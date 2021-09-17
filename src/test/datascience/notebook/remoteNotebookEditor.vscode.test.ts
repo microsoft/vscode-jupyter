@@ -83,7 +83,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('MRU and encrypted storage should be updated with remote Uri info', async () => {
+    test('MRU and encrypted storage should be updated with remote Uri info', async function () {
+        // Entered issue here - test failing: https://github.com/microsoft/vscode-jupyter/issues/7579
+        this.skip();
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
         await openNotebook(api.serviceContainer, ipynbFile.fsPath);

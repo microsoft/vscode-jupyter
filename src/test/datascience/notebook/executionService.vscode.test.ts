@@ -74,23 +74,28 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     suiteSetup(async function () {
         traceInfo('Suite Setup');
         this.timeout(120_000);
-        api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
-        await workAroundVSCodeNotebookStartPages();
-        await hijackPrompt(
-            'showErrorMessage',
-            { endsWith: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
-            disposables
-        );
+        try {
+            api = await initialize();
+            if (!(await canRunNotebookTests())) {
+                return this.skip();
+            }
+            await workAroundVSCodeNotebookStartPages();
+            await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { text: Common.install(), clickImmediately: true },
+                disposables
+            );
 
-        await startJupyterServer();
-        await prewarmNotebooks();
-        sinon.restore();
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        traceInfo('Suite Setup (completed)');
+            await startJupyterServer();
+            await prewarmNotebooks();
+            sinon.restore();
+            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            traceInfo('Suite Setup (completed)');
+        } catch (e) {
+            await captureScreenShot('execution-suite');
+            throw e;
+        }
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
