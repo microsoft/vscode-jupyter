@@ -1875,7 +1875,7 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
-                    "when": "jupyter.hasNativeNotebookOpen"
+                    "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen"
                 }
             ]
         },

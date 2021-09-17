@@ -198,7 +198,7 @@ export namespace EditorContexts {
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
-    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
+    export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
 }
 
 export namespace RegExpValues {
