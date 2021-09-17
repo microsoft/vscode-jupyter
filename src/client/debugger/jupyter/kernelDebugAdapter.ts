@@ -110,7 +110,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     // If a cell has moved to idle, stop the debug session
                     if (
                         this.configuration.__cellIndex === cellStateChange.cell.index &&
-                        cellStateChange.state === NotebookCellExecutionState.Idle
+                        cellStateChange.state === NotebookCellExecutionState.Idle &&
+                        !this.disconected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         this.disconnect();
@@ -168,11 +169,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     public disconnect() {
-        if (!this.disconected) {
-            void this.session.customRequest('disconnect', { restart: false });
-            this.endSession.fire(this.session);
-            this.disconected = true;
-        }
+        void this.session.customRequest('disconnect', { restart: false });
+        this.endSession.fire(this.session);
+        this.disconected = true;
     }
 
     dispose() {
