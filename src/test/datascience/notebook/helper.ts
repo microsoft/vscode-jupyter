@@ -304,7 +304,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
 
     // Wait for the notebookControllerManager to have results for this given document
-    let selectedController: VSCodeNotebookController;
+    let selectedController: VSCodeNotebookController | undefined;
     await waitForCondition(
         async () => {
             const doc = vscodeNotebook.activeNotebookEditor?.document;
@@ -327,9 +327,15 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
             return false;
         }
+        selectedController = notebookControllerManager.getSelectedNotebookController(
+            vscodeNotebook.activeNotebookEditor.document
+        );
 
-        traceInfo(`Waiting for kernel and active is ${selectedController.label}`);
-        if (!expectedLanguage) {
+        traceInfo(`Waiting for kernel and active is ${selectedController?.label || 'none'}`);
+        if (!selectedController) {
+            return false;
+        }
+        if (!expectedLanguage && selectedController) {
             kernelInfo = `<No specific kernel expected> ${JSON.stringify(selectedController.connection)}`;
             return true;
         }
