@@ -15,7 +15,6 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
     NotebookDocument,
     notebooks,
     Uri
@@ -61,8 +60,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private fs: IFileSystem,
         private readonly kernel: IKernel | undefined
     ) {
-        void this.dumpAllCells();
-
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -199,14 +196,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         args: DebugProtocol.SetBreakpointsArguments
     ): Thenable<DebugProtocol.SetBreakpointsResponse['body']> {
         return this.session.customRequest('setBreakpoints', args);
-    }
-
-    private dumpAllCells() {
-        this.notebookDocument.getCells().forEach((cell) => {
-            if (cell.kind === NotebookCellKind.Code && cell.executionSummary?.success) {
-                void this.dumpCell(cell.index);
-            }
-        });
     }
 
     // Dump content of given cell into a tmp file and return path to file.
