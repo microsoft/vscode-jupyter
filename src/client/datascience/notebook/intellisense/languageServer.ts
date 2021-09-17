@@ -14,12 +14,15 @@ import {
 } from 'vscode';
 import {
     ClientCapabilities,
+    DidCloseTextDocumentNotification,
+    DidOpenTextDocumentNotification,
     DocumentSelector,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
     LanguageClient,
     LanguageClientOptions,
+    Middleware,
     RegistrationData,
     RegistrationType,
     RevealOutputChannelOn,
@@ -111,6 +114,7 @@ export class LanguageServer implements Disposable {
     private constructor(
         public client: LanguageClient,
         public interpreter: PythonEnvironment,
+        private readonly middleware: Middleware,
         private disposables: Disposable[]
     ) {
         this._interpreterId = getInterpreterId(interpreter);
@@ -123,6 +127,24 @@ export class LanguageServer implements Disposable {
 
     public get interpreterId() {
         return this._interpreterId;
+    }
+
+    public refresh(notebook: NotebookDocument) {
+        // Have to send a close for every cell in the notebook and then
+        // an open for the first one. This will make the language server think the entire document was
+        // closed and reopened.
+        if (notebook.cellCount > 0) {
+            notebook.getCells().forEach((c) => {
+                this.middleware.didClose!(c.document, (d) => {
+                    const params = this.client.code2ProtocolConverter.asCloseTextDocumentParams(d);
+                    this.client.sendNotification(DidCloseTextDocumentNotification.type, params);
+                });
+            });
+            this.middleware.didOpen!(notebook.cellAt(0).document, (d) => {
+                const params = this.client.code2ProtocolConverter.asOpenTextDocumentParams(d);
+                this.client.sendNotification(DidOpenTextDocumentNotification.type, params);
+            });
+        }
     }
 
     public static async createLanguageServer(
@@ -181,7 +203,7 @@ export class LanguageServer implements Disposable {
                 await languageClient.onReady();
             }
 
-            return new LanguageServer(languageClient, interpreter, [
+            return new LanguageServer(languageClient, interpreter, clientOptions.middleware!, [
                 languageClientDisposable,
                 cancellationStrategy,
                 outputChannel

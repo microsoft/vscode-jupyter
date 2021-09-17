@@ -22,6 +22,10 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
     private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
     private activeInterpreter: PythonEnvironment | undefined;
     private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
+    private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
+        NotebookDocument,
+        VSCodeNotebookController
+    >();
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -32,8 +36,9 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         // Sign up for kernel change events on notebooks
         this.notebookControllerManager.onNotebookControllerSelected(this.controllerChanged, this, this.disposables);
-        // Sign up for notebook open events.
+        // Sign up for notebook open and close events.
         this.notebooks.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        this.notebooks.onDidCloseNotebookDocument(this.closedNotebook, this, this.disposables);
 
         // For all currently open notebooks, launch their language server
         this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
@@ -53,17 +58,44 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         );
     }
 
-    private controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
-        return this.ensureLanguageServer(e.controller.connection.interpreter);
+    private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
+        // Create the language server for this connection
+        await this.ensureLanguageServer(e.controller.connection.interpreter);
+
+        // Get the language server for the old connection (if we have one)
+        const oldController = this.knownControllers.get(e.notebook);
+        if (oldController && oldController.connection.interpreter) {
+            const oldLanguageServer = this.servers.get(getInterpreterId(oldController.connection.interpreter));
+
+            // If we had one, refresh that language server's diagnostics. Nothing
+            // causes a diag update for the old server
+            if (oldLanguageServer) {
+                oldLanguageServer.refresh(e.notebook);
+            }
+        }
+
+        // Update the new controller
+        this.knownControllers.set(e.notebook, e.controller);
     }
 
     private async openedNotebook(n: NotebookDocument) {
         // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
         const controller = this.notebookControllerManager.getSelectedNotebookController(n);
+
+        // Save mapping from notebook to controller
+        if (controller) {
+            this.knownControllers.set(n, controller);
+        }
+
         // If the controller is empty, default to the active interpreter
         const interpreter =
             controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
         return this.ensureLanguageServer(interpreter);
+    }
+
+    private closedNotebook(n: NotebookDocument) {
+        // We don't know the controller after closing
+        this.knownControllers.delete(n);
     }
 
     private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
@@ -105,5 +137,7 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
                 this.servers.set(id, languageServer);
             }
         }
+
+        return id ? this.servers.get(id) : undefined;
     }
 }
