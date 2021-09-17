@@ -465,7 +465,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
                 { kind: kernelConnection.kind },
-                ex,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any,
                 true
             );
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);

@@ -335,7 +335,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         if (!selectedController) {
             return false;
         }
-        if (!expectedLanguage && selectedController) {
+        if (!expectedLanguage) {
             kernelInfo = `<No specific kernel expected> ${JSON.stringify(selectedController.connection)}`;
             return true;
         }
@@ -344,11 +344,12 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
             case 'startUsingKernelSpec':
                 kernelInfo = `<startUsingKernelSpec>${JSON.stringify(selectedController.connection.kernelSpec || {})}`;
                 return (
-                    selectedController.connection.kernelSpec?.language?.toLowerCase() === expectedLanguage.toLowerCase()
+                    selectedController.connection.kernelSpec?.language?.toLowerCase() ===
+                    expectedLanguage!.toLowerCase()
                 );
             case 'startUsingPythonInterpreter':
                 kernelInfo = `<startUsingPythonInterpreter ${selectedController.connection.interpreter.path}>`;
-                return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+                return expectedLanguage!.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
             case 'connectToLiveKernel':
                 kernelInfo = `<connectToLiveKernel id: ${selectedController.connection.kernelModel.id}, name: ${selectedController.connection.kernelModel.id}>`;
                 return true;
