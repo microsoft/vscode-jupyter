@@ -33,9 +33,9 @@ import {
     Diagnostic
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { isCI, JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
@@ -452,6 +452,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
+        traceInfoIf(isCI, `Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         // Wait for Jupyter to start.
         await closeActiveWindows();

@@ -14,7 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -94,15 +94,23 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-        sinon.restore();
-        await startJupyterServer();
-        await createEmptyPythonNotebook(disposables);
-        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        try {
+            traceInfo(`Start Test ${this.currentTest?.title}`);
+            sinon.restore();
+            await startJupyterServer();
+            await createEmptyPythonNotebook(disposables);
+            assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        } catch (e) {
+            await captureScreenShot(this.currentTest?.title || 'unknown');
+            throw e;
+        }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
