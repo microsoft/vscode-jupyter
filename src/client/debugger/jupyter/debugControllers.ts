@@ -107,8 +107,12 @@ export class RunByLineController implements IDebuggingDelegate {
         // start the process of updating the variables view.
         const stResponse = await this.debugAdapter.stackTrace({ threadId, startFrame: 0, levels: 1 });
 
-        const sf = stResponse.stackFrames[0];
-        return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
+        if (stResponse && stResponse.stackFrames[0]) {
+            const sf = stResponse.stackFrames[0];
+            return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
+        }
+
+        return false;
     }
 
     private trace(tag: string, msg: string) {
