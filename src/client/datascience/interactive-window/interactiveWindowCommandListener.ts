@@ -15,7 +15,6 @@ import {
     TextEditor,
     Uri,
     ViewColumn,
-    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -45,6 +44,8 @@ import {
     IStatusProvider
 } from '../types';
 import { createExportInteractiveIdentity } from './identity';
+import { getActiveInteractiveWindow } from './helpers';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 
 @injectable()
 export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -501,10 +502,17 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private async removeCellInInteractiveWindow(context?: NotebookCell) {
-        if (context) {
-            const edit = new WorkspaceEdit();
-            edit.replaceNotebookCells(context.notebook.uri, new NotebookRange(context.index, context.index + 1), []);
-            await workspace.applyEdit(edit);
+        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
+        const ranges =
+            context === undefined
+                ? interactiveWindow?.notebookEditor?.selections
+                : [new NotebookRange(context.index, context.index + 1)];
+        const document = context === undefined ? interactiveWindow?.notebookEditor?.document : context.notebook;
+
+        if (ranges !== undefined && document !== undefined) {
+            await chainWithPendingUpdates(document, (edit) => {
+                ranges.forEach((range) => edit.replaceNotebookCells(document.uri, range, []));
+            });
         }
     }
 
@@ -551,14 +559,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
                 (w) => w.notebookUri?.toString() === notebookUri.toString()
             );
-        } else if (notebookUri === undefined && this.interactiveWindowProvider.activeWindow !== undefined) {
-            targetInteractiveWindow = this.interactiveWindowProvider.activeWindow;
-        } else if (
-            notebookUri === undefined &&
-            this.interactiveWindowProvider.activeWindow === undefined &&
-            window.activeTextEditor?.document.uri !== undefined
-        ) {
-            targetInteractiveWindow = this.interactiveWindowProvider.get(window.activeTextEditor.document.uri);
+        } else {
+            targetInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
         }
         return targetInteractiveWindow;
     }

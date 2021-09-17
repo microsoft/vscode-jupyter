@@ -1384,7 +1384,11 @@
                 },
                 {
                     "command": "jupyter.interactive.removeCell",
-                    "when": "false"
+                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.interactive.clearAllCells",
+                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
                 }
             ],
             "debug/variables/context": [
