@@ -15,7 +15,6 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
     NotebookDocument,
     notebooks,
     Uri
@@ -52,6 +51,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
+    private disconected: boolean = false;
 
     constructor(
         private session: DebugSession,
@@ -60,8 +60,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private fs: IFileSystem,
         private readonly kernel: IKernel | undefined
     ) {
-        void this.dumpAllCells();
-
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -112,7 +110,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     // If a cell has moved to idle, stop the debug session
                     if (
                         this.configuration.__cellIndex === cellStateChange.cell.index &&
-                        cellStateChange.state === NotebookCellExecutionState.Idle
+                        cellStateChange.state === NotebookCellExecutionState.Idle &&
+                        !this.disconected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         this.disconnect();
@@ -172,6 +171,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     public disconnect() {
         void this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
+        this.disconected = true;
     }
 
     dispose() {
@@ -195,14 +195,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         args: DebugProtocol.SetBreakpointsArguments
     ): Thenable<DebugProtocol.SetBreakpointsResponse['body']> {
         return this.session.customRequest('setBreakpoints', args);
-    }
-
-    private dumpAllCells() {
-        this.notebookDocument.getCells().forEach((cell) => {
-            if (cell.kind === NotebookCellKind.Code) {
-                void this.dumpCell(cell.index);
-            }
-        });
     }
 
     // Dump content of given cell into a tmp file and return path to file.
