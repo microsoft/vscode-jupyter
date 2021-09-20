@@ -639,6 +639,12 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.createnewnotebook",
+                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
+                "shortTitle": "%jupyter.command.jupyter.createnewnotebook.shortTitle%",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.scrolltocell",
                 "title": "%jupyter.command.jupyter.scrolltocell.title%",
                 "category": "Jupyter"
@@ -951,6 +957,11 @@
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
+                }
+            ],
+            "file/newFile": [
+                {
+                    "command": "jupyter.createnewnotebook"
                 }
             ],
             "commandPalette": [
