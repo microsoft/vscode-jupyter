@@ -15,6 +15,7 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
+    NotebookCellKind,
     NotebookDocument,
     notebooks,
     Uri
@@ -151,6 +152,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // This might happen if VS Code or the extension host crashes
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
             await this.debugInfo();
+            void this.dumpAllCells();
         }
 
         if (message.type === 'request') {
@@ -195,6 +197,14 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         args: DebugProtocol.SetBreakpointsArguments
     ): Thenable<DebugProtocol.SetBreakpointsResponse['body']> {
         return this.session.customRequest('setBreakpoints', args);
+    }
+
+    private dumpAllCells() {
+        this.notebookDocument.getCells().forEach(async (cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                await this.dumpCell(cell.index);
+            }
+        });
     }
 
     // Dump content of given cell into a tmp file and return path to file.
