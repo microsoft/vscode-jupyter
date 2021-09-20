@@ -337,12 +337,12 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         traceInfoIf(isCI, `No preferred controller found during waitForKernelToGetAutoSelected`);
     }
 
-    // Find one that matches the expected language (and is python 3)
+    // Find one that matches the expected language
     const language = expectedLanguage || 'python';
     const match =
         preferred &&
         preferred.connection.kind !== 'connectToLiveKernel' &&
-        preferred.connection.kernelSpec?.language === language
+        (!expectedLanguage || preferred.connection.kernelSpec?.language === expectedLanguage)
             ? preferred
             : notebookControllers.find(
                   (d) => d.connection.kind != 'connectToLiveKernel' && language === d.connection.kernelSpec?.language
