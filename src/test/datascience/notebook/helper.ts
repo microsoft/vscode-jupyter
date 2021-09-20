@@ -329,7 +329,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 preferred = controllers.find((c) => c.isPreferred(vscodeNotebook.activeNotebookEditor!.document));
                 return preferred != undefined;
             },
-            timeout,
+            3_000,
             `Did not find a controller with document affinity`
         );
     } catch {
