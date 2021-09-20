@@ -107,8 +107,8 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     public async addCellHash(cell: NotebookCell) {
-        // Skip markdown cells as they are never actually executed
-        if (cell.kind === NotebookCellKind.Markup) {
+        // Skip non-code cells as they are never actually executed
+        if (cell.kind !== NotebookCellKind.Code) {
             return;
         }
         // Don't log empty cells
