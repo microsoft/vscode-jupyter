@@ -447,7 +447,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, kernel!);
 
-            result = (await kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
+            result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
