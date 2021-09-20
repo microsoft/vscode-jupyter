@@ -389,7 +389,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        if (this.cellMatcher.stripFirstMarker(code).length === 0) {
+        if (this.cellMatcher.stripFirstMarker(code).trim().length === 0) {
             return true;
         }
         // Chain execution promises so that cells are executed in the right order
