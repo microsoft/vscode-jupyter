@@ -477,6 +477,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        traceInfoIf(isCI, `Controller ${event.controller?.id} selected`);
         // Now notify out that we have updated a notebooks controller
         this._onNotebookControllerSelected.fire(event);
     }

@@ -12,9 +12,7 @@
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
     "python.pythonPath": "python",
-    "jupyter.experiments.optInto": [
-        "NativeNotebookEditor"
-    ],
+    "jupyter.experiments.optInto": ["NativeNotebookEditor"],
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
     // and that slows down tests significantly. We have other tests on CI for testing
     // downloading of LS with this setting enabled.
@@ -27,5 +25,7 @@
     "jupyter.disableJupyterAutoStart": true,
     "jupyter.logging.level": "debug",
     "python.logging.level": "debug",
-    "webview.experimental.useIframes": true
+    "webview.experimental.useIframes": true,
+    // Disable all experiments in python insiders
+    "python.experiments.enabled": "false"
 }
