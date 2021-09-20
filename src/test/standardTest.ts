@@ -123,7 +123,8 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
-            .concat(['--user-data-dir', userDataDirectory]),
+            .concat(['--user-data-dir', userDataDirectory])
+            .concat(['--verbose']),
         version: channel,
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });
