@@ -79,7 +79,8 @@ async function installPythonExtension(vscodeExecutablePath: string) {
 }
 
 async function createSettings(): Promise<string> {
-    const userDataDirectory = await createTempDir();
+    // User data dir can be overridden with an environment variable.
+    const userDataDirectory = process.env.VSC_JUPYTER_USER_DATA_DIR || (await createTempDir());
     process.env.VSC_JUPYTER_VSCODE_SETTINGS_DIR = userDataDirectory;
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {

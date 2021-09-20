@@ -605,6 +605,11 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
 
+      - name: Create temp folder for user data dir
+        run: |
+          echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
+          echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
       # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
@@ -721,6 +726,14 @@ jobs:
         with:
           name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+          retention-days: 1
+
+      - name: Upload VS code logs
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
   smoke-tests:
