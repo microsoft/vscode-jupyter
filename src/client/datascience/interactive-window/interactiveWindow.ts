@@ -389,7 +389,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        if (this.cellMatcher.stripFirstMarker(code).length === 0) {
+        if (this.cellMatcher.stripFirstMarker(code).trim().length === 0) {
             return true;
         }
         // Chain execution promises so that cells are executed in the right order
@@ -447,7 +447,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, kernel!);
 
-            result = (await kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
+            result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
