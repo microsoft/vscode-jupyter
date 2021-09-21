@@ -161,11 +161,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         const output = getTextOutputValue(cell.outputs[0]);
-        if (!output.includes(activeIntepreterSearchString)) {
+        if (!output.includes(activeIntepreterSearchString) && activeIntepreterSearchString) {
             assert.fail(
                 output,
                 `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
-                'Interpreter does not match'
+                `Interpreter does not match for ${activeIntepreterSearchString}`
             );
         }
     });

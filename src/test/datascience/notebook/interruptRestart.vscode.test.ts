@@ -372,6 +372,10 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         ]);
         assert.strictEqual(cell1.executionSummary?.executionOrder, 1, 'Cell 1 should have an execution order of 1');
 
+        // Clear all outputs
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+        await waitForOutputs(cell1, 0);
+
         // Try to run cell 1 again, it should fail with errors.
         await Promise.all([
             runCell(cell1),

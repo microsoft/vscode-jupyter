@@ -370,14 +370,17 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     }
 
     // Find one that matches the expected language
-    const language = expectedLanguage || 'python';
+    const expectedLower = expectedLanguage?.toLowerCase();
+    const language = expectedLower || 'python';
     const match =
         preferred &&
         preferred.connection.kind !== 'connectToLiveKernel' &&
-        (!expectedLanguage || preferred.connection.kernelSpec?.language === expectedLanguage)
+        (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower)
             ? preferred
             : notebookControllers.find(
-                  (d) => d.connection.kind != 'connectToLiveKernel' && language === d.connection.kernelSpec?.language
+                  (d) =>
+                      d.connection.kind != 'connectToLiveKernel' &&
+                      language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 
     assert.ok(match, 'No kernel to auto select');
