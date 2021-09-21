@@ -40,7 +40,6 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
             };
-        default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
 }
@@ -62,14 +61,13 @@ function getPlugins(bundle) {
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
+    const definePlugin = new webpack.DefinePlugin({
+        'process.env': {
+            NODE_ENV: JSON.stringify('production')
+        }
+    });
     switch (bundle) {
         case 'viewers': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
             plugins.push(
                 ...(isProdBuild ? [definePlugin] : []),
                 ...[
@@ -95,34 +93,12 @@ function getPlugins(bundle) {
             );
             break;
         }
-        case 'ipywidgetsRenderer': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
-            plugins.push(new EsmWebpackPlugin());
-            break;
-        }
         case 'ipywidgetsKernel': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             break;
         }
+        case 'ipywidgetsRenderer':
         case 'errorRenderer': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             plugins.push(new EsmWebpackPlugin());
             break;
@@ -135,7 +111,7 @@ function getPlugins(bundle) {
 }
 
 function buildConfiguration(bundle) {
-    // console.error(`Bundle = ${bundle}`);
+    // console.error(`Bundle = ${ bundle }`);
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];

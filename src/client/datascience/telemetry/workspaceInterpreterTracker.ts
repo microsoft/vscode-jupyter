@@ -9,6 +9,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IPythonExtensionChecker } from '../../api/types';
+import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
 
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {
@@ -32,14 +33,14 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
     }
     public static isActiveWorkspaceInterpreter(resource: Resource, interpreter?: PythonEnvironment) {
         if (!interpreter) {
-            return false;
+            return;
         }
         const key = WorkspaceInterpreterTracker.getWorkspaceIdentifier(resource);
         const activeInterpreterPath = WorkspaceInterpreterTracker.workspaceInterpreters.get(key);
         if (!activeInterpreterPath) {
-            return false;
+            return;
         }
-        return activeInterpreterPath === interpreter.path;
+        return areInterpreterPathsSame(activeInterpreterPath, interpreter.path);
     }
     private trackActiveInterpreters() {
         if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionActive) {

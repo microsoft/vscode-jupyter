@@ -22,7 +22,8 @@ import {
     TextEditorRevealType,
     ViewColumn,
     NotebookEditor,
-    Disposable
+    Disposable,
+    window
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -55,8 +56,7 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
     IJupyterDebugger,
-    INotebookExporter,
-    WebViewViewChangeEventArgs
+    INotebookExporter
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
@@ -203,6 +203,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         this._notebookEditor = notebookEditor;
         this.notebookDocument = notebookEditor.document;
+        this.internalDisposables.push(
+            window.onDidChangeActiveNotebookEditor((e) => {
+                if (e === this._notebookEditor) {
+                    this._onDidChangeViewState.fire();
+                }
+            })
+        );
         this.listenForControllerSelection(notebookEditor.document);
         this.initializeRendererCommunication();
         return notebookEditor;
@@ -389,7 +396,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        if (this.cellMatcher.stripFirstMarker(code).length === 0) {
+        if (this.cellMatcher.stripFirstMarker(code).trim().length === 0) {
             return true;
         }
         // Chain execution promises so that cells are executed in the right order
@@ -447,7 +454,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, kernel!);
 
-            result = (await kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
+            result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
@@ -536,10 +543,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return Uri.file(root);
         }
         return undefined;
-    }
-
-    protected async onViewStateChanged(_args: WebViewViewChangeEventArgs) {
-        this._onDidChangeViewState.fire();
     }
 
     protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {

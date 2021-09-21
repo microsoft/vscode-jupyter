@@ -367,7 +367,6 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged(
                 (e) => {
-                    traceInfo(`Notebook Session status ${this.notebook?.identity} # ${e}`);
                     this._onStatusChanged.fire(e);
                 },
                 this,
