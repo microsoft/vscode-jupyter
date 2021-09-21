@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { expect } from 'chai';
+import * as fastDeepEqual from 'fast-deep-equal';
+import { waitForCondition } from '../../common';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
+import { ITestWebviewHost } from '../testInterfaces';
 
 // Basic shape of a variable result
 export interface IVariableInfo {
@@ -11,16 +14,34 @@ export interface IVariableInfo {
     value: string;
 }
 
+export async function waitForVariablesToMatch(expected: IVariableInfo[], variableView: ITestWebviewHost) {
+    let htmlVariables: IVariableInfo[] | undefined;
+    return waitForCondition(
+        async () => {
+            const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+            htmlVariables = parseVariableViewHTML(htmlResult);
+            return variablesMatch(expected, htmlVariables);
+        },
+        defaultNotebookTestTimeout,
+        // Use function here to generate message so that htmlResult is queried at end
+        () => `Variables do not match. Expected ${JSON.stringify(expected)} but got ${JSON.stringify(htmlVariables)}`
+    );
+}
+
 // For the given html, verify that the expected variables are in it
-export function verifyViewVariables(expected: IVariableInfo[], html: string) {
-    const htmlVariables = parseVariableViewHTML(html);
-
+function variablesMatch(expected: IVariableInfo[], htmlVariables: IVariableInfo[]): boolean {
     // Check our size first
-    expect(htmlVariables.length).to.be.equal(expected.length, 'Did not find expected number of variables');
+    if (htmlVariables.length != expected.length) {
+        return false;
+    }
 
-    expected.forEach((expectedInfo, index) => {
-        compareVariableInfos(expectedInfo, htmlVariables[index]);
-    });
+    // Then check all the values
+    const failures = expected
+        .map((expectedInfo, index) => {
+            return compareVariableInfos(expectedInfo, htmlVariables[index]);
+        })
+        .filter((b) => !b);
+    return failures.length <= 0;
 }
 
 // Helper function to parse the view HTML
@@ -51,5 +72,5 @@ function extractVariableFromRow(variableHTMLRow: Element): IVariableInfo {
 
 // Compare two variable infos
 function compareVariableInfos(expected: IVariableInfo, actual: IVariableInfo) {
-    expect(expected).to.deep.equal(actual, 'Found Variable incorrect');
+    return fastDeepEqual(expected, actual);
 }
