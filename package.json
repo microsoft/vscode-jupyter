@@ -637,6 +637,7 @@
             {
                 "command": "jupyter.createnewnotebook",
                 "title": "%jupyter.command.jupyter.createnewnotebook.title%",
+                "shortTitle": "%jupyter.command.jupyter.createnewnotebook.shortTitle%",
                 "category": "Jupyter"
             },
             {
@@ -952,6 +953,11 @@
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
+                }
+            ],
+            "file/newFile": [
+                {
+                    "command": "jupyter.createnewnotebook"
                 }
             ],
             "commandPalette": [
