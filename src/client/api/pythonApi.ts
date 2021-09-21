@@ -273,7 +273,6 @@ export class PythonInstaller implements IPythonInstaller {
             action = 'failed';
             throw ex;
         } finally {
-            product;
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action,
                 moduleName: ProductNames.get(product)!
