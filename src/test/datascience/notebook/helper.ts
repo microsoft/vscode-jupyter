@@ -369,13 +369,14 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         traceInfoIf(isCI, `No preferred controller found during waitForKernelToGetAutoSelected`);
     }
 
-    // Find one that matches the expected language
+    // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
     const language = expectedLower || 'python';
     const match =
-        preferred &&
-        preferred.connection.kind !== 'connectToLiveKernel' &&
-        (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower)
+        (preferred &&
+            preferred.connection.kind !== 'connectToLiveKernel' &&
+            (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower)) ||
+        preferred?.connection.kind === 'connectToLiveKernel'
             ? preferred
             : notebookControllers.find(
                   (d) =>

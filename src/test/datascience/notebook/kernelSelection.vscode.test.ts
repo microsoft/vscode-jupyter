@@ -111,7 +111,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 ? venvNoKernelSearchString
                 : activeInterpreter.displayName === interpreter2.displayName
                 ? venvKernelSearchString
-                : venvNoRegSearchString;
+                : activeInterpreter.displayName === interpreter3.displayName
+                ? venvNoRegSearchString
+                : activeInterpreterPath;
 
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService(new BufferDecoder());
@@ -161,11 +163,17 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         const output = getTextOutputValue(cell.outputs[0]);
-        if (!output.includes(activeIntepreterSearchString) && activeIntepreterSearchString) {
+        if (
+            !output.includes(activeIntepreterSearchString) &&
+            !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
+            !output.includes(activeInterpreterPath)
+        ) {
             assert.fail(
                 output,
                 `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
-                `Interpreter does not match for ${activeIntepreterSearchString}`
+                `Interpreter does not match for ${activeIntepreterSearchString}: expected ${getNormalizedInterpreterPath(
+                    activeInterpreterPath
+                )} or ${activeInterpreterPath}`
             );
         }
     });
