@@ -21,6 +21,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../../common/errors';
 import { createDeferred } from '../../common/utils/async';
+import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/interpreter';
 
 /**
  * This information is sent with each telemetry event.
@@ -223,7 +224,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
+                getNormalizedInterpreterPath(interpreter.path)
+            );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
