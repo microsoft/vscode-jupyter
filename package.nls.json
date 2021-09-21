@@ -107,7 +107,7 @@
     "jupyter.command.jupyter.collapseallcells.shorttitle": "Collapse",
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
-    "jupyter.command.jupyter.createnewnotebook.title": "New Jupyter Notebook",
+    "jupyter.command.jupyter.createnewnotebook.title": "Create New Jupyter Notebook",
     "jupyter.command.jupyter.createnewnotebook.shortTitle": "Jupyter Notebook",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "Select Interpreter to start Jupyter server",
     "jupyter.command.jupyter.createGitHubIssue.title": "Create GitHub Issue",
