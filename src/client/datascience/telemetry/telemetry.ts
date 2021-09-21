@@ -224,7 +224,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(getNormalizedInterpreterPath(interpreter.path));
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
+                getNormalizedInterpreterPath(interpreter.path)
+            );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;

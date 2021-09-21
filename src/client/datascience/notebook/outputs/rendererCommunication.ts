@@ -27,7 +27,7 @@ export class RendererCommunication implements IExtensionSingleActivationService,
     constructor(
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) { }
+    ) {}
 
     public dispose() {
         disposeAllDisposables(this.disposables);
