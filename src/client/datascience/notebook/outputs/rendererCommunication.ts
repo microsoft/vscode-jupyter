@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, extensions, NotebookEditor } from 'vscode';
+import { Event, extensions, NotebookEditor, notebooks, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable } from '../../../common/types';
@@ -27,13 +27,13 @@ export class RendererCommunication implements IExtensionSingleActivationService,
     constructor(
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) {}
+    ) { }
 
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
     public async activate() {
-        const ext = extensions.getExtension('jupyter-notebook-renderer');
+        const ext = extensions.getExtension('ms-toolsai.jupyter-renderers');
         if (!ext) {
             return;
         }
@@ -45,10 +45,14 @@ export class RendererCommunication implements IExtensionSingleActivationService,
         };
         api.onDidReceiveMessage(
             ({ editor, message }) => {
+                const document = editor.document || window.activeNotebookEditor?.document;
+                if (!document) {
+                    return;
+                }
                 if (message.type === 'saveImageAs') {
-                    this.plotSaveHandler.savePlot(editor.document, message.outputId, message.mimeType).catch(noop);
+                    this.plotSaveHandler.savePlot(document, message.outputId, message.mimeType).catch(noop);
                 } else if (message.type === 'openImageInPlotViewer') {
-                    this.plotViewHandler.openPlot(editor.document, message.outputId).catch(noop);
+                    this.plotViewHandler.openPlot(document, message.outputId).catch(noop);
                 }
             },
             this,
