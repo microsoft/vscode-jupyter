@@ -22,7 +22,8 @@ import {
     TextEditorRevealType,
     ViewColumn,
     NotebookEditor,
-    Disposable
+    Disposable,
+    window
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -55,8 +56,7 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
     IJupyterDebugger,
-    INotebookExporter,
-    WebViewViewChangeEventArgs
+    INotebookExporter
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
@@ -203,6 +203,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         this._notebookEditor = notebookEditor;
         this.notebookDocument = notebookEditor.document;
+        this.internalDisposables.push(
+            window.onDidChangeActiveNotebookEditor((e) => {
+                if (e === this._notebookEditor) {
+                    this._onDidChangeViewState.fire();
+                }
+            })
+        );
         this.listenForControllerSelection(notebookEditor.document);
         this.initializeRendererCommunication();
         return notebookEditor;
@@ -536,10 +543,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return Uri.file(root);
         }
         return undefined;
-    }
-
-    protected async onViewStateChanged(_args: WebViewViewChangeEventArgs) {
-        this._onDidChangeViewState.fire();
     }
 
     protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
