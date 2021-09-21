@@ -636,11 +636,6 @@
             {
                 "command": "jupyter.createnewnotebook",
                 "title": "%jupyter.command.jupyter.createnewnotebook.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.createnewnotebook",
-                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
                 "shortTitle": "%jupyter.command.jupyter.createnewnotebook.shortTitle%",
                 "category": "Jupyter"
             },
