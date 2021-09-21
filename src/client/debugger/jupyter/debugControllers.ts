@@ -57,6 +57,7 @@ export class RunByLineController implements IDebuggingDelegate {
     public continue(): void {
         if (typeof this.lastPausedThreadId !== 'number') {
             traceVerbose(`No paused thread, can't do RBL`);
+            this.stop();
             return;
         }
 
@@ -64,6 +65,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public stop(): void {
+        void executeDebugPyFix(this.kernel);
         this.debugAdapter.disconnect();
     }
 
@@ -171,12 +173,15 @@ async function cellDebugSetup(
     debugAdapter: IKernelDebugAdapter,
     debugCell: NotebookCell
 ): Promise<void> {
+    await executeDebugPyFix(kernel);
+    await debugAdapter.dumpCell(debugCell.index);
+}
+
+async function executeDebugPyFix(kernel: IKernel) {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     if (kernel) {
         const code = 'import debugpy\ndebugpy.debug_this_thread()';
         await kernel.executeHidden(code);
     }
-
-    await debugAdapter.dumpCell(debugCell.index);
 }
