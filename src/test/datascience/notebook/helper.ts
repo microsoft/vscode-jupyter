@@ -233,14 +233,34 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
+let waitForKernelPendingPromise: Promise<void> | undefined;
+
 export async function waitForKernelToChange(
+    criteria: { labelOrId?: string; interpreterPath?: string },
+    timeout = defaultNotebookTestTimeout
+) {
+    // Wait for the previous kernel change to finish.
+    if (waitForKernelPendingPromise != undefined) {
+        await waitForKernelPendingPromise;
+    }
+    waitForKernelPendingPromise = waitForKernelToChangeImpl(criteria, timeout);
+    return waitForKernelPendingPromise;
+}
+
+async function waitForKernelToChangeImpl(
     criteria: { labelOrId?: string; interpreterPath?: string },
     timeout = defaultNotebookTestTimeout
 ) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
-    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
+    if (!vscodeNotebook.activeNotebookEditor) {
+        await waitForCondition(
+            async () => !!vscodeNotebook.activeNotebookEditor,
+            10_000,
+            'Active editor not a notebook'
+        );
+    }
 
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
@@ -274,9 +294,7 @@ export async function waitForKernelToChange(
             return false;
         }
 
-        const selectedController = notebookControllerManager
-            .registeredNotebookControllers()
-            .find((item) => item.isAssociatedWithDocument(doc));
+        const selectedController = notebookControllerManager.getSelectedNotebookController(doc);
         if (!selectedController) {
             return false;
         }
@@ -287,38 +305,52 @@ export async function waitForKernelToChange(
         traceInfo(`Active kernel is id:label = ${selectedController.id}:${selectedController.label}`);
         return false;
     };
-    let tryCount = 0;
-    await waitForCondition(
-        async () => {
-            // Double check not the right kernel (don't select again if already found to be correct)
-            if (!isRightKernel()) {
-                traceInfoIf(isCI, `Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
-                // Send a select kernel on the active notebook editor. Keep sending it if it fails.
-                await commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
-                traceInfoIf(isCI, `Notebook select.kernel command switched to kernel id ${id}`);
-                tryCount += 1;
-            }
+    if (!isRightKernel()) {
+        let tryCount = 0;
+        await waitForCondition(
+            async () => {
+                // Double check not the right kernel (don't select again if already found to be correct)
+                if (!isRightKernel()) {
+                    traceInfoIf(isCI, `Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
+                    // Send a select kernel on the active notebook editor. Keep sending it if it fails.
+                    await commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
+                    traceInfoIf(isCI, `Notebook select.kernel command switched to kernel id ${id}`);
+                    tryCount += 1;
+                }
 
-            // Check if it's the right one or not.
-            return isRightKernel();
-        },
-        timeout,
-        `Kernel with criteria ${JSON.stringify(criteria)} not selected`
-    );
-
-    // Make sure the kernel is actually in use before returning (switching is async)
-    await sleep(500);
+                // Check if it's the right one or not.
+                return isRightKernel();
+            },
+            timeout,
+            `Kernel with criteria ${JSON.stringify(criteria)} not selected`
+        );
+        // Make sure the kernel is actually in use before returning (switching is async)
+        await sleep(500);
+    }
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, timeout = 100_000) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
-    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
+    if (!vscodeNotebook.activeNotebookEditor) {
+        await waitForCondition(
+            async () => !!vscodeNotebook.activeNotebookEditor,
+            10_000,
+            'Active editor not a notebook'
+        );
+    }
 
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
     const notebookControllers = notebookControllerManager.registeredNotebookControllers();
+
+    // Make sure we don't already have a selection (this function gets run even after opening a document)
+    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.document)) {
+        return;
+    }
+
+    // We don't have one, try to find the preferred one
     let preferred: VSCodeNotebookController | undefined;
 
     // Wait for one of them to have affinity as the preferred (this may not happen)
@@ -679,7 +711,9 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
     }
     try {
         const haystack = Buffer.from(output.data as Uint8Array).toString('utf8');
-        return isExactMatch ? haystack === value || haystack.trim() === value : haystack.includes(value);
+        return isExactMatch
+            ? haystack === value || haystack.trim() === value
+            : haystack.toLowerCase().includes(value.toLowerCase());
     } catch {
         return false;
     }
