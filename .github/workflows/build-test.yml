@@ -43,6 +43,8 @@ env:
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
+  VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
+  VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
 
 jobs:
   pick_environment:
@@ -399,6 +401,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Download Python VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
+
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
         if: matrix.python != 'conda' && matrix.python != 'noPython'
@@ -505,7 +511,6 @@ jobs:
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
-      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         run: |
@@ -521,10 +526,7 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m ipykernel install --user
-          python -m pip uninstall jedi --yes
-          python -m pip install jedi==0.17.2
 
-      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: matrix.python == 'conda'
@@ -535,8 +537,6 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m pip uninstall jedi --yes
-          python -m pip install jedi==0.17.2
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
 
@@ -605,6 +605,11 @@ jobs:
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
+
+      - name: Create temp folder for user data dir
+        run: |
+          echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
+          echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
@@ -722,6 +727,14 @@ jobs:
         with:
           name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+          retention-days: 1
+
+      - name: Upload VS code logs
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
   smoke-tests:

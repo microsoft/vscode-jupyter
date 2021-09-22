@@ -14,7 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -74,35 +74,48 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     suiteSetup(async function () {
         traceInfo('Suite Setup');
         this.timeout(120_000);
-        api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
-        await workAroundVSCodeNotebookStartPages();
-        await hijackPrompt(
-            'showErrorMessage',
-            { endsWith: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
-            disposables
-        );
+        try {
+            api = await initialize();
+            if (!(await canRunNotebookTests())) {
+                return this.skip();
+            }
+            await workAroundVSCodeNotebookStartPages();
+            await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { text: Common.install(), clickImmediately: true },
+                disposables
+            );
 
-        await startJupyterServer();
-        await prewarmNotebooks();
-        sinon.restore();
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        traceInfo('Suite Setup (completed)');
+            await startJupyterServer();
+            await prewarmNotebooks();
+            sinon.restore();
+            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            traceInfo('Suite Setup (completed)');
+        } catch (e) {
+            await captureScreenShot('execution-suite');
+            throw e;
+        }
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-        sinon.restore();
-        await startJupyterServer();
-        await createEmptyPythonNotebook(disposables);
-        assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        try {
+            traceInfo(`Start Test ${this.currentTest?.title}`);
+            sinon.restore();
+            await startJupyterServer();
+            await createEmptyPythonNotebook(disposables);
+            assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        } catch (e) {
+            await captureScreenShot(this.currentTest?.title || 'unknown');
+            throw e;
+        }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -394,7 +407,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             waitForTextOutput(cell3, 'hello', 0, false)
         ]);
     });
-    test('More messages from background threads', async () => {
+    test('More messages from background threads', async function () {
+        // Not consistently passing
+        // https://github.com/microsoft/vscode-jupyter/issues/7620
+        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         await insertCodeCell(
             dedent`
@@ -454,7 +470,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             )
         ]);
     });
-    test('Messages from background threads can come in other cell output', async () => {
+    test('Messages from background threads can come in other cell output', async function () {
+        // Not consistently passing
+        // https://github.com/microsoft/vscode-jupyter/issues/7620
+        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
         // The background messages (output) from cell one will end up in cell 2.

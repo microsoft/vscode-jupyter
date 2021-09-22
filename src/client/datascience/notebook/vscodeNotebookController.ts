@@ -5,7 +5,6 @@ import { join } from 'path';
 import {
     Disposable,
     EventEmitter,
-    ExtensionMode,
     languages,
     NotebookCell,
     NotebookCellKind,
@@ -17,7 +16,7 @@ import {
     Uri
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { isCI, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIf } from '../../common/logger';
 import {
@@ -49,7 +48,7 @@ import {
 } from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { InteractiveWindowView, JupyterNotebookView } from './constants';
+import { InteractiveWindowView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookController implements Disposable {
@@ -86,6 +85,7 @@ export class VSCodeNotebookController implements Disposable {
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
     }
+
     private readonly associatedDocuments = new WeakSet<NotebookDocument>();
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
@@ -153,11 +153,6 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
-        // Only when running tests should we force the selection of the kernel.
-        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
-        if (this.context.extensionMode === ExtensionMode.Test) {
-            await this.setAsActiveControllerForTests(notebook);
-        }
     }
 
     // Handle the execution of notebook cell
@@ -178,6 +173,7 @@ export class VSCodeNotebookController implements Disposable {
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
+        traceInfoIf(isCI, `Notebook Controller base event called for ${this.id}. Selected ${event.selected} `);
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
             return;
@@ -406,33 +402,6 @@ export class VSCodeNotebookController implements Disposable {
             this.localOrRemoteKernel === 'local'
         ) {
             await newKernel.start({ disableUI: true }).catch(noop);
-        }
-    }
-    /**
-     * In our tests, preferred controllers are setup as the active controller.
-     *
-     * This method is called on when running tests, else in the real world,
-     * users need to select a kernel (preferred is on top of the list).
-     */
-    private async setAsActiveControllerForTests(notebook: NotebookDocument) {
-        // Only when running tests should we force the selection of the kernel.
-        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
-        if (this.context.extensionMode !== ExtensionMode.Test || notebook.notebookType !== JupyterNotebookView) {
-            return;
-        }
-        traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
-        await this.commandManager.executeCommand('notebook.selectKernel', {
-            id: this.id,
-            extension: JVSC_EXTENSION_ID
-        });
-        traceInfoIf(isCI, `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${this.id}`);
-        // Used in tests to determine when the controller has been associated with a document.
-        VSCodeNotebookController.kernelAssociatedWithDocument = true;
-
-        // Sometimes the selection doesn't work (after all this is a hack).
-        if (!this.associatedDocuments.has(notebook)) {
-            this.associatedDocuments.add(notebook);
-            this._onNotebookControllerSelected.fire({ notebook, controller: this });
         }
     }
 }

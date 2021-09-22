@@ -17,7 +17,7 @@ import { IDisposable, IJupyterSettings } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
-import { IS_CI_SERVER } from './ciConstants';
+import { isCI } from '../client/common/constants';
 
 const StreamZip = require('node-stream-zip');
 
@@ -513,7 +513,8 @@ export function clearPendingTimers() {
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
-    errorMessage: string | (() => string)
+    errorMessage: string | (() => string),
+    intervalTimeoutMs: number = 10
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -531,7 +532,7 @@ export async function waitForCondition(
             clearTimeout(timeout);
             clearInterval(timer);
             resolve();
-        }, 10);
+        }, intervalTimeoutMs);
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
     });
@@ -550,7 +551,7 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
             // Capture result, if no exceptions return that.
             return result;
         } catch (ex) {
-            lastEx = ex;
+            lastEx = ex as any;
         }
         await sleep(10);
     }
@@ -738,7 +739,7 @@ export function arePathsSame(path1: string, path2: string) {
  * If there's a failure, it will be logged (errors are swallowed).
  */
 export async function captureScreenShot(fileNamePrefix: string) {
-    if (!IS_CI_SERVER) {
+    if (!isCI) {
         return;
     }
     const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
