@@ -251,6 +251,7 @@ import { OSType } from '../../../client/common/utils/platform';
             extensions = mock<IExtensions>();
             when(extensions.getExtension(anything())).thenReturn();
             fs = mock(FileSystem);
+            when(fs.deleteLocalFile(anything())).thenResolve();
             when(fs.localFileExists(anything())).thenResolve(true);
             const pathUtils = new PathUtils(isWindows);
             const workspaceService = mock(WorkspaceService);
