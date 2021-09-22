@@ -139,7 +139,9 @@ export class NotebookProvider implements INotebookProvider {
               )
             : this.jupyterNotebookProvider.createNotebook(options);
 
-        sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, promise);
+        sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, promise, undefined, {
+            disableUI: options.disableUI
+        });
 
         this.cacheNotebookPromise(options.identity, promise);
 
