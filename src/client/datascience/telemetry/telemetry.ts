@@ -49,14 +49,14 @@ const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
 /**
- * Initializes the Notebook telemetry as a result of user action.
+ * Initializes the Interactive/Notebook telemetry as a result of user action.
  */
-export function initializeNotebookTelemetryBasedOnUserAction(
-    notebookUri: Uri,
+export function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+    resourceUri: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {
     setSharedProperty('userExecutedCell', 'true');
-    trackKernelResourceInformation(notebookUri, { kernelConnection });
+    trackKernelResourceInformation(resourceUri, { kernelConnection });
 }
 /**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]

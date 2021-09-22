@@ -25,6 +25,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
+import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
@@ -44,7 +45,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) { }
+    ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -64,7 +65,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Cache the install run
         let promise = this.installPromises.get(interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(interpreter, token, disableUI, resource);
+            promise = this.runInstaller(resource, interpreter, token, disableUI);
             this.installPromises.set(interpreter.path, promise);
         }
 
@@ -108,10 +109,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         );
     }
     private async runInstaller(
+        resource: Resource,
         interpreter: PythonEnvironment,
         token?: CancellationToken,
-        disableUI?: boolean,
-        resource?: Resource
+        disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
         if (disableUI) {
@@ -130,9 +131,11 @@ export class KernelDependencyService implements IKernelDependencyService {
             ProductNames.get(Product.ipykernel)!
         );
         const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
+        const resourceType = resource ? getResourceType(resource) : undefined;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ipykernelProductName
+            moduleName: ipykernelProductName,
+            resourceType
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
@@ -148,19 +151,21 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'prompted',
-                    moduleName: ipykernelProductName
+                    moduleName: ipykernelProductName,
+                    resourceType
                 });
             }
             const selection = this.isCodeSpace
                 ? installPrompt
                 : await Promise.race([
-                    this.appShell.showErrorMessage(message, { modal: true }, ...options),
-                    promptCancellationPromise
-                ]);
+                      this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                      promptCancellationPromise
+                  ]);
             if (installerToken.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'dismissed',
-                    moduleName: ipykernelProductName
+                    moduleName: ipykernelProductName,
+                    resourceType
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -168,13 +173,15 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (selection === selectKernel) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'differentKernel',
-                    moduleName: ipykernelProductName
+                    moduleName: ipykernelProductName,
+                    resourceType
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installPrompt) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'install',
-                    moduleName: ipykernelProductName
+                    moduleName: ipykernelProductName,
+                    resourceType
                 });
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
@@ -189,13 +196,15 @@ export class KernelDependencyService implements IKernelDependencyService {
                 if (response === InstallerResponse.Installed) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'installed',
-                        moduleName: ipykernelProductName
+                        moduleName: ipykernelProductName,
+                        resourceType
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'failed',
-                        moduleName: ipykernelProductName
+                        moduleName: ipykernelProductName,
+                        resourceType
                     });
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
@@ -203,17 +212,17 @@ export class KernelDependencyService implements IKernelDependencyService {
 
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'dismissed',
-                moduleName: ipykernelProductName
+                moduleName: ipykernelProductName,
+                resourceType
             });
             return KernelInterpreterDependencyResponse.cancel;
-        }
-        catch (ex) {
+        } catch (ex) {
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'error',
-                moduleName: ipykernelProductName
+                moduleName: ipykernelProductName,
+                resourceType
             });
             throw ex;
         }
-
     }
 }

@@ -814,6 +814,7 @@ export interface IEventNamePropertyMapping {
             | 'differentKernel' // User chose to select a different kernel.
             | 'error' // Some other error.
             | 'dismissed'; // User chose to dismiss the prompt.
+        resourceType?: 'notebook' | 'interactive';
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.

@@ -64,7 +64,7 @@ import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
-import { initializeNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 
 type InteractiveCellMetadata = {
     inputCollapsed: boolean;
@@ -172,7 +172,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async createKernelReadyPromise(): Promise<IKernel> {
         const editor = await this._editorReadyPromise;
         const controller = await this._controllerReadyPromise.promise;
-        initializeNotebookTelemetryBasedOnUserAction(editor.document.uri, controller!.connection);
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller!.connection);
         const kernel = this.kernelProvider.getOrCreate(editor.document, {
             metadata: controller!.connection,
             controller: controller!.controller,
