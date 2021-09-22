@@ -251,6 +251,7 @@ import { OSType } from '../../../client/common/utils/platform';
             extensions = mock<IExtensions>();
             when(extensions.getExtension(anything())).thenReturn();
             fs = mock(FileSystem);
+            when(fs.deleteLocalFile(anything())).thenResolve();
             when(fs.localFileExists(anything())).thenResolve(true);
             const pathUtils = new PathUtils(isWindows);
             const workspaceService = mock(WorkspaceService);
@@ -315,11 +316,15 @@ import { OSType } from '../../../client/common/utils/platform';
             when(fs.localDirectoryExists(anything())).thenResolve(true);
 
             const jupyterPaths = new JupyterPaths(instance(platformService), pathUtils, instance(envVarsProvider));
+            const memento = mock<Memento>();
+            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.update(anything(), anything())).thenResolve();
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
                 jupyterPaths,
-                instance(extensionChecker)
+                instance(extensionChecker),
+                instance(memento)
             );
             const memeto = mock<Memento>();
             when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
