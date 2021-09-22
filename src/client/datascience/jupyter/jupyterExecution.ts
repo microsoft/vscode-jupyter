@@ -216,9 +216,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             traceError('Failed to connect to server', ex);
                             if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
                                 sendTelemetryEvent(Telemetry.AskUserForNewJupyterKernel);
-                                void this.kernelSelector.askForLocalKernel(
-                                    options?.resource
-                                );
+                                void this.kernelSelector.askForLocalKernel(options?.resource);
                             }
                             throw ex;
                         }

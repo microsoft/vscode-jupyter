@@ -25,12 +25,9 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) { }
+    ) {}
 
-    public async askForLocalKernel(
-        _resource: Resource,
-        kernelConnection?: KernelConnectionMetadata
-    ): Promise<void> {
+    public async askForLocalKernel(_resource: Resource, kernelConnection?: KernelConnectionMetadata): Promise<void> {
         const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         const message = localize.DataScience.sessionStartFailedWithKernel().format(
             displayName,
