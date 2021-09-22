@@ -11,7 +11,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../common';
+import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -31,7 +31,10 @@ suite('Interactive window', async () => {
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
     });
 
-    teardown(async () => {
+    teardown(async function () {
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
+        }
         await closeActiveWindows();
     });
 
