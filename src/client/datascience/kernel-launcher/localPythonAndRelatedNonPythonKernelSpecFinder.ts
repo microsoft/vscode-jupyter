@@ -89,9 +89,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
     }
     /**
-     * If user has python extension installed, then we'll not list any of the globally registered Python kernels.
-     * They are too ambiguous (because we have no idea what Python environment they are related to).
-     *
      * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
      * Those kernels can only be started within the context of the Python environment.
      * I.e. first actiavte the python environment, then attempt to start those non-python environments.
@@ -115,24 +112,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             isKernelRegisteredByUs(item.kernelSpec)
         );
-        // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
-        // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
-        const usingNonIpyKernelLauncher = (item: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata) => {
-            if (item.kernelSpec.language !== PYTHON_LANGUAGE) {
-                return false;
-            }
-            const args = item.kernelSpec.argv.map((arg) => arg.toLowerCase());
-            const moduleIndex = args.indexOf('-m');
-            if (moduleIndex === -1) {
-                return false;
-            }
-            const moduleName = args.length - 1 >= moduleIndex ? args[moduleIndex + 1] : undefined;
-            if (!moduleName) {
-                return false;
-            }
-            // We are only interested in global kernels that don't use ipykernel_launcher.
-            return moduleName !== 'ipykernel_launcher';
-        };
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -149,7 +128,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Go through the global kernelspecs that use python to launch the kernel but don't use ipykernel.
         await Promise.all(
             globalKernelSpecs
-                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec) && usingNonIpyKernelLauncher(item))
+                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec))
                 .map(async (item) => {
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
