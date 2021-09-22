@@ -61,12 +61,7 @@ suite('Interactive window', async () => {
         assert.equal(
             controller?.connection.interpreter?.path,
             activeInterpreter?.path,
-            'Controller does not match active interpreter'
-        );
-        assert.equal(
-            controller?.connection.interpreter?.envName,
-            activeInterpreter?.envName,
-            'Controller does not match active interpreter'
+            `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
         );
 
         // Verify sys info cell
