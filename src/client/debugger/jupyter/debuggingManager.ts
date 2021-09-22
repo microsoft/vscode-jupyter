@@ -214,7 +214,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
         if (editor) {
-            if (this.notebookInProgress.has(editor.document)) {
+            if (this.notebookInProgress.has(editor.document) || this.isDebugging(editor.document)) {
                 return;
             }
 
