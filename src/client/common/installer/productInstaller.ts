@@ -154,15 +154,13 @@ export class DataScienceInstaller extends BaseInstaller {
 
 @injectable()
 export class ProductInstaller implements IInstaller {
-
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel
-    ) {
-    }
+    ) {}
 
     // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    public dispose() { }
+    public dispose() {}
     public async install(
         product: Product,
         resource: InterpreterUri,
