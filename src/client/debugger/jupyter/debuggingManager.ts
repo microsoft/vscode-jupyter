@@ -52,6 +52,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
+    private notebookInProgress = new Set<NotebookDocument>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
     private _doneDebugging = new EventEmitter<void>();
@@ -209,36 +210,42 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
         if (editor) {
-            if (this.isDebugging(editor.document)) {
+            if (this.notebookInProgress.has(editor.document)) {
                 return;
             }
-            if (
-                await this.checkForIpykernel6(
-                    editor.document,
-                    mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
-                )
-            ) {
-                switch (mode) {
-                    case KernelDebugMode.Everything:
-                        this.updateToolbar(true);
-                        void this.startDebugging(editor.document);
-                        break;
-                    case KernelDebugMode.Cell:
-                        if (cell) {
+
+            try {
+                this.notebookInProgress.add(editor.document);
+                if (
+                    await this.checkForIpykernel6(
+                        editor.document,
+                        mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
+                    )
+                ) {
+                    switch (mode) {
+                        case KernelDebugMode.Everything:
                             this.updateToolbar(true);
-                            void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                        }
-                        break;
-                    case KernelDebugMode.RunByLine:
-                        if (cell) {
-                            this.updateToolbar(true);
-                            this.updateCellToolbar(true);
-                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                        }
-                        break;
+                            void this.startDebugging(editor.document);
+                            break;
+                        case KernelDebugMode.Cell:
+                            if (cell) {
+                                this.updateToolbar(true);
+                                void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                            }
+                            break;
+                        case KernelDebugMode.RunByLine:
+                            if (cell) {
+                                this.updateToolbar(true);
+                                this.updateCellToolbar(true);
+                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                            }
+                            break;
+                    }
+                } else {
+                    void this.installIpykernel6();
                 }
-            } else {
-                void this.installIpykernel6();
+            } finally {
+                this.notebookInProgress.delete(editor.document);
             }
         } else {
             void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
