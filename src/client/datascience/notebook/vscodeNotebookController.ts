@@ -86,11 +86,7 @@ export class VSCodeNotebookController implements Disposable {
         return this.associatedDocuments.has(doc);
     }
 
-    public isPreferred(doc: NotebookDocument) {
-        return this.preferredWith.has(doc);
-    }
     private readonly associatedDocuments = new WeakSet<NotebookDocument>();
-    private readonly preferredWith = new WeakSet<NotebookDocument>();
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -157,11 +153,6 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
-
-        // Keep track of if this controller is preferred for this notebook
-        if (affinity === NotebookControllerAffinity.Preferred) {
-            this.preferredWith.add(notebook);
-        }
     }
 
     // Handle the execution of notebook cell

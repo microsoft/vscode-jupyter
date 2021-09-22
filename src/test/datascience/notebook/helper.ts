@@ -357,8 +357,9 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     try {
         await waitForCondition(
             async () => {
-                const controllers = notebookControllerManager.registeredNotebookControllers();
-                preferred = controllers.find((c) => c.isPreferred(vscodeNotebook.activeNotebookEditor!.document));
+                preferred = notebookControllerManager.getPreferredNotebookController(
+                    vscodeNotebook.activeNotebookEditor!.document
+                );
                 return preferred != undefined;
             },
             3_000,

@@ -13,6 +13,7 @@ export interface INotebookControllerManager {
     // Marked test only, just for tests to access registered controllers
     registeredNotebookControllers(): VSCodeNotebookController[];
     getInteractiveController(): Promise<VSCodeNotebookController | undefined>;
+    getPreferredNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
