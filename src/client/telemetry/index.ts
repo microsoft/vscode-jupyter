@@ -815,6 +815,11 @@ export interface IEventNamePropertyMapping {
             | 'error' // Some other error.
             | 'dismissed'; // User chose to dismiss the prompt.
         resourceType?: 'notebook' | 'interactive';
+        /**
+         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+         * If we run the same notebook tomorrow, the hash will be the same.
+         */
+        resourceHash?: string;
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
