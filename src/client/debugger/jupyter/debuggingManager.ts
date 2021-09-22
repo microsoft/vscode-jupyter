@@ -40,7 +40,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig } from './helper';
 import { Debugger } from './debugger';
-import { throttle } from 'lodash';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -93,119 +92,113 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 createDebugAdapterDescriptor: async (session) => this.createDebugAdapterDescriptor(session)
             }),
 
-            this.commandManager.registerCommand(
-                DSCommands.DebugNotebook,
-                throttle(async () => {
-                    const editor = this.vscNotebook.activeNotebookEditor;
-                    if (editor) {
-                        if (await this.checkForIpykernel6(editor.document)) {
-                            this.updateToolbar(true);
-                            void this.startDebugging(editor.document);
-                        } else {
-                            void this.installIpykernel6();
-                        }
-                    } else {
-                        void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                    }
-                }, 1000)
-            ),
-
-            this.commandManager.registerCommand(
-                DSCommands.RunByLine,
-                throttle(async (cell: NotebookCell | undefined) => {
-                    sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
-                    const editor = this.vscNotebook.activeNotebookEditor;
-                    if (!cell) {
-                        const range = editor?.selections[0];
-                        if (range) {
-                            cell = editor?.document.cellAt(range.start);
-                        }
-                    }
-
-                    if (!cell) {
+            this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (editor) {
+                    if (this.notebookToDebugger.has(editor.document)) {
                         return;
                     }
-
-                    if (editor) {
-                        if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
-                            this.updateToolbar(true);
-                            this.updateCellToolbar(true);
-                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                        } else {
-                            void this.installIpykernel6();
-                        }
+                    if (await this.checkForIpykernel6(editor.document)) {
+                        this.updateToolbar(true);
+                        void this.startDebugging(editor.document);
                     } else {
-                        void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                        void this.installIpykernel6();
                     }
-                }, 1000)
-            ),
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
+            }),
 
-            this.commandManager.registerCommand(
-                DSCommands.RunByLineNext,
-                throttle((cell: NotebookCell | undefined) => {
-                    if (!cell) {
-                        const editor = this.vscNotebook.activeNotebookEditor;
-                        const range = editor?.selections[0];
-                        if (range) {
-                            cell = editor?.document.cellAt(range.start);
-                        }
+            this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
+                sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (!cell) {
+                    const range = editor?.selections[0];
+                    if (range) {
+                        cell = editor?.document.cellAt(range.start);
                     }
+                }
 
-                    if (!cell) {
+                if (!cell) {
+                    return;
+                }
+
+                if (editor) {
+                    if (this.notebookToDebugger.has(editor.document)) {
                         return;
                     }
-
-                    const controller = this.notebookToRunByLineController.get(cell.notebook);
-                    if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
-                        controller.continue();
+                    if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
+                        this.updateToolbar(true);
+                        this.updateCellToolbar(true);
+                        await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                    } else {
+                        void this.installIpykernel6();
                     }
-                }, 500)
-            ),
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
+            }),
 
-            this.commandManager.registerCommand(
-                DSCommands.RunByLineStop,
-                throttle(() => {
+            this.commandManager.registerCommand(DSCommands.RunByLineNext, (cell: NotebookCell | undefined) => {
+                if (!cell) {
                     const editor = this.vscNotebook.activeNotebookEditor;
-                    if (editor) {
-                        const controller = this.notebookToRunByLineController.get(editor.document);
-                        if (controller) {
-                            sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
-                                reason: 'withKeybinding'
-                            });
-                            controller.stop();
-                        }
+                    const range = editor?.selections[0];
+                    if (range) {
+                        cell = editor?.document.cellAt(range.start);
                     }
-                }, 1000)
-            ),
+                }
 
-            this.commandManager.registerCommand(
-                DSCommands.RunAndDebugCell,
-                throttle(async (cell: NotebookCell | undefined) => {
-                    sendTelemetryEvent(DebuggingTelemetry.clickedRunAndDebugCell);
-                    const editor = this.vscNotebook.activeNotebookEditor;
-                    if (!cell) {
-                        const range = editor?.selections[0];
-                        if (range) {
-                            cell = editor?.document.cellAt(range.start);
-                        }
+                if (!cell) {
+                    return;
+                }
+
+                const controller = this.notebookToRunByLineController.get(cell.notebook);
+                if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
+                    controller.continue();
+                }
+            }),
+
+            this.commandManager.registerCommand(DSCommands.RunByLineStop, () => {
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (editor) {
+                    const controller = this.notebookToRunByLineController.get(editor.document);
+                    if (controller) {
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
+                            reason: 'withKeybinding'
+                        });
+                        controller.stop();
                     }
+                }
+            }),
 
-                    if (!cell) {
+            this.commandManager.registerCommand(DSCommands.RunAndDebugCell, async (cell: NotebookCell | undefined) => {
+                sendTelemetryEvent(DebuggingTelemetry.clickedRunAndDebugCell);
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (!cell) {
+                    const range = editor?.selections[0];
+                    if (range) {
+                        cell = editor?.document.cellAt(range.start);
+                    }
+                }
+
+                if (!cell) {
+                    return;
+                }
+
+                if (editor) {
+                    if (this.notebookToDebugger.has(editor.document)) {
                         return;
                     }
-
-                    if (editor) {
-                        if (await this.checkForIpykernel6(editor.document)) {
-                            this.updateToolbar(true);
-                            void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                        } else {
-                            void this.installIpykernel6();
-                        }
+                    if (await this.checkForIpykernel6(editor.document)) {
+                        this.updateToolbar(true);
+                        void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
                     } else {
-                        void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                        void this.installIpykernel6();
                     }
-                }, 1000)
-            )
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
+            })
         );
     }
 
