@@ -43,7 +43,7 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/k
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import {
-    initializeNotebookTelemetryBasedOnUserAction,
+    initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
 } from '../telemetry/telemetry';
@@ -171,7 +171,7 @@ export class VSCodeNotebookController implements Disposable {
         if (!this.workspace.isTrusted) {
             return;
         }
-        initializeNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);

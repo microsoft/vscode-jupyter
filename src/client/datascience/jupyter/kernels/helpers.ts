@@ -35,7 +35,6 @@ import {
 } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
@@ -740,7 +739,7 @@ export function findPreferredKernel(
 
 export async function sendTelemetryForPythonKernelExecutable(
     notebook: INotebook,
-    file: string,
+    resource: Resource,
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
@@ -770,29 +769,42 @@ export async function sendTelemetryForPythonKernelExecutable(
             match: match ? 'true' : 'false',
             kernelConnectionType: kernelConnection.kind
         });
-        trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+        trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
         if (match) {
             return;
         }
 
+        // Rest of the code can all be async, no need to slow the calling code.
+
         // The interpreter paths don't match, possible we have a synlink or similar.
         // Lets try to get the path from the interpreter using the exact same code we send to the kernel.
-        const execService = await executionService.createActivatedEnvironment({
-            interpreter: kernelConnection.interpreter,
-            allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
-        });
-        const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
-        if (execOutput.stdout.trim().length > 0) {
-            const match = areInterpreterPathsSame(execOutput.stdout.trim().toLowerCase(), sysExecutable);
-            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-                match: match ? 'true' : 'false',
-                kernelConnectionType: kernelConnection.kind
-            });
-            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
-        }
+        executionService
+            .createActivatedEnvironment({
+                interpreter: kernelConnection.interpreter,
+                allowEnvironmentFetchExceptions: true,
+                bypassCondaExecution: true
+            })
+            .then(async (execService) => {
+                const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], {
+                    throwOnStdErr: false
+                });
+                if (execOutput.stdout.trim().length > 0) {
+                    const match = areInterpreterPathsSame(execOutput.stdout.trim().toLowerCase(), sysExecutable);
+                    sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+                        match: match ? 'true' : 'false',
+                        kernelConnectionType: kernelConnection.kind
+                    });
+                    trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
+                    if (!match) {
+                        traceError(
+                            `Interpreter started by kernel does not match expectation, expected ${kernelConnection.interpreter?.path}, got ${sysExecutable}`
+                        );
+                    }
+                }
+            })
+            .catch((ex) => traceError('Failed to compare interpreters', ex));
     } catch (ex) {
-        // Noop.
+        traceError('Failed to compare interpreters', ex);
     }
     traceInfoIf(isCI, 'End sendTelemetryForPythonKernelExecutable');
 }
