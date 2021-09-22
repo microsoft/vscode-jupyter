@@ -125,7 +125,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
 
-        // Go through the global kernelspecs that use python to launch the kernel but don't use ipykernel.
+        // Go through the global kernelspecs that use python to launch the kernel
         await Promise.all(
             globalKernelSpecs
                 .filter((item) => !isKernelRegisteredByUs(item.kernelSpec))
