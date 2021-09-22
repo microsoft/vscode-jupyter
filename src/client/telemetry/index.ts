@@ -803,7 +803,8 @@ export interface IEventNamePropertyMapping {
          */
         isModulePresent?: 'true' | undefined;
         action:
-            | 'displayed' // Install prompt displayed.
+            | 'displayed' // Install prompt may have been displayed.
+            | 'prompted' // Install prompt was displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
             | 'ignored' // Installation disabled (this is what python extension returns).
             | 'disabled' // Installation disabled (this is what python extension returns).
@@ -811,6 +812,7 @@ export interface IEventNamePropertyMapping {
             | 'install' // User chose install from prompt.
             | 'donotinstall' // User chose not to install from prompt.
             | 'differentKernel' // User chose to select a different kernel.
+            | 'error' // Some other error.
             | 'dismissed'; // User chose to dismiss the prompt.
     };
     /**
