@@ -25,12 +25,12 @@ import { noop } from '../../common/utils/misc';
  */
 @injectable()
 export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
-    private _oldDernelSpecsDeleted = false;
-    private get oldDernelSpecsDeleted() {
-        return this._oldDernelSpecsDeleted || this.memento.get<boolean>('OLD_KERNEL_SPECS_DELETED_', false);
+    private _oldKernelSpecsDeleted = false;
+    private get oldKernelSpecsDeleted() {
+        return this._oldKernelSpecsDeleted || this.memento.get<boolean>('OLD_KERNEL_SPECS_DELETED_', false);
     }
-    private set oldDernelSpecsDeleted(value: boolean) {
-        this._oldDernelSpecsDeleted = value;
+    private set oldKernelSpecsDeleted(value: boolean) {
+        this._oldKernelSpecsDeleted = value;
         void this.memento.update('OLD_KERNEL_SPECS_DELETED_', value);
     }
     constructor(
@@ -79,8 +79,8 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
-        const oldDernelSpecsDeleted = this.oldDernelSpecsDeleted;
-        this.oldDernelSpecsDeleted = true; // From now on, don't attempt to delete anything (even for new users).
+        const oldDernelSpecsDeleted = this.oldKernelSpecsDeleted;
+        this.oldKernelSpecsDeleted = true; // From now on, don't attempt to delete anything (even for new users).
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
