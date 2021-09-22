@@ -228,8 +228,7 @@
                 "command": "jupyter.runAndDebugCell",
                 "title": "%jupyter.command.jupyter.debugCell.title%",
                 "icon": "$(debug-alt-small)",
-                "category": "Jupyter",
-                "enablement": "!jupyter.notebookeditor.runByLineInProgress"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.runByLineNext",
@@ -866,17 +865,12 @@
                     "command": "jupyter.runByLineStop",
                     "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && notebookCellToolbarLocation == right",
                     "group": "inline/cell@0"
-                },
-                {
-                    "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !config.notebook.consolidatedRunButton",
-                    "group": "inline/cell@1"
                 }
             ],
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && config.notebook.consolidatedRunButton"
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress"
                 }
             ],
             "interactive/toolbar": [
