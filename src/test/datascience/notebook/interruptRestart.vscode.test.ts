@@ -19,7 +19,7 @@ import {
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
+import { createEventHandler, getOSType, IExtensionTestApi, OSType, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
@@ -375,6 +375,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Clear all outputs
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForOutputs(cell1, 0);
+
+        // Wait a bit to make sure it cleared
+        await sleep(500);
 
         // Try to run cell 1 again, it should fail with errors.
         await Promise.all([

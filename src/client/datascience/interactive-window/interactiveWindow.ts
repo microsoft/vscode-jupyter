@@ -107,7 +107,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get notebookEditor(): NotebookEditor | undefined {
         return this._notebookEditor;
     }
-    public notebookController: VSCodeNotebookController | undefined;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private _owner: Uri | undefined;
@@ -281,7 +280,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                 // Controller was deselected for this InteractiveWindow's NotebookDocument
                 if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
-                    this.notebookController = undefined;
                     this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
                     this._kernelReadyPromise = undefined;
                     this.executionPromise = undefined;
@@ -297,7 +295,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const controller = this.notebookControllerManager.getSelectedNotebookController(notebookDocument);
         if (controller !== undefined) {
             this.registerControllerChangeListener(controller, notebookDocument);
-            this.notebookController = controller;
             this._controllerReadyPromise.resolve(controller);
         }
 
@@ -310,7 +307,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
                 // Clear cached kernel when the selected controller for this document changes
                 this.registerControllerChangeListener(e.controller, notebookDocument);
-                this.notebookController = e.controller;
                 this._controllerReadyPromise.resolve(e.controller);
 
                 // Recreate the kernel ready promise now that we have a new controller
@@ -629,7 +625,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             'interactive.open',
             { preserveFocus: true },
             notebookDocument.uri,
-            this.notebookController?.id,
+            this.notebookControllerManager.getSelectedNotebookController(notebookDocument)?.id,
             undefined
         );
 

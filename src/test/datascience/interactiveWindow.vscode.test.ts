@@ -9,6 +9,7 @@ import { IPythonApiProvider } from '../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../common';
 import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
@@ -40,17 +41,23 @@ suite('Interactive window', async () => {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
+        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
+            INotebookControllerManager
+        );
+        const controller = notebookDocument
+            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
+            : undefined;
 
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
         const activeInterpreter = await pythonApi.getActiveInterpreter();
         assert.equal(
-            activeInteractiveWindow.notebookController?.connection.interpreter?.path,
+            controller?.connection.interpreter?.path,
             activeInterpreter?.path,
             'Controller does not match active interpreter'
         );
         assert.equal(
-            activeInteractiveWindow.notebookController?.connection.interpreter?.envName,
+            controller?.connection.interpreter?.envName,
             activeInterpreter?.envName,
             'Controller does not match active interpreter'
         );
