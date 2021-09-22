@@ -15,7 +15,8 @@ import {
     ProgressLocation,
     DebugAdapterDescriptor,
     Event,
-    EventEmitter
+    EventEmitter,
+    NotebookEditor
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -94,19 +95,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
-                if (editor) {
-                    if (this.notebookToDebugger.has(editor.document)) {
-                        return;
-                    }
-                    if (await this.checkForIpykernel6(editor.document)) {
-                        this.updateToolbar(true);
-                        void this.startDebugging(editor.document);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.Everything, editor);
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
@@ -123,20 +112,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
-                if (editor) {
-                    if (this.notebookToDebugger.has(editor.document)) {
-                        return;
-                    }
-                    if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
-                        this.updateToolbar(true);
-                        this.updateCellToolbar(true);
-                        await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.RunByLine, editor, cell);
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineNext, (cell: NotebookCell | undefined) => {
@@ -185,19 +161,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
-                if (editor) {
-                    if (this.notebookToDebugger.has(editor.document)) {
-                        return;
-                    }
-                    if (await this.checkForIpykernel6(editor.document)) {
-                        this.updateToolbar(true);
-                        void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.Cell, editor, cell);
             })
         );
     }
@@ -241,6 +205,44 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private updateCellToolbar(runningByLine: boolean) {
         this.runByLineInProgress.set(runningByLine).ignoreErrors();
+    }
+
+    private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
+        if (editor) {
+            if (this.isDebugging(editor.document)) {
+                return;
+            }
+            if (
+                await this.checkForIpykernel6(
+                    editor.document,
+                    mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
+                )
+            ) {
+                switch (mode) {
+                    case KernelDebugMode.Everything:
+                        this.updateToolbar(true);
+                        void this.startDebugging(editor.document);
+                        break;
+                    case KernelDebugMode.Cell:
+                        if (cell) {
+                            this.updateToolbar(true);
+                            void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                        }
+                        break;
+                    case KernelDebugMode.RunByLine:
+                        if (cell) {
+                            this.updateToolbar(true);
+                            this.updateCellToolbar(true);
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                        }
+                        break;
+                }
+            } else {
+                void this.installIpykernel6();
+            }
+        } else {
+            void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+        }
     }
 
     private async startDebuggingCell(
