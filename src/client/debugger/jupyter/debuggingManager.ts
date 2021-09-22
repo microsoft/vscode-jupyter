@@ -129,6 +129,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
+                if (this.notebookInProgress.has(cell.notebook)) {
+                    return;
+                }
+
                 const controller = this.notebookToRunByLineController.get(cell.notebook);
                 if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
                     controller.continue();
