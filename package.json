@@ -1802,16 +1802,6 @@
         },
         "languages": [
             {
-                "id": "jupyter",
-                "aliases": [
-                    "Jupyter",
-                    "Notebook"
-                ],
-                "extensions": [
-                    ".ipynb"
-                ]
-            },
-            {
                 "id": "raw"
             },
             {
