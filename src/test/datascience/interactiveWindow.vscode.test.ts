@@ -11,7 +11,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IExtensionTestApi, waitForCondition } from '../common';
+import { IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -44,12 +44,16 @@ suite('Interactive window', async () => {
         const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
             INotebookControllerManager
         );
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
 
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+
+        // Give it a bit to warm up
+        await sleep(500);
+
+        const controller = notebookDocument
+            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
+            : undefined;
         const activeInterpreter = await pythonApi.getActiveInterpreter();
         assert.equal(
             controller?.connection.interpreter?.path,
