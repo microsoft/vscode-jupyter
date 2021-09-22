@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { PylanceExtension } from '../client/datascience/constants';
+import { PythonExtension, PylanceExtension } from '../client/datascience/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
 import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
@@ -58,7 +58,9 @@ async function createTempDir() {
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string) {
-    const pythonVSIX = process.env.VSIX_NAME_PYTHON;
+    // Pick python extension to use based on environment variable. Insiders can be flakey so 
+    // have the capability to turn it off/on.
+    const pythonVSIX = process.env.VSC_JUPTYER_PYTHON_EXTENSION_VERSION === 'insiders' ? process.env.VSIX_NAME_PYTHON : PythonExtension;
     if (!requiresPythonExtensionToBeInstalled() || !pythonVSIX) {
         console.info('Python Extension not required');
         return;
