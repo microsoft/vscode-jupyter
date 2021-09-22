@@ -25,6 +25,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
+import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
@@ -132,10 +133,12 @@ export class KernelDependencyService implements IKernelDependencyService {
         );
         const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
         const resourceType = resource ? getResourceType(resource) : undefined;
+        const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
             moduleName: ipykernelProductName,
-            resourceType
+            resourceType,
+            resourceHash
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
@@ -152,7 +155,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'prompted',
                     moduleName: ipykernelProductName,
-                    resourceType
+                    resourceType,
+                    resourceHash
                 });
             }
             const selection = this.isCodeSpace
@@ -165,7 +169,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'dismissed',
                     moduleName: ipykernelProductName,
-                    resourceType
+                    resourceType,
+                    resourceHash
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -174,14 +179,16 @@ export class KernelDependencyService implements IKernelDependencyService {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'differentKernel',
                     moduleName: ipykernelProductName,
-                    resourceType
+                    resourceType,
+                    resourceHash
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installPrompt) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'install',
                     moduleName: ipykernelProductName,
-                    resourceType
+                    resourceType,
+                    resourceHash
                 });
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
@@ -197,14 +204,16 @@ export class KernelDependencyService implements IKernelDependencyService {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'installed',
                         moduleName: ipykernelProductName,
-                        resourceType
+                        resourceType,
+                        resourceHash
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'failed',
                         moduleName: ipykernelProductName,
-                        resourceType
+                        resourceType,
+                        resourceHash
                     });
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
@@ -213,14 +222,16 @@ export class KernelDependencyService implements IKernelDependencyService {
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'dismissed',
                 moduleName: ipykernelProductName,
-                resourceType
+                resourceType,
+                resourceHash
             });
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'error',
                 moduleName: ipykernelProductName,
-                resourceType
+                resourceType,
+                resourceHash
             });
             throw ex;
         }

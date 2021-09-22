@@ -164,12 +164,15 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     const key = getUriKey(resource);
     const [currentData, context] = trackedInfo.get(key) || [
         {
-            resourceType: getResourceType(resource)
+            resourceType: getResourceType(resource),
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined,
+            kernelSessionId: getTelemetrySafeHashedString(Date.now().toString())
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
 
     if (information.restartKernel) {
+        currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
         currentData.interruptCount = 0;
         currentData.restartCount = (currentData.restartCount || 0) + 1;
     }
@@ -197,6 +200,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             context.previouslySelectedKernelConnectionId &&
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
+            currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;
@@ -326,7 +330,8 @@ function getContextualPropsForTelemetry(
     const resourceType = getResourceType(resource);
     if (!data && resourceType) {
         return {
-            resourceType
+            resourceType,
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined
         };
     }
     if (!data) {

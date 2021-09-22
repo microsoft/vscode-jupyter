@@ -7,6 +7,17 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**
+     * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+     * If we run the same notebook tomorrow, the hash will be the same.
+     */
+    resourceHash?: string;
+    /**
+     * Unique identifier for an instance of a notebook session.
+     * If we restart or run this notebook tomorrow, this id will be different.
+     * Id could be something as simple as a hash of the current Epoch time.
+     */
+    kernelSessionId: string;
+    /**
      * Whether this resource is using the active Python interpreter or not.
      */
     isUsingActiveInterpreter?: boolean;

@@ -161,7 +161,6 @@ import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelS
 import { JupyterKernelService } from '../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
-import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
@@ -553,10 +552,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             VariableViewActivationService
-        );
-        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            ServerPreload
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStorageUri).returns(() => Uri.file(os.tmpdir()));
