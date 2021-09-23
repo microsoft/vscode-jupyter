@@ -210,6 +210,18 @@ import { OSType } from '../../../client/common/utils/platform';
                 interpreter: python3Interpreter
             }
         };
+        // Has a custom env, but shares python interpreter with another spec
+        const python3CustomEnv: Kernel.ISpecModel = {
+            display_name: 'Python 3 custom env',
+            name: 'customPython3',
+            argv: ['/usr/bin/python3'],
+            language: 'python',
+            resources: {},
+            env: { Testing: 'Test' },
+            metadata: {
+                interpreter: python3Interpreter
+            }
+        };
         const python2spec: Kernel.ISpecModel = {
             display_name: 'Python 2 on Disk',
             name: 'python2',
@@ -277,6 +289,7 @@ import { OSType } from '../../../client/common/utils/platform';
                     // 'python.json',
                     'python3.json',
                     'python3dupe.json',
+                    'python3custom.json',
                     'julia.json',
                     'python2.json',
                     'python3811.json'
@@ -294,6 +307,9 @@ import { OSType } from '../../../client/common/utils/platform';
                 }
                 if (f.endsWith('python3dupe.json')) {
                     return Promise.resolve(JSON.stringify(python3DupeSpec));
+                }
+                if (f.endsWith('python3custom.json')) {
+                    return Promise.resolve(JSON.stringify(python3CustomEnv));
                 }
                 if (f.endsWith('julia.json')) {
                     return Promise.resolve(JSON.stringify(juliaSpec));
@@ -345,7 +361,7 @@ import { OSType } from '../../../client/common/utils/platform';
         teardown(() => {
             sinon.restore();
         });
-        test('Kernels found on disk with Python exteniosn installed & no python intepreters discovered', async () => {
+        test('Kernels found on disk with Python extension installed & no python intepreters discovered', async () => {
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
             when(interpreterService.getInterpreters(anything())).thenResolve([]);
 
@@ -369,6 +385,31 @@ import { OSType } from '../../../client/common/utils/platform';
             assert.ok(
                 kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Julia on Disk'),
                 'Julia kernel not found'
+            );
+        });
+        test('If two kernelspecs share the same interpreter, but have different envs both should be listed.', async () => {
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+            when(interpreterService.getInterpreters(anything())).thenResolve(
+                duplicateEnv.concat([
+                    python3Interpreter,
+                    condaEnvironment,
+                    python2Interpreter,
+                    condaEnvironmentBase,
+                    python3_8_10_Interpreter
+                ])
+            );
+            const kernels = await kernelFinder.listKernels(undefined);
+
+            // Make sure our python 3 with custom env is here
+            assert.ok(
+                kernels.find((k) => k.kernelSpec!.name === python3CustomEnv.name),
+                'Python 3 with custom env misssing.'
+            );
+            // Make sure we have two kernelspecs pointing at the python3 interpreter path
+            assert.isAtLeast(
+                kernels.filter((k) => k.interpreter?.path === '/usr/bin/python3').length,
+                2,
+                'Missing both python3 kernelspecs'
             );
         });
         // Previously tests passed because the activeInterpreter in the tests was the first interpreter form the list.

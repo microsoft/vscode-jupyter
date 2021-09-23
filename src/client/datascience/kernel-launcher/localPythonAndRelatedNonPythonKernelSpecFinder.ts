@@ -112,6 +112,25 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             isKernelRegisteredByUs(item.kernelSpec)
         );
+        // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
+        // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
+        const usingNonIpyKernelLauncher = (item: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata) => {
+            if (item.kernelSpec.language !== PYTHON_LANGUAGE) {
+                return false;
+            }
+            const args = item.kernelSpec.argv.map((arg) => arg.toLowerCase());
+            const moduleIndex = args.indexOf('-m');
+            if (moduleIndex === -1) {
+                return false;
+            }
+            const moduleName = args.length - 1 >= moduleIndex ? args[moduleIndex + 1] : undefined;
+            if (!moduleName) {
+                return false;
+            }
+            // We are only interested in global kernels that don't use ipykernel_launcher.
+            return moduleName !== 'ipykernel_launcher';
+        };
+
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -125,10 +144,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
 
-        // Go through the global kernelspecs that use python to launch the kernel
+        // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
             globalKernelSpecs
-                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec))
+                .filter(
+                    (item) =>
+                        !isKernelRegisteredByUs(item.kernelSpec) &&
+                        (usingNonIpyKernelLauncher(item) || Object.keys(item.kernelSpec.env || {}).length > 0)
+                )
                 .map(async (item) => {
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
