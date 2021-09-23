@@ -211,8 +211,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 traceError('Failed to restart the kernel', exc);
                 if (exc) {
                     // Show the error message
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     void this.applicationShell.showErrorMessage(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         exc instanceof Error ? exc.message : (exc as any).toString()
                     );
                 }
