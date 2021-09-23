@@ -213,46 +213,47 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
-        if (editor) {
-            if (this.notebookInProgress.has(editor.document) || this.isDebugging(editor.document)) {
-                return;
-            }
-
-            try {
-                this.notebookInProgress.add(editor.document);
-                if (
-                    await this.checkForIpykernel6(
-                        editor.document,
-                        mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
-                    )
-                ) {
-                    switch (mode) {
-                        case KernelDebugMode.Everything:
-                            this.updateToolbar(true);
-                            void this.startDebugging(editor.document);
-                            break;
-                        case KernelDebugMode.Cell:
-                            if (cell) {
-                                this.updateToolbar(true);
-                                void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                            }
-                            break;
-                        case KernelDebugMode.RunByLine:
-                            if (cell) {
-                                this.updateToolbar(true);
-                                this.updateCellToolbar(true);
-                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            }
-                            break;
-                    }
-                } else {
-                    void this.installIpykernel6();
-                }
-            } finally {
-                this.notebookInProgress.delete(editor.document);
-            }
-        } else {
+        if (!editor) {
             void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+            return;
+        }
+
+        if (this.notebookInProgress.has(editor.document) || this.isDebugging(editor.document)) {
+            return;
+        }
+
+        try {
+            this.notebookInProgress.add(editor.document);
+            if (
+                await this.checkForIpykernel6(
+                    editor.document,
+                    mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
+                )
+            ) {
+                switch (mode) {
+                    case KernelDebugMode.Everything:
+                        this.updateToolbar(true);
+                        await this.startDebugging(editor.document);
+                        break;
+                    case KernelDebugMode.Cell:
+                        if (cell) {
+                            this.updateToolbar(true);
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                        }
+                        break;
+                    case KernelDebugMode.RunByLine:
+                        if (cell) {
+                            this.updateToolbar(true);
+                            this.updateCellToolbar(true);
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                        }
+                        break;
+                }
+            } else {
+                void this.installIpykernel6();
+            }
+        } finally {
+            this.notebookInProgress.delete(editor.document);
         }
     }
 
