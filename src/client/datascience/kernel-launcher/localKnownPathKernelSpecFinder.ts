@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Memento } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
+import { getKernelId } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
@@ -15,8 +15,6 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IPythonExtensionChecker } from '../../api/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IMemento, GLOBAL_MEMENTO } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -25,20 +23,11 @@ import { noop } from '../../common/utils/misc';
  */
 @injectable()
 export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
-    private _oldKernelSpecsDeleted = false;
-    private get oldKernelSpecsDeleted() {
-        return this._oldKernelSpecsDeleted || this.memento.get<boolean>('OLD_KERNEL_SPECS_DELETED_', false);
-    }
-    private set oldKernelSpecsDeleted(value: boolean) {
-        this._oldKernelSpecsDeleted = value;
-        void this.memento.update('OLD_KERNEL_SPECS_DELETED_', value);
-    }
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
         super(fs, workspaceService, extensionChecker);
     }
@@ -72,15 +61,12 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
         });
     }
-
     private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
-        const oldDernelSpecsDeleted = this.oldKernelSpecsDeleted;
-        this.oldKernelSpecsDeleted = true; // From now on, don't attempt to delete anything (even for new users).
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
@@ -91,10 +77,6 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
 
                 if (kernelspec) {
-                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec)) {
-                        await this.fs.deleteLocalFile(resultPath.kernelSpecFile).catch(noop);
-                        return;
-                    }
                     results.push(kernelspec);
                 }
             })
