@@ -241,19 +241,25 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 switch (mode) {
                     case KernelDebugMode.Everything:
                         await this.startDebugging(editor.document);
-                        this.updateToolbar(true);
+                        if (this.isDebugging(editor.document)) {
+                            this.updateToolbar(true);
+                        }
                         break;
                     case KernelDebugMode.Cell:
                         if (cell) {
                             await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                            this.updateToolbar(true);
+                            if (this.isDebugging(editor.document)) {
+                                this.updateToolbar(true);
+                            }
                         }
                         break;
                     case KernelDebugMode.RunByLine:
                         if (cell) {
                             await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            this.updateToolbar(true);
-                            this.updateCellToolbar(true);
+                            if (this.isDebugging(editor.document)) {
+                                this.updateToolbar(true);
+                                this.updateCellToolbar(true);
+                            }
                         }
                         break;
                 }
@@ -322,13 +328,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
+                void debug.stopDebugging(session);
                 this.notebookToDebugger.delete(doc);
                 this.notebookToDebugAdapter.delete(doc);
+                this.updateToolbar(false);
+                this.updateCellToolbar(false);
                 break;
             }
         }
-        this.updateToolbar(false);
-        this.updateCellToolbar(false);
     }
 
     private async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
