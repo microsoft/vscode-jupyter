@@ -12,7 +12,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
@@ -96,6 +96,12 @@ export class PythonApiProvider implements IPythonApiProvider {
             return;
         }
         this.api.resolve(api);
+
+        // Log experiment status here. Python extension is definitely loaded at this point.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pythonConfig = workspace.getConfiguration('python', (null as any) as Uri);
+        const experimentsSection = pythonConfig.get('experiments');
+        traceInfo(`Experiment status for python is ${JSON.stringify(experimentsSection)}`);
     }
 
     private async init() {
