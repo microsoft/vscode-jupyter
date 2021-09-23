@@ -834,7 +834,7 @@ export async function waitForDebugEvent<T>(
 }
 
 export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
-    return waitForDebugEvent('stopped', debugAdapter, 20_000);
+    return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
 
 export async function getDebugSessionAndAdapter(
