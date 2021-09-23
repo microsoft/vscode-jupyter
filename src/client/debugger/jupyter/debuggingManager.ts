@@ -83,9 +83,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             workspace.onDidCloseNotebookDocument(async (document) => {
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
+                    await dbg.stop();
                     this.updateToolbar(false);
                     this.updateCellToolbar(false);
-                    await dbg.stop();
                 }
             }),
 
@@ -240,20 +240,20 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             ) {
                 switch (mode) {
                     case KernelDebugMode.Everything:
-                        this.updateToolbar(true);
                         await this.startDebugging(editor.document);
+                        this.updateToolbar(true);
                         break;
                     case KernelDebugMode.Cell:
                         if (cell) {
-                            this.updateToolbar(true);
                             await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                            this.updateToolbar(true);
                         }
                         break;
                     case KernelDebugMode.RunByLine:
                         if (cell) {
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
                             this.updateToolbar(true);
                             this.updateCellToolbar(true);
-                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
                         }
                         break;
                 }
@@ -319,8 +319,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async endSession(session: DebugSession) {
-        void this.updateToolbar(false);
-        void this.updateCellToolbar(false);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
@@ -329,6 +327,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 break;
             }
         }
+        this.updateToolbar(false);
+        this.updateCellToolbar(false);
     }
 
     private async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
