@@ -68,7 +68,7 @@ async function installPythonExtension(vscodeExecutablePath: string) {
         console.info('Python Extension not required');
         return;
     }
-    console.info('Installing Python Extension');
+    console.info(`Installing Python Extension ${pythonVSIX}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
     spawnSync(cliPath, ['--install-extension', pythonVSIX], {
         encoding: 'utf-8',
