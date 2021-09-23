@@ -322,7 +322,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
-                // void debug.stopDebugging(session);
                 this.notebookToDebugger.delete(doc);
                 this.notebookToDebugAdapter.delete(doc);
                 this.updateToolbar(false);
