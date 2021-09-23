@@ -241,25 +241,19 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 switch (mode) {
                     case KernelDebugMode.Everything:
                         await this.startDebugging(editor.document);
-                        if (this.isDebugging(editor.document)) {
-                            this.updateToolbar(true);
-                        }
+                        this.updateToolbar(true);
                         break;
                     case KernelDebugMode.Cell:
                         if (cell) {
                             await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                            if (this.isDebugging(editor.document)) {
-                                this.updateToolbar(true);
-                            }
+                            this.updateToolbar(true);
                         }
                         break;
                     case KernelDebugMode.RunByLine:
                         if (cell) {
                             await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            if (this.isDebugging(editor.document)) {
-                                this.updateToolbar(true);
-                                this.updateCellToolbar(true);
-                            }
+                            this.updateToolbar(true);
+                            this.updateCellToolbar(true);
                         }
                         break;
                 }
