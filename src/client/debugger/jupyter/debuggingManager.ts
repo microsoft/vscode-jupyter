@@ -218,7 +218,15 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             return;
         }
 
-        if (this.notebookInProgress.has(editor.document) || this.isDebugging(editor.document)) {
+        if (this.notebookInProgress.has(editor.document)) {
+            return;
+        }
+
+        if (this.isDebugging(editor.document)) {
+            this.updateToolbar(true);
+            if (mode === KernelDebugMode.RunByLine) {
+                this.updateCellToolbar(true);
+            }
             return;
         }
 
