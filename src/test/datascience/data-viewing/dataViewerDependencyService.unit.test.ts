@@ -86,7 +86,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenReject(new Error('Not Found'));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showErrorMessage(anything(), { modal: true }, anything())).thenResolve(Common.install() as any);
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
         when(installer.install(Product.pandas, interpreter, anything())).thenResolve();
 
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
@@ -100,7 +100,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenReject(new Error('Not Found'));
-        when(appShell.showErrorMessage(anything(), { modal: true }, anything())).thenResolve();
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
