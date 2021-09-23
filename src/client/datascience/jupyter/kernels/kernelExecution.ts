@@ -245,9 +245,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.RestartJupyterTime)
     private async restartExecution(notebook: INotebook): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
-        await notebook.session.restart(this.interruptTimeout).catch((exc) => {
-            traceWarning(`Error during restart: ${exc}`);
-        });
+        await notebook.session.restart(this.interruptTimeout);
 
         (notebook as JupyterNotebookBase).fireRestart();
     }

@@ -110,9 +110,13 @@ export class PythonKernelDiedError extends BaseError {
     public readonly exitCode: number;
     public readonly reason?: string;
     constructor(options: { exitCode: number; reason?: string; stdErr: string } | { error: Error; stdErr: string }) {
+        // Last line in stack traces generally contains the error message.
+        // Display that in the error message.
+        let reason = ('reason' in options ? options.reason || '' : options.stdErr).trim().split('\n').reverse()[0];
+        reason = reason ? `${reason}, \n` : '';
         const message =
             'exitCode' in options
-                ? `Kernel died with exit code ${options.exitCode}. ${options.reason}`
+                ? `Kernel died (code: ${options.exitCode}). ${reason}${options.reason}`
                 : `Kernel died ${options.error.message}`;
         super('kerneldied', message);
         this.stdErr = options.stdErr;

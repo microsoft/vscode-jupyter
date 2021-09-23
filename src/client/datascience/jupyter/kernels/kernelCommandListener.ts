@@ -208,9 +208,14 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     metadata: getNotebookMetadata(kernel.notebookDocument)
                 });
             } else {
-                // Show the error message
-                void this.applicationShell.showErrorMessage(exc);
-                traceError(exc);
+                traceError('Failed to restart the kernel', exc);
+                if (exc) {
+                    // Show the error message
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    void this.applicationShell.showErrorMessage(
+                        exc instanceof Error ? exc.message : (exc as any).toString()
+                    );
+                }
             }
         } finally {
             status.dispose();
