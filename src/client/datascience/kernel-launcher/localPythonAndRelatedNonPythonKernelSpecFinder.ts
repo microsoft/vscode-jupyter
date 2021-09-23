@@ -376,8 +376,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`
+        );
         // Find all the possible places to look for this resource
         const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
+        traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Finding kernel specs for paths: ${paths.join('\n')}`);
+
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         let results: IJupyterKernelSpec[] = [];
         await Promise.all(
@@ -421,6 +427,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 byDisplayName.set(r.display_name, r);
             }
         });
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`
+        );
 
         return unique;
     }
