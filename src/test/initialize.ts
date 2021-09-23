@@ -4,13 +4,7 @@ import type { IExtensionApi } from '../client/api';
 import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
-import {
-    clearPendingTimers,
-    disableExperimentsInPythonExtension,
-    IExtensionTestApi,
-    PYTHON_PATH,
-    setPythonPathInWorkspaceRoot
-} from './common';
+import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
@@ -34,7 +28,6 @@ export function isInsiders() {
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
-    await disableExperimentsInPythonExtension();
     await initializePython();
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
