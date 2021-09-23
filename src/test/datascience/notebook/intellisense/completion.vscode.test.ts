@@ -40,9 +40,6 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        // Skip for now. We need python insiders and it's not working
-        return this.skip();
-
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();

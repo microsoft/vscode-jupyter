@@ -44,7 +44,7 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
-  VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
+  VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'insiders'
 
 jobs:
   pick_environment:
