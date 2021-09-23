@@ -27,6 +27,12 @@ import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/inte
  * This information is sent with each telemetry event.
  */
 type ContextualTelemetryProps = {
+    /**
+     * Whether we're starting the preferred kernel or not.
+     * If false, then the user chose a different kernel when starting the notebook.
+     * Doesn't really apply to Interactive Window, as we always pick the current interpreter.
+     */
+    isPreferredKernel?: boolean;
     kernelConnection: KernelConnectionMetadata;
     startFailed: boolean;
     kernelDied: boolean;

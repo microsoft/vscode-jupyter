@@ -61,6 +61,8 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { IPythonExecutionFactory } from '../../../common/process/types';
+import { INotebookControllerManager } from '../../notebook/types';
+import { getResourceType } from '../../common';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -125,7 +127,8 @@ export class Kernel implements IKernel {
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
         private readonly cellHashProviderFactory: CellHashProviderFactory,
-        private readonly pythonExecutionFactory: IPythonExecutionFactory
+        private readonly pythonExecutionFactory: IPythonExecutionFactory,
+        notebookControllerManager: INotebookControllerManager
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -138,8 +141,14 @@ export class Kernel implements IKernel {
             outputTracker,
             cellHashProviderFactory
         );
+        const isPreferredKernel =
+            getResourceType(resourceUri) === 'notebook'
+                ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
+                  controller
+                : undefined;
         trackKernelResourceInformation(resourceUri, {
-            kernelConnection: kernelConnectionMetadata
+            kernelConnection: kernelConnectionMetadata,
+            isPreferredKernel
         });
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
