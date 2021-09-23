@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, deepEqual, instance, mock, strictEqual, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
