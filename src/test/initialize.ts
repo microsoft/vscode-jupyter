@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
 import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
+import { PythonExtension } from '../client/datascience/constants';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import {
     adjustSettingsInPythonExtension,
@@ -25,6 +26,11 @@ process.env.VSC_JUPYTER_CI_TEST = '1';
 // Ability to use custom python environments for testing
 export async function initializePython() {
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
+    // Make sure the python extension can load if this test allows it
+    if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
+        const extension = vscode.extensions.getExtension(PythonExtension)!;
+        await extension.activate();
+    }
 }
 
 export function isInsiders() {
