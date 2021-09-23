@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, strictEqual, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
@@ -92,7 +92,11 @@ suite('DataScience - DataViewerDependencyService', () => {
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         verify(
-            appShell.showErrorMessage(DataScience.pandasRequiredForViewing(), { modal: true }, Common.install())
+            appShell.showErrorMessage(
+                DataScience.pandasRequiredForViewing(),
+                deepEqual({ modal: true }),
+                Common.install()
+            )
         ).once();
         verify(installer.install(Product.pandas, interpreter, anything())).once();
     });
@@ -106,7 +110,11 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         await assert.isRejected(promise, DataScience.pandasRequiredForViewing());
         verify(
-            appShell.showErrorMessage(DataScience.pandasRequiredForViewing(), { modal: true }, Common.install())
+            appShell.showErrorMessage(
+                DataScience.pandasRequiredForViewing(),
+                deepEqual({ modal: true }),
+                Common.install()
+            )
         ).once();
         verify(installer.install(anything(), anything(), anything())).never();
     });
