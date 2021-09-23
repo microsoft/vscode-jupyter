@@ -692,6 +692,14 @@
                 "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
             },
             {
+                "command": "jupyter.openOutlineView",
+                "title": "%jupyter.command.jupyter.openOutlineView.title%",
+                "shortTitle": "%jupyter.command.jupyter.openOutlineView.shorttitle%",
+                "icon": "$(list-unordered)",
+                "category": "Jupyter",
+                "enablement": "notebookType == jupyter-notebook && !view.outline.visible"
+            },
+            {
                 "command": "jupyter.refreshDataViewer",
                 "title": "%DataScience.refreshDataViewerCommandPalette%",
                 "category": "Jupyter",
@@ -813,9 +821,15 @@
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
+                    "command": "jupyter.openOutlineView",
+                    "title": "%jupyter.command.jupyter.openOutlineView.title%",
+                    "group": "navigation@3",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                },
+                {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation@3",
+                    "group": "navigation@4",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
@@ -839,6 +853,11 @@
                 {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@1",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openOutlineView",
+                    "group": "navigation@2",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
@@ -1378,6 +1397,12 @@
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "category": "Jupyter",
+                    "when": "notebookType == jupyter-notebook && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openOutlineView",
+                    "title": "%jupyter.command.jupyter.openOutlineView.title%",
                     "category": "Jupyter",
                     "when": "notebookType == jupyter-notebook && isWorkspaceTrusted"
                 },

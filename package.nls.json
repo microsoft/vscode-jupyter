@@ -119,6 +119,8 @@
     "jupyter.command.jupyter.clearSavedJupyterUris.title": "Clear Jupyter server list",
     "jupyter.command.jupyter.openVariableView.title": "Open Variable View",
     "jupyter.command.jupyter.openVariableView.shorttitle": "Variables",
+    "jupyter.command.jupyter.openOutlineView.title": "Open Notebook Outline",
+    "jupyter.command.jupyter.openOutlineView.shorttitle": "Outline",
     "Datascience.currentlySelectedJupyterInterpreterForPlaceholder": "current: {0}",
     "jupyter.command.jupyter.analysis.clearCache.title": "Clear Module Analysis Cache",
     "jupyter.command.jupyter.analysis.restartLanguageServer.title": "Restart Language Server",

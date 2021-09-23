@@ -140,6 +140,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugStop, this.debugStop);
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.OpenVariableView, this.openVariableView);
+        this.registerCommand(Commands.OpenOutlineView, this.openOutlineView);
         this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(Commands.RunToLine, this.runToLine);
         this.registerCommand(Commands.RunFromLine, this.runFromLine);
@@ -517,6 +518,11 @@ export class CommandRegistry implements IDisposable {
         // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
         return this.commandManager.executeCommand('jupyterViewVariables.focus');
+    }
+
+    // Open the VS Code outline view
+    private async openOutlineView(): Promise<void> {
+        return this.commandManager.executeCommand('outline.focus');
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
