@@ -320,7 +320,7 @@ import { OSType } from '../../../client/common/utils/platform';
                 instance(fs),
                 instance(workspaceService),
                 jupyterPaths,
-                instance(extensionChecker),
+                instance(extensionChecker)
             );
             const memeto = mock<Memento>();
             when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
