@@ -970,17 +970,17 @@
                 {
                     "command": "jupyter.runByLine",
                     "title": "%jupyter.command.jupyter.runByLine.title%",
-                    "when": "false"
+                    "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.runByLineNext",
                     "title": "%jupyter.command.jupyter.runByLineNext.title%",
-                    "when": "false"
+                    "when": "jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.runByLineStop",
                     "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                    "when": "false"
+                    "when": "jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
