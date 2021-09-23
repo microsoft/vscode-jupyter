@@ -21,7 +21,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
             level: 'off'
         },
         experiments: {
-            enabled: true,
+            enabled: false,
             optOutFrom: [],
             optInto: []
         },
