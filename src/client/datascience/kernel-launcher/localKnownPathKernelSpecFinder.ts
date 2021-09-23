@@ -27,7 +27,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
         super(fs, workspaceService, extensionChecker);
     }
