@@ -7,6 +7,11 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**
+     * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+     * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+     */
+    disableUI?: boolean;
+    /**
      * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
      * If we run the same notebook tomorrow, the hash will be the same.
      */

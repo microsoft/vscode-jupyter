@@ -16,8 +16,10 @@ import {
     IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
+import { INotebookControllerManager } from '../../notebook/types';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -58,7 +60,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
     }
@@ -107,7 +110,8 @@ export class KernelProvider implements IKernelProvider {
             this.outputTracker,
             this.workspaceService,
             this.cellHashProviderFactory,
-            this.pythonExecutionFactory
+            this.pythonExecutionFactory,
+            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager)
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
