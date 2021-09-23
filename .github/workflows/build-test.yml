@@ -403,7 +403,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds-jupyter-public --name ${{ env.VSIX_NAME_PYTHON }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Use Python ${{matrix.pythonVersion}}
