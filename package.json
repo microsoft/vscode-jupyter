@@ -241,7 +241,7 @@
             {
                 "command": "jupyter.runByLineStop",
                 "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                "icon": "$(debug-continue)",
+                "icon": "$(debug-continue-small)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
             },
@@ -692,6 +692,14 @@
                 "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
             },
             {
+                "command": "jupyter.openOutlineView",
+                "title": "%jupyter.command.jupyter.openOutlineView.title%",
+                "shortTitle": "%jupyter.command.jupyter.openOutlineView.shorttitle%",
+                "icon": "$(list-unordered)",
+                "category": "Jupyter",
+                "enablement": "notebookType == jupyter-notebook && !view.outline.visible"
+            },
+            {
                 "command": "jupyter.refreshDataViewer",
                 "title": "%DataScience.refreshDataViewerCommandPalette%",
                 "category": "Jupyter",
@@ -813,9 +821,15 @@
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
+                    "command": "jupyter.openOutlineView",
+                    "title": "%jupyter.command.jupyter.openOutlineView.title%",
+                    "group": "navigation@3",
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                },
+                {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
-                    "group": "navigation@3",
+                    "group": "navigation@4",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
@@ -840,6 +854,11 @@
                     "command": "jupyter.openVariableView",
                     "group": "navigation@1",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openOutlineView",
+                    "group": "navigation@2",
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
@@ -970,17 +989,17 @@
                 {
                     "command": "jupyter.runByLine",
                     "title": "%jupyter.command.jupyter.runByLine.title%",
-                    "when": "false"
+                    "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.runByLineNext",
                     "title": "%jupyter.command.jupyter.runByLineNext.title%",
-                    "when": "false"
+                    "when": "jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.runByLineStop",
                     "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                    "when": "false"
+                    "when": "jupyter.notebookeditor.runByLineInProgress"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
@@ -1378,6 +1397,12 @@
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "category": "Jupyter",
+                    "when": "notebookType == jupyter-notebook && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openOutlineView",
+                    "title": "%jupyter.command.jupyter.openOutlineView.title%",
                     "category": "Jupyter",
                     "when": "notebookType == jupyter-notebook && isWorkspaceTrusted"
                 },
@@ -1798,6 +1823,12 @@
                     "default": true,
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
+                },
+                "jupyter.showOutlineButtonInNotebookToolbar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the Outline button in the Jupyter notebook toolbar.",
+                    "scope": "resource"
                 }
             }
         },
@@ -1912,13 +1943,11 @@
         "@jupyterlab/coreutils": "^3.1.0",
         "@jupyterlab/services": "^4.2.0",
         "@nteract/messaging": "^7.0.0",
-        "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
-        "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "download": "^8.0.0",
         "encoding": "^0.1.13",
@@ -1939,7 +1968,6 @@
         "named-js-regexp": "^1.3.3",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
-        "onigasm": "^2.2.2",
         "pdfkit": "^0.12.1",
         "portfinder": "^1.0.25",
         "re-resizable": "~6.5.5",
@@ -1970,7 +1998,6 @@
         "svg-to-pdfkit": "^0.1.8",
         "tcp-port-used": "^1.0.1",
         "tmp": "^0.0.29",
-        "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
@@ -2056,7 +2083,6 @@
         "@types/uuid": "^3.4.3",
         "@types/vscode-notebook-renderer": "^1.60.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
-        "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.10.1",
@@ -2105,7 +2131,6 @@
         "gulp-rename": "^1.4.0",
         "gulp-typescript": "^4.0.1",
         "html-webpack-plugin": "^3.2.0",
-        "husky": "^1.1.2",
         "jsdom": "^15.0.0",
         "less": "^3.9.0",
         "less-loader": "^5.0.0",
@@ -2165,7 +2190,6 @@
         "yargs-parser": "^13.1.2"
     },
     "optionalDependencies": {
-        "canvas": "^2.7.0",
-        "playwright-chromium": "^1.10.0"
+        "canvas": "^2.7.0"
     }
 }

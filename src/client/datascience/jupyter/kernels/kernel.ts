@@ -620,7 +620,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
 
     const request = session.requestExecute(
         {
-            code,
+            code: code.replace(/\r\n/g, '\n'),
             silent: false,
             stop_on_error: false,
             allow_stdin: true,
