@@ -18,8 +18,7 @@ import {
     NotebookCellKind,
     NotebookCellsChangeEvent,
     NotebookDocument,
-    notebooks,
-    Uri
+    notebooks
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceVerbose } from '../../common/logger';
@@ -52,7 +51,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private delegate: IDebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
-    public readonly debugCellUri: Uri | undefined;
+    public readonly debugCell: NotebookCell | undefined;
     private disconected: boolean = false;
 
     constructor(
@@ -67,7 +66,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         this.configuration = configuration;
 
         if (configuration.__mode === KernelDebugMode.Cell || configuration.__mode === KernelDebugMode.RunByLine) {
-            this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
+            this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
         }
 
         this.disposables.push(
@@ -129,7 +128,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 (e: NotebookCellsChangeEvent) => {
                     e.changes.forEach((change) => {
                         change.deletedItems.forEach((cell: NotebookCell) => {
-                            if (cell.document.uri === this.debugCellUri) {
+                            if (cell === this.debugCell) {
                                 this.disconnect();
                             }
                         });
