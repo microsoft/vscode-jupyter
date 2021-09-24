@@ -15,7 +15,8 @@ import {
     ProgressLocation,
     DebugAdapterDescriptor,
     Event,
-    EventEmitter
+    EventEmitter,
+    NotebookEditor
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -51,6 +52,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
+    private notebookInProgress = new Set<NotebookDocument>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
     private _doneDebugging = new EventEmitter<void>();
@@ -81,9 +83,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             workspace.onDidCloseNotebookDocument(async (document) => {
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
+                    await dbg.stop();
                     this.updateToolbar(false);
                     this.updateCellToolbar(false);
-                    await dbg.stop();
                 }
             }),
 
@@ -94,16 +96,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
-                if (editor) {
-                    if (await this.checkForIpykernel6(editor.document)) {
-                        this.updateToolbar(true);
-                        void this.startDebugging(editor.document);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.Everything, editor);
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
@@ -120,17 +113,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
-                if (editor) {
-                    if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
-                        this.updateToolbar(true);
-                        this.updateCellToolbar(true);
-                        await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.RunByLine, editor, cell);
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineNext, (cell: NotebookCell | undefined) => {
@@ -146,6 +129,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
+                if (this.notebookInProgress.has(cell.notebook)) {
+                    return;
+                }
+
                 const controller = this.notebookToRunByLineController.get(cell.notebook);
                 if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
                     controller.continue();
@@ -157,7 +144,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 if (editor) {
                     const controller = this.notebookToRunByLineController.get(editor.document);
                     if (controller) {
-                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'withKeybinding' });
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
+                            reason: 'withKeybinding'
+                        });
                         controller.stop();
                     }
                 }
@@ -177,16 +166,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
-                if (editor) {
-                    if (await this.checkForIpykernel6(editor.document)) {
-                        this.updateToolbar(true);
-                        void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                    } else {
-                        void this.installIpykernel6();
-                    }
-                } else {
-                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                }
+                await this.tryToStartDebugging(KernelDebugMode.Cell, editor, cell);
             })
         );
     }
@@ -230,6 +210,59 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private updateCellToolbar(runningByLine: boolean) {
         this.runByLineInProgress.set(runningByLine).ignoreErrors();
+    }
+
+    private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
+        if (!editor) {
+            void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+            return;
+        }
+
+        if (this.notebookInProgress.has(editor.document)) {
+            return;
+        }
+
+        if (this.isDebugging(editor.document)) {
+            this.updateToolbar(true);
+            if (mode === KernelDebugMode.RunByLine) {
+                this.updateCellToolbar(true);
+            }
+            return;
+        }
+
+        try {
+            this.notebookInProgress.add(editor.document);
+            if (
+                await this.checkForIpykernel6(
+                    editor.document,
+                    mode === KernelDebugMode.RunByLine ? DataScience.startingRunByLine() : undefined
+                )
+            ) {
+                switch (mode) {
+                    case KernelDebugMode.Everything:
+                        await this.startDebugging(editor.document);
+                        this.updateToolbar(true);
+                        break;
+                    case KernelDebugMode.Cell:
+                        if (cell) {
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                            this.updateToolbar(true);
+                        }
+                        break;
+                    case KernelDebugMode.RunByLine:
+                        if (cell) {
+                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                            this.updateToolbar(true);
+                            this.updateCellToolbar(true);
+                        }
+                        break;
+                }
+            } else {
+                void this.installIpykernel6();
+            }
+        } finally {
+            this.notebookInProgress.delete(editor.document);
+        }
     }
 
     private async startDebuggingCell(
@@ -286,13 +319,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async endSession(session: DebugSession) {
-        void this.updateToolbar(false);
-        void this.updateCellToolbar(false);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
                 this.notebookToDebugger.delete(doc);
                 this.notebookToDebugAdapter.delete(doc);
+                this.updateToolbar(false);
+                this.updateCellToolbar(false);
                 break;
             }
         }
