@@ -241,7 +241,7 @@
             {
                 "command": "jupyter.runByLineStop",
                 "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                "icon": "$(debug-continue)",
+                "icon": "$(debug-continue-small)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
             },
