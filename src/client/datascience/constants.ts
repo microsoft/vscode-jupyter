@@ -153,6 +153,7 @@ export namespace Commands {
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
+    export const OpenOutlineView = 'jupyter.openOutlineView';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
