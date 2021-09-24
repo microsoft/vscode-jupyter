@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo } from '../common/logger';
+import { traceInfo, traceInfoIf } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -39,6 +39,7 @@ import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/
 import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
     ILanguageServer,
@@ -326,10 +327,12 @@ export class InterpreterSelector implements IInterpreterSelector {
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
     private eventHandlerAdded?: boolean;
+    private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -342,6 +345,7 @@ export class InterpreterService implements IInterpreterService {
                 );
             }
         }
+        this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
     }
 
     public get onDidChangeInterpreter(): Event<void> {
@@ -352,15 +356,11 @@ export class InterpreterService implements IInterpreterService {
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
-        const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
-        if (isCI) {
-            promise
-                .then((items) => {
-                    traceInfo(`Interpreter list for ${resource?.toString()} is ${items.map((i) => i.path).join('\n')}`);
-                })
-                .catch(noop);
+        // Cache result as it only changes when the interpreter list changes or we add more workspace folders
+        if (!this.interpreterListCachePromise) {
+            this.interpreterListCachePromise = this.getInterpretersImpl(resource);
         }
-        return promise;
+        return this.interpreterListCachePromise;
     }
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
@@ -385,6 +385,29 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
+
+    private onDidChangeWorkspaceFolders() {
+        this.interpreterListCachePromise = undefined;
+    }
+    private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
+        // Python uses the resource to look up the workspace folder. For Jupyter
+        // we want all interpreters regardless of workspace folder so call this multiple times
+        const folders = this.workspace.workspaceFolders;
+        const all = folders
+            ? await Promise.all(folders.map((f) => this.apiProvider.getApi().then((api) => api.getInterpreters(f.uri))))
+            : await Promise.all([this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
+
+        // Remove dupes
+        const result: PythonEnvironment[] = [];
+        all.flat().forEach((p) => {
+            if (!result.find((r) => areInterpreterPathsSame(r.path, p.path))) {
+                result.push(p);
+            }
+        });
+        traceInfoIf(isCI, `Interpreter list for ${resource?.toString()} is ${result.map((i) => i.path).join('\n')}`);
+        return result;
+    }
+
     private hookupOnDidChangeInterpreterEvent() {
         // Only do this once.
         if (this.eventHandlerAdded) {
@@ -404,6 +427,7 @@ export class InterpreterService implements IInterpreterService {
                     this.eventHandlerAdded = true;
                     api.onDidChangeInterpreter(
                         () => {
+                            this.interpreterListCachePromise = undefined;
                             this.didChangeInterpreter.fire();
                         },
                         this,
