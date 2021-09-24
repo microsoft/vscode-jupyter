@@ -321,7 +321,6 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 }
 
-const interpreterCacheForCI = new Map<string, PythonEnvironment[]>();
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
@@ -354,24 +353,7 @@ export class InterpreterService implements IInterpreterService {
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
-        const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
-        if (isCI) {
-            promise
-                .then((items) => {
-                    const current = interpreterCacheForCI.get(resource?.toString() || '');
-                    const itemToStore = items;
-                    if (
-                        current &&
-                        (itemToStore === current || JSON.stringify(itemToStore) === JSON.stringify(current))
-                    ) {
-                        return;
-                    }
-                    interpreterCacheForCI.set(resource?.toString() || '', itemToStore);
-                    traceInfo(`Interpreter list for ${resource?.toString()} is ${JSON.stringify(items)}`);
-                })
-                .catch(noop);
-        }
-        return promise;
+        return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)

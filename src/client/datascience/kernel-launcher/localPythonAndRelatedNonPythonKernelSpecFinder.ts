@@ -382,7 +382,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
         // Find all the possible places to look for this resource
         const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
-        traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Finding kernel specs for paths: ${paths.join('\n')}`);
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs for paths: ${paths
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((p) => ((p as any).interpreter ? (p as any).interpreter.path : p))
+                .join('\n')}`
+        );
 
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         let results: IJupyterKernelSpec[] = [];
