@@ -363,31 +363,16 @@ export class InterpreterService implements IInterpreterService {
         }
         return promise;
     }
-    private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
-        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
-        let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
-        if (!promise) {
-            promise = this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
-
-            if (promise) {
-                this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
-                // If there was a problem in getting the details, remove the cached info.
-                promise.catch(() => {
-                    if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
-                        this.workspaceCachedActiveInterpreter.delete(workspaceId);
-                    }
-                });
-                if (isCI) {
-                    promise
-                        .then((item) =>
-                            traceInfo(`Active Interpreter in Python API for ${resource?.toString()} is ${item?.path}`)
-                        )
-                        .catch(noop);
-                }
-            }
+        const promise = this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
+        if (isCI) {
+            promise
+                .then((item) =>
+                    traceInfo(`Active Interpreter in Python API for ${resource?.toString()} is ${item?.path}`)
+                )
+                .catch(noop);
         }
         return promise;
     }
@@ -421,7 +406,6 @@ export class InterpreterService implements IInterpreterService {
                     api.onDidChangeInterpreter(
                         () => {
                             this.didChangeInterpreter.fire();
-                            this.workspaceCachedActiveInterpreter.clear();
                         },
                         this,
                         this.disposables
