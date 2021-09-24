@@ -105,7 +105,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
-        venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
+        venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
         activeIntepreterSearchString =
             activeInterpreter.displayName === interpreter1.displayName
                 ? venvNoKernelSearchString
