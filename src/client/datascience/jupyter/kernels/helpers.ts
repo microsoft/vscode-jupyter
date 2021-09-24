@@ -702,12 +702,12 @@ export function findPreferredKernel(
             // Trace score for kernel
             traceInfo(`findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`);
 
-            // If we have a score of 2, this can only happen if we match against language and find a Python 3 kernel.
+            // If we have a score of 5, this can only happen if we match against language and find a Python 3 kernel.
             // In such cases, use our preferred interpreter kernel if we have one.
             // I.e. give preference to the preferred interpreter kernelspec if we dont have any matches.
             if (
-                subScore === 2 &&
-                score === 2 &&
+                subScore === 5 && // This is a bit flakey. Number isn't consistent. Should probably just make the order of kernelspecs have the preferred one first
+                score === 5 &&
                 (metadata.kind === 'startUsingPythonInterpreter' ||
                     (metadata.kind === 'startUsingKernelSpec' && metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
                 preferredInterpreterKernelSpecIndex >= 0 &&
