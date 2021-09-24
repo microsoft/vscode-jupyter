@@ -787,7 +787,7 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const item = output.items.find(
+    const item = output?.items?.find(
         (opit) =>
             opit.mime === CellOutputMimeTypes.stdout ||
             opit.mime === CellOutputMimeTypes.stderr ||
