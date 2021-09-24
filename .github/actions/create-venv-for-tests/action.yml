@@ -27,12 +27,6 @@ runs:
         python -m ipykernel install --user --name .venvkernel --display-name .venvkernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
-        python -m pip install numpy
-        python -m pip install nbformat==5.0.8
-        python -m pip install --upgrade jupyter
-        python -m pip install --upgrade -r build/test-requirements.txt
-        python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
 
         python -m venv .venvnokernel
         source .venvnokernel/bin/activate
