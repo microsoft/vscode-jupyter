@@ -444,7 +444,7 @@ export class CellExecution implements IDisposable {
         // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
         const request = (this.request = session.requestExecute(
             {
-                code,
+                code: code.replace(/\\r\\n/g, '\n'),
                 silent: false,
                 stop_on_error: false,
                 allow_stdin: true,
