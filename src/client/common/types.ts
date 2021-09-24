@@ -85,7 +85,6 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(product: Product, resource: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     install(
         product: Product,
         resource: InterpreterUri,

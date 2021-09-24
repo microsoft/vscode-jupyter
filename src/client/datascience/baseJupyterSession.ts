@@ -519,6 +519,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         try {
             await waitForPromise(kernelPromise, timeout);
         } catch (e) {
+            // TODO: This will never get throw, `waitForPromise` never throws when there's a timeout,
+            // TODO: Review usages of `JupyterKernelPromiseFailedError` it might never get thrown.
             if (!e) {
                 // We timed out. Throw a specific exception
                 throw new JupyterKernelPromiseFailedError(errorMessage);

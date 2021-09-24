@@ -8,6 +8,7 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
@@ -15,8 +16,10 @@ import {
     IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
+import { INotebookControllerManager } from '../../notebook/types';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -56,7 +59,9 @@ export class KernelProvider implements IKernelProvider {
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
+        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
     }
@@ -104,7 +109,9 @@ export class KernelProvider implements IKernelProvider {
             this.configService,
             this.outputTracker,
             this.workspaceService,
-            this.cellHashProviderFactory
+            this.cellHashProviderFactory,
+            this.pythonExecutionFactory,
+            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager)
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

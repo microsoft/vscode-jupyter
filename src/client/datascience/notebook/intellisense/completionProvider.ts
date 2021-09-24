@@ -65,6 +65,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         // Allow slower timeouts for CI (testing).
         const timeout =
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
+        traceInfoIf(isCI, `Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
@@ -76,7 +77,10 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             })
         ]);
         if (!result) {
+            traceInfoIf(isCI, `Notebook completions not found.`);
             return [];
+        } else {
+            traceInfoIf(isCI, `Completions found, filtering the list: ${JSON.stringify(result)}.`);
         }
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         // Check if we have more information about the complication items & whether its valid.

@@ -52,6 +52,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
+    private disconected: boolean = false;
 
     constructor(
         private session: DebugSession,
@@ -60,8 +61,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private fs: IFileSystem,
         private readonly kernel: IKernel | undefined
     ) {
-        void this.dumpAllCells();
-
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -112,7 +111,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     // If a cell has moved to idle, stop the debug session
                     if (
                         this.configuration.__cellIndex === cellStateChange.cell.index &&
-                        cellStateChange.state === NotebookCellExecutionState.Idle
+                        cellStateChange.state === NotebookCellExecutionState.Idle &&
+                        !this.disconected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         this.disconnect();
@@ -152,6 +152,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // This might happen if VS Code or the extension host crashes
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
             await this.debugInfo();
+            void this.dumpAllCells();
         }
 
         if (message.type === 'request') {
@@ -172,6 +173,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     public disconnect() {
         void this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
+        this.disconected = true;
     }
 
     dispose() {
@@ -198,9 +200,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private dumpAllCells() {
-        this.notebookDocument.getCells().forEach((cell) => {
+        this.notebookDocument.getCells().forEach(async (cell) => {
             if (cell.kind === NotebookCellKind.Code) {
-                void this.dumpCell(cell.index);
+                await this.dumpCell(cell.index);
             }
         });
     }

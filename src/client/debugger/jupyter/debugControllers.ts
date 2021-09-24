@@ -57,6 +57,7 @@ export class RunByLineController implements IDebuggingDelegate {
     public continue(): void {
         if (typeof this.lastPausedThreadId !== 'number') {
             traceVerbose(`No paused thread, can't do RBL`);
+            this.stop();
             return;
         }
 
@@ -64,6 +65,8 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public stop(): void {
+        // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
+        void this.kernel.executeHidden('pass');
         this.debugAdapter.disconnect();
     }
 
@@ -107,8 +110,12 @@ export class RunByLineController implements IDebuggingDelegate {
         // start the process of updating the variables view.
         const stResponse = await this.debugAdapter.stackTrace({ threadId, startFrame: 0, levels: 1 });
 
-        const sf = stResponse.stackFrames[0];
-        return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
+        if (stResponse && stResponse.stackFrames[0]) {
+            const sf = stResponse.stackFrames[0];
+            return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
+        }
+
+        return false;
     }
 
     private trace(tag: string, msg: string) {
@@ -169,10 +176,8 @@ async function cellDebugSetup(
 ): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
-    if (kernel) {
-        const code = 'import debugpy\ndebugpy.debug_this_thread()';
-        await kernel.executeHidden(code);
-    }
+    const code = 'import debugpy\ndebugpy.debug_this_thread()';
+    await kernel.executeHidden(code);
 
     await debugAdapter.dumpCell(debugCell.index);
 }

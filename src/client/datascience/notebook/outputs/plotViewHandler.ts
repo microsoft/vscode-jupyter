@@ -1,6 +1,6 @@
 import sizeOf from 'image-size';
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutputItem, NotebookEditor } from 'vscode';
+import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IPlotViewerProvider } from '../../types';
 
@@ -11,18 +11,18 @@ const pngMimeType = 'image/png';
 export class PlotViewHandler {
     constructor(@inject(IPlotViewerProvider) private readonly plotViewProvider: IPlotViewerProvider) {}
 
-    public async openPlot(editor: NotebookEditor, outputId: string) {
-        if (editor.document.isClosed) {
+    public async openPlot(notebook: NotebookDocument, outputId: string) {
+        if (notebook.isClosed) {
             return;
         }
-        const outputItem = getOutputItem(editor, outputId, svgMimeType);
+        const outputItem = getOutputItem(notebook, outputId, svgMimeType);
         let svgString: string | undefined;
         if (!outputItem) {
             // Didn't find svg, see if we have png we can convert
-            const pngOutput = getOutputItem(editor, outputId, pngMimeType);
+            const pngOutput = getOutputItem(notebook, outputId, pngMimeType);
 
             if (!pngOutput) {
-                return traceError(`No SVG or PNG Plot to open ${editor.document.uri.toString()}, id: ${outputId}`);
+                return traceError(`No SVG or PNG Plot to open ${notebook.uri.toString()}, id: ${outputId}`);
             }
 
             // If we did find a PNG wrap it in an SVG element so that we can display it
@@ -36,8 +36,12 @@ export class PlotViewHandler {
     }
 }
 
-function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: string): NotebookCellOutputItem | undefined {
-    for (const cell of editor.document.getCells()) {
+function getOutputItem(
+    notebook: NotebookDocument,
+    outputId: string,
+    mimeType: string
+): NotebookCellOutputItem | undefined {
+    for (const cell of notebook.getCells()) {
         for (const output of cell.outputs) {
             if (output.id !== outputId) {
                 continue;

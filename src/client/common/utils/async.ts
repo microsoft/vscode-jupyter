@@ -20,6 +20,12 @@ export async function sleep(timeout: number): Promise<number> {
     });
 }
 
+// TODO: This will never reject when there's a timeout, its only used in 3 places, remove this.
+// TODO: Remove this.
+
+/**
+ * @deprecated use Promise.race([..., sleep(n)])
+ */
 export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {

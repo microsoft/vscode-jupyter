@@ -93,9 +93,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
             traceInfo(`Interrupt requested & no kernel.`);
-            trackKernelResourceInformation(document.uri, { interruptKernel: true });
             return;
         }
+        trackKernelResourceInformation(kernel.resourceUri, { interruptKernel: true });
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
 
         try {
@@ -133,11 +133,11 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             return;
         }
 
-        trackKernelResourceInformation(document.uri, { restartKernel: true });
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
+            trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -180,12 +180,12 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const stopWatch = new StopWatch();
         try {
             await kernel.restart();
-            sendKernelTelemetryEvent(kernel.notebookDocument.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             sendKernelTelemetryEvent(
-                kernel.notebookDocument.uri,
+                kernel.resourceUri,
                 Telemetry.NotebookRestart,
                 stopWatch.elapsedTime,
                 undefined,
@@ -194,8 +194,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
-                    resource: kernel.notebookDocument.uri,
-                    // TODO: This would be wrong for interactive window;
+                    resource: kernel.resourceUri,
                     identity: kernel.notebookDocument.uri,
                     getOnly: true
                 });
@@ -205,7 +204,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 await this.notebookProvider.connect({
                     getOnly: false,
                     disableUI: false,
-                    resource: kernel.notebookDocument.uri,
+                    resource: kernel.resourceUri,
                     metadata: getNotebookMetadata(kernel.notebookDocument)
                 });
             } else {

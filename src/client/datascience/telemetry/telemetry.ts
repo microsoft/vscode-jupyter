@@ -21,11 +21,18 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../../common/errors';
 import { createDeferred } from '../../common/utils/async';
+import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/interpreter';
 
 /**
  * This information is sent with each telemetry event.
  */
 type ContextualTelemetryProps = {
+    /**
+     * Whether we're starting the preferred kernel or not.
+     * If false, then the user chose a different kernel when starting the notebook.
+     * Doesn't really apply to Interactive Window, as we always pick the current interpreter.
+     */
+    isPreferredKernel?: boolean;
     kernelConnection: KernelConnectionMetadata;
     startFailed: boolean;
     kernelDied: boolean;
@@ -48,14 +55,14 @@ const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
 /**
- * Initializes the Notebook telemetry as a result of user action.
+ * Initializes the Interactive/Notebook telemetry as a result of user action.
  */
-export function initializeNotebookTelemetryBasedOnUserAction(
-    notebookUri: Uri,
+export function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+    resourceUri: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {
     setSharedProperty('userExecutedCell', 'true');
-    trackKernelResourceInformation(notebookUri, { kernelConnection });
+    trackKernelResourceInformation(resourceUri, { kernelConnection });
 }
 /**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
@@ -163,12 +170,15 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     const key = getUriKey(resource);
     const [currentData, context] = trackedInfo.get(key) || [
         {
-            resourceType: getResourceType(resource)
+            resourceType: getResourceType(resource),
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined,
+            kernelSessionId: getTelemetrySafeHashedString(Date.now().toString())
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
 
     if (information.restartKernel) {
+        currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
         currentData.interruptCount = 0;
         currentData.restartCount = (currentData.restartCount || 0) + 1;
     }
@@ -196,6 +206,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             context.previouslySelectedKernelConnectionId &&
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
+            currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;
@@ -223,7 +234,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
+                getNormalizedInterpreterPath(interpreter.path)
+            );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
@@ -323,7 +336,8 @@ function getContextualPropsForTelemetry(
     const resourceType = getResourceType(resource);
     if (!data && resourceType) {
         return {
-            resourceType
+            resourceType,
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined
         };
     }
     if (!data) {

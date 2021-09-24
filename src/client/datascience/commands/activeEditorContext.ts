@@ -15,7 +15,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { JupyterNotebookView } from '../notebook/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebook, INotebookProvider } from '../types';
 
@@ -35,7 +35,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
-    private hasNativeNotebookOpen: ContextKey;
+    private hasNativeNotebookOrInteractiveWindowOpen: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
@@ -78,7 +78,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
-        this.hasNativeNotebookOpen = new ContextKey(EditorContexts.HasNativeNotebookOpen, this.commandManager);
+        this.hasNativeNotebookOrInteractiveWindowOpen = new ContextKey(
+            EditorContexts.HasNativeNotebookOrInteractiveWindowOpen,
+            this.commandManager
+        );
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -103,8 +106,21 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
-        this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
-        this.vscNotebook.onDidCloseNotebookDocument(this.updateNativeNotebookContext, this, this.disposables);
+        this.vscNotebook.onDidChangeNotebookEditorSelection(
+            this.updateNativeNotebookInteractiveWindowOpenContext,
+            this,
+            this.disposables
+        );
+        this.vscNotebook.onDidOpenNotebookDocument(
+            this.updateNativeNotebookInteractiveWindowOpenContext,
+            this,
+            this.disposables
+        );
+        this.vscNotebook.onDidCloseNotebookDocument(
+            this.updateNativeNotebookInteractiveWindowOpenContext,
+            this,
+            this.disposables
+        );
     }
 
     private updateNativeNotebookCellContext() {
@@ -114,6 +130,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).ignoreErrors();
+        this.updateNativeNotebookInteractiveWindowOpenContext();
         this.updateMergedContexts();
         this.updateContextOfActiveInteractiveWindowKernel();
     }
@@ -126,13 +143,17 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             .ignoreErrors();
         this.updateContextOfActiveNotebookKernel(e);
         this.updateContextOfActiveInteractiveWindowKernel();
-        this.updateNativeNotebookContext();
+        this.updateNativeNotebookInteractiveWindowOpenContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
-    private updateNativeNotebookContext() {
-        this.hasNativeNotebookOpen
-            .set(this.vscNotebook.notebookDocuments.some((nb) => nb.notebookType === JupyterNotebookView))
+    private updateNativeNotebookInteractiveWindowOpenContext() {
+        this.hasNativeNotebookOrInteractiveWindowOpen
+            .set(
+                this.vscNotebook.notebookDocuments.some(
+                    (nb) => nb.notebookType === JupyterNotebookView || nb.notebookType === InteractiveWindowView
+                )
+            )
             .ignoreErrors();
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
@@ -211,7 +232,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateMergedContexts() {
         this.interactiveOrNativeContext
-            .set(this.nativeContext.value === true && this.interactiveContext.value === true)
+            .set(this.nativeContext.value === true || this.interactiveContext.value === true)
             .ignoreErrors();
         this.pythonOrNativeContext
             .set(this.nativeContext.value === true || this.isPythonFileActive === true)

@@ -15,6 +15,7 @@ export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
 export const PythonExtension = 'ms-python.python';
+export const PylanceExtension = 'ms-python.vscode-pylance';
 
 export const LanguagesSupportedByPythonkernel = [
     'python',
@@ -198,7 +199,7 @@ export namespace EditorContexts {
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
-    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
+    export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
 }
 
 export namespace RegExpValues {

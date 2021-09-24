@@ -75,7 +75,7 @@ export class KernelExecution implements IDisposable {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async interrupt(notebookPromise?: Promise<INotebook>): Promise<InterruptResult> {
-        trackKernelResourceInformation(this.kernel.notebookDocument.uri, { interruptKernel: true });
+        trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
         if (!executionQueue) {
             return InterruptResult.Success;
@@ -99,11 +99,7 @@ export class KernelExecution implements IDisposable {
         // Interrupt the active execution
         const result = this._interruptPromise
             ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(
-                  this.kernel.notebookDocument,
-                  notebook.session,
-                  pendingCells
-              ));
+            : await (this._interruptPromise = this.interruptExecution(notebook.session, pendingCells));
 
         // Done interrupting, clear interrupt promise
         this._interruptPromise = undefined;
@@ -115,7 +111,7 @@ export class KernelExecution implements IDisposable {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async restart(notebookPromise?: Promise<INotebook>): Promise<void> {
-        trackKernelResourceInformation(this.kernel.notebookDocument.uri, { restartKernel: true });
+        trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
         if (!executionQueue) {
             return;
@@ -173,7 +169,6 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
-        document: NotebookDocument,
         session: IJupyterSession,
         pendingCells: Promise<unknown>
     ): Promise<InterruptResult> {
@@ -226,7 +221,7 @@ export class KernelExecution implements IDisposable {
 
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
-                    document.uri,
+                    this.kernel.resourceUri,
                     Telemetry.NotebookInterrupt,
                     stopWatch.elapsedTime,
                     undefined,
@@ -239,7 +234,9 @@ export class KernelExecution implements IDisposable {
         })();
 
         return promise.then((result) => {
-            sendKernelTelemetryEvent(document.uri, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, { result });
+            sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, {
+                result
+            });
             return result;
         });
     }

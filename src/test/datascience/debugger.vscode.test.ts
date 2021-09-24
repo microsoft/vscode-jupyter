@@ -22,17 +22,15 @@ import {
     runCell,
     getDebugSessionAndAdapter
 } from './notebook/helper';
-import { verifyViewVariables } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 import { traceInfo } from '../../client/common/logger';
 import { IDebuggingManager } from '../../client/debugger/types';
 import { assert } from 'chai';
 import { debug } from 'vscode';
-import { OnMessageListener } from './vscodeTestHelpers';
 import { ITestWebviewHost } from './testInterfaces';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { sleep } from '../../client/common/utils/async';
+import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 
 suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
@@ -89,6 +87,7 @@ suite('VSCode Notebook - Run By Line', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Stops at end of cell', async function () {
+        // Run by line seems to end up on the second line of the function, not the first
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
@@ -106,15 +105,12 @@ suite('VSCode Notebook - Run By Line', function () {
 
         const coreVariableView = await variableViewProvider.activeVariableView;
         const variableView = (coreVariableView as unknown) as ITestWebviewHost;
-        const onMessageListener = new OnMessageListener(variableView);
 
         void commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
-        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
-        const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
-        verifyViewVariables(expectedVariables, htmlResult);
+        await waitForVariablesToMatch(expectedVariables, variableView);
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
