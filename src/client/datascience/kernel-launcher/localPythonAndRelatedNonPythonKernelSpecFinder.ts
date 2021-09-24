@@ -65,6 +65,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `listKernelsImplementation for ${resource?.toString()}: ${interpreters.map((i) => i.path).join('\n')}`
+        );
+
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
