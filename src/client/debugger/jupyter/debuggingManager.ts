@@ -73,16 +73,18 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this.updateToolbar(false);
         this.updateCellToolbar(false);
 
-        this.disposables.push(this.vscNotebook.onDidChangeActiveNotebookEditor(
-            (e?: NotebookEditor) => {
-                if (e) {
-                    this.updateCellToolbar(this.isDebugging(e.document));
-                    this.updateToolbar(this.isDebugging(e.document));
-                }
-            },
-            this,
-            this.disposables
-        ));
+        this.disposables.push(
+            this.vscNotebook.onDidChangeActiveNotebookEditor(
+                (e?: NotebookEditor) => {
+                    if (e) {
+                        this.updateCellToolbar(this.isDebugging(e.document));
+                        this.updateToolbar(this.isDebugging(e.document));
+                    }
+                },
+                this,
+                this.disposables
+            )
+        );
     }
 
     public async activate() {
