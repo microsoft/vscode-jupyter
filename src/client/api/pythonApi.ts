@@ -353,7 +353,15 @@ export class InterpreterService implements IInterpreterService {
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
-        return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
+        const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
+        if (isCI) {
+            promise
+                .then((items) => {
+                    traceInfo(`Interpreter list for ${resource?.toString()} is ${items.map((i) => i.path).join('\n')}`);
+                })
+                .catch(noop);
+        }
+        return promise;
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
