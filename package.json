@@ -824,7 +824,7 @@
                     "command": "jupyter.openOutlineView",
                     "title": "%jupyter.command.jupyter.openOutlineView.title%",
                     "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
@@ -858,7 +858,7 @@
                 {
                     "command": "jupyter.openOutlineView",
                     "group": "navigation@2",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
@@ -1822,6 +1822,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "When debugging, debug just my code.",
+                    "scope": "resource"
+                },
+                "jupyter.showOutlineButtonInNotebookToolbar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the Outline button in the Jupyter notebook toolbar.",
                     "scope": "resource"
                 }
             }
