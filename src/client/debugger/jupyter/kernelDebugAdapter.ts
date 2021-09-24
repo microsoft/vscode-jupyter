@@ -212,7 +212,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         const cell = this.notebookDocument.cellAt(index);
         if (cell) {
             try {
-                const response = await this.session.customRequest('dumpCell', { code: cell.document.getText() });
+                const response = await this.session.customRequest('dumpCell', {
+                    code: cell.document.getText().replace(/\r\n/g, '\n')
+                });
                 const norm = path.normalize((response as IDumpCellResponse).sourcePath);
                 this.fileToCell.set(norm, cell);
                 this.cellToFile.set(cell.document.uri.toString(), norm);
