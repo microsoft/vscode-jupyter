@@ -16,6 +16,7 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     NotebookCellKind,
+    NotebookCellsChangeEvent,
     NotebookDocument,
     notebooks,
     Uri
@@ -117,6 +118,22 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         this.disconnect();
                     }
+                },
+                this,
+                this.disposables
+            )
+        );
+
+        this.disposables.push(
+            notebooks.onDidChangeNotebookCells(
+                (e: NotebookCellsChangeEvent) => {
+                    e.changes.forEach((change) => {
+                        change.deletedItems.forEach((cell: NotebookCell) => {
+                            if (cell.document.uri === this.debugCellUri) {
+                                this.disconnect();
+                            }
+                        });
+                    });
                 },
                 this,
                 this.disposables
