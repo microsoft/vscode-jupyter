@@ -117,6 +117,16 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "### VSCode Repo Notebook issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "### Closed before they hit formal triage"
   },
   {
