@@ -23,7 +23,8 @@ import {
     ViewColumn,
     NotebookEditor,
     Disposable,
-    window
+    window,
+    ThemeColor
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -424,7 +425,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
         // to newly-inserted cells.
         if (settings.alwaysScrollOnNewCell || isLastCellVisible) {
-            this.revealCell(notebookCell, notebookEditor);
+            this.revealCell(notebookCell, notebookEditor, false);
         }
 
         const notebook = kernel?.notebook;
@@ -510,15 +511,31 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
-            this.revealCell(matchingCell, notebookEditor);
+            this.revealCell(matchingCell, notebookEditor, true);
         }
     }
 
-    private revealCell(notebookCell: NotebookCell, notebookEditor: NotebookEditor) {
+    private revealCell(notebookCell: NotebookCell, notebookEditor: NotebookEditor, useDecoration: boolean) {
         const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
+        const decorationType = useDecoration
+            ? notebooks.createNotebookEditorDecorationType({
+                  backgroundColor: new ThemeColor('peekViewEditor.background'),
+                  top: {}
+              })
+            : undefined;
         // This will always try to reveal the whole cell--input + output combined
         setTimeout(() => {
             notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+
+            // Also add a decoration to make it look highlighted (peek background color)
+            if (decorationType) {
+                notebookEditor.setDecorations(decorationType, notebookRange);
+
+                // Fire another timeout to dispose of the decoration
+                setTimeout(() => {
+                    decorationType.dispose();
+                }, 2000);
+            }
         }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
