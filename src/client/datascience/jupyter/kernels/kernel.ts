@@ -164,12 +164,12 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
-    public async executeHidden(code: string) {
+    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
         const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
-        await promise;
+        return promise;
     }
     public async start(options: { disableUI?: boolean } = {}): Promise<void> {
         await this.startNotebook(options);
