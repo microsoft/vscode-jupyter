@@ -219,7 +219,6 @@ module.exports = {
         'src/test/datascience/jupyter/serverCache.unit.test.ts',
         'src/test/datascience/mockWorkspaceConfig.ts',
         'src/test/datascience/mockProcessService.ts',
-        'src/test/datascience/cellFactory.unit.test.ts',
         'src/test/refactor/extension.refactor.extract.method.test.ts',
         'src/test/refactor/extension.refactor.extract.var.test.ts',
         'src/test/refactor/rename.test.ts',
