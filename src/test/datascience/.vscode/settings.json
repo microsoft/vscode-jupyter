@@ -26,8 +26,8 @@
     "jupyter.logging.level": "debug",
     "python.logging.level": "debug",
     "webview.experimental.useIframes": true,
-    // Disable all experiments in python insiders
-    "python.experiments.enabled": "false",
     "jupyter.interactiveWindowMode": "multiple",
-    "jupyter.magicCommandsAsComments": false
+    "jupyter.magicCommandsAsComments": false,
+    // Python experiments have to be on for insiders to work
+    "python.experiments.enabled": true
 }

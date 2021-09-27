@@ -242,7 +242,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
         expect(displayCell.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-        assertHasTextOutputInVSCode(displayCell, 'foo', 0, true);
+        await waitForTextOutput(displayCell, 'foo', 0, false);
     });
     test('Clearing output while executing will ensure output is cleared', async function () {
         // Assume you are executing a cell that prints numbers 1-100.

@@ -184,13 +184,9 @@ export async function run(): Promise<void> {
 
     /* eslint-disable no-console */
     console.time('Time taken to activate the extension');
-    try {
-        console.log('Starting & waiting for Python extension to activate');
-        await activateExtensionScript();
-        console.timeEnd('Time taken to activate the extension');
-    } catch (ex) {
-        console.error('Failed to activate python extension without errors', ex);
-    }
+    console.log('Starting & waiting for Python extension to activate');
+    await activateExtensionScript();
+    console.timeEnd('Time taken to activate the extension');
 
     try {
         // Run the tests.

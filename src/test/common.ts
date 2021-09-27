@@ -139,10 +139,10 @@ async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
     await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
     await disposePythonSettings();
 }
-export async function disableExperimentsInPythonExtension(): Promise<void> {
+export async function adjustSettingsInPythonExtension(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('experiments.enabled', false, vscode.ConfigurationTarget.Global).then(noop, noop);
+    await pythonConfig.update('experiments.enabled', 'true', vscode.ConfigurationTarget.Global).then(noop, noop);
 }
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
@@ -222,8 +222,9 @@ async function setPythonPathInWorkspace(
     const value = settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
-    if (value && value[prop] !== pythonPath) {
+    if (!value || value[prop] !== pythonPath) {
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
+        await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }

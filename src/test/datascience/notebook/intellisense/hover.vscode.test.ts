@@ -36,9 +36,6 @@ suite('DataScience - VSCode Intellisense Notebook Hover', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        // Skip for now. We need python insiders and it's not working
-        return this.skip();
-
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Suite (Completed) Hover`);

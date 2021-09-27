@@ -68,7 +68,7 @@ async function installPythonExtension(vscodeExecutablePath: string) {
         console.info('Python Extension not required');
         return;
     }
-    console.info('Installing Python Extension');
+    console.info(`Installing Python Extension ${pythonVSIX}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
     spawnSync(cliPath, ['--install-extension', pythonVSIX], {
         encoding: 'utf-8',
@@ -92,6 +92,8 @@ async function createSettings(): Promise<string> {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
+        'python.experiments.enabled': true,
+        'python.experiments.optOutFrom': [],
         'security.workspace.trust.enabled': false, // Disable trusted workspaces.
         // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.

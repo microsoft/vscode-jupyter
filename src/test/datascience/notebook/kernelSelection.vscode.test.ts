@@ -92,6 +92,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        // Wait for all interpreters so we can make sure we can get details on the paths we have
+        await interpreterService.getInterpreters();
         const [activeInterpreter, interpreter1, interpreter2, interpreter3] = await Promise.all([
             interpreterService.getActiveInterpreter(),
             interpreterService.getInterpreterDetails(venvNoKernelPython),
@@ -105,7 +107,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
-        venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
+        venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
         activeIntepreterSearchString =
             activeInterpreter.displayName === interpreter1.displayName
                 ? venvNoKernelSearchString

@@ -98,7 +98,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     resourceType,
                     language: telemetrySafeLanguage
                 },
-                ex,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any,
                 true
             );
             traceError(`findKernel crashed`, ex);
