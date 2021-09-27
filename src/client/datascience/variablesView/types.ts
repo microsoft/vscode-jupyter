@@ -33,7 +33,6 @@ export class IVariableViewPanelMapping {
 }
 
 export interface IActiveNotebookChangedEvent {
-    notebook?: INotebook;
     executionCount?: number;
 }
 

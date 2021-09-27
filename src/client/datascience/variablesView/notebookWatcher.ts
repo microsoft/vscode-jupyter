@@ -16,10 +16,10 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { IInteractiveWindowProvider, INotebook, INotebookEditor, INotebookEditorProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
-import { isJupyterNotebook } from '../notebook/helpers/helpers';
 
 interface IExecutionCountEntry {
     uri: Uri;
@@ -56,7 +56,6 @@ export class NotebookWatcher implements INotebookWatcher {
 
     private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
     private readonly _onDidChangeActiveNotebook = new EventEmitter<{
-        notebook?: INotebook;
         executionCount?: number;
     }>();
     private readonly _onDidRestartActiveNotebook = new EventEmitter<void>();
@@ -75,7 +74,7 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
-            (kernel) => this.handleRestart({ state: KernelState.restarted, resource: kernel.notebookUri }),
+            (kernel) => this.handleRestart({ state: KernelState.restarted, resource: kernel.notebookDocument.uri }),
             this,
             this.disposables
         );
@@ -151,7 +150,6 @@ export class NotebookWatcher implements INotebookWatcher {
         const changeEvent: IActiveNotebookChangedEvent = {};
 
         if (editor) {
-            changeEvent.notebook = editor.notebook;
             const executionCount = this.getExecutionCount(editor.file);
             executionCount && (changeEvent.executionCount = executionCount.executionCount);
         }

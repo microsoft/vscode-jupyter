@@ -61,14 +61,12 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
         });
     }
-
     private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
-
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds

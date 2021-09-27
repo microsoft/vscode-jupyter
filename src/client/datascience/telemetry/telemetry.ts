@@ -21,19 +21,19 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../../common/errors';
 import { createDeferred } from '../../common/utils/async';
+import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/interpreter';
 
 /**
  * This information is sent with each telemetry event.
  */
 type ContextualTelemetryProps = {
-    kernelConnection: KernelConnectionMetadata;
     /**
-     * Used by WebViews & Interactive window.
-     * In those cases we know for a fact that the user changes the kernel.
-     * In Native Notebooks, we don't know whether the user changed the kernel or VS Code is just asking for default kernel.
-     * In Native Notebooks we track changes to selection by checking if previously selected kernel is the same as the new one.
+     * Whether we're starting the preferred kernel or not.
+     * If false, then the user chose a different kernel when starting the notebook.
+     * Doesn't really apply to Interactive Window, as we always pick the current interpreter.
      */
-    kernelConnectionChanged: boolean;
+    isPreferredKernel?: boolean;
+    kernelConnection: KernelConnectionMetadata;
     startFailed: boolean;
     kernelDied: boolean;
     interruptKernel: boolean;
@@ -55,6 +55,16 @@ const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
 /**
+ * Initializes the Interactive/Notebook telemetry as a result of user action.
+ */
+export function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+    resourceUri: Resource,
+    kernelConnection: KernelConnectionMetadata
+) {
+    setSharedProperty('userExecutedCell', 'true');
+    trackKernelResourceInformation(resourceUri, { kernelConnection });
+}
+/**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
  * Can optionally contain a property `waitBeforeSending` referencing a promise.
  * Which must be awaited before sending the telemetry.
@@ -66,7 +76,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
 ) {
-    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
+    if (eventName === Telemetry.ExecuteCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
 
@@ -103,7 +113,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
 ) {
-    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
+    if (eventName === Telemetry.ExecuteCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -160,12 +170,15 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     const key = getUriKey(resource);
     const [currentData, context] = trackedInfo.get(key) || [
         {
-            resourceType: getResourceType(resource)
+            resourceType: getResourceType(resource),
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined,
+            kernelSessionId: getTelemetrySafeHashedString(Date.now().toString())
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
 
     if (information.restartKernel) {
+        currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
         currentData.interruptCount = 0;
         currentData.restartCount = (currentData.restartCount || 0) + 1;
     }
@@ -193,9 +206,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             context.previouslySelectedKernelConnectionId &&
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
-            currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
-        }
-        if (information.kernelConnectionChanged) {
+            currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;
@@ -223,7 +234,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(interpreter.path);
+            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
+                getNormalizedInterpreterPath(interpreter.path)
+            );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
@@ -323,7 +336,8 @@ function getContextualPropsForTelemetry(
     const resourceType = getResourceType(resource);
     if (!data && resourceType) {
         return {
-            resourceType
+            resourceType,
+            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined
         };
     }
     if (!data) {

@@ -12,7 +12,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -44,6 +44,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
 import { executeSilently } from './kernels/kernel';
+import { isCI } from '../../common/constants';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -387,6 +388,12 @@ export class JupyterNotebookBase implements INotebook {
                 }),
                 createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
             ]);
+            traceInfoIf(
+                isCI,
+                `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
+                    result ? JSON.stringify(result) : 'empty'
+                }`
+            );
             if (result && result.content) {
                 if ('matches' in result.content) {
                     return {
@@ -491,7 +498,7 @@ export class JupyterNotebookBase implements INotebook {
                 ? this.session.requestExecute(
                       {
                           // Remove the cell marker if we have one.
-                          code: cellMatcher.stripFirstMarker(code),
+                          code: cellMatcher.stripFirstMarker(code.replace(/\r\n/g, '\n')),
                           stop_on_error: false,
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                           store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count

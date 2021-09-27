@@ -12,11 +12,11 @@ import { IRawNotebookSupportedService } from '../types';
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
-    private isSupported?: boolean;
+    private _isSupported?: boolean;
     constructor(@inject(IConfigurationService) private readonly configuration: IConfigurationService) {}
 
     // Check to see if we have all that we need for supporting raw kernel launch
-    public supported(): boolean {
+    public get isSupported(): boolean {
         if (!this.localLaunch()) {
             return false;
         }
@@ -46,8 +46,8 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
 
     // Check to see if this machine supports our local ZMQ launching
     private zmqSupported(): boolean {
-        if (typeof this.isSupported === 'boolean') {
-            return this.isSupported;
+        if (typeof this._isSupported === 'boolean') {
+            return this._isSupported;
         }
         if (IS_NON_RAW_NATIVE_TEST) {
             return false;
@@ -56,13 +56,13 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             require('zeromq');
             traceInfo(`ZMQ install verified.`);
             sendTelemetryEvent(Telemetry.ZMQSupported);
-            this.isSupported = true;
+            this._isSupported = true;
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
             sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this.isSupported = false;
+            this._isSupported = false;
         }
 
-        return this.isSupported;
+        return this._isSupported;
     }
 }

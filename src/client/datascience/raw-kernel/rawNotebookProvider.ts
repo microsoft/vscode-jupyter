@@ -69,8 +69,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
 
     // Check to see if we have all that we need for supporting raw kernel launch
-    public async supported(): Promise<boolean> {
-        return this.rawNotebookSupportedService.supported();
+    public get isSupported(): boolean {
+        return this.rawNotebookSupportedService.isSupported;
     }
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)

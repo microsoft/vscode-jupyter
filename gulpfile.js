@@ -19,7 +19,6 @@ const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 gulp.task('compile', async (done) => {
@@ -126,10 +125,6 @@ async function buildIPyWidgets() {
     }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
-gulp.task('compile-notebooks', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
-});
-
 gulp.task('compile-renderers', async () => {
     console.log('Building renderers');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
@@ -148,7 +143,7 @@ if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
 } else {
     gulp.task(
         'compile-webviews',
-        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers', 'compile-renderers'))
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers'))
     );
 }
 
@@ -166,7 +161,6 @@ gulp.task('webpack', async () => {
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
@@ -304,20 +298,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('downloadRendererExtension', async () => {
-    await downloadRendererExtension();
-});
-
-gulp.task('prePublishBundle', gulp.series('downloadRendererExtension', 'webpack'));
+gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'downloadRendererExtension'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel('compile', 'downloadRendererExtension', gulp.series('compile-webviews'))
+        gulp.parallel('compile', gulp.series('compile-webviews'))
     );
 }
 

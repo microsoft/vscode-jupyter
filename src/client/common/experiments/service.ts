@@ -10,6 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceInfo } from '../logger';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -80,6 +81,8 @@ export class ExperimentService implements IExperimentService {
             telemetryReporter,
             this.globalState
         );
+
+        traceInfo(`Experimentation service retrieved: ${this.experimentationService}`);
 
         this.logExperiments();
     }

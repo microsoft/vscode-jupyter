@@ -15,6 +15,7 @@ export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
 export const PythonExtension = 'ms-python.python';
+export const PylanceExtension = 'ms-python.vscode-pylance';
 
 export const LanguagesSupportedByPythonkernel = [
     'python',
@@ -152,6 +153,7 @@ export namespace Commands {
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
+    export const OpenOutlineView = 'jupyter.openOutlineView';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
@@ -161,7 +163,7 @@ export namespace Commands {
     export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
-    export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineNext = 'jupyter.runByLineNext';
     export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
@@ -198,7 +200,7 @@ export namespace EditorContexts {
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
-    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
+    export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
 }
 
 export namespace RegExpValues {
@@ -379,7 +381,6 @@ export enum Telemetry {
     DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
     DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
-    ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',

@@ -45,7 +45,7 @@ suite('DataScience - NotebookProvider', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerType).thenReturn('local');
         when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
-        when(rawNotebookProvider.supported).thenReturn(() => Promise.resolve(false));
+        when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(configService.getSettings(anything())).thenReturn(instance(dataScienceSettings) as any);

@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { PythonExtension } from '../client/datascience/constants';
+import { PythonExtension, PylanceExtension } from '../client/datascience/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
 import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
@@ -58,26 +58,42 @@ async function createTempDir() {
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string) {
-    if (!requiresPythonExtensionToBeInstalled()) {
+    // Pick python extension to use based on environment variable. Insiders can be flakey so
+    // have the capability to turn it off/on.
+    const pythonVSIX =
+        process.env.VSC_JUPTYER_PYTHON_EXTENSION_VERSION === 'insiders'
+            ? process.env.VSIX_NAME_PYTHON
+            : PythonExtension;
+    if (!requiresPythonExtensionToBeInstalled() || !pythonVSIX) {
         console.info('Python Extension not required');
         return;
     }
-    console.info('Installing Python Extension');
+    console.info(`Installing Python Extension ${pythonVSIX}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', PythonExtension], {
+    spawnSync(cliPath, ['--install-extension', pythonVSIX], {
+        encoding: 'utf-8',
+        stdio: 'inherit'
+    });
+
+    // Make sure pylance is there too as we'll use it for intellisense tests
+    console.info('Installing Pylance Extension');
+    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
 }
 
 async function createSettings(): Promise<string> {
-    const userDataDirectory = await createTempDir();
+    // User data dir can be overridden with an environment variable.
+    const userDataDirectory = process.env.VSC_JUPYTER_USER_DATA_DIR || (await createTempDir());
     process.env.VSC_JUPYTER_VSCODE_SETTINGS_DIR = userDataDirectory;
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
+        'python.experiments.enabled': true,
+        'python.experiments.optOutFrom': [],
         'security.workspace.trust.enabled': false, // Disable trusted workspaces.
         // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
@@ -115,7 +131,8 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
-            .concat(['--user-data-dir', userDataDirectory]),
+            .concat(['--user-data-dir', userDataDirectory])
+            .concat(['--verbose']),
         version: channel,
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });

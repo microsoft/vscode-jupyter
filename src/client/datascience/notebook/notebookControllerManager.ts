@@ -62,6 +62,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private controllersPromise?: Promise<void>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
+    private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private readonly isLocalLaunch: boolean;
     private wasPythonInstalledWhenFetchingControllers?: boolean;
@@ -110,6 +111,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     public getSelectedNotebookController(notebook: NotebookDocument) {
         return Array.from(this.registeredControllers.values()).find((item) => item.isAssociatedWithDocument(notebook));
+    }
+
+    public getPreferredNotebookController(notebook: NotebookDocument) {
+        return this.preferredControllers.get(notebook);
     }
 
     public activate() {
@@ -387,6 +392,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (targetController) {
                 traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+                // Save in our map so we can find it in test code.
+                this.preferredControllers.set(document, targetController);
             } else {
                 traceInfoIf(
                     isCI,
@@ -454,7 +462,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this,
                         this.disposables
                     );
-
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
@@ -465,7 +472,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
                 { kind: kernelConnection.kind },
-                ex,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any,
                 true
             );
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
@@ -476,6 +484,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        traceInfoIf(isCI, `Controller ${event.controller?.id} selected`);
         // Now notify out that we have updated a notebooks controller
         this._onNotebookControllerSelected.fire(event);
     }

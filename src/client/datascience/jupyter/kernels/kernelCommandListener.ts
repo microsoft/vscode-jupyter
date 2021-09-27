@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ProgressLocation, ConfigurationTarget, Uri, window, workspace, NotebookDocument } from 'vscode';
+import { ProgressLocation, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceInfo, traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
@@ -93,14 +93,14 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
             traceInfo(`Interrupt requested & no kernel.`);
-            trackKernelResourceInformation(document.uri, { interruptKernel: true });
             return;
         }
+        trackKernelResourceInformation(kernel.resourceUri, { interruptKernel: true });
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
 
         try {
             traceInfo(`Interrupt requested & sent for ${document.uri} in notebookEditor.`);
-            const result = await kernel.interrupt(document);
+            const result = await kernel.interrupt();
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
@@ -133,11 +133,11 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             return;
         }
 
-        trackKernelResourceInformation(document.uri, { restartKernel: true });
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
+            trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -156,36 +156,36 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     await this.disableAskForRestart(document.uri);
                     void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => this.restartKernelInternal(kernel, document)
+                        () => this.restartKernelInternal(kernel)
                     );
                 } else if (response === yes) {
                     void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => this.restartKernelInternal(kernel, document)
+                        () => this.restartKernelInternal(kernel)
                     );
                 }
             } else {
                 void this.applicationShell.withProgress(
                     { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                    () => this.restartKernelInternal(kernel, document)
+                    () => this.restartKernelInternal(kernel)
                 );
             }
         }
     }
 
-    private async restartKernelInternal(kernel: IKernel, notebookDocument: NotebookDocument): Promise<void> {
+    private async restartKernelInternal(kernel: IKernel): Promise<void> {
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus());
 
         const stopWatch = new StopWatch();
         try {
-            await kernel.restart(notebookDocument);
-            sendKernelTelemetryEvent(notebookDocument.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+            await kernel.restart();
+            sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             sendKernelTelemetryEvent(
-                notebookDocument.uri,
+                kernel.resourceUri,
                 Telemetry.NotebookRestart,
                 stopWatch.elapsedTime,
                 undefined,
@@ -194,8 +194,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
-                    resource: notebookDocument.uri,
-                    identity: notebookDocument.uri,
+                    resource: kernel.resourceUri,
+                    identity: kernel.notebookDocument.uri,
                     getOnly: true
                 });
                 if (notebook) {
@@ -204,13 +204,18 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 await this.notebookProvider.connect({
                     getOnly: false,
                     disableUI: false,
-                    resource: notebookDocument.uri,
-                    metadata: getNotebookMetadata(notebookDocument)
+                    resource: kernel.resourceUri,
+                    metadata: getNotebookMetadata(kernel.notebookDocument)
                 });
             } else {
-                // Show the error message
-                void this.applicationShell.showErrorMessage(exc);
-                traceError(exc);
+                traceError('Failed to restart the kernel', exc);
+                if (exc) {
+                    // Show the error message
+                    void this.applicationShell.showErrorMessage(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        exc instanceof Error ? exc.message : (exc as any).toString()
+                    );
+                }
             }
         } finally {
             status.dispose();

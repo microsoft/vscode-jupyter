@@ -65,6 +65,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `listKernelsImplementation for ${resource?.toString()}: ${interpreters.map((i) => i.path).join('\n')}`
+        );
+
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
@@ -89,9 +95,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
     }
     /**
-     * If user has python extension installed, then we'll not list any of the globally registered Python kernels.
-     * They are too ambiguous (because we have no idea what Python environment they are related to).
-     *
      * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
      * Those kernels can only be started within the context of the Python environment.
      * I.e. first actiavte the python environment, then attempt to start those non-python environments.
@@ -133,6 +136,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             // We are only interested in global kernels that don't use ipykernel_launcher.
             return moduleName !== 'ipykernel_launcher';
         };
+
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -146,10 +150,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
 
-        // Go through the global kernelspecs that use python to launch the kernel but don't use ipykernel.
+        // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
             globalKernelSpecs
-                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec) && usingNonIpyKernelLauncher(item))
+                .filter(
+                    (item) =>
+                        !isKernelRegisteredByUs(item.kernelSpec) &&
+                        (usingNonIpyKernelLauncher(item) || Object.keys(item.kernelSpec.env || {}).length > 0)
+                )
                 .map(async (item) => {
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
@@ -376,8 +384,20 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`
+        );
         // Find all the possible places to look for this resource
         const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs for paths: ${paths
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((p) => ((p as any).interpreter ? (p as any).interpreter.path : p))
+                .join('\n')}`
+        );
+
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         let results: IJupyterKernelSpec[] = [];
         await Promise.all(
@@ -421,6 +441,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 byDisplayName.set(r.display_name, r);
             }
         });
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`
+        );
 
         return unique;
     }

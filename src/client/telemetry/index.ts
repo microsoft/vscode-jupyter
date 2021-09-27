@@ -672,7 +672,6 @@ export interface IEventNamePropertyMapping {
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
-    [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebookInteractive]: never | undefined;
     [Telemetry.ExportPythonFileInteractive]: never | undefined;
@@ -804,14 +803,23 @@ export interface IEventNamePropertyMapping {
          */
         isModulePresent?: 'true' | undefined;
         action:
-            | 'displayed' // Install prompt displayed.
+            | 'displayed' // Install prompt may have been displayed.
+            | 'prompted' // Install prompt was displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
             | 'ignored' // Installation disabled (this is what python extension returns).
             | 'disabled' // Installation disabled (this is what python extension returns).
             | 'failed' // Installation disabled (this is what python extension returns).
             | 'install' // User chose install from prompt.
             | 'donotinstall' // User chose not to install from prompt.
+            | 'differentKernel' // User chose to select a different kernel.
+            | 'error' // Some other error.
             | 'dismissed'; // User chose to dismiss the prompt.
+        resourceType?: 'notebook' | 'interactive';
+        /**
+         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+         * If we run the same notebook tomorrow, the hash will be the same.
+         */
+        resourceHash?: string;
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.

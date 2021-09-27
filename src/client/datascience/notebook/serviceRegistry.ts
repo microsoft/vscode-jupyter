@@ -62,7 +62,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
     );

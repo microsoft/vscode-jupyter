@@ -31,14 +31,12 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    INotebook,
     IThemeFinder
 } from '../types';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { ContextKey } from '../../common/contextKey';
-import { IDebuggingManager } from '../../debugger/types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -63,8 +61,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
         @unmanaged() private readonly notebookWatcher: INotebookWatcher,
-        @unmanaged() private readonly commandManager: ICommandManager,
-        @unmanaged() private readonly debuggingManager: IDebuggingManager
+        @unmanaged() private readonly commandManager: ICommandManager
     ) {
         super(
             configuration,
@@ -81,7 +78,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
-        this.debuggingManager.onDidFireVariablesEvent(this.sendRefreshMessage, this, this.disposables);
+        this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -214,7 +211,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     // The active variable new notebook has changed, so force a refresh on the view to pick up the new info
-    private async activeNotebookChanged(arg: { notebook?: INotebook; executionCount?: number }) {
+    private async activeNotebookChanged(arg: { executionCount?: number }) {
         if (arg.executionCount) {
             this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                 executionCount: arg.executionCount

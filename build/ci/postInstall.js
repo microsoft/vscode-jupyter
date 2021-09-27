@@ -6,8 +6,6 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
-const { spawnSync } = require('child_process');
-const { downloadRendererExtension } = require('./downloadRenderer');
 
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
@@ -121,5 +119,4 @@ function makeVariableExplorerAlwaysSorted() {
     makeVariableExplorerAlwaysSorted();
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
-    await downloadRendererExtension();
 })().catch((ex) => console.error('Encountered error while running postInstall step', ex));

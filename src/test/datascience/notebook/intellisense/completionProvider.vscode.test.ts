@@ -8,9 +8,8 @@ import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Posi
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
 import { JupyterCompletionProvider } from '../../../../client/datascience/notebook/intellisense/jupyterCompletionProvider';
-import { IExtensionTestApi } from '../../../common';
+import { IExtensionTestApi, sleep } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
@@ -21,11 +20,12 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    getCellOutputs
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', function () {
+suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -65,38 +65,55 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and get completions for variable', async () => {
-        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
+    test('Execute cell and get completions that require jupyter', async () => {
+        await insertCodeCell('%pip install pandas', {
+            index: 0
+        });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        const outputText = getTextOutputValue(cell.outputs[0]).trim();
-        traceInfo(`Cell Output ${outputText}`);
-        await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+        await insertCodeCell(
+            `import pandas as pd\ndf = pd.read_csv("../src/test/datascience/notebook/intellisense/names.csv")\n`,
+            {
+                index: 1
+            }
+        );
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+
+        await runCell(cell2);
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell2);
+        const cell3 = await insertCodeCell('import os\nprint(os.getcwd())\n');
+        await runCell(cell3);
+
+        // Wait till execution count changes and status is success.
+        await waitForExecutionCompletedSuccessfully(cell3);
+        traceInfo(`last cell output: ${getCellOutputs(cell3)}`);
+
+        // Now add the cell to check intellisense.
+        await insertCodeCell('df.');
+        const cell4 = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         const token = new CancellationTokenSource().token;
-        const position = new Position(0, 2);
+        const position = new Position(0, 3);
         const context: CompletionContext = {
             triggerKind: CompletionTriggerKind.TriggerCharacter,
             triggerCharacter: '.'
         };
         traceInfo('Get completions in test');
-        const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
+        let completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
+        await sleep(500);
+        // Ask a second time as Jupyter can sometimes not be ready
+        traceInfo('Get completions second time in test');
+        completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
         assert.ok(
-            items.find((item) =>
-                typeof item === 'string' ? item.includes('bit_length') : item.label.includes('bit_length')
-            )
-        );
-        assert.ok(
-            items.find((item) =>
-                typeof item === 'string' ? item.includes('to_bytes') : item.label.includes('to_bytes')
-            )
+            items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         );
     });
 });

@@ -56,6 +56,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
+    [DSCommands.OpenOutlineView]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
@@ -108,6 +109,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         string | undefined
     ];
     ['interactive.execute']: [string];
+    ['outline.focus']: [];
     [DSCommands.NotebookEditorInterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
@@ -168,6 +170,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
-    [DSCommands.RunByLineContinue]: [NotebookCell];
+    [DSCommands.RunByLineNext]: [NotebookCell];
     [DSCommands.RunByLineStop]: [];
 }

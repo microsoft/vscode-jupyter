@@ -71,7 +71,11 @@ export class DataViewerDependencyService {
         });
         const selection = this.isCodeSpace
             ? Common.install()
-            : await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing(), Common.install());
+            : await this.applicationShell.showErrorMessage(
+                  DataScience.pandasRequiredForViewing(),
+                  { modal: true },
+                  Common.install()
+              );
 
         // All data science dependencies require an interpreter to be passed in
         // Default to the active interpreter if no interpreter is available
