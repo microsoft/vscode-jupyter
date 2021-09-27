@@ -160,6 +160,7 @@ class Pizza(object):
 
 first line`;
         const expected1 = `# %% CELL
+
 first line`;
         const entry2 = `# %% CELL
 
@@ -167,6 +168,7 @@ first line
 
 `;
         const expected2 = `# %% CELL
+
 first line`;
         const entry3 = `# %% CELL
 
@@ -176,6 +178,7 @@ second line
 
 `;
         const expected3 = `# %% CELL
+
 first line
 
 second line`;
@@ -207,6 +210,7 @@ test("dude")
     test function
     """
     print("hallo")
+
 
 test("dude")`;
         let removed = removeLinesFromFrontAndBack(entry1);
