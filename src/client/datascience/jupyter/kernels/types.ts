@@ -23,6 +23,7 @@ import type {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import type { nbformat } from '@jupyterlab/coreutils';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -146,7 +147,7 @@ export interface IKernel extends IAsyncDisposable {
     interrupt(): Promise<InterruptResult>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
-    executeHidden(code: string): Promise<void>;
+    executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 
 export type KernelOptions = {
