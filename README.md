@@ -2,7 +2,7 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
-The Jupyter Extension includes the Jupyter Keymaps extension by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and can be disabled or uninstalled. 
+The Jupyter Extension includes the Jupyter Keymaps and the Jupyter Notebook Renderers extensions by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and the Jupyter Notebook Rendereres extension provides renderers for mime types such as plotly, vega and the like. Both of these extensions can be disabled or uninstalled.
 
 ## Notebook support
 
@@ -47,11 +47,6 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 -   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
 
 -   **Step 4.** Open or create a notebook file and start coding!
-
--   **Special Note:** The Jupyter Extension in VS Code Insiders will include our Native Notebooks experience by default. Because we are running in VS Code Insiders and this build is updated every day, there may be times when our extension may fail to work at all. We do attempt to ensure that this doesn't happen frequently. If it does, we strive to provide an updated extension build by the next business day. However, if you'd like to opt out of the native experience while working in VS Code Insiders:
-    -   Open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select "Preferences: Open Settings (JSON)"
-    -   Add the following code to your JSON settings:
-        `"jupyter.experiments.optOutFrom": ["NativeNotebookEditor"],`
 
 ## Notebooks Quick Start
 
