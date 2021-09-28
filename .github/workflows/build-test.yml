@@ -105,7 +105,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -213,7 +213,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -275,7 +275,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -440,7 +440,7 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -772,7 +772,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -836,7 +836,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Node
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -919,7 +919,7 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
 
