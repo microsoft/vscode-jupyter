@@ -5,10 +5,10 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IPythonDebuggerPathProvider, IPythonInstaller } from '../../api/types';
+import { IPythonDebuggerPathProvider } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, Product, ProductInstallStatus } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { Identifiers } from '../constants';
 import {
@@ -40,8 +40,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IPythonInstaller) private installer: IPythonInstaller
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
         this.debuggerPackage = 'debugpy';
         this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
@@ -54,13 +53,18 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (!notebook) {
             throw new Error('Notebook not initialized');
         }
-        const result = await this.installer.isProductVersionCompatible(
-            Product.ipykernel,
-            '>=6.0.0',
-            notebook.getKernelConnection()?.interpreter
-        );
+
+        let result = false;
+        const code = 'import ipykernel\nprint(ipykernel.__version__)';
+        const output = await kernel.executeHidden(code);
+
+        if (output[0].text) {
+            const majorVersion = Number(output[0].text.toString().charAt(0));
+            result = majorVersion >= 6;
+        }
+
         const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6OrLater = result === ProductInstallStatus.Installed;
+        this.isUsingPyKernel6OrLater = result;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
