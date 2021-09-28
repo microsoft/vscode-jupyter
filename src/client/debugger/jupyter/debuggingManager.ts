@@ -36,7 +36,7 @@ import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '.
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
-import { assertIsDebugConfig } from './helper';
+import { assertIsDebugConfig, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
 
 /**
@@ -428,18 +428,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }
 
             if (kernel) {
-                const code = 'import ipykernel\nprint(ipykernel.__version__)';
-                const output = await kernel.executeHidden(code);
-
-                if (output[0].text) {
-                    const majorVersion = Number(output[0].text.toString().charAt(0));
-                    const result = majorVersion >= 6;
-
-                    sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
-                        status: result ? 'installed' : 'notInstalled'
-                    });
-                    return result;
-                }
+                const result = await isUsingIpykernel6OrLater(kernel);
+                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
+                    status: result ? 'installed' : 'notInstalled'
+                });
+                return result;
             }
         } catch {
             traceError('Debugging: Could not check for ipykernel 6');

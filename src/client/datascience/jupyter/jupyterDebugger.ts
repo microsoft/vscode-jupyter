@@ -10,6 +10,7 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { isUsingIpykernel6OrLater } from '../../debugger/jupyter/helper';
 import { Identifiers } from '../constants';
 import {
     ICellHashListener,
@@ -54,17 +55,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             throw new Error('Notebook not initialized');
         }
 
-        let result = false;
-        const code = 'import ipykernel\nprint(ipykernel.__version__)';
-        const output = await kernel.executeHidden(code);
-
-        if (output[0].text) {
-            const majorVersion = Number(output[0].text.toString().charAt(0));
-            result = majorVersion >= 6;
-        }
-
         const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6OrLater = result;
+        this.isUsingPyKernel6OrLater = await isUsingIpykernel6OrLater(kernel);
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
