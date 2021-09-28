@@ -60,17 +60,16 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
         // Create the language server for this connection
-        await this.ensureLanguageServer(e.controller.connection.interpreter);
+        await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
 
         // Get the language server for the old connection (if we have one)
         const oldController = this.knownControllers.get(e.notebook);
         if (oldController && oldController.connection.interpreter) {
             const oldLanguageServer = this.servers.get(getInterpreterId(oldController.connection.interpreter));
 
-            // If we had one, refresh that language server's diagnostics. Nothing
-            // causes a diag update for the old server
+            // If we had one, tell the old language server to stop watching this notebook
             if (oldLanguageServer) {
-                oldLanguageServer.refresh(e.notebook);
+                oldLanguageServer.stopWatching(e.notebook);
             }
         }
 
@@ -90,7 +89,7 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         // If the controller is empty, default to the active interpreter
         const interpreter =
             controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
-        return this.ensureLanguageServer(interpreter);
+        return this.ensureLanguageServer(interpreter, n);
     }
 
     private closedNotebook(n: NotebookDocument) {
@@ -121,7 +120,7 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         return interpreterId == notebookId;
     }
 
-    private async ensureLanguageServer(interpreter: PythonEnvironment | undefined) {
+    private async ensureLanguageServer(interpreter: PythonEnvironment | undefined, notebook: NotebookDocument) {
         // We should have one language server per active interpreter.
 
         // See if we already have one for this interpreter or not
@@ -135,6 +134,9 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
             );
             if (languageServer) {
                 this.servers.set(id, languageServer);
+
+                // If we just created it, indicate to the language server to start watching this notebook
+                languageServer.startWatching(notebook);
             }
         }
 

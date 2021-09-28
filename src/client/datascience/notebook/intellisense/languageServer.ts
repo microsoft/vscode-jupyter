@@ -14,15 +14,12 @@ import {
 } from 'vscode';
 import {
     ClientCapabilities,
-    DidCloseTextDocumentNotification,
-    DidOpenTextDocumentNotification,
     DocumentSelector,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
     LanguageClient,
     LanguageClientOptions,
-    Middleware,
     RegistrationData,
     RegistrationType,
     RevealOutputChannelOn,
@@ -35,7 +32,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
-import { createNotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import { traceInfo } from '../../../common/logger';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sleep } from '../../../common/utils/async';
@@ -114,7 +111,7 @@ export class LanguageServer implements Disposable {
     private constructor(
         public client: LanguageClient,
         public interpreter: PythonEnvironment,
-        private readonly middleware: Middleware,
+        private readonly middleware: NotebookMiddleware,
         private disposables: Disposable[]
     ) {
         this._interpreterId = getInterpreterId(interpreter);
@@ -122,6 +119,7 @@ export class LanguageServer implements Disposable {
 
     public async dispose() {
         this.disposables.forEach((d) => d.dispose());
+        this.middleware.dispose();
         await this.client.stop();
     }
 
@@ -129,22 +127,14 @@ export class LanguageServer implements Disposable {
         return this._interpreterId;
     }
 
-    public refresh(notebook: NotebookDocument) {
-        // Have to send a close for every cell in the notebook and then
-        // an open for the first one. This will make the language server think the entire document was
-        // closed and reopened.
-        if (notebook.cellCount > 0) {
-            notebook.getCells().forEach((c) => {
-                this.middleware.didClose!(c.document, (d) => {
-                    const params = this.client.code2ProtocolConverter.asCloseTextDocumentParams(d);
-                    this.client.sendNotification(DidCloseTextDocumentNotification.type, params);
-                });
-            });
-            this.middleware.didOpen!(notebook.cellAt(0).document, (d) => {
-                const params = this.client.code2ProtocolConverter.asOpenTextDocumentParams(d);
-                this.client.sendNotification(DidOpenTextDocumentNotification.type, params);
-            });
-        }
+    public stopWatching(notebook: NotebookDocument) {
+        // Tell the middleware to stop watching this document
+        this.middleware.stopWatching(notebook);
+    }
+
+    public startWatching(notebook: NotebookDocument) {
+        // Tell the middleware to start watching this document
+        this.middleware.startWatching(notebook);
     }
 
     public static async createLanguageServer(
@@ -157,6 +147,15 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getInterpreterId(interpreter);
+            const middleware = createNotebookMiddleware(
+                notebookApi,
+                () => languageClient,
+                () => noop, // Don't trace output. Slows things down too much
+                NOTEBOOK_SELECTOR,
+                /.*\.(ipynb|interactive)/m,
+                interpreter.path,
+                (uri) => shouldAllowIntellisense(uri, interpreterId)
+            );
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {
@@ -167,15 +166,7 @@ export class LanguageServer implements Disposable {
                 },
                 outputChannel,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
-                middleware: createNotebookMiddleware(
-                    notebookApi,
-                    () => languageClient,
-                    () => noop, // Don't trace output. Slows things down too much
-                    NOTEBOOK_SELECTOR,
-                    /.*\.(ipynb|interactive)/m,
-                    interpreter.path,
-                    (uri) => shouldAllowIntellisense(uri, interpreterId)
-                ),
+                middleware,
                 connectionOptions: {
                     cancellationStrategy
                 }
@@ -203,7 +194,7 @@ export class LanguageServer implements Disposable {
                 await languageClient.onReady();
             }
 
-            return new LanguageServer(languageClient, interpreter, clientOptions.middleware!, [
+            return new LanguageServer(languageClient, interpreter, middleware, [
                 languageClientDisposable,
                 cancellationStrategy,
                 outputChannel
