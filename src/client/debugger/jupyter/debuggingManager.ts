@@ -277,7 +277,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
-            internalConsoleOptions: 'neverOpen',
             justMyCode: true,
             // add a property to the config to know if the session is runByLine
             __mode: mode,
