@@ -127,6 +127,26 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "### Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Non Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "### Closed before they hit formal triage"
   },
   {
