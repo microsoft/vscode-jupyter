@@ -697,7 +697,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openOutlineView.shorttitle%",
                 "icon": "$(list-unordered)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && !view.outline.visible"
+                "enablement": "notebookType == jupyter-notebook"
             },
             {
                 "command": "jupyter.refreshDataViewer",
