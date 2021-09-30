@@ -44,7 +44,7 @@ export class CellExecutionQueue {
     /**
      * Queue the cell for execution & start processing it immediately.
      */
-    public queueCell(code: NotebookCell | string): void {
+    public queueCell(code: NotebookCell | string): Promise<nbformat.IOutput[]> {
         if (typeof code === 'string') {
             const codeExecution = this.codeExecutionFactory.create(code);
             this.queueToExecute.push(codeExecution);
@@ -55,7 +55,7 @@ export class CellExecutionQueue {
             const existingCellExecution = cellQueue.find((item) => item.cell === code);
             if (existingCellExecution) {
                 traceCellMessage(code, 'Use existing cell execution');
-                return;
+                return Promise.resolve([]);
             }
             const cellExecution = this.cellExecutionFactory.create(code, this.metadata);
             this.queueToExecute.push(cellExecution);
@@ -65,6 +65,16 @@ export class CellExecutionQueue {
 
         // Start executing the cells.
         this.startExecutingCells();
+
+        if (typeof code === 'string') {
+            const queue: CodeExecution[] = this.getCodeExecutions(this.queueToExecute);
+            const execution = queue.find((exec) => exec.code === code);
+
+            if (execution) {
+                return Promise.resolve(execution.output);
+            }
+        }
+        return Promise.resolve([]);
     }
     /**
      * Cancel all cells that have been queued & wait for them to complete.
@@ -90,16 +100,6 @@ export class CellExecutionQueue {
             Array.isArray(cells) && cells.length > 0 ? queue.filter((item) => cells.includes(item.cell)) : queue;
 
         return Promise.all(cellsToCheck.map((cell) => cell.result));
-    }
-    public async waitForHiddenOutput(code: string): Promise<nbformat.IOutput[]> {
-        const queue: CodeExecution[] = this.getCodeExecutions(this.queueToExecute);
-        const execution = queue.find((exec) => exec.code === code);
-
-        if (execution) {
-            return Promise.resolve(execution.output);
-        }
-
-        return [];
     }
     private startExecutingCells() {
         if (!this.startedRunningCells) {
