@@ -83,9 +83,9 @@ export class CellExecutionQueue {
         await Promise.all(
             this.queueToExecute.map((item) => {
                 if (item.cellExecution) {
-                    item.cellExecution.cancel(forced);
+                    void item.cellExecution.cancel(forced);
                 } else {
-                    item.codeExecution?.cancel(forced);
+                    void item.codeExecution?.cancel(forced);
                 }
             })
         );

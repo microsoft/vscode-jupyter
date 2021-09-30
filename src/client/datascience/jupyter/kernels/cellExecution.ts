@@ -502,6 +502,7 @@ export class CellExecution implements IDisposable {
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
                 traceCellMessage(this.cell, 'Some other execution error');
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.completedWithErrors(ex as any);
             }
         }
@@ -561,6 +562,7 @@ export class CellExecution implements IDisposable {
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.completedWithErrors(err as any);
         }
     }

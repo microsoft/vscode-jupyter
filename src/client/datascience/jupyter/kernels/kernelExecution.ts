@@ -250,6 +250,7 @@ export class KernelExecution implements IDisposable {
                     Telemetry.NotebookInterrupt,
                     stopWatch.elapsedTime,
                     undefined,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     exc as any
                 );
                 throw exc;
