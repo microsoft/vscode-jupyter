@@ -9,6 +9,7 @@ import { noop } from '../../../common/utils/misc';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook } from '../../types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { createDeferred } from '../../../common/utils/async';
+import * as uuid from 'uuid/v4';
 
 export class CodeExecutionFactory {
     constructor(
@@ -35,6 +36,7 @@ export class CodeExecution implements IDisposable {
     public get output(): Promise<nbformat.IOutput[]> {
         return this._output.promise;
     }
+    public id = uuid();
     private started?: boolean;
     private _completed?: boolean;
     private cancelHandled = false;

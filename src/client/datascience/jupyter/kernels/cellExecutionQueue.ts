@@ -45,8 +45,9 @@ export class CellExecutionQueue {
      * Queue the cell for execution & start processing it immediately.
      */
     public queueCell(code: NotebookCell | string): Promise<nbformat.IOutput[]> {
+        let codeExecution: CodeExecution;
         if (typeof code === 'string') {
-            const codeExecution = this.codeExecutionFactory.create(code);
+            codeExecution = this.codeExecutionFactory.create(code);
             this.queueToExecute.push(codeExecution);
 
             traceInfo('Hidden cell queued for execution', codeExecution.code.substring(0, 50));
@@ -68,7 +69,7 @@ export class CellExecutionQueue {
 
         if (typeof code === 'string') {
             const queue: CodeExecution[] = this.getCodeExecutions(this.queueToExecute);
-            const execution = queue.find((exec) => exec.code === code);
+            const execution = queue.find((exec) => exec.id === codeExecution.id);
 
             if (execution) {
                 return execution.output;
