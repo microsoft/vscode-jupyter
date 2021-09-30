@@ -443,8 +443,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
             if (isDebug) {
                 await kernel!.executeHidden(
-                    `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
-                    notebookEditor.document
+                    `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`
                 );
                 await this.jupyterDebugger.startDebugging(kernel!);
             }
@@ -600,12 +599,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     protected async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
-        const notebookEditor = await this._editorReadyPromise;
-
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookEditor.document);
+            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
@@ -614,7 +611,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookEditor.document);
+            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         }
     }
 

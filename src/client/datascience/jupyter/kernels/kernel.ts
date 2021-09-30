@@ -164,11 +164,11 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
-    public async executeHidden(code: string, doc: NotebookDocument): Promise<nbformat.IOutput[]> {
+    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
 
-        const promise = this.kernelExecution.executeHidden(notebookPromise, code, doc);
+        const promise = this.kernelExecution.executeHidden(notebookPromise, code, this.notebookDocument);
 
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         return promise;

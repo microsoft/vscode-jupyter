@@ -66,7 +66,7 @@ export class RunByLineController implements IDebuggingDelegate {
 
     public stop(): void {
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
-        void this.kernel.executeHidden('pass', this.debugCell.notebook);
+        void this.kernel.executeHidden('pass');
         this.debugAdapter.disconnect();
     }
 
@@ -177,7 +177,7 @@ async function cellDebugSetup(
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     const code = 'import debugpy\ndebugpy.debug_this_thread()';
-    await kernel.executeHidden(code, debugCell.notebook);
+    await kernel.executeHidden(code);
 
     await debugAdapter.dumpCell(debugCell.index);
 }
