@@ -164,10 +164,12 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
-    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
+    public async executeHidden(code: string, doc: NotebookDocument): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
-        const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
+
+        const promise = this.kernelExecution.executeHidden(notebookPromise, code, doc);
+
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         return promise;
     }
@@ -302,12 +304,12 @@ export class Kernel implements IKernel {
                         Telemetry.NotebookStart,
                         stopWatch.elapsedTime,
                         undefined,
-                        ex
+                        ex as any
                     );
                     if (options?.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else {
-                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                        this.errorHandler.handleError(ex as any).ignoreErrors(); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();

@@ -56,7 +56,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6OrLater = await isUsingIpykernel6OrLater(kernel);
+        this.isUsingPyKernel6OrLater = await isUsingIpykernel6OrLater(kernel, kernel.notebookDocument);
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,

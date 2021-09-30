@@ -427,7 +427,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }
 
             if (kernel) {
-                const result = await isUsingIpykernel6OrLater(kernel);
+                const result = await isUsingIpykernel6OrLater(kernel, doc);
                 sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
                     status: result ? 'installed' : 'notInstalled'
                 });

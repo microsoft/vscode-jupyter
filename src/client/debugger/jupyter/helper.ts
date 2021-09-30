@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { NotebookDocument } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 
-export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<boolean> {
+export async function isUsingIpykernel6OrLater(kernel: IKernel, doc: NotebookDocument): Promise<boolean> {
     const code = 'import ipykernel\nprint(ipykernel.__version__)';
-    const output = await kernel.executeHidden(code);
+    const output = await kernel.executeHidden(code, doc);
 
     if (output[0].text) {
         const version = output[0].text.toString().split('.');

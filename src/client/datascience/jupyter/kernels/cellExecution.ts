@@ -502,7 +502,7 @@ export class CellExecution implements IDisposable {
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
                 traceCellMessage(this.cell, 'Some other execution error');
-                this.completedWithErrors(ex);
+                this.completedWithErrors(ex as any);
             }
         }
     }
@@ -561,7 +561,7 @@ export class CellExecution implements IDisposable {
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
-            this.completedWithErrors(err);
+            this.completedWithErrors(err as any);
         }
     }
 

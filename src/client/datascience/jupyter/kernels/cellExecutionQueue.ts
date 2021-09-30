@@ -7,7 +7,14 @@ import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
+import { CodeExecution, CodeExecutionFactory } from './codeExecution';
 import { KernelConnectionMetadata, NotebookCellRunState } from './types';
+import type { nbformat } from '@jupyterlab/coreutils';
+
+interface Execution {
+    cellExecution?: CellExecution;
+    codeExecution?: CodeExecution;
+}
 
 /**
  * A queue responsible for execution of cells.
@@ -15,14 +22,14 @@ import { KernelConnectionMetadata, NotebookCellRunState } from './types';
  * All cells queued using `queueCell` are added to the queue and processed in order they were added/queued.
  */
 export class CellExecutionQueue {
-    private readonly queueOfCellsToExecute: CellExecution[] = [];
+    private readonly queueToExecute: Execution[] = [];
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      */
     public get isEmpty(): boolean {
-        return this.queueOfCellsToExecute.length === 0;
+        return this.queueToExecute.length === 0;
     }
     /**
      * Whether cells have been cancelled (as a result of interrupt or some have failed).
@@ -33,22 +40,31 @@ export class CellExecutionQueue {
     }
     constructor(
         private readonly notebookPromise: Promise<INotebook>,
-        private readonly executionFactory: CellExecutionFactory,
+        private readonly cellExecutionFactory: CellExecutionFactory,
+        private readonly codeExecutionFactory: CodeExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
     ) {}
     /**
      * Queue the cell for execution & start processing it immediately.
      */
-    public queueCell(cell: NotebookCell): void {
-        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
-        if (existingCellExecution) {
-            traceCellMessage(cell, 'Use existing cell execution');
-            return;
-        }
-        const cellExecution = this.executionFactory.create(cell, this.metadata);
-        this.queueOfCellsToExecute.push(cellExecution);
+    public queueCell(cell?: NotebookCell, code?: string): void {
+        if (cell) {
+            const cellQueue = this.getCellExecutions(this.queueToExecute);
+            const existingCellExecution = cellQueue.find((item) => item.cell === cell);
+            if (existingCellExecution) {
+                traceCellMessage(cell, 'Use existing cell execution');
+                return;
+            }
+            const cellExecution = this.cellExecutionFactory.create(cell, this.metadata);
+            this.queueToExecute.push({ cellExecution });
 
-        traceCellMessage(cell, 'User queued cell for execution');
+            traceCellMessage(cell, 'User queued cell for execution');
+        } else if (code) {
+            const codeExecution = this.codeExecutionFactory.create(code);
+            this.queueToExecute.push({ codeExecution });
+
+            traceInfo('Hidden cell queued for execution', codeExecution.code.substring(0, 50));
+        }
 
         // Start executing the cells.
         this.startExecutingCells();
@@ -64,7 +80,15 @@ export class CellExecutionQueue {
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
-        await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
+        await Promise.all(
+            this.queueToExecute.map((item) => {
+                if (item.cellExecution) {
+                    item.cellExecution.cancel(forced);
+                } else {
+                    item.codeExecution?.cancel(forced);
+                }
+            })
+        );
     }
     /**
      * Wait for cells to complete (for for the queue of cells to be processed)
@@ -72,12 +96,21 @@ export class CellExecutionQueue {
      * If no cells are provided, then wait on all cells in the current queue.
      */
     public async waitForCompletion(cells?: NotebookCell[]): Promise<NotebookCellRunState[]> {
+        const queue: CellExecution[] = this.getCellExecutions(this.queueToExecute);
         const cellsToCheck =
-            Array.isArray(cells) && cells.length > 0
-                ? this.queueOfCellsToExecute.filter((item) => cells.includes(item.cell))
-                : this.queueOfCellsToExecute;
+            Array.isArray(cells) && cells.length > 0 ? queue.filter((item) => cells.includes(item.cell)) : queue;
 
         return Promise.all(cellsToCheck.map((cell) => cell.result));
+    }
+    public async waitForHiddenOutput(code: string): Promise<nbformat.IOutput[]> {
+        const queue: CodeExecution[] = this.getCodeExecutions(this.queueToExecute);
+        const execution = queue.find((exec) => exec.code === code);
+
+        if (execution) {
+            return Promise.resolve(execution.output);
+        }
+
+        return [];
     }
     private startExecutingCells() {
         if (!this.startedRunningCells) {
@@ -102,24 +135,42 @@ export class CellExecutionQueue {
     }
     private async executeQueuedCells() {
         const notebook = await this.notebookPromise;
-        this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
-        while (this.queueOfCellsToExecute.length) {
+        this.queueToExecute.forEach((exec) => {
+            if (exec.cellExecution) {
+                traceCellMessage(exec.cellExecution.cell, 'Ready to execute');
+            } else if (exec.codeExecution) {
+                traceInfo('Ready to execute hidden code', exec.codeExecution.code.substring(0, 50));
+            }
+        });
+        while (this.queueToExecute.length) {
             // Take the first item from the queue, this way we maintain order of cell executions.
             // Remove from the queue only after we process it
             // This way we don't accidentally end up queueing the same cell again (we know its in the queue).
-            const cellToExecute = this.queueOfCellsToExecute[0];
-            traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
+            const toExecute = this.queueToExecute[0];
+            if (toExecute.cellExecution) {
+                traceCellMessage(toExecute.cellExecution.cell, 'Before Execute individual cell');
+            } else if (toExecute.codeExecution) {
+                traceInfo('Before Execute hidden code', toExecute.codeExecution.code.substring(0, 50));
+            }
 
             let executionResult: NotebookCellRunState | undefined;
             try {
-                await cellToExecute.start(notebook);
-                executionResult = await cellToExecute.result;
+                if (toExecute.cellExecution) {
+                    await toExecute.cellExecution.start(notebook);
+                    executionResult = await toExecute.cellExecution.result;
+                } else if (toExecute.codeExecution) {
+                    await toExecute.codeExecution.start(notebook);
+                }
             } finally {
                 // Once the cell has completed execution, remove it from the queue.
-                traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
-                const index = this.queueOfCellsToExecute.indexOf(cellToExecute);
+                if (toExecute.cellExecution) {
+                    traceCellMessage(toExecute.cellExecution.cell, `After Execute individual cell ${executionResult}`);
+                } else if (toExecute.codeExecution) {
+                    traceInfo('After Execute hidden code', toExecute.codeExecution.code.substring(0, 50));
+                }
+                const index = this.queueToExecute.indexOf(toExecute);
                 if (index >= 0) {
-                    this.queueOfCellsToExecute.splice(index, 1);
+                    this.queueToExecute.splice(index, 1);
                 }
             }
 
@@ -131,5 +182,29 @@ export class CellExecutionQueue {
                 break;
             }
         }
+    }
+
+    private getCellExecutions(executionList: Execution[]): CellExecution[] {
+        const cellExecutions: CellExecution[] = [];
+
+        executionList.forEach((execution) => {
+            if (execution.cellExecution) {
+                cellExecutions.push(execution.cellExecution);
+            }
+        });
+
+        return cellExecutions;
+    }
+
+    private getCodeExecutions(executionList: Execution[]): CodeExecution[] {
+        const codeExecutions: CodeExecution[] = [];
+
+        executionList.forEach((execution) => {
+            if (execution.codeExecution) {
+                codeExecutions.push(execution.codeExecution);
+            }
+        });
+
+        return codeExecutions;
     }
 }

@@ -21,6 +21,8 @@ import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, KernelConnectionMetadata } from './types';
 import { NotebookCellRunState } from './types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
+import { CodeExecutionFactory } from './codeExecution';
+import type { nbformat } from '@jupyterlab/coreutils';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -28,7 +30,8 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
  */
 export class KernelExecution implements IDisposable {
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
-    private readonly executionFactory: CellExecutionFactory;
+    private readonly cellExecutionFactory: CellExecutionFactory;
+    private readonly codeExecutionFactory: CodeExecutionFactory;
     private readonly disposables: IDisposable[] = [];
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
@@ -43,7 +46,7 @@ export class KernelExecution implements IDisposable {
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProviderFactory: CellHashProviderFactory
     ) {
-        this.executionFactory = new CellExecutionFactory(
+        this.cellExecutionFactory = new CellExecutionFactory(
             kernel,
             errorHandler,
             appShell,
@@ -52,6 +55,7 @@ export class KernelExecution implements IDisposable {
             outputTracker,
             cellHashProviderFactory
         );
+        this.codeExecutionFactory = new CodeExecutionFactory(errorHandler, disposables);
     }
 
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<NotebookCellRunState> {
@@ -68,6 +72,22 @@ export class KernelExecution implements IDisposable {
         executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
         return result[0];
+    }
+
+    public async executeHidden(
+        notebookPromise: Promise<INotebook>,
+        code: string,
+        doc: NotebookDocument
+    ): Promise<nbformat.IOutput[]> {
+        // If we're restarting, wait for it to finish
+        if (this._restartPromise) {
+            await this._restartPromise;
+        }
+
+        const executionQueue = this.getOrCreateCellExecutionQueue(doc, notebookPromise);
+        executionQueue.queueCell(undefined, code);
+        const result = await executionQueue.waitForHiddenOutput(code);
+        return result;
     }
 
     /**
@@ -148,7 +168,12 @@ export class KernelExecution implements IDisposable {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(notebookPromise, this.executionFactory, this.metadata);
+        const newCellExecutionQueue = new CellExecutionQueue(
+            notebookPromise,
+            this.cellExecutionFactory,
+            this.codeExecutionFactory,
+            this.metadata
+        );
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
         workspace.onDidCloseNotebookDocument(
@@ -225,7 +250,7 @@ export class KernelExecution implements IDisposable {
                     Telemetry.NotebookInterrupt,
                     stopWatch.elapsedTime,
                     undefined,
-                    exc
+                    exc as any
                 );
                 throw exc;
             } finally {
