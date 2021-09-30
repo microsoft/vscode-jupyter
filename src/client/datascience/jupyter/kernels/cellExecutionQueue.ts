@@ -71,7 +71,7 @@ export class CellExecutionQueue {
             const execution = queue.find((exec) => exec.code === code);
 
             if (execution) {
-                return Promise.resolve(execution.output);
+                return execution.output;
             }
         }
         return Promise.resolve([]);
