@@ -5,17 +5,24 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 
-export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<boolean> {
+export enum IpykernelCheckResult {
+    Unknown,
+    Ok,
+    Missing,
+    NoKernel
+}
+
+export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
     const code = 'import ipykernel\nprint(ipykernel.__version__)';
     const output = await kernel.executeHidden(code);
 
     if (output[0].text) {
         const version = output[0].text.toString().split('.');
         const majorVersion = Number(version[0]);
-        return majorVersion >= 6;
+        return majorVersion >= 6 ? IpykernelCheckResult.Ok : IpykernelCheckResult.Missing;
     }
 
-    return false;
+    return IpykernelCheckResult.Unknown;
 }
 
 export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
