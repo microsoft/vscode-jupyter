@@ -25,7 +25,7 @@ Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-
 
 ### Run by Line
 
-To start a lightweight debugging session and run code cells line by line in Python notebooks, press `F10` while selecting a cell or click the Run by Line button on the cell toolbar.
+To start a lightweight debugging session and run code cells line by line in Python notebooks, press `F10` while selecting a cell or click the Run by Line button on the cell toolbar. It also supports remote kernels.
 
 Once you start a Run by Line session the Variable Explorer will appear and variable values will update as you iterate through your code.
 
