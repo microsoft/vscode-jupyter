@@ -8,8 +8,7 @@ import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 export enum IpykernelCheckResult {
     Unknown,
     Ok,
-    Missing,
-    NoKernel
+    Missing
 }
 
 export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {

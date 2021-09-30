@@ -265,7 +265,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 ipykernelResult === IpykernelCheckResult.Unknown
             ) {
                 void this.promptInstallIpykernel6();
-            } else if (ipykernelResult === IpykernelCheckResult.NoKernel && allowSelectKernel) {
+            } else if (ipykernelResult === undefined && allowSelectKernel) {
                 await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
                 return checkIpykernelAndStart(false);
             }
@@ -421,7 +421,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return kernel;
     }
 
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult | undefined> {
         try {
             let kernel = this.kernelProvider.get(doc);
 
@@ -444,7 +444,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 });
                 return result;
             } else {
-                return IpykernelCheckResult.NoKernel;
+                return undefined;
             }
         } catch {
             traceError('Debugging: Could not check for ipykernel 6');
