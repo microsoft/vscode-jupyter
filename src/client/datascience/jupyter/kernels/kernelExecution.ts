@@ -69,7 +69,7 @@ export class KernelExecution implements IDisposable {
         }
 
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
-        executionQueue.queueCell(cell);
+        void executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
         return result[0];
     }
