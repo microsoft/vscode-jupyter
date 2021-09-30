@@ -261,7 +261,7 @@ export class VSCodeNotebookController implements Disposable {
             resourceUri: doc.uri
         });
         this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-        return kernel.executeCell(cell);
+        return kernel.queueAndExecuteCell(cell);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

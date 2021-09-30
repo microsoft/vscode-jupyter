@@ -187,7 +187,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Wait till execution count changes and status is success.
         await Promise.all([
-            kernel?.executeCell(cell),
+            kernel?.queueAndExecuteCell(cell),
             waitForTextOutput(cell, '123412341234', 0, false),
             waitForExecutionCompletedSuccessfully(cell)
         ]);
@@ -212,7 +212,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const kernel = createKernelWithMockJupyterSession(cell.notebook, session);
 
         await Promise.all([
-            kernel?.executeCell(cell),
+            kernel?.queueAndExecuteCell(cell),
             waitForExecutionCompletedSuccessfully(cell),
             waitForTextOutput(cell, 'Completed', 0, false),
             waitForTextOutput(cell, '99', 0, false)

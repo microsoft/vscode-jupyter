@@ -146,7 +146,8 @@ export interface IKernel extends IAsyncDisposable {
     start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<InterruptResult>;
     restart(): Promise<void>;
-    executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    queueAndExecuteCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    queueAndExeceuteHidden(code: string): Promise<nbformat.IOutput[]>;
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 

@@ -152,7 +152,7 @@ export class Kernel implements IKernel {
         });
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
-    public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
+    public async queueAndExecuteCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
@@ -164,12 +164,17 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
+    public async queueAndExeceuteHidden(code: string): Promise<nbformat.IOutput[]> {
+        const stopWatch = new StopWatch();
+        const notebookPromise = this.startNotebook();
+        const promise = this.kernelExecution.executeHidden(notebookPromise, code, this.notebookDocument);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        return promise;
+    }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
-
-        const promise = this.kernelExecution.executeHidden(notebookPromise, code, this.notebookDocument);
-
+        const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         return promise;
     }

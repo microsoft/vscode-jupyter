@@ -7,7 +7,7 @@ import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 
 export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<boolean> {
     const code = 'import ipykernel\nprint(ipykernel.__version__)';
-    const output = await kernel.executeHidden(code);
+    const output = await kernel.queueAndExeceuteHidden(code);
 
     if (output[0].text) {
         const version = output[0].text.toString().split('.');
