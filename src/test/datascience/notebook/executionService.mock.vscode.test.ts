@@ -121,9 +121,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const observableResult = new Subject();
         observableResult.next();
         observableResult.complete();
-        when(inotebook.executeObservable(anything(), anything(), anything(), anything(), anything())).thenReturn(
-            observableResult.asObservable() as any
-        );
         const kernelSocket = new Subject<KernelSocketInformation>();
         kernelSocket.next();
         kernelSocket.complete();
