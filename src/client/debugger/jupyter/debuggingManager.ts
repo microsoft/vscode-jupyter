@@ -36,7 +36,7 @@ import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '.
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
-import { assertIsDebugConfig, isUsingIpykernel6OrLater } from './helper';
+import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
 
 /**
@@ -238,9 +238,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             return;
         }
 
-        try {
-            this.notebookInProgress.add(editor.document);
-            if (await this.checkForIpykernel6(editor.document)) {
+        const checkIpykernelAndStart = async (allowSelectKernel = true): Promise<void> => {
+            const ipykernelResult = await this.checkForIpykernel6(editor.document);
+            if (ipykernelResult === IpykernelCheckResult.Ok) {
                 switch (mode) {
                     case KernelDebugMode.Everything:
                         await this.startDebugging(editor.document);
@@ -260,9 +260,20 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         }
                         break;
                 }
-            } else {
-                void this.installIpykernel6();
+            } else if (
+                ipykernelResult === IpykernelCheckResult.Missing ||
+                ipykernelResult === IpykernelCheckResult.Unknown
+            ) {
+                void this.promptInstallIpykernel6();
+            } else if (ipykernelResult === undefined && allowSelectKernel) {
+                await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                return checkIpykernelAndStart(false);
             }
+        };
+
+        try {
+            this.notebookInProgress.add(editor.document);
+            await checkIpykernelAndStart();
         } finally {
             this.notebookInProgress.delete(editor.document);
         }
@@ -410,7 +421,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return kernel;
     }
 
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult | undefined> {
         try {
             let kernel = this.kernelProvider.get(doc);
 
@@ -429,17 +440,19 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             if (kernel) {
                 const result = await isUsingIpykernel6OrLater(kernel);
                 sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
-                    status: result ? 'installed' : 'notInstalled'
+                    status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
                 });
                 return result;
+            } else {
+                return undefined;
             }
         } catch {
             traceError('Debugging: Could not check for ipykernel 6');
         }
-        return false;
+        return IpykernelCheckResult.Unknown;
     }
 
-    private async installIpykernel6() {
+    private async promptInstallIpykernel6() {
         const response = await this.appShell.showInformationMessage(
             DataScience.needIpykernel6(),
             { modal: true },
