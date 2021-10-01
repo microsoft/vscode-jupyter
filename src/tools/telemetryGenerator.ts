@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import * as ts from 'typescript';
 import * as glob from 'glob';
-import { ConsoleForegroundColors } from '../client/logging/_global';
 
 /** Generate documentation for all classes in a set of .ts files */
 function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
