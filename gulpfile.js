@@ -85,8 +85,7 @@ gulp.task('checkNpmDependencies', (done) => {
             }
             if (!version.includes(expectedVersion.version)) {
                 errors.push(
-                    `${expectedVersion.name} version needs to be at least ${
-                        expectedVersion.version
+                    `${expectedVersion.name} version needs to be at least ${expectedVersion.version
                     }, current ${version}, ${parent ? `(parent package ${parent})` : ''}`
                 );
             }
@@ -193,9 +192,9 @@ async function updateBuildNumber(args) {
         const newVersion =
             versionParts.length > 1
                 ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2].substring(
-                      0,
-                      3
-                  )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
+                    0,
+                    3
+                )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
                 : packageJson.version;
         packageJson.version = newVersion;
 
@@ -360,3 +359,8 @@ function hasNativeDependencies() {
     }
     return false;
 }
+
+gulp.task('generateTelemetryMd', async () => {
+    const generator = require('./out/tools/telemetryGenerator');
+    return generator.default();
+})
