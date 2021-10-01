@@ -7,7 +7,7 @@ on:
 permissions:
   issues: write
 
-jobs:            
+jobs:
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
@@ -19,7 +19,7 @@ jobs:
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'joyceerhl', 'DavidKutu', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'DavidKutu', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -55,8 +55,20 @@ jobs:
           echo ${{steps.week.outputs.odd}}
           echo ${{steps.hour.outputs.hour}}
         shell: bash
-      - name: Even late friday (David)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 0 && steps.day.outputs.number == 5 && steps.hour.outputs.hour >= 16
+      - name: Saturday (Claudia)
+        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 6
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.addAssignees({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['claudiaregio']
+            })
+      - name: Sunday (David)
+        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
         uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
@@ -67,20 +79,8 @@ jobs:
               repo: context.repo.repo,
               assignees: ['DavidKutu']
             })
-      - name: Odd late friday (Joyce)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && steps.day.outputs.number == 5 && steps.hour.outputs.hour >= 16
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['joyceerhl']
-            })
-      - name: Even weekends (David)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 0 && (steps.day.outputs.number == 6 || steps.day.outputs.number == 0)
+      - name: Monday (David)
+        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
         uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
@@ -90,42 +90,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               assignees: ['DavidKutu']
-            })
-      - name: Odd weekends (Joyce)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && (steps.day.outputs.number == 6 || steps.day.outputs.number == 0)
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['joyceerhl']
-            })
-      - name: Odd Monday (David)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['DavidKutu']
-            })
-      - name: Even Monday (Joyce)
-        if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 0 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['joyceerhl']
             })
       - name: Tuesday (Ian)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
@@ -164,7 +128,7 @@ jobs:
               assignees: ['DonJayamanne']
             })
       - name: Friday (Claudia)
-        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5 && steps.hour.outputs.hour < 16)
+        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5)
         uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
