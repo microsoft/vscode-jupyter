@@ -8,7 +8,7 @@
    ([#1909](https://github.com/Microsoft/vscode-jupyter/issues/1909))
 1. Added support to use Run by Line and Notebook Debugging in remote kernels.
    ([#7576](https://github.com/Microsoft/vscode-jupyter/issues/7576))
-1. Added abiliyt to create notebooks using the menu options `File -> New File...`.
+1. Added ability to create notebooks using the menu option `File -> New File...`.
    ([#7363](https://github.com/Microsoft/vscode-jupyter/issues/7363))
 1. Added a command to the command palette and an icon to the notebook toolbar to open the the table of contents for Notebooks.
    ([#7305](https://github.com/microsoft/vscode-jupyter/issues/7305))
