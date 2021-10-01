@@ -1,5 +1,94 @@
 # Changelog
 
+## 2021.9.100 (6 October 2021)
+
+### Enhancements
+
+1. Split Notebook renderers into a separate extension ([Jupyter Notebook Renderers](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers)), allowing users to view Notebook outputs such as plotly, vega on [github.dev](https://github.dev).
+   ([#1909](https://github.com/Microsoft/vscode-jupyter/issues/1909))
+1. Added support to use Run by Line and Notebook Debugging in remote kernels.
+   ([#7576](https://github.com/Microsoft/vscode-jupyter/issues/7576))
+1. Added abiliyt to create notebooks using the menu options `File -> New File...`.
+   ([#7363](https://github.com/Microsoft/vscode-jupyter/issues/7363))
+1. Added a command to the command palette and an icon to the notebook toolbar to open the the table of contents for Notebooks.
+   ([#7305](https://github.com/microsoft/vscode-jupyter/issues/7305))
+
+### Fixes
+
+1. Strip CR from CRLF of source when sending code to the kernel for execution.
+   ([#4576](https://github.com/Microsoft/vscode-jupyter/issues/4576))
+1. Show global Python kernel specs that use ipykernel to launch.
+   ([#6389](https://github.com/Microsoft/vscode-jupyter/issues/6389))
+1. Fixes related to remote connections in `Interactive Window`.
+   ([#6881](https://github.com/Microsoft/vscode-jupyter/issues/6881))
+1. Fixes to restarting of kernels when kernel dies (as opposed to manually restarting a kernel).
+   ([#7167](https://github.com/Microsoft/vscode-jupyter/issues/7167))
+1. Code cell submissions should go to active window in 'multiple' mode.
+   ([#7249](https://github.com/Microsoft/vscode-jupyter/issues/7249))
+1. Interrupt kernel button on interactive window toolbar should be disabled when kernel is not busy.
+   ([#7269](https://github.com/Microsoft/vscode-jupyter/issues/7269))
+1. Fix 'Connecting to...' message in interactive window not being updated in-place if a code cell is inserted before the connection completes.
+   ([#7280](https://github.com/Microsoft/vscode-jupyter/issues/7280))
+1. Fix changing kernel in interactive windows started with an interpreter that does not have ipykernel installed.
+   ([#7288](https://github.com/Microsoft/vscode-jupyter/issues/7288))
+1. Preserve leading tab characters on code lines for #%% cells submitted to interactive window.
+   ([#7303](https://github.com/Microsoft/vscode-jupyter/issues/7303))
+1. Display error message from Python stack trace when kernel dies (also if kernel dies when attempting to restart).
+   ([#7318](https://github.com/Microsoft/vscode-jupyter/issues/7318))
+1. Don't add an extra linefeed in interactive window markdown.
+   ([#7355](https://github.com/Microsoft/vscode-jupyter/issues/7355))
+1. Fix Debug Cell codelens opening the wrong source file after restarting the kernel in the interactive window.
+   ([#7366](https://github.com/Microsoft/vscode-jupyter/issues/7366))
+1. Refresh list of remote kernels if a notebook is already open.
+   ([#7385](https://github.com/Microsoft/vscode-jupyter/issues/7385))
+1. Fix allowing the dataframe viewer to open large data frames. Also fix variable fetching code from updating the execution count.
+   ([#7420](https://github.com/Microsoft/vscode-jupyter/issues/7420))
+1. Apply background to the image element in a notebook output, instead of applying it to the entire output container.
+   ([#7470](https://github.com/Microsoft/vscode-jupyter/issues/7470))
+1. Support retina output option for Matplotlib.
+   ([#7471](https://github.com/Microsoft/vscode-jupyter/issues/7471))
+1. Clicking 'Change Kernel' for interactive window started from script file when ipykernel is not installed should display the kernel picker.
+   ([#7476](https://github.com/Microsoft/vscode-jupyter/issues/7476))
+1. Fix `jupyter.magicCommandsAsComments` when executing code cells in the interactive window.
+   ([#7481](https://github.com/Microsoft/vscode-jupyter/issues/7481))
+1. `jupyter.interactive.removeCell` now supports being invoked from the command palette or with a custom keybinding when an interactive window has focus.
+   ([#7541](https://github.com/Microsoft/vscode-jupyter/issues/7541))
+1. Fix the context keys for the variable explorer when working with the interactive window.
+   ([#7556](https://github.com/Microsoft/vscode-jupyter/issues/7556))
+1. Ensure empty #%% cells are skipped and do not interfere with running of subsequent cells in the interactive window.
+   ([#7581](https://github.com/Microsoft/vscode-jupyter/issues/7581))
+1. Fix interactive window debugging sourcemap resolution after running a markdown cell.
+   ([#7589](https://github.com/Microsoft/vscode-jupyter/issues/7589))
+1. Support a highlight around a cell when goto cell is clicked in the interactive window.
+   ([#7648](https://github.com/Microsoft/vscode-jupyter/issues/7648))
+1. Support multiline comments in the middle of a cell being submitted to the interactive window.
+   ([#7658](https://github.com/Microsoft/vscode-jupyter/issues/7658))
+
+### Code Health
+
+1. Basic test for plotviewer metadata and SVG setting.
+   ([#7209](https://github.com/Microsoft/vscode-jupyter/issues/7209))
+1. Fix failing variable view tests.
+   ([#7443](https://github.com/Microsoft/vscode-jupyter/issues/7443))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
 ## 2021.8.203 (1 September 2021)
 
 ### Enhancements
