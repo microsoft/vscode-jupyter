@@ -98,11 +98,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
-    public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
+    public async getActiveInterpreterOrDefaultController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): Promise<VSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
-            return this.createActiveInterpreterController(InteractiveWindowView);
+            return this.createActiveInterpreterController(notebookType);
         } else {
-            return this.createDefaultRemoteControllerForInteractiveWindow();
+            return this.createDefaultRemoteController();
         }
     }
 
@@ -209,7 +211,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
         return this.getOrCreateController(activeInterpreter, notebookType);
     }
-    private async createDefaultRemoteControllerForInteractiveWindow() {
+    private async createDefaultRemoteController() {
         // Get all remote kernels
         await this.loadNotebookControllers();
         const controllers = this.registeredNotebookControllers();

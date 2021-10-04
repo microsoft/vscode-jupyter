@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -49,7 +49,6 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) private readonly appService: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
@@ -163,14 +162,11 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                 // Create our notebook
                 const notebook = new JupyterNotebookBase(
                     session,
-                    configService,
                     disposableRegistry,
                     info,
                     resource,
                     identity,
-                    this.getDisposedError.bind(this),
                     this.workspaceService,
-                    this.appService,
                     this.fs
                 );
 
