@@ -97,6 +97,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.COPY_SOURCE</summary>
@@ -110,6 +113,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.CREATE_NEW_INTERACTIVE</summary>
@@ -600,6 +606,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DEBUGPY_INSTALL_FAILED</summary>
@@ -613,6 +622,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL</summary>
@@ -626,6 +638,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED</summary>
@@ -639,6 +654,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DELETE_ALL_CELLS</summary>
@@ -652,6 +670,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DELETE_CELL</summary>
@@ -665,6 +686,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER</summary>
@@ -830,6 +854,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.EXPORT_NOTEBOOK</summary>
@@ -843,6 +870,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.EXPORT_NOTEBOOK_AS</summary>
@@ -1151,6 +1181,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.IMPORT_NOTEBOOK</summary>
@@ -1228,6 +1261,9 @@ No description provided
         command: JupyterCommands;
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN</summary>
@@ -1301,6 +1337,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK</summary>
@@ -1338,6 +1377,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP</summary>
@@ -1351,6 +1393,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE</summary>
@@ -1364,6 +1409,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN</summary>
@@ -1377,6 +1425,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL</summary>
@@ -1390,6 +1441,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE</summary>
@@ -1403,6 +1457,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW</summary>
@@ -1416,6 +1473,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.REDO</summary>
@@ -1429,6 +1489,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN</summary>
@@ -1442,6 +1505,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD</summary>
@@ -1455,6 +1521,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE</summary>
@@ -1468,6 +1537,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.SAVE</summary>
@@ -1481,6 +1553,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS</summary>
@@ -1494,6 +1569,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT</summary>
@@ -1507,6 +1585,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.UNDO</summary>
@@ -1520,6 +1601,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS</summary>
@@ -1533,6 +1617,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.ADD_TO_END</summary>
@@ -1546,6 +1633,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE</summary>
@@ -1559,6 +1649,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN</summary>
@@ -1572,6 +1665,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.DELETE_CELL</summary>
@@ -1585,6 +1681,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW</summary>
@@ -1598,6 +1697,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN</summary>
@@ -1611,6 +1713,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP</summary>
@@ -1624,6 +1729,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.RUN</summary>
@@ -1637,6 +1745,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE</summary>
@@ -1650,6 +1761,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.RUN_ALL</summary>
@@ -1663,6 +1777,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.RUN_BELOW</summary>
@@ -1676,6 +1793,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.SAVE</summary>
@@ -1689,6 +1809,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.SELECT_KERNEL</summary>
@@ -1702,6 +1825,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER</summary>
@@ -1715,6 +1841,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER</summary>
@@ -1728,6 +1857,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.NATIVE.OPEN_NOTEBOOK</summary>
@@ -2114,6 +2246,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.RECOMMENT_EXTENSION</summary>
@@ -2210,6 +2345,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.REFRESH_DATA_VIEWER</summary>
@@ -2275,6 +2413,9 @@ src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":135,"cha
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.RUN_ALL_CELLS</summary>
@@ -2339,6 +2480,9 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":190,"character"
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.RUN_BY_LINE_STEP</summary>
@@ -2352,6 +2496,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.RUN_BY_LINE_STOP</summary>
@@ -2365,6 +2512,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER</summary>
@@ -2908,6 +3058,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.SCROLLED_TO_CELL</summary>
@@ -2921,6 +3074,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command</summary>
@@ -3253,6 +3409,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.UNDO</summary>
@@ -3266,6 +3425,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER</summary>
@@ -3378,6 +3540,9 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.USER_INSTALLED_PANDAS</summary>
@@ -3417,6 +3582,9 @@ No description provided
 -  runByLine: boolean
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE</summary>
@@ -3430,6 +3598,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN</summary>
@@ -3443,6 +3614,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.VSCODE_NATIVE.DELETE_CELL</summary>
@@ -3456,6 +3630,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.VSCODE_NATIVE.INSERT_CELL</summary>
@@ -3470,6 +3647,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DATASCIENCE.VSCODE_NATIVE.MOVE_CELL</summary>
@@ -3483,6 +3663,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF</summary>
@@ -3554,6 +3737,9 @@ No description provided
 -  count: number
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.CODE_LENS_ACQ_TIME</summary>
@@ -3645,6 +3831,9 @@ src/client/common/application/commandManager.ts:{"line":101,"character":41}
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.COMPLETION_TIME_FROM_LS</summary>
@@ -3664,6 +3853,9 @@ src/client/common/application/commandManager.ts:{"line":101,"character":41}
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.CONNECTFAILEDJUPYTER</summary>
@@ -3968,6 +4160,9 @@ No description provided
 -  command: string
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC</summary>
@@ -3981,6 +4176,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION</summary>
@@ -4002,6 +4200,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.GET_PASSWORD_FAILURE</summary>
@@ -4065,6 +4266,9 @@ src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":246,"character"
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF</summary>
@@ -4078,6 +4282,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE</summary>
@@ -4172,6 +4379,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF</summary>
@@ -4293,6 +4503,9 @@ src/client/datascience/jupyter/jupyterInvalidKernelError.ts:{"line":18,"characte
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED</summary>
@@ -4334,6 +4547,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts:{"line":226,"characte
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.IPYWIDGET_LOAD_FAILURE</summary>
@@ -4506,6 +4722,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":179,"chara
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_LOCAL</summary>
@@ -4716,6 +4935,9 @@ export class JupyterWaitForIdleError extends BaseError {
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE</summary>
@@ -4867,6 +5089,9 @@ src/client/datascience/telemetry/kernelTelemetry.ts:{"line":37,"character":53}
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.KERNEL_FINDER_PERF</summary>
@@ -5046,6 +5271,9 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.KERNEL_REGISTER_FAILED</summary>
@@ -5064,6 +5292,9 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.KERNEL_SPEC_NOT_FOUND</summary>
@@ -5111,6 +5342,9 @@ No description provided
         count: number;
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED</summary>
@@ -5198,6 +5432,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT</summary>
@@ -5238,6 +5475,9 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":65,"ch
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.NATIVE.WORKSPACE_NOTEBOOK_COUNT</summary>
@@ -5280,6 +5520,9 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"ch
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED</summary>
@@ -6216,6 +6459,9 @@ No description provided
         count: number;
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.RESTART_JUPYTER_TIME</summary>
@@ -6661,6 +6907,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.SYNC_ALL_CELLS</summary>
@@ -6675,6 +6924,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.SYNC_SINGLE_CELL</summary>
@@ -6688,6 +6940,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.USE_EXISTING_KERNEL</summary>
@@ -6701,6 +6956,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.USE_INTERPRETER_AS_KERNEL</summary>
@@ -6714,6 +6972,9 @@ No description provided
 
 
 ## Locations Used
+
+Event can be removed. Not referenced anywhere
+
 </details>
 <details>
   <summary>DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME</summary>

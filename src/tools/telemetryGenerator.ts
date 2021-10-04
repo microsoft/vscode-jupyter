@@ -265,12 +265,16 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         }
     });
     writeOutput(`\n## Locations Used`);
-    entry.locations.forEach((l) => {
-        writeOutput(`${l.location}`);
-        writeOutput('```typescript');
-        writeOutput(l.code);
-        writeOutput('```\n');
-    });
+    if (entry.locations.length < 1) {
+        writeOutput(`\nEvent can be removed. Not referenced anywhere\n`);
+    } else {
+        entry.locations.forEach((l) => {
+            writeOutput(`${l.location}`);
+            writeOutput('```typescript');
+            writeOutput(l.code);
+            writeOutput('```\n');
+        });
+    }
     writeOutput(`</details>`);
 }
 
