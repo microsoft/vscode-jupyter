@@ -108,8 +108,8 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
             progressDisposable = !disableUI
                 ? this.progressReporter.createProgressIndicator(
-                    localize.DataScience.connectingToKernel().format(displayName)
-                )
+                      localize.DataScience.connectingToKernel().format(displayName)
+                  )
                 : undefined;
 
             traceInfo(`Computing working directory ${identity.toString()}`);

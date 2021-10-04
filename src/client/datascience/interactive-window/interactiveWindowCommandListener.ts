@@ -16,7 +16,13 @@ import {
     workspace,
     WorkspaceEdit
 } from 'vscode';
-import { IApplicationShell, IClipboard, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import {
+    IApplicationShell,
+    IClipboard,
+    ICommandManager,
+    IDocumentManager,
+    IVSCodeNotebook
+} from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
@@ -60,7 +66,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
         @inject(ICommandManager) private commandManager: ICommandManager
-    ) { }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
@@ -291,7 +297,10 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
                         file.fsPath
                     );
                     // Next open this notebook & execute it.
-                    await this.notebook.showNotebookDocument(uri, { preserveFocus: false, viewColumn: ViewColumn.Beside });
+                    await this.notebook.showNotebookDocument(uri, {
+                        preserveFocus: false,
+                        viewColumn: ViewColumn.Beside
+                    });
                     await this.commandManager.executeCommand('notebook.execute');
                     return uri;
                 }

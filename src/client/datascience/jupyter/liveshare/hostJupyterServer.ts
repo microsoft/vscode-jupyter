@@ -146,11 +146,11 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                 possibleSession && sessionDirectoryMatches
                     ? possibleSession
                     : await sessionManager.startNew(
-                        resource,
-                        info.kernelConnectionMetadata,
-                        workingDirectory,
-                        cancelToken
-                    );
+                          resource,
+                          info.kernelConnectionMetadata,
+                          workingDirectory,
+                          cancelToken
+                      );
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };
@@ -242,11 +242,11 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
                     ? this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken)
                     : this.remoteKernelFinder.findKernel(
-                        resource,
-                        launchInfo.connectionInfo,
-                        notebookMetadata,
-                        cancelToken
-                    ));
+                          resource,
+                          launchInfo.connectionInfo,
+                          notebookMetadata,
+                          cancelToken
+                      ));
                 traceInfoIf(isCI, `kernelInfo found ${kernelInfo?.id}`);
             }
             if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {

@@ -35,7 +35,6 @@ import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } 
 import { executeSilently } from './kernels/kernel';
 import { isCI } from '../../common/constants';
 
-
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
@@ -114,9 +113,7 @@ export class JupyterNotebookBase implements INotebook {
 
             try {
                 traceInfo(`Shutting down session ${this.identity.toString()}`);
-                await this.session
-                    .dispose()
-                    .catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
+                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             } catch (exc) {
                 traceError(`Exception shutting down session `, exc);
             }
@@ -210,7 +207,8 @@ export class JupyterNotebookBase implements INotebook {
         ]);
         traceInfoIf(
             isCI,
-            `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${result ? JSON.stringify(result) : 'empty'
+            `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
+                result ? JSON.stringify(result) : 'empty'
             }`
         );
         if (result && result.content) {
