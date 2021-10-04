@@ -153,8 +153,8 @@ export class MockJupyterSession implements IJupyterSession {
     public requestDebug(
         _content: KernelMessage.IDebugRequestMsg['content'],
         _disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
-        return undefined;
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
+        throw new Error('Not implemented');
     }
 
     public requestInspect(
@@ -196,7 +196,7 @@ export class MockJupyterSession implements IJupyterSession {
 
     public async requestComplete(
         _content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    ): Promise<KernelMessage.ICompleteReplyMsg> {
         await sleep(this.completionTimeout);
 
         return {

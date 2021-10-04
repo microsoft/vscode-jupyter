@@ -277,26 +277,24 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 arguments: request.arguments
             });
 
-            if (control) {
-                control.onReply = (msg) => {
-                    const message = msg.content as DebugProtocol.ProtocolMessage;
-                    getMessageSourceAndHookIt(message, (source) => {
-                        if (source && source.path) {
-                            const cell = this.fileToCell.get(source.path);
-                            if (cell) {
-                                source.name = path.basename(cell.document.uri.path);
-                                if (cell.index >= 0) {
-                                    source.name += `, Cell ${cell.index + 1}`;
-                                }
-                                source.path = cell.document.uri.toString();
+            control.onReply = (msg) => {
+                const message = msg.content as DebugProtocol.ProtocolMessage;
+                getMessageSourceAndHookIt(message, (source) => {
+                    if (source && source.path) {
+                        const cell = this.fileToCell.get(source.path);
+                        if (cell) {
+                            source.name = path.basename(cell.document.uri.path);
+                            if (cell.index >= 0) {
+                                source.name += `, Cell ${cell.index + 1}`;
                             }
+                            source.path = cell.document.uri.toString();
                         }
-                    });
+                    }
+                });
 
-                    this.trace('response', JSON.stringify(message));
-                    this.sendMessage.fire(message);
-                };
-            }
+                this.trace('response', JSON.stringify(message));
+                this.sendMessage.fire(message);
+            };
         } else if (message.type === 'response') {
             // responses of reverse requests
             const response = message as DebugProtocol.Response;

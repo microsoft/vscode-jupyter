@@ -153,19 +153,23 @@ export class JupyterNotebookBase implements INotebook {
             // Not running, just exit
             deferred.reject(exitError);
         } else {
-            // Ask session for inspect result
-            this.session
-                .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
-                .then((r) => {
-                    if (r && r.content.status === 'ok') {
-                        deferred.resolve(r.content.data);
-                    } else {
-                        deferred.resolve(undefined);
-                    }
-                })
-                .catch((ex) => {
-                    deferred.reject(ex);
-                });
+            try {
+                // Ask session for inspect result
+                this.session
+                    .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
+                    .then((r) => {
+                        if (r && r.content.status === 'ok') {
+                            deferred.resolve(r.content.data);
+                        } else {
+                            deferred.resolve(undefined);
+                        }
+                    })
+                    .catch((ex) => {
+                        deferred.reject(ex);
+                    });
+            } catch (ex) {
+                deferred.reject(ex);
+            }
         }
 
         if (cancelToken) {
