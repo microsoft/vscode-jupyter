@@ -91,16 +91,73 @@ function writeOutput(line: string) {
     fs.writeFileSync(fileDescriptor, `${line}\n`);
 }
 
+const MultineLineRegex = /(?:\/\*)((.|[\r\n])*?)(?:\*\/)/g;
+const StarRemovalRegex = /(?:\*)((.|[\r\n])*?)(.*)/g;
+const NormalRemovalRegex = /(?:\/\/)((.|[\r\n])*?)(.*)/g;
+
+function extractLinesFromComments(comment: string): string {
+    // Strip out comment on each line
+    MultineLineRegex.lastIndex = -1;
+    const multineLineMatch = MultineLineRegex.exec(comment);
+    if (multineLineMatch && multineLineMatch.length > 1) {
+        // Scrape off the * on the front
+        const withStars = multineLineMatch[1].toString();
+
+        // Go through the star removal regex, adding up the lines
+        StarRemovalRegex.lastIndex = -1;
+        let m: RegExpExecArray | null = null;
+        let result = '';
+        while ((m = StarRemovalRegex.exec(withStars)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === StarRemovalRegex.lastIndex) {
+                StarRemovalRegex.lastIndex++;
+            }
+
+            if (m && m.length > 3) {
+                result = `${result}\n${m[3]}`;
+            }
+        }
+        return result;
+    }
+    // Otherwise should be regular comments
+    NormalRemovalRegex.lastIndex = -1;
+    const regularCommentMatch = NormalRemovalRegex.test(comment);
+    if (regularCommentMatch) {
+        NormalRemovalRegex.lastIndex = -1;
+        let m: RegExpExecArray | null = null;
+        let result = '';
+        while ((m = NormalRemovalRegex.exec(comment)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === NormalRemovalRegex.lastIndex) {
+                NormalRemovalRegex.lastIndex++;
+            }
+
+            if (m && m.length > 3) {
+                result = `${result}\n${m[3]}`;
+            }
+        }
+        return result;
+    }
+    // No comments found
+    return '';
+}
+
 function computeDescription(
     host: TypeScriptLanguageServiceHost,
     indexNode: ts.Node,
     grandParent: ts.Node,
     indexSourceFile: ts.SourceFile
 ) {
-    if (grandParent && grandParent.pos > indexNode.pos + 10) {
-        const endRefLine = indexSourceFile.getLineEndOfPosition(indexNode.pos || 0);
-        const snapshot = host.getScriptSnapshot(`./${indexSourceFile.fileName}`);
-        return snapshot.getText(grandParent?.pos || 0, endRefLine);
+    if (grandParent && grandParent.pos < indexNode.pos - 10) {
+        const lineOfRef = indexSourceFile.getLineAndCharacterOfPosition(indexNode.pos);
+        const lineOfGrandParent = indexSourceFile.getLineAndCharacterOfPosition(grandParent.pos);
+        if (lineOfRef.line > lineOfGrandParent.line + 1) {
+            const snapshot = host.getScriptSnapshot(`./${indexSourceFile.fileName}`);
+            const startLinePos = indexSourceFile.getPositionOfLineAndCharacter(lineOfGrandParent.line + 1, 0);
+            const endLinePos = indexSourceFile.getPositionOfLineAndCharacter(lineOfRef.line, 0);
+            const comment = snapshot.getText(startLinePos, endLinePos);
+            return extractLinesFromComments(comment);
+        }
     }
     return '';
 }
@@ -221,8 +278,9 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
 
         if (ts.isEnumDeclaration(node) && node.members) {
             // This is an enum. Telemetry is described with enums
-            if (node.name.getText(sourceFile).includes('Telemetry')) {
-                console.log(`Found exported telemetry enum ${node.name.text}:`);
+            const nodeName = node.name.getText(sourceFile);
+            if (nodeName.includes('Telemetry') || nodeName.includes('EventName')) {
+                console.log(`Found exported telemetry enum ${nodeName}:`);
                 // This is a telemetry enum. Print out members
                 node.members.forEach((m) => {
                     console.log(`   ${m.getText(sourceFile)}`);

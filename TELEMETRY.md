@@ -8,7 +8,8 @@ Expand each section to see more information about that event.
 ## Description
 
 
-No description provided
+
+ Data Science
 
 ## Properties
 
@@ -139,7 +140,10 @@ src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when a slice is first applied in a
+ data viewer instance to a sliceable Python variable.
 
 ## Properties
 
@@ -163,7 +167,11 @@ src/client/datascience/data-viewing/dataViewer.ts:{"line":296,"character":41}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent whenever the user toggles the checkbox
+ controlling whether a slice is currently being applied to an
+ n-dimensional variable.
 
 ## Properties
 
@@ -187,7 +195,10 @@ src/client/datascience/data-viewing/dataViewer.ts:{"line":181,"character":50}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent whenever the user applies a valid slice
+ to a sliceable Python variable in the data viewer.
 
 ## Properties
 
@@ -726,7 +737,8 @@ src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":69,"character":22}
 ## Description
 
 
-No description provided
+
+ Applies to everything (interactive+Notebooks & local+remote)
 
 ## Properties
 
@@ -999,7 +1011,8 @@ src/client/datascience/variablesView/variableView.ts:{"line":175,"character":41}
 ## Description
 
 
-No description provided
+
+ Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
 
 ## Properties
 
@@ -1023,7 +1036,9 @@ src/client/datascience/notebook/notebookControllerManager.ts:{"line":471,"charac
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
 
 ## Properties
 
@@ -1751,7 +1766,10 @@ src/client/datascience/activation.ts:{"line":51,"character":37}
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
+ This only applies with other extensions like .NET registers with us.
 
 ## Properties
 
@@ -1867,7 +1885,12 @@ src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":236,"character
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to indicate the language used in a notebook
+
+ @type { language: string }
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -2064,7 +2087,8 @@ No description provided
 ## Description
 
 
-No description provided
+
+ Telemetry sent when we recommend installing an extension.
 
 ## Properties
 
@@ -2145,7 +2169,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Sent when the jupyter.refreshDataViewer command is invoked
 
 ## Properties
 
@@ -2193,7 +2219,9 @@ src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":135,"cha
 ## Description
 
 
-No description provided
+
+
+ Misc
 
 ## Properties
 
@@ -2206,7 +2234,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Run Cell Commands in Interactive Python
 
 ## Properties
 
@@ -2254,7 +2284,8 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":190,"character"
 ## Description
 
 
-No description provided
+
+ Run by line events
 
 ## Properties
 
@@ -2653,7 +2684,9 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":399,"character"
 ## Description
 
 
-No description provided
+
+
+ Cell Edit Commands in Interactive Python
 
 ## Properties
 
@@ -2847,7 +2880,12 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when user selects an interpreter to start jupyter server.
+
+ @type {(never | undefined)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -3048,7 +3086,9 @@ src/client/datascience/jupyter/serverSelector.ts:{"line":67,"character":32}
 ## Description
 
 
-No description provided
+
+
+ This telemetry tracks the display of the Picker for Jupyter Remote servers.
 
 ## Properties
 
@@ -3275,7 +3315,12 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when installing a jupyter dependency
+
+ @type {product: string}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -3364,7 +3409,8 @@ No description provided
 ## Description
 
 
-No description provided
+
+ Native notebooks events
 
 ## Properties
 
@@ -3414,7 +3460,9 @@ src/client/api/pythonApi.ts:{"line":366,"character":32}
 ## Description
 
 
-No description provided
+
+
+ Sent when a jupyter session fails to start and we ask the user for a new kernel
 
 ## Properties
 
@@ -3475,7 +3523,9 @@ src/client/datascience/editor-integration/codelensprovider.ts:{"line":53,"charac
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when a command is executed.
 
 ## Properties
 
@@ -3521,7 +3571,13 @@ src/client/common/application/commandManager.ts:{"line":101,"character":41}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
+ This is used to compare against time taken by LS.
+
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -3534,7 +3590,13 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to capture total time taken for completions list to be provided by LS.
+ This is used to compare against time taken by Jupyter.
+
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -3643,7 +3705,9 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":225,"character":86}
 ## Description
 
 
-No description provided
+
+
+ Connecting to an existing Jupyter server, but connecting to localhost.
 
 ## Properties
 
@@ -3691,7 +3755,9 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":256,"character":61}
 ## Description
 
 
-No description provided
+
+ Whether we've attempted to start a raw Python kernel without any interpreter information.
+ If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
 
 ## Properties
 
@@ -3715,7 +3781,10 @@ src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":9
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent to capture first time execution of a cell.
+ If `notebook = true`, this its telemetry for native editor/notebooks.
 
 ## Properties
 
@@ -3750,7 +3819,10 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":1022,"character
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent to capture subsequent execution of a cell.
+ If `notebook = true`, this its telemetry for native editor/notebooks.
 
 ## Properties
 
@@ -3846,7 +3918,15 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
+
+ @type {{
+         kernelSpecFound: boolean;
+         interpreterFound: boolean;
+     }}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -3907,7 +3987,9 @@ src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":246,"character"
 ## Description
 
 
-No description provided
+
+
+ Total time taken to get the preferred kernel for notebook.
 
 ## Properties
 
@@ -3994,7 +4076,8 @@ No description provided
 ## Description
 
 
-No description provided
+
+ Capture telemetry re: how long returning a tooltip takes
 
 ## Properties
 
@@ -4018,7 +4101,9 @@ src/client/datascience/editor-integration/hoverProvider.ts:{"line":78,"character
 ## Description
 
 
-No description provided
+
+
+ Time taken to list the Python interpreters.
 
 ## Properties
 
@@ -4066,7 +4151,11 @@ src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":169,"character
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when a kernel picked crashes on startup
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4090,7 +4179,9 @@ src/client/datascience/jupyter/jupyterInvalidKernelError.ts:{"line":18,"characte
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent with name of a Widget found.
 
 ## Properties
 
@@ -4103,7 +4194,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Something went wrong in looking for a widget.
 
 ## Properties
 
@@ -4127,7 +4220,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts:{"line":226,"characte
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
 
 ## Properties
 
@@ -4140,7 +4235,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
 
 ## Properties
 
@@ -4164,7 +4261,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":156,"chara
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when an ipywidget module loads. Module name is hashed.
 
 ## Properties
 
@@ -4188,7 +4287,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":116,"chara
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
 
 ## Properties
 
@@ -4212,7 +4313,10 @@ src/client/datascience/ipywidgets/ipyWidgetMessageDispatcher.ts:{"line":503,"cha
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
+ This is always sent when we display a prompt.
 
 ## Properties
 
@@ -4236,7 +4340,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":202,"
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
 
 ## Properties
 
@@ -4260,7 +4366,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":232,"
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
 
 ## Properties
 
@@ -4284,7 +4392,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":179,"chara
 ## Description
 
 
-No description provided
+
+
+ Total time taken to discover a widget script on CDN.
 
 ## Properties
 
@@ -4297,7 +4407,10 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Total time taken to discover all IPyWidgets on disc.
+ This is how long it takes to discover a single widget on disc (from python environment).
 
 ## Properties
 
@@ -4321,7 +4434,9 @@ src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts:{"line":52,
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when the widget tries to send a kernel message but nothing was listening
 
 ## Properties
 
@@ -4345,7 +4460,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":198,"chara
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent with name of a Widget that is used.
 
 ## Properties
 
@@ -4369,7 +4486,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":106,"
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
 
 ## Properties
 
@@ -4428,7 +4547,11 @@ src/client/datascience/jupyter/jupyterServer.ts:{"line":148,"character":57}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to when user customizes the jupyter command line
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4476,7 +4599,12 @@ export class JupyterWaitForIdleError extends BaseError {
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent if there's an error installing a jupyter required dependency
+
+ @type { product: string }
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4489,7 +4617,12 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
+
+ @type {(never | undefined)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4585,7 +4718,8 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":347,"character":32}
 ## Description
 
 
-No description provided
+
+ Misc
 
 ## Properties
 
@@ -4609,7 +4743,12 @@ src/client/datascience/telemetry/kernelTelemetry.ts:{"line":37,"character":53}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to every time a kernel enumeration is done
+
+ @type {...}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4622,7 +4761,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Total time taken to find a kernel on disc or on a remote machine.
 
 ## Properties
 
@@ -4657,7 +4798,9 @@ src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":55,"charact
 ## Description
 
 
-No description provided
+
+
+ Total time taken to Launch a raw kernel.
 
 ## Properties
 
@@ -4762,7 +4905,9 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
 ## Description
 
 
-No description provided
+
+
+ Total time taken to list kernels for VS Code.
 
 ## Properties
 
@@ -4775,7 +4920,12 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to indicate registering a kernel with jupyter failed.
+
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4788,7 +4938,12 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
+
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4825,7 +4980,8 @@ No description provided
 ## Description
 
 
-No description provided
+
+ Native variable view events
 
 ## Properties
 
@@ -4934,7 +5090,9 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":65,"ch
 ## Description
 
 
-No description provided
+
+
+ Telemetry event fired if a failure occurs loading a notebook
 
 ## Properties
 
@@ -4971,7 +5129,11 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"ch
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when a user runs the interactive window with a new file
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -4984,7 +5146,10 @@ No description provided
 ## Description
 
 
-No description provided
+
+ When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+ when user opens the same notebook. We only store the last 100.
+ Count is the number of entries saved in the list.
 
 ## Properties
 
@@ -5008,7 +5173,9 @@ src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts:{"line
 ## Description
 
 
-No description provided
+
+
+ Time take for jupyter server to start and be ready to run first user cell.
 
 ## Properties
 
@@ -5043,7 +5210,9 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":291,"character":34}
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when we have attempted to find the preferred kernel.
 
 ## Properties
 
@@ -5179,7 +5348,11 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":72,
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent for local Python Kernels.
+ Tracking whether we have managed to launch the kernel that matches the interpreter.
+ If match=false, then this means we have failed to launch the right kernel.
 
 ## Properties
 
@@ -5438,7 +5611,8 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":86,
 ## Description
 
 
-No description provided
+
+ Telemetry send when we create a notebook for a raw kernel or jupyter
 
 ## Properties
 
@@ -5486,7 +5660,8 @@ src/client/datascience/kernel-launcher/kernelProcess.ts:{"line":81,"character":3
 ## Description
 
 
-No description provided
+
+ Raw kernel timing events
 
 ## Properties
 
@@ -5510,7 +5685,9 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":173,"character":5
 ## Description
 
 
-No description provided
+
+
+ This event is sent when a RawSession's `dispose` method is called.
 
 ## Properties
 
@@ -5534,7 +5711,10 @@ src/client/datascience/raw-kernel/rawSession.ts:{"line":62,"character":37}
 ## Description
 
 
-No description provided
+
+
+ This event is sent when the underlying kernelProcess for a
+ RawJupyterSession exits.
 
 ## Properties
 
@@ -5604,7 +5784,10 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":148,"character":6
 ## Description
 
 
-No description provided
+
+
+ This event is sent when a RawJupyterSession's `shutdownSession`
+ method is called.
 
 ## Properties
 
@@ -5628,7 +5811,8 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":216,"character":4
 ## Description
 
 
-No description provided
+
+ Raw kernel single events
 
 ## Properties
 
@@ -6089,7 +6273,9 @@ src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":53,"c
 ## Description
 
 
-No description provided
+
+
+ Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
 
 ## Properties
 
@@ -6137,7 +6323,8 @@ src/client/datascience/jupyter/notebookStarter.ts:{"line":144,"character":41}
 ## Description
 
 
-No description provided
+
+ Telemetry sent when starting auto starting Native Notebook kernel fails silently.
 
 ## Properties
 
@@ -6161,7 +6348,12 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":307,"character":53}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when starting a session for a local connection failed.
+
+ @type {(undefined | never)}
+ @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -6279,7 +6471,8 @@ No description provided
 ## Description
 
 
-No description provided
+
+ Sync events
 
 ## Properties
 
@@ -6475,7 +6668,9 @@ src/client/datascience/webviews/webviewHost.ts:{"line":316,"character":32}
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when the ZMQ native binaries do work.
 
 ## Properties
 
@@ -6499,7 +6694,9 @@ src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":57,"cha
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when the ZMQ native binaries do not work.
 
 ## Properties
 
@@ -6514,6 +6711,403 @@ src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":61,"cha
             this._isSupported = false;
         }
 
+```
+
+</details>
+<details>
+  <summary>ENVFILE_VARIABLE_SUBSTITUTION</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent when substituting Environment variables to calculate value of variables
+
+## Properties
+
+
+## Locations Used
+src/client/common/variables/environment.ts:{"line":139,"character":37}
+```typescript
+    });
+    if (!invalid && replacement !== value) {
+        value = replacement;
+        sendTelemetryEvent(EventName.ENVFILE_VARIABLE_SUBSTITUTION);
+    }
+
+    return value.replace(/\\\$/g, '$');
+```
+
+</details>
+<details>
+  <summary>ENVFILE_WORKSPACE</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent when an environment file is detected in the workspace.
+
+## Properties
+
+
+## Locations Used
+src/client/telemetry/envFileTelemetry.ts:{"line":45,"character":33}
+```typescript
+}
+
+function sendTelemetry(hasCustomEnvPath: boolean = false) {
+    sendTelemetryEvent(EventName.ENVFILE_WORKSPACE, undefined, { hasCustomEnvPath });
+
+    envFileTelemetrySent = true;
+}
+```
+
+</details>
+<details>
+  <summary>EXTENSION.LOAD</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent with details just after editor loads
+
+## Properties
+
+
+## Locations Used
+src/client/telemetry/types.ts:{"line":7,"character":70}
+```typescript
+import { IEventNamePropertyMapping } from '../telemetry/index';
+import { EventName } from './constants';
+
+export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EXTENSION_LOAD];
+export const IImportTracker = Symbol('IImportTracker');
+export interface IImportTracker {}
+
+```
+
+src/client/startupTelemetry.ts:{"line":30,"character":37}
+```typescript
+        await activatedPromise;
+        durations.totalActivateTime = stopWatch.elapsedTime;
+        const props = await getActivationTelemetryProps(serviceContainer);
+        sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props);
+    } catch (ex) {
+        traceError('sendStartupTelemetry() failed.', ex);
+    }
+```
+
+src/client/startupTelemetry.ts:{"line":51,"character":37}
+```typescript
+                traceError('getActivationTelemetryProps() failed.', ex);
+            }
+        }
+        sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props, ex);
+    } catch (exc2) {
+        traceError('sendErrorTelemetry() failed.', exc2);
+    }
+```
+
+</details>
+<details>
+  <summary>HASHED_PACKAGE_NAME</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent with details when tracking imports
+
+## Properties
+
+
+## Locations Used
+src/client/telemetry/importTracker.ts:{"line":207,"character":37}
+```typescript
+        // Hash the package name so that we will never accidentally see a
+        // user's private package name.
+        const hash = getTelemetrySafeHashedString(packageName);
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash });
+    }
+
+    private lookForImports(lines: (string | undefined)[]) {
+```
+
+src/test/telemetry/importTracker.unit.test.ts:{"line":43,"character":65}
+```typescript
+        public static expectHashes(...hashes: string[]) {
+            expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
+            if (hashes.length > 0) {
+                expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+            }
+
+            Reporter.properties.pop(); // HASHED_PACKAGE_PERF
+```
+
+</details>
+<details>
+  <summary>HASHED_PACKAGE_PERF</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+## Locations Used
+src/client/telemetry/importTracker.ts:{"line":160,"character":32}
+```typescript
+        }
+    }
+
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkNotebookDocument(e: NotebookDocument) {
+        this.pendingChecks.delete(e.uri.fsPath);
+        const lines = this.getNotebookDocumentLines(e);
+```
+
+src/client/telemetry/importTracker.ts:{"line":167,"character":32}
+```typescript
+        this.lookForImports(lines);
+    }
+
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
+        if (!isJupyterNotebook(e.cell.notebook)) {
+            return;
+```
+
+src/client/telemetry/importTracker.ts:{"line":191,"character":32}
+```typescript
+        this.lookForImports(result);
+    }
+
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkDocument(document: TextDocument) {
+        this.pendingChecks.delete(document.fileName);
+        const lines = this.getDocumentLines(document);
+```
+
+src/test/telemetry/importTracker.unit.test.ts:{"line":41,"character":61}
+```typescript
+        public static measures: {}[] = [];
+
+        public static expectHashes(...hashes: string[]) {
+            expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
+            if (hashes.length > 0) {
+                expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+            }
+```
+
+</details>
+<details>
+  <summary>JUPYTER_EXPERIMENTS_OPT_IN_OUT</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent with details when a user has requested to opt it or out of an experiment group
+
+## Properties
+
+
+## Locations Used
+src/client/common/experiments/service.ts:{"line":103,"character":45}
+```typescript
+        // so we need to perform these checks and send the corresponding telemetry manually.
+        switch (this.getOptInOptOutStatus(experiment)) {
+            case 'optOut': {
+                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
+                    expNameOptedOutOf: experiment
+                });
+
+```
+
+src/client/common/experiments/service.ts:{"line":111,"character":45}
+```typescript
+            }
+            case 'optIn': {
+                await this.experimentationService.isCachedFlightEnabled(experiment);
+                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
+                    expNameOptedInto: experiment
+                });
+
+```
+
+src/test/common/experiments/service.unit.test.ts:{"line":220,"character":37}
+```typescript
+            assert.isTrue(result);
+            assert.equal(telemetryEvents.length, 1);
+            assert.deepEqual(telemetryEvents[0], {
+                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
+                properties: { expNameOptedInto: experiment }
+            });
+            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+```
+
+src/test/common/experiments/service.unit.test.ts:{"line":240,"character":37}
+```typescript
+            assert.isFalse(result);
+            assert.equal(telemetryEvents.length, 1);
+            assert.deepEqual(telemetryEvents[0], {
+                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
+                properties: { expNameOptedOutOf: experiment }
+            });
+            sinon.assert.notCalled(isCachedFlightEnabledStub);
+```
+
+</details>
+<details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+## Locations Used
+src/client/datascience/commands/commandRegistry.ts:{"line":545,"character":45}
+```typescript
+                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                }
+            } catch (e) {
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
+                traceError(e);
+                void this.appShell.showErrorMessage(e.toString());
+            }
+```
+
+</details>
+<details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+## Locations Used
+src/client/datascience/commands/commandRegistry.ts:{"line":527,"character":37}
+```typescript
+        return this.commandManager.executeCommand('outline.focus');
+    }
+    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
+        sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
+        if (this.debugService.activeDebugSession) {
+            try {
+                const variable = convertDebugProtocolVariableToIJupyterVariable(
+```
+
+</details>
+<details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+## Locations Used
+src/client/datascience/commands/commandRegistry.ts:{"line":542,"character":49}
+```typescript
+                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
+                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                }
+            } catch (e) {
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
+```
+
+</details>
+<details>
+  <summary>PLATFORM.INFO</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent after fetching the OS version
+
+## Properties
+
+
+## Locations Used
+src/client/common/platform/platformService.ts:{"line":20,"character":41}
+```typescript
+    public version?: SemVer;
+    constructor() {
+        if (this.osType === OSType.Unknown) {
+            sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                failureType: PlatformErrors.FailedToDetermineOS
+            });
+        }
+```
+
+src/client/common/platform/platformService.ts:{"line":44,"character":53}
+```typescript
+                try {
+                    const ver = coerce(os.release());
+                    if (ver) {
+                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`
+                        });
+                        return (this.version = ver);
+```
+
+src/client/common/platform/platformService.ts:{"line":51,"character":49}
+```typescript
+                    }
+                    throw new Error('Unable to parse version');
+                } catch (ex) {
+                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                        failureType: PlatformErrors.FailedToParseVersion
+                    });
+                    return parseVersion(os.release());
+```
+
+</details>
+<details>
+  <summary>PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+## Locations Used
+src/client/common/process/pythonExecutionFactory.ts:{"line":166,"character":37}
+```typescript
+            options.allowEnvironmentFetchExceptions
+        );
+        const hasEnvVars = envVars && Object.keys(envVars).length > 0;
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
+        if (!hasEnvVars) {
+            return this.create({
+                resource: options.resource,
 ```
 
 </details>
