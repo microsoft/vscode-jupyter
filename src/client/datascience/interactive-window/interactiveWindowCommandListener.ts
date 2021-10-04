@@ -24,7 +24,7 @@ import {
     IVSCodeNotebook
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -46,6 +46,8 @@ import {
 } from '../types';
 import { getActiveInteractiveWindow } from './helpers';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
+import { INotebookControllerManager } from '../notebook/types';
+import { JupyterNotebookView } from '../notebook/constants';
 
 @injectable()
 export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -65,7 +67,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
-        @inject(ICommandManager) private commandManager: ICommandManager
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(INotebookControllerManager) private controllerManager: INotebookControllerManager
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -301,6 +304,15 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
                         preserveFocus: false,
                         viewColumn: ViewColumn.Beside
                     });
+                    const preferredController = await this.controllerManager.getActiveInterpreterOrDefaultController(
+                        JupyterNotebookView
+                    );
+                    if (preferredController) {
+                        await this.commandManager.executeCommand('notebook.selectKernel', {
+                            id: preferredController.id,
+                            extension: JVSC_EXTENSION_ID
+                        });
+                    }
                     await this.commandManager.executeCommand('notebook.execute');
                     return uri;
                 }

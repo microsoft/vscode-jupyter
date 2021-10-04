@@ -66,6 +66,7 @@ import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/link
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
+import { InteractiveWindowView } from '../notebook/constants';
 
 type InteractiveCellMetadata = {
     inputCollapsed: boolean;
@@ -184,7 +185,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async createEditorReadyPromise(): Promise<NotebookEditor> {
-        const preferredController = await this.notebookControllerManager.getInteractiveController();
+        const preferredController = await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
+            InteractiveWindowView
+        );
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
