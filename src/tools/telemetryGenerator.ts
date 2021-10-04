@@ -66,11 +66,141 @@ function findNode(sourceFile: ts.SourceFile, position: number): ts.Node | undefi
     return found;
 }
 
+type TelemetryProperty = {
+    name: string;
+    description: string;
+};
+
+type TelemetryLocation = {
+    location: string;
+    code: string;
+};
+
+type TelemetryEntry = {
+    name: string;
+    description: string;
+    locations: TelemetryLocation[];
+    properties: TelemetryProperty[];
+};
+
+let fileDescriptor: number = 0;
+function writeOutput(line: string) {
+    if (fileDescriptor === 0) {
+        fileDescriptor = fs.openSync(`./TELEMETRY.md`, 'w');
+    }
+    fs.writeFileSync(fileDescriptor, `${line}\n`);
+}
+
+function computeDescription(
+    host: TypeScriptLanguageServiceHost,
+    indexNode: ts.Node,
+    grandParent: ts.Node,
+    indexSourceFile: ts.SourceFile
+) {
+    if (grandParent && grandParent.pos > indexNode.pos + 10) {
+        const endRefLine = indexSourceFile.getLineEndOfPosition(indexNode.pos || 0);
+        const snapshot = host.getScriptSnapshot(`./${indexSourceFile.fileName}`);
+        return snapshot.getText(grandParent?.pos || 0, endRefLine);
+    }
+    return '';
+}
+
+function computeLocations(
+    program: ts.Program,
+    host: TypeScriptLanguageServiceHost,
+    references: ts.ReferenceEntry[],
+    indexNode: ts.Node
+) {
+    const locations: TelemetryLocation[] = [];
+    references.forEach((r) => {
+        const refSourceFile = program?.getSourceFile(r.fileName);
+        if (refSourceFile) {
+            const refNode = findNode(refSourceFile, r.textSpan.start);
+            if (refNode && refNode.pos !== indexNode.pos) {
+                const snapshot = host.getScriptSnapshot(`./${refSourceFile.fileName}`);
+                // Grab 3 lines in each direction around this refnode for the location
+                const lineAndChar = refSourceFile.getLineAndCharacterOfPosition(refNode.pos);
+                const startPos = refSourceFile.getPositionOfLineAndCharacter(Math.max(lineAndChar.line - 3, 0), 0);
+                const endPos = refSourceFile.getLineEndOfPosition(
+                    refSourceFile.getPositionOfLineAndCharacter(lineAndChar.line + 3, 0)
+                );
+                locations.push({
+                    location: `${refSourceFile.fileName}:${JSON.stringify(lineAndChar)}`,
+                    code: snapshot.getText(startPos, endPos)
+                });
+            }
+        }
+    });
+    return locations;
+}
+
+function computeProperties(_indexNode: ts.Node) {
+    // Properties should be children of the index node. Just skip for now
+    return [];
+}
+
+function generateTelemetryEntry(
+    program: ts.Program,
+    host: TypeScriptLanguageServiceHost,
+    eventDefinition: string,
+    indexNode: ts.Node,
+    indexSourceFile: ts.SourceFile,
+    references: ts.ReferenceEntry[]
+): TelemetryEntry {
+    // First compute event name. Should be in the form:
+    // EnumMember = 'EVENT_NAME'
+    const match = /\s*\w+\s*=\s*'(\w+.+)'/.exec(eventDefinition);
+    const eventName = match ? match[1].toString() : eventDefinition;
+
+    // Then compute description using the grandparent node (comments are ignored, so grandparent
+    // should be the previous ; on the previous entry)
+    const grandParent = indexNode.parent?.parent;
+    const description = computeDescription(host, indexNode, grandParent, indexSourceFile);
+
+    // Then compute all of the locations that the reference telemetry is used
+    const locations = computeLocations(program, host, references, indexNode);
+
+    // Compute properties that are listed in the index node
+    const properties = computeProperties(indexNode);
+
+    // Return the telemetry entry
+    return {
+        name: eventName,
+        description,
+        locations,
+        properties
+    };
+}
+function writeTelemetryEntry(entry: TelemetryEntry) {
+    writeOutput(`<details>`);
+    writeOutput(`  <summary>${entry.name}</summary>\n`);
+    writeOutput(`## Description\n`);
+    if (entry.description.length <= 2) {
+        writeOutput(`\nNo description provided\n`);
+    } else {
+        writeOutput(`\n${entry.description}\n`);
+    }
+    writeOutput(`## Properties\n`);
+    entry.properties.forEach((p) => {
+        writeOutput(`- ${p.name} : `);
+        writeOutput(`  - ${p.description}`);
+    });
+    writeOutput(`\n## Locations Used`);
+    entry.locations.forEach((l) => {
+        writeOutput(`${l.location}`);
+        writeOutput('```typescript');
+        writeOutput(l.code);
+        writeOutput('```\n');
+    });
+    writeOutput(`</details>`);
+}
+
 /** Generate documentation for all classes in a set of .ts files */
 function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
     let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     let program = languageService.getProgram();
+    let entries: TelemetryEntry[] = [];
 
     // Visit every sourceFile in the program
     if (program) {
@@ -81,8 +211,6 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
             }
         }
     }
-
-    return;
 
     /** visit nodes finding exported classes */
     function visit(sourceFile: ts.SourceFile, node: ts.Node) {
@@ -104,23 +232,29 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                         m.getSourceFile().fileName,
                         m.name.pos + m.name.getLeadingTriviaWidth()
                     );
-                    if (references) {
+                    if (references && program) {
                         console.log(`    References:`);
                         references.forEach((r) => {
                             if (!r.isDefinition) {
                                 const refSourceFile = program?.getSourceFile(r.fileName);
                                 if (refSourceFile) {
                                     const refNode = findNode(refSourceFile, r.textSpan.start);
-                                    const endRefLine = refSourceFile.getLineEndOfPosition(refNode?.pos || 0);
-                                    const grandParent = refNode?.parent?.parent;
-                                    const snapshot = host.getScriptSnapshot(`./${r.fileName}`);
-                                    console.log(
-                                        `        ${r.fileName} =>${snapshot.getText(grandParent?.pos || 0, endRefLine)}`
-                                    );
-                                } else {
-                                    console.log(`        ${r.fileName} => ${JSON.stringify(r.textSpan)}`);
+                                    // See if this is the special 'index.ts' file that forces telemetry to be type safe
+                                    if (refNode && r.fileName.endsWith('src/client/telemetry/index.ts')) {
+                                        entries.push(
+                                            generateTelemetryEntry(
+                                                program!,
+                                                host,
+                                                m.getText(sourceFile),
+                                                refNode,
+                                                refSourceFile,
+                                                references
+                                            )
+                                        );
+                                    }
                                 }
                             }
+                            console.log(`        ${r.fileName} => ${JSON.stringify(r.textSpan)}`);
                         });
                     }
                 });
@@ -138,6 +272,21 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
             (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
         );
     }
+
+    // Write our header first
+    writeOutput('# Telemetry created by Jupyter Extension\n');
+    writeOutput('Expand each section to see more information about that event.\n');
+
+    // Sort entries by name
+    const sorted = entries.sort((a, b) => {
+        return a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
+    });
+
+    // Then write out each one
+    sorted.forEach(writeTelemetryEntry);
+
+    // Close our file
+    fs.closeSync(fileDescriptor);
 }
 
 export default async function generateTelemetryMd() {
