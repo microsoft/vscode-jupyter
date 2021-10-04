@@ -239,35 +239,39 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         content: KernelMessage.IExecuteRequestMsg['content'],
         disposeOnDone?: boolean,
         metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
-            : undefined;
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+        if (!this.session?.kernel) {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+        return this.session.kernel.requestExecute(content, disposeOnDone, metadata);
     }
 
     public requestDebug(
         content: KernelMessage.IDebugRequestMsg['content'],
         disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestDebug(content, disposeOnDone)
-            : undefined;
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
+        if (!this.session?.kernel) {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+        return this.session.kernel.requestDebug(content, disposeOnDone);
     }
 
     public requestInspect(
         content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg | undefined> {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestInspect(content)
-            : Promise.resolve(undefined);
+    ): Promise<KernelMessage.IInspectReplyMsg> {
+        if (!this.session?.kernel) {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+        return this.session.kernel.requestInspect(content);
     }
 
     public requestComplete(
         content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestComplete(content)
-            : Promise.resolve(undefined);
+    ): Promise<KernelMessage.ICompleteReplyMsg> {
+        if (!this.session?.kernel) {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+        return this.session.kernel.requestComplete(content);
     }
 
     public sendInputReply(content: string) {

@@ -440,31 +440,29 @@ export class CellExecution implements IDisposable {
             ...{ cellId: this.cell.document.uri.toString() }
         };
 
-        // For Jupyter requests, silent === don't output, while store_history === don't update execution count
-        // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-        const request = (this.request = session.requestExecute(
-            {
-                code: code.replace(/\r\n/g, '\n'),
-                silent: false,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: true
-            },
-            false,
-            metadata
-        ));
-
+        try {
+            // For Jupyter requests, silent === don't output, while store_history === don't update execution count
+            // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
+            this.request = session.requestExecute(
+                {
+                    code: code.replace(/\r\n/g, '\n'),
+                    silent: false,
+                    stop_on_error: false,
+                    allow_stdin: true,
+                    store_history: true
+                },
+                false,
+                metadata
+            );
+        } catch (ex) {
+            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
+            return this.completedWithErrors(new Error('Session cannot generate requests'));
+        }
         // Listen to messages and update our cell execution state appropriately
-
         // Keep track of our clear state
         const clearState = new RefBool(false);
 
-        // Listen to the response messages and update state as we go
-        if (!request) {
-            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`);
-            return this.completedWithErrors(new Error('Session cannot generate requests'));
-        }
-
+        const request = this.request;
         request.onIOPub = (msg) => {
             // Cell has been deleted or the like.
             if (this.cell.document.isClosed) {

@@ -273,17 +273,13 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IExecuteRequestMsg['content'],
         disposeOnDone?: boolean,
         metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
     requestDebug(
         content: KernelMessage.IDebugRequestMsg['content'],
         disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
-    requestComplete(
-        content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
-    requestInspect(
-        content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>;
+    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
+    requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
     sendInputReply(content: string): void;
     changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
