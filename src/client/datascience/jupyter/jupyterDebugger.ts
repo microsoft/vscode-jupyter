@@ -10,7 +10,7 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { isUsingIpykernel6OrLater } from '../../debugger/jupyter/helper';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../debugger/jupyter/helper';
 import { Identifiers } from '../constants';
 import {
     ICellHashListener,
@@ -56,7 +56,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6OrLater = await isUsingIpykernel6OrLater(kernel);
+        this.isUsingPyKernel6OrLater = (await isUsingIpykernel6OrLater(kernel)) === IpykernelCheckResult.Ok;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,

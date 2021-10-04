@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
+import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -55,7 +55,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
@@ -159,14 +158,11 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                     // Create our notebook
                     const notebook = new JupyterNotebookBase(
                         rawSession,
-                        this.configService,
                         this.disposableRegistry,
                         info,
                         resource,
                         identity,
-                        this.getDisposedError.bind(this),
                         this.workspaceService,
-                        this.appShell,
                         this.fs
                     );
 

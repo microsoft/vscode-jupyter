@@ -59,17 +59,6 @@ export const activate: ActivationFunction = (_context) => {
             element.appendChild(container);
             container.classList.add('cell-output-text');
 
-            const header = document.createElement('div');
-            const headerMessage =
-                outputItemJson.name && outputItemJson.message
-                    ? `${outputItemJson.name}: ${outputItemJson.message}`
-                    : outputItemJson.name || outputItemJson.message;
-            if (headerMessage) {
-                header.classList.add('output-error-header');
-                header.innerText = headerMessage;
-                container.appendChild(header);
-            }
-
             const metadata: any = outputItem.metadata;
             let traceback: string[] =
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
@@ -78,6 +67,7 @@ export const activate: ActivationFunction = (_context) => {
                     ? outputItemJson.stack.map((item: string) => escape(item))
                     : [escape(outputItemJson.stack)];
 
+            // there is traceback
             // Fix links in tracebacks.
             // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
             // When we escape, the links would be escaped as well.
@@ -95,6 +85,7 @@ export const activate: ActivationFunction = (_context) => {
                 }
                 return line;
             });
+
             const html = traceback.some((item) => item.trim().length)
                 ? converter.toHtml(traceback.join('\n'))
                 : undefined;
@@ -107,10 +98,22 @@ export const activate: ActivationFunction = (_context) => {
                     handleInnerClick(e, _context);
                 });
             } else {
-                // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
-                const tbEle = document.createElement('div');
-                container.appendChild(tbEle);
-                tbEle.innerHTML = traceback.join('<br>');
+                const header = document.createElement('div');
+                const headerMessage =
+                    outputItemJson.name && outputItemJson.message
+                        ? `${outputItemJson.name}: ${outputItemJson.message}`
+                        : outputItemJson.name || outputItemJson.message;
+
+                if (headerMessage) {
+                    header.classList.add('output-error-header');
+                    header.innerText = headerMessage;
+                    container.appendChild(header);
+                } else {
+                    // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
+                    const tbEle = document.createElement('div');
+                    container.appendChild(tbEle);
+                    tbEle.innerHTML = traceback.join('<br>');
+                }
             }
         }
     };

@@ -82,8 +82,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
             return widgetScriptSource;
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return Promise.all(mappedFiles as any);
+        return Promise.all(mappedFiles);
     }
     private async getSysPrefixOfKernel() {
         const kernelConnectionMetadata = this.notebook.getKernelConnection();

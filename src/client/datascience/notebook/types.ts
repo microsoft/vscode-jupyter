@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
@@ -12,7 +13,9 @@ export interface INotebookControllerManager {
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers
     registeredNotebookControllers(): VSCodeNotebookController[];
-    getInteractiveController(): Promise<VSCodeNotebookController | undefined>;
+    getActiveInterpreterOrDefaultController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): Promise<VSCodeNotebookController | undefined>;
     getPreferredNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {

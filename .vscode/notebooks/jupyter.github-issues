@@ -127,6 +127,26 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "### Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Non Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "### Closed before they hit formal triage"
   },
   {
@@ -202,7 +222,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:invalid $CURRENT_MILESTONE sort:created-asc  "
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc "
   },
   {
     "kind": 1,
