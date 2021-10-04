@@ -109,6 +109,9 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
+    public get hasPendingCells() {
+        return this.kernelExecution.hasPendingCells;
+    }
     constructor(
         public readonly notebookDocument: NotebookDocument,
         public readonly resourceUri: Resource,
@@ -126,7 +129,7 @@ export class Kernel implements IKernel {
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
-        private readonly cellHashProviderFactory: CellHashProviderFactory,
+        cellHashProviderFactory: CellHashProviderFactory,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         notebookControllerManager: INotebookControllerManager
     ) {
@@ -156,9 +159,6 @@ export class Kernel implements IKernel {
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook();
-        if (cell.notebook.notebookType === InteractiveWindowView) {
-            await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
-        }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;

@@ -15,6 +15,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebook, INotebookProvider } from '../types';
@@ -42,7 +43,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -168,13 +170,13 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                     if (activeEditor === this.vscNotebook.activeNotebookEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted;
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
-                        const canInterrupt = nb && nb.status === ServerStatus.Busy;
-                        this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
                     }
                 })
                 .catch(
                     traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
                 );
+            const hasPendingCells = this.kernelProvider.get(activeEditor.document)?.hasPendingCells === true;
+            this.canInterruptNotebookKernelContext.set(hasPendingCells).ignoreErrors();
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();

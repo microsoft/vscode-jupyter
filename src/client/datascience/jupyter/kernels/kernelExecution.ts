@@ -21,6 +21,7 @@ import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, KernelConnectionMetadata } from './types';
 import { NotebookCellRunState } from './types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
+import { InteractiveWindowView } from '../../notebook/constants';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -32,6 +33,14 @@ export class KernelExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
+    private _hasPendingCells?: boolean;
+    public get hasPendingCells() {
+        if (this._hasPendingCells) {
+            return true;
+        }
+        const queue = this.documentExecutions.get(this.kernel.notebookDocument);
+        return queue ? !queue.isEmpty : false;
+    }
     constructor(
         private readonly kernel: IKernel,
         errorHandler: IDataScienceErrorHandler,
@@ -41,7 +50,7 @@ export class KernelExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.executionFactory = new CellExecutionFactory(
             kernel,
@@ -53,21 +62,30 @@ export class KernelExecution implements IDisposable {
             cellHashProviderFactory
         );
     }
-
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<NotebookCellRunState> {
         if (cell.kind == NotebookCellKind.Markup) {
             return NotebookCellRunState.Success;
         }
 
-        // If we're restarting, wait for it to finish
-        if (this._restartPromise) {
-            await this._restartPromise;
-        }
+        // If we're in the middle of restarting, ensure we properly have the state of has pending cells.
+        this._hasPendingCells = true;
 
-        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
-        executionQueue.queueCell(cell);
-        const result = await executionQueue.waitForCompletion([cell]);
-        return result[0];
+        try {
+            // If we're restarting, wait for it to finish
+            if (this._restartPromise) {
+                await this._restartPromise;
+            }
+            if (cell.notebook.notebookType === InteractiveWindowView) {
+                await this.cellHashProviderFactory.getOrCreate(this.kernel).addCellHash(cell);
+            }
+
+            const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
+            executionQueue.queueCell(cell);
+            const result = await executionQueue.waitForCompletion([cell]);
+            return result[0];
+        } finally {
+            this._hasPendingCells = false;
+        }
     }
 
     /**

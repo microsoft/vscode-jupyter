@@ -135,6 +135,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly onWillRestart: Event<void>;
     readonly onWillInterrupt: Event<void>;
     readonly status: ServerStatus;
+    readonly hasPendingCells: boolean;
     readonly disposed: boolean;
     /**
      * Kernel information, used to save in ipynb in the metadata.
