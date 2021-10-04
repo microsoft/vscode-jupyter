@@ -689,7 +689,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || notebookType == interactive && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openOutlineView",
