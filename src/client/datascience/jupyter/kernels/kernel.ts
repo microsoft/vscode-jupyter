@@ -161,7 +161,6 @@ export class Kernel implements IKernel {
         }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
-        await promise;
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
@@ -188,7 +187,6 @@ export class Kernel implements IKernel {
         traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._notebookPromise);
-        await interruptResultPromise;
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
@@ -211,8 +209,7 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
-        const restartPromise = this.kernelExecution.restart(this._notebookPromise);
-        await restartPromise;
+        await this.kernelExecution.restart(this._notebookPromise);
         traceInfoIf(isCI, `Restarted ${this.notebookDocument.uri}`);
 
         // Interactive window needs a restart sys info
