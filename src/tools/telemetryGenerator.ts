@@ -191,9 +191,27 @@ function computeLocations(
     return locations;
 }
 
-function computeProperties(_indexNode: ts.Node) {
-    // Properties should be children of the index node. Just skip for now
-    return [];
+function computeProperties(host: TypeScriptLanguageServiceHost, indexNode: ts.Node, indexSourceFile: ts.SourceFile) {
+    const properties: TelemetryProperty[] = [];
+    const greatGrandParent = indexNode.parent.parent.parent;
+    if (greatGrandParent) {
+        // Should have 4 children if any properties. 3rd one is the
+        // type for the class
+        const thirdChild = greatGrandParent.getChildAt(2, indexSourceFile);
+        // If this is a type declaration, we have properties
+        if (thirdChild && ts.isTypeLiteralNode(thirdChild)) {
+            const snapshot = host.getScriptSnapshot(`./${indexSourceFile.fileName}`);
+
+            // Pull them apart
+            thirdChild.members.forEach((m) => {
+                const lastToken = m.getLastToken(indexSourceFile)!;
+                const name = snapshot.getText(m.pos, lastToken.end);
+                const description = ``;
+                properties.push({ name, description });
+            });
+        }
+    }
+    return properties;
 }
 
 function generateTelemetryEntry(
@@ -218,7 +236,7 @@ function generateTelemetryEntry(
     const locations = computeLocations(program, host, references, indexNode);
 
     // Compute properties that are listed in the index node
-    const properties = computeProperties(indexNode);
+    const properties = computeProperties(host, indexNode, indexSourceFile);
 
     // Return the telemetry entry
     return {
@@ -239,8 +257,12 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
     }
     writeOutput(`## Properties\n`);
     entry.properties.forEach((p) => {
-        writeOutput(`- ${p.name} : `);
-        writeOutput(`  - ${p.description}`);
+        if (p.description && p.description.length > 2) {
+            writeOutput(`- ${p.name} : `);
+            writeOutput(`  - ${p.description}`);
+        } else {
+            writeOutput(`- ${p.name}`);
+        }
     });
     writeOutput(`\n## Locations Used`);
     entry.locations.forEach((l) => {

@@ -37,6 +37,7 @@ No description provided
 
 ## Properties
 
+-  format: ExportFormat
 
 ## Locations Used
 src/client/datascience/commands/exportCommands.ts:{"line":119,"character":45}
@@ -453,6 +454,8 @@ No description provided
 
 ## Properties
 
+- 
+        reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
 
 ## Locations Used
 src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":88,"character":58}
@@ -521,6 +524,8 @@ No description provided
 
 ## Properties
 
+- 
+        status: 'installed' | 'notInstalled';
 
 ## Locations Used
 src/client/debugger/jupyter/debuggingManager.ts:{"line":441,"character":54}
@@ -849,6 +854,10 @@ No description provided
 
 ## Properties
 
+-  format: ExportFormat;
+-  cancelled?: boolean;
+-  successful?: boolean;
+-  opened?: boolean
 
 ## Locations Used
 src/client/datascience/export/exportFileOpener.ts:{"line":24,"character":41}
@@ -895,6 +904,7 @@ No description provided
 
 ## Properties
 
+-  format: ExportFormat
 
 ## Locations Used
 src/client/datascience/commands/exportCommands.ts:{"line":104,"character":45}
@@ -919,6 +929,7 @@ No description provided
 
 ## Properties
 
+-  format: ExportFormat
 
 ## Locations Used
 src/client/datascience/export/exportManager.ts:{"line":52,"character":41}
@@ -1151,6 +1162,7 @@ No description provided
 
 ## Properties
 
+-  scope: 'command' | 'file'
 
 ## Locations Used
 src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":428,"character":32}
@@ -1210,6 +1222,10 @@ No description provided
 
 ## Properties
 
+- 
+        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
+- 
+        command: JupyterCommands;
 
 ## Locations Used
 </details>
@@ -1247,6 +1263,18 @@ No description provided
 
 ## Properties
 
+- 
+        resourceType: 'notebook' | 'interactive';
+-  // Whether its a notebook or interactive window.
+        language: string;
+-  // Language defined in notebook metadata.
+        kernelConnectionProvided: boolean;
+-  // Whether kernelConnection was provided.
+        notebookMetadataProvided: boolean;
+-  // Whether notebook metadata was provided.
+        hasKernelSpecInMetadata: boolean;
+-  // Whether we have kernelspec info in the notebook metadata.
+        kernelConnectionFound: boolean;
 
 ## Locations Used
 src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":133,"character":45}
@@ -1711,6 +1739,7 @@ No description provided
 
 ## Properties
 
+-  scope: 'command' | 'file'
 
 ## Locations Used
 src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts:{"line":84,"character":32}
@@ -1797,6 +1826,11 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
+         */
+        extensionId: string;
 
 ## Locations Used
 src/client/datascience/notebook/creation/creationOptionsService.ts:{"line":20,"character":49}
@@ -2092,6 +2126,20 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Extension we recommended the user to install.
+         */
+        extensionId: string;
+- 
+        /**
+         * `displayed` - If prompt was displayed
+         * `dismissed` - If prompt was displayed & dismissed by the user
+         * `ok` - If prompt was displayed & ok clicked by the user
+         * `cancel` - If prompt was displayed & cancel clicked by the user
+         * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
+         */
+        action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
 
 ## Locations Used
 src/client/datascience/extensionRecommendation.ts:{"line":116,"character":37}
@@ -3116,6 +3164,8 @@ No description provided
 
 ## Properties
 
+- 
+        azure: boolean;
 
 ## Locations Used
 src/client/datascience/jupyter/serverSelector.ts:{"line":85,"character":37}
@@ -3140,6 +3190,8 @@ No description provided
 
 ## Properties
 
+-  rows: number | undefined;
+-  columns: number | undefined
 
 ## Locations Used
 src/client/datascience/data-viewing/dataViewer.ts:{"line":210,"character":41}
@@ -3361,6 +3413,8 @@ No description provided
 
 ## Properties
 
+-  open: boolean;
+-  runByLine: boolean
 
 ## Locations Used
 </details>
@@ -3440,6 +3494,13 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Whether this is the first time in the session.
+         * (fetching kernels first time in the session is slower, later its cached).
+         * This is a generic property supported for all telemetry (sent by decorators).
+         */
+        firstTime?: boolean;
 
 ## Locations Used
 src/client/api/pythonApi.ts:{"line":366,"character":32}
@@ -3490,6 +3551,7 @@ No description provided
 
 ## Properties
 
+-  count: number
 
 ## Locations Used
 </details>
@@ -3761,6 +3823,13 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":256,"character":61}
 
 ## Properties
 
+- 
+        /**
+         * Indicates whether the python extension is installed.
+         * If we send telemetry fro this & this is `true`, then we have a bug.
+         * If its `false`, then we can ignore this telemetry.
+         */
+        pythonExtensionInstalled: boolean;
 
 ## Locations Used
 src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":98,"character":49}
@@ -3896,6 +3965,7 @@ No description provided
 
 ## Properties
 
+-  command: string
 
 ## Locations Used
 </details>
@@ -4019,6 +4089,39 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Hash of the cell output mimetype
+         *
+         * @type {string}
+         */
+        hashedName: string;
+- 
+        hasText: boolean;
+- 
+        hasLatex: boolean;
+- 
+        hasHtml: boolean;
+- 
+        hasSvg: boolean;
+- 
+        hasXml: boolean;
+- 
+        hasJson: boolean;
+- 
+        hasImage: boolean;
+- 
+        hasGeo: boolean;
+- 
+        hasPlotly: boolean;
+- 
+        hasVega: boolean;
+- 
+        hasWidget: boolean;
+- 
+        hasJupyter: boolean;
+- 
+        hasVnd: boolean;
 
 ## Locations Used
 src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts:{"line":152,"character":37}
@@ -4081,6 +4184,9 @@ No description provided
 
 ## Properties
 
+- 
+        // Result is null if user signalled cancellation or if we timed out
+        isResultNull: boolean;
 
 ## Locations Used
 src/client/datascience/editor-integration/hoverProvider.ts:{"line":78,"character":37}
@@ -4674,6 +4780,13 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Total time spent in attempting to start and connect to jupyter before giving up.
+         *
+         * @type {number}
+         */
+        timeout: number;
 
 ## Locations Used
 src/client/datascience/jupyter/jupyterExecution.ts:{"line":285,"character":41}
@@ -4828,6 +4941,19 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Whether this is the first time in the session.
+         * (fetching kernels first time in the session is slower, later its cached).
+         * This is a generic property supported for all telemetry (sent by decorators).
+         */
+        firstTime?: boolean;
+- 
+        /**
+         * Whether this telemetry is for listing of all kernels or just python or just non-python.
+         * (fetching kernels first time in the session is slower, later its cached).
+         */
+        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
 
 ## Locations Used
 src/client/datascience/kernel-launcher/localKnownPathKernelSpecFinder.ts:{"line":36,"character":32}
@@ -4885,6 +5011,13 @@ No description provided
 
 ## Properties
 
+- 
+        action: 'displayed';
+-  // Message displayed.
+        /**
+         * Language found in the notebook if a known language. Otherwise 'unknown'
+         */
+        language: string;
 
 ## Locations Used
 src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
@@ -4971,6 +5104,11 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
 
 ## Locations Used
 </details>
@@ -5033,6 +5171,7 @@ No description provided
 
 ## Properties
 
+-  count: number
 
 ## Locations Used
 src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":62,"character":41}
@@ -5070,6 +5209,7 @@ No description provided
 
 ## Properties
 
+-  count: number
 
 ## Locations Used
 src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":65,"character":41}
@@ -5109,6 +5249,7 @@ No description provided
 
 ## Properties
 
+-  count: number
 
 ## Locations Used
 src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"character":41}
@@ -5153,6 +5294,7 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"ch
 
 ## Properties
 
+-  count: number
 
 ## Locations Used
 src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts:{"line":57,"character":37}
@@ -5273,6 +5415,11 @@ No description provided
 
 ## Properties
 
+- 
+        action:
+            | 'displayed' // Message displayed.
+            | 'dismissed' // user dismissed the message.
+            | 'download';
 
 ## Locations Used
 src/client/api/pythonApi.ts:{"line":170,"character":37}
@@ -5391,6 +5538,35 @@ No description provided
 
 ## Properties
 
+- 
+        moduleName: string;
+- 
+        /**
+         * Whether the module was already (once before) installed into the python environment or
+         * whether this already exists (detected via `pip list`)
+         */
+        isModulePresent?: 'true' | undefined;
+- 
+        action:
+            | 'displayed' // Install prompt may have been displayed.
+            | 'prompted' // Install prompt was displayed.
+            | 'installed' // Installation disabled (this is what python extension returns).
+            | 'ignored' // Installation disabled (this is what python extension returns).
+            | 'disabled' // Installation disabled (this is what python extension returns).
+            | 'failed' // Installation disabled (this is what python extension returns).
+            | 'install' // User chose install from prompt.
+            | 'donotinstall' // User chose not to install from prompt.
+            | 'differentKernel' // User chose to select a different kernel.
+            | 'error' // Some other error.
+            | 'dismissed';
+-  // User chose to dismiss the prompt.
+        resourceType?: 'notebook' | 'interactive';
+- 
+        /**
+         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+         * If we run the same notebook tomorrow, the hash will be the same.
+         */
+        resourceHash?: string;
 
 ## Locations Used
 src/client/api/pythonApi.ts:{"line":282,"character":41}
@@ -5536,6 +5712,11 @@ No description provided
 
 ## Properties
 
+- 
+        action:
+            | 'displayed' // Message displayed.
+            | 'dismissed' // user dismissed the message.
+            | 'download';
 
 ## Locations Used
 src/client/datascience/errorHandler/errorHandler.ts:{"line":55,"character":45}
@@ -6028,6 +6209,11 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Number of kernel specs.
+         */
+        count: number;
 
 ## Locations Used
 </details>
@@ -6089,6 +6275,16 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * The result of the selection.
+         * notSelected - No interpreter was selected.
+         * selected - An interpreter was selected (and configured to have jupyter and notebook).
+         * installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.
+         *
+         * @type {('notSelected' | 'selected' | 'installationCancelled')}
+         */
+        result?: 'notSelected' | 'selected' | 'installationCancelled';
 
 ## Locations Used
 src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":94,"character":41}
@@ -6405,6 +6601,7 @@ No description provided
 
 ## Properties
 
+-  language: string
 
 ## Locations Used
 src/client/datascience/common.ts:{"line":167,"character":30}
@@ -6552,6 +6749,7 @@ No description provided
 
 ## Properties
 
+-  variableCount: number
 
 ## Locations Used
 src/client/datascience/variablesView/variableView.ts:{"line":188,"character":41}
@@ -6576,6 +6774,8 @@ No description provided
 
 ## Properties
 
+- 
+        isErrorOutput: boolean;
 
 ## Locations Used
 src/client/datascience/notebook/helpers/helpers.ts:{"line":724,"character":41}
@@ -6624,6 +6824,7 @@ No description provided
 
 ## Properties
 
+-  type: string
 
 ## Locations Used
 src/client/datascience/webviews/webviewHost.ts:{"line":298,"character":41}
@@ -7097,6 +7298,35 @@ No description provided
 
 ## Properties
 
+- 
+        /**
+         * Carries `true` if environment variables are present, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        hasEnvVars?: boolean;
+- 
+        /**
+         * Carries `true` if fetching environment variables failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed?: boolean;
+- 
+        /**
+         * Whether the environment was activated within a terminal or not.
+         *
+         * @type {boolean}
+         */
+        activatedInTerminal?: boolean;
+- 
+        /**
+         * Whether the environment was activated by the wrapper class.
+         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
+         *
+         * @type {boolean}
+         */
+        activatedByWrapper?: boolean;
 
 ## Locations Used
 src/client/common/process/pythonExecutionFactory.ts:{"line":166,"character":37}
