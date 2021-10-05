@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
-  PYTHON_VERSION: 3.10
+  PYTHON_VERSION: '3.10'
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
@@ -358,7 +358,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        pythonVersion: [3.10]
+        pythonVersion: ['3.10']
         python: [nonConda, conda]
         jupyter: [raw, local, remote]
         # integration: Tests with VS Code, Python extension & real Jupyter
@@ -752,7 +752,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.10]
+        python: ['3.10']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
