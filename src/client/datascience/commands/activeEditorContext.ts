@@ -160,58 +160,35 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         if (activeEditor && activeEditor.document.notebookType === JupyterNotebookView) {
-            this.notebookProvider
-                .getOrCreateNotebook({
-                    identity: activeEditor.document.uri,
-                    resource: activeEditor.document.uri,
-                    getOnly: true
-                })
-                .then(async (nb) => {
-                    if (activeEditor === this.vscNotebook.activeNotebookEditor) {
-                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
-                        this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
-                    }
-                })
-                .catch(
-                    traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
-                );
-            const hasPendingCells = this.kernelProvider.get(activeEditor.document)?.hasPendingCells === true;
-            this.canInterruptNotebookKernelContext.set(hasPendingCells).ignoreErrors();
-        } else {
-            this.canRestartNotebookKernelContext.set(false).ignoreErrors();
-            this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
+            const kernel = this.kernelProvider.get(activeEditor.document);
+            if (kernel) {
+                const canStart = kernel.status !== ServerStatus.NotStarted;
+                this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+                const canInterrupt = kernel.status === ServerStatus.Busy;
+                const hasPendingCells = this.kernelProvider.get(activeEditor.document)?.hasPendingCells === true;
+                this.canInterruptNotebookKernelContext.set(canInterrupt || hasPendingCells).ignoreErrors();
+                return;
+            }
         }
+        this.canRestartNotebookKernelContext.set(false).ignoreErrors();
+        this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
     }
     private updateContextOfActiveInteractiveWindowKernel() {
         const interactiveWindow = getActiveInteractiveWindow(this.interactiveProvider);
-        if (interactiveWindow?.notebookUri) {
-            this.notebookProvider
-                .getOrCreateNotebook({
-                    identity: interactiveWindow.notebookUri,
-                    resource: interactiveWindow.owner,
-                    getOnly: true
-                })
-                .then(async (nb) => {
-                    if (
-                        getActiveInteractiveWindow(this.interactiveProvider) === interactiveWindow &&
-                        nb !== undefined
-                    ) {
-                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
-                        this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
-                        const canInterrupt = nb && nb.status === ServerStatus.Busy;
-                        this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).ignoreErrors();
-                    }
-                })
-                .catch(
-                    traceError.bind(
-                        undefined,
-                        'Failed to determine if a kernel is active for the current interactive window'
-                    )
-                );
-        } else {
-            this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
-            this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
+        const notebook = interactiveWindow?.notebookEditor?.document;
+        if (notebook) {
+            const kernel = this.kernelProvider.get(notebook);
+            if (kernel) {
+                const canStart = kernel.status !== ServerStatus.NotStarted;
+                this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
+                const canInterrupt = kernel.status === ServerStatus.Busy;
+                const hasPendingCells = this.kernelProvider.get(notebook)?.hasPendingCells === true;
+                this.canInterruptInteractiveWindowKernelContext.set(canInterrupt || hasPendingCells).ignoreErrors();
+                return;
+            }
         }
+        this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
+        this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
     }
     private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
         // Ok, kernel status has changed.
@@ -245,7 +222,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
-                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
+                (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
             .ignoreErrors();
     }

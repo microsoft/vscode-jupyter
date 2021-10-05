@@ -70,22 +70,20 @@ export class KernelExecution implements IDisposable {
         // If we're in the middle of restarting, ensure we properly have the state of has pending cells.
         this._hasPendingCells = true;
 
-        try {
-            // If we're restarting, wait for it to finish
-            if (this._restartPromise) {
-                await this._restartPromise;
-            }
-            if (cell.notebook.notebookType === InteractiveWindowView) {
-                await this.cellHashProviderFactory.getOrCreate(this.kernel).addCellHash(cell);
-            }
-
-            const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
-            executionQueue.queueCell(cell);
-            const result = await executionQueue.waitForCompletion([cell]);
-            return result[0];
-        } finally {
-            this._hasPendingCells = false;
+        // If we're restarting, wait for it to finish
+        if (this._restartPromise) {
+            await this._restartPromise;
         }
+        if (cell.notebook.notebookType === InteractiveWindowView) {
+            await this.cellHashProviderFactory.getOrCreate(this.kernel).addCellHash(cell);
+        }
+
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
+        executionQueue.queueCell(cell);
+        // Once we've queued the cell, then the queue will tell us whether we have any pending cells or not.
+        this._hasPendingCells = false;
+        const result = await executionQueue.waitForCompletion([cell]);
+        return result[0];
     }
 
     /**
