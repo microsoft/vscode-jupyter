@@ -72,7 +72,9 @@ type TelemetryProperty = {
 };
 
 type TelemetryLocation = {
-    location: string;
+    file: string;
+    line: number;
+    char: number;
     code: string;
 };
 
@@ -182,7 +184,9 @@ function computeLocations(
                     refSourceFile.getPositionOfLineAndCharacter(lineAndChar.line + 3, 0)
                 );
                 locations.push({
-                    location: `${refSourceFile.fileName}:${JSON.stringify(lineAndChar)}`,
+                    file: refSourceFile.fileName,
+                    line: lineAndChar.line,
+                    char: lineAndChar.character,
                     code: snapshot.getText(startPos, endPos)
                 });
             }
@@ -256,20 +260,25 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         writeOutput(`\n${entry.description}\n`);
     }
     writeOutput(`## Properties\n`);
-    entry.properties.forEach((p) => {
-        if (p.description && p.description.length > 2) {
-            writeOutput(`- ${p.name} : `);
-            writeOutput(`  - ${p.description}`);
-        } else {
-            writeOutput(`- ${p.name}`);
-        }
-    });
+    if (!entry.properties || entry.properties.length < 1) {
+        writeOutput(`\nNo properties for event\n`);
+    } else {
+        entry.properties.forEach((p) => {
+            if (p.description && p.description.length > 2) {
+                writeOutput(`- ${p.name} : `);
+                writeOutput(`  - ${p.description}`);
+            } else {
+                writeOutput(`- ${p.name}`);
+            }
+        });
+    }
     writeOutput(`\n## Locations Used`);
-    if (entry.locations.length < 1) {
+    if (!entry.locations || entry.locations.length < 1) {
         writeOutput(`\nEvent can be removed. Not referenced anywhere\n`);
     } else {
         entry.locations.forEach((l) => {
-            writeOutput(`${l.location}`);
+            const link = `https://github.com/microsoft/vscode-jupyter/tree/main/${l.file}#L${l.line + 1}`;
+            writeOutput(`\n[${l.file}#L${l.line + 1}](${link})`);
             writeOutput('```typescript');
             writeOutput(l.code);
             writeOutput('```\n');

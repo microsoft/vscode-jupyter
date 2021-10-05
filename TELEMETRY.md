@@ -14,8 +14,12 @@ Expand each section to see more information about that event.
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":369,"character":32}
+
+[src/client/datascience/commands/commandRegistry.ts#L370](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L370)
 ```typescript
         }
     }
@@ -40,7 +44,8 @@ No description provided
 -  format: ExportFormat
 
 ## Locations Used
-src/client/datascience/commands/exportCommands.ts:{"line":119,"character":45}
+
+[src/client/datascience/commands/exportCommands.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/exportCommands.ts#L120)
 ```typescript
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -51,7 +56,8 @@ src/client/datascience/commands/exportCommands.ts:{"line":119,"character":45}
     }
 ```
 
-src/client/datascience/commands/exportCommands.ts:{"line":138,"character":49}
+
+[src/client/datascience/commands/exportCommands.ts#L139](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/exportCommands.ts#L139)
 ```typescript
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -62,7 +68,8 @@ src/client/datascience/commands/exportCommands.ts:{"line":138,"character":49}
                     void this.commandManager.executeCommand(
 ```
 
-src/client/datascience/commands/exportCommands.ts:{"line":157,"character":53}
+
+[src/client/datascience/commands/exportCommands.ts#L158](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/exportCommands.ts#L158)
 ```typescript
                     label: DataScience.exportHTMLQuickPickLabel(),
                     picked: false,
@@ -73,7 +80,8 @@ src/client/datascience/commands/exportCommands.ts:{"line":157,"character":53}
                         void this.commandManager.executeCommand(
 ```
 
-src/client/datascience/commands/exportCommands.ts:{"line":173,"character":53}
+
+[src/client/datascience/commands/exportCommands.ts#L174](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/exportCommands.ts#L174)
 ```typescript
                     label: DataScience.exportPDFQuickPickLabel(),
                     picked: false,
@@ -96,6 +104,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -110,6 +121,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -128,8 +142,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":413,"character":32}
+
+[src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L367](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L367)
 ```typescript
         }
     }
@@ -155,8 +173,12 @@ src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewer.ts:{"line":296,"character":41}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L297](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L297)
 ```typescript
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
@@ -183,8 +205,12 @@ src/client/datascience/data-viewing/dataViewer.ts:{"line":296,"character":41}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewer.ts:{"line":181,"character":50}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L182](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L182)
 ```typescript
                 break;
 
@@ -210,8 +236,12 @@ src/client/datascience/data-viewing/dataViewer.ts:{"line":181,"character":50}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewer.ts:{"line":242,"character":45}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L243](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L243)
 ```typescript
                 if (payload.shape?.length) {
                     this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
@@ -234,8 +264,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":361,"character":32}
+
+[src/client/datascience/commands/commandRegistry.ts#L362](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L362)
 ```typescript
         }
     }
@@ -258,8 +292,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":119,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L120)
 ```typescript
         return this.codeLenses;
     }
@@ -270,7 +308,8 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":119,"character"
             return;
 ```
 
-src/client/datascience/editor-integration/codewatcher.ts:{"line":315,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L316](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L316)
 ```typescript
         return this.runMatchingCell(range, advance);
     }
@@ -293,8 +332,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":184,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L185](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L185)
 ```typescript
         return this.runFileInteractiveInternal(false);
     }
@@ -317,8 +360,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":345,"character":32}
+
+[src/client/datascience/commands/commandRegistry.ts#L346](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L346)
 ```typescript
         }
     }
@@ -341,8 +388,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":353,"character":32}
+
+[src/client/datascience/commands/commandRegistry.ts#L354](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L354)
 ```typescript
         }
     }
@@ -365,8 +416,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debuggingManager.ts:{"line":462,"character":50}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L463](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L463)
 ```typescript
         );
 
@@ -389,8 +444,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debuggingManager.ts:{"line":163,"character":54}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L164](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L164)
 ```typescript
             }),
 
@@ -413,8 +472,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debuggingManager.ts:{"line":110,"character":54}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L111](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L111)
 ```typescript
             }),
 
@@ -437,8 +500,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debuggingManager.ts:{"line":467,"character":50}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L468](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L468)
 ```typescript
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
@@ -464,7 +531,8 @@ No description provided
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
 
 ## Locations Used
-src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":88,"character":58}
+
+[src/client/debugger/jupyter/kernelDebugAdapter.ts#L89](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/kernelDebugAdapter.ts#L89)
 ```typescript
         if (this.kernel) {
             this.disposables.push(
@@ -475,7 +543,8 @@ src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":88,"character":58}
             );
 ```
 
-src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":94,"character":58}
+
+[src/client/debugger/jupyter/kernelDebugAdapter.ts#L95](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/kernelDebugAdapter.ts#L95)
 ```typescript
             );
             this.disposables.push(
@@ -486,7 +555,8 @@ src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":94,"character":58}
             );
 ```
 
-src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":102,"character":58}
+
+[src/client/debugger/jupyter/kernelDebugAdapter.ts#L103](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/kernelDebugAdapter.ts#L103)
 ```typescript
                 this.kernel.onDisposed(() => {
                     void debug.stopDebugging(this.session);
@@ -497,7 +567,8 @@ src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":102,"character":58}
         }
 ```
 
-src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":116,"character":62}
+
+[src/client/debugger/jupyter/kernelDebugAdapter.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/kernelDebugAdapter.ts#L117)
 ```typescript
                         cellStateChange.state === NotebookCellExecutionState.Idle &&
                         !this.disconected
@@ -508,7 +579,8 @@ src/client/debugger/jupyter/kernelDebugAdapter.ts:{"line":116,"character":62}
                 },
 ```
 
-src/client/debugger/jupyter/debuggingManager.ts:{"line":154,"character":62}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L155](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L155)
 ```typescript
                 if (editor) {
                     const controller = this.notebookToRunByLineController.get(editor.document);
@@ -534,7 +606,8 @@ No description provided
         status: 'installed' | 'notInstalled';
 
 ## Locations Used
-src/client/debugger/jupyter/debuggingManager.ts:{"line":441,"character":54}
+
+[src/client/debugger/jupyter/debuggingManager.ts#L442](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debuggingManager.ts#L442)
 ```typescript
 
             if (kernel) {
@@ -557,8 +630,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debugControllers.ts:{"line":24,"character":46}
+
+[src/client/debugger/jupyter/debugControllers.ts#L25](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debugControllers.ts#L25)
 ```typescript
         private readonly kernel: IKernel,
         private readonly commandManager: ICommandManager
@@ -581,8 +658,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/debugger/jupyter/debugControllers.ts:{"line":53,"character":46}
+
+[src/client/debugger/jupyter/debugControllers.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/debugger/jupyter/debugControllers.ts#L54)
 ```typescript
         private readonly kernel: IKernel,
         private readonly settings: IConfigurationService
@@ -605,6 +686,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -619,6 +703,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -637,6 +724,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -651,6 +741,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -669,6 +762,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -683,6 +779,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -701,8 +800,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/shiftEnterBanner.ts:{"line":102,"character":32}
+
+[src/client/datascience/shiftEnterBanner.ts#L103](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/shiftEnterBanner.ts#L103)
 ```typescript
         );
     }
@@ -713,7 +816,8 @@ src/client/datascience/shiftEnterBanner.ts:{"line":102,"character":32}
             'sendSelectionToInteractiveWindow',
 ```
 
-src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":114,"character":22}
+
+[src/test/datascience/shiftEnterBanner.unit.test.ts#L115](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L115)
 ```typescript
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -736,8 +840,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/shiftEnterBanner.ts:{"line":113,"character":32}
+
+[src/client/datascience/shiftEnterBanner.ts#L114](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/shiftEnterBanner.ts#L114)
 ```typescript
         await this.disableBanner();
     }
@@ -748,7 +856,8 @@ src/client/datascience/shiftEnterBanner.ts:{"line":113,"character":32}
             'sendSelectionToInteractiveWindow',
 ```
 
-src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":69,"character":22}
+
+[src/test/datascience/shiftEnterBanner.unit.test.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L70)
 ```typescript
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -772,8 +881,12 @@ src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":69,"character":22}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/telemetry/telemetry.ts:{"line":78,"character":32}
+
+[src/client/datascience/telemetry/telemetry.ts#L79](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L79)
 ```typescript
     properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
@@ -784,7 +897,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":78,"character":32}
 
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":115,"character":32}
+
+[src/client/datascience/telemetry/telemetry.ts#L116](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L116)
 ```typescript
     stopWatch?: StopWatch,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
@@ -795,7 +909,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":115,"character":32}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ```
 
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":169,"character":57}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L170](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L170)
 ```typescript
             return;
         }
@@ -806,7 +921,8 @@ src/client/datascience/notebook/vscodeNotebookController.ts:{"line":169,"charact
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
 ```
 
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":155,"character":61}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L156](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L156)
 ```typescript
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
@@ -829,17 +945,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterNotebook.ts:{"line":361,"character":49}
-```typescript
-                },
-                () => {
-                    subscriber.complete();
-                    sendTelemetryEvent(Telemetry.ExecuteCellTime, stopWatch.elapsedTime);
-                }
-            );
-        });
-```
+
+Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -851,6 +962,9 @@ src/client/datascience/jupyter/jupyterNotebook.ts:{"line":361,"character":49}
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -867,6 +981,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -890,7 +1007,8 @@ No description provided
 -  opened?: boolean
 
 ## Locations Used
-src/client/datascience/export/exportFileOpener.ts:{"line":24,"character":41}
+
+[src/client/datascience/export/exportFileOpener.ts#L25](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/export/exportFileOpener.ts#L25)
 ```typescript
     public async openFile(format: ExportFormat, uri: Uri) {
         if (format === ExportFormat.python) {
@@ -901,7 +1019,8 @@ src/client/datascience/export/exportFileOpener.ts:{"line":24,"character":41}
                 opened: true
 ```
 
-src/client/datascience/export/exportFileOpener.ts:{"line":31,"character":41}
+
+[src/client/datascience/export/exportFileOpener.ts#L32](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/export/exportFileOpener.ts#L32)
 ```typescript
             });
         } else {
@@ -912,7 +1031,8 @@ src/client/datascience/export/exportFileOpener.ts:{"line":31,"character":41}
                 opened: opened
 ```
 
-src/client/datascience/export/exportManager.ts:{"line":80,"character":41}
+
+[src/client/datascience/export/exportManager.ts#L81](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/export/exportManager.ts#L81)
 ```typescript
         }
 
@@ -937,7 +1057,8 @@ No description provided
 -  format: ExportFormat
 
 ## Locations Used
-src/client/datascience/commands/exportCommands.ts:{"line":104,"character":45}
+
+[src/client/datascience/commands/exportCommands.ts#L105](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/exportCommands.ts#L105)
 ```typescript
             }
 
@@ -962,7 +1083,8 @@ No description provided
 -  format: ExportFormat
 
 ## Locations Used
-src/client/datascience/export/exportManager.ts:{"line":52,"character":41}
+
+[src/client/datascience/export/exportManager.ts#L53](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/export/exportManager.ts#L53)
 ```typescript
             await this.performExport(format, contents, target, exportInterpreter);
         } catch (e) {
@@ -985,10 +1107,14 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":214,"character":32}
+
+[src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L215](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L215)
 ```typescript
-        }
+        return result;
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
@@ -1009,8 +1135,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":262,"character":32}
+
+[src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L263](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L263)
 ```typescript
         }
     }
@@ -1033,8 +1163,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/variablesView/variableView.ts:{"line":175,"character":41}
+
+[src/client/datascience/variablesView/variableView.ts#L176](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/variablesView/variableView.ts#L176)
 ```typescript
             }
         } catch (e) {
@@ -1058,8 +1192,12 @@ src/client/datascience/variablesView/variableView.ts:{"line":175,"character":41}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/notebookControllerManager.ts:{"line":471,"character":26}
+
+[src/client/datascience/notebook/notebookControllerManager.ts#L474](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/notebookControllerManager.ts#L474)
 ```typescript
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
@@ -1084,8 +1222,12 @@ src/client/datascience/notebook/notebookControllerManager.ts:{"line":471,"charac
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/helpers.ts:{"line":417,"character":37}
+
+[src/client/datascience/jupyter/kernels/helpers.ts#L418](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/helpers.ts#L418)
 ```typescript
             return kernelMatchingPreferredInterpreter;
         }
@@ -1108,8 +1250,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":29,"character":32}
+
+[src/client/datascience/jupyter/jupyterPasswordConnect.ts#L30](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterPasswordConnect.ts#L30)
 ```typescript
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -1132,8 +1278,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":675,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L676](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L676)
 ```typescript
         });
     }
@@ -1156,8 +1306,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":692,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L693](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L693)
 ```typescript
         }
     }
@@ -1180,6 +1334,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1198,7 +1355,8 @@ No description provided
 -  scope: 'command' | 'file'
 
 ## Locations Used
-src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":428,"character":32}
+
+[src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L382](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L382)
 ```typescript
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
@@ -1209,7 +1367,8 @@ src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"
         const filtersObject: { [name: string]: string[] } = {};
 ```
 
-src/client/datascience/interactive-window/interactiveWindowCommandListener.ts:{"line":452,"character":32}
+
+[src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L406](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-window/interactiveWindowCommandListener.ts#L406)
 ```typescript
         }
     }
@@ -1232,8 +1391,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":168,"character":32}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L169)
 ```typescript
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
@@ -1276,8 +1439,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":143,"character":37}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L144](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L144)
 ```typescript
             action: 'displayed',
             moduleName: ProductNames.get(Product.jupyter)!
@@ -1313,7 +1480,8 @@ No description provided
         kernelConnectionFound: boolean;
 
 ## Locations Used
-src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":133,"character":45}
+
+[src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L133](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L133)
 ```typescript
                 !kernelConnectionMetadata ||
                 (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
@@ -1336,6 +1504,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1352,8 +1523,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/notebookEditorProvider.ts:{"line":129,"character":32}
+
+[src/client/datascience/notebook/notebookEditorProvider.ts#L130](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/notebookEditorProvider.ts#L130)
 ```typescript
         // We do not need this.
         return;
@@ -1376,6 +1551,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1390,6 +1568,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1408,6 +1589,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1422,6 +1606,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1440,6 +1627,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1454,6 +1644,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1472,6 +1665,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1486,6 +1682,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1504,6 +1703,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1518,6 +1720,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1536,6 +1741,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1550,6 +1758,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1568,6 +1779,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1582,6 +1796,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1600,6 +1817,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1614,6 +1834,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1632,6 +1855,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1646,6 +1872,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1664,6 +1893,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1678,6 +1910,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1696,6 +1931,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1710,6 +1948,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1728,6 +1969,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1742,6 +1986,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1760,6 +2007,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1774,6 +2024,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1792,6 +2045,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1806,6 +2062,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1824,6 +2083,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1840,6 +2102,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -1854,6 +2119,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -1874,7 +2142,8 @@ No description provided
 -  scope: 'command' | 'file'
 
 ## Locations Used
-src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts:{"line":84,"character":32}
+
+[src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts#L85](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts#L85)
 ```typescript
         }
     }
@@ -1885,7 +2154,8 @@ src/client/datascience/interactive-ipynb/nativeEditorCommandListener.ts:{"line":
             try {
 ```
 
-src/client/datascience/notebook/notebookEditorProvider.ts:{"line":90,"character":47}
+
+[src/client/datascience/notebook/notebookEditorProvider.ts#L91](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/notebookEditorProvider.ts#L91)
 ```typescript
         this.disposables.push(
             this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
@@ -1908,8 +2178,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/activation.ts:{"line":51,"character":37}
+
+[src/client/datascience/activation.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/activation.ts#L52)
 ```typescript
         }
         this.notebookOpened = true;
@@ -1935,8 +2209,12 @@ src/client/datascience/activation.ts:{"line":51,"character":37}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/creation/notebookCreator.ts:{"line":52,"character":37}
+
+[src/client/datascience/notebook/creation/notebookCreator.ts#L53](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/creation/notebookCreator.ts#L53)
 ```typescript
             matchOnDetail: true,
             placeHolder
@@ -1965,7 +2243,8 @@ No description provided
         extensionId: string;
 
 ## Locations Used
-src/client/datascience/notebook/creation/creationOptionsService.ts:{"line":20,"character":49}
+
+[src/client/datascience/notebook/creation/creationOptionsService.ts#L21](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/creation/creationOptionsService.ts#L21)
 ```typescript
             try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1988,8 +2267,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/telemetry/telemetry.ts:{"line":362,"character":32}
+
+[src/client/datascience/telemetry/telemetry.ts#L363](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L363)
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function resetData(resource: Resource, eventName: string, properties: any) {
@@ -2000,7 +2283,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         // Check result to determine if success.
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":363,"character":58}
+
+[src/client/datascience/telemetry/telemetry.ts#L364](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L364)
 ```typescript
 function resetData(resource: Resource, eventName: string, properties: any) {
     // Once we have successfully interrupted, clear the interrupt counter.
@@ -2011,7 +2295,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         if (data && 'result' in data && data.result === InterruptResult.Success) {
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":364,"character":52}
+
+[src/client/datascience/telemetry/telemetry.ts#L365](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L365)
 ```typescript
     // Once we have successfully interrupted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookInterrupt) {
@@ -2022,7 +2307,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":364,"character":52}
             clearInterruptCounter(resource);
 ```
 
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":224,"character":30}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L225](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L225)
 ```typescript
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
@@ -2033,7 +2319,8 @@ src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":224,"character
                     exc
 ```
 
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":236,"character":72}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L237](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L237)
 ```typescript
         })();
 
@@ -2061,8 +2348,12 @@ src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":236,"character
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/common.ts:{"line":167,"character":65}
+
+[src/client/datascience/common.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/common.ts#L168)
 ```typescript
 }
 
@@ -2085,8 +2376,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/telemetry/telemetry.ts:{"line":371,"character":32}
+
+[src/client/datascience/telemetry/telemetry.ts#L372](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L372)
 ```typescript
         }
     }
@@ -2097,7 +2392,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":371,"character":32}
         // For restart to be successful, we should not have `failed`
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":372,"character":58}
+
+[src/client/datascience/telemetry/telemetry.ts#L373](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L373)
 ```typescript
     }
     // Once we have successfully restarted, clear the interrupt counter.
@@ -2108,7 +2404,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":372,"character":58}
         const failed = data && 'failed' in data ? data.failed : false;
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":373,"character":52}
+
+[src/client/datascience/telemetry/telemetry.ts#L374](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L374)
 ```typescript
     // Once we have successfully restarted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookRestart) {
@@ -2119,7 +2416,8 @@ src/client/datascience/telemetry/telemetry.ts:{"line":373,"character":52}
         if (!failed) {
 ```
 
-src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":182,"character":67}
+
+[src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L183](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L183)
 ```typescript
         const stopWatch = new StopWatch();
         try {
@@ -2130,7 +2428,8 @@ src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":182,"cha
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
 ```
 
-src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":188,"character":26}
+
+[src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L189](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L189)
 ```typescript
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             sendKernelTelemetryEvent(
@@ -2153,8 +2452,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/telemetry/telemetry.ts:{"line":404,"character":32}
+
+[src/client/datascience/telemetry/telemetry.ts#L405](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L405)
 ```typescript
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2165,7 +2468,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         // Check start failed.
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":405,"character":58}
+
+[src/client/datascience/telemetry/telemetry.ts#L406](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L406)
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
@@ -2176,7 +2480,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         if (data && 'failed' in data && data.failed) {
 ```
 
-src/client/datascience/telemetry/telemetry.ts:{"line":406,"character":52}
+
+[src/client/datascience/telemetry/telemetry.ts#L407](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/telemetry.ts#L407)
 ```typescript
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
     if (eventName === Telemetry.NotebookStart) {
@@ -2187,7 +2492,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
             trackKernelResourceInformation(resource, { startFailed: true });
 ```
 
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":301,"character":34}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L299](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L299)
 ```typescript
                 } catch (ex) {
                     sendKernelTelemetryEvent(
@@ -2198,7 +2504,8 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":301,"character":34}
                         ex
 ```
 
-src/client/datascience/interactive-common/notebookProvider.ts:{"line":141,"character":56}
+
+[src/client/datascience/interactive-common/notebookProvider.ts#L142](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookProvider.ts#L142)
 ```typescript
               )
             : this.jupyterNotebookProvider.createNotebook(options);
@@ -2221,8 +2528,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/plotting/plotViewerProvider.ts:{"line":45,"character":41}
+
+[src/client/datascience/plotting/plotViewerProvider.ts#L46](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/plotting/plotViewerProvider.ts#L46)
 ```typescript
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
             this.currentViewerClosed = this.currentViewer.closed(this.closedViewer);
@@ -2243,6 +2554,9 @@ src/client/datascience/plotting/plotViewerProvider.ts:{"line":45,"character":41}
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -2277,7 +2591,8 @@ Event can be removed. Not referenced anywhere
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
 
 ## Locations Used
-src/client/datascience/extensionRecommendation.ts:{"line":116,"character":37}
+
+[src/client/datascience/extensionRecommendation.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/extensionRecommendation.ts#L117)
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -2288,7 +2603,8 @@ src/client/datascience/extensionRecommendation.ts:{"line":116,"character":37}
             Common.bannerLabelYes(),
 ```
 
-src/client/datascience/extensionRecommendation.ts:{"line":125,"character":45}
+
+[src/client/datascience/extensionRecommendation.ts#L126](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/extensionRecommendation.ts#L126)
 ```typescript
         );
         switch (selection) {
@@ -2299,7 +2615,8 @@ src/client/datascience/extensionRecommendation.ts:{"line":125,"character":45}
             }
 ```
 
-src/client/datascience/extensionRecommendation.ts:{"line":130,"character":45}
+
+[src/client/datascience/extensionRecommendation.ts#L131](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/extensionRecommendation.ts#L131)
 ```typescript
                 break;
             }
@@ -2310,7 +2627,8 @@ src/client/datascience/extensionRecommendation.ts:{"line":130,"character":45}
             case Common.doNotShowAgain(): {
 ```
 
-src/client/datascience/extensionRecommendation.ts:{"line":134,"character":45}
+
+[src/client/datascience/extensionRecommendation.ts#L135](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/extensionRecommendation.ts#L135)
 ```typescript
                 break;
             }
@@ -2321,7 +2639,8 @@ src/client/datascience/extensionRecommendation.ts:{"line":134,"character":45}
                     list.push(extensionId);
 ```
 
-src/client/datascience/extensionRecommendation.ts:{"line":143,"character":45}
+
+[src/client/datascience/extensionRecommendation.ts#L144](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/extensionRecommendation.ts#L144)
 ```typescript
                 break;
             }
@@ -2344,6 +2663,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -2362,8 +2684,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewer.ts:{"line":177,"character":50}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L178](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L178)
 ```typescript
 
             case DataViewerMessages.RefreshDataViewer:
@@ -2386,8 +2712,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":135,"character":37}
+
+[src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L136](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelCommandListener.ts#L136)
 ```typescript
             return;
         }
@@ -2412,6 +2742,9 @@ src/client/datascience/jupyter/kernels/kernelCommandListener.ts:{"line":135,"cha
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -2430,8 +2763,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":133,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L134](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L134)
 ```typescript
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
@@ -2454,8 +2791,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":190,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L191](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L191)
 ```typescript
     }
 
@@ -2479,6 +2820,9 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":190,"character"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -2493,6 +2837,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -2511,6 +2858,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -2527,8 +2877,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/debuggerVariables.ts:{"line":127,"character":45}
+
+[src/client/datascience/jupyter/debuggerVariables.ts#L128](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/debuggerVariables.ts#L128)
 ```typescript
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
@@ -2551,8 +2905,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":302,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L303](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L303)
 ```typescript
         }
     }
@@ -2575,8 +2933,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":228,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L229](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L229)
 ```typescript
         }
     }
@@ -2599,8 +2961,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":668,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L669](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L669)
 ```typescript
         });
     }
@@ -2623,8 +2989,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":661,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L662](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L662)
 ```typescript
         await this.moveCellsDirection(false);
     }
@@ -2647,8 +3017,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":325,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L326](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L326)
 ```typescript
         return this.runMatchingCell(range, false, true);
     }
@@ -2671,8 +3045,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":353,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L354](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L354)
 ```typescript
         }
     }
@@ -2695,8 +3073,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":335,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L336](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L336)
 ```typescript
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false);
     }
@@ -2719,8 +3101,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":425,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L426](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L426)
 ```typescript
         }
     }
@@ -2743,8 +3129,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":517,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L518](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L518)
 ```typescript
         editor.selections = selections;
     }
@@ -2767,8 +3157,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":583,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L584](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L584)
 ```typescript
         }
     }
@@ -2791,8 +3185,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":179,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L180](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L180)
 ```typescript
         }
     }
@@ -2815,8 +3213,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":288,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L289](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L289)
 ```typescript
         }
     }
@@ -2839,8 +3241,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":412,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L413](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L413)
 ```typescript
         }
     }
@@ -2863,8 +3269,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":399,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L400](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L400)
 ```typescript
         }
     }
@@ -2889,8 +3299,12 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":399,"character"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":391,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L392](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L392)
 ```typescript
         );
     }
@@ -2913,8 +3327,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":656,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L657](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L657)
 ```typescript
         await this.moveCellsDirection(true);
     }
@@ -2937,8 +3355,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":651,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L652](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L652)
 ```typescript
         }
     }
@@ -2961,8 +3383,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":462,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L463](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L463)
 ```typescript
         });
     }
@@ -2985,8 +3411,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":479,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L480](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L480)
 ```typescript
         }
     }
@@ -3009,8 +3439,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":253,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L254](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L254)
 ```typescript
         }
     }
@@ -3033,8 +3467,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codewatcher.ts:{"line":274,"character":32}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L275](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L275)
 ```typescript
         }
     }
@@ -3057,6 +3495,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3071,6 +3512,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -3094,8 +3538,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.ts:{"line":23,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.ts#L24](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.ts#L24)
 ```typescript
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -3118,8 +3566,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/commandLineSelector.ts:{"line":35,"character":32}
+
+[src/client/datascience/jupyter/commandLineSelector.ts#L36](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/commandLineSelector.ts#L36)
 ```typescript
         workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
     }
@@ -3130,7 +3582,8 @@ src/client/datascience/jupyter/commandLineSelector.ts:{"line":35,"character":32}
         return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
 ```
 
-src/client/datascience/jupyter/serverSelector.ts:{"line":55,"character":32}
+
+[src/client/datascience/jupyter/serverSelector.ts#L56](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/serverSelector.ts#L56)
 ```typescript
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
@@ -3153,8 +3606,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":363,"character":32}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L364](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L364)
 ```typescript
         if (existingKernel) {
             const telemetryEvent =
@@ -3177,8 +3634,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":364,"character":32}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L365](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L365)
 ```typescript
             const telemetryEvent =
                 this.localOrRemoteKernel === 'local'
@@ -3201,8 +3662,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/interactive-common/notebookServerProvider.ts:{"line":167,"character":57}
+
+[src/client/datascience/interactive-common/notebookServerProvider.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookServerProvider.ts#L168)
 ```typescript
                                 )
                                 .ignoreErrors();
@@ -3213,7 +3678,8 @@ src/client/datascience/interactive-common/notebookServerProvider.ts:{"line":167,
                     .then(noop, noop);
 ```
 
-src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":376,"character":49}
+
+[src/client/datascience/jupyter/jupyterPasswordConnect.ts#L377](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterPasswordConnect.ts#L377)
 ```typescript
                     );
                     return this.fetchFunction(url, this.addAllowUnauthorized(url, true, options));
@@ -3236,8 +3702,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/interactive-common/notebookServerProvider.ts:{"line":157,"character":57}
+
+[src/client/datascience/interactive-common/notebookServerProvider.ts#L158](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookServerProvider.ts#L158)
 ```typescript
                     )
                     .then((value) => {
@@ -3248,7 +3718,8 @@ src/client/datascience/interactive-common/notebookServerProvider.ts:{"line":157,
                                     'allowUnauthorizedRemoteConnection',
 ```
 
-src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":367,"character":49}
+
+[src/client/datascience/jupyter/jupyterPasswordConnect.ts#L368](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterPasswordConnect.ts#L368)
 ```typescript
                     closeOption
                 );
@@ -3271,8 +3742,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/serverSelector.ts:{"line":67,"character":32}
+
+[src/client/datascience/jupyter/serverSelector.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/serverSelector.ts#L68)
 ```typescript
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
@@ -3297,8 +3772,12 @@ src/client/datascience/jupyter/serverSelector.ts:{"line":67,"character":32}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/serverSelector.ts:{"line":61,"character":37}
+
+[src/client/datascience/jupyter/serverSelector.ts#L62](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/serverSelector.ts#L62)
 ```typescript
         allowLocal: boolean,
         commandSource: SelectJupyterUriCommandSource = 'nonUser'
@@ -3324,7 +3803,8 @@ No description provided
         azure: boolean;
 
 ## Locations Used
-src/client/datascience/jupyter/serverSelector.ts:{"line":85,"character":37}
+
+[src/client/datascience/jupyter/serverSelector.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/serverSelector.ts#L86)
 ```typescript
         await this.serverUriStorage.setUri(userURI);
 
@@ -3350,7 +3830,8 @@ No description provided
 -  columns: number | undefined
 
 ## Locations Used
-src/client/datascience/data-viewing/dataViewer.ts:{"line":210,"character":41}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L211](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L211)
 ```typescript
 
         // Log telemetry about number of rows
@@ -3361,7 +3842,8 @@ src/client/datascience/data-viewing/dataViewer.ts:{"line":210,"character":41}
             });
 ```
 
-src/client/datascience/data-viewing/dataViewer.ts:{"line":290,"character":41}
+
+[src/client/datascience/data-viewing/dataViewer.ts#L291](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewer.ts#L291)
 ```typescript
 
     private sendElapsedTimeTelemetry() {
@@ -3384,8 +3866,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewerFactory.ts:{"line":40,"character":32}
+
+[src/client/datascience/data-viewing/dataViewerFactory.ts#L41](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerFactory.ts#L41)
 ```typescript
         }
     }
@@ -3408,6 +3894,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3422,6 +3911,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -3440,8 +3932,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":192,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L193](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L193)
 ```typescript
             }
 
@@ -3452,7 +3948,8 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
 
 ```
 
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":198,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L199](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L199)
 ```typescript
 
             case DataScience.pythonInteractiveHelpLink(): {
@@ -3463,7 +3960,8 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
 
 ```
 
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":203,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L204](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L204)
 ```typescript
             }
 
@@ -3486,8 +3984,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":107,"character":41}
+
+[src/client/datascience/data-viewing/dataViewerDependencyService.ts#L108](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerDependencyService.ts#L108)
 ```typescript
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             }
@@ -3510,8 +4012,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":185,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L186](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L186)
 ```typescript
                         return JupyterInterpreterDependencyResponse.cancel;
                     }
@@ -3539,6 +4045,9 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3555,8 +4064,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":104,"character":45}
+
+[src/client/datascience/data-viewing/dataViewerDependencyService.ts#L105](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerDependencyService.ts#L105)
 ```typescript
                 cancellatonPromise
             ]);
@@ -3597,6 +4110,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3613,6 +4129,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3627,6 +4146,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -3646,6 +4168,9 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3660,6 +4185,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -3686,7 +4214,8 @@ No description provided
         firstTime?: boolean;
 
 ## Locations Used
-src/client/api/pythonApi.ts:{"line":366,"character":32}
+
+[src/client/api/pythonApi.ts#L367](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L367)
 ```typescript
     }
 
@@ -3711,8 +4240,12 @@ src/client/api/pythonApi.ts:{"line":366,"character":32}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":217,"character":61}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L218](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L218)
 ```typescript
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
@@ -3752,8 +4285,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/editor-integration/codelensprovider.ts:{"line":53,"character":26}
+
+[src/client/datascience/editor-integration/codelensprovider.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codelensprovider.ts#L54)
 ```typescript
         // On shutdown send how long on average we spent parsing code lens
         if (this.totalGetCodeLensCalls > 0) {
@@ -3778,8 +4315,12 @@ src/client/datascience/editor-integration/codelensprovider.ts:{"line":53,"charac
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/common/application/commandManager.ts:{"line":36,"character":45}
+
+[src/client/common/application/commandManager.ts#L37](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/application/commandManager.ts#L37)
 ```typescript
         return commands.registerCommand(
             command,
@@ -3790,7 +4331,8 @@ src/client/common/application/commandManager.ts:{"line":36,"character":45}
                 } else {
 ```
 
-src/client/common/application/commandManager.ts:{"line":70,"character":45}
+
+[src/client/common/application/commandManager.ts#L71](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/application/commandManager.ts#L71)
 ```typescript
         return commands.registerTextEditorCommand(
             command,
@@ -3801,7 +4343,8 @@ src/client/common/application/commandManager.ts:{"line":70,"character":45}
                 } else {
 ```
 
-src/client/common/application/commandManager.ts:{"line":101,"character":41}
+
+[src/client/common/application/commandManager.ts#L102](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/application/commandManager.ts#L102)
 ```typescript
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
@@ -3830,6 +4373,9 @@ src/client/common/application/commandManager.ts:{"line":101,"character":41}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3852,6 +4398,9 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -3868,8 +4417,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":268,"character":57}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L269](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L269)
 ```typescript
                                 );
                             }
@@ -3892,8 +4445,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":225,"character":54}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L226](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L226)
 ```typescript
                     }
 
@@ -3916,8 +4473,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":252,"character":57}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L253](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L253)
 ```typescript
 
                         // Something else went wrong
@@ -3940,8 +4501,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":225,"character":86}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L226](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L226)
 ```typescript
                     }
 
@@ -3966,8 +4531,12 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":225,"character":86}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":167,"character":53}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L168)
 ```typescript
                     ]);
 
@@ -3990,8 +4559,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":256,"character":61}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L257](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L257)
 ```typescript
 
                             // Check for the self signed certs error specifically
@@ -4024,7 +4597,8 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":256,"character":61}
         pythonExtensionInstalled: boolean;
 
 ## Locations Used
-src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":98,"character":49}
+
+[src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L98](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L98)
 ```typescript
                 kernelConnection.kind === 'startUsingKernelSpec'
             ) {
@@ -4050,8 +4624,12 @@ src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts:{"line":9
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/cellExecution.ts:{"line":408,"character":41}
+
+[src/client/datascience/jupyter/kernels/cellExecution.ts#L409](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/cellExecution.ts#L409)
 ```typescript
         const props = { notebook: true };
         if (!CellExecution.sentExecuteCellTelemetry) {
@@ -4062,7 +4640,8 @@ src/client/datascience/jupyter/kernels/cellExecution.ts:{"line":408,"character":
         }
 ```
 
-src/client/datascience/editor-integration/codewatcher.ts:{"line":1022,"character":45}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L1023](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L1023)
 ```typescript
         if (runningStopWatch) {
             if (!CodeWatcher.sentExecuteCellTelemetry) {
@@ -4088,8 +4667,12 @@ src/client/datascience/editor-integration/codewatcher.ts:{"line":1022,"character
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/cellExecution.ts:{"line":410,"character":41}
+
+[src/client/datascience/jupyter/kernels/cellExecution.ts#L411](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/cellExecution.ts#L411)
 ```typescript
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatch.elapsedTime, props);
@@ -4100,7 +4683,8 @@ src/client/datascience/jupyter/kernels/cellExecution.ts:{"line":410,"character":
     private canExecuteCell() {
 ```
 
-src/client/datascience/editor-integration/codewatcher.ts:{"line":1024,"character":45}
+
+[src/client/datascience/editor-integration/codewatcher.ts#L1025](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/codewatcher.ts#L1025)
 ```typescript
                 CodeWatcher.sentExecuteCellTelemetry = true;
                 sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
@@ -4123,8 +4707,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/jupyterKernelService.ts:{"line":167,"character":41}
+
+[src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L168)
 ```typescript
         try {
             await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
@@ -4135,7 +4723,8 @@ src/client/datascience/jupyter/kernels/jupyterKernelService.ts:{"line":167,"char
         if (cancelToken?.isCancellationRequested) {
 ```
 
-src/client/datascience/jupyter/kernels/jupyterKernelService.ts:{"line":261,"character":49}
+
+[src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L262](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L262)
 ```typescript
                 try {
                     await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
@@ -4175,6 +4764,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4199,6 +4791,9 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4215,8 +4810,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":251,"character":41}
+
+[src/client/datascience/jupyter/jupyterPasswordConnect.ts#L252](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterPasswordConnect.ts#L252)
 ```typescript
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders };
@@ -4239,8 +4838,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":246,"character":41}
+
+[src/client/datascience/jupyter/jupyterPasswordConnect.ts#L247](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterPasswordConnect.ts#L247)
 ```typescript
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -4265,6 +4868,9 @@ src/client/datascience/jupyter/jupyterPasswordConnect.ts:{"line":246,"character"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4279,6 +4885,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -4331,7 +4940,8 @@ No description provided
         hasVnd: boolean;
 
 ## Locations Used
-src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts:{"line":152,"character":37}
+
+[src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts#L153](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts#L153)
 ```typescript
             hasJupyter: lowerMimeType.includes('jupyter'),
             hasVnd: lowerMimeType.includes('vnd')
@@ -4354,8 +4964,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts:{"line":118,"character":32}
+
+[src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts#L119](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts#L119)
 ```typescript
         this.pendingChecks.set(id, setTimeout(check, 5000));
     }
@@ -4376,6 +4990,9 @@ src/client/datascience/jupyter/jupyterCellOutputMimeTypeTracker.ts:{"line":118,"
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -4399,7 +5016,8 @@ Event can be removed. Not referenced anywhere
         isResultNull: boolean;
 
 ## Locations Used
-src/client/datascience/editor-integration/hoverProvider.ts:{"line":78,"character":37}
+
+[src/client/datascience/editor-integration/hoverProvider.ts#L79](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/editor-integration/hoverProvider.ts#L79)
 ```typescript
         const timeoutHandler = sleep(300).then(() => undefined);
         this.stopWatch.reset();
@@ -4424,8 +5042,12 @@ src/client/datascience/editor-integration/hoverProvider.ts:{"line":78,"character
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/api/pythonApi.ts:{"line":355,"character":32}
+
+[src/client/api/pythonApi.ts#L356](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L356)
 ```typescript
         return this.didChangeInterpreter.event;
     }
@@ -4448,8 +5070,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":169,"character":32}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L170](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L170)
 ```typescript
         return newCellExecutionQueue;
     }
@@ -4476,8 +5102,12 @@ src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":169,"character
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterInvalidKernelError.ts:{"line":18,"character":37}
+
+[src/client/datascience/jupyter/jupyterInvalidKernelError.ts#L19](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterInvalidKernelError.ts#L19)
 ```typescript
                 getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)
             )
@@ -4502,6 +5132,9 @@ src/client/datascience/jupyter/jupyterInvalidKernelError.ts:{"line":18,"characte
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4520,8 +5153,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts:{"line":226,"character":41}
+
+[src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts#L227](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts#L227)
 ```typescript
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
         } catch (ex) {
@@ -4546,6 +5183,9 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSource.ts:{"line":226,"characte
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4564,8 +5204,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":156,"character":41}
+
+[src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L157](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L157)
 ```typescript
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
@@ -4590,8 +5234,12 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":156,"chara
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":116,"character":41}
+
+[src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L117)
 ```typescript
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -4616,8 +5264,12 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":116,"chara
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/ipyWidgetMessageDispatcher.ts:{"line":503,"character":37}
+
+[src/client/datascience/ipywidgets/ipyWidgetMessageDispatcher.ts#L504](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/ipyWidgetMessageDispatcher.ts#L504)
 ```typescript
     }
 
@@ -4643,8 +5295,12 @@ src/client/datascience/ipywidgets/ipyWidgetMessageDispatcher.ts:{"line":503,"cha
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":202,"character":37}
+
+[src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L203](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L203)
 ```typescript
             return this.configurationPromise.promise;
         }
@@ -4669,8 +5325,12 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":202,"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":232,"character":37}
+
+[src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L233](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L233)
 ```typescript
                 break;
         }
@@ -4695,8 +5355,12 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":232,"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":179,"character":41}
+
+[src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L180](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L180)
 ```typescript
     private sendRenderFailureTelemetry(payload: Error) {
         try {
@@ -4721,6 +5385,9 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":179,"chara
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4740,8 +5407,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts:{"line":52,"character":32}
+
+[src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts#L53](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts#L53)
 ```typescript
         }
         return (this.cachedWidgetScripts = this.getWidgetScriptSourcesWithoutCache());
@@ -4766,8 +5437,12 @@ src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts:{"line":52,
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":198,"character":45}
+
+[src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L199](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L199)
 ```typescript
                 this.jupyterOutput.appendLine(
                     localize.DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
@@ -4792,8 +5467,12 @@ src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":198,"chara
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":106,"character":37}
+
+[src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L107](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts#L107)
 ```typescript
             }
         }
@@ -4818,8 +5497,12 @@ src/client/datascience/ipywidgets/ipyWidgetScriptSourceProvider.ts:{"line":106,"
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/ipywidgets/commonMessageCoordinator.ts:{"line":168,"character":41}
+
+[src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/ipywidgets/commonMessageCoordinator.ts#L169)
 ```typescript
     }
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
@@ -4842,8 +5525,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterServer.ts:{"line":145,"character":57}
+
+[src/client/datascience/jupyter/jupyterServer.ts#L146](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterServer.ts#L146)
 ```typescript
             );
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
@@ -4854,7 +5541,8 @@ src/client/datascience/jupyter/jupyterServer.ts:{"line":145,"character":57}
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime, undefined, ex);
 ```
 
-src/client/datascience/jupyter/jupyterServer.ts:{"line":148,"character":57}
+
+[src/client/datascience/jupyter/jupyterServer.ts#L149](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterServer.ts#L149)
 ```typescript
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
             return notebook;
@@ -4881,8 +5569,12 @@ src/client/datascience/jupyter/jupyterServer.ts:{"line":148,"character":57}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/commandLineSelector.ts:{"line":92,"character":41}
+
+[src/client/datascience/jupyter/commandLineSelector.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/commandLineSelector.ts#L93)
 ```typescript
 
     private async setJupyterCommandLine(val: string): Promise<void> {
@@ -4905,8 +5597,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterWaitForIdleError.ts:{"line":11,"character":37}
+
+[src/client/datascience/jupyter/jupyterWaitForIdleError.ts#L12](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterWaitForIdleError.ts#L12)
 ```typescript
 export class JupyterWaitForIdleError extends BaseError {
     constructor(message: string) {
@@ -4934,6 +5630,9 @@ export class JupyterWaitForIdleError extends BaseError {
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -4955,8 +5654,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":309,"character":37}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L310](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L310)
 ```typescript
             return JupyterInterpreterDependencyResponse.ok;
         }
@@ -4979,8 +5682,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/jupyterKernelService.ts:{"line":119,"character":32}
+
+[src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L120)
 ```typescript
      */
     // eslint-disable-next-line
@@ -5011,7 +5718,8 @@ No description provided
         timeout: number;
 
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":285,"character":41}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L286](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L286)
 ```typescript
             // If we're here, then starting jupyter timeout.
             // Kill any existing connections.
@@ -5034,8 +5742,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterExecution.ts:{"line":347,"character":32}
+
+[src/client/datascience/jupyter/jupyterExecution.ts#L348](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterExecution.ts#L348)
 ```typescript
     }
 
@@ -5059,8 +5771,12 @@ src/client/datascience/jupyter/jupyterExecution.ts:{"line":347,"character":32}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/telemetry/kernelTelemetry.ts:{"line":37,"character":53}
+
+[src/client/datascience/telemetry/kernelTelemetry.ts#L38](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/telemetry/kernelTelemetry.ts#L38)
 ```typescript
     });
     trackKernelResourceInformation(resource, counters);
@@ -5088,6 +5804,9 @@ src/client/datascience/telemetry/kernelTelemetry.ts:{"line":37,"character":53}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -5106,8 +5825,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":51,"character":32}
+
+[src/client/datascience/kernel-launcher/localKernelFinder.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localKernelFinder.ts#L52)
 ```typescript
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
@@ -5118,7 +5841,8 @@ src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":51,"characte
         notebookMetadata?: nbformat.INotebookMetadata,
 ```
 
-src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":55,"character":32}
+
+[src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L56](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L56)
 ```typescript
         );
     }
@@ -5143,8 +5867,12 @@ src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":55,"charact
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/kernel-launcher/kernelLauncher.ts:{"line":116,"character":56}
+
+[src/client/datascience/kernel-launcher/kernelLauncher.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/kernelLauncher.ts#L117)
 ```typescript
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
@@ -5181,7 +5909,8 @@ No description provided
         kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
 
 ## Locations Used
-src/client/datascience/kernel-launcher/localKnownPathKernelSpecFinder.ts:{"line":36,"character":32}
+
+[src/client/datascience/kernel-launcher/localKnownPathKernelSpecFinder.ts#L37](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localKnownPathKernelSpecFinder.ts#L37)
 ```typescript
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
@@ -5192,7 +5921,8 @@ src/client/datascience/kernel-launcher/localKnownPathKernelSpecFinder.ts:{"line"
         cancelToken?: CancellationToken
 ```
 
-src/client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder.ts:{"line":48,"character":32}
+
+[src/client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder.ts#L49](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder.ts#L49)
 ```typescript
     ) {
         super(fs, workspaceService, extensionChecker);
@@ -5203,7 +5933,8 @@ src/client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecF
         const workspaceFolderId =
 ```
 
-src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":152,"character":32}
+
+[src/client/datascience/kernel-launcher/localKernelFinder.ts#L153](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localKernelFinder.ts#L153)
 ```typescript
         return this.jupyterPaths.getKernelSpecRootPath();
     }
@@ -5214,7 +5945,8 @@ src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":152,"charact
         cancelToken?: CancellationToken
 ```
 
-src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":56,"character":32}
+
+[src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L57](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L57)
 ```typescript
     }
     @traceDecorators.verbose('Find remote kernel spec')
@@ -5245,7 +5977,8 @@ No description provided
         language: string;
 
 ## Locations Used
-src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
+
+[src/client/datascience/errorHandler/errorHandler.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/errorHandler/errorHandler.ts#L68)
 ```typescript
                         }
                     }, noop);
@@ -5270,6 +6003,9 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":67,"character":45}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -5289,6 +6025,9 @@ Event can be removed. Not referenced anywhere
  @memberof IEventNamePropertyMapping
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -5312,8 +6051,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":285,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L286](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L286)
 ```typescript
             .then(() => true)
             .catch((e) => {
@@ -5358,8 +6101,12 @@ Event can be removed. Not referenced anywhere
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/variablesView/variableView.ts:{"line":85,"character":32}
+
+[src/client/datascience/variablesView/variableView.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/variablesView/variableView.ts#L86)
 ```typescript
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -5382,8 +6129,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/variablesView/variableView.ts:{"line":144,"character":41}
+
+[src/client/datascience/variablesView/variableView.ts#L145](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/variablesView/variableView.ts#L145)
 ```typescript
 
         // I've we've been made visible, make sure that we are updated
@@ -5408,7 +6159,8 @@ No description provided
 -  count: number
 
 ## Locations Used
-src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":62,"character":41}
+
+[src/client/datascience/interactive-common/notebookUsageTracker.ts#L63](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookUsageTracker.ts#L63)
 ```typescript
     public dispose() {
         // Send a bunch of telemetry
@@ -5431,6 +6183,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -5449,7 +6204,8 @@ No description provided
 -  count: number
 
 ## Locations Used
-src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":65,"character":41}
+
+[src/client/datascience/interactive-common/notebookUsageTracker.ts#L66](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookUsageTracker.ts#L66)
 ```typescript
             sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
         }
@@ -5474,6 +6230,9 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":65,"ch
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -5492,7 +6251,8 @@ No description provided
 -  count: number
 
 ## Locations Used
-src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"character":41}
+
+[src/client/datascience/interactive-common/notebookUsageTracker.ts#L71](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/interactive-common/notebookUsageTracker.ts#L71)
 ```typescript
             });
         }
@@ -5519,6 +6279,9 @@ src/client/datascience/interactive-common/notebookUsageTracker.ts:{"line":70,"ch
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -5540,7 +6303,8 @@ Event can be removed. Not referenced anywhere
 -  count: number
 
 ## Locations Used
-src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts:{"line":57,"character":37}
+
+[src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts#L58](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts#L58)
 ```typescript
         }
 
@@ -5565,8 +6329,12 @@ src/client/datascience/notebookStorage/preferredRemoteKernelIdProvider.ts:{"line
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":240,"character":41}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L238](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L238)
 ```typescript
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
@@ -5577,7 +6345,8 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":240,"character":41}
             );
 ```
 
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":291,"character":34}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L289](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L289)
 ```typescript
                     }
                     sendKernelTelemetryEvent(
@@ -5602,8 +6371,12 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":291,"character":34}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":81,"character":41}
+
+[src/client/datascience/kernel-launcher/localKernelFinder.ts#L82](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localKernelFinder.ts#L82)
 ```typescript
                 preferredInterpreter,
                 undefined
@@ -5614,7 +6387,8 @@ src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":81,"characte
                 language: telemetrySafeLanguage,
 ```
 
-src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":93,"character":26}
+
+[src/client/datascience/kernel-launcher/localKernelFinder.ts#L94](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/localKernelFinder.ts#L94)
 ```typescript
             }
         } catch (ex) {
@@ -5625,7 +6399,8 @@ src/client/datascience/kernel-launcher/localKernelFinder.ts:{"line":93,"characte
                     result: 'failed',
 ```
 
-src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":81,"character":41}
+
+[src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L82](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L82)
 ```typescript
                 undefined,
                 this.preferredRemoteKernelIdProvider
@@ -5636,7 +6411,8 @@ src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":81,"charact
                 language: telemetrySafeLanguage
 ```
 
-src/client/datascience/kernel-launcher/remoteKernelFinder.ts:{"line":89,"character":26}
+
+[src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L90](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/remoteKernelFinder.ts#L90)
 ```typescript
             return preferred;
         } catch (ex) {
@@ -5665,7 +6441,8 @@ No description provided
             | 'download';
 
 ## Locations Used
-src/client/api/pythonApi.ts:{"line":170,"character":37}
+
+[src/client/api/pythonApi.ts#L171](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L171)
 ```typescript
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
@@ -5676,7 +6453,8 @@ src/client/api/pythonApi.ts:{"line":170,"character":37}
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
 ```
 
-src/client/api/pythonApi.ts:{"line":173,"character":41}
+
+[src/client/api/pythonApi.ts#L174](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L174)
 ```typescript
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
@@ -5687,7 +6465,8 @@ src/client/api/pythonApi.ts:{"line":173,"character":41}
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-src/client/api/pythonApi.ts:{"line":176,"character":41}
+
+[src/client/api/pythonApi.ts#L177](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L177)
 ```typescript
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             await this.installPythonExtension();
@@ -5698,7 +6477,8 @@ src/client/api/pythonApi.ts:{"line":176,"character":41}
     private async installPythonExtension() {
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":62,"character":37}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L63](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L63)
 ```typescript
         }
     }
@@ -5709,7 +6489,8 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":62,
             { modal: true },
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":69,"character":41}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L70)
 ```typescript
             Common.install()
         );
@@ -5720,7 +6501,8 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":69,
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":72,"character":41}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L73](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L73)
 ```typescript
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
@@ -5747,8 +6529,12 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":72,
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/helpers.ts:{"line":767,"character":37}
+
+[src/client/datascience/jupyter/kernels/helpers.ts#L768](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/helpers.ts#L768)
 ```typescript
             kernelConnection.interpreter.path.toLowerCase(),
             sysExecutable.toLowerCase()
@@ -5759,7 +6545,8 @@ src/client/datascience/jupyter/kernels/helpers.ts:{"line":767,"character":37}
         });
 ```
 
-src/client/datascience/jupyter/kernels/helpers.ts:{"line":792,"character":49}
+
+[src/client/datascience/jupyter/kernels/helpers.ts#L793](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/helpers.ts#L793)
 ```typescript
                 });
                 if (execOutput.stdout.trim().length > 0) {
@@ -5812,7 +6599,8 @@ No description provided
         resourceHash?: string;
 
 ## Locations Used
-src/client/api/pythonApi.ts:{"line":282,"character":41}
+
+[src/client/api/pythonApi.ts#L283](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L283)
 ```typescript
             action = 'failed';
             throw ex;
@@ -5823,7 +6611,8 @@ src/client/api/pythonApi.ts:{"line":282,"character":41}
             });
 ```
 
-src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts:{"line":139,"character":37}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L140](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L140)
 ```typescript
         }
 
@@ -5834,7 +6623,8 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.t
         });
 ```
 
-src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":67,"character":37}
+
+[src/client/datascience/data-viewing/dataViewerDependencyService.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerDependencyService.ts#L68)
 ```typescript
         interpreter?: PythonEnvironment,
         token?: CancellationToken
@@ -5845,7 +6635,8 @@ src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":67,"c
         });
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":136,"character":37}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L137](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L137)
 ```typescript
         const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
         const resourceType = resource ? getResourceType(resource) : undefined;
@@ -5856,7 +6647,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":136,"c
             resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":154,"character":45}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L155](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L155)
 ```typescript
         const options = resource ? [installPrompt, selectKernel] : [installPrompt];
         try {
@@ -5867,7 +6659,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":154,"c
                     resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":168,"character":45}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L169)
 ```typescript
                       promptCancellationPromise
                   ]);
@@ -5878,7 +6671,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":168,"c
                     resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":178,"character":45}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L179](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L179)
 ```typescript
             }
 
@@ -5889,7 +6683,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":178,"c
                     resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":186,"character":45}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L187](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L187)
 ```typescript
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
@@ -5900,7 +6695,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":186,"c
                     resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":203,"character":49}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L204](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L204)
 ```typescript
                     cancellationPromise
                 ]);
@@ -5911,7 +6707,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":203,"c
                         resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":211,"character":49}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L212](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L212)
 ```typescript
                     });
                     return KernelInterpreterDependencyResponse.ok;
@@ -5922,7 +6719,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":211,"c
                         resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":221,"character":41}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L222](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L222)
 ```typescript
                 }
             }
@@ -5933,7 +6731,8 @@ src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":221,"c
                 resourceType,
 ```
 
-src/client/datascience/jupyter/kernels/kernelDependencyService.ts:{"line":229,"character":41}
+
+[src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L230](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelDependencyService.ts#L230)
 ```typescript
             });
             return KernelInterpreterDependencyResponse.cancel;
@@ -5962,7 +6761,8 @@ No description provided
             | 'download';
 
 ## Locations Used
-src/client/datascience/errorHandler/errorHandler.ts:{"line":55,"character":45}
+
+[src/client/datascience/errorHandler/errorHandler.ts#L56](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/errorHandler/errorHandler.ts#L56)
 ```typescript
             const language = getLanguageInNotebookMetadata(err.notebookMetadata);
             if (isPythonNotebook(err.notebookMetadata) || !language) {
@@ -5973,7 +6773,8 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":55,"character":45}
                     .then((selection) => {
 ```
 
-src/client/datascience/errorHandler/errorHandler.ts:{"line":60,"character":57}
+
+[src/client/datascience/errorHandler/errorHandler.ts#L61](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/errorHandler/errorHandler.ts#L61)
 ```typescript
                     .showErrorMessage(DataScience.pythonNotInstalled(), Common.download())
                     .then((selection) => {
@@ -5984,7 +6785,8 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":60,"character":57}
                             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-src/client/datascience/errorHandler/errorHandler.ts:{"line":63,"character":57}
+
+[src/client/datascience/errorHandler/errorHandler.ts#L64](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/errorHandler/errorHandler.ts#L64)
 ```typescript
                             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
                             this.applicationShell.openUrl('https://www.python.org/downloads');
@@ -5995,7 +6797,8 @@ src/client/datascience/errorHandler/errorHandler.ts:{"line":63,"character":57}
             } else {
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":76,"character":37}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L77](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L77)
 ```typescript
         }
     }
@@ -6006,7 +6809,8 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":76,
             { modal: true },
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":83,"character":41}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L84)
 ```typescript
             Common.install()
         );
@@ -6017,7 +6821,8 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":83,
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":86,"character":41}
+
+[src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L87](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/noPythonKernelsNotebookController.ts#L87)
 ```typescript
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             this.appShell.openUrl('https://www.python.org/downloads');
@@ -6041,8 +6846,12 @@ src/client/datascience/notebook/noPythonKernelsNotebookController.ts:{"line":86,
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawNotebookProvider.ts:{"line":75,"character":32}
+
+[src/client/datascience/raw-kernel/rawNotebookProvider.ts#L76](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawNotebookProvider.ts#L76)
 ```typescript
         return this.rawNotebookSupportedService.isSupported;
     }
@@ -6065,8 +6874,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/kernel-launcher/kernelProcess.ts:{"line":81,"character":32}
+
+[src/client/datascience/kernel-launcher/kernelProcess.ts#L82](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/kernelProcess.ts#L82)
 ```typescript
         }
     }
@@ -6090,8 +6903,12 @@ src/client/datascience/kernel-launcher/kernelProcess.ts:{"line":81,"character":3
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":173,"character":57}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L174](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L174)
 ```typescript
                 throw error;
             }
@@ -6116,8 +6933,12 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":173,"character":5
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawSession.ts:{"line":62,"character":37}
+
+[src/client/datascience/raw-kernel/rawSession.ts#L63](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawSession.ts#L63)
 ```typescript
     public async dispose() {
         // We want to know who called dispose on us
@@ -6143,8 +6964,12 @@ src/client/datascience/raw-kernel/rawSession.ts:{"line":62,"character":37}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/kernel-launcher/kernelLauncher.ts:{"line":142,"character":45}
+
+[src/client/datascience/kernel-launcher/kernelLauncher.ts#L143](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/kernel-launcher/kernelLauncher.ts#L143)
 ```typescript
 
         kernelProcess.exited(
@@ -6155,7 +6980,8 @@ src/client/datascience/kernel-launcher/kernelLauncher.ts:{"line":142,"character"
                 });
 ```
 
-src/client/datascience/raw-kernel/rawSession.ts:{"line":172,"character":37}
+
+[src/client/datascience/raw-kernel/rawSession.ts#L173](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawSession.ts#L173)
 ```typescript
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
@@ -6166,7 +6992,8 @@ src/client/datascience/raw-kernel/rawSession.ts:{"line":172,"character":37}
         });
 ```
 
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":238,"character":45}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L239](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L239)
 ```typescript
         if (session && (session as RawSession).kernelProcess) {
             // Watch to see if our process exits
@@ -6189,8 +7016,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":148,"character":61}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L149](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L149)
 ```typescript
                     undefined,
                     error
@@ -6216,8 +7047,12 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":148,"character":6
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":216,"character":41}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L217](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L217)
 ```typescript
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
@@ -6241,8 +7076,12 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":216,"character":4
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":100,"character":57}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L101](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L101)
 ```typescript
 
             // Only connect our session if we didn't cancel or timeout
@@ -6253,7 +7092,8 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":100,"character":5
 
 ```
 
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":120,"character":30}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L121](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L121)
 ```typescript
             if (error instanceof CancellationError) {
                 sendKernelTelemetryEvent(
@@ -6264,7 +7104,8 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":120,"character":3
                     error
 ```
 
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":131,"character":30}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L132](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L132)
 ```typescript
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(
@@ -6275,7 +7116,8 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":131,"character":3
                     error
 ```
 
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":143,"character":30}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L144](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L144)
 ```typescript
             } else if (error instanceof IpyKernelNotInstalledError) {
                 sendKernelTelemetryEvent(
@@ -6286,7 +7128,8 @@ src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":143,"character":3
                     error
 ```
 
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":157,"character":30}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L158](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L158)
 ```typescript
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(
@@ -6309,8 +7152,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":164,"character":30}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L165](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L165)
 ```typescript
                 );
                 sendKernelTelemetryEvent(
@@ -6333,8 +7180,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":99,"character":57}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L100](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L100)
 ```typescript
             newSession = await this.startRawSession(resource, kernelConnection, timeout, cancelToken, disableUI);
 
@@ -6357,8 +7208,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":136,"character":61}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L137](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L137)
 ```typescript
                     undefined,
                     error
@@ -6381,8 +7236,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":125,"character":61}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L126](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L126)
 ```typescript
                     undefined,
                     error
@@ -6405,8 +7264,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawJupyterSession.ts:{"line":271,"character":32}
+
+[src/client/datascience/raw-kernel/rawJupyterSession.ts#L272](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawJupyterSession.ts#L272)
 ```typescript
         });
     }
@@ -6429,8 +7292,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/jupyterKernelService.ts:{"line":188,"character":37}
+
+[src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L189](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/jupyterKernelService.ts#L189)
 ```typescript
             );
         }
@@ -6474,8 +7341,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":244,"character":32}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L245](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L245)
 ```typescript
     }
 
@@ -6498,8 +7369,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernelExecution.ts:{"line":243,"character":32}
+
+[src/client/datascience/jupyter/kernels/kernelExecution.ts#L244](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernelExecution.ts#L244)
 ```typescript
         });
     }
@@ -6533,7 +7408,8 @@ No description provided
         result?: 'notSelected' | 'selected' | 'installationCancelled';
 
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":94,"character":41}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L95](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L95)
 ```typescript
             resolveToUndefinedWhenCancelled
         ]);
@@ -6544,7 +7420,8 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":
 
 ```
 
-src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":105,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L106](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L106)
 ```typescript
                 return interpreter;
             }
@@ -6555,7 +7432,8 @@ src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":
                 return this.selectInterpreter(token);
 ```
 
-src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts:{"line":168,"character":37}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts#L169)
 ```typescript
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
@@ -6578,8 +7456,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts:{"line":77,"character":45}
+
+[src/client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts#L78](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts#L78)
 ```typescript
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
@@ -6602,8 +7484,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/datascience.ts:{"line":116,"character":41}
+
+[src/client/datascience/datascience.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/datascience.ts#L117)
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -6626,8 +7512,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/shiftEnterBanner.ts:{"line":77,"character":37}
+
+[src/client/datascience/shiftEnterBanner.ts#L78](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/shiftEnterBanner.ts#L78)
 ```typescript
             return;
         }
@@ -6638,7 +7528,8 @@ src/client/datascience/shiftEnterBanner.ts:{"line":77,"character":37}
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
 ```
 
-src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":68,"character":22}
+
+[src/test/datascience/shiftEnterBanner.unit.test.ts#L69](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L69)
 ```typescript
         config.verifyAll();
 
@@ -6649,7 +7540,8 @@ src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":68,"character":22}
     });
 ```
 
-src/test/datascience/shiftEnterBanner.unit.test.ts:{"line":113,"character":22}
+
+[src/test/datascience/shiftEnterBanner.unit.test.ts#L114](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L114)
 ```typescript
         config.verifyAll();
 
@@ -6672,8 +7564,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":59,"character":37}
+
+[src/client/datascience/data-viewing/dataViewerDependencyService.ts#L60](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerDependencyService.ts#L60)
 ```typescript
             throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
         }
@@ -6696,8 +7592,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":53,"character":41}
+
+[src/client/datascience/data-viewing/dataViewerDependencyService.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/data-viewing/dataViewerDependencyService.ts#L54)
 ```typescript
             if (isVersionOfPandasSupported(pandasVersion)) {
                 return;
@@ -6722,8 +7622,12 @@ src/client/datascience/data-viewing/dataViewerDependencyService.ts:{"line":53,"c
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":242,"character":45}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L240](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L240)
 ```typescript
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
@@ -6746,8 +7650,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/notebookStarter.ts:{"line":144,"character":41}
+
+[src/client/datascience/jupyter/notebookStarter.ts#L145](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/notebookStarter.ts#L145)
 ```typescript
             }
 
@@ -6771,8 +7679,12 @@ src/client/datascience/jupyter/notebookStarter.ts:{"line":144,"character":41}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/kernels/kernel.ts:{"line":307,"character":53}
+
+[src/client/datascience/jupyter/kernels/kernel.ts#L305](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/kernels/kernel.ts#L305)
 ```typescript
                         ex
                     );
@@ -6800,8 +7712,12 @@ src/client/datascience/jupyter/kernels/kernel.ts:{"line":307,"character":53}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/baseJupyterSession.ts:{"line":38,"character":37}
+
+[src/client/datascience/baseJupyterSession.ts#L39](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/baseJupyterSession.ts#L39)
 ```typescript
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
@@ -6824,8 +7740,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":357,"character":57}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L358](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L358)
 ```typescript
             // We don't know as its the default kernel on Jupyter server.
         }
@@ -6850,7 +7770,8 @@ No description provided
 -  language: string
 
 ## Locations Used
-src/client/datascience/common.ts:{"line":167,"character":30}
+
+[src/client/datascience/common.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/common.ts#L168)
 ```typescript
 }
 
@@ -6861,7 +7782,8 @@ export function sendNotebookOrKernelLanguageTelemetry(
     language = getTelemetrySafeLanguage(language);
 ```
 
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":339,"character":64}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L340](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L340)
 ```typescript
         }
         switch (this.connection.kind) {
@@ -6872,7 +7794,8 @@ src/client/datascience/notebook/vscodeNotebookController.ts:{"line":339,"charact
                 sendNotebookOrKernelLanguageTelemetry(
 ```
 
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":343,"character":30}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L344](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L344)
 ```typescript
                 break;
             case 'connectToLiveKernel':
@@ -6883,7 +7806,8 @@ src/client/datascience/notebook/vscodeNotebookController.ts:{"line":343,"charact
                 break;
 ```
 
-src/client/datascience/notebook/vscodeNotebookController.ts:{"line":349,"character":30}
+
+[src/client/datascience/notebook/vscodeNotebookController.ts#L350](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L350)
 ```typescript
                 break;
             case 'startUsingKernelSpec':
@@ -6906,6 +7830,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -6921,6 +7848,9 @@ Event can be removed. Not referenced anywhere
  Sync events
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -6939,6 +7869,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -6953,6 +7886,9 @@ Event can be removed. Not referenced anywhere
 No description provided
 
 ## Properties
+
+
+No properties for event
 
 
 ## Locations Used
@@ -6971,6 +7907,9 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
@@ -6987,8 +7926,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterVariables.ts:{"line":43,"character":32}
+
+[src/client/datascience/jupyter/jupyterVariables.ts#L44](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterVariables.ts#L44)
 ```typescript
     }
 
@@ -7013,7 +7956,8 @@ No description provided
 -  variableCount: number
 
 ## Locations Used
-src/client/datascience/variablesView/variableView.ts:{"line":188,"character":41}
+
+[src/client/datascience/variablesView/variableView.ts#L189](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/variablesView/variableView.ts#L189)
 ```typescript
             const response = await this.variables.getVariables(args, activeNotebook);
 
@@ -7039,7 +7983,8 @@ No description provided
         isErrorOutput: boolean;
 
 ## Locations Used
-src/client/datascience/notebook/helpers/helpers.ts:{"line":724,"character":41}
+
+[src/client/datascience/notebook/helpers/helpers.ts#L725](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/helpers/helpers.ts#L725)
 ```typescript
             // Unless we already know its an unknown output type.
             const outputType: nbformat.OutputType =
@@ -7062,8 +8007,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/jupyter/jupyterSession.ts:{"line":53,"character":32}
+
+[src/client/datascience/jupyter/jupyterSession.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/jupyter/jupyterSession.ts#L54)
 ```typescript
     }
 
@@ -7088,7 +8037,8 @@ No description provided
 -  type: string
 
 ## Locations Used
-src/client/datascience/webviews/webviewHost.ts:{"line":298,"character":41}
+
+[src/client/datascience/webviews/webviewHost.ts#L299](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/webviews/webviewHost.ts#L299)
 ```typescript
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
@@ -7111,8 +8061,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/webviews/webviewHost.ts:{"line":316,"character":32}
+
+[src/client/datascience/webviews/webviewHost.ts#L317](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/webviews/webviewHost.ts#L317)
 ```typescript
         this.dispose();
     };
@@ -7137,8 +8091,12 @@ src/client/datascience/webviews/webviewHost.ts:{"line":316,"character":32}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":57,"character":41}
+
+[src/client/datascience/raw-kernel/rawNotebookSupportedService.ts#L58](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawNotebookSupportedService.ts#L58)
 ```typescript
         try {
             require('zeromq');
@@ -7163,8 +8121,12 @@ src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":57,"cha
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":61,"character":41}
+
+[src/client/datascience/raw-kernel/rawNotebookSupportedService.ts#L62](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/rawNotebookSupportedService.ts#L62)
 ```typescript
             this._isSupported = true;
         } catch (e) {
@@ -7189,8 +8151,12 @@ src/client/datascience/raw-kernel/rawNotebookSupportedService.ts:{"line":61,"cha
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/common/variables/environment.ts:{"line":139,"character":37}
+
+[src/client/common/variables/environment.ts#L140](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/variables/environment.ts#L140)
 ```typescript
     });
     if (!invalid && replacement !== value) {
@@ -7215,8 +8181,12 @@ src/client/common/variables/environment.ts:{"line":139,"character":37}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/telemetry/envFileTelemetry.ts:{"line":45,"character":33}
+
+[src/client/telemetry/envFileTelemetry.ts#L46](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/envFileTelemetry.ts#L46)
 ```typescript
 }
 
@@ -7241,8 +8211,12 @@ function sendTelemetry(hasCustomEnvPath: boolean = false) {
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/telemetry/types.ts:{"line":7,"character":70}
+
+[src/client/telemetry/types.ts#L8](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/types.ts#L8)
 ```typescript
 import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName } from './constants';
@@ -7253,7 +8227,8 @@ export interface IImportTracker {}
 
 ```
 
-src/client/startupTelemetry.ts:{"line":30,"character":37}
+
+[src/client/startupTelemetry.ts#L31](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/startupTelemetry.ts#L31)
 ```typescript
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
@@ -7264,7 +8239,8 @@ src/client/startupTelemetry.ts:{"line":30,"character":37}
     }
 ```
 
-src/client/startupTelemetry.ts:{"line":51,"character":37}
+
+[src/client/startupTelemetry.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/startupTelemetry.ts#L52)
 ```typescript
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -7289,8 +8265,12 @@ src/client/startupTelemetry.ts:{"line":51,"character":37}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/telemetry/importTracker.ts:{"line":207,"character":37}
+
+[src/client/telemetry/importTracker.ts#L208](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/importTracker.ts#L208)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -7301,7 +8281,8 @@ src/client/telemetry/importTracker.ts:{"line":207,"character":37}
     private lookForImports(lines: (string | undefined)[]) {
 ```
 
-src/test/telemetry/importTracker.unit.test.ts:{"line":43,"character":65}
+
+[src/test/telemetry/importTracker.unit.test.ts#L44](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/telemetry/importTracker.unit.test.ts#L44)
 ```typescript
         public static expectHashes(...hashes: string[]) {
             expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
@@ -7324,8 +8305,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/telemetry/importTracker.ts:{"line":160,"character":32}
+
+[src/client/telemetry/importTracker.ts#L161](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/importTracker.ts#L161)
 ```typescript
         }
     }
@@ -7336,7 +8321,8 @@ src/client/telemetry/importTracker.ts:{"line":160,"character":32}
         const lines = this.getNotebookDocumentLines(e);
 ```
 
-src/client/telemetry/importTracker.ts:{"line":167,"character":32}
+
+[src/client/telemetry/importTracker.ts#L168](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/importTracker.ts#L168)
 ```typescript
         this.lookForImports(lines);
     }
@@ -7347,7 +8333,8 @@ src/client/telemetry/importTracker.ts:{"line":167,"character":32}
             return;
 ```
 
-src/client/telemetry/importTracker.ts:{"line":191,"character":32}
+
+[src/client/telemetry/importTracker.ts#L192](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/importTracker.ts#L192)
 ```typescript
         this.lookForImports(result);
     }
@@ -7358,7 +8345,8 @@ src/client/telemetry/importTracker.ts:{"line":191,"character":32}
         const lines = this.getDocumentLines(document);
 ```
 
-src/test/telemetry/importTracker.unit.test.ts:{"line":41,"character":61}
+
+[src/test/telemetry/importTracker.unit.test.ts#L42](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/telemetry/importTracker.unit.test.ts#L42)
 ```typescript
         public static measures: {}[] = [];
 
@@ -7383,8 +8371,12 @@ src/test/telemetry/importTracker.unit.test.ts:{"line":41,"character":61}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/common/experiments/service.ts:{"line":103,"character":45}
+
+[src/client/common/experiments/service.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/experiments/service.ts#L104)
 ```typescript
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
@@ -7395,7 +8387,8 @@ src/client/common/experiments/service.ts:{"line":103,"character":45}
 
 ```
 
-src/client/common/experiments/service.ts:{"line":111,"character":45}
+
+[src/client/common/experiments/service.ts#L112](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/experiments/service.ts#L112)
 ```typescript
             }
             case 'optIn': {
@@ -7406,7 +8399,8 @@ src/client/common/experiments/service.ts:{"line":111,"character":45}
 
 ```
 
-src/test/common/experiments/service.unit.test.ts:{"line":220,"character":37}
+
+[src/test/common/experiments/service.unit.test.ts#L221](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/common/experiments/service.unit.test.ts#L221)
 ```typescript
             assert.isTrue(result);
             assert.equal(telemetryEvents.length, 1);
@@ -7417,7 +8411,8 @@ src/test/common/experiments/service.unit.test.ts:{"line":220,"character":37}
             sinon.assert.calledOnce(isCachedFlightEnabledStub);
 ```
 
-src/test/common/experiments/service.unit.test.ts:{"line":240,"character":37}
+
+[src/test/common/experiments/service.unit.test.ts#L241](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/common/experiments/service.unit.test.ts#L241)
 ```typescript
             assert.isFalse(result);
             assert.equal(telemetryEvents.length, 1);
@@ -7440,8 +8435,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":545,"character":45}
+
+[src/client/datascience/commands/commandRegistry.ts#L546](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L546)
 ```typescript
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
@@ -7464,8 +8463,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":527,"character":37}
+
+[src/client/datascience/commands/commandRegistry.ts#L528](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L528)
 ```typescript
         return this.commandManager.executeCommand('outline.focus');
     }
@@ -7488,8 +8491,12 @@ No description provided
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/datascience/commands/commandRegistry.ts:{"line":542,"character":49}
+
+[src/client/datascience/commands/commandRegistry.ts#L543](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/commands/commandRegistry.ts#L543)
 ```typescript
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
@@ -7514,8 +8521,12 @@ src/client/datascience/commands/commandRegistry.ts:{"line":542,"character":49}
 ## Properties
 
 
+No properties for event
+
+
 ## Locations Used
-src/client/common/platform/platformService.ts:{"line":20,"character":41}
+
+[src/client/common/platform/platformService.ts#L21](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/platform/platformService.ts#L21)
 ```typescript
     public version?: SemVer;
     constructor() {
@@ -7526,7 +8537,8 @@ src/client/common/platform/platformService.ts:{"line":20,"character":41}
         }
 ```
 
-src/client/common/platform/platformService.ts:{"line":44,"character":53}
+
+[src/client/common/platform/platformService.ts#L45](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/platform/platformService.ts#L45)
 ```typescript
                 try {
                     const ver = coerce(os.release());
@@ -7537,7 +8549,8 @@ src/client/common/platform/platformService.ts:{"line":44,"character":53}
                         return (this.version = ver);
 ```
 
-src/client/common/platform/platformService.ts:{"line":51,"character":49}
+
+[src/client/common/platform/platformService.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/platform/platformService.ts#L52)
 ```typescript
                     }
                     throw new Error('Unable to parse version');
@@ -7590,7 +8603,8 @@ No description provided
         activatedByWrapper?: boolean;
 
 ## Locations Used
-src/client/common/process/pythonExecutionFactory.ts:{"line":166,"character":37}
+
+[src/client/common/process/pythonExecutionFactory.ts#L167](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/common/process/pythonExecutionFactory.ts#L167)
 ```typescript
             options.allowEnvironmentFetchExceptions
         );
