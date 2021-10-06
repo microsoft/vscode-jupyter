@@ -160,7 +160,7 @@ export class KernelProvider implements IKernelProvider {
         this.kernelsByNotebook.delete(notebook);
     }
     private onNotebookSessionChanged({ status, notebook }: { status: ServerStatus; notebook: INotebook }) {
-        const kernel = this.kernels.find(item => item.notebook === notebook);
+        const kernel = this.kernels.find((item) => item.notebook === notebook);
         if (kernel) {
             this._onKernelStatusChanged.fire({ status, kernel });
         }

@@ -142,7 +142,7 @@ export class Kernel implements IKernel {
         const isPreferredKernel =
             getResourceType(resourceUri) === 'notebook'
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
-                controller
+                  controller
                 : undefined;
         trackKernelResourceInformation(resourceUri, {
             kernelConnection: kernelConnectionMetadata,
@@ -609,7 +609,10 @@ export class Kernel implements IKernel {
     }
 }
 
-export async function executeSilently(session: Pick<JupyterKernel.IKernelConnection, 'requestExecute'>, code: string): Promise<nbformat.IOutput[]> {
+export async function executeSilently(
+    session: Pick<JupyterKernel.IKernelConnection, 'requestExecute'>,
+    code: string
+): Promise<nbformat.IOutput[]> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 

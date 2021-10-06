@@ -744,7 +744,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
-    if (!kernel.notebook){
+    if (!kernel.notebook) {
         return;
     }
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {

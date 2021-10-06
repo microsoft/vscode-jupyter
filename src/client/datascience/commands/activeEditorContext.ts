@@ -185,11 +185,12 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
     private onDidKernelStatusChange({ kernel }: { status: ServerStatus; kernel: IKernel }) {
-        if (
-            kernel.notebookDocument.notebookType === InteractiveWindowView
-        ) {
+        if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
-        } else if (kernel.notebookDocument.notebookType === JupyterNotebookView && kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document) {
+        } else if (
+            kernel.notebookDocument.notebookType === JupyterNotebookView &&
+            kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
+        ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }
     }
@@ -212,7 +213,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
-                (this.interactiveContext.value === true && this.isPythonFileActive === true)
+                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
             .ignoreErrors();
     }
