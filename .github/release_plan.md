@@ -51,6 +51,8 @@
 ## Preparation
 
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the release notes(https://github.com/microsoft/vscode-docs/blob/vnext/release-notes/v<vscode version>.md, make note of the branch and file name).
+    - [ ] Include all new new features under a section named `Jupyter` with screenshots or animated gifs.
+    - [ ] Fixes, code health should remain in the Jupyter change log.
 -   [ ] Make sure component governance is happy
 -   [ ] Make sure there is nothing targeting this release that still needs to be validated
         (`is:issue sort:updated-desc milestone:"<milestone>" label:verification-needed -label:verified`)
@@ -73,7 +75,6 @@
             -   [ ] Branch is release branch
             -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
             -   [ ] Save
--   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
         * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
