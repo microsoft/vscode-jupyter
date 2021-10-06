@@ -17,7 +17,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { ICodeCssGenerator, INotebook, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -45,6 +45,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     public get active() {
         return !!this.webPanel?.isActive();
+    }
+
+    public get refreshPending() {
+        return this.pendingRowsCount > 0;
     }
 
     public get onDidDisposeDataViewer() {
@@ -106,6 +110,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+        }
+    }
+
+    public get notebook(): INotebook | undefined {
+        if (this.dataProvider && 'notebook' in this.dataProvider) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (this.dataProvider as any).notebook;
         }
     }
 
@@ -255,6 +266,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                     Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0),
                     request.sliceExpression
                 );
+                this.pendingRowsCount = Math.max(0, this.pendingRowsCount - rows.length);
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,
                     start: request.start,
@@ -280,7 +292,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.dispose();
             }
             traceError(e);
-            this.applicationShell.showErrorMessage(e).then(noop, noop);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.applicationShell.showErrorMessage(e as any).then(noop, noop);
         } finally {
             this.sendElapsedTimeTelemetry();
         }

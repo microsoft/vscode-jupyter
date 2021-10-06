@@ -14,6 +14,7 @@ import {
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
@@ -40,7 +41,11 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveNotebook.event;
     }
     public get activeNotebook(): INotebook | undefined {
-        return this.notebookEditorProvider.activeEditor?.notebook || this.getActiveInteractiveWindowNotebook();
+        return (
+            this.notebookEditorProvider.activeEditor?.notebook ||
+            this.getActiveInteractiveWindowNotebook() ||
+            this.getActiveDataViewerNotebook()
+        );
     }
     public get activeNotebookExecutionCount(): number | undefined {
         const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
@@ -68,7 +73,8 @@ export class NotebookWatcher implements INotebookWatcher {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory
     ) {
         // We need to know if kernel state changes or if the active notebook editor is changed
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
@@ -198,6 +204,11 @@ export class NotebookWatcher implements INotebookWatcher {
             return;
         }
         return this.kernelProvider.get(notebookDocument)?.notebook;
+    }
+
+    private getActiveDataViewerNotebook(): INotebook | undefined {
+        const activeViewer = this.dataViewerFactory.activeViewer;
+        return activeViewer?.notebook;
     }
 
     // If the Uri is in the execution count tracker, return it, if not return undefined

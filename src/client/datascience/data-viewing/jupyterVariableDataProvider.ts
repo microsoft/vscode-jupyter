@@ -14,13 +14,17 @@ import { traceError } from '../../common/logger';
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
     private initialized: boolean = false;
-    private notebook: INotebook | undefined;
+    private _notebook: INotebook | undefined;
     private variable: IJupyterVariable | undefined;
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
     ) {}
+
+    public get notebook(): INotebook | undefined {
+        return this._notebook;
+    }
 
     /**
      * Normalizes column types to the types the UI component understands.
@@ -74,7 +78,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     }
 
     public setDependencies(variable: IJupyterVariable, notebook?: INotebook): void {
-        this.notebook = notebook;
+        this._notebook = notebook;
         this.variable = variable;
     }
 
@@ -86,7 +90,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             if (sliceExpression || isRefresh) {
                 variable = await this.variableManager.getDataFrameInfo(
                     variable,
-                    this.notebook,
+                    this._notebook,
                     sliceExpression,
                     isRefresh
                 );
@@ -120,7 +124,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 0,
                 this.variable.rowCount,
-                this.notebook,
+                this._notebook,
                 sliceExpression
             );
             allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
@@ -136,7 +140,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 start,
                 end,
-                this.notebook,
+                this._notebook,
                 sliceExpression
             );
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
@@ -148,8 +152,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
             this.initialized = true;
-            await this.dependencyService.checkAndInstallMissingDependencies(this.notebook?.getMatchingInterpreter());
-            this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
+            await this.dependencyService.checkAndInstallMissingDependencies(this._notebook?.getMatchingInterpreter());
+            this.variable = await this.variableManager.getDataFrameInfo(this.variable, this._notebook);
         }
     }
 }
