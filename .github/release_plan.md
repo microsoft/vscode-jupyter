@@ -57,8 +57,7 @@
 ## Release
 
 -   [ ] Publish the release
-    -   [ ] Increase the extension version on the `release` branch. E.g. if the extension version was 2021.7.x, increase it to 2021.8.x. This should be the only difference between the `main` and `release` branches.
-    -   [ ] Generate a VSIX and sanity test the VSIX against VS Code prebuild
+    -   [ ] Use the generated VSIX (from last build for the release branch) and sanity test the VSIX against VS Code prebuild
     -   [ ] For an automated release
         -   [ ] Create a commit which contains the words `publish` and `release` in it (you can use --allow-empty if needed)
         -   [ ] Directly push (PR not required) the commit to the `release-xxxx.xx` branch
