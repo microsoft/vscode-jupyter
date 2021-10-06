@@ -78,8 +78,8 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
         expect(r1.test('Central African Republic')).to.be.true;
         expect(r1.test('Afric')).to.be.false;
         const r2 = buildDataViewerFilterRegex('Africa.*');
-        expect(r2.test('South Africa')).to.be.false;
-        expect(r2.test('South African')).to.be.false;
+        expect(r2.test('South Africa')).to.be.true;
+        expect(r2.test('South African')).to.be.true;
         expect(r2.test('African')).to.be.true;
         expect(r2.test('african')).to.be.false;
         const r3 = buildDataViewerFilterRegex('= Africa');
