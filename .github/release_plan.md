@@ -50,9 +50,10 @@
 
 ## Preparation
 
--   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
+-   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the release notes(https://github.com/microsoft/vscode-docs/blob/vnext/release-notes/v<vscode version>.md, make note of the branch and file name).
 -   [ ] Make sure component governance is happy
--   [ ] Make sure there is nothing in the validation queue targeting this release that still needs to be validated.
+-   [ ] Make sure there is nothing targeting this release that still needs to be validated
+        (`is:issue sort:updated-desc milestone:"<milestone>" label:verification-needed -label:verified`)
 
 ## Release
 
@@ -73,7 +74,6 @@
             -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
             -   [ ] Save
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
--   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
         * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
@@ -88,11 +88,14 @@
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Turn insiders daily builds back on
--   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
+-   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release
 
 -   [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/.github/release_plan.md) (🤖)
+    * Title `<Month> <year> Release Plan`
+    * Add the labels `endgame-plan` to this issue
+    * Pin this issue
 -   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan) (🤖)
