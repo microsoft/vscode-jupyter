@@ -715,6 +715,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    readonly notebook: INotebook | undefined;
     setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 

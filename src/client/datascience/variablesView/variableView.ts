@@ -10,6 +10,7 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
+    IDocumentManager,
     IWebviewViewProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -23,7 +24,7 @@ import {
 } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IDataViewerFactory } from '../data-viewing/types';
+import { IDataViewer, IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import {
     ICodeCssGenerator,
@@ -61,7 +62,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
         @unmanaged() private readonly notebookWatcher: INotebookWatcher,
-        @unmanaged() private readonly commandManager: ICommandManager
+        @unmanaged() private readonly commandManager: ICommandManager,
+        @unmanaged() private readonly documentManager: IDocumentManager
     ) {
         super(
             configuration,
@@ -79,6 +81,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
+        this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -156,8 +159,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         }
     }
 
-    // Handle a request from the react UI to show our data viewer
-    private async showDataViewer(request: IShowDataViewer): Promise<void> {
+    // Handle a request from the react UI to show our data viewer. Public for testing
+    public async showDataViewer(request: IShowDataViewer): Promise<IDataViewer | undefined> {
         try {
             if (
                 this.notebookWatcher.activeNotebook &&
@@ -169,7 +172,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     this.notebookWatcher.activeNotebook
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
-                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
             traceError(e);
@@ -222,6 +225,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             }).ignoreErrors();
         }
 
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+    }
+
+    // Active text editor changed. Editor may not be associated with a notebook
+    private activeTextEditorChanged() {
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
