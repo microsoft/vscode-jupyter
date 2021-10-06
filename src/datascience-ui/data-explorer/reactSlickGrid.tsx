@@ -39,6 +39,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
+import { buildDataViewerFilterRegex } from '../../client/common/utils/regexp';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -89,6 +90,7 @@ class ColumnFilter {
     private greaterThanRegEx = /^\s*>\s*((?<Number>-?\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>-?\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>-?\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
+    private textRegex: RegExp | undefined;
 
     constructor(public text: string, column: Slick.Column<Slick.SlickData>) {
         if (text && text.length > 0) {
@@ -100,7 +102,8 @@ class ColumnFilter {
 
                 case ColumnType.String:
                 default:
-                    this.matchFunc = (v: any) => this.matchStringWithWildcards(v, text);
+                    this.textRegex = buildDataViewerFilterRegex(text);
+                    this.matchFunc = (v: any) => this.matchStringWithWildcards(v);
                     break;
             }
         } else {
@@ -113,19 +116,9 @@ class ColumnFilter {
     }
 
     // Tries to match entire words instead of possibly trying to match substrings.
-    private matchStringWithWildcards(v: any, text: string): boolean {
-        // boundaryRegEx allows us to check that v matches full string and not substring.
-        // It is similar to \b but works with special characters as well
-        // Modified from https://stackoverflow.com/a/40298937
-        const boundaryRegEx = '(?:(?=[\\S])(?<![\\S])|(?<=[\\S])(?![\\S]))';
-
-        const regEx = text
-            .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Replace special characters in regex with backslashed versions
-            .replace(/\*/g, '.*');
-
+    private matchStringWithWildcards(v: any): boolean {
         try {
-            const matchExpr = new RegExp(`${boundaryRegEx}${regEx}${boundaryRegEx}`, 'i');
-            return matchExpr.test(v);
+            return this.textRegex ? this.textRegex.test(v) : false;
         } catch (e) {
             return false;
         }
