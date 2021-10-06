@@ -139,7 +139,7 @@ export class CellExecution implements IDisposable {
     private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
-    private readonly prompts: CancellationTokenSource[] = [];
+    private readonly prompts = new Set<CancellationTokenSource>();
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -291,6 +291,8 @@ export class CellExecution implements IDisposable {
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
+        this.prompts.forEach((item) => item.dispose());
+        this.prompts.clear();
     }
     private clearLastUsedStreamOutput() {
         this.lastUsedStreamOutput = undefined;
@@ -608,8 +610,7 @@ export class CellExecution implements IDisposable {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const cancelToken = new CancellationTokenSource();
-            this.disposables.push(cancelToken);
-            this.prompts.push(cancelToken);
+            this.prompts.add(cancelToken);
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
             await this.applicationService
                 .showInputBox(
@@ -623,6 +624,8 @@ export class CellExecution implements IDisposable {
                 .then((v) => {
                     session.sendInputReply(v || '');
                 }, noop);
+
+            this.prompts.delete(cancelToken);
         }
     }
 
