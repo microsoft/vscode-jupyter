@@ -38,6 +38,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
+import { IpyKernelNotInstalledError } from '../../datascience/kernel-launcher/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -261,7 +262,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         break;
                 }
             } else if (
-                ipykernelResult === IpykernelCheckResult.Missing ||
+                ipykernelResult === IpykernelCheckResult.NotInstalled
+            ) {
+                // User would have been notified about this, nothing more to do.
+            } else if (
+                ipykernelResult === IpykernelCheckResult.Outdated ||
                 ipykernelResult === IpykernelCheckResult.Unknown
             ) {
                 void this.promptInstallIpykernel6();
@@ -446,8 +451,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             } else {
                 return undefined;
             }
-        } catch {
-            traceError('Debugging: Could not check for ipykernel 6');
+        } catch (ex) {
+            if (ex instanceof IpyKernelNotInstalledError) {
+                return IpykernelCheckResult.NotInstalled
+            }
+            traceError('Debugging: Could not check for ipykernel 6', ex);
         }
         return IpykernelCheckResult.Unknown;
     }

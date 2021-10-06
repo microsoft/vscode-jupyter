@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
@@ -45,8 +45,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) {}
+    ) { }
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -73,7 +74,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
-            this.handleKernelDependencyResponse(result, interpreter);
+            await this.handleKernelDependencyResponse(result, interpreter, resource);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
@@ -83,19 +84,21 @@ export class KernelDependencyService implements IKernelDependencyService {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 
-    private handleKernelDependencyResponse(
+    private async handleKernelDependencyResponse(
         response: KernelInterpreterDependencyResponse,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        resource: Resource
     ) {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const targetNotebookEditor = getActiveInteractiveWindow(
+            const notebook = getResourceType(resource) === 'notebook' ? this.notebooks.notebookDocuments.find(item => item.uri.toString() === resource?.toString()) : undefined;
+            const targetNotebookEditor = notebook ? this.notebooks.activeNotebookEditor : getActiveInteractiveWindow(
                 this.serviceContainer.get(IInteractiveWindowProvider)
             )?.notebookEditor;
             if (targetNotebookEditor) {
-                this.commandManager
+                await this.commandManager
                     .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
                     .then(noop, noop);
             } else {
@@ -162,9 +165,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             const selection = this.isCodeSpace
                 ? installPrompt
                 : await Promise.race([
-                      this.appShell.showErrorMessage(message, { modal: true }, ...options),
-                      promptCancellationPromise
-                  ]);
+                    this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                    promptCancellationPromise
+                ]);
             if (installerToken.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'dismissed',
