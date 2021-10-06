@@ -20,7 +20,8 @@ import {
     Range,
     notebooks,
     NotebookCellOutput,
-    NotebookCellExecutionState
+    NotebookCellExecutionState,
+    CancellationTokenSource
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -73,7 +74,7 @@ export class CellExecutionFactory {
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
         private readonly cellHashProviderFactory: CellHashProviderFactory
-    ) {}
+    ) { }
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -138,6 +139,7 @@ export class CellExecution implements IDisposable {
     private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
+    private readonly prompts: CancellationTokenSource[] = [];
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -263,6 +265,8 @@ export class CellExecution implements IDisposable {
      * Hence `forced=true` is more like a hard kill.
      */
     public async cancel(forced = false) {
+        // Close all of the prompts (if we any any UI prompts asking user for input).
+        this.prompts.forEach(item => item.cancel());
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
@@ -570,9 +574,9 @@ export class CellExecution implements IDisposable {
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
             output.transient &&
-            typeof output.transient === 'object' &&
-            'display_id' in output.transient &&
-            typeof output.transient?.display_id === 'string'
+                typeof output.transient === 'object' &&
+                'display_id' in output.transient &&
+                typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id
                 : undefined;
         if (this.cell.document.isClosed) {
@@ -600,16 +604,19 @@ export class CellExecution implements IDisposable {
         this.endTemporaryTask();
     }
 
-    private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
+    private async handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
+            const cancelToken = new CancellationTokenSource();
+            this.disposables.push(cancelToken);
+            this.prompts.push(cancelToken);
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            this.applicationService
+            await this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
                     ignoreFocusOut: true,
                     password: hasPassword
-                })
+                }, cancelToken.token)
                 .then((v) => {
                     session.sendInputReply(v || '');
                 }, noop);
