@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-
-import type { KernelMessage } from '@jupyterlab/services';
+import type { Kernel as JupyterKernel, KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import {
@@ -38,7 +37,6 @@ import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
-    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -409,7 +407,7 @@ export class Kernel implements IKernel {
 
             if (this.connection?.localLaunch && this.notebook) {
                 await sendTelemetryForPythonKernelExecutable(
-                    this.notebook,
+                    this,
                     this.resourceUri,
                     this.kernelConnectionMetadata,
                     this.pythonExecutionFactory
@@ -611,7 +609,10 @@ export class Kernel implements IKernel {
     }
 }
 
-export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+export async function executeSilently(
+    session: Pick<JupyterKernel.IKernelConnection, 'requestExecute'>,
+    code: string
+): Promise<nbformat.IOutput[]> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 

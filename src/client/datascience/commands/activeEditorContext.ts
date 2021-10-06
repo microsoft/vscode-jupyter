@@ -14,10 +14,10 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebook, INotebookProvider } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -41,7 +41,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
@@ -89,7 +88,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
-        this.notebookProvider.onSessionStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
+        this.kernelProvider.onKernelStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(
             this.onDidChangeActiveInteractiveWindow,
             this,
@@ -185,17 +184,14 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
         }
     }
-    private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
-        // Ok, kernel status has changed.
-        const activeEditor = this.vscNotebook.activeNotebookEditor;
-        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveProvider);
-        if (
-            activeInteractiveWindow &&
-            activeInteractiveWindow.notebookUri?.toString() === notebook.identity.toString()
-        ) {
+    private onDidKernelStatusChange({ kernel }: { status: ServerStatus; kernel: IKernel }) {
+        if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
-        } else if (activeEditor && activeEditor.document.uri.toString() === notebook.identity.toString()) {
-            this.updateContextOfActiveNotebookKernel(activeEditor);
+        } else if (
+            kernel.notebookDocument.notebookType === JupyterNotebookView &&
+            kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
+        ) {
+            this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {

@@ -17,7 +17,13 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, INotebook, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import {
+    ICodeCssGenerator,
+    IJupyterVariableDataProvider,
+    INotebook,
+    IThemeFinder,
+    WebViewViewChangeEventArgs
+} from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -36,7 +42,7 @@ const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
-    private dataProvider: IDataViewerDataProvider | undefined;
+    private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
@@ -86,7 +92,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.onDidDispose(this.dataViewerDisposed, this);
     }
 
-    public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
+    public async showData(
+        dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider,
+        title: string
+    ): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
             this.dataProvider = dataProvider;
@@ -116,7 +125,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     public get notebook(): INotebook | undefined {
         if (this.dataProvider && 'notebook' in this.dataProvider) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (this.dataProvider as any).notebook;
+            return this.dataProvider.notebook;
         }
     }
 

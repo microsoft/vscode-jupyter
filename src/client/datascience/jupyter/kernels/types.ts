@@ -164,6 +164,7 @@ export interface IKernelProvider extends IAsyncDisposable {
     readonly kernels: Readonly<IKernel[]>;
     onDidRestartKernel: Event<IKernel>;
     onDidDisposeKernel: Event<IKernel>;
+    onKernelStatusChanged: Event<{ status: ServerStatus; kernel: IKernel }>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

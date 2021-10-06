@@ -4,7 +4,7 @@
 
 import * as path from 'path';
 import type { Kernel } from '@jupyterlab/services';
-import { IJupyterKernelSpec, INotebook } from '../../types';
+import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -16,6 +16,7 @@ import { IConfigurationService, IPathUtils, Resource } from '../../../common/typ
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
+    IKernel,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -738,11 +739,14 @@ export function findPreferredKernel(
 }
 
 export async function sendTelemetryForPythonKernelExecutable(
-    notebook: INotebook,
+    kernel: IKernel,
     resource: Resource,
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
+    if (!kernel.notebook) {
+        return;
+    }
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
     }
@@ -751,7 +755,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     try {
         traceInfoIf(isCI, 'Begin sendTelemetryForPythonKernelExecutable');
-        const outputs = await executeSilently(notebook.session, 'import sys\nprint(sys.executable)');
+        const outputs = await executeSilently(kernel.notebook.session, 'import sys\nprint(sys.executable)');
         if (outputs.length === 0) {
             return;
         }

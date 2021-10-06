@@ -104,10 +104,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._identity;
     }
     public get notebookUri(): Uri | undefined {
-        return this.notebookDocument?.uri;
+        return this._notebookDocument?.uri;
     }
     public get notebookEditor(): NotebookEditor | undefined {
         return this._notebookEditor;
+    }
+    public get notebookDocument(): NotebookDocument | undefined {
+        return this._notebookDocument;
     }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
@@ -124,7 +127,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _editorReadyPromise: Promise<NotebookEditor>;
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
-    private notebookDocument: NotebookDocument | undefined;
+    private _notebookDocument: NotebookDocument | undefined;
     private executionPromise: Promise<boolean> | undefined;
     private _notebookEditor: NotebookEditor | undefined;
 
@@ -162,7 +165,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this._kernelReadyPromise = this.createKernelReadyPromise();
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
-            if (notebookDocument === this.notebookDocument) {
+            if (notebookDocument === this._notebookDocument) {
                 this.closedEvent.fire(this);
             }
         });
@@ -205,7 +208,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         this._notebookEditor = notebookEditor;
-        this.notebookDocument = notebookEditor.document;
+        this._notebookDocument = notebookEditor.document;
         this.internalDisposables.push(
             window.onDidChangeActiveNotebookEditor((e) => {
                 if (e === this._notebookEditor) {

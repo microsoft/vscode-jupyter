@@ -5,26 +5,33 @@ import { inject, injectable } from 'inversify';
 import {
     Event,
     EventEmitter,
-    notebooks,
+    NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
-    Uri,
-    workspace
+    NotebookDocument,
+    NotebookEditor
 } from 'vscode';
+import { IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { JupyterNotebookView } from '../notebook/constants';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
-import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
-import { IInteractiveWindowProvider, INotebook, INotebookEditor, INotebookEditorProvider } from '../types';
+import { IInteractiveWindowProvider, INotebook } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
-interface IExecutionCountEntry {
-    uri: Uri;
-    executionCount: number;
+type KernelStateEventArgs = {
+    notebook: NotebookDocument;
+    state: KernelState;
+    cell?: NotebookCell;
+    silent?: boolean;
+};
+
+enum KernelState {
+    executed,
+    restarted
 }
 
 // For any class that is monitoring the active notebook document, this class will update you
@@ -41,22 +48,33 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveNotebook.event;
     }
     public get activeNotebook(): INotebook | undefined {
-        return (
-            this.notebookEditorProvider.activeEditor?.notebook ||
-            this.getActiveInteractiveWindowNotebook() ||
-            this.getActiveDataViewerNotebook()
-        );
+        return this.activeKernel?.notebook;
     }
-    public get activeNotebookExecutionCount(): number | undefined {
-        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
-        const activeNotebookOrInteractiveWindow =
-            this.notebookEditorProvider.activeEditor?.file || activeInteractiveWindow?.notebookUri;
-        if (activeNotebookOrInteractiveWindow) {
-            const executionCount = this.getExecutionCount(activeNotebookOrInteractiveWindow);
-            return executionCount?.executionCount;
-        }
+    public get activeKernel(): IKernel | undefined {
+        const activeNotebook = this.notebooks.activeNotebookEditor?.document;
+        const activeJupyterNotebookKernel =
+            activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
 
-        return undefined;
+        if (activeJupyterNotebookKernel) {
+            return activeJupyterNotebookKernel;
+        }
+        const interactiveWindowDoc = this.getActiveInteractiveWindowDocument();
+        const activeInteractiveWindowKernel = interactiveWindowDoc
+            ? this.kernelProvider.get(interactiveWindowDoc)
+            : undefined;
+
+        if (activeInteractiveWindowKernel) {
+            return activeInteractiveWindowKernel;
+        }
+        const activeDataViewer = this.dataViewerFactory.activeViewer;
+        return activeDataViewer
+            ? this.kernelProvider.kernels.find((item) => item.notebook === activeDataViewer.notebook)
+            : undefined;
+    }
+
+    public get activeNotebookExecutionCount(): number | undefined {
+        const activeNotebook = this.activeKernel?.notebookDocument;
+        return activeNotebook ? this._executionCountTracker.get(activeNotebook) : undefined;
     }
 
     private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
@@ -65,22 +83,21 @@ export class NotebookWatcher implements INotebookWatcher {
     }>();
     private readonly _onDidRestartActiveNotebook = new EventEmitter<void>();
 
-    // Keep track of the execution count for any editors
-    private _executionCountTracker: IExecutionCountEntry[] = [];
+    // Keep track of the execution count for any notebook
+    private _executionCountTracker = new WeakMap<NotebookDocument, number>();
 
     constructor(
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
     ) {
         // We need to know if kernel state changes or if the active notebook editor is changed
-        this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
-        this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
+        this.notebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
+        this.notebooks.onDidCloseNotebookDocument(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
-            (kernel) => this.handleRestart({ state: KernelState.restarted, resource: kernel.notebookDocument.uri }),
+            (kernel) => this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebookDocument }),
             this,
             this.disposables
         );
@@ -90,11 +107,18 @@ export class NotebookWatcher implements INotebookWatcher {
             this.disposables
         );
     }
+    private getActiveInteractiveWindowDocument() {
+        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
+        if (!interactiveWindow) {
+            return;
+        }
+        return this.notebooks.notebookDocuments.find(
+            (notebookDocument) => notebookDocument === interactiveWindow?.notebookDocument
+        );
+    }
 
     // Handle when a cell finishes execution
-    private async onDidChangeNotebookCellExecutionState(
-        cellStateChange: NotebookCellExecutionStateChangeEvent
-    ): Promise<void> {
+    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent) {
         if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
             return;
         }
@@ -102,8 +126,8 @@ export class NotebookWatcher implements INotebookWatcher {
         // If a cell has moved to idle, update our state
         if (cellStateChange.state === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
-            await this.handleExecute({
-                resource: cellStateChange.cell.notebook.uri,
+            this.handleExecute({
+                notebook: cellStateChange.cell.notebook,
                 state: KernelState.executed,
                 cell: cellStateChange.cell,
                 silent: false
@@ -112,20 +136,20 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel execution event
-    private async handleExecute(kernelStateEvent: KernelStateEventArgs) {
+    private handleExecute(kernelStateEvent: KernelStateEventArgs) {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
             if (kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined) {
-                this.updateExecutionCount(
-                    kernelStateEvent.resource,
+                this._executionCountTracker.set(
+                    kernelStateEvent.notebook,
                     kernelStateEvent.cell.executionSummary?.executionOrder
                 );
             }
 
             // Next, if this is the active document, send out our notifications
             if (
-                (await this.isActiveNotebookEvent(kernelStateEvent)) &&
+                this.isActiveNotebookEvent(kernelStateEvent) &&
                 kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
@@ -136,28 +160,28 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel restart event
-    private async handleRestart(kernelStateEvent: KernelStateEventArgs) {
+    private handleRestart(kernelStateEvent: KernelStateEventArgs) {
         // First delete any execution counts that we are holding for this
-        this.deleteExecutionCount(kernelStateEvent.resource);
+        this._executionCountTracker.delete(kernelStateEvent.notebook);
 
         // If this is the active notebook, send our restart message
-        if (await this.isActiveNotebookEvent(kernelStateEvent)) {
+        if (this.isActiveNotebookEvent(kernelStateEvent)) {
             this._onDidRestartActiveNotebook.fire();
         }
     }
 
     // When an editor is closed, remove it from our execution count map
-    private notebookEditorClosed(editor: INotebookEditor) {
-        this.deleteExecutionCount(editor.file);
+    private notebookEditorClosed(doc: NotebookDocument) {
+        this._executionCountTracker.delete(doc);
     }
 
     // When the active editor is changed, update our execution count and notify
-    private activeEditorChanged(editor: INotebookEditor | undefined) {
+    private activeEditorChanged(editor: NotebookEditor | undefined) {
         const changeEvent: IActiveNotebookChangedEvent = {};
 
-        if (editor) {
-            const executionCount = this.getExecutionCount(editor.file);
-            executionCount && (changeEvent.executionCount = executionCount.executionCount);
+        if (editor && isJupyterNotebook(editor.document)) {
+            const executionCount = this._executionCountTracker.get(editor.document);
+            executionCount && (changeEvent.executionCount = executionCount);
         }
 
         this._onDidChangeActiveNotebook.fire(changeEvent);
@@ -178,61 +202,7 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Check to see if this event was on the active notebook
-    private async isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): Promise<boolean> {
-        if (
-            this.notebookEditorProvider.activeEditor &&
-            this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
-        ) {
-            return true;
-        }
-        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
-        if (
-            activeInteractiveWindow?.notebookUri !== undefined &&
-            this.fileSystem.arePathsSame(activeInteractiveWindow.notebookUri, kernelStateEvent.resource)
-        ) {
-            return true;
-        }
-        return false;
-    }
-
-    private getActiveInteractiveWindowNotebook(): INotebook | undefined {
-        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
-        const notebookDocument = workspace.notebookDocuments.find(
-            (notebookDocument) => notebookDocument.uri.toString() === interactiveWindow?.notebookUri?.toString()
-        );
-        if (notebookDocument === undefined) {
-            return;
-        }
-        return this.kernelProvider.get(notebookDocument)?.notebook;
-    }
-
-    private getActiveDataViewerNotebook(): INotebook | undefined {
-        const activeViewer = this.dataViewerFactory.activeViewer;
-        return activeViewer?.notebook;
-    }
-
-    // If the Uri is in the execution count tracker, return it, if not return undefined
-    private getExecutionCount(uri: Uri): IExecutionCountEntry | undefined {
-        return this._executionCountTracker.find((value) => {
-            return this.fileSystem.arePathsSame(uri, value.uri);
-        });
-    }
-
-    // Update the execution count value for the given Uri
-    private updateExecutionCount(uri: Uri, newValue: number) {
-        const executionCount = this.getExecutionCount(uri);
-        if (!executionCount) {
-            // If we don't have one yet, add one
-            this._executionCountTracker.push({ uri, executionCount: newValue });
-        } else {
-            executionCount.executionCount = newValue;
-        }
-    }
-
-    // Delete the given Uri from our execution count list
-    private deleteExecutionCount(uri: Uri) {
-        this._executionCountTracker = this._executionCountTracker.filter((value) => {
-            return !this.fileSystem.arePathsSame(uri, value.uri);
-        });
+    private isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): boolean {
+        return this.activeKernel?.notebookDocument === kernelStateEvent.notebook;
     }
 }
