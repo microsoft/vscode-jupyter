@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -23,6 +24,7 @@ import { INotebookControllerManager } from '../../notebook/types';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
+    INotebook,
     INotebookEditorProvider,
     INotebookProvider
 } from '../../types';
@@ -36,6 +38,8 @@ export class KernelProvider implements IKernelProvider {
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     private readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
+    private readonly _onKernelStatusChanged = new EventEmitter<{ status: ServerStatus; kernel: IKernel }>();
+    public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();
         this.notebook.notebookDocuments.forEach((item) => {
@@ -64,6 +68,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
+        this.notebookProvider.onSessionStatusChanged(this.onNotebookSessionChanged, this, this.disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -81,6 +86,9 @@ export class KernelProvider implements IKernelProvider {
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
+        this._onDidDisposeKernel.dispose();
+        this._onDidRestartKernel.dispose();
+        this._onKernelStatusChanged.dispose();
     }
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
         const existingKernelInfo = this.kernelsByNotebook.get(notebook);
@@ -150,5 +158,11 @@ export class KernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+    private onNotebookSessionChanged({ status, notebook }: { status: ServerStatus; notebook: INotebook }) {
+        const kernel = this.kernels.find(item => item.notebook === notebook);
+        if (kernel) {
+            this._onKernelStatusChanged.fire({ status, kernel });
+        }
     }
 }
