@@ -74,7 +74,7 @@ export class CellExecutionFactory {
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
         private readonly cellHashProviderFactory: CellHashProviderFactory
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -266,7 +266,7 @@ export class CellExecution implements IDisposable {
      */
     public async cancel(forced = false) {
         // Close all of the prompts (if we any any UI prompts asking user for input).
-        this.prompts.forEach(item => item.cancel());
+        this.prompts.forEach((item) => item.cancel());
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
@@ -574,9 +574,9 @@ export class CellExecution implements IDisposable {
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
             output.transient &&
-                typeof output.transient === 'object' &&
-                'display_id' in output.transient &&
-                typeof output.transient?.display_id === 'string'
+            typeof output.transient === 'object' &&
+            'display_id' in output.transient &&
+            typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id
                 : undefined;
         if (this.cell.document.isClosed) {
@@ -612,11 +612,14 @@ export class CellExecution implements IDisposable {
             this.prompts.push(cancelToken);
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
             await this.applicationService
-                .showInputBox({
-                    prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
-                    ignoreFocusOut: true,
-                    password: hasPassword
-                }, cancelToken.token)
+                .showInputBox(
+                    {
+                        prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                        ignoreFocusOut: true,
+                        password: hasPassword
+                    },
+                    cancelToken.token
+                )
                 .then((v) => {
                     session.sendInputReply(v || '');
                 }, noop);
