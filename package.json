@@ -1306,6 +1306,11 @@
                     "when": "config.noExists"
                 },
                 {
+                    "command": "jupyter.selectjupytercommandline",
+                    "category": "Jupyter",
+                    "when": "!jupyter.zmqavailable"
+                },
+                {
                     "command": "jupyter.runfromline",
                     "category": "Jupyter",
                     "when": "config.noExists"
