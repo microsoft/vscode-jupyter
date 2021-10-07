@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
@@ -20,6 +20,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 // eslint-disable-next-line
 suite('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
+    let notebooks: IVSCodeNotebook;
     let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
@@ -32,6 +33,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         cmdManager = mock<ICommandManager>();
         serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
+        notebooks = mock<IVSCodeNotebook>();
         when(memento.get(anything(), anything())).thenReturn(false);
         dependencyService = new KernelDependencyService(
             instance(appShell),
@@ -39,6 +41,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             instance(memento),
             false,
             instance(cmdManager),
+            instance(notebooks),
             instance(serviceContainer)
         );
     });

@@ -47,7 +47,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) { }
+    ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -93,10 +93,13 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const notebook = getResourceType(resource) === 'notebook' ? this.notebooks.notebookDocuments.find(item => item.uri.toString() === resource?.toString()) : undefined;
-            const targetNotebookEditor = notebook ? this.notebooks.activeNotebookEditor : getActiveInteractiveWindow(
-                this.serviceContainer.get(IInteractiveWindowProvider)
-            )?.notebookEditor;
+            const notebook =
+                getResourceType(resource) === 'notebook'
+                    ? this.notebooks.notebookDocuments.find((item) => item.uri.toString() === resource?.toString())
+                    : undefined;
+            const targetNotebookEditor = notebook
+                ? this.notebooks.activeNotebookEditor
+                : getActiveInteractiveWindow(this.serviceContainer.get(IInteractiveWindowProvider))?.notebookEditor;
             if (targetNotebookEditor) {
                 await this.commandManager
                     .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
@@ -165,9 +168,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             const selection = this.isCodeSpace
                 ? installPrompt
                 : await Promise.race([
-                    this.appShell.showErrorMessage(message, { modal: true }, ...options),
-                    promptCancellationPromise
-                ]);
+                      this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                      promptCancellationPromise
+                  ]);
             if (installerToken.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'dismissed',

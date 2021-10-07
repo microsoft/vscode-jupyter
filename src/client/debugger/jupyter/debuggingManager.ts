@@ -261,9 +261,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         }
                         break;
                 }
-            } else if (
-                ipykernelResult === IpykernelCheckResult.NotInstalled
-            ) {
+            } else if (ipykernelResult === IpykernelCheckResult.NotInstalled) {
                 // User would have been notified about this, nothing more to do.
             } else if (
                 ipykernelResult === IpykernelCheckResult.Outdated ||
@@ -453,7 +451,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }
         } catch (ex) {
             if (ex instanceof IpyKernelNotInstalledError) {
-                return IpykernelCheckResult.NotInstalled
+                return IpykernelCheckResult.NotInstalled;
             }
             traceError('Debugging: Could not check for ipykernel 6', ex);
         }
