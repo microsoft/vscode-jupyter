@@ -158,7 +158,6 @@ module.exports = {
         'src/test/datascience/executionServiceMock.ts',
         'src/test/datascience/mockCommandManager.ts',
         'src/test/datascience/mockInputBox.ts',
-        'src/test/datascience/mockDocumentManager.ts',
         'src/test/datascience/cellMatcher.unit.test.ts',
         'src/test/datascience/crossProcessLock.unit.test.ts',
         'src/test/datascience/mockWorkspaceConfiguration.ts',

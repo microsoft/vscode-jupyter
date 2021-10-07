@@ -118,6 +118,7 @@ export class MockDocumentManager implements IDocumentManager {
                 };
             });
             const ev: TextDocumentChangeEvent = {
+                reason: undefined,
                 document: doc,
                 contentChanges
             };
