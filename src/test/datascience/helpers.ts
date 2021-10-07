@@ -5,9 +5,9 @@
 import { noop } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../client/common/application/types';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
+import { INotebookEditorProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { waitForCondition } from '../common';
 
@@ -76,17 +76,16 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
 
 export async function openNotebook(serviceContainer: IServiceContainer, ipynbFile: string) {
     traceInfo(`Opening notebook ${ipynbFile}`);
-    const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await notebooks.openNotebookDocument(Uri.file(ipynbFile));
+    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    await editorProvider.open(Uri.file(ipynbFile));
     traceInfo('Wait for notebook to be the active editor');
     await waitForCondition(
         async () =>
-            notebooks.notebookEditors.length > 0 &&
-            !!notebooks.activeNotebookEditor &&
-            notebooks.activeNotebookEditor.document.uri.fsPath.endsWith(path.basename(ipynbFile)),
+            editorProvider.editors.length > 0 &&
+            !!editorProvider.activeEditor &&
+            editorProvider.activeEditor.file.fsPath.endsWith(path.basename(ipynbFile)),
         30_000,
         'Notebook not opened'
     );
-
     traceInfo(`Opened notebook ${ipynbFile}`);
 }
