@@ -145,7 +145,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Clear output in empty cells', async function () {
         await closeNotebooks();
         const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
-        await openNotebook(api.serviceContainer, nbUri.fsPath);
+        await openNotebook(nbUri.fsPath);
         await waitForKernelToGetAutoSelected();
 
         // Confirm we have execution order and output.

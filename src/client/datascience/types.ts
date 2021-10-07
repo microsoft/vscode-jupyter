@@ -454,11 +454,6 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    notebook?: INotebook;
-    undoCells(): void;
-    redoCells(): void;
-    toggleOutput?(): void;
-    removeAllCells(): void;
     hasCell(id: string): Promise<boolean>;
 }
 
@@ -496,28 +491,8 @@ export interface IInteractiveWindowLoadable extends IInteractiveWindow {
 // For native editing, the provider acts like the IDocumentManager for normal docs
 export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
-    readonly activeEditor: INotebookEditor | undefined;
-    readonly editors: INotebookEditor[];
-    readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
-    readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
-    open(file: Uri): Promise<INotebookEditor>;
-    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
-}
-
-// For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
-export const INotebookEditor = Symbol('INotebookEditor');
-export interface INotebookEditor extends Disposable, IInteractiveBase {
-    readonly closed: Event<INotebookEditor>;
-    readonly file: Uri;
-    notebook?: INotebook;
-    runAllCells(): void;
-    addCellBelow(): void;
-    undoCells(): void;
-    redoCells(): void;
-    removeAllCells(): void;
-    expandAllCells(): void;
-    collapseAllCells(): void;
-    getContent(): string;
+    open(file: Uri): Promise<void>;
+    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
 }
 
 // Wraps the vscode CodeLensProvider base class

@@ -18,7 +18,6 @@ import {
     hasErrorOutput,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
@@ -48,7 +47,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     this.timeout(60_000);
 
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscEditor: VSCNotebookEditor;
     let vscodeNotebook: IVSCodeNotebook;
@@ -65,7 +63,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         oldAskForRestart = dsSettings.askForKernelRestart;
@@ -133,7 +130,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             });
         disposables.push({ dispose: () => showInformationMessage.restore() });
 
-        (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
         traceInfo(`Step 4. Before execute`);
         traceInfo(`Step 5. After execute`);
         await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '1', 0, false)]);
@@ -190,8 +186,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
                 return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
             });
         disposables.push({ dispose: () => showInformationMessage.restore() });
-
-        (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
     }
     test('Restarting kernel during run all will skip the rest of the cells', async function () {
         // Restart event is not firing.
