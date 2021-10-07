@@ -100,7 +100,14 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
-    ['notebook.selectKernel']: [{ id?: string; extension?: string; notebookEditor?: NotebookEditor }] | [];
+    ['notebook.selectKernel']:
+        | [
+              // This set of args will set the kernel/controller to the one with the id provided.
+              | { id: string; extension: string }
+              // This set of args will display the kernel picker.
+              | { notebookEditor: NotebookEditor }
+          ]
+        | [];
     ['undo']: [];
     ['interactive.open']: [
         { preserveFocus?: boolean; viewColumn?: ViewColumn },

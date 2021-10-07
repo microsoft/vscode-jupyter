@@ -9,7 +9,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../co
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
+import { traceDecorators, traceInfo } from '../../../common/logger';
 import {
     GLOBAL_MEMENTO,
     IInstaller,
@@ -20,7 +20,6 @@ import {
     Resource
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -28,9 +27,9 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import { selectKernel } from './kernelSelector';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -89,35 +88,24 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         resource: Resource
     ) {
-        if (response === KernelInterpreterDependencyResponse.ok) {
-            return;
+        switch (response) {
+            case KernelInterpreterDependencyResponse.ok:
+                return;
+            case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                return selectKernel(
+                    resource,
+                    this.notebooks,
+                    this.serviceContainer.get(IInteractiveWindowProvider),
+                    this.commandManager
+                );
+            default:
+                throw new IpyKernelNotInstalledError(
+                    DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    ),
+                    response
+                );
         }
-        if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const notebook =
-                getResourceType(resource) === 'notebook'
-                    ? this.notebooks.notebookDocuments.find((item) => item.uri.toString() === resource?.toString())
-                    : undefined;
-            const notebookEditor =
-                notebook && this.notebooks.activeNotebookEditor?.document === notebook
-                    ? this.notebooks.activeNotebookEditor
-                    : undefined;
-            const targetNotebookEditor =
-                notebookEditor ||
-                getActiveInteractiveWindow(this.serviceContainer.get(IInteractiveWindowProvider))?.notebookEditor;
-            if (targetNotebookEditor) {
-                await this.commandManager
-                    .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
-                    .then(noop, noop);
-            } else {
-                traceError(`Unable to select kernel as the Notebook document could not be identified`);
-            }
-        }
-        throw new IpyKernelNotInstalledError(
-            DataScience.ipykernelNotInstalled().format(
-                `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-            ),
-            response
-        );
     }
     private async runInstaller(
         resource: Resource,
