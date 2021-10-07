@@ -84,8 +84,6 @@
     "DataScience.jupyterNativeNotebookUriStatusLabelForRemote": "Jupyter Server: Remote",
     "jupyter.command.jupyter.selectjupytercommandline.title": "Specify Jupyter command line arguments",
     "jupyter.command.jupyter.importnotebook.title": "Import Jupyter Notebook",
-    "jupyter.command.jupyter.opennotebook.title": "Open in Notebook Editor",
-    "jupyter.command.jupyter.opennotebookInPreviewEditor.title": "Open in preview Notebook Editor",
     "jupyter.command.jupyter.importnotebookfile.title": "Convert a Notebook to Python Script",
     "jupyter.command.jupyter.exportoutputasnotebook.title": "Export Interactive Window as Jupyter Notebook",
     "jupyter.command.jupyter.exportfileasnotebook.title": "Export Current Python File as Jupyter Notebook",
