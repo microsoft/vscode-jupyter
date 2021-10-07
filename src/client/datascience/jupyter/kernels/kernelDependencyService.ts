@@ -88,24 +88,26 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         resource: Resource
     ) {
-        switch (response) {
-            case KernelInterpreterDependencyResponse.ok:
-                return;
-            case KernelInterpreterDependencyResponse.selectDifferentKernel:
-                return selectKernel(
-                    resource,
-                    this.notebooks,
-                    this.serviceContainer.get(IInteractiveWindowProvider),
-                    this.commandManager
-                );
-            default:
-                throw new IpyKernelNotInstalledError(
-                    DataScience.ipykernelNotInstalled().format(
-                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    ),
-                    response
-                );
+        if (response === KernelInterpreterDependencyResponse.ok) {
+            return;
         }
+        if (KernelInterpreterDependencyResponse.selectDifferentKernel) {
+            await selectKernel(
+                resource,
+                this.notebooks,
+                this.serviceContainer.get(IInteractiveWindowProvider),
+                this.commandManager
+            );
+            // If selecting a new kernel, the current code paths don't allow us to just change a kernel on the fly.
+            // We pass kernel connection information around, hence if ther'es a change we need to start all over again.
+            // Throwing this exception will get the user to start again.
+        }
+        throw new IpyKernelNotInstalledError(
+            DataScience.ipykernelNotInstalled().format(
+                `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+            ),
+            response
+        );
     }
     private async runInstaller(
         resource: Resource,

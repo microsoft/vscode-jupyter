@@ -152,7 +152,9 @@ suite.only('DataScience - Kernel Dependency Service', () => {
                     DataScience.selectKernel() as any
                 );
 
-                await dependencyService.installMissingDependencies(resource, interpreter);
+                const promise = dependencyService.installMissingDependencies(resource, interpreter);
+
+                await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
 
                 verify(
                     cmdManager.executeCommand('notebook.selectKernel', deepEqual({ notebookEditor: instance(editor) }))
