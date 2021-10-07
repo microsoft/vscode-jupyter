@@ -51,13 +51,9 @@ export class JupyterNotebookBase implements INotebook {
     public get onDidFinishExecuting(): Event<ICell> {
         return this.finishedExecuting.event;
     }
-    public get onKernelChanged(): Event<KernelConnectionMetadata> {
-        return this.kernelChanged.event;
-    }
     public get disposed() {
         return this._disposed;
     }
-    private kernelChanged = new EventEmitter<KernelConnectionMetadata>();
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }

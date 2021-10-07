@@ -23,7 +23,6 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { ConsoleForegroundColors } from '../../logging/_global';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
@@ -51,7 +50,6 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private disposables: IDisposable[] = [];
-    private interpreterForWhichWidgetSourcesWereFetched?: PythonEnvironment;
     /**
      * Key value pair of widget modules along with the version that needs to be loaded.
      */
@@ -241,23 +239,6 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             return;
         }
         this.notebook.onDisposed(() => this.dispose());
-        // When changing a kernel, we might have a new interpreter.
-        this.notebook.onKernelChanged(
-            () => {
-                // If underlying interpreter has changed, then refresh list of widget sources.
-                // After all, different kernels have different widgets.
-                if (
-                    this.notebook?.getMatchingInterpreter() &&
-                    this.notebook?.getMatchingInterpreter() === this.interpreterForWhichWidgetSourcesWereFetched
-                ) {
-                    return;
-                }
-                // Let UI know that kernel has changed.
-                this.postEmitter.fire({ message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined });
-            },
-            this,
-            this.disposables
-        );
         this.handlePendingRequests();
     }
     private handlePendingRequests() {
