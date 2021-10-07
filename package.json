@@ -60,8 +60,6 @@
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
-        "onCommand:jupyter.opennotebook",
-        "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
         "onCommand:jupyter.exportfileasnotebook",
         "onCommand:jupyter.exportfileandoutputasnotebook",
@@ -507,17 +505,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.opennotebook",
-                "title": "%jupyter.command.jupyter.opennotebook.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.opennotebookInPreviewEditor",
-                "title": "%jupyter.command.jupyter.opennotebookInPreviewEditor.title%",
-                "enablement": "jupyter.opennotebookInPreviewEditor.enabled",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.exportoutputasnotebook",
                 "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                 "category": "Jupyter",
@@ -960,16 +947,6 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter",
-                    "command": "jupyter.opennotebook",
-                    "group": "Jupyter"
-                },
-                {
-                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled",
-                    "command": "jupyter.opennotebookInPreviewEditor",
-                    "group": "Jupyter"
-                },
-                {
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
@@ -1191,12 +1168,6 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.opennotebook",
-                    "title": "%jupyter.command.jupyter.opennotebook.title%",
-                    "category": "Jupyter",
-                    "when": "isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.exportfileasnotebook",
                     "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
                     "category": "Jupyter",
@@ -1388,11 +1359,6 @@
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.opennotebookInPreviewEditor",
-                    "when": "false",
-                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.openVariableView",
@@ -2013,7 +1979,7 @@
         "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.17",
         "winston": "^3.2.1",
-        "ws": "^6.0.0",
+        "ws": "^6.2.2",
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {

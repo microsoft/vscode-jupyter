@@ -22,7 +22,7 @@ import { IDisposableRegistry, IExtensions } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
+import { defaultNotebookFormat, Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -84,14 +84,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
             this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
-        );
-        this.disposables.push(
-            this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
-                if (uri) {
-                    captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
-                    this.open(uri).ignoreErrors();
-                }
-            })
         );
     }
     public dispose() {

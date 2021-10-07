@@ -45,7 +45,6 @@
     "jupyter.command.jupyter.openVariableView.title": "開啟變數面板",
     "jupyter.command.jupyter.debugcontinue.title": "繼續",
     "jupyter.command.jupyter.debugcell.title": "偵錯儲存格",
-    "jupyter.command.jupyter.opennotebook.title": "在筆記本編輯器中開啟",
     "jupyter.command.jupyter.importnotebookfile.title": "將筆記本轉換為 Python 指令碼",
     "jupyter.command.jupyter.exportAsPythonScript.title": "匯出 Python 指令碼",
     "jupyter.command.jupyter.exportToHTML.title": "匯出 HTML",
