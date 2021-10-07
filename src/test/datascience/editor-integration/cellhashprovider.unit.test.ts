@@ -84,7 +84,6 @@ suite('CellHashProvider Unit Tests', () => {
             },
             executionSummary: {},
             kind: NotebookCellKind.Code,
-            executionSummary: {},
             document: new MockDocument(code, fileName, async () => true),
             metadata: {
                 interactive: {
