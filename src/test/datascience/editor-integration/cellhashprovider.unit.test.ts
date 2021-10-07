@@ -82,6 +82,7 @@ suite('CellHashProvider Unit Tests', () => {
                     throw new Error('Method not implemented');
                 }
             },
+            executionSummary: {},
             kind: NotebookCellKind.Code,
             document: new MockDocument(code, fileName, async () => true),
             metadata: {
