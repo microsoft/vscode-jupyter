@@ -9,7 +9,8 @@ export enum IpykernelCheckResult {
     Unknown,
     Ok,
     Outdated,
-    NotInstalled
+    NotInstalled,
+    ControllerNotSelected
 }
 
 export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {

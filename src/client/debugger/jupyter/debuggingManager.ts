@@ -241,52 +241,60 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
         const checkIpykernelAndStart = async (allowSelectKernel = true): Promise<void> => {
             const ipykernelResult = await this.checkForIpykernel6(editor.document);
-            if (ipykernelResult === IpykernelCheckResult.Ok) {
-                switch (mode) {
-                    case KernelDebugMode.Everything:
-                        await this.startDebugging(editor.document);
-                        this.updateToolbar(true);
-                        break;
-                    case KernelDebugMode.Cell:
-                        if (cell) {
-                            await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
-                            this.updateToolbar(true);
-                        }
-                        break;
-                    case KernelDebugMode.RunByLine:
-                        if (cell) {
-                            await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            this.updateToolbar(true);
-                            this.updateCellToolbar(true);
-                        }
-                        break;
+            switch (ipykernelResult) {
+                case IpykernelCheckResult.NotInstalled:
+                    // User would have been notified about this, nothing more to do.
+                    return;
+                case IpykernelCheckResult.Outdated:
+                case IpykernelCheckResult.Unknown: {
+                    void this.promptInstallIpykernel6();
+                    return;
                 }
-            } else if (ipykernelResult === IpykernelCheckResult.NotInstalled) {
-                // User would have been notified about this, nothing more to do.
-            } else if (
-                ipykernelResult === IpykernelCheckResult.Outdated ||
-                ipykernelResult === IpykernelCheckResult.Unknown
-            ) {
-                void this.promptInstallIpykernel6();
-            } else if (ipykernelResult === undefined && allowSelectKernel) {
-                await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
-                return checkIpykernelAndStart(false);
-            }
-        };
+                case IpykernelCheckResult.Ok: {
+                    switch (mode) {
+                        case KernelDebugMode.Everything: {
+                            await this.startDebugging(editor.document);
+                            this.updateToolbar(true);
+                            return;
+                        }
+                        case KernelDebugMode.Cell:
+                            if (cell) {
+                                await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                                this.updateToolbar(true);
+                            }
+                            return;
+                        case KernelDebugMode.RunByLine:
+                            if (cell) {
+                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                                this.updateToolbar(true);
+                                this.updateCellToolbar(true);
+                            }
+                            return;
+                        default:
+                            return;
+                    }
+                }
+                case IpykernelCheckResult.ControllerNotSelected: {
+                    if (allowSelectKernel) {
+                        await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                        await checkIpykernelAndStart(false);
+                    }
+                }
+            };
 
-        try {
-            this.notebookInProgress.add(editor.document);
-            await checkIpykernelAndStart();
-        } finally {
-            this.notebookInProgress.delete(editor.document);
+            try {
+                this.notebookInProgress.add(editor.document);
+                await checkIpykernelAndStart();
+            } finally {
+                this.notebookInProgress.delete(editor.document);
+            }
         }
-    }
 
     private async startDebuggingCell(
-        doc: NotebookDocument,
-        mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
-        cell: NotebookCell
-    ) {
+            doc: NotebookDocument,
+            mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
+            cell: NotebookCell
+        ) {
         const config: IKernelDebugAdapterConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
@@ -424,32 +432,26 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return kernel;
     }
 
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult | undefined> {
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
             let kernel = this.kernelProvider.get(doc);
-
             if (!kernel) {
-                // TODO: This code looks iffy, why not just this.kernelProvider.getOrCreate(doc)
                 const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
-
-                if (controller) {
-                    kernel = this.kernelProvider.getOrCreate(doc, {
-                        metadata: controller.connection,
-                        controller: controller?.controller,
-                        resourceUri: doc.uri
-                    });
+                if (!controller) {
+                    return IpykernelCheckResult.ControllerNotSelected;
                 }
+                kernel = this.kernelProvider.getOrCreate(doc, {
+                    metadata: controller.connection,
+                    controller: controller?.controller,
+                    resourceUri: doc.uri
+                });
             }
 
-            if (kernel) {
-                const result = await isUsingIpykernel6OrLater(kernel);
-                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
-                    status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
-                });
-                return result;
-            } else {
-                return undefined;
-            }
+            const result = await isUsingIpykernel6OrLater(kernel);
+            sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
+                status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
+            });
+            return result;
         } catch (ex) {
             if (ex instanceof IpyKernelNotInstalledError) {
                 return IpykernelCheckResult.NotInstalled;
