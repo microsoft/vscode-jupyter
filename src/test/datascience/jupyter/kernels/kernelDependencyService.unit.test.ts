@@ -19,7 +19,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
-suite.only('DataScience - Kernel Dependency Service', () => {
+suite('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let notebooks: IVSCodeNotebook;
     let appShell: IApplicationShell;

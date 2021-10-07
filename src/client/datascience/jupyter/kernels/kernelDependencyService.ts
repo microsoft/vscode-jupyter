@@ -91,7 +91,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
         }
-        if (KernelInterpreterDependencyResponse.selectDifferentKernel) {
+        if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
             await selectKernel(
                 resource,
                 this.notebooks,
