@@ -10,7 +10,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
@@ -33,7 +33,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
 import { executeSilently } from './kernels/kernel';
-import { isCI } from '../../common/constants';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -205,8 +204,7 @@ export class JupyterNotebookBase implements INotebook {
             }),
             createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
         ]);
-        traceInfoIf(
-            isCI,
+        traceInfoIfCI(
             `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
                 result ? JSON.stringify(result) : 'empty'
             }`

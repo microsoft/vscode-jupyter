@@ -8,8 +8,7 @@ import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { isCI } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -95,7 +94,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public receiveMessage(message: IPyWidgetMessage): void {
         if (process.env.VSC_JUPYTER_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
-            traceInfoIf(isCI, `IPyWidgetMessage: ${util.inspect(message)}`);
+            traceInfoIfCI(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:

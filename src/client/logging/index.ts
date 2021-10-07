@@ -10,7 +10,7 @@ export {
     logError,
     logErrorIf,
     logInfo,
-    logInfoIf,
+    logInfoOnCI,
     logVerbose,
     logWarning,
     traceDecorators,
