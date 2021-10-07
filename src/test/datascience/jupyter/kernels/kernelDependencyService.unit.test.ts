@@ -35,6 +35,9 @@ suite('DataScience - Kernel Dependency Service', () => {
         memento = mock<Memento>();
         notebooks = mock<IVSCodeNotebook>();
         when(memento.get(anything(), anything())).thenReturn(false);
+        when(cmdManager.executeCommand('notebook.selectKernel')).thenResolve();
+        when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
+        when(notebooks.notebookDocuments).thenReturn([]);
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),

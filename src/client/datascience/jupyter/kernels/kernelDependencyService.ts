@@ -9,7 +9,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../co
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceInfo } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import {
     GLOBAL_MEMENTO,
     IInstaller,
@@ -97,15 +97,19 @@ export class KernelDependencyService implements IKernelDependencyService {
                 getResourceType(resource) === 'notebook'
                     ? this.notebooks.notebookDocuments.find((item) => item.uri.toString() === resource?.toString())
                     : undefined;
-            const targetNotebookEditor = notebook
-                ? this.notebooks.activeNotebookEditor
-                : getActiveInteractiveWindow(this.serviceContainer.get(IInteractiveWindowProvider))?.notebookEditor;
+            const notebookEditor =
+                notebook && this.notebooks.activeNotebookEditor?.document === notebook
+                    ? this.notebooks.activeNotebookEditor
+                    : undefined;
+            const targetNotebookEditor =
+                notebookEditor ||
+                getActiveInteractiveWindow(this.serviceContainer.get(IInteractiveWindowProvider))?.notebookEditor;
             if (targetNotebookEditor) {
                 await this.commandManager
                     .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
                     .then(noop, noop);
             } else {
-                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+                traceError(`Unable to select kernel as the Notebook document could not be identified`);
             }
         }
         throw new IpyKernelNotInstalledError(
