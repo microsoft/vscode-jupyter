@@ -429,6 +429,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             let kernel = this.kernelProvider.get(doc);
 
             if (!kernel) {
+                // TODO: This code looks iffy, why not just this.kernelProvider.getOrCreate(doc)
                 const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 
                 if (controller) {
