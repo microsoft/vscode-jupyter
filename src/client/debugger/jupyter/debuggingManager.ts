@@ -280,21 +280,21 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         await checkIpykernelAndStart(false);
                     }
                 }
-            };
-
-            try {
-                this.notebookInProgress.add(editor.document);
-                await checkIpykernelAndStart();
-            } finally {
-                this.notebookInProgress.delete(editor.document);
             }
-        }
+        };
 
+        try {
+            this.notebookInProgress.add(editor.document);
+            await checkIpykernelAndStart();
+        } finally {
+            this.notebookInProgress.delete(editor.document);
+        }
+    }
     private async startDebuggingCell(
-            doc: NotebookDocument,
-            mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
-            cell: NotebookCell
-        ) {
+        doc: NotebookDocument,
+        mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
+        cell: NotebookCell
+    ) {
         const config: IKernelDebugAdapterConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
