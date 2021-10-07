@@ -285,7 +285,6 @@ export class DebuggerVariables extends DebugLocationTracker
         const key = notebook.identity.toString();
         if (!this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
-            disposables.push(notebook.onKernelChanged(this.resetImport.bind(this, key)));
             disposables.push(notebook.onKernelRestarted(this.resetImport.bind(this, key)));
             disposables.push(
                 notebook.onDisposed(() => {

@@ -181,7 +181,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             };
             disposables.push(notebook.onDisposed(clear));
             disposables.push(notebook.onKernelRestarted(clear));
-            disposables.push(notebook.onKernelChanged(clear));
         }
 
         return result;

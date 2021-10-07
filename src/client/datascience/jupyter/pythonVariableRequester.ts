@@ -153,7 +153,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 disposables.forEach((d) => d.dispose());
             };
             disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
 
             // First put the code from our helper files into the notebook
@@ -173,7 +172,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 disposables.forEach((d) => d.dispose());
             };
             disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
 
             await this.runScriptFile(notebook, GetVariableInfo.ScriptPath);
