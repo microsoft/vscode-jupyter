@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
@@ -20,7 +20,6 @@ import {
     Resource
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -28,9 +27,9 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import { selectKernel } from './kernelSelector';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -45,6 +44,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     /**
@@ -73,7 +73,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
-            this.handleKernelDependencyResponse(result, interpreter);
+            await this.handleKernelDependencyResponse(result, interpreter, resource);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
@@ -83,24 +83,24 @@ export class KernelDependencyService implements IKernelDependencyService {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 
-    private handleKernelDependencyResponse(
+    private async handleKernelDependencyResponse(
         response: KernelInterpreterDependencyResponse,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        resource: Resource
     ) {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const targetNotebookEditor = getActiveInteractiveWindow(
-                this.serviceContainer.get(IInteractiveWindowProvider)
-            )?.notebookEditor;
-            if (targetNotebookEditor) {
+            await selectKernel(
+                resource,
+                this.notebooks,
+                this.serviceContainer.get(IInteractiveWindowProvider),
                 this.commandManager
-                    .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
-                    .then(noop, noop);
-            } else {
-                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
-            }
+            );
+            // If selecting a new kernel, the current code paths don't allow us to just change a kernel on the fly.
+            // We pass kernel connection information around, hence if ther'es a change we need to start all over again.
+            // Throwing this exception will get the user to start again.
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(
