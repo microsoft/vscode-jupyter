@@ -49,7 +49,7 @@ import {
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
@@ -188,12 +188,8 @@ export async function canRunNotebookTests() {
 
 export async function shutdownAllNotebooks() {
     const api = await initialize();
-    const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-    await Promise.all([
-        ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
-        kernelProvider.dispose()
-    ]);
+    await kernelProvider.dispose();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {

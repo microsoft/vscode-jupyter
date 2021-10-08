@@ -11,14 +11,12 @@ import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { INotebookProvider } from '../types';
 
 @injectable()
 export class NotebookDisposeService implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public async activate(): Promise<void> {
@@ -34,6 +32,5 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
             );
             kernel.dispose().catch(noop);
         }
-        this.notebookProvider.disposeAssociatedNotebook({ identity: document.uri });
     }
 }
