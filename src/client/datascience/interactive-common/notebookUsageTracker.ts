@@ -2,12 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    notebooks,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookDocument,
-    NotebookCellExecutionState
-} from 'vscode';
+import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, NotebookCellExecutionState } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
