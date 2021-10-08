@@ -182,7 +182,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "----\r\n## EndGame for Current Milestone"
+    "value": "----\r\n## EndGame for Current Milestone\r\n### See [My Endgame](https://github.dev/microsoft/vscode/blob/main/.vscode/notebooks/my-endgame.github-issues) notebook in the main VS Code repo. "
   },
   {
     "kind": 1,
