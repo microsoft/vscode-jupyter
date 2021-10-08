@@ -7,7 +7,6 @@
 import * as path from 'path';
 import { assert } from 'chai';
 import { traceInfo } from '../../../client/common/logger';
-import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { openNotebook } from '../helpers';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
@@ -18,7 +17,6 @@ import { cellOutputToVSCCellOutput } from '../../../client/datascience/notebook/
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
-    let api: IExtensionTestApi;
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -31,7 +29,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        api = await initialize();
+        await initialize();
     });
     setup(async function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -43,7 +41,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
     test('Verify order of outputs in existing ipynb file', async () => {
-        await openNotebook(api.serviceContainer, templateIPynb);
+        await openNotebook(templateIPynb);
         const cells = window.activeNotebookEditor?.document?.getCells()!;
 
         const expectedOutputItemMimeTypes = [

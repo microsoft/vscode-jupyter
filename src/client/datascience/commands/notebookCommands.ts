@@ -4,17 +4,18 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
-import { INotebookEditorProvider } from '../types';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 
 @injectable()
 export class NotebookCommands implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
+        @inject(IVSCodeNotebook) private notebooks: IVSCodeNotebook
     ) {}
     public register() {
         this.disposables.push(
@@ -27,14 +28,30 @@ export class NotebookCommands implements IDisposable {
     }
 
     private collapseAll() {
-        if (this.notebookEditorProvider.activeEditor) {
-            this.notebookEditorProvider.activeEditor.collapseAllCells();
+        const document = this.notebooks.activeNotebookEditor?.document;
+        if (!document) {
+            return;
         }
+
+        chainWithPendingUpdates(document, (edit) => {
+            document.getCells().forEach((cell, index) => {
+                const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+            });
+        }).then(noop, noop);
     }
 
     private expandAll() {
-        if (this.notebookEditorProvider.activeEditor) {
-            this.notebookEditorProvider.activeEditor.expandAllCells();
+        const document = this.notebooks.activeNotebookEditor?.document;
+        if (!document) {
+            return;
         }
+
+        chainWithPendingUpdates(document, (edit) => {
+            document.getCells().forEach((cell, index) => {
+                const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+            });
+        }).then(noop, noop);
     }
 }

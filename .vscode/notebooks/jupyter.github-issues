@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-09-23"
+    "value": "$TODAYS_DATE=2021-10-07"
   },
   {
     "kind": 1,
@@ -47,12 +47,12 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_FEATURE_AREAS=3rd-party-extension,azureml,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n$ADMIN_AREAS=engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
+    "value": "$JUPYTER_FEATURE_AREAS=3rd-party-extension,azureml,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n$ADMIN_AREAS=endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "----\r\n## Quick Bug Queries\r\n\r\n[Basic Information](https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests)  \r\n[Number, Word, Date Qualifiers](https://docs.github.com/en/github/searching-for-information-on-github/getting-started-with-searching-on-github/understanding-the-search-syntax)\r\n\r\n\r\nSome interesting examples:  \r\n* Closed between 08/30/2021 and 09/03/2021 - ```$JUPYTER_ALL_REPOS is:issue closed:2021-08-30..2021-09-03```\r\n"
+    "value": "----\r\n## Quick Bug Queries\r\n\r\n[Basic Information](https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests)  \r\n[Number, Word, Date Qualifiers](https://docs.github.com/en/github/searching-for-information-on-github/getting-started-with-searching-on-github/understanding-the-search-syntax)\r\n\r\n\r\nSome interesting examples:  \r\n* Issues closed between 08/30/2021 and 09/03/2021 - ```$JUPYTER_ALL_REPOS is:issue closed:2021-08-30..2021-09-03```\r\n* Issues updated today by me that aren't part of a milestone - $ALL_REPOS is:issue updated:$TODAYS_DATE commenter:@me no:milestone\r\n"
   },
   {
     "kind": 2,

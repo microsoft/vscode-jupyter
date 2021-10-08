@@ -33,9 +33,9 @@ import {
     Diagnostic
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { isCI, JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo, traceInfoIf } from '../../../client/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
@@ -49,13 +49,12 @@ import {
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
-import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
@@ -189,14 +188,8 @@ export async function canRunNotebookTests() {
 
 export async function shutdownAllNotebooks() {
     const api = await initialize();
-    const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-    await Promise.all([
-        ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
-        kernelProvider.dispose()
-    ]);
-    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(INotebookEditorProvider);
-    notebookEditorProvider.dispose();
+    await kernelProvider.dispose();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
@@ -311,10 +304,10 @@ async function waitForKernelToChangeImpl(
             async () => {
                 // Double check not the right kernel (don't select again if already found to be correct)
                 if (!isRightKernel()) {
-                    traceInfoIf(isCI, `Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
+                    traceInfoIfCI(`Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
-                    traceInfoIf(isCI, `Notebook select.kernel command switched to kernel id ${id}`);
+                    traceInfoIfCI(`Notebook select.kernel command switched to kernel id ${id}`);
                     tryCount += 1;
                 }
 
@@ -367,7 +360,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         );
     } catch {
         // Do nothing for now. Just log it
-        traceInfoIf(isCI, `No preferred controller found during waitForKernelToGetAutoSelected`);
+        traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
 
     // Find one that matches the expected language or the preferred
@@ -468,7 +461,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        traceInfoIf(isCI, `Running all cells in prewarm notebooks`);
+        traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         // Wait for Jupyter to start.
         await closeActiveWindows();

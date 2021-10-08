@@ -74,13 +74,13 @@ export class NotebookProvider implements INotebookProvider {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
-    public disposeAssociatedNotebook(options: { identity: Uri }) {
+    public async disposeAssociatedNotebook(options: { identity: Uri }) {
         const nbPromise = this.notebooks.get(options.identity.toString());
         if (!nbPromise) {
             return;
         }
         this.notebooks.delete(options.identity.toString());
-        nbPromise
+        await nbPromise
             .then((nb) => nb.dispose())
             .catch((ex) => traceWarning('Failed to dispose notebook in disposeAssociatedNotebook', ex));
     }

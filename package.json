@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.9.100",
+    "version": "2021.10.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -28,7 +28,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.61.0-insider"
+        "vscode": "1.62.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -1304,6 +1304,11 @@
                     "command": "jupyter.runtoline",
                     "category": "Jupyter",
                     "when": "config.noExists"
+                },
+                {
+                    "command": "jupyter.selectjupytercommandline",
+                    "category": "Jupyter",
+                    "when": "!jupyter.zmqavailable"
                 },
                 {
                     "command": "jupyter.runfromline",

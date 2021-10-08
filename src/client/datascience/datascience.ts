@@ -15,7 +15,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from './commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
-import { IDataScience, IDataScienceCodeLensProvider } from './types';
+import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -30,7 +30,8 @@ export class DataScience implements IDataScience {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(CommandRegistry) private commandRegistry: CommandRegistry
+        @inject(CommandRegistry) private commandRegistry: CommandRegistry,
+        @inject(IRawNotebookSupportedService) private rawSupported: IRawNotebookSupportedService
     ) {
         this.disposableRegistry.push(this.commandRegistry);
     }
@@ -59,6 +60,9 @@ export class DataScience implements IDataScience {
 
         // Send telemetry for all of our settings
         this.sendSettingsTelemetry().ignoreErrors();
+
+        // Figure out the ZMQ available context key
+        this.computeZmqAvailable();
     }
 
     public async dispose() {
@@ -74,6 +78,11 @@ export class DataScience implements IDataScience {
         const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
         void editorContext.set(ownsSelection).catch(noop);
     };
+
+    private computeZmqAvailable() {
+        const zmqContext = new ContextKey(EditorContexts.ZmqAvailable, this.commandManager);
+        void zmqContext.set(this.rawSupported.isSupported);
+    }
 
     private onChangedActiveTextEditor() {
         // Setup the editor context for the cells

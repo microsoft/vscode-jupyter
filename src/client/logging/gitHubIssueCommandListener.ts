@@ -20,7 +20,7 @@ import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
 import { Commands } from '../datascience/constants';
-import { IDataScienceCommandListener, IInteractiveWindowProvider, INotebookProvider } from '../datascience/types';
+import { IDataScienceCommandListener, IInteractiveWindowProvider } from '../datascience/types';
 import { IInterpreterService } from '../interpreter/contracts';
 
 @injectable()
@@ -37,7 +37,6 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
@@ -68,8 +67,6 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
 # Your Jupyter environment
 Active Python interpreter: ${(await this.interpreterService.getActiveInterpreter(undefined))?.displayName}
 Number of interactive windows: ${this.interactiveWindowProvider?.windows?.length}
-Number of Jupyter notebooks: ${this.notebookProvider?.activeNotebooks?.length}
-Jupyter notebook type: ${this.notebookProvider?.type}
 Extension version: ${this.applicationEnvironment?.packageJson?.version}
 VS Code version: ${this.applicationEnvironment?.vscodeVersion}
 OS: ${this.platformService.osType} ${(await this.platformService?.getVersion())?.version}

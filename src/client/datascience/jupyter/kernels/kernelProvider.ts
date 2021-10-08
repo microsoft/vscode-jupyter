@@ -21,13 +21,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { INotebookControllerManager } from '../../notebook/types';
-import {
-    IDataScienceErrorHandler,
-    IJupyterServerUriStorage,
-    INotebook,
-    INotebookEditorProvider,
-    INotebookProvider
-} from '../../types';
+import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebook, INotebookProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
@@ -56,7 +50,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
@@ -86,6 +79,7 @@ export class KernelProvider implements IKernelProvider {
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
+        await Promise.all(this.kernels.map((k) => k.dispose()));
         this._onDidDisposeKernel.dispose();
         this._onDidRestartKernel.dispose();
         this._onKernelStatusChanged.dispose();
@@ -109,7 +103,6 @@ export class KernelProvider implements IKernelProvider {
             waitForIdleTimeout,
             interruptTimeout,
             this.errorHandler,
-            this.editorProvider,
             this.appShell,
             this.fs,
             this.serverStorage,

@@ -5,7 +5,7 @@ export {
     logError as traceError,
     logErrorIf as traceErrorIf,
     logInfo as traceInfo,
-    logInfoIf as traceInfoIf,
+    logInfoOnCI as traceInfoIfCI,
     logVerbose as traceVerbose,
     logWarning as traceWarning
 } from '../logging';

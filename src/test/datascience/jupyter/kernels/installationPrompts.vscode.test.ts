@@ -24,7 +24,6 @@ import {
 } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
-import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
 import { IS_CI_SERVER } from '../../../ciConstants';
@@ -58,7 +57,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     let installer: IInstaller;
     let memento: Memento;
     let vscodeNotebook: IVSCodeNotebook;
@@ -86,7 +84,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
@@ -177,11 +174,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 });
 
             try {
-                await openNotebook(api.serviceContainer, nbFile);
+                await openNotebook(nbFile);
                 await waitForKernelToChange({ interpreterPath });
 
                 // Run all cells
-                editorProvider.activeEditor!.runAllCells();
+                this.commandManager.executeCommand('notebook.execute');
 
                 // The prompt should be displayed.
                 await waitForCondition(
@@ -220,7 +217,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             disposables
         );
 
-        await openNotebook(api.serviceContainer, nbFile);
+        await openNotebook(nbFile);
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);

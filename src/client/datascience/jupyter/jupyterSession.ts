@@ -13,9 +13,8 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
-import { isCI } from '../../common/constants';
 import { BaseError } from '../../common/errors/types';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataScience } from '../../common/utils/localize';
@@ -108,7 +107,7 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.isRemoteSession = true;
                 newSession.resource = resource;
             } else {
-                traceInfoIf(isCI, `createNewKernelSession ${kernelConnection?.id}`);
+                traceInfoIfCI(`createNewKernelSession ${kernelConnection?.id}`);
                 newSession = await this.createSession(resource, kernelConnection, cancelToken, disableUI);
                 newSession.resource = resource;
             }
@@ -147,7 +146,7 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                traceInfoIf(isCI, `JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
+                traceInfoIfCI(`JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
                 result = await this.createSession(resource, kernelConnection, cancelToken, true);
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 if (result.kernel) {
@@ -236,7 +235,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            traceInfoIf(isCI, `JupyterSession.createSession ${kernelConnection.id}`);
+            traceInfoIfCI(`JupyterSession.createSession ${kernelConnection.id}`);
             await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
         }
 

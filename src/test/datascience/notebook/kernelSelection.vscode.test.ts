@@ -183,7 +183,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await openNotebook(api.serviceContainer, nbFile1);
+        await openNotebook(nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
@@ -220,7 +220,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await openNotebook(api.serviceContainer, nbFile1);
+        await openNotebook(nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells

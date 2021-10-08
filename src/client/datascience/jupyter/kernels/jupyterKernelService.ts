@@ -8,9 +8,8 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { isCI } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceDecorators, traceInfo, traceInfoIf } from '../../../common/logger';
+import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 
 import { ReadWrite, Resource } from '../../../common/types';
@@ -93,8 +92,7 @@ export class JupyterKernelService {
 
         // Update the kernel environment to use the interpreter's latest
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
-            traceInfoIf(
-                isCI,
+            traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${kernel.interpreter.path} for ${kernel.id}`
             );
             await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, specFile, token);
