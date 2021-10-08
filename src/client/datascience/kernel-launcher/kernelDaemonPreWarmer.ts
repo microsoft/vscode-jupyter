@@ -10,18 +10,13 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
-import {
-    IInteractiveWindowProvider,
-    INotebookCreationTracker,
-    INotebookEditorProvider,
-    IRawNotebookSupportedService
-} from '../types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
+import { IInteractiveWindowProvider, INotebookCreationTracker, IRawNotebookSupportedService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
 @injectable()
 export class KernelDaemonPreWarmer {
     constructor(
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookCreationTracker)
@@ -52,7 +47,7 @@ export class KernelDaemonPreWarmer {
 
         if (
             this.extensionChecker.isPythonExtensionActive &&
-            (this.notebookEditorProvider.editors.length > 0 || this.interactiveProvider.windows.length > 0)
+            this.vscodeNotebook.notebookDocuments.some((nb) => isJupyterNotebook(nb))
         ) {
             await this.preWarmKernelDaemonPool();
         }

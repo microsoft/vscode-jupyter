@@ -11,14 +11,12 @@ import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launch
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
-    INotebookEditorProvider,
     IRawNotebookSupportedService
 } from '../../../client/datascience/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let prewarmer: KernelDaemonPreWarmer;
-    let notebookEditorProvider: INotebookEditorProvider;
     let interactiveProvider: IInteractiveWindowProvider;
     let usageTracker: INotebookCreationTracker;
     let rawNotebookSupported: IRawNotebookSupportedService;
@@ -28,13 +26,13 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let vscodeNotebook: IVSCodeNotebook;
     let extensionChecker: PythonExtensionChecker;
     setup(() => {
-        notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
         usageTracker = mock<INotebookCreationTracker>();
         daemonPool = mock<KernelDaemonPool>();
         rawNotebookSupported = mock<IRawNotebookSupportedService>();
         configService = mock<IConfigurationService>();
         vscodeNotebook = mock<IVSCodeNotebook>();
+        when(vscodeNotebook.notebookDocuments).thenReturn([]);
         const experimentService = mock<IExperimentService>();
         when(experimentService.inExperiment(anything())).thenResolve(true);
         extensionChecker = mock(PythonExtensionChecker);
@@ -47,7 +45,6 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
         prewarmer = new KernelDaemonPreWarmer(
-            instance(notebookEditorProvider),
             instance(interactiveProvider),
             [],
             instance(usageTracker),

@@ -134,7 +134,7 @@
 //     });
 
 //     test('Validate custom notebook metadata (from 3rd party extension) is saved into ipynb', async function () {
-//         await openNotebook(api.serviceContainer, nbFile1);
+//         await openNotebook(nbFile1);
 //         await waitForKernelToGetAutoSelected(undefined);
 
 //         // Verify the bogus controller is not selected.

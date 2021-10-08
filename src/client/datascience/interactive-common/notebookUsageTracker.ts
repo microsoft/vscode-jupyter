@@ -2,13 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    EventEmitter,
-    notebooks,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookDocument,
-    NotebookCellExecutionState
-} from 'vscode';
+import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, NotebookCellExecutionState } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -16,15 +10,12 @@ import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
-import { INotebookEditor } from '../types';
 
 /**
  * This class tracks opened notebooks, # of notebooks in workspace & # of executed notebooks.
  */
 @injectable()
 export class NotebookUsageTracker implements IExtensionSingleActivationService {
-    protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
-    protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly executedNotebooksIndexedByUri = new Set<string>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;

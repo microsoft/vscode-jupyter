@@ -38,7 +38,6 @@ import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     INotebook,
-    INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -116,7 +115,6 @@ export class Kernel implements IKernel {
         private readonly launchTimeout: number,
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
-        private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly serverStorage: IJupyterServerUriStorage,
@@ -361,14 +359,6 @@ export class Kernel implements IKernel {
         traceInfoIfCI('Step A');
         if (!this.notebook) {
             return;
-        }
-
-        // Set the notebook property on the matching editor
-        const editor = this.editorProvider.editors.find((item) =>
-            this.fs.arePathsSame(item.file, this.notebookDocument.uri)
-        );
-        if (editor) {
-            editor.notebook = this.notebook;
         }
         traceInfoIfCI('Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {

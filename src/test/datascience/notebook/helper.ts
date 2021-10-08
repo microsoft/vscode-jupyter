@@ -55,7 +55,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } fr
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
-import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
@@ -195,8 +194,6 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(INotebookEditorProvider);
-    notebookEditorProvider.dispose();
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
