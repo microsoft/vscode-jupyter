@@ -3,7 +3,7 @@
 'use strict';
 
 import { Kernel } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IDisposableRegistry, Resource } from '../../common/types';

@@ -10,7 +10,7 @@ suite('Dummy1a', () => {
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 // import '../../client/common/extensions';
 
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import * as assert from 'assert';
 // import { mount, ReactWrapper } from 'enzyme';
 // import * as sinon from 'sinon';

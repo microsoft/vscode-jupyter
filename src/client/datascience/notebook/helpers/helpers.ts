@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import {
     NotebookCellOutput,
     NotebookCellOutputItem,

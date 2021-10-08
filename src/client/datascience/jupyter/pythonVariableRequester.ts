@@ -1,5 +1,5 @@
-// import { nbformat } from '@jupyterlab/coreutils';
-import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import stripAnsi from 'strip-ansi';

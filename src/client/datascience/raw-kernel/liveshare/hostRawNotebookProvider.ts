@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 

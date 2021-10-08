@@ -23,9 +23,9 @@ import type {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 
-export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
+export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel | undefined };
 
 export enum NotebookCellRunState {
     Running = 1,

@@ -10,7 +10,7 @@ suite('Dummy8', () => {
 // // Copyright (c) Microsoft Corporation. All rights reserved.
 // // Licensed under the MIT License.
 // 'use strict';
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert, expect, use } from 'chai';
 // import * as chaiAsPromised from 'chai-as-promised';
 // import * as dedent from 'dedent';

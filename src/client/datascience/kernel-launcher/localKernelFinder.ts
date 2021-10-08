@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';

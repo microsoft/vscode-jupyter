@@ -16,7 +16,7 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
 
 const LineFeedRegEx = /(\r\n|\n)/g;

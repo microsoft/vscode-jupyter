@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 
 // After executing %tensorboard --logdir <log directory> to launch
 // TensorBoard inline, TensorBoard sends back an IFrame to display as output.

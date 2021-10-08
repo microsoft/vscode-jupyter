@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -127,13 +127,14 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             );
         }
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         if (!this.session) {
             throw new Error('Cannot request KernelInfo, Session not initialized.');
         }
-        if (this.session.kernel.info) {
+        if (this.session.kernel?.info) {
+            const content = await this.session.kernel.info;
             const infoMsg: KernelMessage.IInfoReplyMsg = {
-                content: this.session.kernel.info,
+                content,
                 channel: 'shell',
                 metadata: {},
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,7 +144,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             };
             return Promise.resolve(infoMsg);
         }
-        return this.session.kernel.requestKernelInfo();
+        return this.session.kernel?.requestKernelInfo();
     }
     public async changeKernel(
         resource: Resource,
@@ -195,7 +196,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     public async restart(timeout: number): Promise<void> {
-        if (this.session?.isRemoteSession) {
+        if (this.session?.isRemoteSession && this.session.kernel) {
             await this.session.kernel.restart();
             return;
         }
@@ -207,7 +208,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise) {
-            traceInfo(`Restarting ${this.session?.kernel.id}`);
+            traceInfo(`Restarting ${this.session?.kernel?.id}`);
 
             // Save old state for shutdown
             const oldSession = this.session;
@@ -218,12 +219,14 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
-            this.restartSessionUsed(this.session.kernel);
-            traceInfo(`Got new session ${this.session.kernel.id}`);
 
-            // Rewire our status changed event.
-            this.session.statusChanged.connect(this.statusHandler);
+            if (this.session.kernel) {
+                this.restartSessionUsed(this.session.kernel);
+                traceInfo(`Got new session ${this.session.kernel.id}`);
 
+                // Rewire our status changed event.
+                this.session.statusChanged.connect(this.statusHandler);
+            }
             this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
             if (oldStatusHandler && oldSession) {
@@ -358,9 +361,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
                 session.statusChanged.connect(statusChangeHandler);
             });
-            let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
+            let kernelChangedHandler:
+                | Slot<ISessionWithSocket, Session.ISessionConnection.IKernelChangedArgs>
+                | undefined;
             const statusChangedPromise = new Promise<void>((resolve, reject) => {
-                kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
+                kernelChangedHandler = (_: ISessionWithSocket, e: Session.ISessionConnection.IKernelChangedArgs) =>
                     statusHandler(resolve, reject, e.newValue?.status);
                 session.kernelChanged.connect(kernelChangedHandler);
             });

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
 import { BaseError, WrappedError } from '../../common/errors/types';
