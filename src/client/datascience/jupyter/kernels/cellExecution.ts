@@ -5,7 +5,7 @@
 
 import * as fastDeepEqual from 'fast-deep-equal';
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
+import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {
     NotebookCell,
     NotebookCellExecution,
@@ -506,7 +506,8 @@ export class CellExecution implements IDisposable {
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
                 traceCellMessage(this.cell, 'Some other execution error');
-                this.completedWithErrors(ex);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                this.completedWithErrors(ex as any);
             }
         }
     }
@@ -565,7 +566,8 @@ export class CellExecution implements IDisposable {
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
-            this.completedWithErrors(err);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.completedWithErrors(err as any);
         }
     }
 

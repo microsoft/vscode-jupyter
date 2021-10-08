@@ -5,7 +5,7 @@
 
 import * as jupyterlab from '@jupyter-widgets/base/lib';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@phosphor/signaling';
 import { Widget } from '@phosphor/widgets';
 import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';

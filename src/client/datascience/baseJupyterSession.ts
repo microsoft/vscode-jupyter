@@ -336,7 +336,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {
                 if (e === 'idle') {
                     resolve();
-                } else if (e === 'dead') {
+                } else if (e === 'dead' && session.kernel) {
                     traceError('Kernel died while waiting for idle');
                     // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                     this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
@@ -344,7 +344,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                         ...session.kernel,
                         lastActivityTime: new Date(),
                         numberOfConnections: 0,
-                        session: session.model
+                        model: session.model
                     };
                     reject(
                         new JupyterInvalidKernelError({
@@ -353,6 +353,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                             id: kernelModel.id
                         })
                     );
+                } else if (e === 'dead' && !session.kernel) {
+                    reject(new JupyterInvalidKernelError(undefined));
                 }
             };
 
@@ -421,7 +423,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
 
         // If we have a new session, then emit the new kernel connection information.
-        if (session && oldSession !== session) {
+        if (session && oldSession !== session && session.kernel) {
             if (!session.kernelSocketInformation) {
                 traceError(`Unable to find WebSocket connection associated with kernel ${session.kernel.id}`);
                 this._kernelSocket.next(undefined);
@@ -496,18 +498,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return true;
     }
     private getServerStatus(): ServerStatus {
-        if (this.session) {
+        if (this.session && this.session.kernel) {
             switch (this.session.kernel.status) {
                 case 'busy':
                     return ServerStatus.Busy;
                 case 'dead':
+                case 'terminating':
                     return ServerStatus.Dead;
                 case 'idle':
-                case 'connected':
                     return ServerStatus.Idle;
                 case 'restarting':
                 case 'autorestarting':
-                case 'reconnecting':
                     return ServerStatus.Restarting;
                 case 'starting':
                     return ServerStatus.Starting;
@@ -538,7 +539,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
-    private onStatusChanged(_s: Session.ISession) {
+    private onStatusChanged(_s: Session.ISessionConnection) {
         if (this.onStatusChangedEvent) {
             this.onStatusChangedEvent.fire(this.getServerStatus());
         }

@@ -4,7 +4,7 @@
 'use strict';
 
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
+import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
@@ -22,16 +22,16 @@ import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
-class ProxyKernel implements IMessageHandler, Kernel.IKernel {
+class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
     public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessageSignal;
     }
-    public get terminated() {
-        return this.realKernel.terminated as any;
-    }
     public get statusChanged() {
         return this.realKernel.statusChanged as any;
+    }
+    public get connectionStatusChanged() {
+        return this.realKernel.connectionStatusChanged as any;
     }
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any;
@@ -60,27 +60,47 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public get status(): Kernel.Status {
         return this.realKernel.status;
     }
-    public get info(): KernelMessage.IInfoReply | null {
-        return this.realKernel.info;
-    }
-    public get isReady(): boolean {
-        return this.realKernel.isReady;
-    }
-    public get ready(): Promise<void> {
-        return this.realKernel.ready;
-    }
     public get handleComms(): boolean {
         return this.realKernel.handleComms;
     }
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
-    private realKernel: Kernel.IKernel;
+    public get connectionStatus() {
+        return this.realKernel.connectionStatus;
+    }
+    public get spec() {
+        return this.realKernel.spec;
+    }
+    public get info() {
+        return this.realKernel.info;
+    }
+    public get hasComm() {
+        return this.realKernel.hasComm;
+    }
+    public createComm(targetName: string, commId?: string | undefined) {
+        return this.realKernel.createComm(targetName, commId);
+    }
+    public get disposed() {
+        return this.realKernel.disposed as any; // NOSONAR
+    }
+    public clone(options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>) {
+        return new ProxyKernel(
+            {
+                ...this._options,
+                clientId: options?.clientId || this._options.clientId,
+                userName: options?.username || this._options.userName
+            },
+            this.postOffice
+        );
+    }
+    private realKernel: Kernel.IKernelConnection;
     private hookResults = new Map<string, boolean | PromiseLike<boolean>>();
     private websocket: WebSocketWS & { sendEnabled: boolean };
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     private lastHookedMessageId: string | undefined;
+    private _options: KernelSocketOptions;
     // Messages that are awaiting extension messages to be fully handled
     private awaitingExtensionMessage: Map<string, Deferred<void>>;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
@@ -119,22 +139,20 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // This is crucial, the clientId must match the real kernel in extension.
         // All messages contain the clientId as `session` in the request.
         // If this doesn't match the actual value, then things can and will go wrong.
-        this.realKernel = new DefaultKernel(
-            {
-                name: options.model.name,
-                serverSettings: settings,
-                clientId: options.clientId,
-                handleComms: true,
-                username: options.userName
-            },
-            options.id
-        );
+        this.realKernel = new KernelConnection({
+            serverSettings: settings,
+            clientId: options.clientId,
+            handleComms: true,
+            username: options.userName,
+            model: options.model
+        });
 
         // Hook up to watch iopub messages from the real kernel
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this._options = options;
 
         postOffice.addHandler(this);
         this.websocket = proxySocketInstance;
@@ -145,9 +163,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
     public shutdown(): Promise<void> {
         return this.realKernel.shutdown();
-    }
-    public getSpec(): Promise<Kernel.ISpecModel> {
-        return this.realKernel.getSpec();
     }
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         msg: KernelMessage.IShellMessage<T>,
@@ -178,7 +193,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public restart(): Promise<void> {
         return this.realKernel.restart();
     }
-    public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public requestKernelInfo() {
         return this.realKernel.requestKernelInfo();
     }
     public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
@@ -204,12 +219,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             code: string;
             silent?: boolean;
             store_history?: boolean;
-            user_expressions?: import('@phosphor/coreutils').JSONObject;
+            user_expressions?: import('@lumino/coreutils').JSONObject;
             allow_stdin?: boolean;
             stop_on_error?: boolean;
         },
         disposeOnDone?: boolean,
-        metadata?: import('@phosphor/coreutils').JSONObject
+        metadata?: import('@lumino/coreutils').JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
@@ -229,11 +244,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
         return this.realKernel.sendInputReply(content);
-    }
-    public connectToComm(targetName: string, commId?: string): Kernel.IComm {
-        return this.realKernel.connectToComm(targetName, commId);
     }
     public registerCommTarget(
         targetName: string,
@@ -464,7 +476,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
     // When the real kernel handles iopub messages notify the Extension side and then forward on the message
     // Note, this message comes from the kernel after it is done handling the message async
-    private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+    private onIOPubMessage(_sender: Kernel.IKernelConnection, message: KernelMessage.IIOPubMessage) {
         // If we are not waiting for anything on the extension just send it
         if (this.awaitingExtensionMessage.size <= 0) {
             this.finishIOPubMessage(message);
@@ -507,7 +519,7 @@ export function create(
     options: KernelSocketOptions,
     postOffice: PostOffice,
     pendingMessages: { message: string; payload: any }[]
-): Kernel.IKernel {
+): Kernel.IKernelConnection {
     const result = new ProxyKernel(options, postOffice);
     // Make sure to handle all the missed messages
     pendingMessages.forEach((m) => result.handleMessage(m.message, m.payload));

@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IChangedArgs } from '@jupyterlab/coreutils';
 import {
     ContentsManager,
     Kernel,
@@ -30,17 +31,7 @@ import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
-    interface IKernelChangedArgs {
-        /**
-         * The old kernel.
-         */
-        oldValue: Kernel.IKernelConnection | null;
-        /**
-         * The new kernel.
-         */
-        newValue: Kernel.IKernelConnection | null;
-    }
-
+    type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let restartSessionCreatedEvent: Deferred<void>;
     let restartSessionUsedEvent: Deferred<void>;
@@ -282,7 +273,7 @@ suite('DataScience - JupyterSession', () => {
                 path: 'path',
                 lastActivityTime: new Date(),
                 numberOfConnections: 1,
-                session: {
+                model: {
                     statusChanged: {
                         connect: noop,
                         disconnect: noop
@@ -325,9 +316,9 @@ suite('DataScience - JupyterSession', () => {
                     const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
-                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
+                    when(sessionManager.connectTo(newActiveRemoteKernel.model)).thenReturn(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        newActiveRemoteKernel.session as any
+                        newActiveRemoteKernel.model as any
                     );
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
@@ -341,11 +332,11 @@ suite('DataScience - JupyterSession', () => {
                     verify(session.shutdown()).once();
                 });
                 test('Will connect to existing session', async () => {
-                    verify(sessionManager.connectTo(newActiveRemoteKernel.session)).once();
+                    verify(sessionManager.connectTo(newActiveRemoteKernel.model)).once();
                 });
                 test('Will flag new session as being remote', async () => {
                     // Confirm the new session is flagged as remote
-                    assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
+                    assert.isTrue(newActiveRemoteKernel.model.isRemoteSession);
                 });
                 test('Will not create a new session', async () => {
                     verify(sessionManager.startNew(anything())).once();
@@ -363,18 +354,18 @@ suite('DataScience - JupyterSession', () => {
             });
         });
         suite('Local Sessions', async () => {
-            let newSession: Session.ISession;
+            let newSession: Session.ISessionConnection;
             let newKernelConnection: Kernel.IKernelConnection;
-            let newStatusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
-            let newKernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
+            let newStatusChangedSignal: ISignal<Session.ISessionConnection, Kernel.Status>;
+            let newKernelChangedSignal: ISignal<Session.ISessionConnection, IKernelChangedArgs>;
             let newSessionCreated: Deferred<void>;
             setup(async () => {
                 newSession = mock(DefaultSession);
                 newKernelConnection = mock(DefaultKernel);
-                newStatusChangedSignal = mock<ISignal<Session.ISession, Kernel.Status>>();
-                newKernelChangedSignal = mock<ISignal<Session.ISession, IKernelChangedArgs>>();
+                newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
+                newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
                 const newIoPubSignal = mock<
-                    ISignal<Session.ISession, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                    ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
                 >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();

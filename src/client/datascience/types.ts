@@ -189,7 +189,7 @@ export interface INotebook extends IAsyncDisposable {
     ): Promise<INotebookCompletion>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     setLaunchingFile(file: string): Promise<void>;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
      * Gets the metadata that's used to start/connect to a Kernel.

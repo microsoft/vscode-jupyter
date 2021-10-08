@@ -297,12 +297,14 @@ export class Kernel implements IKernel {
                         Telemetry.NotebookStart,
                         stopWatch.elapsedTime,
                         undefined,
-                        ex
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        ex as any
                     );
                     if (options?.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else {
-                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        this.errorHandler.handleError(ex as any).ignoreErrors(); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();
@@ -422,7 +424,7 @@ export class Kernel implements IKernel {
 
         try {
             const info = await this.notebook.requestKernelInfo();
-            this._info = info.content;
+            this._info = info?.content;
             traceInfoIf(isCI, 'Step N1');
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
             traceInfoIf(isCI, 'Step N2');

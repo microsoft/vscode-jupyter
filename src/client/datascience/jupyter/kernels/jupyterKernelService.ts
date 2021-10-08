@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { Kernel } from '@jupyterlab/services';
+import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
@@ -165,7 +165,8 @@ export class JupyterKernelService {
         try {
             await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
-            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
             throw ex;
         }
         if (cancelToken?.isCancellationRequested) {
@@ -210,7 +211,9 @@ export class JupyterKernelService {
             }
 
             // Read spec from the file.
-            let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fs.readLocalFile(kernelSpecFilePath));
+            let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(
+                await this.fs.readLocalFile(kernelSpecFilePath)
+            );
             let shouldUpdate = false;
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
@@ -259,7 +262,8 @@ export class JupyterKernelService {
                 try {
                     await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
                 } catch (ex) {
-                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
                     throw ex;
                 }
             }

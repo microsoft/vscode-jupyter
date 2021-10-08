@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import type { ISignal, Signal } from '@phosphor/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import '../../common/extensions';
@@ -32,8 +32,9 @@ export class RawSession implements ISessionWithSocket {
     private _clientID: string;
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
-    private readonly _kernelChanged: Signal<this, Session.IKernelChangedArgs>;
+    private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
+    private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
@@ -42,8 +43,9 @@ export class RawSession implements ISessionWithSocket {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
-        this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);
+        this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
+        this._connectionStatusChanged = new signaling.Signal<this, Kernel.ConnectionStatus>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -54,8 +56,17 @@ export class RawSession implements ISessionWithSocket {
         this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
+    public get connectionStatusChanged(): ISignal<this, Kernel.ConnectionStatus> {
+        return this._kernel.connectionStatusChanged;
+    }
+    public get disposed(): ISignal<this, void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return this._kernel.disposed as any;
+    }
+    isRemoteSession?: boolean | undefined;
 
     public async dispose() {
         // We want to know who called dispose on us
@@ -109,7 +120,7 @@ export class RawSession implements ISessionWithSocket {
     get terminated(): ISignal<this, void> {
         throw new Error('Not yet implemented');
     }
-    get kernelChanged(): ISignal<this, Session.IKernelChangedArgs> {
+    get kernelChanged(): ISignal<this, Session.ISessionConnection.IKernelChangedArgs> {
         return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
@@ -162,6 +173,9 @@ export class RawSession implements ISessionWithSocket {
     }
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
         this._ioPubMessage.emit(msg);
+    }
+    private onKernelConnectionStatus(_sender: Kernel.IKernelConnection, state: Kernel.ConnectionStatus) {
+        this._connectionStatusChanged.emit(state);
     }
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {

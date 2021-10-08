@@ -6,7 +6,7 @@
 import '@jupyter-widgets/controls/css/labvariables.css';
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@phosphor/widgets';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
@@ -33,7 +33,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     }
     private static _instance = new ReplaySubject<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
-    private proxyKernel?: Kernel.IKernel;
+    private proxyKernel?: Kernel.IKernelConnection;
     private options?: KernelSocketOptions;
     private pendingMessages: { message: string; payload: any }[] = [];
     /**

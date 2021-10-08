@@ -23,7 +23,7 @@ import {
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import type { Kernel } from '@jupyterlab/services';
+import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -143,7 +143,7 @@ import { OSType } from '../../../client/common/utils/platform';
             }
         };
         const duplicateEnv = isWindows ? [python3_8_11_Interpreter] : [python3_8_11_InterpreterNoBinPython];
-        const python3811spec: Kernel.ISpecModel = {
+        const python3811spec: KernelSpec.ISpecModel = {
             display_name: python3_8_11_InterpreterNoBinPython.displayName!,
             name: 'python3811jvsc74a57bd06bf34dd489c90df3f2c7e4a7a969c3a519895dd38f693a4499ab76afdf92a529',
             argv: [isWindows ? python3_8_11_Interpreter.path : python3_8_11_InterpreterNoBinPython.path],
@@ -173,7 +173,7 @@ import { OSType } from '../../../client/common/utils/platform';
             envName: 'condaEnv1',
             envType: EnvironmentType.Conda
         };
-        const pyEnvPython3spec: Kernel.ISpecModel = {
+        const pyEnvPython3spec: KernelSpec.ISpecModel = {
             display_name: 'Python 3 PyEnv on Disk',
             name: 'python38664bitpyenv87d47e496650464eac2bd1421064a987',
             argv: ['/users/username/pyenv/envs/temp/python'],
@@ -183,14 +183,14 @@ import { OSType } from '../../../client/common/utils/platform';
                 interpreter: pyEnvInterpreter
             }
         };
-        const pyEnvUsingNewNamesPython3spec: Kernel.ISpecModel = {
+        const pyEnvUsingNewNamesPython3spec: KernelSpec.ISpecModel = {
             display_name: 'Python 3 PyEnv on Disk with new Name',
             name: 'pythonjvsc74a57bd0857c2ac1a2d121b2884435ca7334db9e850ee37c2dd417fb5029a40e4d8390b5',
             argv: ['/users/username/pyenv/envs/temp2/python'],
             language: 'python',
             resources: {}
         };
-        const python3spec: Kernel.ISpecModel = {
+        const python3spec: KernelSpec.ISpecModel = {
             display_name: 'Python 3 on Disk',
             name: defaultPython3Name,
             argv: ['/usr/bin/python3'],
@@ -200,7 +200,7 @@ import { OSType } from '../../../client/common/utils/platform';
                 interpreter: python3Interpreter
             }
         };
-        const python3DupeSpec: Kernel.ISpecModel = {
+        const python3DupeSpec: KernelSpec.ISpecModel = {
             display_name: 'Python 3 on Disk',
             name: defaultPython3Name,
             argv: ['/usr/bin/python3'],
@@ -211,7 +211,7 @@ import { OSType } from '../../../client/common/utils/platform';
             }
         };
         // Has a custom env, but shares python interpreter with another spec
-        const python3CustomEnv: Kernel.ISpecModel = {
+        const python3CustomEnv: KernelSpec.ISpecModel = {
             display_name: 'Python 3 custom env',
             name: 'customPython3',
             argv: ['/usr/bin/python3'],
@@ -222,21 +222,21 @@ import { OSType } from '../../../client/common/utils/platform';
                 interpreter: python3Interpreter
             }
         };
-        const python2spec: Kernel.ISpecModel = {
+        const python2spec: KernelSpec.ISpecModel = {
             display_name: 'Python 2 on Disk',
             name: 'python2',
             argv: ['/usr/bin/python'],
             language: 'python',
             resources: {}
         };
-        const juliaSpec: Kernel.ISpecModel = {
+        const juliaSpec: KernelSpec.ISpecModel = {
             display_name: 'Julia on Disk',
             name: 'julia',
             argv: ['/usr/bin/julia'],
             language: 'julia',
             resources: {}
         };
-        const interpreterSpec: Kernel.ISpecModel = {
+        const interpreterSpec: KernelSpec.ISpecModel = {
             display_name: 'Conda interpreter kernel',
             name: defaultPython3Name,
             argv: ['python'],

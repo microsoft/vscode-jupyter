@@ -115,7 +115,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         }
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return this.session.requestKernelInfo();
     }
     public get onSessionStatusChanged(): Event<ServerStatus> {

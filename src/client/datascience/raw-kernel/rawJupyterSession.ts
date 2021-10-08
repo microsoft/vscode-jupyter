@@ -158,14 +158,16 @@ export class RawJupyterSession extends BaseJupyterSession {
                     Telemetry.RawKernelSessionStart,
                     stopWatch.elapsedTime,
                     undefined,
-                    error
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    error as any
                 );
                 sendKernelTelemetryEvent(
                     resource,
                     Telemetry.RawKernelSessionStartException,
                     undefined,
                     undefined,
-                    error
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    error as any
                 );
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;

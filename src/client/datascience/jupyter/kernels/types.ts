@@ -25,7 +25,7 @@ import type {
 } from '../../types';
 import type * as nbformat from '@jupyterlab/nbformat';
 
-export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel | undefined };
+export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined };
 
 export enum NotebookCellRunState {
     Running = 1,

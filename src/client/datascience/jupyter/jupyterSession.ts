@@ -5,7 +5,7 @@ import type {
     Contents,
     ContentsManager,
     Kernel,
-    ServerConnection,
+    KernelSpecManager,
     Session,
     SessionManager
 } from '@jupyterlab/services';
@@ -35,8 +35,8 @@ export class JupyterSession extends BaseJupyterSession {
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
-        private serverSettings: ServerConnection.ISettings,
         kernelSpec: KernelConnectionMetadata | undefined,
+        private specsManager: KernelSpecManager,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
@@ -96,22 +96,20 @@ export class JupyterSession extends BaseJupyterSession {
             if (
                 kernelConnection &&
                 kernelConnection.kind === 'connectToLiveKernel' &&
-                kernelConnection.kernelModel.id
+                kernelConnection.kernelModel.id &&
+                kernelConnection.kernelModel.model
             ) {
                 // Remote case.
-                newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session) as ISessionWithSocket;
+                newSession = this.sessionManager.connectTo({
+                    ...kernelConnection.kernelModel,
+                    model: kernelConnection.kernelModel.model
+                }) as ISessionWithSocket;
                 newSession.kernelConnectionMetadata = kernelConnection;
                 newSession.isRemoteSession = true;
                 newSession.resource = resource;
             } else {
                 traceInfoIf(isCI, `createNewKernelSession ${kernelConnection?.id}`);
-                newSession = await this.createSession(
-                    resource,
-                    this.serverSettings,
-                    kernelConnection,
-                    cancelToken,
-                    disableUI
-                );
+                newSession = await this.createSession(resource, kernelConnection, cancelToken, disableUI);
                 newSession.resource = resource;
             }
 
@@ -150,15 +148,11 @@ export class JupyterSession extends BaseJupyterSession {
         while (tryCount < 3) {
             try {
                 traceInfoIf(isCI, `JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
-                result = await this.createSession(
-                    resource,
-                    session.serverSettings,
-                    kernelConnection,
-                    cancelToken,
-                    true
-                );
+                result = await this.createSession(resource, kernelConnection, cancelToken, true);
                 await this.waitForIdleOnSession(result, this.idleTimeout);
-                this.restartSessionCreated(result.kernel);
+                if (result.kernel) {
+                    this.restartSessionCreated(result.kernel);
+                }
                 return result;
             } catch (exc) {
                 traceInfo(`Error waiting for restart session: ${exc}`);
@@ -232,7 +226,6 @@ export class JupyterSession extends BaseJupyterSession {
 
     private async createSession(
         resource: Resource,
-        serverSettings: ServerConnection.ISettings,
         kernelConnection: KernelConnectionMetadata | undefined,
         cancelToken?: CancellationToken,
         disableUI?: boolean
@@ -250,43 +243,50 @@ export class JupyterSession extends BaseJupyterSession {
         // If kernelName is empty this can cause problems for servers that don't
         // understand that empty kernel name means the default kernel.
         // See https://github.com/microsoft/vscode-jupyter/issues/5290
-        const kernelName = getNameOfKernelConnection(kernelConnection) ?? this.sessionManager?.specs?.default ?? '';
+        const kernelName = getNameOfKernelConnection(kernelConnection) ?? this.specsManager?.specs?.default ?? '';
 
         // Create our session options using this temporary notebook and our connection info
-        const options: Session.IOptions = {
+        const options: Session.ISessionOptions = {
             path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
-            kernelName,
+            kernel: {
+                name: kernelName
+            },
             name: uuid(), // This is crucial to distinguish this session from any other.
-            serverSettings: serverSettings,
             type: 'notebook'
         };
 
-        traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${options.kernelName}`);
+        traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${kernelName}`);
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)
                     .then(async (session) => {
-                        this.logRemoteOutput(
-                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
-                        );
-                        const sessionWithSocket = session as ISessionWithSocket;
+                        if (session.kernel) {
+                            this.logRemoteOutput(
+                                localize.DataScience.createdNewKernel().format(
+                                    this.connInfo.baseUrl,
+                                    session?.kernel?.id || ''
+                                )
+                            );
+                            const sessionWithSocket = session as ISessionWithSocket;
 
-                        // Add on the kernel metadata & sock information
-                        sessionWithSocket.resource = resource;
-                        sessionWithSocket.kernelConnectionMetadata = kernelConnection;
-                        sessionWithSocket.kernelSocketInformation = {
-                            socket: JupyterWebSockets.get(session.kernel.id),
-                            options: {
-                                clientId: session.kernel.clientId,
-                                id: session.kernel.id,
-                                model: { ...session.kernel.model },
-                                userName: session.kernel.username
+                            // Add on the kernel metadata & sock information
+                            sessionWithSocket.resource = resource;
+                            sessionWithSocket.kernelConnectionMetadata = kernelConnection;
+                            sessionWithSocket.kernelSocketInformation = {
+                                socket: JupyterWebSockets.get(session.kernel.id),
+                                options: {
+                                    clientId: session.kernel.clientId,
+                                    id: session.kernel.id,
+                                    model: { ...session.kernel.model },
+                                    userName: session.kernel.username
+                                }
+                            };
+                            if (!this.connInfo.localLaunch) {
+                                sessionWithSocket.isRemoteSession = true;
                             }
-                        };
-                        if (!this.connInfo.localLaunch) {
-                            sessionWithSocket.isRemoteSession = true;
+                            return sessionWithSocket;
                         }
-                        return sessionWithSocket;
+                        throw new JupyterSessionStartError(new Error(`No kernel created`));
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {

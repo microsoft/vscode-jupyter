@@ -3,7 +3,7 @@
 'use strict';
 
 import * as path from 'path';
-import type { Kernel } from '@jupyterlab/services';
+import type { KernelSpec } from '@jupyterlab/services';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -187,7 +187,7 @@ export function getDetailOfKernelConnection(
 ): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     const notebookPath =
-        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel.session.path})` : '';
+        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     return `${kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue} ${notebookPath}`;
 }
 
@@ -304,7 +304,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
-    const defaultSpec: Kernel.ISpecModel = {
+    const defaultSpec: KernelSpec.ISpecModel = {
         name: getInterpreterKernelSpecName(interpreter),
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
