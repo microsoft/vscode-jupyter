@@ -252,7 +252,7 @@ export class RawKernel implements Kernel.IKernelConnection {
     }
 }
 
-let nonSerializingKernel: any;
+let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
 export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
@@ -280,15 +280,16 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
         // we eliminate the serialize import from the default kernel and remap it to do nothing.
         nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
-    const realKernel = new nonSerializingKernel.DefaultKernel(
-        {
-            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata),
-            serverSettings: settings,
-            clientId,
-            handleComms: true
-        },
-        uuid()
-    );
+    const realKernel = new nonSerializingKernel.KernelConnection({
+        serverSettings: settings,
+        clientId,
+        handleComms: true,
+        username: uuid(),
+        model: {
+            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata) || 'python3',
+            id: uuid()
+        }
+    });
 
     // Use this real kernel in result.
     return new RawKernel(realKernel, socketInstance, kernelProcess);

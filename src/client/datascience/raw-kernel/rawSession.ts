@@ -156,10 +156,10 @@ export class RawSession implements ISessionWithSocket {
         return this._ioPubMessage;
     }
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
-        throw new Error('Not yet implemented');
+        return this._kernel.unhandledMessage;
     }
     get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
-        throw new Error('Not yet implemented');
+        return this._kernel.anyMessage;
     }
     get path(): string {
         throw new Error('Not yet implemented');
@@ -174,7 +174,13 @@ export class RawSession implements ISessionWithSocket {
         throw new Error('Not yet implemented');
     }
     get model(): Session.IModel {
-        throw new Error('Not yet implemented');
+        return {
+            id: this._id,
+            name: this._kernel.name,
+            path: this.kernelProcess.kernelConnectionMetadata.interpreter?.path || 'kernel_path',
+            type: 'notebook',
+            kernel: this._kernel.model
+        };
     }
     get status(): Kernel.Status {
         return this.kernel.status;
