@@ -5,7 +5,7 @@
 
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
-import type { ISignal, Signal } from '@phosphor/signaling';
+import type { ISignal, Signal } from '@lumino/signaling';
 import * as WebSocketWS from 'ws';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../../client/common/utils/serializers';
@@ -149,7 +149,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
 
         // Hook up to watch iopub messages from the real kernel
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
         this._options = options;

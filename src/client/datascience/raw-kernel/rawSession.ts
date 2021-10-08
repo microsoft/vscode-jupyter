@@ -42,7 +42,7 @@ export class RawSession implements ISessionWithSocket {
     constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);

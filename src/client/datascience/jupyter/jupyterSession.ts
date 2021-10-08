@@ -258,7 +258,11 @@ export class JupyterSession extends BaseJupyterSession {
         traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${kernelName}`);
         return Cancellation.race(
             () =>
-                this.sessionManager!.startNew(options)
+                this.sessionManager!.startNew(options, {
+                    kernelConnectionOptions: {
+                        handleComms: true // This has to be true for ipywidgets to work
+                    }
+                })
                     .then(async (session) => {
                         if (session.kernel) {
                             this.logRemoteOutput(

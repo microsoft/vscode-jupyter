@@ -26,7 +26,7 @@ import {
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -484,6 +484,9 @@ export class CellExecution implements IDisposable {
             this.handleReply(clearState, msg);
         };
         request.onStdin = this.handleInputRequest.bind(this, session);
+        const disposable = session.onIOPubMessage((m) => {
+            traceInfo(`IO Pub message on session: ${JSON.stringify(m)}`);
+        });
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.
@@ -495,13 +498,14 @@ export class CellExecution implements IDisposable {
             // Solution is to wait for all messages to get processed.
             traceCellMessage(this.cell, 'Wait for jupyter execution');
             await request.done;
+            disposable.dispose();
             traceCellMessage(this.cell, 'Jupyter execution completed');
             this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
-            if (ex && ex instanceof Error && ex.message === 'Canceled') {
+            if (ex && ex instanceof Error && ex.message.includes('Canceled')) {
                 this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {

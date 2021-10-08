@@ -3,7 +3,7 @@
 'use strict';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
-import type { Slot } from '@phosphor/signaling';
+import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
@@ -77,6 +77,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
+    private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
 
     constructor(
         protected resource: Resource,
@@ -85,6 +86,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
+        this.unhandledMessageHandler = (_s, m) => {
+            traceInfo(`Unhandled message found: ${m.header.msg_type}`);
+        };
     }
     public dispose(): Promise<void> {
         return this.shutdown();
@@ -417,9 +421,15 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (this.ioPubHandler && oldSession) {
             oldSession.iopubMessage.disconnect(this.ioPubHandler);
         }
+        if (this.unhandledMessageHandler && oldSession) {
+            oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
+        }
         this._session = session;
         if (session) {
             session.iopubMessage.connect(this.ioPubHandler);
+        }
+        if (session) {
+            session.unhandledMessage.connect(this.unhandledMessageHandler);
         }
 
         // If we have a new session, then emit the new kernel connection information.

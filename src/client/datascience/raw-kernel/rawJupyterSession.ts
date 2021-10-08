@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
-import type { Slot } from '@phosphor/signaling';
+import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';

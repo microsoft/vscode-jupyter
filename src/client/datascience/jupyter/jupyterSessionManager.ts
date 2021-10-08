@@ -10,7 +10,7 @@ import type {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
+import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { EventEmitter } from 'vscode';
@@ -27,7 +27,6 @@ import {
 } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import {
     IJupyterConnection,
     IJupyterKernel,
@@ -105,24 +104,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const sessionManager = this.sessionManager as any;
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
-
-                // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
-                // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
-                if (sessionManager._specs) {
-                    sessionManager._specs = {};
-                }
-                if (sessionManager._sessions && sessionManager._sessions.clear) {
-                    sessionManager._sessions.clear();
-                }
-                if (sessionManager._pollModels) {
-                    this.clearPoll(sessionManager._pollModels);
-                }
-                if (sessionManager._pollSpecs) {
-                    this.clearPoll(sessionManager._pollSpecs);
-                }
             }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
@@ -269,15 +252,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             traceError(`SessionManager:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
             return [];
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private clearPoll(poll: { _timeout: any }) {
-        try {
-            clearTimeout(poll._timeout);
-        } catch {
-            noop();
         }
     }
 
