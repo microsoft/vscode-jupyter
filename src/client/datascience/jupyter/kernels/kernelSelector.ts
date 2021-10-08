@@ -67,7 +67,7 @@ export async function selectKernel(
             : undefined;
     const activeInteractiveNotebookEditor =
         getResourceType(resource) === 'interactive'
-            ? interactiveWindowProvider.activeWindow?.notebookEditor
+            ? getActiveInteractiveWindow(interactiveWindowProvider)?.notebookEditor
             : undefined;
 
     const notebookEditor = targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
