@@ -74,6 +74,6 @@ export async function openNotebook(ipynbFile: string) {
     traceInfo(`Opening notebook ${ipynbFile}`);
     const uri = Uri.file(ipynbFile);
     const nb = await workspace.openNotebookDocument(uri);
-    window.showNotebookDocument(nb);
+    await window.showNotebookDocument(nb);
     traceInfo(`Opened notebook ${ipynbFile}`);
 }
