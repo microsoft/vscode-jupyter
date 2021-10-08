@@ -199,6 +199,7 @@ export namespace EditorContexts {
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
+    export const ZmqAvailable = 'jupyter.zmqavailable';
 }
 
 export namespace RegExpValues {

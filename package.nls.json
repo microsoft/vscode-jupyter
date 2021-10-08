@@ -114,7 +114,7 @@
     "jupyter.command.jupyter.resetLoggingLevel.title": "Reset Logging Level",
     "jupyter.command.jupyter.showDataViewer.title": "View Value in Data Viewer",
     "jupyter.command.jupyter.viewOutput.title": "Show Output",
-    "jupyter.command.jupyter.clearSavedJupyterUris.title": "Clear Jupyter server list",
+    "jupyter.command.jupyter.clearSavedJupyterUris.title": "Clear Jupyter remote server list",
     "jupyter.command.jupyter.openVariableView.title": "Open Variable View",
     "jupyter.command.jupyter.openVariableView.shorttitle": "Variables",
     "jupyter.command.jupyter.openOutlineView.title": "Show Table Of Contents (Outline View)",
