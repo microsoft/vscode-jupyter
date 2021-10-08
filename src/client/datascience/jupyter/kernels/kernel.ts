@@ -188,15 +188,21 @@ export class Kernel implements IKernel {
     public async dispose(): Promise<void> {
         traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
         this.restarting = undefined;
+        this.notebook = this.notebook ? this.notebook : this._notebookPromise ? await this._notebookPromise : undefined;
         this._notebookPromise = undefined;
+        const promises: Promise<void>[] = [];
         if (this.notebook) {
-            await this.notebook.dispose();
+            promises.push(this.notebook.dispose().catch(noop));
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
             this.notebook = undefined;
         }
         this.kernelExecution.dispose();
+        promises.push(
+            this.notebookProvider.disposeAssociatedNotebook({ identity: this.notebookDocument.uri }).catch(noop)
+        );
+        await Promise.all(promises);
     }
     public async restart(): Promise<void> {
         this._onWillRestart.fire();

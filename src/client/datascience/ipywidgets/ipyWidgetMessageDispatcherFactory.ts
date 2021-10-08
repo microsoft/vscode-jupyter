@@ -8,7 +8,8 @@ import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebook, INotebookProvider } from '../types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -84,14 +85,12 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
+        @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
         disposables.push(this);
-        notebookProvider.onNotebookCreated((e) => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
 
-        notebookProvider.activeNotebooks.forEach((nbPromise) =>
-            nbPromise.then((notebook) => this.trackDisposingOfNotebook(notebook)).ignoreErrors()
-        );
+        kernelProvider.onDidDisposeKernel(this.trackDisposingOfKernels, this, disposables);
     }
 
     public dispose() {
@@ -123,19 +122,13 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         this.disposables.push(dispatcher);
         return dispatcher;
     }
-    private trackDisposingOfNotebook(notebook: INotebook) {
+    private trackDisposingOfKernels(kernel: IKernel) {
         if (this.disposed) {
             return;
         }
-        notebook.onDisposed(
-            () => {
-                const item = this.messageDispatchers.get(notebook.identity.fsPath);
-                this.messageDispatchers.delete(notebook.identity.fsPath);
-                item?.dispose(); // NOSONAR
-            },
-            this,
-            this.disposables
-        );
+        const item = this.messageDispatchers.get(kernel.notebookDocument.uri.fsPath);
+        this.messageDispatchers.delete(kernel.notebookDocument.uri.fsPath);
+        item?.dispose(); // NOSONAR
     }
 
     private onMessage(message: IPyWidgetMessage, document?: NotebookDocument) {

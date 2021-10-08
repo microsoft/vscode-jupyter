@@ -962,14 +962,10 @@ export interface INotebookProvider {
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
     onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
     /**
-     * List of all notebooks (active and ones that are being constructed).
-     */
-    activeNotebooks: Promise<INotebook>[];
-    /**
      * Disposes notebook associated with the given identity.
      * Using `getOrCreateNotebook` would be incorrect as thats async, and its possible a document has been opened in the interim (meaning we could end up disposing something that is required).
      */
-    disposeAssociatedNotebook(options: { identity: Uri }): void;
+    disposeAssociatedNotebook(options: { identity: Uri }): Promise<void>;
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */

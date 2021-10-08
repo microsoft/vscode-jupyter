@@ -79,6 +79,7 @@ export class KernelProvider implements IKernelProvider {
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
+        await Promise.all(this.kernels.map((k) => k.dispose()));
         this._onDidDisposeKernel.dispose();
         this._onDidRestartKernel.dispose();
         this._onKernelStatusChanged.dispose();
