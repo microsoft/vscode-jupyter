@@ -13,8 +13,7 @@ import {
     TextDocument
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../common/application/types';
-import { isCI } from '../../../common/constants';
-import { traceError, traceInfoIf } from '../../../common/logger';
+import { traceError, traceInfoIfCI } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
@@ -54,7 +53,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             getOnly: true
         });
         if (token.isCancellationRequested) {
-            traceInfoIf(isCI, `Getting completions cancelled for ${notebookDocument.uri.toString()}`);
+            traceInfoIfCI(`Getting completions cancelled for ${notebookDocument.uri.toString()}`);
             return [];
         }
         if (!notebook) {
@@ -65,22 +64,22 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         // Allow slower timeouts for CI (testing).
         const timeout =
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
-        traceInfoIf(isCI, `Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
+        traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
                 if (token.isCancellationRequested) {
                     return;
                 }
-                traceInfoIf(isCI, `Notebook completions request timed out for Cell ${document.uri.toString()}`);
+                traceInfoIfCI(`Notebook completions request timed out for Cell ${document.uri.toString()}`);
                 return emptyResult;
             })
         ]);
         if (!result) {
-            traceInfoIf(isCI, `Notebook completions not found.`);
+            traceInfoIfCI(`Notebook completions not found.`);
             return [];
         } else {
-            traceInfoIf(isCI, `Completions found, filtering the list: ${JSON.stringify(result)}.`);
+            traceInfoIfCI(`Completions found, filtering the list: ${JSON.stringify(result)}.`);
         }
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         // Check if we have more information about the complication items & whether its valid.

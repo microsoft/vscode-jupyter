@@ -164,9 +164,9 @@ suite('Dummy20', () => {
 //         }
 
 //         // Start the jupyter server
-//         traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Getting interactive window');
+//         traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Getting interactive window');
 //         const history = await getOrCreateInteractiveWindow(ioc);
-//         traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Got interactive window');
+//         traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Got interactive window');
 //         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
 //         // Debug this code. We should either hit the breakpoint or stop on entry
@@ -183,7 +183,7 @@ suite('Dummy20', () => {
 
 //             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
 //             const done = history.window.debugCode(code, Uri.file(fileName), 0, docManager.activeTextEditor);
-//             traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for breakpoint on debug');
+//             traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for breakpoint on debug');
 //             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
 //             if (expectError) {
 //                 assert.ok(lastErrorMessage, 'Error did not occur when expected');
@@ -195,7 +195,7 @@ suite('Dummy20', () => {
 //                 assert.ok(stackFrames, 'Stack trace not computable');
 //                 assert.ok(stackFrames.length >= 1, 'Not enough frames');
 //                 assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-//                 traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens');
+//                 traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens');
 //                 await waitForPromise(newLensPromise.promise, 10_000);
 
 //                 verifyCodeLenses(expectedBreakLine);
@@ -211,17 +211,17 @@ suite('Dummy20', () => {
 //                     const mountedWebPanel =
 //                         type === 'notebook' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
 //                     breakPromise = createDeferred<void>();
-//                     traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.step');
+//                     traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.step');
 //                     await jupyterDebuggerService?.step();
-//                     traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for break point again');
+//                     traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for break point again');
 //                     await breakPromise.promise;
-//                     traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables complete');
+//                     traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables complete');
 //                     await mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 //                     await sleep(1000);
 //                     const variableRefresh = mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
-//                     traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables request');
+//                     traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables request');
 //                     await jupyterDebuggerService?.requestVariables();
-//                     traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables refresh');
+//                     traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for variables refresh');
 //                     await variableRefresh;
 
 //                     // Force an update so we render whatever the current state is
@@ -237,10 +237,10 @@ suite('Dummy20', () => {
 //                 }
 
 //                 // Verify break location
-//                 traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.continue');
+//                 traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for Jupyter.continue');
 //                 await jupyterDebuggerService!.continue();
 
-//                 traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens promise');
+//                 traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for code lens promise');
 //                 await waitForPromise(newLensPromise.promise, 10_000);
 
 //                 verifyCodeLenses(undefined);
@@ -248,7 +248,7 @@ suite('Dummy20', () => {
 //             }
 //         });
 
-//         traceInfoIf(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for result promise');
+//         traceInfoIfCI(!!process.env.VSC_CI_ENABLE_TOO_MUCH_LOGGING, 'Waiting for result promise');
 //         if (!expectError) {
 //             const cellResults = await resultPromise;
 //             assert.ok(cellResults, 'No cell results after finishing debugging');

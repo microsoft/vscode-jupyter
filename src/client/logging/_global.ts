@@ -3,6 +3,7 @@
 'use strict';
 
 import * as winston from 'winston';
+import { isCI } from '../common/constants';
 import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
@@ -94,8 +95,8 @@ export function logInfo(...args: any[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function logInfoIf(condition: boolean, ...args: any[]) {
-    if (condition) {
+export function logInfoOnCI(...args: any[]) {
+    if (isCI) {
         log(LogLevel.Info, ...args);
     }
 }

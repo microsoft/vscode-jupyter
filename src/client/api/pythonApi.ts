@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo, traceInfoIf } from '../common/logger';
+import { traceInfo, traceInfoIfCI } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -420,7 +420,7 @@ export class InterpreterService implements IInterpreterService {
                 result.push(p);
             }
         });
-        traceInfoIf(isCI, `Interpreter list for ${resource?.toString()} is ${result.map((i) => i.path).join('\n')}`);
+        traceInfoIfCI(`Interpreter list for ${resource?.toString()} is ${result.map((i) => i.path).join('\n')}`);
         return result;
     }
 

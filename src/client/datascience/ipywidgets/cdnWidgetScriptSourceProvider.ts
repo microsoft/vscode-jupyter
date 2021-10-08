@@ -7,7 +7,7 @@ import * as download from 'download';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
@@ -124,8 +124,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 traceInfo(
                     `${ConsoleForegroundColors.Green}Wiget ${moduleName} successfully downloaded to temp file ${tempFile.filePath}`
                 );
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_FORCE_LOGGING,
+                traceInfoIfCI(
                     `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
                         diskPath
                     )}`
