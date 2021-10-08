@@ -32,6 +32,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         rawNotebookSupported = mock<IRawNotebookSupportedService>();
         configService = mock<IConfigurationService>();
         vscodeNotebook = mock<IVSCodeNotebook>();
+        when(vscodeNotebook.notebookDocuments).thenReturn([]);
         const experimentService = mock<IExperimentService>();
         when(experimentService.inExperiment(anything())).thenResolve(true);
         extensionChecker = mock(PythonExtensionChecker);
