@@ -7,6 +7,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/er
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
+import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -59,6 +60,9 @@ export class RawSession implements ISessionWithSocket {
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
+    public get connectionStatus() {
+        return this._kernel.connectionStatus;
+    }
     public get connectionStatusChanged(): ISignal<this, Kernel.ConnectionStatus> {
         return this._kernel.connectionStatusChanged;
     }
@@ -109,6 +113,28 @@ export class RawSession implements ISessionWithSocket {
     // Provide status changes for the attached kernel
     get statusChanged(): ISignal<this, Kernel.Status> {
         return this._statusChanged;
+    }
+
+    // Provide a way to wait for connected status
+    public async waitForReady(): Promise<void> {
+        // When our kernel connects and gets a status message it triggers the ready promise
+        const deferred = createDeferred<string>();
+        const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
+            if (status == 'connected') {
+                deferred.resolve(status);
+            }
+        };
+        this.connectionStatusChanged.connect(handler);
+        if (this.connectionStatus == 'connected') {
+            deferred.resolve(this.connectionStatus);
+        }
+
+        const result = await Promise.race([deferred.promise, sleep(30_000)]);
+        this.connectionStatusChanged.disconnect(handler);
+
+        if (result.toString().length < 5) {
+            throw new TimedOutError(`Kernel with ${this.id} never connected.`);
+        }
     }
 
     // Shutdown our session and kernel

@@ -300,8 +300,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process, this.resource);
 
-        // When our kernel connects and gets a status message it triggers the ready promise
-        await result.kernel.ready;
+        // Wait for it to be ready
+        await result.waitForReady();
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
