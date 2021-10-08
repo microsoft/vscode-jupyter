@@ -59,13 +59,21 @@ export async function selectKernel(
         getResourceType(resource) === 'notebook'
             ? notebooks.notebookDocuments.find((item) => item.uri.toString() === resource?.toString())
             : undefined;
-    const notebookEditor =
-        notebook && notebooks.activeNotebookEditor?.document === notebook ? notebooks.activeNotebookEditor : undefined;
     const targetNotebookEditor =
-        notebookEditor || getActiveInteractiveWindow(interactiveWindowProvider)?.notebookEditor;
-    if (targetNotebookEditor) {
+        notebook && notebooks.activeNotebookEditor?.document === notebook ? notebooks.activeNotebookEditor : undefined;
+    const targetInteractiveNotebookEditor =
+        resource && getResourceType(resource) === 'interactive'
+            ? interactiveWindowProvider.get(resource)?.notebookEditor
+            : undefined;
+    const activeInteractiveNotebookEditor =
+        getResourceType(resource) === 'interactive'
+            ? interactiveWindowProvider.activeWindow?.notebookEditor
+            : undefined;
+
+    const notebookEditor = targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+    if (notebookEditor) {
         return commandManager.executeCommand('notebook.selectKernel', {
-            notebookEditor: targetNotebookEditor
+            notebookEditor
         });
     }
     traceError(`Unable to select kernel as the Notebook document could not be identified`);
