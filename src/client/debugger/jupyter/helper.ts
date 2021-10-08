@@ -8,7 +8,9 @@ import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 export enum IpykernelCheckResult {
     Unknown,
     Ok,
-    Missing
+    Outdated,
+    NotInstalled,
+    ControllerNotSelected
 }
 
 export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
@@ -18,7 +20,7 @@ export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<Ipykern
     if (output[0].text) {
         const version = output[0].text.toString().split('.');
         const majorVersion = Number(version[0]);
-        return majorVersion >= 6 ? IpykernelCheckResult.Ok : IpykernelCheckResult.Missing;
+        return majorVersion >= 6 ? IpykernelCheckResult.Ok : IpykernelCheckResult.Outdated;
     }
 
     return IpykernelCheckResult.Unknown;
