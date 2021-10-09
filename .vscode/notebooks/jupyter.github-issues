@@ -287,12 +287,12 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Neither a bug or enhancement"
+    "value": "### Not a bug, enhancement, or documentation issue"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// Unfortunately, the github issues notebook doesn't currently support adding macros to the comma separated entries, so just copy/paste them from above.\r\n\r\n$JUPYTER_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS"
+    "value": "// Unfortunately, the github issues notebook doesn't currently support adding macros to the comma separated entries (like $ADMIN_AREAS), so just copy/paste them from above.\r\n\r\n$JUPYTER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
   },
   {
     "kind": 1,
