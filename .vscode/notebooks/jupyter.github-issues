@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
   },
   {
     "kind": 1,
