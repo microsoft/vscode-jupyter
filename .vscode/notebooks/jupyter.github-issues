@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-10-07"
+    "value": "$TODAYS_DATE=2021-10-08"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DavidKutu assignee:joyceerhl assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
   },
   {
     "kind": 1,
@@ -293,6 +293,16 @@
     "kind": 2,
     "language": "github-issues",
     "value": "// Unfortunately, the github issues notebook doesn't currently support adding macros to the comma separated entries (like $ADMIN_AREAS), so just copy/paste them from above.\r\n\r\n$JUPYTER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Info-Needed bugs"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:info-needed"
   },
   {
     "kind": 1,
