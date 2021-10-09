@@ -252,12 +252,47 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "---\r\n## Bugs not assigned to any area"
+    "value": "---\r\n## Housekeeping"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Bugs not assigned to any area"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage"
+    "value": "$JUPYTER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Bugs"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:bug\r\n$JUPYTER_INTERNAL_REPO is:open is:issue label:bug\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:bug"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Enhancements"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:enhancement\r\n$JUPYTER_INTERNAL_REPO is:open is:issue label:enhancement\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:enhancement"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Neither a bug or enhancement"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "// Unfortunately, the github issues notebook doesn't currently support adding macros to the comma separated entries, so just copy/paste them from above.\r\n\r\n$JUPYTER_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:enhancement,bug,$ADMIN_AREAS"
   },
   {
     "kind": 1,
