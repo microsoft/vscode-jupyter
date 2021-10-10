@@ -272,7 +272,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue label:bug\r\n$JUPYTER_INTERNAL_REPO is:open is:issue label:bug\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:bug"
+    "value": "$JUPYTER_REPO is:open is:issue label:bug\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue label:bug\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:bug"
   },
   {
     "kind": 1,
@@ -283,6 +283,16 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$JUPYTER_REPO is:open is:issue label:enhancement\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue label:enhancement\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:enhancement"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Engineering Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:code-health\r\n$JUPYTER_REPO is:open is:issue label:engineering"
   },
   {
     "kind": 1,
