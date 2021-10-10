@@ -47,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
+    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
   },
   {
     "kind": 1,
@@ -257,7 +257,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### In general\r\nThe success of any housekeeping activity depends on the following, so regularly review!\r\n- $JUPYTER_FEATURE_AREAS is accurate and colors are set correctly (traditionally colored #c5def5)\r\n- $VSCODE_FEATURE_AREAS is accurate (traditionally colored #c5def5)\r\n- $BASE_CATEGORIES is accurate.\r\n"
+    "value": "### In general\r\nThe success of any housekeeping activity depends on the following, so regularly review!\r\n- $JUPYTER_FEATURE_AREAS is accurate and colors are set correctly (traditionally colored #c5def5)\r\n- $VSCODE_FEATURE_AREAS is accurate (traditionally colored #c5def5)\r\n- $BASE_CATEGORIES is accurate (traditionally colored #)\r\n"
   },
   {
     "kind": 2,
@@ -303,6 +303,16 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation label:housekeeping-review -label:needs-triage\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Debt Housekeeping Review\r\nSame as Feature Area, but applies to debt items."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt -label:housekeeping-review -label:needs-triage"
   },
   {
     "kind": 1,
