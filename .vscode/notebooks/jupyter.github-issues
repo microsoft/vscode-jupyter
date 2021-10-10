@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-10-08"
+    "value": "$TODAYS_DATE=2021-10-10"
   },
   {
     "kind": 1,
@@ -47,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_FEATURE_AREAS=3rd-party-extension,azureml,cell-magics,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n$ADMIN_AREAS=endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan,marketing"
+    "value": "$JUPYTER_FEATURE_AREAS=3rd-party-extension,azureml,cell-magics,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n$ADMIN_AREAS=endgame-plan,engineering,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing"
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION -label:$ADMIN_AREAS sort:created-asc "
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION -label:$ADMIN_AREAS sort:author-date"
   },
   {
     "kind": 1,
@@ -272,7 +272,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue label:bug\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue label:bug\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:bug"
+    "value": "$JUPYTER_REPO is:open is:issue label:bug\r\n$JUPYTER_INTERNAL_REPO is:open is:issue label:bug\r\n$JUPYTER_DATA_WRANGLER_REPO is:open is:issue label:bug"
   },
   {
     "kind": 1,
@@ -292,7 +292,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// Unfortunately, the github issues notebook doesn't currently support adding macros to the comma separated entries (like $ADMIN_AREAS), so just copy/paste them from above.\r\n\r\n$JUPYTER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:enhancement,bug,documentation,needs-triage,endgame-plan,engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
+    "value": "$JUPYTER_REPO is:open is:issue -label:bug -label:enhancement -label:documentation -label:$ADMIN_AREAS\r\n//$JUPYTER_INTERNAL_REPO is:open is:issue -label:bug -label:enhancement -label:documentation -label:$ADMIN_AREAS\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:bug -label:enhancement -label:documentation -label:$ADMIN_AREAS"
   },
   {
     "kind": 1,
