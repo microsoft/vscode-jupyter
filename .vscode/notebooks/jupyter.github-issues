@@ -262,7 +262,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// Set this to limit which repo you're actively working on.\r\n$HOUSEKEEPING_REPO=$JUPYTER_REPO"
+    "value": "// Set this to limit which repo you're actively working on.\r\n$HOUSEKEEPING_REPO=$JUPYTER_REPO\r\n//$HOUSEKEEPING_REPO=$JUPYTER_INTERNAL_REPO\r\n//$HOUSEKEEPING_REPO=$JUPYTER_DATA_WRANGLER_REPO"
   },
   {
     "kind": 1,
