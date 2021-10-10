@@ -257,7 +257,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### In general\r\nThe success of any housekeeping activity depends on the following, so regularly review!\r\n- $JUPYTER_FEATURE_AREAS is accurate and colors are set correctly (traditionally colored #c5def5)\r\n- $VSCODE_FEATURE_AREAS is accurate (traditionally colored #c5def5)\r\n- $BASE_CATEGORIES is accurate (traditionally colored #)\r\n"
+    "value": "### In general\r\nThe success of any housekeeping activity depends on the following, so regularly review!\r\n- $JUPYTER_FEATURE_AREAS is accurate and colors are set correctly (traditionally colored #c5def5)\r\n- $VSCODE_FEATURE_AREAS is accurate (traditionally colored #c5def5)\r\n- $BASE_CATEGORIES is accurate (Colored #000000)\r\n"
   },
   {
     "kind": 2,
