@@ -312,7 +312,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt -label:housekeeping-review -label:needs-triage"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt label:housekeeping-review -label:needs-triage"
   },
   {
     "kind": 1,
