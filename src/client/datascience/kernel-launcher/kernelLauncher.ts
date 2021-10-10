@@ -14,7 +14,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -49,7 +49,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
     ) {}
 
     public static async cleanupStartPort() {
@@ -134,7 +135,8 @@ export class KernelLauncher implements IKernelLauncher {
             this.fs,
             resource,
             this.extensionChecker,
-            this.kernelEnvVarsService
+            this.kernelEnvVarsService,
+            this.pythonExecFactory
         );
         await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 

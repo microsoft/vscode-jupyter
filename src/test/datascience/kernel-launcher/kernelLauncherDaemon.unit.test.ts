@@ -2,8 +2,12 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
-import { IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult } from '../../../client/common/process/types';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import {
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    ObservableExecutionResult
+} from '../../../client/common/process/types';
 import { ReadWrite } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from '../../../client/datascience/kernel-launcher/kernelEnvVarsService';
@@ -20,6 +24,8 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     let interpreter: PythonEnvironment;
     let kernelSpec: ReadWrite<IJupyterKernelSpec>;
     let kernelDaemon: IPythonKernelDaemon;
+    let pythonExecService: IPythonExecutionService;
+    let execFactory: IPythonExecutionFactory;
     let observableOutputForDaemon: ObservableExecutionResult<string>;
     setup(() => {
         kernelSpec = {
@@ -31,18 +37,23 @@ suite('DataScience - Kernel Launcher Daemon', () => {
             path: ''
         };
         interpreter = createPythonInterpreter();
-        const execFactory = mock<IPythonExecutionFactory>()
+        execFactory = mock<IPythonExecutionFactory>();
         daemonPool = mock(KernelDaemonPool);
         observableOutputForDaemon = mock<ObservableExecutionResult<string>>();
         kernelDaemon = mock<IPythonKernelDaemon>();
+        pythonExecService = mock<IPythonExecutionService>();
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(kernelDaemon) as any).then = undefined;
+        (instance(pythonExecService) as any).then = undefined;
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(observableOutputForDaemon) as any).then = undefined;
-
+        when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(kernelDaemon));
         when(observableOutputForDaemon.proc).thenResolve({} as any);
         when(kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
+            instance(observableOutputForDaemon)
+        );
+        when(pythonExecService.execObservable(anything(), anything())).thenReturn(
             instance(observableOutputForDaemon)
         );
         launcher = new PythonKernelLauncherDaemon(
@@ -51,11 +62,12 @@ suite('DataScience - Kernel Launcher Daemon', () => {
             instance(mock<KernelEnvironmentVariablesService>())
         );
     });
-    test('Does not support launching kernels if there is no -m in argv', async () => {
-        kernelSpec.argv = ['wow'];
-        const promise = launcher.launch(undefined, '', kernelSpec, interpreter);
+    test('Supports launching kernels if there is no -m in argv', async () => {
+        kernelSpec.argv = ['exec', 'wow'];
+        const obs = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
-        await assert.isRejected(promise, /^Unsupported KernelSpec file. args must be/g);
+        await assert.isObject(obs);
+        verify(pythonExecService.execObservable(deepEqual(['wow']), anything())).once();
     });
     test('Creates and returns a daemon', async () => {
         const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);

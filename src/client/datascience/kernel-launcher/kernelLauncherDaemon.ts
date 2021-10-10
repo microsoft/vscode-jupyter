@@ -79,7 +79,6 @@ export class PythonKernelLauncherDaemon implements IDisposable {
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
-
             return { observableOutput, daemon: undefined };
         }
 
