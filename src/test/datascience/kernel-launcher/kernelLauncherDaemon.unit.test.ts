@@ -53,9 +53,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         when(kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
             instance(observableOutputForDaemon)
         );
-        when(pythonExecService.execObservable(anything(), anything())).thenReturn(
-            instance(observableOutputForDaemon)
-        );
+        when(pythonExecService.execObservable(anything(), anything())).thenReturn(instance(observableOutputForDaemon));
         launcher = new PythonKernelLauncherDaemon(
             instance(daemonPool),
             instance(execFactory),
