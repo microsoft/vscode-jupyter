@@ -297,6 +297,16 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "### Feature Area Housekeeping Review Instructions\r\nOnce the above queries are clean, the ```housekeeping-review``` label will be added to every bug, enhancement or documentation issue. We will assign all such issues in bulk to a teammember. It's that teammember's job to review each issue assigned to them to make sure it's still valid. Once reviewed, the ```housekeeping-review``` label is removed."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation label:housekeeping-review -label:needs-triage\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "### All Open Bugs\r\n\r\nJust an informational query. Nothing needs to be driven here. "
   },
   {
