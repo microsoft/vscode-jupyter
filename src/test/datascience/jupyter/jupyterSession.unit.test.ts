@@ -12,7 +12,7 @@ import {
 } from '@jupyterlab/services';
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import { SessionConnection } from '@jupyterlab/services/lib/session/default';
-import { ISignal } from '@lumino/commands/node_modules/@lumino/signaling';
+import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
