@@ -676,7 +676,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || notebookType == interactive && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openOutlineView",
@@ -684,7 +684,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openOutlineView.shorttitle%",
                 "icon": "$(list-unordered)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && !view.outline.visible"
+                "enablement": "notebookType == jupyter-notebook"
             },
             {
                 "command": "jupyter.refreshDataViewer",
