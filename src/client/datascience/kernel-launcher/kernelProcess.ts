@@ -171,7 +171,8 @@ export class KernelProcess implements IKernelProcess {
         try {
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             await Promise.race([
-                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
+                // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
+                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 deferred.promise,
                 createPromiseFromCancellation({
                     token: cancelToken,
