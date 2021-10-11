@@ -16,10 +16,12 @@ import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initia
 import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
+    defaultNotebookTestTimeout,
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
 
-suite('Interactive window', async () => {
+suite('Interactive window', async function () {
+    this.timeout(60_000);
     let api: IExtensionTestApi;
     let interactiveWindowProvider: InteractiveWindowProvider;
 
@@ -77,6 +79,68 @@ suite('Interactive window', async () => {
         assertHasTextOutputInVSCode(secondCell!, '42');
     });
 
+    test('__file__ exists even after restarting a kernel', async () => {
+        const source = 'print(__file__)';
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(source);
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        )!;
+        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
+            INotebookControllerManager
+        );
+
+        // Ensure we picked up the active interpreter for use as the kernel
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+
+        // Give it a bit to warm up
+        await sleep(500);
+
+        const controller = notebookDocument
+            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
+            : undefined;
+        const activeInterpreter = await pythonApi.getActiveInterpreter();
+        assert.equal(
+            controller?.connection.interpreter?.path,
+            activeInterpreter?.path,
+            `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
+        );
+
+        async function verifyCells() {
+            // Verify sys info cell
+            const firstCell = notebookDocument.cellAt(0);
+            assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+            assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
+
+            // Verify executed cell input and output
+            const secondCell = notebookDocument.cellAt(1);
+            const actualSource = secondCell.document.getText();
+            assert.equal(actualSource, source, `Executed cell has unexpected source code`);
+            await waitForExecutionCompletedSuccessfully(secondCell!);
+        }
+
+        await verifyCells();
+
+        // CLear all cells
+        await vscode.commands.executeCommand('jupyter.interactive.clearAllCells');
+        await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
+
+        // Restart kernel
+        await vscode.commands.executeCommand('jupyter.restartkernel');
+        // Wait for first cell to get output.
+        await waitForCondition(
+            async () => notebookDocument.cellCount > 0,
+            defaultNotebookTestTimeout,
+            'Kernel info not printed'
+        );
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+        await waitForCondition(
+            async () => notebookDocument.cellCount > 1,
+            defaultNotebookTestTimeout,
+            'Code not executed'
+        );
+
+        await verifyCells();
+    });
     test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
