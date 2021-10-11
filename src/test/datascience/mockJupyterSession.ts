@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils/lib/json';
+import { JSONObject } from '@lumino/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -431,7 +432,8 @@ export function findPreferredKernel(
                 !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                     ? PYTHON_LANGUAGE
                     : (
-                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                          ((notebookMetadata?.kernelspec as any)?.language as string) ||
+                          notebookMetadata?.language_info?.name
                       )?.toLowerCase();
         }
         let bestScore = -1;
@@ -545,12 +547,12 @@ export function findPreferredKernel(
                 if (
                     typeof notebookMetadata === 'object' &&
                     'interpreter' in notebookMetadata &&
-                    notebookMetadata.interpreter &&
-                    typeof notebookMetadata.interpreter === 'object' &&
-                    'hash' in notebookMetadata.interpreter &&
+                    (notebookMetadata as any).interpreter &&
+                    typeof (notebookMetadata as any).interpreter === 'object' &&
+                    'hash' in (notebookMetadata as any).interpreter &&
                     (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
+                    getInterpreterHash(metadata.interpreter) === (notebookMetadata as any).interpreter.hash
                 ) {
                     // This is a perfect match.
                     traceInfoIfCI('Increased score by +100 for matching interpreter in notbeook metadata');
@@ -662,11 +664,13 @@ export function findPreferredKernel(
                     if (
                         typeof notebookMetadata === 'object' &&
                         'interpreter' in notebookMetadata &&
-                        notebookMetadata.interpreter &&
-                        typeof notebookMetadata.interpreter === 'object' &&
+                        (notebookMetadata as any).interpreter &&
+                        typeof (notebookMetadata as any).interpreter === 'object' &&
                         metadata.kind === 'startUsingPythonInterpreter'
                     ) {
-                        const nbMetadataInterpreter = notebookMetadata.interpreter as Partial<PythonEnvironment>;
+                        const nbMetadataInterpreter = (notebookMetadata as any).interpreter as Partial<
+                            PythonEnvironment
+                        >;
                         if (
                             nbMetadataInterpreter.version?.raw &&
                             nbMetadataInterpreter.version?.raw === metadata.interpreter.version?.raw

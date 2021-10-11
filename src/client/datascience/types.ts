@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
 import {

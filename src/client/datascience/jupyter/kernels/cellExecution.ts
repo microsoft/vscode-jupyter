@@ -568,12 +568,12 @@ export class CellExecution implements IDisposable {
     }
 
     private addToCellData(
-        output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError,
+        output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError | nbformat.IOutput,
         clearState: RefBool
     ) {
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
-            output.transient &&
+            'transient' in output &&
             typeof output.transient === 'object' &&
             'display_id' in output.transient &&
             typeof output.transient?.display_id === 'string'
@@ -781,7 +781,7 @@ export class CellExecution implements IDisposable {
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
-        const output: nbformat.IDisplayData = {
+        const output = {
             output_type: 'display_data',
             data: handleTensorBoardDisplayDataOutput(msg.content.data),
             metadata: msg.content.metadata,
@@ -851,7 +851,7 @@ export class CellExecution implements IDisposable {
             ...output,
             data: msg.content.data,
             metadata: msg.content.metadata
-        });
+        } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
             return;

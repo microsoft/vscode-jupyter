@@ -69,7 +69,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         }
         const nbCell = createJupyterCellFromVSCNotebookCell(cell);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outputs: nbformat.IOutput[] = nbCell.outputs as any;
+        const outputs: nbformat.IOutput[] = (nbCell as any).outputs as any;
         if (!Array.isArray(outputs)) {
             return [];
         }

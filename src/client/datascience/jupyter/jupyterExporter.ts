@@ -70,12 +70,16 @@ export class JupyterExporter implements INotebookExporter {
                             await this.ipynbProvider.open(Uri.file(file));
                         }
                     } catch (e) {
-                        await this.errorHandler.handleError(e);
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        await this.errorHandler.handleError(e as any);
                     }
                 });
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            void this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            void this.applicationShell.showInformationMessage(
+                localize.DataScience.exportDialogFailed().format(exc as any)
+            );
         }
     }
     public async translateToNotebook(
@@ -91,7 +95,7 @@ export class JupyterExporter implements INotebookExporter {
         const pythonNumber = await this.extractPythonMainVersion();
 
         // Use this to build our metadata object
-        const metadata: nbformat.INotebookMetadata = {
+        const metadata = {
             language_info: {
                 codemirror_mode: {
                     name: 'ipython',
