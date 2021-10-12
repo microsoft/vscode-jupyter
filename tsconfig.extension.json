@@ -15,6 +15,7 @@
         "rootDir": "src",
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
+        "useUnknownInCatchVariables": false,
         "noImplicitThis": false
     },
     "exclude": [

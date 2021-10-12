@@ -18,6 +18,7 @@
         "noImplicitThis": false,
         "noUnusedLocals": true,
         "noUnusedParameters": false,
+        "useUnknownInCatchVariables": false,
         "strict": true
     },
     "exclude": [".vscode-test", ".vscode test", "src/test", "src/server", "src/client", "build"]
