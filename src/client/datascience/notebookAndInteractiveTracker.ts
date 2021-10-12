@@ -38,10 +38,10 @@ export class NotebookCreationTracker implements INotebookCreationTracker {
     private kernelStarted(kernel: IKernel) {
         const language = getKernelConnectionLanguage(kernel.kernelConnectionMetadata);
 
-        this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
+        void this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
 
         if (language === PYTHON_LANGUAGE) {
-            this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
+            void this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
         }
     }
 }
