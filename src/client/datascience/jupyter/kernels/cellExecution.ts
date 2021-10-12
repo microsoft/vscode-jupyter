@@ -575,6 +575,7 @@ export class CellExecution implements IDisposable {
         const displayId =
             'transient' in output &&
             typeof output.transient === 'object' &&
+            output.transient &&
             'display_id' in output.transient &&
             typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id

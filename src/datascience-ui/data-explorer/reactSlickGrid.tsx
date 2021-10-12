@@ -708,7 +708,7 @@ function readonlyCellEditor(this: any, args: any) {
         return $input.val();
     };
 
-    function handleKeyDown(this: any, e: JQueryKeyEventObject) {
+    function handleKeyDown(this: any, e: KeyboardEvent) {
         var cursorPosition = this.selectionStart;
         var textLength = this.value.length;
         // In the original SlickGrid TextEditor this references
