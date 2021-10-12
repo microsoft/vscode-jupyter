@@ -72,7 +72,7 @@ export class DebuggerVariables extends DebugLocationTracker
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         // Listen to notebook events if we haven't already
         if (kernel) {
-            this.watchNotebook(kernel);
+            this.watchKernel(kernel);
         }
 
         const result: IJupyterVariablesResponse = {
@@ -143,7 +143,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
         // Listen to notebook events if we haven't already
         if (kernel) {
-            this.watchNotebook(kernel);
+            this.watchKernel(kernel);
         }
 
         // See if we imported or not into the kernel our special function
@@ -195,7 +195,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
         // Listen to notebook events if we haven't already
         if (kernel) {
-            this.watchNotebook(kernel);
+            this.watchKernel(kernel);
         }
 
         let expression = targetVariable.name;
@@ -278,7 +278,7 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
-    private watchNotebook(kernel: IKernel) {
+    private watchKernel(kernel: IKernel) {
         const key = kernel.notebookDocument.uri.toString();
         if (!this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
