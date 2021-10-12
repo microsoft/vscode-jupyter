@@ -305,7 +305,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error(localize.DataScience.passwordFailure());
             }
         } else {
-            serverSettings = { ...serverSettings, token: connInfo.token };
+            serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
         }
 
         const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;

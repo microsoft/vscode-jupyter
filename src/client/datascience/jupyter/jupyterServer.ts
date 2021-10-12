@@ -146,7 +146,14 @@ export class JupyterServerBase implements INotebookServer {
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
             return notebook;
         } catch (ex) {
-            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime, undefined, ex);
+            sendKernelTelemetryEvent(
+                resource,
+                Telemetry.JupyterCreatingNotebook,
+                stopWatch.elapsedTime,
+                undefined,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any
+            );
             throw ex;
         }
     }
