@@ -126,7 +126,7 @@ export class RawSession implements ISessionWithSocket {
         };
         this.statusChanged.connect(handler);
         if (this.status == 'idle') {
-            deferred.resolve(this.connectionStatus);
+            deferred.resolve(this.status);
         }
 
         const result = await Promise.race([deferred.promise, sleep(30_000)]);
