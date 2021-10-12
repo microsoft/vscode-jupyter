@@ -76,8 +76,8 @@ export class JupyterExporter implements INotebookExporter {
                 });
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             void this.applicationShell.showInformationMessage(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 localize.DataScience.exportDialogFailed().format(exc as any)
             );
         }
