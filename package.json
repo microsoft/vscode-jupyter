@@ -1908,7 +1908,6 @@
         "@enonic/fnv-plus": "^1.3.0",
         "@fluentui/react": "^7.160.1",
         "@jupyter-widgets/base": "^4.0.0",
-        "@jupyter-widgets/jupyterlab-manager": "^3.0.1",
         "@jupyter-widgets/schema": "^0.4.0",
         "@jupyterlab/coreutils": "^5.1.17",
         "@jupyterlab/nbformat": "^3.1.17",

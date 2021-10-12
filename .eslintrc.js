@@ -729,7 +729,8 @@ module.exports = {
         'src/client/workspaceSymbols/contracts.ts',
         'src/client/workspaceSymbols/generator.ts',
         'src/client/workspaceSymbols/parser.ts',
-        'src/client/workspaceSymbols/provider.ts'
+        'src/client/workspaceSymbols/provider.ts',
+        'src/ipywidgets/**/*'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
