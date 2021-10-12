@@ -224,7 +224,6 @@ module.exports = {
         'src/test/workspaceSymbols/generator.unit.test.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-ai-tools-test/src/serverPicker.ts',
         'src/ipywidgets/types/require.js.d.ts',
-        'src/ipywidgets/webpack.config.js',
         'src/ipywidgets/scripts/copyfiles.js',
         'src/ipywidgets/scripts/clean.js',
         'src/ipywidgets/src/widgetLoader.ts',
