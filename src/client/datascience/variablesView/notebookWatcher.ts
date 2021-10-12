@@ -65,7 +65,7 @@ export class NotebookWatcher implements INotebookWatcher {
         }
         const activeDataViewer = this.dataViewerFactory.activeViewer;
         return activeDataViewer
-            ? this.kernelProvider.kernels.find((item) => item.notebook === activeDataViewer.kernel)
+            ? this.kernelProvider.kernels.find((item) => item === activeDataViewer.kernel)
             : undefined;
     }
 

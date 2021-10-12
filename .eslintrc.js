@@ -671,7 +671,6 @@ module.exports = {
         'src/client/application/diagnostics/commands/types.ts',
         'src/client/application/diagnostics/commands/launchBrowser.ts',
         'src/client/application/misc/joinMailingListPrompt.ts',
-        'src/client/datascience/data-viewing/jupyterVariableDataProviderFactory.ts',
         'src/client/datascience/data-viewing/dataViewerMessageListener.ts',
         'src/client/datascience/progress/progressReporter.ts',
         'src/client/datascience/progress/messages.ts',
