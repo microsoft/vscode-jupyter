@@ -338,13 +338,13 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     deferred.resolve(status);
                 }
             };
-            session.kernel.statusChanged.connect(handler);
+            session.kernel.statusChanged?.connect(handler);
             if (session.kernel.status == 'idle') {
                 deferred.resolve(session.kernel.status);
             }
 
             const result = await Promise.race([deferred.promise, sleep(timeout)]);
-            session.kernel.statusChanged.disconnect(handler);
+            session.kernel.statusChanged?.disconnect(handler);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
             if (result.toString() == 'idle') {
