@@ -4,18 +4,21 @@
 'use strict';
 
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { IDisposable } from '../../client/common/types';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
-import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
+    closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
@@ -23,6 +26,7 @@ import {
 suite('Interactive window', async function () {
     this.timeout(60_000);
     let api: IExtensionTestApi;
+    const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
 
     setup(async function () {
@@ -37,7 +41,8 @@ suite('Interactive window', async function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
         }
-        await closeActiveWindows();
+        sinon.restore();
+        await closeNotebooksAndCleanUpAfterTests(disposables);
     });
 
     test('Execute cell from Python file', async () => {
@@ -80,6 +85,9 @@ suite('Interactive window', async function () {
     });
 
     test('__file__ exists even after restarting a kernel', async () => {
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        disposables.push(await clickOKForRestartPrompt());
+
         const source = 'print(__file__)';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(source);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
