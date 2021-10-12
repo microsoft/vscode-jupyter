@@ -29,7 +29,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     let observableOutputForDaemon: ObservableExecutionResult<string>;
     setup(() => {
         kernelSpec = {
-            argv: ['python', '-m', 'ipkernel_launcher', '-f', 'file.json'],
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', 'file.json'],
             display_name: '',
             env: { hello: '1' },
             language: 'python',
@@ -50,7 +50,10 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(kernelDaemon));
         when(observableOutputForDaemon.proc).thenResolve({} as any);
-        when(kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
+        when(kernelDaemon.start('ipykernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
+            instance(observableOutputForDaemon)
+        );
+        when(kernelDaemon.start('ipykernel', deepEqual(['-f', 'file.json']), anything())).thenResolve(
             instance(observableOutputForDaemon)
         );
         when(pythonExecService.execObservable(anything(), anything())).thenReturn(instance(observableOutputForDaemon));
@@ -67,6 +70,13 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         await assert.isObject(obs);
         verify(pythonExecService.execObservable(deepEqual(['wow']), anything())).once();
     });
+    test('Supports launching non ipykernel kernels', async () => {
+        kernelSpec.argv = ['python', '-m', 'ansible'];
+        const obs = await launcher.launch(undefined, '', kernelSpec, interpreter);
+
+        await assert.isObject(obs);
+        verify(pythonExecService.execObservable(deepEqual(['-m', 'ansible']), anything())).once();
+    });
     test('Creates and returns a daemon', async () => {
         const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
@@ -80,7 +90,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     test('If our daemon pool returns an execution service, then use it and return the daemon as undefined', async () => {
         const executionService = mock<IPythonExecutionService>();
         when(
-            executionService.execModuleObservable('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())
+            executionService.execModuleObservable('ipykernel_launcher', deepEqual(['-f', 'file.json']), anything())
         ).thenReturn(instance(observableOutputForDaemon));
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(executionService) as any).then = undefined;
