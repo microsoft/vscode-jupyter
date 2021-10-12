@@ -61,7 +61,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         const isRegularIPyKernel =
             moduleName && ['ipykernel', 'ipykernel_launcher'].includes((moduleName || '').toLowerCase());
 
-        if (!isRegularIPyKernel) {
+        if (!isRegularIPyKernel || !moduleName) {
             // If we don't have a module in kernelspec argv such as `[python, -m, ipykernel]`
             // Then just launch the python kernel as a regular python executable without the daemon.
             // Possible we're running regular code such as `python xyz.py` or `python -m abc` (ansible, or other kernels)
