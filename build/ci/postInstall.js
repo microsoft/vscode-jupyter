@@ -8,6 +8,39 @@ const path = require('path');
 const constants = require('../constants');
 const child_process = require('child_process');
 
+
+/**
+ * Phosphor has types copied from the dom.d.ts files (found in typescript).
+ * Some of the types have been deleted, hence things won't work.
+ */
+ function fixPhosphorVDOMDTSFiles() {
+    var relativePath = path.join(
+        'node_modules',
+        '@phosphor',
+        'virtualdom',
+        'lib',
+        'index.d.ts'
+    );
+    var filePath = path.join(constants.ExtensionRootDir, relativePath);
+    if (!fs.existsSync(filePath)) {
+        throw new Error("Type Definition file from @phosphor/virtualdom not found '" + filePath + "' (pvsc post install script)");
+    }
+    var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
+    if (fileContents.indexOf('onended: any;') > 0) {
+        // tslint:disable-next-line:no-console
+        console.log(colors.blue(relativePath + ' file already updated (by Jupyter VSC)'));
+        return;
+    }
+    var replacedText = fileContents.replace('onended: MediaStreamErrorEvent;', 'onended: any;');
+    if (fileContents === replacedText) {
+        throw new Error("Fix for @phosphor/virtualdom file 'index.d.ts' failed (pvsc post install script)");
+    }
+    fs.writeFileSync(filePath, replacedText);
+    // tslint:disable-next-line:no-console
+    console.log(colors.green(relativePath + ' file updated (by Jupyter VSC)'));
+}
+
+
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
  * However it expects to be talking to a websocket which is serializing the messages to strings.
@@ -74,7 +107,6 @@ function makeVariableExplorerAlwaysSorted() {
     }
 }
 
-(async () => {
-    makeVariableExplorerAlwaysSorted();
-    createJupyterKernelWithoutSerialization();
-})().catch((ex) => console.error('Encountered error while running postInstall step', ex));
+makeVariableExplorerAlwaysSorted();
+createJupyterKernelWithoutSerialization();
+fixPhosphorVDOMDTSFiles();

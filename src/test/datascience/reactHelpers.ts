@@ -60,6 +60,9 @@ import { noop } from '../../client/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
+    public getContextAttributes(): CanvasRenderingContext2DSettings {
+        throw new Error('Method not implemented.');
+    }
     public restore(): void {
         throw new Error('Method not implemented.');
     }
