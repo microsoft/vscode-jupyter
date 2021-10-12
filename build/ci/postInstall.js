@@ -8,22 +8,17 @@ const path = require('path');
 const constants = require('../constants');
 const child_process = require('child_process');
 
-
 /**
  * Phosphor has types copied from the dom.d.ts files (found in typescript).
  * Some of the types have been deleted, hence things won't work.
  */
- function fixPhosphorVDOMDTSFiles() {
-    var relativePath = path.join(
-        'node_modules',
-        '@phosphor',
-        'virtualdom',
-        'lib',
-        'index.d.ts'
-    );
+function fixPhosphorVDOMDTSFiles() {
+    var relativePath = path.join('node_modules', '@phosphor', 'virtualdom', 'lib', 'index.d.ts');
     var filePath = path.join(constants.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
-        throw new Error("Type Definition file from @phosphor/virtualdom not found '" + filePath + "' (pvsc post install script)");
+        throw new Error(
+            "Type Definition file from @phosphor/virtualdom not found '" + filePath + "' (pvsc post install script)"
+        );
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     if (fileContents.indexOf('onended: any;') > 0) {
@@ -39,7 +34,6 @@ const child_process = require('child_process');
     // tslint:disable-next-line:no-console
     console.log(colors.green(relativePath + ' file updated (by Jupyter VSC)'));
 }
-
 
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
