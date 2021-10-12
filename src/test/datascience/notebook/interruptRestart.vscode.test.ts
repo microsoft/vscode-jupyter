@@ -9,7 +9,6 @@ import { commands, NotebookCellExecutionState, NotebookEditor as VSCNotebookEdit
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
@@ -34,7 +33,8 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForQueuedForExecution,
     runCell,
-    waitForOutputs
+    waitForOutputs,
+    clickOKForRestartPrompt
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
@@ -116,19 +116,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cellAt(0);
         // Ensure we click `Yes` when prompted to restart the kernel.
-        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const showInformationMessage = sinon
-            .stub(appShell, 'showInformationMessage')
-            .callsFake(function (message: string) {
-                traceInfo(`Step 2. ShowInformationMessage ${message}`);
-                if (message === DataScience.restartKernelMessage()) {
-                    traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
-                    // User clicked ok to restart it.
-                    return DataScience.restartKernelMessageYes();
-                }
-                return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
-            });
-        disposables.push({ dispose: () => showInformationMessage.restore() });
+        disposables.push(await clickOKForRestartPrompt());
 
         traceInfo(`Step 4. Before execute`);
         traceInfo(`Step 5. After execute`);
@@ -172,21 +160,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // KERNELPUSH
         //await vscEditor.kernel!.interrupt!(vscEditor.document);
     });
-    function swallowRestartPrompt() {
-        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const showInformationMessage = sinon
-            .stub(appShell, 'showInformationMessage')
-            .callsFake(function (message: string) {
-                traceInfo(`Step 2. ShowInformationMessage ${message}`);
-                if (message === DataScience.restartKernelMessage()) {
-                    traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
-                    // User clicked ok to restart it.
-                    return DataScience.restartKernelMessageYes();
-                }
-                return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
-            });
-        disposables.push({ dispose: () => showInformationMessage.restore() });
-    }
     test('Restarting kernel during run all will skip the rest of the cells', async function () {
         // Restart event is not firing.
         // https://github.com/microsoft/vscode-jupyter/issues/7582
@@ -197,7 +170,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // await insertCodeCell('print(3)', { index: 2 });
         // const cell = vscEditor.document.cellAt(1);
         // // Ensure we click `Yes` when prompted to restart the kernel.
-        // swallowRestartPrompt();
+        // await clickOKForRestartPrompt();
         // traceInfo(`Step 4. Before execute`);
         // traceInfo(`Step 5. After execute`);
         // await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '2', 0, false)]);
@@ -355,7 +328,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         const [cell1, cell2] = vscEditor.document.getCells();
         // Ensure we click `Yes` when prompted to restart the kernel.
-        swallowRestartPrompt();
+        disposables.push(await clickOKForRestartPrompt());
 
         // Confirm 1 completes, 2 is in progress & 3 is queued.
         await Promise.all([

@@ -58,6 +58,7 @@ import { JupyterServer } from '../jupyterServer';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
+import { DataScience } from '../../../client/common/utils/localize';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -908,4 +909,20 @@ export async function getDebugSessionAndAdapter(
     assert.isOk<IKernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
 
     return { session, debugAdapter };
+}
+
+export async function clickOKForRestartPrompt() {
+    const api = await initialize();
+    // Ensure we click `Yes` when prompted to restart the kernel.
+    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    const showInformationMessage = sinon.stub(appShell, 'showInformationMessage').callsFake(function (message: string) {
+        traceInfo(`Step 2. ShowInformationMessage ${message}`);
+        if (message === DataScience.restartKernelMessage()) {
+            traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
+            // User clicked ok to restart it.
+            return DataScience.restartKernelMessageYes();
+        }
+        return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
+    });
+    return { dispose: () => showInformationMessage.restore() };
 }
