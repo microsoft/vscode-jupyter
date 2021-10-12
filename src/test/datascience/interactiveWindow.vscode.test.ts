@@ -18,6 +18,7 @@ import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
+    clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
     waitForExecutionCompletedSuccessfully
