@@ -9,7 +9,12 @@ import { IKernelConnection } from '../../client/datascience/kernel-launcher/type
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { IDisposable } from '../../client/common/types';
 import rewiremock from 'rewiremock';
-import { IProcessService, IProcessServiceFactory, ObservableExecutionResult } from '../../client/common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
@@ -25,6 +30,7 @@ import { traceInfo } from '../../client/common/logger';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;
+    let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
@@ -69,6 +75,7 @@ suite('DataScience - Kernel Process', () => {
                 on: noop
             } as any
         };
+        pythonExecFactory = mock<IPythonExecutionFactory>();
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
         when(fs.writeFile(anything(), anything())).thenResolve();
@@ -85,7 +92,8 @@ suite('DataScience - Kernel Process', () => {
             instance(fs),
             undefined,
             instance(extensionChecker),
-            instance(kernelEnvVarsService)
+            instance(kernelEnvVarsService),
+            instance(pythonExecFactory)
         );
     }
     test('Launch from kernelspec (linux)', async function () {
