@@ -17,7 +17,15 @@ import {
     hasErrorOutput,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, sleep, waitForCondition } from '../../common';
+import {
+    captureScreenShot,
+    createEventHandler,
+    getOSType,
+    IExtensionTestApi,
+    OSType,
+    sleep,
+    waitForCondition
+} from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
@@ -81,6 +89,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     });
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });

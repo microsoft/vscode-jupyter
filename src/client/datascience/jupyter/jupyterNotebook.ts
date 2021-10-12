@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
@@ -114,7 +114,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         }
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return this.session.requestKernelInfo();
     }
     public get onSessionStatusChanged(): Event<ServerStatus> {

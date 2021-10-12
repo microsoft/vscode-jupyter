@@ -54,7 +54,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -420,7 +420,7 @@ export class Kernel implements IKernel {
 
         try {
             const info = await this.notebook.requestKernelInfo();
-            this._info = info.content;
+            this._info = info?.content;
             traceInfoIfCI('Step N1');
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
             traceInfoIfCI('Step N2');

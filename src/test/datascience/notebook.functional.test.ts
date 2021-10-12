@@ -7,7 +7,7 @@ suite('Dummy9', () => {
         //
     });
 });
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert } from 'chai';
 // import { ChildProcess } from 'child_process';
 // import * as fs from 'fs-extra';

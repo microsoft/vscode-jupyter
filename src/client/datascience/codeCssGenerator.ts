@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { JSONArray, JSONObject } from '@phosphor/coreutils';
+import type { JSONArray, JSONObject } from '@lumino/coreutils';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';

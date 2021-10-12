@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { ISignal } from '@lumino/signaling';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
@@ -42,11 +43,8 @@ RawKernel class represents the mapping from the JupyterLab services IKernel inte
 to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
-export class RawKernel implements Kernel.IKernel {
+export class RawKernel implements Kernel.IKernelConnection {
     public socket: IKernelSocket & IDisposable;
-    public get terminated() {
-        return this.realKernel.terminated as any; // NOSONAR
-    }
     public get statusChanged() {
         return this.realKernel.statusChanged as any; // NOSONAR
     }
@@ -55,6 +53,12 @@ export class RawKernel implements Kernel.IKernel {
     }
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any; // NOSONAR
+    }
+    public get connectionStatusChanged() {
+        return this.realKernel.connectionStatusChanged as any; // NOSONAR
+    }
+    public get connectionStatus() {
+        return this.realKernel.connectionStatus;
     }
     public get anyMessage() {
         return this.realKernel.anyMessage as any; // NOSONAR
@@ -80,14 +84,8 @@ export class RawKernel implements Kernel.IKernel {
     public get status(): Kernel.Status {
         return this.realKernel.status;
     }
-    public get info(): KernelMessage.IInfoReply | null {
+    public get info() {
         return this.realKernel.info;
-    }
-    public get isReady(): boolean {
-        return this.realKernel.isReady;
-    }
-    public get ready(): Promise<void> {
-        return this.realKernel.ready;
     }
     public get handleComms(): boolean {
         return this.realKernel.handleComms;
@@ -96,7 +94,7 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.isDisposed;
     }
     constructor(
-        private realKernel: Kernel.IKernel,
+        private realKernel: Kernel.IKernelConnection,
         socket: IKernelSocket & IWebSocketLike & IDisposable,
         private kernelProcess: IKernelProcess
     ) {
@@ -107,13 +105,27 @@ export class RawKernel implements Kernel.IKernel {
         // Pretend like an open occurred. This will prime the real kernel to be connected
         socket.emit('open');
     }
+    public createComm(targetName: string, commId?: string): Kernel.IComm {
+        return this.realKernel.createComm(targetName, commId);
+    }
+    public hasComm(commId: string): boolean {
+        return this.realKernel.hasComm(commId);
+    }
+    public clone(
+        options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
+    ): Kernel.IKernelConnection {
+        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
+    }
+    public get disposed(): ISignal<this, void> {
+        return this.realKernel.disposed as any; // NOSONAR
+    }
 
     public async shutdown(): Promise<void> {
         suppressShutdownErrors(this.realKernel);
         await this.kernelProcess.dispose();
         this.socket.dispose();
     }
-    public async getSpec(): Promise<Kernel.ISpecModel> {
+    public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
         if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingKernelSpec') {
             const kernelSpec = cloneDeep(this.kernelProcess.kernelConnectionMetadata.kernelSpec) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
@@ -123,7 +135,7 @@ export class RawKernel implements Kernel.IKernel {
             };
         }
         traceError('Fetching kernel spec from raw kernel using JLab API');
-        return this.realKernel.getSpec();
+        return this.realKernel.spec;
     }
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         msg: KernelMessage.IShellMessage<T>,
@@ -156,7 +168,7 @@ export class RawKernel implements Kernel.IKernel {
     public restart(): Promise<void> {
         throw new Error('This method should not be called. Restart is implemented at a higher level');
     }
-    public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public requestKernelInfo() {
         return this.realKernel.requestKernelInfo();
     }
     public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
@@ -182,12 +194,12 @@ export class RawKernel implements Kernel.IKernel {
             code: string;
             silent?: boolean;
             store_history?: boolean;
-            user_expressions?: import('@phosphor/coreutils').JSONObject;
+            user_expressions?: import('@lumino/coreutils').JSONObject;
             allow_stdin?: boolean;
             stop_on_error?: boolean;
         },
         disposeOnDone?: boolean,
-        metadata?: import('@phosphor/coreutils').JSONObject
+        metadata?: import('@lumino/coreutils').JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
@@ -207,11 +219,8 @@ export class RawKernel implements Kernel.IKernel {
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
-    public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
         return this.realKernel.sendInputReply(content);
-    }
-    public connectToComm(targetName: string, commId?: string): Kernel.IComm {
-        return this.realKernel.connectToComm(targetName, commId);
     }
     public registerCommTarget(
         targetName: string,
@@ -243,7 +252,7 @@ export class RawKernel implements Kernel.IKernel {
     }
 }
 
-let nonSerializingKernel: any;
+let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
 export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
@@ -271,15 +280,16 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
         // we eliminate the serialize import from the default kernel and remap it to do nothing.
         nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
-    const realKernel = new nonSerializingKernel.DefaultKernel(
-        {
-            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata),
-            serverSettings: settings,
-            clientId,
-            handleComms: true
-        },
-        uuid()
-    );
+    const realKernel = new nonSerializingKernel.KernelConnection({
+        serverSettings: settings,
+        clientId,
+        handleComms: true,
+        username: uuid(),
+        model: {
+            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata) || 'python3',
+            id: uuid()
+        }
+    });
 
     // Use this real kernel in result.
     return new RawKernel(realKernel, socketInstance, kernelProcess);
