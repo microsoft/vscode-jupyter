@@ -173,7 +173,7 @@ export class NotebookIPyWidgetCoordinator {
         traceInfo(`Resolving notebook UI Comms (resolve) for ${document.uri.toString()}`);
         let promise = this.messageCoordinators.get(document);
         if (promise === undefined) {
-            promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
+            promise = CommonMessageCoordinator.create(document, this.serviceContainer);
             this.messageCoordinators.set(document, promise);
             this.asyncDisposableRegistry.push({
                 dispose: async () => promise?.then((item) => item.dispose()).catch(noop)

@@ -20,15 +20,15 @@ import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywi
 import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/remoteWidgetScriptSourceProvider';
-import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
+import { IJupyterConnection, ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
 suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
-    let notebook: INotebook;
+    let kernel: IKernel;
     let configService: IConfigurationService;
     let settings: IJupyterSettings;
     let appShell: IApplicationShell;
@@ -36,7 +36,6 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
     setup(() => {
-        notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
         workspaceService = mock(WorkspaceService);
@@ -49,7 +48,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         const stateFactory = mock(PersistentStateFactory);
         const factory = mock<IPythonExecutionFactory>();
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
-
+        kernel = mock<IKernel>();
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );
@@ -58,7 +57,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
-            instance(notebook),
+            instance(kernel),
             instance(resourceConverter),
             instance(fs),
             instance(interpreterService),
@@ -88,7 +87,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                     token: '',
                     rootDirectory: EXTENSION_ROOT_DIR
                 };
-                when(notebook.connection).thenReturn(connection);
+                when(kernel.connection).thenReturn(connection);
             });
             test('Prompt to use CDN', async () => {
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();

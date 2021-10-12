@@ -20,6 +20,7 @@ import type {
     IJupyterKernel,
     IJupyterKernelSpec,
     INotebook,
+    INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
@@ -121,8 +122,9 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 }
 
 export interface IKernel extends IAsyncDisposable {
+    readonly connection: INotebookProviderConnection | undefined;
     readonly notebookDocument: NotebookDocument;
-    /**
+    /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
      * However if we create an intearctive window without a file, then this is undefined.
@@ -131,6 +133,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
+    readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
     readonly onWillRestart: Event<void>;
     readonly onWillInterrupt: Event<void>;
@@ -162,6 +165,7 @@ export type KernelOptions = {
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     readonly kernels: Readonly<IKernel[]>;
+    onDidStartKernel: Event<IKernel>;
     onDidRestartKernel: Event<IKernel>;
     onDidDisposeKernel: Event<IKernel>;
     onKernelStatusChanged: Event<{ status: ServerStatus; kernel: IKernel }>;

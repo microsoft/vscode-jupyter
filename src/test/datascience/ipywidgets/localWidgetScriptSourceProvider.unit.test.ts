@@ -10,29 +10,29 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
+import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
-    let notebook: INotebook;
     let resourceConverter: ILocalResourceUriConverter;
     let fs: IFileSystem;
+    let kernel: IKernel;
     let interpreterService: IInterpreterService;
     const filesToLookSearchFor = `*${path.sep}index.js`;
     function asVSCodeUri(uri: Uri) {
         return `vscodeUri://${uri.fsPath}`;
     }
     setup(() => {
-        notebook = mock(JupyterNotebookBase);
         resourceConverter = mock<ILocalResourceUriConverter>();
         fs = mock(FileSystem);
         interpreterService = mock<IInterpreterService>();
+        kernel = mock<IKernel>();
         when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(
-            instance(notebook),
+            instance(kernel),
             instance(resourceConverter),
             instance(fs),
             instance(interpreterService),
@@ -40,16 +40,24 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         );
     });
     test('No script source when there is no kernel associated with notebook', async () => {
-        when(notebook.getKernelConnection()).thenReturn();
+        when(kernel.kernelConnectionMetadata).thenReturn();
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
         assert.deepEqual(value, { moduleName: 'ModuleName' });
     });
     test('No script source when there are no widgets', async () => {
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
@@ -63,9 +71,17 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
 
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix, path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
@@ -81,9 +97,11 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(interpreterService.getInterpreterDetails(kernelPath)).thenResolve({ sysPrefix } as any);
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
 
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { path: kernelPath, language: PYTHON_LANGUAGE }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: { name: '', display_name: '', argv: [], path: kernelPath, language: PYTHON_LANGUAGE },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
@@ -94,9 +112,17 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
     });
     test('Ensure we cache the list of widgets source (when nothing is found)', async () => {
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
@@ -112,9 +138,17 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     test('Ensure we search directory only once (cache results)', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix, path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',
@@ -139,9 +173,17 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     test('Get source for a specific widget & search in the right place', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix, path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',
@@ -164,9 +206,17 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     test('Return empty source for widgets that cannot be found', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(notebook.getKernelConnection()).thenReturn({
-            kernelSpec: { metadata: { interpreter: { sysPrefix, path: 'pythonPath' } } }
-        } as any);
+        when(kernel.kernelConnectionMetadata).thenReturn({
+            kernelSpec: {
+                name: '',
+                path: '',
+                display_name: '',
+                argv: [],
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
+            },
+            id: '',
+            kind: 'startUsingKernelSpec'
+        });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',

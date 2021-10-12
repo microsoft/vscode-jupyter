@@ -4,9 +4,7 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
-import { Resource } from '../../client/common/types';
-import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
@@ -28,9 +26,6 @@ export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
         return this.providerConnection;
     }
-    public get identity(): Uri {
-        return getDefaultInteractiveIdentity();
-    }
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -45,9 +40,6 @@ export class MockJupyterNotebook implements INotebook {
         throw new Error('Method not implemented');
     }
 
-    public get resource(): Resource {
-        return Uri.file('foo.py');
-    }
     public get onKernelInterrupted(): Event<void> {
         return this.kernelInterrupted.event;
     }

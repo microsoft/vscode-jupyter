@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
 import { IConfigurationService, IExperimentService } from '../../common/types';
@@ -12,10 +12,10 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    IKernelVariableRequester,
-    INotebook
+    IKernelVariableRequester
 } from '../types';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
+import { IKernel } from './kernels/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -46,7 +46,7 @@ interface INotebookState {
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
-    private notebookState = new Map<Uri, INotebookState>();
+    private notebookState = new WeakMap<NotebookDocument, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
     private enhancedTooltipsExperimentPromise: boolean | undefined;
 
@@ -65,30 +65,27 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
-    public async getVariables(
-        request: IJupyterVariablesRequest,
-        notebook: INotebook
-    ): Promise<IJupyterVariablesResponse> {
+    public async getVariables(request: IJupyterVariablesRequest, kernel: IKernel): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
-        return this.getVariablesBasedOnKernel(notebook, request);
+        return this.getVariablesBasedOnKernel(kernel, request);
     }
 
     public async getMatchingVariable(
         name: string,
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
-        const cache = this.notebookState.get(notebook.identity);
+        const cache = this.notebookState.get(kernel.notebookDocument);
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
-                match = await this.getVariableValueFromKernel(match, notebook, token);
+                match = await this.getVariableValueFromKernel(match, kernel, token);
             }
             return match;
         } else {
             // No items in the cache yet, just ask for the names
-            const variables = await this.getVariableNamesAndTypesFromKernel(notebook, token);
+            const variables = await this.getVariableNamesAndTypesFromKernel(kernel, token);
             if (variables) {
                 const matchName = variables.find((v) => v.name === name);
                 if (matchName) {
@@ -103,7 +100,7 @@ export class KernelVariables implements IJupyterVariables {
                             shape: '',
                             truncated: true
                         },
-                        notebook,
+                        kernel,
                         token
                     );
                 }
@@ -113,22 +110,22 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
-        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
             if (isRefresh) {
-                targetVariable = await this.getFullVariable(targetVariable, notebook);
+                targetVariable = await this.getFullVariable(targetVariable, kernel);
             }
 
             let expression = targetVariable.name;
             if (sliceExpression) {
                 expression = `${targetVariable.name}${sliceExpression}`;
             }
-            return variableRequester.getDataFrameInfo(targetVariable, notebook, expression);
+            return variableRequester.getDataFrameInfo(targetVariable, kernel, expression);
         }
         return targetVariable;
     }
@@ -137,45 +134,45 @@ export class KernelVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook: INotebook,
+        kernel: IKernel,
         sliceExpression?: string
     ): Promise<{}> {
-        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const language = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(language);
         if (variableRequester) {
             let expression = targetVariable.name;
             if (sliceExpression) {
                 expression = `${targetVariable.name}${sliceExpression}`;
             }
-            return variableRequester.getDataFrameRows(start, end, notebook, expression);
+            return variableRequester.getDataFrameRows(start, end, kernel, expression);
         }
         return {};
     }
 
     public async getFullVariable(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
-        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getFullVariable(targetVariable, notebook, token);
+            return variableRequester.getFullVariable(targetVariable, kernel, token);
         }
         return targetVariable;
     }
 
     private async getVariablesBasedOnKernel(
-        notebook: INotebook,
+        kernel: IKernel,
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        let list = this.notebookState.get(notebook.identity);
+        let list = this.notebookState.get(kernel.notebookDocument);
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesAndTypesFromKernel(notebook)).map((v) => {
+                variables: (await this.getVariableNamesAndTypesFromKernel(kernel)).map((v) => {
                     return {
                         name: v.name,
                         value: undefined,
@@ -190,7 +187,7 @@ export class KernelVariables implements IJupyterVariables {
             };
         }
 
-        const exclusionList = this.configService.getSettings(notebook.resource).variableExplorerExclude
+        const exclusionList = this.configService.getSettings(kernel.resourceUri).variableExplorerExclude
             ? this.configService.getSettings().variableExplorerExclude?.split(';')
             : [];
 
@@ -227,7 +224,7 @@ export class KernelVariables implements IJupyterVariables {
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
-                    : await this.getVariableValueFromKernel(list.variables[i], notebook);
+                    : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
                 // See if this is excluded or not.
                 if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
@@ -241,7 +238,7 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Save in our cache
-            this.notebookState.set(notebook.identity, list);
+            this.notebookState.set(kernel.notebookDocument, list);
 
             // Update total count (exclusions will change this as types are computed)
             result.totalCount = list.variables.length;
@@ -252,12 +249,12 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getVariableProperties(
         word: string,
-        notebook: INotebook,
+        kernel: IKernel,
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
-        const matchingVariable = await this.getMatchingVariable(word, notebook, cancelToken);
+        const matchingVariable = await this.getMatchingVariable(word, kernel, cancelToken);
         const settings = this.configService.getSettings().variableTooltipFields;
-        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const languageSettings = settings[languageId];
         const inEnhancedTooltipsExperiment = await this.inEnhancedTooltipsExperiment();
 
@@ -265,7 +262,7 @@ export class KernelVariables implements IJupyterVariables {
         if (variableRequester) {
             return variableRequester.getVariableProperties(
                 word,
-                notebook,
+                kernel,
                 cancelToken,
                 matchingVariable,
                 languageSettings,
@@ -277,14 +274,14 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private async getVariableNamesAndTypesFromKernel(
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         // Get our query and parser
-        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getVariableNamesAndTypesFromKernel(notebook, token);
+            return variableRequester.getVariableNamesAndTypesFromKernel(kernel, token);
         }
 
         return [];
@@ -293,12 +290,12 @@ export class KernelVariables implements IJupyterVariables {
     // eslint-disable-next-line complexity
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
-        if (notebook) {
-            const output = await notebook.inspect(targetVariable.name, 0, token);
+        if (kernel && kernel.notebook) {
+            const output = await kernel.notebook.inspect(targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
@@ -352,11 +349,11 @@ export class KernelVariables implements IJupyterVariables {
             result.type &&
             result.count &&
             !result.shape &&
-            isPythonKernelConnection(notebook.getKernelConnection()) &&
+            isPythonKernelConnection(kernel.kernelConnectionMetadata) &&
             result.supportsDataExplorer &&
             result.type !== 'list' // List count is good enough
         ) {
-            result = await this.getFullVariable(result, notebook);
+            result = await this.getFullVariable(result, kernel);
         }
 
         return result;

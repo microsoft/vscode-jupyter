@@ -19,7 +19,7 @@ import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { JupyterNotebookView } from '../notebook/constants';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
-import { IInteractiveWindowProvider, INotebook } from '../types';
+import { IInteractiveWindowProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
 type KernelStateEventArgs = {
@@ -47,9 +47,6 @@ export class NotebookWatcher implements INotebookWatcher {
     public get onDidRestartActiveNotebook(): Event<void> {
         return this._onDidRestartActiveNotebook.event;
     }
-    public get activeNotebook(): INotebook | undefined {
-        return this.activeKernel?.notebook;
-    }
     public get activeKernel(): IKernel | undefined {
         const activeNotebook = this.notebooks.activeNotebookEditor?.document;
         const activeJupyterNotebookKernel =
@@ -68,7 +65,7 @@ export class NotebookWatcher implements INotebookWatcher {
         }
         const activeDataViewer = this.dataViewerFactory.activeViewer;
         return activeDataViewer
-            ? this.kernelProvider.kernels.find((item) => item.notebook === activeDataViewer.notebook)
+            ? this.kernelProvider.kernels.find((item) => item.notebook === activeDataViewer.kernel)
             : undefined;
     }
 

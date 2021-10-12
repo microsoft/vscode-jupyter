@@ -160,7 +160,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                         rawSession,
                         this.disposableRegistry,
                         info,
-                        resource,
                         identity,
                         this.workspaceService,
                         this.fs
