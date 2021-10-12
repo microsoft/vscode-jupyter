@@ -62,6 +62,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
+        when(session.unhandledMessage).thenReturn(instance(ioPubSignal));
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
@@ -102,7 +103,7 @@ suite('DataScience - JupyterSession', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
         when(contentsManager.delete(anything())).thenResolve();
-        when(sessionManager.startNew(anything())).thenResolve(instance(session));
+        when(sessionManager.startNew(anything(), anything())).thenResolve(instance(session));
         const specOrModel = { name: 'some name', id: undefined } as any;
         mockKernelSpec.setup((k: any) => k.kernelModel).returns(() => specOrModel);
         mockKernelSpec.setup((k: any) => k.kernelSpec).returns(() => specOrModel);
@@ -115,7 +116,7 @@ suite('DataScience - JupyterSession', () => {
         await connect();
 
         assert.isTrue(jupyterSession.isConnected);
-        verify(sessionManager.startNew(anything())).once();
+        verify(sessionManager.startNew(anything(), anything())).once();
         verify(contentsManager.newUntitled(anything())).once();
     });
 
@@ -308,7 +309,7 @@ suite('DataScience - JupyterSession', () => {
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
-                when(sessionManager.startNew(anything())).thenCall(() => {
+                when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     return Promise.resolve(instance(remoteSession));
                 });
             });
@@ -316,8 +317,8 @@ suite('DataScience - JupyterSession', () => {
                 setup(async () => {
                     const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
-                    verify(sessionManager.startNew(anything())).once();
-                    when(sessionManager.connectTo({ model: newActiveRemoteKernel.model! })).thenReturn(
+                    verify(sessionManager.startNew(anything(), anything())).once();
+                    when(sessionManager.connectTo(anything())).thenReturn(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         newActiveRemoteKernel.model as any
                     );
@@ -333,14 +334,14 @@ suite('DataScience - JupyterSession', () => {
                     verify(session.shutdown()).once();
                 });
                 test('Will connect to existing session', async () => {
-                    verify(sessionManager.connectTo({ model: newActiveRemoteKernel.model! })).once();
+                    verify(sessionManager.connectTo(anything())).once();
                 });
                 test('Will flag new session as being remote', async () => {
                     // Confirm the new session is flagged as remote
                     assert.isTrue((newActiveRemoteKernel.model as any).isRemoteSession);
                 });
                 test('Will not create a new session', async () => {
-                    verify(sessionManager.startNew(anything())).once();
+                    verify(sessionManager.startNew(anything(), anything())).once();
                 });
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();
@@ -373,6 +374,7 @@ suite('DataScience - JupyterSession', () => {
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
+                when(newSession.unhandledMessage).thenReturn(instance(newIoPubSignal));
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -381,7 +383,7 @@ suite('DataScience - JupyterSession', () => {
                 when(newKernelConnection.clientId).thenReturn('restartClientId');
                 when(newKernelConnection.status).thenReturn('idle');
                 when(newSession.kernel).thenReturn(instance(newKernelConnection));
-                when(sessionManager.startNew(anything())).thenCall(() => {
+                when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
@@ -390,7 +392,7 @@ suite('DataScience - JupyterSession', () => {
                 verify(sessionManager.connectTo(anything())).never();
             });
             test('Switching kernels will kill current session and start a new one', async () => {
-                verify(sessionManager.startNew(anything())).once();
+                verify(sessionManager.startNew(anything(), anything())).once();
 
                 const newKernel: IJupyterKernelSpec = {
                     argv: [],
@@ -410,7 +412,7 @@ suite('DataScience - JupyterSession', () => {
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;
                 // One original, one new session.
-                verify(sessionManager.startNew(anything())).twice();
+                verify(sessionManager.startNew(anything(), anything())).twice();
             });
             suite('Executing user code', async () => {
                 setup(executeUserCode);

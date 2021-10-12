@@ -419,10 +419,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
         }
         this._session = session;
-        if (session) {
+        if (session && session.iopubMessage) {
             session.iopubMessage.connect(this.ioPubHandler);
         }
-        if (session) {
+        if (session && session.unhandledMessage) {
             session.unhandledMessage.connect(this.unhandledMessageHandler);
         }
 
