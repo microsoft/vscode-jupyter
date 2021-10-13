@@ -18,9 +18,9 @@ import {
     IJupyterDebugService,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    INotebook
+    IJupyterVariablesResponse
 } from '../types';
+import { IKernel } from './kernels/types';
 
 const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -69,13 +69,10 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     // IJupyterVariables implementation
-    public async getVariables(
-        request: IJupyterVariablesRequest,
-        notebook?: INotebook
-    ): Promise<IJupyterVariablesResponse> {
+    public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         // Listen to notebook events if we haven't already
-        if (notebook) {
-            this.watchNotebook(notebook);
+        if (kernel) {
+            this.watchKernel(kernel);
         }
 
         const result: IJupyterVariablesResponse = {
@@ -120,11 +117,11 @@ export class DebuggerVariables extends DebugLocationTracker
         return result;
     }
 
-    public async getMatchingVariable(name: string, notebook?: INotebook): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(name: string, kernel?: IKernel): Promise<IJupyterVariable | undefined> {
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && notebook && notebook.identity.fsPath.endsWith('.ipynb')) {
+            if (result && kernel?.notebookDocument.uri.fsPath.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
@@ -133,7 +130,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
@@ -145,8 +142,8 @@ export class DebuggerVariables extends DebugLocationTracker
             targetVariable = await this.getFullVariable(targetVariable);
         }
         // Listen to notebook events if we haven't already
-        if (notebook) {
-            this.watchNotebook(notebook);
+        if (kernel) {
+            this.watchKernel(kernel);
         }
 
         // See if we imported or not into the kernel our special function
@@ -164,7 +161,7 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
-        let fileName = notebook ? path.basename(notebook.identity.path) : '';
+        let fileName = kernel ? path.basename(kernel.notebookDocument.uri.fsPath) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
@@ -183,7 +180,7 @@ export class DebuggerVariables extends DebugLocationTracker
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string
     ): Promise<{}> {
         // Developer error. The debugger cannot eval more than 100 rows at once.
@@ -197,8 +194,8 @@ export class DebuggerVariables extends DebugLocationTracker
             return {};
         }
         // Listen to notebook events if we haven't already
-        if (notebook) {
-            this.watchNotebook(notebook);
+        if (kernel) {
+            this.watchKernel(kernel);
         }
 
         let expression = targetVariable.name;
@@ -281,13 +278,13 @@ export class DebuggerVariables extends DebugLocationTracker
         }
     }
 
-    private watchNotebook(notebook: INotebook) {
-        const key = notebook.identity.toString();
+    private watchKernel(kernel: IKernel) {
+        const key = kernel.notebookDocument.uri.toString();
         if (!this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
-            disposables.push(notebook.onKernelRestarted(this.resetImport.bind(this, key)));
+            disposables.push(kernel.onRestarted(this.resetImport.bind(this, key)));
             disposables.push(
-                notebook.onDisposed(() => {
+                kernel.onDisposed(() => {
                     this.resetImport(key);
                     disposables.forEach((d) => d.dispose());
                     this.watchedNotebooks.delete(key);

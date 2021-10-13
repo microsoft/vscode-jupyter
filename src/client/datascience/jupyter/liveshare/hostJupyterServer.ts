@@ -164,7 +164,6 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                     session,
                     disposableRegistry,
                     info,
-                    resource,
                     identity,
                     this.workspaceService,
                     this.fs

@@ -31,14 +31,12 @@ import { Commands, EditorContexts } from '../../../client/datascience/constants'
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
-import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import {
     ICodeWatcher,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IInteractiveWindow,
-    IInteractiveWindowProvider,
-    INotebook
+    IInteractiveWindowProvider
 } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -146,10 +144,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => jupyterSettings);
 
-        const dummyEvent = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
-        const notebookProvider = mock(NotebookProvider);
-        when((notebookProvider as any).then).thenReturn(undefined);
-        when(notebookProvider.onNotebookCreated).thenReturn(dummyEvent.event);
         const workspace = mock<IWorkspaceService>();
         when(workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();

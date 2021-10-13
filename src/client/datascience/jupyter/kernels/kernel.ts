@@ -77,6 +77,9 @@ export class Kernel implements IKernel {
     get onWillInterrupt(): Event<void> {
         return this._onWillInterrupt.event;
     }
+    get onStarted(): Event<void> {
+        return this._onStarted.event;
+    }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
@@ -100,6 +103,7 @@ export class Kernel implements IKernel {
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onWillRestart = new EventEmitter<void>();
     private readonly _onWillInterrupt = new EventEmitter<void>();
+    private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
@@ -295,6 +299,7 @@ export class Kernel implements IKernel {
                         this.updateRemoteUriList(this.notebook.connection).catch(noop);
                     }
                     resolve(this.notebook);
+                    this._onStarted.fire();
                 } catch (ex) {
                     sendKernelTelemetryEvent(
                         this.resourceUri,

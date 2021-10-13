@@ -5,8 +5,9 @@ import {
     InteractiveWindowMessages,
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
+import { IKernel } from '../jupyter/kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook, IVSCWebviewViewProvider } from '../types';
+import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
@@ -38,7 +39,7 @@ export interface IActiveNotebookChangedEvent {
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
-    readonly activeNotebook?: INotebook;
+    readonly activeKernel?: IKernel;
     readonly activeNotebookExecutionCount?: number;
     readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
     readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;

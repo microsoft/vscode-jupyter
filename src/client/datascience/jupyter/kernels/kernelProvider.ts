@@ -31,6 +31,7 @@ export class KernelProvider implements IKernelProvider {
     private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
+    private readonly _onDidStartKernel = new EventEmitter<IKernel>();
     private readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
     private readonly _onKernelStatusChanged = new EventEmitter<{ status: ServerStatus; kernel: IKernel }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
@@ -70,6 +71,10 @@ export class KernelProvider implements IKernelProvider {
 
     public get onDidRestartKernel(): Event<IKernel> {
         return this._onDidRestartKernel.event;
+    }
+
+    public get onDidStartKernel(): Event<IKernel> {
+        return this._onDidStartKernel.event;
     }
 
     public get(notebook: NotebookDocument): IKernel | undefined {
@@ -116,6 +121,7 @@ export class KernelProvider implements IKernelProvider {
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
         this.deleteMappingIfKernelIsDisposed(notebook, kernel);

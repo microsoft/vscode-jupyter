@@ -17,9 +17,9 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
-import { IInteractiveWindowProvider, IJupyterVariables, INotebook } from '../types';
+import { IInteractiveWindowProvider, IJupyterVariables } from '../types';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();
@@ -100,7 +100,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
                 const word = document.getText(range);
                 if (word) {
                     // See if we have any matching notebooks
-                    const notebooks = this.getMatchingNotebooks(document);
+                    const notebooks = this.getMatchingKernels(document);
                     if (notebooks.length) {
                         // Just use the first one to reply if more than one.
                         const attributes = await Promise.race(
@@ -124,7 +124,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         }, token);
     }
 
-    private getMatchingNotebooks(document: vscode.TextDocument): INotebook[] {
+    private getMatchingKernels(document: vscode.TextDocument): IKernel[] {
         // First see if we have an interactive window who's owner is this document
         let notebookUris = this.interactiveProvider.windows
             .filter((w) => w.owner && this.fs.arePathsSame(w.owner, document.uri))
@@ -132,15 +132,15 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         if (!Array.isArray(notebookUris) || notebookUris.length == 0) {
             return [];
         }
-        const notebooks = new Set<INotebook>();
+        const kernels = new Set<IKernel>();
         this.notebook.notebookDocuments
             .filter((item) => notebookUris.includes(item.uri.toString()))
             .forEach((item) => {
                 const kernel = this.kernelProvider.get(item);
-                if (kernel?.notebook) {
-                    notebooks.add(kernel?.notebook);
+                if (kernel) {
+                    kernels.add(kernel);
                 }
             });
-        return Array.from(notebooks);
+        return Array.from(kernels);
     }
 }

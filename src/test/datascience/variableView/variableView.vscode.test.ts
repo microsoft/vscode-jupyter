@@ -214,7 +214,7 @@ suite('DataScience - VariableView', function () {
         })) as DataViewer;
 
         await waitForCondition(
-            async () => !dataViewer!.refreshPending,
+            async () => !dataViewer.refreshPending,
             defaultNotebookTestTimeout,
             'Data viewer does not ever update'
         );

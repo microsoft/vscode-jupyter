@@ -17,13 +17,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import {
-    ICodeCssGenerator,
-    IJupyterVariableDataProvider,
-    INotebook,
-    IThemeFinder,
-    WebViewViewChangeEventArgs
-} from '../types';
+import { ICodeCssGenerator, IJupyterVariableDataProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -37,6 +31,7 @@ import {
 } from './types';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
 import { CheckboxState } from '../../telemetry/constants';
+import { IKernel } from '../jupyter/kernels/types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -122,10 +117,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    public get notebook(): INotebook | undefined {
-        if (this.dataProvider && 'notebook' in this.dataProvider) {
+    public get kernel(): IKernel | undefined {
+        if (this.dataProvider && 'kernel' in this.dataProvider) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return this.dataProvider.notebook;
+            return this.dataProvider.kernel;
         }
     }
 

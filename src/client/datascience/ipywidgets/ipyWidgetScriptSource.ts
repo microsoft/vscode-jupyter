@@ -5,7 +5,7 @@
 import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -26,7 +26,8 @@ import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { ILocalResourceUriConverter } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
@@ -46,7 +47,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
-    private notebook?: INotebook;
+    private kernel?: IKernel;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private disposables: IDisposable[] = [];
@@ -59,8 +60,8 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     private readonly _rootScriptFolder: string;
     private readonly createTargetWidgetScriptsFolder: Promise<string>;
     constructor(
-        private readonly identity: Uri,
-        private readonly notebookProvider: INotebookProvider,
+        private readonly document: NotebookDocument,
+        private readonly kernelProvider: IKernelProvider,
         disposables: IDisposableRegistry,
         private readonly fs: IFileSystem,
         private readonly interpreterService: IInterpreterService,
@@ -83,9 +84,9 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
                 return this.targetWidgetScriptsFolder;
             });
         disposables.push(this);
-        this.notebookProvider.onNotebookCreated(
+        this.kernelProvider.onDidStartKernel(
             (e) => {
-                if (e.identity.toString() === this.identity.toString()) {
+                if (e.notebookDocument === this.document) {
                     this.initialize().catch(traceError.bind('Failed to initialize'));
                 }
             },
@@ -104,7 +105,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
         if (!this.isInScriptPath(localResource.fsPath)) {
-            if (this.identity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
+            if (this.document && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
                 const deferred = createDeferred<Uri>();
                 this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
                 try {
@@ -172,22 +173,17 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.jupyterLab = require('@jupyterlab/services') as typeof jupyterlabService; // NOSONAR
         }
 
-        if (!this.notebook) {
-            this.notebook = await this.notebookProvider.getOrCreateNotebook({
-                identity: this.identity,
-                resource: this.identity,
-                disableUI: true,
-                getOnly: true
-            });
+        if (!this.kernel) {
+            this.kernel = await this.kernelProvider.get(this.document);
         }
-        if (!this.notebook) {
+        if (!this.kernel) {
             return;
         }
         if (this.scriptProvider) {
             return;
         }
         this.scriptProvider = new IPyWidgetScriptSourceProvider(
-            this.notebook,
+            this.kernel,
             this,
             this.fs,
             this.interpreterService,
@@ -211,7 +207,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         if (!moduleName || moduleName.startsWith('@jupyter')) {
             return;
         }
-        if (!this.notebook || !this.scriptProvider) {
+        if (!this.kernel || !this.scriptProvider) {
             this.pendingModuleRequests.set(moduleName, moduleVersion);
             return;
         }
@@ -235,10 +231,10 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         }
     }
     private initializeNotebook() {
-        if (!this.notebook) {
+        if (!this.kernel) {
             return;
         }
-        this.notebook.onDisposed(() => this.dispose());
+        this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();
     }
     private handlePendingRequests() {
