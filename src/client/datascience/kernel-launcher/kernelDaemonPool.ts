@@ -55,7 +55,10 @@ export class KernelDaemonPool implements IDisposable {
         const promises: Promise<void>[] = [];
         // Don't pre-warm the kernel daemons if we have more than 1 workspace.
         // Else we just end up spinning a whole lot of processes unnecessarily.
-        if (Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length === 1) {
+        if (
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length === 1
+        ) {
             promises.push(
                 ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
             );
