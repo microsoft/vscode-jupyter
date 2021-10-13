@@ -118,9 +118,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         };
     });
     test('Confirm we get pre-warmed daemons instead of creating new ones', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
 
         // Verify we only created 1 daemons.
@@ -142,9 +140,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         assert.equal(daemonPool.daemons, 1);
     });
     test('Pre-warming multiple times has no affect', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
 
         // Verify we only created 2 daemons.
@@ -159,9 +155,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         assert.equal(daemonPool.daemons, 1);
     });
     test('Disposing daemonpool should kill all daemons in the pool', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
 
         // Verify we only created 2 daemons.
@@ -195,9 +189,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         assert.equal(daemonPool.daemons, 0);
     });
     test('Create a new daemon if we do not have a pre-warmed daemon', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
 
         // Verify we only created 2 daemons.
@@ -209,9 +201,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         verify(daemon3.preWarm()).never();
     });
     test('Create a new daemon if our kernelspec has environment variables (will not use one from the pool of daemons)', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
         // Verify we created just 1 daemon.
         verify(pythonExecutionFactory.createDaemon(anything())).once();
@@ -228,9 +218,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         verify(pythonExecutionFactory.createDaemon(anything())).times(2);
     });
     test('After updating env varialbes we will always create new daemons, and not use the ones from the daemon pool', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
         // Verify we created just 2 daemons.
         assert.equal(daemonPool.daemons, 1);
@@ -249,9 +237,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         verify(daemon1.dispose()).once();
     });
     test('After selecting a new interpreter we will always create new daemons, and not use the ones from the daemon pool', async () => {
-        when(worksapceService.workspaceFolders).thenReturn([
-            { index: 0, name: '', uri: workspace1 }
-        ]);
+        when(worksapceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri: workspace1 }]);
         await daemonPool.preWarmKernelDaemons();
         // Verify we created just 2 daemons.
         assert.equal(daemonPool.daemons, 1);
