@@ -38,7 +38,7 @@ source .venv/bin/activate
 # The Python code in the extension is formatted using Black.
 python -m pip install black
 # The Python code required in the extension
-python -m pip install -r requirements.txt
+python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 ```
 
 ### Incremental Build

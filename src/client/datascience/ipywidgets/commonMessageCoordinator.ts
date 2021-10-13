@@ -14,7 +14,7 @@ import {
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import {
@@ -81,7 +81,7 @@ export class CommonMessageCoordinator {
     ): Promise<CommonMessageCoordinator> {
         const result = new CommonMessageCoordinator(document, serviceContainer);
         await result.initialize();
-        traceInfo('Created and initailized CommonMessageCoordinator');
+        traceVerbose('Created and initailized CommonMessageCoordinator');
         return result;
     }
 
@@ -112,7 +112,7 @@ export class CommonMessageCoordinator {
     }
 
     private async initialize(): Promise<void> {
-        traceInfo('initialize CommonMessageCoordinator');
+        traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
         const promise = this.getIPyWidgetScriptSource()?.initialize();
         await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
