@@ -365,13 +365,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.submitCodeImpl(code, file, line, false);
     }
-    public undoCells() {
-        throw new Error('Method not implemented.');
-    }
 
-    public redoCells() {
-        throw new Error('Method not implemented.');
-    }
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
         const file = fileUri.fsPath;
@@ -469,6 +463,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return result;
     }
+    public undoCells() {
+        throw new Error('Method not implemented.');
+    }
+    public redoCells() {
+        throw new Error('Method not implemented.');
+    }
+    public removeAllCells() {
+        throw new Error('Method not implemented.');
+    }
+    public async exportCells() {
+        throw new Error('Method not implemented.');
+    }
+
     private async runIntialization(kernel: IKernel) {
         const fileUri = this.lastExecutedFileUri;
         if (!fileUri || !kernel.notebook) {
@@ -486,12 +493,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         await this.setFileInKernel(file, kernel!);
     }
 
-    public async exportCells() {
-        throw new Error('Method not implemented.');
-    }
-    public removeAllCells() {
-        throw new Error('Method not implemented.');
-    }
     public async expandAllCells() {
         const notebookEditor = await this._editorReadyPromise;
         const edit = new WorkspaceEdit();
