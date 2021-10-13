@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
@@ -53,7 +53,12 @@ export class KernelDaemonPool implements IDisposable {
         this.envVars.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange.bind(this));
         this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];
-        if (this.workspaceService.hasWorkspaceFolders) {
+        // Don't pre-warm the kernel daemons if we have more than 1 workspace.
+        // Else we just end up spinning a whole lot of processes unnecessarily.
+        if (
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length === 1
+        ) {
             promises.push(
                 ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
             );
@@ -131,6 +136,7 @@ export class KernelDaemonPool implements IDisposable {
         });
     }
     private async preWarmKernelDaemon(resource: Resource) {
+        traceInfo(`Pre-warming kernel daemon for ${resource?.toString()}`);
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
             return;

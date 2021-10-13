@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -204,8 +204,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const activeInterpreter = await api.getActiveInterpreter();
 
         if (!activeInterpreter) {
+            traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
+        traceInfo(`Creating controller for ${notebookType} with interpreter ${activeInterpreter.path}`);
         return this.getOrCreateController(activeInterpreter, notebookType);
     }
     private async createDefaultRemoteController() {
