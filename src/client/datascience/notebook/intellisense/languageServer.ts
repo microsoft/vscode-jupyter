@@ -106,6 +106,12 @@ const notebookApi = new (class {
     }
 })();
 
+/**
+ * This class wraps an instance of the language server (either Pylance or Jedi LSP) per interpreter.
+ *
+ * If you need to debug pylance's messages, set this setting:
+ *     "notebook-intellisense.trace.server.verbosity": "Verbose",
+ */
 export class LanguageServer implements Disposable {
     private _interpreterId: String;
     private constructor(

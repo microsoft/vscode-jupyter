@@ -60,7 +60,7 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
         // Create the language server for this connection
-        await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
+        const newServer = await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
 
         // Get the language server for the old connection (if we have one)
         const oldController = this.knownControllers.get(e.notebook);
@@ -70,6 +70,11 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
             // If we had one, tell the old language server to stop watching this notebook
             if (oldLanguageServer) {
                 oldLanguageServer.stopWatching(e.notebook);
+            }
+
+            // Tell the new server about the file
+            if (newServer) {
+                newServer.startWatching(e.notebook);
             }
         }
 
