@@ -44,14 +44,20 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, defaultNotebookFormat, Identifiers } from '../constants';
+import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
-import { IInteractiveWindow, IInteractiveWindowLoadable, IJupyterDebugger, INotebookExporter } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowInfo,
+    IInteractiveWindowLoadable,
+    IJupyterDebugger,
+    INotebookExporter
+} from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
@@ -59,6 +65,7 @@ import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/link
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
+import { ContextKey } from '../../common/contextKey';
 
 type InteractiveCellMetadata = {
     inputCollapsed: boolean;
@@ -114,10 +121,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private internalDisposables: Disposable[] = [];
     private _editorReadyPromise: Promise<NotebookEditor>;
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
+    private _kernelConnection?: KernelConnectionMetadata;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
     private notebookDocument: NotebookDocument | undefined;
     private executionPromise: Promise<boolean> | undefined;
     private _notebookEditor: NotebookEditor | undefined;
+    private isDisposed = false;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -330,6 +339,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public dispose() {
         this.internalDisposables.forEach((d) => d.dispose());
+        this.isDisposed = true;
     }
 
     // Add message to the notebook document in a markdown cell
@@ -355,7 +365,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.submitCodeImpl(code, file, line, false);
     }
+    public undoCells() {
+        throw new Error('Method not implemented.');
+    }
 
+    public redoCells() {
+        throw new Error('Method not implemented.');
+    }
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
         const file = fileUri.fsPath;
@@ -427,7 +443,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         const notebook = kernel?.notebook;
-        if (!kernel || !notebook) {
+        if (!notebook) {
             return false;
         }
         this.lastExecutedFileUri = fileUri;
@@ -473,7 +489,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public async exportCells() {
         throw new Error('Method not implemented.');
     }
-
+    public removeAllCells() {
+        throw new Error('Method not implemented.');
+    }
     public async expandAllCells() {
         const notebookEditor = await this._editorReadyPromise;
         const edit = new WorkspaceEdit();
@@ -553,7 +571,45 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return undefined;
     }
+    protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
+        return undefined;
+    }
 
+    protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
+        return this._kernelConnection;
+    }
+
+    protected async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
+        this._kernelConnection = kernelConnection;
+    }
+
+    protected get notebookIdentity(): INotebookIdentity {
+        // Use this identity for the lifetime of the notebook
+        return {
+            resource: this._identity,
+            type: 'interactive'
+        };
+    }
+
+    protected updateContexts(info: IInteractiveWindowInfo | undefined) {
+        // This should be called by the python interactive window every
+        // time state changes. We use this opportunity to update our
+        // extension contexts
+        const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
+        interactiveContext.set(!this.isDisposed).catch(noop);
+        const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
+        const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
+        const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
+        if (info) {
+            interactiveCellsContext.set(info.cellCount > 0).catch(noop);
+            redoableContext.set(info.redoCount > 0).catch(noop);
+            hasCellSelectedContext.set(info.selectedCell ? true : false).catch(noop);
+        } else {
+            interactiveCellsContext.set(false).catch(noop);
+            redoableContext.set(false).catch(noop);
+            hasCellSelectedContext.set(false).catch(noop);
+        }
+    }
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel && file !== Identifiers.EmptyFileName) {
