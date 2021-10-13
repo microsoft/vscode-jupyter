@@ -3,16 +3,9 @@
 
 'use strict';
 import { noop } from 'lodash';
-import * as path from 'path';
-import { Uri } from 'vscode';
-import { ICommandManager } from '../../client/common/application/types';
+import { Uri, window, workspace } from 'vscode';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
-import { INotebookEditorProvider } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { CommandSource } from '../../client/testing/common/constants';
-import { waitForCondition } from '../common';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -77,20 +70,10 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
 }
 
-export async function openNotebook(serviceContainer: IServiceContainer, ipynbFile: string) {
+export async function openNotebook(ipynbFile: string) {
     traceInfo(`Opening notebook ${ipynbFile}`);
-    const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
-    await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
-    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-    traceInfo('Wait for notebook to be the active editor');
-    await waitForCondition(
-        async () =>
-            editorProvider.editors.length > 0 &&
-            !!editorProvider.activeEditor &&
-            editorProvider.activeEditor.file.fsPath.endsWith(path.basename(ipynbFile)),
-        30_000,
-        'Notebook not opened'
-    );
-
+    const uri = Uri.file(ipynbFile);
+    const nb = await workspace.openNotebookDocument(uri);
+    await window.showNotebookDocument(nb);
     traceInfo(`Opened notebook ${ipynbFile}`);
 }

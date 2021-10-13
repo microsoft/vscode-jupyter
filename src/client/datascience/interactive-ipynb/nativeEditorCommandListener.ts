@@ -4,22 +4,24 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
 
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
-import { captureTelemetry } from '../../telemetry';
-import { CommandSource } from '../../testing/common/constants';
-import { Commands, Telemetry } from '../constants';
-import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
+import { Commands } from '../constants';
+import { IDataScienceCommandListener } from '../types';
+import { NotebookCellLanguageService } from '../notebook/cellLanguageService';
+import { getNotebookMetadata } from '../notebook/helpers/helpers';
+import { noop } from '../../common/utils/misc';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
+import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IVSCodeNotebook) private notebooks: IVSCodeNotebook,
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -33,13 +35,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.OpenNotebook,
-                (file?: Uri, contents?: string, _cmdSource: CommandSource = CommandSource.commandPalette) =>
-                    this.openNotebook(file, contents)
-            )
-        );
-        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells())
         );
         this.disposableRegistry.push(
@@ -48,55 +43,39 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     private runAllCells() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runAllCells();
+        if (this.notebooks.activeNotebookEditor) {
+            void this.commandManager.executeCommand('notebook.execute');
         }
     }
 
     private addCellBelow() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.addCellBelow();
+        if (this.notebooks.activeNotebookEditor) {
+            void this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow');
         }
     }
 
     private undoCells() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.undoCells();
+        if (this.notebooks.activeNotebookEditor) {
+            void this.commandManager.executeCommand('notebook.undo');
         }
     }
 
     private redoCells() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.redoCells();
+        if (this.notebooks.activeNotebookEditor) {
+            void this.commandManager.executeCommand('notebook.redo');
         }
     }
 
     private removeAllCells() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.removeAllCells();
+        const document = this.notebooks.activeNotebookEditor?.document;
+        if (!document) {
+            return;
         }
-    }
-
-    @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
-    private async openNotebook(file?: Uri, contents?: string): Promise<void> {
-        if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
-            try {
-                // Then take the contents and load it.
-                await this.provider.open(file);
-            } catch (e) {
-                await this.dataScienceErrorHandler.handleError(e);
-            }
-        } else if (contents) {
-            try {
-                await this.provider.createNew({ contents });
-            } catch (e) {
-                await this.dataScienceErrorHandler.handleError(e);
-            }
-        }
+        const defaultLanguage = this.languageService.getPreferredLanguage(getNotebookMetadata(document));
+        chainWithPendingUpdates(document, (edit) =>
+            edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), [
+                new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
+            ])
+        ).then(noop, noop);
     }
 }

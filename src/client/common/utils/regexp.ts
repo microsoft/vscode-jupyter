@@ -25,3 +25,24 @@ export function verboseRegExp(pattern: string, flags?: string): RegExp {
     pattern = pattern.replace(/\s+?/g, '');
     return RegExp(pattern, flags);
 }
+
+const SpecialCharsRegEx = /[\.\+\?\^\$\{\}\(\)\|\[\]\\]/;
+
+export function buildDataViewerFilterRegex(filter: string): RegExp {
+    let flags = '';
+
+    // Allow an = operator. It's exact match. Anchor at start and end
+    if (filter.startsWith('=')) {
+        filter = `^${filter.substr(1).trim()}$`;
+    } else if (!SpecialCharsRegEx.test(filter)) {
+        // If no special chars, then match everything that has
+        // this text in the middle. Default option
+        filter = `^.*${filter}.*$`;
+
+        // This option is also case insensitive
+        flags = 'i';
+    }
+
+    // Otherwise let the user type a normal regex
+    return new RegExp(filter, flags);
+}

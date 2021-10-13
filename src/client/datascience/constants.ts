@@ -89,8 +89,6 @@ export namespace Commands {
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
-    export const OpenNotebook = 'jupyter.opennotebook';
-    export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
     export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
@@ -201,6 +199,7 @@ export namespace EditorContexts {
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
+    export const ZmqAvailable = 'jupyter.zmqavailable';
 }
 
 export namespace RegExpValues {

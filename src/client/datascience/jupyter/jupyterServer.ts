@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
@@ -146,7 +146,14 @@ export class JupyterServerBase implements INotebookServer {
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
             return notebook;
         } catch (ex) {
-            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime, undefined, ex);
+            sendKernelTelemetryEvent(
+                resource,
+                Telemetry.JupyterCreatingNotebook,
+                stopWatch.elapsedTime,
+                undefined,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any
+            );
             throw ex;
         }
     }

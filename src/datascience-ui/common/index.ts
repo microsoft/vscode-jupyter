@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { noop } from '../../client/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";
@@ -48,32 +48,17 @@ export function splitMultilineString(source: nbformat.MultilineString): string[]
 }
 
 export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
-    let foundNonEmptyLine = false;
-    let lastNonEmptyLine = -1;
-    let result: string[] = [];
-    parseForComments(
-        lines,
-        (_s, i) => {
-            result.push(lines[i]);
+    let lastNonEmptyLine = lines.length;
+    let firstNonEmptyLine = -1;
+    lines.forEach((l, i) => {
+        if (l.trim()) {
             lastNonEmptyLine = i;
-        },
-        (s, i) => {
-            const trimmed = s.trim();
-            if (foundNonEmptyLine || trimmed) {
-                result.push(lines[i]);
-                foundNonEmptyLine = true;
-            }
-            if (trimmed) {
-                lastNonEmptyLine = i;
+            if (firstNonEmptyLine < 0) {
+                firstNonEmptyLine = i;
             }
         }
-    );
-
-    // Remove empty lines off the bottom too
-    if (lastNonEmptyLine < lines.length - 1) {
-        result = result.slice(0, result.length - (lines.length - 1 - lastNonEmptyLine));
-    }
-    return result;
+    });
+    return firstNonEmptyLine >= 0 ? lines.slice(firstNonEmptyLine, lastNonEmptyLine + 1) : [];
 }
 
 export function removeLinesFromFrontAndBack(code: string | string[]): string {

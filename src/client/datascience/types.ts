@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
 import {
@@ -16,6 +16,7 @@ import {
     Disposable,
     Event,
     NotebookCell,
+    NotebookDocument,
     NotebookEditor,
     QuickPickItem,
     Range,
@@ -170,19 +171,13 @@ export interface IJupyterNotebookProvider {
 }
 
 export interface INotebook extends IAsyncDisposable {
-    readonly resource: Resource;
     readonly connection: INotebookProviderConnection | undefined;
     kernelSocket: Observable<KernelSocketInformation | undefined>;
-    readonly identity: Uri;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
-    onKernelChanged: Event<KernelConnectionMetadata>;
-    onKernelRestarted: Event<void>;
-    executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
-    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]>;
     inspect(code: string, offsetInCode?: number, cancelToken?: CancellationToken): Promise<JSONObject>;
     getCompletion(
         cellCode: string,
@@ -191,21 +186,7 @@ export interface INotebook extends IAsyncDisposable {
     ): Promise<INotebookCompletion>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     setLaunchingFile(file: string): Promise<void>;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    getMatchingInterpreter(): PythonEnvironment | undefined;
-    /**
-     * Gets the metadata that's used to start/connect to a Kernel.
-     */
-    getKernelConnection(): KernelConnectionMetadata | undefined;
-    registerCommTarget(
-        targetName: string,
-        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ): void;
-    registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void;
-    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
 }
 
 // Options for connecting to a notebook provider
@@ -275,17 +256,13 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IExecuteRequestMsg['content'],
         disposeOnDone?: boolean,
         metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
     requestDebug(
         content: KernelMessage.IDebugRequestMsg['content'],
         disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
-    requestComplete(
-        content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
-    requestInspect(
-        content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>;
+    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
+    requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
     sendInputReply(content: string): void;
     changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
@@ -297,11 +274,11 @@ export interface IJupyterSession extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     shutdown(): Promise<void>;
 }
 
-export type ISessionWithSocket = Session.ISession & {
+export type ISessionWithSocket = Session.ISessionConnection & {
     // The resource associated with this session.
     resource: Resource;
     // Whether this is a remote session that we attached to.
@@ -460,11 +437,6 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    notebook?: INotebook;
-    undoCells(): void;
-    redoCells(): void;
-    toggleOutput?(): void;
-    removeAllCells(): void;
     hasCell(id: string): Promise<boolean>;
 }
 
@@ -475,6 +447,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly submitters: Uri[];
     readonly identity: Uri;
     readonly notebookUri?: Uri;
+    readonly notebookDocument?: NotebookDocument;
     readonly readyPromise: Promise<void>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
@@ -501,28 +474,8 @@ export interface IInteractiveWindowLoadable extends IInteractiveWindow {
 // For native editing, the provider acts like the IDocumentManager for normal docs
 export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
-    readonly activeEditor: INotebookEditor | undefined;
-    readonly editors: INotebookEditor[];
-    readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
-    readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
-    open(file: Uri): Promise<INotebookEditor>;
-    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
-}
-
-// For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
-export const INotebookEditor = Symbol('INotebookEditor');
-export interface INotebookEditor extends Disposable, IInteractiveBase {
-    readonly closed: Event<INotebookEditor>;
-    readonly file: Uri;
-    notebook?: INotebook;
-    runAllCells(): void;
-    addCellBelow(): void;
-    undoCells(): void;
-    redoCells(): void;
-    removeAllCells(): void;
-    expandAllCells(): void;
-    collapseAllCells(): void;
-    getContent(): string;
+    open(file: Uri): Promise<void>;
+    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
 }
 
 // Wraps the vscode CodeLensProvider base class
@@ -721,26 +674,27 @@ export interface IJupyterVariable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
-    setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
+    readonly kernel: IKernel | undefined;
+    setDependencies(variable: IJupyterVariable, kernel?: IKernel): void;
 }
 
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
 export interface IJupyterVariableDataProviderFactory {
-    create(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariableDataProvider>;
+    create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
-    getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
+    getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
         variable: IJupyterVariable,
-        notebook?: INotebook,
+        kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable>;
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable>;
@@ -748,16 +702,16 @@ export interface IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
-        notebook?: INotebook,
+        kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
     // This is currently only defined in kernelVariables.ts
-    getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
+    getVariableProperties?(name: string, kernel?: IKernel, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -991,14 +945,10 @@ export interface INotebookProvider {
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
     onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
     /**
-     * List of all notebooks (active and ones that are being constructed).
-     */
-    activeNotebooks: Promise<INotebook>[];
-    /**
      * Disposes notebook associated with the given identity.
      * Using `getOrCreateNotebook` would be incorrect as thats async, and its possible a document has been opened in the interim (meaning we could end up disposing something that is required).
      */
-    disposeAssociatedNotebook(options: { identity: Uri }): void;
+    disposeAssociatedNotebook(options: { identity: Uri }): Promise<void>;
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
@@ -1109,26 +1059,22 @@ export interface IKernelDependencyService {
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
-    getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
-    getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}>;
+    getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}>;
     getVariableProperties(
         word: string,
-        notebook: INotebook,
+        kernel: IKernel,
         cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined,
         languageSettings: { [typeNameKey: string]: string[] },
         inEnhancedTooltipsExperiment: boolean
     ): Promise<{ [attributeName: string]: string }>;
-    getDataFrameInfo(
-        targetVariable: IJupyterVariable,
-        notebook: INotebook,
-        expression: string
-    ): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
 
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');

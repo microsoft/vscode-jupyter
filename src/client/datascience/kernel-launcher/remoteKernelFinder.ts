@@ -3,7 +3,7 @@
 'use strict';
 
 import { Kernel } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -24,7 +24,7 @@ import {
     INotebookProviderConnection
 } from '../types';
 import { IRemoteKernelFinder } from './types';
-import { traceError, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfoIfCI } from '../../common/logger';
 import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
@@ -90,7 +90,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 Telemetry.PreferredKernel,
                 undefined,
                 { result: 'failed', resourceType, language: telemetrySafeLanguage },
-                ex,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any,
                 true
             );
             traceError(`findKernel crashed`, ex);
@@ -135,9 +136,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     const numberOfConnections = liveKernel.connections
                         ? parseInt(liveKernel.connections.toString(), 10)
                         : 0;
-                    const activeKernel = running.find((active) => active.id === s.kernel.id) || {};
+                    const activeKernel = running.find((active) => active.id === s.kernel?.id) || {};
                     const matchingSpec: Partial<IJupyterKernelSpec> =
-                        specs.find((spec) => spec.name === s.kernel.name) || {};
+                        specs.find((spec) => spec.name === s.kernel?.name) || {};
 
                     const kernel: LiveKernelConnectionMetadata = {
                         kind: 'connectToLiveKernel',
@@ -145,11 +146,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             ...s.kernel,
                             ...matchingSpec,
                             ...activeKernel,
+                            name: s.kernel?.name || '',
                             lastActivityTime,
                             numberOfConnections,
-                            session: s
+                            model: s
                         },
-                        id: s.kernel.id
+                        id: s.kernel?.id || ''
                     };
                     return kernel;
                 });
@@ -157,8 +159,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 // Filter out excluded ids
                 const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
                 const items = [...filtered, ...mappedSpecs];
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                traceInfoIfCI(
                     `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
                         items,
                         undefined,

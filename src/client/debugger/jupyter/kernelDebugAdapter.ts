@@ -16,9 +16,9 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     NotebookCellKind,
+    NotebookCellsChangeEvent,
     NotebookDocument,
-    notebooks,
-    Uri
+    notebooks
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceVerbose } from '../../common/logger';
@@ -51,7 +51,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private delegate: IDebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
-    public readonly debugCellUri: Uri | undefined;
+    public readonly debugCell: NotebookCell | undefined;
     private disconected: boolean = false;
 
     constructor(
@@ -66,7 +66,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         this.configuration = configuration;
 
         if (configuration.__mode === KernelDebugMode.Cell || configuration.__mode === KernelDebugMode.RunByLine) {
-            this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
+            this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
         }
 
         this.disposables.push(
@@ -117,6 +117,22 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         this.disconnect();
                     }
+                },
+                this,
+                this.disposables
+            )
+        );
+
+        this.disposables.push(
+            notebooks.onDidChangeNotebookCells(
+                (e: NotebookCellsChangeEvent) => {
+                    e.changes.forEach((change) => {
+                        change.deletedItems.forEach((cell: NotebookCell) => {
+                            if (cell === this.debugCell) {
+                                this.disconnect();
+                            }
+                        });
+                    });
                 },
                 this,
                 this.disposables
@@ -261,26 +277,24 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 arguments: request.arguments
             });
 
-            if (control) {
-                control.onReply = (msg) => {
-                    const message = msg.content as DebugProtocol.ProtocolMessage;
-                    getMessageSourceAndHookIt(message, (source) => {
-                        if (source && source.path) {
-                            const cell = this.fileToCell.get(source.path);
-                            if (cell) {
-                                source.name = path.basename(cell.document.uri.path);
-                                if (cell.index >= 0) {
-                                    source.name += `, Cell ${cell.index + 1}`;
-                                }
-                                source.path = cell.document.uri.toString();
+            control.onReply = (msg) => {
+                const message = msg.content as DebugProtocol.ProtocolMessage;
+                getMessageSourceAndHookIt(message, (source) => {
+                    if (source && source.path) {
+                        const cell = this.fileToCell.get(source.path);
+                        if (cell) {
+                            source.name = path.basename(cell.document.uri.path);
+                            if (cell.index >= 0) {
+                                source.name += `, Cell ${cell.index + 1}`;
                             }
+                            source.path = cell.document.uri.toString();
                         }
-                    });
+                    }
+                });
 
-                    this.trace('response', JSON.stringify(message));
-                    this.sendMessage.fire(message);
-                };
-            }
+                this.trace('response', JSON.stringify(message));
+                this.sendMessage.fire(message);
+            };
         } else if (message.type === 'response') {
             // responses of reverse requests
             const response = message as DebugProtocol.Response;

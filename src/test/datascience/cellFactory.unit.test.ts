@@ -160,6 +160,7 @@ class Pizza(object):
 
 first line`;
         const expected1 = `# %% CELL
+
 first line`;
         const entry2 = `# %% CELL
 
@@ -167,6 +168,7 @@ first line
 
 `;
         const expected2 = `# %% CELL
+
 first line`;
         const entry3 = `# %% CELL
 
@@ -176,6 +178,7 @@ second line
 
 `;
         const expected3 = `# %% CELL
+
 first line
 
 second line`;
@@ -192,6 +195,24 @@ print('some more')
     print('stuff')
 
 print('some more')`;
+        const entry5 = `
+def test(input: str = "test"):
+    """
+    test function
+    """
+    print("hallo")
+
+
+test("dude")
+`;
+        const expected5 = `def test(input: str = "test"):
+    """
+    test function
+    """
+    print("hallo")
+
+
+test("dude")`;
         let removed = removeLinesFromFrontAndBack(entry1);
         assert.equal(removed, expected1);
         removed = removeLinesFromFrontAndBack(entry2);
@@ -200,5 +221,7 @@ print('some more')`;
         assert.equal(removed, expected3);
         removed = removeLinesFromFrontAndBack(entry4);
         assert.equal(removed, expected4);
+        removed = removeLinesFromFrontAndBack(entry5);
+        assert.equal(removed, expected5);
     });
 });

@@ -16,9 +16,9 @@ import {
     Uri
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo, traceInfoIf } from '../../common/logger';
+import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposable,
@@ -137,7 +137,7 @@ export class VSCodeNotebookController implements Disposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
 
@@ -158,7 +158,7 @@ export class VSCodeNotebookController implements Disposable {
     // Handle the execution of notebook cell
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            traceInfoIf(isCI, 'No cells passed to handleExecution');
+            traceInfoIfCI('No cells passed to handleExecution');
             return;
         }
         // When we receive a cell execute request, first ensure that the notebook is trusted.
@@ -173,12 +173,18 @@ export class VSCodeNotebookController implements Disposable {
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
-        traceInfoIf(isCI, `Notebook Controller base event called for ${this.id}. Selected ${event.selected} `);
+        traceInfoIfCI(`Notebook Controller base event called for ${this.id}. Selected ${event.selected} `);
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
             return;
         }
         if (!event.selected) {
+            // If user has selectd another controller, then kill the current kernel.
+            // Possible user selected a controller that's not contributed by us at all.
+            const kernel = this.kernelProvider.get(event.notebook);
+            if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
+                void kernel.dispose();
+            }
             this.associatedDocuments.delete(event.notebook);
             return;
         }
@@ -190,7 +196,7 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
 
-        traceInfoIf(isCI, `Notebook Controller set ${event.notebook.uri.toString()}, ${this.id}`);
+        traceInfoIfCI(`Notebook Controller set ${event.notebook.uri.toString()}, ${this.id}`);
         this.associatedDocuments.add(event.notebook);
 
         // Now actually handle the change

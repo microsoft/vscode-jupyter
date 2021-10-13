@@ -15,7 +15,6 @@ import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
-import { JupyterNotebookBase } from '../jupyterNotebook';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, KernelConnectionMetadata } from './types';
@@ -246,7 +245,5 @@ export class KernelExecution implements IDisposable {
     private async restartExecution(notebook: INotebook): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await notebook.session.restart(this.interruptTimeout);
-
-        (notebook as JupyterNotebookBase).fireRestart();
     }
 }

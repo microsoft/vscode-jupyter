@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert } from 'chai';
 // import * as fs from 'fs-extra';
 // import * as path from 'path';
@@ -134,7 +134,7 @@
 //     });
 
 //     test('Validate custom notebook metadata (from 3rd party extension) is saved into ipynb', async function () {
-//         await openNotebook(api.serviceContainer, nbFile1);
+//         await openNotebook(nbFile1);
 //         await waitForKernelToGetAutoSelected(undefined);
 
 //         // Verify the bogus controller is not selected.

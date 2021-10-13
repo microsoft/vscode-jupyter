@@ -328,7 +328,7 @@
             "request": "launch",
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "args": ["checkDependencies"],
+            "args": ["generateTelemetryMd"],
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "3_misc",

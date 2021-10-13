@@ -3,14 +3,14 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { NotebookCellData, NotebookData, NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IDisposable } from '../../common/types';
+import { IDisposable, IExtensions } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -18,8 +18,10 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
+import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
-import { INotebookEditorProvider } from '../types';
+import { INotebookControllerManager } from '../notebook/types';
+import { IInteractiveWindowProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -32,8 +34,11 @@ export class ExportCommands implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExportManager) private exportManager: ExportManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
+        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (contents, file, interpreter?) =>
@@ -66,14 +71,16 @@ export class ExportCommands implements IDisposable {
 
     private async nativeNotebookExport(context?: Uri | { notebookEditor: { notebookUri: Uri } }) {
         const notebookUri = isUri(context) ? context : context?.notebookEditor.notebookUri;
-        const editor = notebookUri
-            ? this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, notebookUri))
-            : this.notebookProvider.activeEditor;
+        const document = notebookUri
+            ? this.notebooks.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
+            : this.notebooks.activeNotebookEditor?.document;
 
-        if (editor) {
-            const contents = editor.getContent();
-            const interpreter = editor.notebook?.getMatchingInterpreter();
-            return this.export(contents, editor.file, undefined, undefined, interpreter);
+        if (document) {
+            const contents = this.getContent(document);
+            const interpreter =
+                this.controllers.getSelectedNotebookController(document)?.connection.interpreter ||
+                this.controllers.getPreferredNotebookController(document)?.connection.interpreter;
+            return this.export(contents, document.uri, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
         }
@@ -89,18 +96,20 @@ export class ExportCommands implements IDisposable {
         if (!contents || !source) {
             // if no contents was passed then this was called from the command palette,
             // so we need to get the active editor
-            const activeEditor = this.notebookProvider.activeEditor;
-            if (!activeEditor) {
+            const document =
+                this.notebooks.activeNotebookEditor?.document ||
+                getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument;
+            if (!document) {
                 return;
             }
-            contents = contents ? contents : activeEditor.getContent();
-            source = source ? source : activeEditor.file;
+            contents = contents || this.getContent(document);
+            source = source || document.uri;
 
             // At this point also see if the active editor has a candidate interpreter to use
-            if (!interpreter) {
-                interpreter = activeEditor.notebook?.getMatchingInterpreter();
-            }
-
+            interpreter =
+                interpreter ||
+                this.controllers.getSelectedNotebookController(document)?.connection.interpreter ||
+                this.controllers.getPreferredNotebookController(document)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }
@@ -120,6 +129,27 @@ export class ExportCommands implements IDisposable {
                 sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick);
             }
         }
+    }
+    public getContent(document: NotebookDocument): string {
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
+        }
+        const cells = document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
+        });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
 
     private getExportQuickPickItems(

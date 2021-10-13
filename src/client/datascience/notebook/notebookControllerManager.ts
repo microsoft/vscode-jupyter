@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -45,7 +45,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -98,11 +98,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
-    public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
+    public async getActiveInterpreterOrDefaultController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): Promise<VSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
-            return this.createActiveInterpreterController(InteractiveWindowView);
+            return this.createActiveInterpreterController(notebookType);
         } else {
-            return this.createDefaultRemoteControllerForInteractiveWindow();
+            return this.createDefaultRemoteController();
         }
     }
 
@@ -160,10 +162,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         stopWatch
                     );
 
-                    traceInfoIf(
-                        !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                        `Providing notebook controllers with length ${this.registeredControllers.size}.`
-                    );
+                    traceInfoIfCI(`Providing notebook controllers with length ${this.registeredControllers.size}.`);
                 });
         }
         return this.controllersPromise;
@@ -209,7 +208,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
         return this.getOrCreateController(activeInterpreter, notebookType);
     }
-    private async createDefaultRemoteControllerForInteractiveWindow() {
+    private async createDefaultRemoteController() {
         // Get all remote kernels
         await this.loadNotebookControllers();
         const controllers = this.registeredNotebookControllers();
@@ -326,7 +325,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
 
         // Prep so that we can track the selected controller for this document
-        traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
+        traceInfoIfCI(`Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
         if (
@@ -372,7 +371,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     return;
                 }
                 if (!preferredConnection) {
-                    traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
+                    traceInfoIfCI(`PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
                     return;
                 }
 
@@ -396,8 +395,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
             } else {
-                traceInfoIf(
-                    isCI,
+                traceInfoIfCI(
                     `TargetController not found ID: ${preferredConnection?.id} for document ${document.uri.toString()}`
                 );
             }
@@ -484,7 +482,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
-        traceInfoIf(isCI, `Controller ${event.controller?.id} selected`);
+        traceInfoIfCI(`Controller ${event.controller?.id} selected`);
         // Now notify out that we have updated a notebooks controller
         this._onNotebookControllerSelected.fire(event);
     }
@@ -554,7 +552,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
             this.registeredControllers.delete(controller.id);
-            traceInfoIf(isCI, `Disposing controller ${controller.id}`);
+            traceInfoIfCI(`Disposing controller ${controller.id}`);
             controller.dispose();
         });
     }

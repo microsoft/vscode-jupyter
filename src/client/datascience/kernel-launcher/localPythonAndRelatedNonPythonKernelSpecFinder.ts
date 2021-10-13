@@ -7,7 +7,7 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -66,8 +66,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             ? await this.interpreterService.getInterpreters(resource)
             : [];
 
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+        traceInfoIfCI(
             `listKernelsImplementation for ${resource?.toString()}: ${interpreters.map((i) => i.path).join('\n')}`
         );
 
@@ -303,10 +302,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     ): Promise<PythonEnvironment | undefined> {
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`
-            );
+            traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
             return;
         }
         // 1. Check if current interpreter has the same path
@@ -372,10 +368,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             // but this seems too ambitious. The kernel spec should just launch with the default
             // python and no environment. Otherwise how do we know which interpreter is the best
             // match?
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel ${kernelSpec.name} does not match ${i.displayName} interpreter.`
-            );
+            traceInfoIfCI(`Kernel ${kernelSpec.name} does not match ${i.displayName} interpreter.`);
 
             return false;
         });
@@ -384,14 +377,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`
-        );
+        traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`);
         // Find all the possible places to look for this resource
         const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+        traceInfoIfCI(
             `Finding kernel specs for paths: ${paths
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .map((p) => ((p as any).interpreter ? (p as any).interpreter.path : p))
@@ -442,10 +431,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             }
         });
 
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`
-        );
+        traceInfoIfCI(`Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`);
 
         return unique;
     }

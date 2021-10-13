@@ -9,6 +9,7 @@ import {
     Range,
     TextDocument,
     TextDocumentChangeEvent,
+    TextDocumentContentChangeEvent,
     TextDocumentShowOptions,
     TextEditor,
     TextEditorDecorationType,
@@ -107,7 +108,7 @@ export class MockDocumentManager implements IDocumentManager {
     public changeDocument(file: string, changes: { range: Range; newText: string }[]) {
         const doc = this.textDocuments.find((d) => d.uri.fsPath === Uri.file(file).fsPath) as MockDocument;
         if (doc) {
-            const contentChanges = changes.map((c) => {
+            const contentChanges: TextDocumentContentChangeEvent[] = changes.map((c) => {
                 const startOffset = doc.offsetAt(c.range.start);
                 const endOffset = doc.offsetAt(c.range.end);
                 return {
@@ -118,6 +119,7 @@ export class MockDocumentManager implements IDocumentManager {
                 };
             });
             const ev: TextDocumentChangeEvent = {
+                reason: undefined,
                 document: doc,
                 contentChanges
             };

@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
 
 import * as path from 'path';
-import type { Kernel } from '@jupyterlab/services';
-import { IJupyterKernelSpec, INotebook } from '../../types';
+import type { KernelSpec } from '@jupyterlab/services';
+import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
@@ -16,6 +17,7 @@ import { IConfigurationService, IPathUtils, Resource } from '../../../common/typ
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
+    IKernel,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -27,7 +29,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceInfo, traceInfoIf } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import {
     areInterpreterPathsSame,
     getInterpreterHash,
@@ -186,7 +188,7 @@ export function getDetailOfKernelConnection(
 ): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     const notebookPath =
-        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel.session.path})` : '';
+        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     return `${kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue} ${notebookPath}`;
 }
 
@@ -303,7 +305,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
-    const defaultSpec: Kernel.ISpecModel = {
+    const defaultSpec: KernelSpec.ISpecModel = {
         name: getInterpreterKernelSpecName(interpreter),
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
@@ -430,7 +432,8 @@ export function findPreferredKernel(
                 !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                     ? PYTHON_LANGUAGE
                     : (
-                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                          ((notebookMetadata?.kernelspec as any)?.language as string) ||
+                          notebookMetadata?.language_info?.name
                       )?.toLowerCase();
         }
         let bestScore = -1;
@@ -450,7 +453,7 @@ export function findPreferredKernel(
               })
             : -1;
 
-        traceInfoIf(isCI, `preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
+        traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
 
         if (
             getResourceType(resource) === 'notebook' &&
@@ -459,7 +462,7 @@ export function findPreferredKernel(
         ) {
             // If we don't have any kernelspec, then just return the preferred interpreter for notebooks.
             if (!notebookMetadata?.kernelspec) {
-                traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
+                traceInfoIfCI("Using preferred interpreter as there's no kernelspec in notebook metadata");
                 return kernels[preferredInterpreterKernelSpecIndex];
             }
 
@@ -494,7 +497,7 @@ export function findPreferredKernel(
             //         }
             //     })
             // ) {
-            //     traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
+            //     traceInfoIfCI("Using preferred interpreter as there's no kernelspec in notebook metadata");
             //     return kernels[preferredInterpreterKernelSpecIndex];
             // }
         }
@@ -507,9 +510,9 @@ export function findPreferredKernel(
             let subScore = 0;
 
             if (spec) {
-                traceInfoIf(isCI, `Checking kernel Spec ${JSON.stringify(spec)}`);
-                traceInfoIf(isCI, `isPythonKernelSpec(spec) = ${isPythonKernelSpec(spec)}`);
-                traceInfoIf(isCI, `isKernelRegisteredByUs(spec) = ${isKernelRegisteredByUs(spec)}`);
+                traceInfoIfCI(`Checking kernel Spec ${JSON.stringify(spec)}`);
+                traceInfoIfCI(`isPythonKernelSpec(spec) = ${isPythonKernelSpec(spec)}`);
+                traceInfoIfCI(`isKernelRegisteredByUs(spec) = ${isKernelRegisteredByUs(spec)}`);
 
                 // Check if the kernel spec name matches the hash of the generated kernel spec name.
                 // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
@@ -521,7 +524,7 @@ export function findPreferredKernel(
                     spec.name === getInterpreterKernelSpecName(preferredInterpreter)
                 ) {
                     // This is a perfect match.
-                    traceInfoIf(isCI, 'Increased score by +100 for matching names without notebook metadata');
+                    traceInfoIfCI('Increased score by +100 for matching names without notebook metadata');
                     score += 100;
                 }
 
@@ -535,7 +538,7 @@ export function findPreferredKernel(
                     notebookMetadata.kernelspec.name === spec.name
                 ) {
                     // This is a perfect match.
-                    traceInfoIf(isCI, 'Increased score by +100 for matching names in notbeook metadata');
+                    traceInfoIfCI('Increased score by +100 for matching names in notbeook metadata');
                     score += 100;
                 }
 
@@ -544,15 +547,15 @@ export function findPreferredKernel(
                 if (
                     typeof notebookMetadata === 'object' &&
                     'interpreter' in notebookMetadata &&
-                    notebookMetadata.interpreter &&
-                    typeof notebookMetadata.interpreter === 'object' &&
-                    'hash' in notebookMetadata.interpreter &&
+                    (notebookMetadata as any).interpreter &&
+                    typeof (notebookMetadata as any).interpreter === 'object' &&
+                    'hash' in (notebookMetadata as any).interpreter &&
                     (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
+                    getInterpreterHash(metadata.interpreter) === (notebookMetadata as any).interpreter.hash
                 ) {
                     // This is a perfect match.
-                    traceInfoIf(isCI, 'Increased score by +100 for matching interpreter in notbeook metadata');
+                    traceInfoIfCI('Increased score by +100 for matching interpreter in notbeook metadata');
                     score += 100;
                 }
 
@@ -567,8 +570,7 @@ export function findPreferredKernel(
                 ) {
                     // Path match. This is worth more if no notebook metadata as that should
                     // match first.
-                    traceInfoIf(
-                        isCI,
+                    traceInfoIfCI(
                         `Increased score by ${notebookMetadata ? 1 : 8} for matching spec.path in notbeook metadata`
                     );
                     score += notebookMetadata ? 1 : 8;
@@ -576,7 +578,7 @@ export function findPreferredKernel(
 
                 // See if the display name already matches.
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
-                    traceInfoIf(isCI, 'Increased score by +16 for matching display_name with metadata');
+                    traceInfoIfCI('Increased score by +16 for matching display_name with metadata');
                     score += 16;
                 }
                 // See if the name of the environments match (kernel name == environment name).
@@ -589,7 +591,7 @@ export function findPreferredKernel(
                     nbMetadataLanguage === PYTHON_LANGUAGE &&
                     !notebookMetadata?.kernelspec?.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                 ) {
-                    traceInfoIf(isCI, 'Increased score by +16 for matching env name');
+                    traceInfoIfCI('Increased score by +16 for matching env name');
                     score += 16;
                 }
 
@@ -600,7 +602,7 @@ export function findPreferredKernel(
                     !notebookMetadata?.kernelspec?.display_name &&
                     nbMetadataLanguage === PYTHON_LANGUAGE
                 ) {
-                    traceInfoIf(isCI, 'Increased score by +16 for matching display_name with interpreter');
+                    traceInfoIfCI('Increased score by +16 for matching display_name with interpreter');
                     score += 10;
                 }
 
@@ -611,7 +613,7 @@ export function findPreferredKernel(
                             metadata
                         )} is ${score}`
                     );
-                    traceInfoIf(isCI, 'Increased score by +1 for matching language');
+                    traceInfoIfCI('Increased score by +1 for matching language');
                     subScore = 1;
                     score = +1;
                 }
@@ -631,7 +633,7 @@ export function findPreferredKernel(
                         // See if the version number matches
                         const nameVersion = parseInt(match[1][0], 10);
                         if (nameVersion && nameVersion === preferredInterpreter.version.major) {
-                            traceInfoIf(isCI, 'Increased score by +4 for matching major version');
+                            traceInfoIfCI('Increased score by +4 for matching major version');
                             score += 4;
                         }
                     }
@@ -649,7 +651,7 @@ export function findPreferredKernel(
                         metadata.interpreter?.path?.toLowerCase().includes('python3') ||
                         spec.argv[0].toLocaleLowerCase().includes('python3'))
                 ) {
-                    traceInfoIf(isCI, 'Increased score by +1 for matching major version 3');
+                    traceInfoIfCI('Increased score by +1 for matching major version 3');
                     score += 1;
                     subScore += 1;
                     traceInfo(
@@ -662,17 +664,18 @@ export function findPreferredKernel(
                     if (
                         typeof notebookMetadata === 'object' &&
                         'interpreter' in notebookMetadata &&
-                        notebookMetadata.interpreter &&
-                        typeof notebookMetadata.interpreter === 'object' &&
+                        (notebookMetadata as any).interpreter &&
+                        typeof (notebookMetadata as any).interpreter === 'object' &&
                         metadata.kind === 'startUsingPythonInterpreter'
                     ) {
-                        const nbMetadataInterpreter = notebookMetadata.interpreter as Partial<PythonEnvironment>;
+                        const nbMetadataInterpreter = (notebookMetadata as any).interpreter as Partial<
+                            PythonEnvironment
+                        >;
                         if (
                             nbMetadataInterpreter.version?.raw &&
                             nbMetadataInterpreter.version?.raw === metadata.interpreter.version?.raw
                         ) {
-                            traceInfoIf(
-                                isCI,
+                            traceInfoIfCI(
                                 'Increased score by +3 for matching raw version in notebook metadata interpreter'
                             );
                             score += 3;
@@ -681,7 +684,7 @@ export function findPreferredKernel(
                         metadata.interpreter?.version?.raw &&
                         metadata.interpreter?.version?.raw === preferredInterpreter?.version?.raw
                     ) {
-                        traceInfoIf(isCI, 'Increased score by +3 for matching raw version in preferred interpreter');
+                        traceInfoIfCI('Increased score by +3 for matching raw version in preferred interpreter');
                         score += 3;
                     }
                 }
@@ -694,7 +697,7 @@ export function findPreferredKernel(
                     preferredInterpreter &&
                     areInterpreterPathsSame(spec.interpreterPath, preferredInterpreter?.path)
                 ) {
-                    traceInfoIf(isCI, 'Increased score by +10 for matching spec.interpreterPath');
+                    traceInfoIfCI('Increased score by +10 for matching spec.interpreterPath');
                     score += 10;
                 }
             }
@@ -733,16 +736,19 @@ export function findPreferredKernel(
             }
         });
     }
-    traceInfoIf(isCI && index >= 0, `Preferred kernel is ${JSON.stringify(kernels[index])}`);
+    traceInfoIfCI(isCI && index >= 0, `Preferred kernel is ${JSON.stringify(kernels[index])}`);
     return index >= 0 ? kernels[index] : undefined;
 }
 
 export async function sendTelemetryForPythonKernelExecutable(
-    notebook: INotebook,
+    kernel: IKernel,
     resource: Resource,
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
+    if (!kernel.notebook) {
+        return;
+    }
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
     }
@@ -750,8 +756,8 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     try {
-        traceInfoIf(isCI, 'Begin sendTelemetryForPythonKernelExecutable');
-        const outputs = await executeSilently(notebook.session, 'import sys\nprint(sys.executable)');
+        traceInfoIfCI('Begin sendTelemetryForPythonKernelExecutable');
+        const outputs = await executeSilently(kernel.notebook.session, 'import sys\nprint(sys.executable)');
         if (outputs.length === 0) {
             return;
         }
@@ -806,5 +812,5 @@ export async function sendTelemetryForPythonKernelExecutable(
     } catch (ex) {
         traceError('Failed to compare interpreters', ex);
     }
-    traceInfoIf(isCI, 'End sendTelemetryForPythonKernelExecutable');
+    traceInfoIfCI('End sendTelemetryForPythonKernelExecutable');
 }

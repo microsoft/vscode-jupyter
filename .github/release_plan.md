@@ -8,7 +8,7 @@
 -   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
     -   [ ] Provide details for any automatically detected npm dependencies
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
--   [ ] Create new release branch with format `release-YYYY.MM.10`
+-   [ ] Create new release branch with format `release-YYYY.MM.100`
     -   [ ] Create a pull request against `release-YYYY.MM` for changes
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
@@ -50,15 +50,17 @@
 
 ## Preparation
 
--   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
+-   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the release notes(https://github.com/microsoft/vscode-docs/blob/vnext/release-notes/v<vscode version>.md, make note of the branch and file name).
+    - [ ] Include all new new features under a section named `Jupyter` with screenshots or animated gifs.
+    - [ ] Fixes, code health should remain in the Jupyter change log.
 -   [ ] Make sure component governance is happy
--   [ ] Make sure there is nothing in the validation queue targeting this release that still needs to be validated.
+-   [ ] Make sure there is nothing targeting this release that still needs to be validated
+        (`is:issue sort:updated-desc milestone:"<milestone>" label:verification-needed -label:verified`)
 
 ## Release
 
 -   [ ] Publish the release
-    -   [ ] Increase the extension version on the `release` branch. E.g. if the extension version was 2021.7.x, increase it to 2021.8.x. This should be the only difference between the `main` and `release` branches.
-    -   [ ] Generate a VSIX and sanity test the VSIX against VS Code prebuild
+    -   [ ] Use the generated VSIX (from last build for the release branch) and sanity test the VSIX against VS Code prebuild
     -   [ ] For an automated release
         -   [ ] Create a commit which contains the words `publish` and `release` in it (you can use --allow-empty if needed)
         -   [ ] Directly push (PR not required) the commit to the `release-xxxx.xx` branch
@@ -73,8 +75,6 @@
             -   [ ] Branch is release branch
             -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
             -   [ ] Save
--   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
--   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
         * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
@@ -89,11 +89,14 @@
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Turn insiders daily builds back on
--   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
+-   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release
 
 -   [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/.github/release_plan.md) (🤖)
+    * Title `<Month> <year> Release Plan`
+    * Add the labels `endgame-plan` to this issue
+    * Pin this issue
 -   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan) (🤖)

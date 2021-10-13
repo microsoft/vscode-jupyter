@@ -12,7 +12,7 @@ import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo, traceInfoIf } from '../../../client/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -51,7 +51,6 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { IS_CI_SERVER } from '../../ciConstants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -146,7 +145,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Clear output in empty cells', async function () {
         await closeNotebooks();
         const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
-        await openNotebook(api.serviceContainer, nbUri.fsPath);
+        await openNotebook(nbUri.fsPath);
         await waitForKernelToGetAutoSelected();
 
         // Confirm we have execution order and output.
@@ -515,7 +514,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     const cell1Output = getTextOutputValue(cell1.outputs[0]);
                     const cell2Output = getTextOutputValue(cell2.outputs[0]);
                     // https://github.com/microsoft/vscode-jupyter/issues/6175
-                    traceInfoIf(IS_CI_SERVER, `Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
+                    traceInfoIfCI(`Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
                     return false;
                 },
                 20_000,

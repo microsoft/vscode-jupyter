@@ -10,14 +10,14 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebook, INotebookProvider } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -41,8 +41,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -88,7 +88,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
-        this.notebookProvider.onSessionStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
+        this.kernelProvider.onKernelStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(
             this.onDidChangeActiveInteractiveWindow,
             this,
@@ -157,71 +157,41 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             .ignoreErrors();
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
-        if (activeEditor && activeEditor.document.notebookType === JupyterNotebookView) {
-            this.notebookProvider
-                .getOrCreateNotebook({
-                    identity: activeEditor.document.uri,
-                    resource: activeEditor.document.uri,
-                    getOnly: true
-                })
-                .then(async (nb) => {
-                    if (activeEditor === this.vscNotebook.activeNotebookEditor) {
-                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
-                        this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
-                        const canInterrupt = nb && nb.status === ServerStatus.Busy;
-                        this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
-                    }
-                })
-                .catch(
-                    traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
-                );
+        const kernel =
+            activeEditor && activeEditor.document.notebookType === JupyterNotebookView
+                ? this.kernelProvider.get(activeEditor.document)
+                : undefined;
+        if (kernel) {
+            const canStart = kernel.status !== ServerStatus.NotStarted;
+            this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+            const canInterrupt = kernel.status === ServerStatus.Busy;
+            this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const interactiveWindow = getActiveInteractiveWindow(this.interactiveProvider);
-        if (interactiveWindow?.notebookUri) {
-            this.notebookProvider
-                .getOrCreateNotebook({
-                    identity: interactiveWindow.notebookUri,
-                    resource: interactiveWindow.owner,
-                    getOnly: true
-                })
-                .then(async (nb) => {
-                    if (
-                        getActiveInteractiveWindow(this.interactiveProvider) === interactiveWindow &&
-                        nb !== undefined
-                    ) {
-                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
-                        this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
-                        const canInterrupt = nb && nb.status === ServerStatus.Busy;
-                        this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).ignoreErrors();
-                    }
-                })
-                .catch(
-                    traceError.bind(
-                        undefined,
-                        'Failed to determine if a kernel is active for the current interactive window'
-                    )
-                );
+        const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
+        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
+        if (kernel) {
+            const canStart = kernel.status !== ServerStatus.NotStarted;
+            this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
+            const canInterrupt = kernel.status === ServerStatus.Busy;
+            this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).ignoreErrors();
         } else {
             this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
             this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
         }
     }
-    private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
-        // Ok, kernel status has changed.
-        const activeEditor = this.vscNotebook.activeNotebookEditor;
-        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveProvider);
-        if (
-            activeInteractiveWindow &&
-            activeInteractiveWindow.notebookUri?.toString() === notebook.identity.toString()
-        ) {
+    private onDidKernelStatusChange({ kernel }: { status: ServerStatus; kernel: IKernel }) {
+        if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
-        } else if (activeEditor && activeEditor.document.uri.toString() === notebook.identity.toString()) {
-            this.updateContextOfActiveNotebookKernel(activeEditor);
+        } else if (
+            kernel.notebookDocument.notebookType === JupyterNotebookView &&
+            kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
+        ) {
+            this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -69,7 +69,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         }
         const nbCell = createJupyterCellFromVSCNotebookCell(cell);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outputs: nbformat.IOutput[] = nbCell.outputs as any;
+        const outputs: nbformat.IOutput[] = (nbCell as any).outputs as any;
         if (!Array.isArray(outputs)) {
             return [];
         }

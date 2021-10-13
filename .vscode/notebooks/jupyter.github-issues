@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-09-23"
+    "value": "$TODAYS_DATE=2021-10-11"
   },
   {
     "kind": 1,
@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DavidKutu assignee:joyceerhl assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
   },
   {
     "kind": 1,
@@ -37,7 +37,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"September 2021\"\r\n$RECOVERY_MILESTONE=milestone:\"August 2021 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"October 2021\""
+    "value": "$CURRENT_MILESTONE=milestone:\"October 2021\"\r\n$RECOVERY_MILESTONE=milestone:\"September 2021 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"November 2021\""
   },
   {
     "kind": 1,
@@ -47,12 +47,12 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_FEATURE_AREAS=3rd-party-extension,azureml,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n$ADMIN_AREAS=engineering,iteration-plan-candidate,release-plan,discussion,pm-task,iteration-plan"
+    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "----\r\n## Quick Bug Queries\r\n\r\n[Basic Information](https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests)  \r\n[Number, Word, Date Qualifiers](https://docs.github.com/en/github/searching-for-information-on-github/getting-started-with-searching-on-github/understanding-the-search-syntax)\r\n\r\n\r\nSome interesting examples:  \r\n* Closed between 08/30/2021 and 09/03/2021 - ```$JUPYTER_ALL_REPOS is:issue closed:2021-08-30..2021-09-03```\r\n"
+    "value": "----\r\n## Quick Bug Queries\r\n\r\n[Basic Information](https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests)  \r\n[Number, Word, Date Qualifiers](https://docs.github.com/en/github/searching-for-information-on-github/getting-started-with-searching-on-github/understanding-the-search-syntax)\r\n\r\n\r\nSome interesting examples:  \r\n* Issues closed between 08/30/2021 and 09/03/2021 - ```$JUPYTER_ALL_REPOS is:issue closed:2021-08-30..2021-09-03```\r\n* Issues updated today by me that aren't part of a milestone - $ALL_REPOS is:issue updated:$TODAYS_DATE commenter:@me no:milestone\r\n"
   },
   {
     "kind": 2,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION -label:$ADMIN_AREAS sort:created-asc "
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:author-date"
   },
   {
     "kind": 1,
@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION -label:$ADMIN_AREAS sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -123,6 +123,26 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Non Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden sort:created-asc"
   },
   {
     "kind": 1,
@@ -162,7 +182,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "----\r\n## EndGame for Current Milestone"
+    "value": "----\r\n## EndGame for Current Milestone\r\n### See [My Endgame](https://github.dev/microsoft/vscode/blob/main/.vscode/notebooks/my-endgame.github-issues) notebook in the main VS Code repo. "
   },
   {
     "kind": 1,
@@ -202,7 +222,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:invalid $CURRENT_MILESTONE sort:created-asc  "
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc "
   },
   {
     "kind": 1,
@@ -232,17 +252,127 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "---\r\n## Bugs not assigned to any area"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$JUPYTER_FEATURE_AREAS -label:needs-triage"
+    "value": "---\r\n## Housekeeping"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "---\r\n## Interactive Window"
+    "value": "### In general\r\nThe success of any housekeeping activity depends on the following, so regularly review!\r\n- $JUPYTER_FEATURE_AREAS is accurate and colors are set correctly (traditionally colored #c5def5)\r\n- $VSCODE_FEATURE_AREAS is accurate (traditionally colored #c5def5)\r\n- $BASE_CATEGORIES is accurate (Colored #000000)\r\n"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "// Set this to limit which repo you're actively working on.\r\n$HOUSEKEEPING_REPO=$JUPYTER_REPO\r\n//$HOUSEKEEPING_REPO=$JUPYTER_INTERNAL_REPO\r\n//$HOUSEKEEPING_REPO=$JUPYTER_DATA_WRANGLER_REPO"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Issues not categorized at all\r\n\r\nAll issues should be categorized as a bug, enhancement, documentation, pm-task etc ($BASE_CATEGORIES). Should be driven to zero."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue -label:$BASE_CATEGORIES -label:needs-triage"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Bugs, enhancements, documentation not assigned to any area\r\n\r\nAll bugs and enhancements should be assigned with some feature area label. During housekeeping this query should be driven to zero at least once."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Info-Needed bugs\r\n\r\nIf assigned to you please review. If required info is not present after 2 weeks have passed, please close using the following statement: \r\n\r\n```Issues labeled with \"info-needed\" are closed if we do not receive more information from the issue author in 2 weeks. If you are the issue author and you still are running into this problem, please reactivate with additional information.```"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:info-needed"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Feature Area Housekeeping Review Instructions\r\nOnce the above queries are clean, the ```housekeeping-review``` label will be added to every bug, enhancement or documentation issue. We will assign all such issues in bulk to a teammember. It's that teammember's job to review each issue assigned to them to make sure it's still valid. Once reviewed, the ```housekeeping-review``` label is removed."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation label:housekeeping-review -label:needs-triage\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Assignment Housekeeping\r\nOur team does not assign bugs automatically based on areas. It's generally the case that if an issue is assigned, then it's actively being worked on or will be worked on in the current iteration."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue $TEAM_ASSIGNMENT -$CURRENT_MILESTONE -label:info-needed \r\n\r\n// NOTE: The expanded query will not return the same results in github as this cell's execution will. "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Debt Housekeeping Review\r\nSame as Feature Area, but applies to debt items."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt label:housekeeping-review -label:needs-triage"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Bugs\r\n\r\nJust an informational query. Nothing needs to be driven here. "
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Enhancements\r\n\r\nJust an informational query. Nothing needs to be driven here."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:enhancement"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Documentation\r\nJust an informational query. Nothing needs to be driven here."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:documentation"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Engineering Issues\r\n\r\nJust an informational query. Nothing needs to be driven here."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:engineering"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All Open Debt Issues\r\n"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt"
   },
   {
     "kind": 1,

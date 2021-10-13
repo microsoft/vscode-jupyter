@@ -4,8 +4,8 @@
 'use strict';
 
 import * as fastDeepEqual from 'fast-deep-equal';
-import { nbformat } from '@jupyterlab/coreutils';
-import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
+import type * as nbformat from '@jupyterlab/nbformat';
+import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {
     NotebookCell,
     NotebookCellExecution,
@@ -20,12 +20,13 @@ import {
     Range,
     notebooks,
     NotebookCellOutput,
-    NotebookCellExecutionState
+    NotebookCellExecutionState,
+    CancellationTokenSource
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -138,6 +139,7 @@ export class CellExecution implements IDisposable {
     private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
+    private readonly prompts = new Set<CancellationTokenSource>();
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -216,10 +218,7 @@ export class CellExecution implements IDisposable {
             return;
         }
         traceCellMessage(this.cell, 'Start execution');
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_FORCE_LOGGING,
-            `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
-        );
+        traceInfoIfCI(`Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`);
         if (!this.canExecuteCell()) {
             // End state is bool | undefined not optional. Undefined == not success or failure
             this.execution?.end(undefined);
@@ -263,6 +262,8 @@ export class CellExecution implements IDisposable {
      * Hence `forced=true` is more like a hard kill.
      */
     public async cancel(forced = false) {
+        // Close all of the prompts (if we any any UI prompts asking user for input).
+        this.prompts.forEach((item) => item.cancel());
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
@@ -287,6 +288,8 @@ export class CellExecution implements IDisposable {
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
+        this.prompts.forEach((item) => item.dispose());
+        this.prompts.clear();
     }
     private clearLastUsedStreamOutput() {
         this.lastUsedStreamOutput = undefined;
@@ -440,31 +443,29 @@ export class CellExecution implements IDisposable {
             ...{ cellId: this.cell.document.uri.toString() }
         };
 
-        // For Jupyter requests, silent === don't output, while store_history === don't update execution count
-        // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-        const request = (this.request = session.requestExecute(
-            {
-                code: code.replace(/\r\n/g, '\n'),
-                silent: false,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: true
-            },
-            false,
-            metadata
-        ));
-
+        try {
+            // For Jupyter requests, silent === don't output, while store_history === don't update execution count
+            // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
+            this.request = session.requestExecute(
+                {
+                    code: code.replace(/\r\n/g, '\n'),
+                    silent: false,
+                    stop_on_error: false,
+                    allow_stdin: true,
+                    store_history: true
+                },
+                false,
+                metadata
+            );
+        } catch (ex) {
+            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
+            return this.completedWithErrors(new Error('Session cannot generate requests'));
+        }
         // Listen to messages and update our cell execution state appropriately
-
         // Keep track of our clear state
         const clearState = new RefBool(false);
 
-        // Listen to the response messages and update state as we go
-        if (!request) {
-            traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`);
-            return this.completedWithErrors(new Error('Session cannot generate requests'));
-        }
-
+        const request = this.request;
         request.onIOPub = (msg) => {
             // Cell has been deleted or the like.
             if (this.cell.document.isClosed) {
@@ -497,12 +498,13 @@ export class CellExecution implements IDisposable {
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
-            if (ex && ex instanceof Error && ex.message === 'Canceled') {
+            if (ex && ex instanceof Error && ex.message.includes('Canceled')) {
                 this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
                 traceCellMessage(this.cell, 'Some other execution error');
-                this.completedWithErrors(ex);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                this.completedWithErrors(ex as any);
             }
         }
     }
@@ -513,35 +515,34 @@ export class CellExecution implements IDisposable {
 
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
+                traceInfoIfCI('KernelMessage = ExecuteResult');
                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = StatusMessage');
+                traceInfoIfCI('KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
                 const statusMsg = msg as KernelMessage.IStatusMsg;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                traceInfoIfCI(
                     'KernelMessage = StreamMessage',
                     `Cell Index ${this.cell.index}, Stream '${msg.content.name}`,
                     msg.content.text
                 );
                 this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = DisplayMessage');
+                traceInfoIfCI('KernelMessage = DisplayMessage');
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = UpdateDisplayMessage');
+                traceInfoIfCI('KernelMessage = UpdateDisplayMessage');
                 this.handleUpdateDisplayDataMessage(msg);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = CleanOutput');
+                traceInfoIfCI('KernelMessage = CleanOutput');
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ErrorMessage');
+                traceInfoIfCI('KernelMessage = ErrorMessage');
                 this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // Noop.
@@ -555,24 +556,26 @@ export class CellExecution implements IDisposable {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
-                traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Exec Count = ${msg.content.execution_count}`);
+                traceInfoIfCI(`Exec Count = ${msg.content.execution_count}`);
                 this.execution.executionOrder = msg.content.execution_count;
             }
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
-            this.completedWithErrors(err);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.completedWithErrors(err as any);
         }
     }
 
     private addToCellData(
-        output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError,
+        output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError | nbformat.IOutput,
         clearState: RefBool
     ) {
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
-            output.transient &&
+            'transient' in output &&
             typeof output.transient === 'object' &&
+            output.transient &&
             'display_id' in output.transient &&
             typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id
@@ -602,19 +605,26 @@ export class CellExecution implements IDisposable {
         this.endTemporaryTask();
     }
 
-    private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
+    private async handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
+            const cancelToken = new CancellationTokenSource();
+            this.prompts.add(cancelToken);
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            this.applicationService
-                .showInputBox({
-                    prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
-                    ignoreFocusOut: true,
-                    password: hasPassword
-                })
+            await this.applicationService
+                .showInputBox(
+                    {
+                        prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                        ignoreFocusOut: true,
+                        password: hasPassword
+                    },
+                    cancelToken.token
+                )
                 .then((v) => {
                     session.sendInputReply(v || '');
                 }, noop);
+
+            this.prompts.delete(cancelToken);
         }
     }
 
@@ -772,7 +782,7 @@ export class CellExecution implements IDisposable {
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
-        const output: nbformat.IDisplayData = {
+        const output = {
             output_type: 'display_data',
             data: handleTensorBoardDisplayDataOutput(msg.content.data),
             metadata: msg.content.metadata,
@@ -842,7 +852,7 @@ export class CellExecution implements IDisposable {
             ...output,
             data: msg.content.data,
             metadata: msg.content.metadata
-        });
+        } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
             return;

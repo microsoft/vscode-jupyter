@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -17,7 +17,8 @@ import { CommandRegistry } from '../../client/datascience/commands/commandRegist
 import { pruneCell } from '../../client/datascience/common';
 import { DataScience } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
-import { IDataScienceCodeLensProvider } from '../../client/datascience/types';
+import { RawNotebookSupportedService } from '../../client/datascience/raw-kernel/rawNotebookSupportedService';
+import { IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../../client/datascience/types';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {
@@ -31,6 +32,7 @@ suite('DataScience Tests', () => {
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
+    let rawNotebookSupported: IRawNotebookSupportedService;
     setup(() => {
         cmdManager = mock(CommandManager);
         dataScienceCodeLensProvider = mock(DataScienceCodeLensProvider);
@@ -39,6 +41,7 @@ suite('DataScience Tests', () => {
         cmdRegistry = mock(CommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
+        rawNotebookSupported = mock(RawNotebookSupportedService);
 
         dataScience = new DataScience(
             instance(cmdManager),
@@ -50,7 +53,8 @@ suite('DataScience Tests', () => {
             instance(configService),
             instance(docManager),
             instance(workspaceService),
-            instance(cmdRegistry)
+            instance(cmdRegistry),
+            instance(rawNotebookSupported)
         );
 
         onDidChangeSettings = sinon.stub();
@@ -59,6 +63,7 @@ suite('DataScience Tests', () => {
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(docManager.onDidChangeActiveTextEditor).thenReturn(onDidChangeActiveTextEditor);
+        when(rawNotebookSupported.isSupported).thenReturn(true);
     });
 
     suite('Activate', () => {

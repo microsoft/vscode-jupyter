@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -70,12 +70,16 @@ export class JupyterExporter implements INotebookExporter {
                             await this.ipynbProvider.open(Uri.file(file));
                         }
                     } catch (e) {
-                        await this.errorHandler.handleError(e);
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        await this.errorHandler.handleError(e as any);
                     }
                 });
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            void this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
+            void this.applicationShell.showInformationMessage(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                localize.DataScience.exportDialogFailed().format(exc as any)
+            );
         }
     }
     public async translateToNotebook(
@@ -91,7 +95,7 @@ export class JupyterExporter implements INotebookExporter {
         const pythonNumber = await this.extractPythonMainVersion();
 
         // Use this to build our metadata object
-        const metadata: nbformat.INotebookMetadata = {
+        const metadata = {
             language_info: {
                 codemirror_mode: {
                     name: 'ipython',

@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.9.100",
+    "version": "2021.10.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -28,7 +28,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.61.0-insider"
+        "vscode": "1.62.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -60,8 +60,6 @@
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
-        "onCommand:jupyter.opennotebook",
-        "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
         "onCommand:jupyter.exportfileasnotebook",
         "onCommand:jupyter.exportfileandoutputasnotebook",
@@ -507,17 +505,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.opennotebook",
-                "title": "%jupyter.command.jupyter.opennotebook.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.opennotebookInPreviewEditor",
-                "title": "%jupyter.command.jupyter.opennotebookInPreviewEditor.title%",
-                "enablement": "jupyter.opennotebookInPreviewEditor.enabled",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.exportoutputasnotebook",
                 "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                 "category": "Jupyter",
@@ -689,7 +676,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || notebookType == interactive && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openOutlineView",
@@ -697,7 +684,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openOutlineView.shorttitle%",
                 "icon": "$(list-unordered)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && !view.outline.visible"
+                "enablement": "notebookType == jupyter-notebook"
             },
             {
                 "command": "jupyter.refreshDataViewer",
@@ -960,16 +947,6 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter",
-                    "command": "jupyter.opennotebook",
-                    "group": "Jupyter"
-                },
-                {
-                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled",
-                    "command": "jupyter.opennotebookInPreviewEditor",
-                    "group": "Jupyter"
-                },
-                {
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
@@ -1191,12 +1168,6 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.opennotebook",
-                    "title": "%jupyter.command.jupyter.opennotebook.title%",
-                    "category": "Jupyter",
-                    "when": "isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.exportfileasnotebook",
                     "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
                     "category": "Jupyter",
@@ -1335,6 +1306,11 @@
                     "when": "config.noExists"
                 },
                 {
+                    "command": "jupyter.selectjupytercommandline",
+                    "category": "Jupyter",
+                    "when": "!jupyter.zmqavailable"
+                },
+                {
                     "command": "jupyter.runfromline",
                     "category": "Jupyter",
                     "when": "config.noExists"
@@ -1388,11 +1364,6 @@
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.opennotebookInPreviewEditor",
-                    "when": "false",
-                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.openVariableView",
@@ -1905,7 +1876,7 @@
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
         "build-ipywidgets-webpack": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./src/ipywidgets/webpack.config.js",
         "checkDependencies": "gulp checkDependencies",
-        "postinstall": "node ./build/ci/postInstall.js",
+        "postinstall": "node ./build/ci/postInstall.js && cd src/ipywidgets && npm install",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
@@ -1930,25 +1901,25 @@
         "updateBuildNumber": "gulp updateBuildNumber",
         "webpack": "webpack",
         "download-api": "vscode-dts dev",
-        "postdownload-api": "vscode-dts main"
+        "postdownload-api": "vscode-dts main",
+        "generateTelemetry": "gulp generateTelemetryMd"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
         "@fluentui/react": "^7.160.1",
-        "@jupyter-widgets/base": "^2.0.1",
-        "@jupyter-widgets/controls": "^1.5.2",
-        "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
-        "@jupyter-widgets/output": "^2.0.1",
+        "@jupyter-widgets/base": "^4.0.0",
         "@jupyter-widgets/schema": "^0.4.0",
-        "@jupyterlab/coreutils": "^3.1.0",
-        "@jupyterlab/services": "^4.2.0",
+        "@jupyterlab/coreutils": "^5.1.17",
+        "@jupyterlab/nbformat": "^3.1.17",
+        "@jupyterlab/services": "^6.1.17",
+        "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
-        "@phosphor/widgets": "^1.9.3",
         "@vscode/jupyter-lsp-middleware": "^0.2.12",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
+        "crypto": "^1.0.1",
         "diff-match-patch": "^1.0.0",
         "download": "^8.0.0",
         "encoding": "^0.1.13",
@@ -1962,6 +1933,7 @@
         "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "is-online": "^9.0.0",
+        "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
         "lodash": "^4.17.21",
         "log4js": "^6.1.2",
@@ -2013,7 +1985,7 @@
         "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.17",
         "winston": "^3.2.1",
-        "ws": "^6.0.0",
+        "ws": "^6.2.2",
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {

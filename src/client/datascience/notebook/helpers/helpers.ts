@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import {
     NotebookCellOutput,
     NotebookCellOutputItem,
@@ -18,9 +18,9 @@ import {
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
-import { isCI, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -300,8 +300,7 @@ export class NotebookCellStateTracker {
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
-    traceInfoIf(
-        isCI,
+    traceInfoIfCI(
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}`

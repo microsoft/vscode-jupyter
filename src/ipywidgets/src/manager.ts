@@ -7,7 +7,7 @@ import { shims } from '@jupyter-widgets/base';
 import * as jupyterlab from '@jupyter-widgets/jupyterlab-manager';
 import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime';
 import { Kernel } from '@jupyterlab/services';
-import { Widget } from '@phosphor/widgets';
+import { Widget } from '@lumino/widgets';
 import { DocumentContext } from './documentContext';
 import { requireLoader } from './widgetLoader';
 
@@ -66,7 +66,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         data?: any,
         metadata?: any
     ): Promise<shims.services.Comm> {
-        const comm = this.kernel.connectToComm(target_name, model_id);
+        const comm = this.kernel.createComm(target_name, model_id);
         if (data || metadata) {
             comm.open(data, metadata);
         }
@@ -78,7 +78,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
      */
     public _get_comm_info(): Promise<any> {
         return this.kernel
-            .requestCommInfo({ target: this.comm_target_name })
+            .requestCommInfo({ target_name: this.comm_target_name })
             .then((reply) => (reply.content as any).comms);
     }
     public async display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget> {

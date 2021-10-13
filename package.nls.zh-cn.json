@@ -79,8 +79,6 @@
     "DataScience.jupyterNativeNotebookUriStatusLabelForRemote": "Jupyter 服务器：远程",
     "jupyter.command.jupyter.selectjupytercommandline.title": "指定 Jupyter 命令行参数",
     "jupyter.command.jupyter.importnotebook.title": "导入 Jupyter 笔记本",
-    "jupyter.command.jupyter.opennotebook.title": "在笔记本编辑器中打开",
-    "jupyter.command.jupyter.opennotebookInPreviewEditor.title": "在预览笔记本编辑器中打开",
     "jupyter.command.jupyter.importnotebookfile.title": "转换为 Python 脚本",
     "jupyter.command.jupyter.exportoutputasnotebook.title": "将交互式窗口导出为 Jupyter Notebook",
     "jupyter.command.jupyter.exportfileasnotebook.title": "将当前的 Python 文件导出为 Jupyter Notebook",

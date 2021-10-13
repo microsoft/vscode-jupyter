@@ -17,7 +17,8 @@ import {
     getKernelPathFromKernelConnection,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { ILocalResourceUriConverter, INotebook } from '../types';
+import { IKernel } from '../jupyter/kernels/types';
+import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
@@ -30,7 +31,7 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     private cachedWidgetScripts?: Promise<WidgetScriptSource[]>;
     constructor(
-        private readonly notebook: INotebook,
+        private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly fs: IFileSystem,
         private readonly interpreterService: IInterpreterService,
@@ -82,11 +83,10 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
             return widgetScriptSource;
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return Promise.all(mappedFiles as any);
+        return Promise.all(mappedFiles);
     }
     private async getSysPrefixOfKernel() {
-        const kernelConnectionMetadata = this.notebook.getKernelConnection();
+        const kernelConnectionMetadata = this.kernel.kernelConnectionMetadata;
         if (!kernelConnectionMetadata) {
             return;
         }

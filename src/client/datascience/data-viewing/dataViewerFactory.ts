@@ -62,6 +62,10 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         return result;
     }
 
+    public get activeViewer() {
+        return [...this.knownViewers.values()].find((v) => v.active);
+    }
+
     private updateOpenDataViewers(viewer: IDataViewer) {
         this.knownViewers.delete(viewer);
     }

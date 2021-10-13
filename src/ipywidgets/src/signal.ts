@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { ISignal, Slot } from '@phosphor/signaling';
+import { ISignal, Slot } from '@lumino/signaling';
 
 export class Signal<T, S> implements ISignal<T, S> {
     private slots: Set<Slot<T, S>> = new Set<Slot<T, S>>();

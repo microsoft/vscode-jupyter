@@ -88,7 +88,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         this.skip();
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
+        await openNotebook(ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
@@ -106,7 +106,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // point to this one
         // https://github.com/microsoft/vscode-jupyter/issues/7610
         this.skip();
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
+        await openNotebook(ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -136,7 +136,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // It should connect to the same live kernel
         // Second cell should display the value of existing variable from previous execution.
 
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
+        await openNotebook(ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');

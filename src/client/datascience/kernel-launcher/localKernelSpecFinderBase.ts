@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
@@ -75,8 +75,7 @@ export abstract class LocalKernelSpecFinderBase {
                 string,
                 KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
             >();
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            traceInfoIfCI(
                 `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
             );
             items.map((kernelSpec) => {

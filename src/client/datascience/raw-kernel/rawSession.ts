@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import type { ISignal, Signal } from '@phosphor/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
+import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -32,18 +33,20 @@ export class RawSession implements ISessionWithSocket {
     private _clientID: string;
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
-    private readonly _kernelChanged: Signal<this, Session.IKernelChangedArgs>;
+    private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
+    private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
-        this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);
+        this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
+        this._connectionStatusChanged = new signaling.Signal<this, Kernel.ConnectionStatus>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -54,8 +57,20 @@ export class RawSession implements ISessionWithSocket {
         this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
+    public get connectionStatus() {
+        return this._kernel.connectionStatus;
+    }
+    public get connectionStatusChanged(): ISignal<this, Kernel.ConnectionStatus> {
+        return this._kernel.connectionStatusChanged;
+    }
+    public get disposed(): ISignal<this, void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return this._kernel.disposed as any;
+    }
+    isRemoteSession?: boolean | undefined;
 
     public async dispose() {
         // We want to know who called dispose on us
@@ -100,6 +115,28 @@ export class RawSession implements ISessionWithSocket {
         return this._statusChanged;
     }
 
+    // Provide a way to wait for connected status
+    public async waitForReady(): Promise<void> {
+        // When our kernel connects and gets a status message it triggers the ready promise
+        const deferred = createDeferred<string>();
+        const handler = (_session: RawSession, status: Kernel.Status) => {
+            if (status == 'idle') {
+                deferred.resolve(status);
+            }
+        };
+        this.statusChanged.connect(handler);
+        if (this.status == 'idle') {
+            deferred.resolve(this.status);
+        }
+
+        const result = await Promise.race([deferred.promise, sleep(30_000)]);
+        this.statusChanged.disconnect(handler);
+
+        if (result.toString() != 'idle') {
+            throw new TimedOutError(`Kernel with ${this.id} never connected.`);
+        }
+    }
+
     // Shutdown our session and kernel
     public shutdown(): Promise<void> {
         return this.dispose();
@@ -109,7 +146,7 @@ export class RawSession implements ISessionWithSocket {
     get terminated(): ISignal<this, void> {
         throw new Error('Not yet implemented');
     }
-    get kernelChanged(): ISignal<this, Session.IKernelChangedArgs> {
+    get kernelChanged(): ISignal<this, Session.ISessionConnection.IKernelChangedArgs> {
         return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
@@ -119,10 +156,10 @@ export class RawSession implements ISessionWithSocket {
         return this._ioPubMessage;
     }
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
-        throw new Error('Not yet implemented');
+        return this._kernel.unhandledMessage;
     }
     get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
-        throw new Error('Not yet implemented');
+        return this._kernel.anyMessage;
     }
     get path(): string {
         throw new Error('Not yet implemented');
@@ -137,7 +174,13 @@ export class RawSession implements ISessionWithSocket {
         throw new Error('Not yet implemented');
     }
     get model(): Session.IModel {
-        throw new Error('Not yet implemented');
+        return {
+            id: this._id,
+            name: this._kernel.name,
+            path: this.kernelProcess.kernelConnectionMetadata.interpreter?.path || 'kernel_path',
+            type: 'notebook',
+            kernel: this._kernel.model
+        };
     }
     get status(): Kernel.Status {
         return this.kernel.status;
@@ -162,6 +205,9 @@ export class RawSession implements ISessionWithSocket {
     }
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
         this._ioPubMessage.emit(msg);
+    }
+    private onKernelConnectionStatus(_sender: Kernel.IKernelConnection, state: Kernel.ConnectionStatus) {
+        this._connectionStatusChanged.emit(state);
     }
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {

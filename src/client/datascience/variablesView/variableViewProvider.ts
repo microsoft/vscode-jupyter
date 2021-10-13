@@ -7,6 +7,7 @@ import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscod
 import {
     IApplicationShell,
     ICommandManager,
+    IDocumentManager,
     IWebviewViewProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -56,7 +57,8 @@ export class VariableViewProvider implements IVariableViewProvider {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager
     ) {}
 
     public async resolveWebviewView(
@@ -79,7 +81,8 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
             this.notebookWatcher,
-            this.commandManager
+            this.commandManager,
+            this.documentManager
         );
 
         // If someone is waiting for the variable view resolve that here

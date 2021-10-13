@@ -9,7 +9,7 @@ import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
-import { IExtensionTestApi } from '../../../common';
+import { captureScreenShot, IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
@@ -58,6 +58,9 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

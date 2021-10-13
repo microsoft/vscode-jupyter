@@ -6,21 +6,26 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { Identifiers } from '../constants';
-import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
+import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
 import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
 import { traceError } from '../../common/logger';
+import { IKernel } from '../jupyter/kernels/types';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
     private initialized: boolean = false;
-    private notebook: INotebook | undefined;
+    private _kernel: IKernel | undefined;
     private variable: IJupyterVariable | undefined;
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
     ) {}
+
+    public get kernel(): IKernel | undefined {
+        return this._kernel;
+    }
 
     /**
      * Normalizes column types to the types the UI component understands.
@@ -73,8 +78,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return;
     }
 
-    public setDependencies(variable: IJupyterVariable, notebook?: INotebook): void {
-        this.notebook = notebook;
+    public setDependencies(variable: IJupyterVariable, kernel?: IKernel): void {
+        this._kernel = kernel;
         this.variable = variable;
     }
 
@@ -86,7 +91,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             if (sliceExpression || isRefresh) {
                 variable = await this.variableManager.getDataFrameInfo(
                     variable,
-                    this.notebook,
+                    this._kernel,
                     sliceExpression,
                     isRefresh
                 );
@@ -120,7 +125,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 0,
                 this.variable.rowCount,
-                this.notebook,
+                this._kernel,
                 sliceExpression
             );
             allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
@@ -136,7 +141,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 start,
                 end,
-                this.notebook,
+                this._kernel,
                 sliceExpression
             );
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
@@ -148,8 +153,10 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
             this.initialized = true;
-            await this.dependencyService.checkAndInstallMissingDependencies(this.notebook?.getMatchingInterpreter());
-            this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
+            await this.dependencyService.checkAndInstallMissingDependencies(
+                this._kernel?.kernelConnectionMetadata.interpreter
+            );
+            this.variable = await this.variableManager.getDataFrameInfo(this.variable, this._kernel);
         }
     }
 }

@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -20,12 +21,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { INotebookControllerManager } from '../../notebook/types';
-import {
-    IDataScienceErrorHandler,
-    IJupyterServerUriStorage,
-    INotebookEditorProvider,
-    INotebookProvider
-} from '../../types';
+import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebook, INotebookProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
@@ -35,7 +31,10 @@ export class KernelProvider implements IKernelProvider {
     private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
+    private readonly _onDidStartKernel = new EventEmitter<IKernel>();
     private readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
+    private readonly _onKernelStatusChanged = new EventEmitter<{ status: ServerStatus; kernel: IKernel }>();
+    public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();
         this.notebook.notebookDocuments.forEach((item) => {
@@ -52,7 +51,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
@@ -64,6 +62,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
+        this.notebookProvider.onSessionStatusChanged(this.onNotebookSessionChanged, this, this.disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -74,6 +73,10 @@ export class KernelProvider implements IKernelProvider {
         return this._onDidRestartKernel.event;
     }
 
+    public get onDidStartKernel(): Event<IKernel> {
+        return this._onDidStartKernel.event;
+    }
+
     public get(notebook: NotebookDocument): IKernel | undefined {
         return this.kernelsByNotebook.get(notebook)?.kernel;
     }
@@ -81,6 +84,10 @@ export class KernelProvider implements IKernelProvider {
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
+        await Promise.all(this.kernels.map((k) => k.dispose()));
+        this._onDidDisposeKernel.dispose();
+        this._onDidRestartKernel.dispose();
+        this._onKernelStatusChanged.dispose();
     }
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
         const existingKernelInfo = this.kernelsByNotebook.get(notebook);
@@ -101,7 +108,6 @@ export class KernelProvider implements IKernelProvider {
             waitForIdleTimeout,
             interruptTimeout,
             this.errorHandler,
-            this.editorProvider,
             this.appShell,
             this.fs,
             this.serverStorage,
@@ -115,6 +121,7 @@ export class KernelProvider implements IKernelProvider {
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
         this.deleteMappingIfKernelIsDisposed(notebook, kernel);
@@ -134,6 +141,7 @@ export class KernelProvider implements IKernelProvider {
                         kernel.notebookDocument.uri.toString()
                     );
                 }
+                this.pendingDisposables.delete(kernel);
             },
             this,
             this.disposables
@@ -150,5 +158,11 @@ export class KernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+    private onNotebookSessionChanged({ status, notebook }: { status: ServerStatus; notebook: INotebook }) {
+        const kernel = this.kernels.find((item) => item.notebook === notebook);
+        if (kernel) {
+            this._onKernelStatusChanged.fire({ status, kernel });
+        }
     }
 }

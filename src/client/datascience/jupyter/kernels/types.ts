@@ -20,11 +20,13 @@ import type {
     IJupyterKernel,
     IJupyterKernelSpec,
     INotebook,
+    INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import type * as nbformat from '@jupyterlab/nbformat';
 
-export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
+export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined };
 
 export enum NotebookCellRunState {
     Running = 1,
@@ -120,8 +122,9 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 }
 
 export interface IKernel extends IAsyncDisposable {
+    readonly connection: INotebookProviderConnection | undefined;
     readonly notebookDocument: NotebookDocument;
-    /**
+    /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
      * However if we create an intearctive window without a file, then this is undefined.
@@ -130,6 +133,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
+    readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
     readonly onWillRestart: Event<void>;
     readonly onWillInterrupt: Event<void>;
@@ -146,7 +150,7 @@ export interface IKernel extends IAsyncDisposable {
     interrupt(): Promise<InterruptResult>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
-    executeHidden(code: string): Promise<void>;
+    executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 
 export type KernelOptions = {
@@ -161,8 +165,10 @@ export type KernelOptions = {
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     readonly kernels: Readonly<IKernel[]>;
+    onDidStartKernel: Event<IKernel>;
     onDidRestartKernel: Event<IKernel>;
     onDidDisposeKernel: Event<IKernel>;
+    onKernelStatusChanged: Event<{ status: ServerStatus; kernel: IKernel }>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

@@ -11,7 +11,7 @@ import { createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -69,7 +69,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
+        private readonly pythonExecFactory: IPythonExecutionFactory
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -171,7 +172,8 @@ export class KernelProcess implements IKernelProcess {
         try {
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             await Promise.race([
-                tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
+                // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
+                tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 deferred.promise,
                 createPromiseFromCancellation({
                     token: cancelToken,
@@ -343,7 +345,11 @@ export class KernelProcess implements IKernelProcess {
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
         if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled) {
-            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool, this.kernelEnvVarsService);
+            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(
+                this.daemonPool,
+                this.pythonExecFactory,
+                this.kernelEnvVarsService
+            );
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,

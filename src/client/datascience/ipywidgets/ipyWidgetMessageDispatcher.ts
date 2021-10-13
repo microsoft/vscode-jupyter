@@ -6,10 +6,9 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import * as util from 'util';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { isCI } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -17,7 +16,8 @@ import { deserializeDataViews, serializeDataViews } from '../../common/utils/ser
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -37,7 +37,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly commTargetsRegistered = new Set<string>();
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
-    private notebook?: INotebook;
+    private kernel?: IKernel;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private pendingHookRemovals = new Map<string, string>();
@@ -63,14 +63,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private isUsingIPyWidgets?: boolean;
     private readonly deserialize: (data: string | ArrayBuffer) => KernelMessage.IMessage<KernelMessage.MessageType>;
 
-    constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
+    constructor(private readonly kernelProvider: IKernelProvider, public readonly document: NotebookDocument) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
         // been reigstered, in which case kaboom. As we know this is always required, pre-register this.
         this.pendingTargetNames.add('jupyter.widget');
-        notebookProvider.onNotebookCreated(
+        kernelProvider.onDidStartKernel(
             (e) => {
-                if (e.identity.toString() === notebookIdentity.toString()) {
+                if (e.notebookDocument === document) {
                     this.initialize().ignoreErrors();
                 }
             },
@@ -95,7 +95,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public receiveMessage(message: IPyWidgetMessage): void {
         if (process.env.VSC_JUPYTER_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
-            traceInfoIf(isCI, `IPyWidgetMessage: ${util.inspect(message)}`);
+            traceInfoIfCI(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
@@ -154,7 +154,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
 
         // If we have any pending targets, register them now
-        const notebook = await this.getNotebook();
+        const notebook = await this.getKernel();
         if (notebook) {
             this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
@@ -167,13 +167,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     ) {
         this._postMessageEmitter.fire({ message, payload });
     }
-    private subscribeToKernelSocket(notebook: INotebook) {
-        if (this.subscribedToKernelSocket) {
+    private subscribeToKernelSocket(kernel: IKernel) {
+        if (this.subscribedToKernelSocket || !kernel.notebook) {
             return;
         }
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
-        notebook.kernelSocket.subscribe((info) => {
+        kernel.notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
@@ -203,7 +203,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
-            this.registerCommTargets(notebook);
+            this.registerCommTargets(kernel);
             this.sendPendingMessages();
         });
     }
@@ -351,7 +351,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
     private sendPendingMessages() {
-        if (!this.notebook || !this.kernelSocketInfo) {
+        if (!this.kernel?.notebook || !this.kernelSocketInfo) {
             return;
         }
         while (this.pendingMessages.length) {
@@ -365,7 +365,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private registerCommTargets(notebook: INotebook) {
+    private registerCommTargets(kernel: IKernel) {
         while (this.pendingTargetNames.size > 0) {
             const targetNames = Array.from([...this.pendingTargetNames.values()]);
             const targetName = targetNames.shift();
@@ -385,32 +385,28 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // inside the kernel on startup. However we
             // still need to track it here.
             if (targetName !== Identifiers.DefaultCommTarget) {
-                notebook.registerCommTarget(targetName, noop);
+                kernel.notebook?.session.registerCommTarget(targetName, noop);
             }
         }
     }
 
-    private async getNotebook(): Promise<INotebook | undefined> {
-        if (this.notebookIdentity && !this.notebook) {
-            this.notebook = await this.notebookProvider.getOrCreateNotebook({
-                identity: this.notebookIdentity,
-                resource: this.notebookIdentity,
-                getOnly: true
-            });
-            this.notebook?.onDisposed(() => (this.notebook = undefined));
+    private async getKernel(): Promise<IKernel | undefined> {
+        if (this.document && !this.kernel) {
+            this.kernel = await this.kernelProvider.get(this.document);
+            this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
-        if (this.notebook && !this.kernelRestartHandlerAttached) {
+        if (this.kernel && !this.kernelRestartHandlerAttached) {
             this.kernelRestartHandlerAttached = true;
-            this.disposables.push(this.notebook.onKernelRestarted(this.handleKernelRestarts, this));
+            this.disposables.push(this.kernel.onRestarted(this.handleKernelRestarts, this));
         }
-        return this.notebook;
+        return this.kernel;
     }
     /**
      * When a kernel restarts, we need to ensure the comm targets are re-registered.
      * This must happen before anything else is processed.
      */
     private async handleKernelRestarts() {
-        if (this.disposed || this.commTargetsRegistered.size === 0 || !this.notebook) {
+        if (this.disposed || this.commTargetsRegistered.size === 0 || !this.kernel?.notebook) {
             return;
         }
         // Ensure we re-register the comm targets.
@@ -419,17 +415,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.pendingTargetNames.add(targetName);
         });
 
-        this.subscribeToKernelSocket(this.notebook);
-        this.registerCommTargets(this.notebook);
+        this.subscribeToKernelSocket(this.kernel);
+        this.registerCommTargets(this.kernel);
     }
 
     private registerMessageHook(msgId: string) {
         try {
-            if (this.notebook && !this.messageHooks.has(msgId)) {
+            if (this.kernel?.notebook && !this.messageHooks.has(msgId)) {
                 this.hookCount += 1;
                 const callback = this.messageHookCallback.bind(this);
                 this.messageHooks.set(msgId, callback);
-                this.notebook.registerMessageHook(msgId, callback);
+                this.kernel?.notebook.session.registerMessageHook(msgId, callback);
             }
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
@@ -460,10 +456,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private removeMessageHook(msgId: string) {
-        if (this.notebook && this.messageHooks.has(msgId)) {
+        if (this.kernel?.notebook && this.messageHooks.has(msgId)) {
             const callback = this.messageHooks.get(msgId);
             this.messageHooks.delete(msgId);
-            this.notebook.removeMessageHook(msgId, callback!);
+            this.kernel?.notebook.session.removeMessageHook(msgId, callback!);
         }
     }
 

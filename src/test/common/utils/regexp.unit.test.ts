@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 
-import { verboseRegExp } from '../../../client/common/utils/regexp';
+import { buildDataViewerFilterRegex, verboseRegExp } from '../../../client/common/utils/regexp';
 
 suite('Utils for regular expressions - verboseRegExp()', () => {
     test('whitespace removed in multiline pattern (example of typical usage)', () => {
@@ -70,4 +70,27 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
             expect(regex.source).to.equal('(?:)', 'mismatch');
         });
     }
+
+    test('Test filter patterns for data viewer', () => {
+        const r1 = buildDataViewerFilterRegex('Africa');
+        expect(r1.test('South Africa')).to.be.true;
+        expect(r1.test('south africa')).to.be.true;
+        expect(r1.test('Central African Republic')).to.be.true;
+        expect(r1.test('Afric')).to.be.false;
+        const r2 = buildDataViewerFilterRegex('Africa.*');
+        expect(r2.test('South Africa')).to.be.true;
+        expect(r2.test('South African')).to.be.true;
+        expect(r2.test('African')).to.be.true;
+        expect(r2.test('african')).to.be.false;
+        const r3 = buildDataViewerFilterRegex('= Africa');
+        expect(r3.test('Africa')).to.be.true;
+        expect(r3.test('    Africa')).to.be.false;
+        expect(r3.test('African')).to.be.false;
+        expect(r3.test('african')).to.be.false;
+        const r4 = buildDataViewerFilterRegex('(Both sexes)|(Male)');
+        expect(r4.test('Both sexes')).to.be.true;
+        expect(r4.test('Male')).to.be.true;
+        expect(r4.test('Female')).to.be.false;
+        expect(r4.test('Male sex')).to.be.true;
+    });
 });

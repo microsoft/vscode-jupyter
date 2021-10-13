@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils/lib/json';
+import { JSONObject } from '@lumino/coreutils';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
@@ -16,7 +16,7 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
@@ -97,7 +97,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return sleep(this.timedelay);
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return {
             channel: 'shell',
             content: {
@@ -153,8 +153,8 @@ export class MockJupyterSession implements IJupyterSession {
     public requestDebug(
         _content: KernelMessage.IDebugRequestMsg['content'],
         _disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
-        return undefined;
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
+        throw new Error('Not implemented');
     }
 
     public requestInspect(
@@ -196,7 +196,7 @@ export class MockJupyterSession implements IJupyterSession {
 
     public async requestComplete(
         _content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    ): Promise<KernelMessage.ICompleteReplyMsg> {
         await sleep(this.completionTimeout);
 
         return {

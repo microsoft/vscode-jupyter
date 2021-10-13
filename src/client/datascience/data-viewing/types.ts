@@ -6,6 +6,7 @@ import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
 import { Event } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
+import { IKernel } from '../jupyter/kernels/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -101,11 +102,14 @@ export type IRowsResponse = any[];
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
     create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+    readonly activeViewer: IDataViewer | undefined;
 }
 
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     readonly active: boolean;
+    readonly kernel?: IKernel | undefined;
+    readonly title: string;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;

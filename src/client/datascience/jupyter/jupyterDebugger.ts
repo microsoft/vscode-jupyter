@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
-import { DebugConfiguration, Disposable } from 'vscode';
+import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IPythonDebuggerPathProvider, IPythonInstaller } from '../../api/types';
+import { IPythonDebuggerPathProvider } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, Product, ProductInstallStatus } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../debugger/jupyter/helper';
 import { Identifiers } from '../constants';
 import {
     ICellHashListener,
@@ -17,7 +18,6 @@ import {
     IJupyterConnection,
     IJupyterDebugger,
     IJupyterDebugService,
-    INotebook,
     ISourceMapRequest
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
@@ -27,7 +27,10 @@ import { IKernel } from './kernels/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
-    private configs: Map<string, DebugConfiguration> = new Map<string, DebugConfiguration>();
+    private configs: WeakMap<NotebookDocument, DebugConfiguration> = new WeakMap<
+        NotebookDocument,
+        DebugConfiguration
+    >();
     private readonly debuggerPackage: string;
     private readonly enableDebuggerCode: string;
     private readonly waitForDebugClientCode: string;
@@ -40,8 +43,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IPythonInstaller) private installer: IPythonInstaller
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
         this.debuggerPackage = 'debugpy';
         this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
@@ -54,16 +56,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (!notebook) {
             throw new Error('Notebook not initialized');
         }
-        const result = await this.installer.isProductVersionCompatible(
-            Product.ipykernel,
-            '>=6.0.0',
-            notebook.getKernelConnection()?.interpreter
-        );
-        const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6OrLater = result === ProductInstallStatus.Installed;
+
+        const settings = this.configService.getSettings(kernel.resourceUri);
+        this.isUsingPyKernel6OrLater = (await isUsingIpykernel6OrLater(kernel)) === IpykernelCheckResult.Ok;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
-            notebook,
+            kernel,
             {
                 justMyCode: settings.debugJustMyCode
             },
@@ -76,7 +74,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (!notebook) {
             return;
         }
-        const config = this.configs.get(notebook.identity.toString());
+        const config = this.configs.get(kernel.notebookDocument);
         if (config) {
             traceInfo('stop debugging');
 
@@ -85,7 +83,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
-            if (notebook.status !== ServerStatus.Dead && notebook.status !== ServerStatus.NotStarted) {
+            if (kernel.status !== ServerStatus.Dead && kernel.status !== ServerStatus.NotStarted) {
                 await executeSilently(notebook.session, this.tracingDisableCode);
             }
         }
@@ -107,14 +105,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async startDebugSession(
         startCommand: (config: DebugConfiguration) => Thenable<boolean>,
-        notebook: INotebook,
+        kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>,
         runByLine: boolean
     ) {
         traceInfo('start debugging');
-
+        if (!kernel.notebook?.session) {
+            return;
+        }
         // Try to connect to this notebook
-        const config = await this.connect(notebook, runByLine, extraConfig);
+        const config = await this.connect(kernel, runByLine, extraConfig);
         if (config) {
             traceInfo('connected to notebook during debugging');
 
@@ -125,7 +125,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             this.debugService.removeBreakpoints([]);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            const importResults = await executeSilently(notebook.session, this.waitForDebugClientCode);
+            const importResults = await executeSilently(kernel.notebook.session, this.waitForDebugClientCode);
             if (importResults.some((item) => item.output_type === 'error')) {
                 traceWarning(`${this.debuggerPackage} not found in path.`);
             } else {
@@ -133,17 +133,20 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             }
 
             // Then enable tracing
-            await executeSilently(notebook.session, this.tracingEnableCode);
+            await executeSilently(kernel.notebook.session, this.tracingEnableCode);
         }
     }
 
     private async connect(
-        notebook: INotebook,
+        kernel: IKernel,
         _runByLine: boolean,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
+        if (!kernel.notebook) {
+            return;
+        }
         // If we already have configuration, we're already attached, don't do it again.
-        const key = notebook.identity.toString();
+        const key = kernel.notebookDocument;
         let result = this.configs.get(key);
         if (result) {
             return {
@@ -154,7 +157,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         traceInfo('enable debugger attach');
 
         // Append any specific debugger paths that we have
-        await this.appendDebuggerPaths(notebook);
+        await this.appendDebuggerPaths(kernel);
 
         // Connect local or remote based on what type of notebook we're talking to
         result = {
@@ -163,19 +166,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             request: 'attach',
             ...extraConfig
         };
-        const connectionInfo = notebook.connection;
+        const connectionInfo = kernel.connection;
         if (connectionInfo && !connectionInfo.localLaunch) {
-            const { host, port } = await this.connectToRemote(notebook, connectionInfo);
+            const { host, port } = await this.connectToRemote(kernel, connectionInfo);
             result.host = host;
             result.port = port;
         } else {
-            const { host, port } = await this.connectToLocal(notebook);
+            const { host, port } = await this.connectToLocal(kernel);
             result.host = host;
             result.port = port;
         }
 
         if (result.port) {
-            this.configs.set(notebook.identity.toString(), result);
+            this.configs.set(kernel.notebookDocument, result);
 
             // Sign up for any change to the kernel to delete this config.
             const disposables: Disposable[] = [];
@@ -183,20 +186,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 this.configs.delete(key);
                 disposables.forEach((d) => d.dispose());
             };
-            disposables.push(notebook.onDisposed(clear));
-            disposables.push(notebook.onKernelRestarted(clear));
-            disposables.push(notebook.onKernelChanged(clear));
+            disposables.push(kernel.onDisposed(clear));
+            disposables.push(kernel.onRestarted(clear));
         }
 
         return result;
     }
 
-    private async calculateDebuggerPathList(notebook: INotebook): Promise<string | undefined> {
+    private async calculateDebuggerPathList(kernel: IKernel): Promise<string | undefined> {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
         // eslint-disable-next-line no-multi-str
-        let settingsPath = this.configService.getSettings(notebook.resource).debugpyDistPath;
+        let settingsPath = this.configService.getSettings(kernel.resourceUri).debugpyDistPath;
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {
             if (this.platform.isWindows) {
@@ -210,7 +212,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // installed locally by the extension
         // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
         // this path.
-        const connectionInfo = notebook.connection;
+        const connectionInfo = kernel.connection;
         if (connectionInfo && connectionInfo.localLaunch) {
             let localPath = await this.debuggerPathProvider.getDebuggerPath();
             if (this.platform.isWindows) {
@@ -235,14 +237,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     // Append our local debugger path and debugger settings path to sys.path
-    private async appendDebuggerPaths(notebook: INotebook): Promise<void> {
-        const debuggerPathList = await this.calculateDebuggerPathList(notebook);
+    private async appendDebuggerPaths(kernel: IKernel): Promise<void> {
+        const debuggerPathList = await this.calculateDebuggerPathList(kernel);
 
         if (debuggerPathList && debuggerPathList.length > 0) {
-            const result = await executeSilently(
-                notebook.session,
-                `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
-            );
+            const result = kernel.notebook?.session
+                ? await executeSilently(
+                      kernel.notebook.session,
+                      `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
+                  )
+                : [];
             traceInfo(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
         }
     }
@@ -265,8 +269,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return sourceMapRequest;
     }
 
-    private async connectToLocal(notebook: INotebook): Promise<{ port: number; host: string }> {
-        const outputs = await executeSilently(notebook.session, this.enableDebuggerCode);
+    private async connectToLocal(kernel: IKernel): Promise<{ port: number; host: string }> {
+        const outputs = kernel.notebook?.session
+            ? await executeSilently(kernel.notebook.session, this.enableDebuggerCode)
+            : [];
 
         // Pull our connection info out from the cells returned by enable_attach
         if (outputs.length > 0) {
@@ -297,7 +303,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     private async connectToRemote(
-        _notebook: INotebook,
+        _kernel: IKernel,
         _connectionInfo: IJupyterConnection
     ): Promise<{ port: number; host: string }> {
         // We actually need a token. This isn't supported at the moment

@@ -3,12 +3,12 @@
 'use strict';
 import '../../../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { traceInfo, traceInfoIf } from '../../../common/logger';
+import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -35,7 +35,7 @@ import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
-import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -49,7 +49,6 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) private readonly appService: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
@@ -163,14 +162,10 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                 // Create our notebook
                 const notebook = new JupyterNotebookBase(
                     session,
-                    configService,
                     disposableRegistry,
                     info,
-                    resource,
                     identity,
-                    this.getDisposedError.bind(this),
                     this.workspaceService,
-                    this.appService,
                     this.fs
                 );
 
@@ -234,13 +229,13 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
             if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
-                traceInfoIf(isCI, `kernelConnection?.kind === 'connectToLiveKernel'`);
+                traceInfoIfCI(`kernelConnection?.kind === 'connectToLiveKernel'`);
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
-                traceInfoIf(isCI, `kernelConnection?.kind === 'startUsingKernelSpec'`);
+                traceInfoIfCI(`kernelConnection?.kind === 'startUsingKernelSpec'`);
                 kernelInfo = kernelConnection;
             } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
-                traceInfoIf(isCI, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
+                traceInfoIfCI(`launchInfo.connectionInfo.localLaunch && kernelConnection'`);
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
@@ -251,7 +246,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                           notebookMetadata,
                           cancelToken
                       ));
-                traceInfoIf(isCI, `kernelInfo found ${kernelInfo?.id}`);
+                traceInfoIfCI(`kernelInfo found ${kernelInfo?.id}`);
             }
             if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
                 // Update kernel info if we found a new one.
@@ -264,7 +259,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         }
         if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
             // Update kernel info if its different from what was originally provided.
-            traceInfoIf(isCI, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
+            traceInfoIfCI(`kernelConnection provided is different from launch info ${kernelConnection.id}`);
             launchInfo.kernelConnectionMetadata = kernelConnection;
             changedKernel = true;
         }
