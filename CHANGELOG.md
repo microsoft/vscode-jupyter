@@ -51,7 +51,7 @@ make this extension useful:
    ([#7167](https://github.com/Microsoft/vscode-jupyter/issues/7167))
 1. Code cell submissions should go to active window in 'multiple' mode.
    ([#7249](https://github.com/Microsoft/vscode-jupyter/issues/7249))
-1. Interrupt kernel button on interactive window toolbar should be disabled when kernel is not busy.python 
+1. Interrupt kernel button on interactive window toolbar should be disabled when kernel is not busy.
    ([#7269](https://github.com/Microsoft/vscode-jupyter/issues/7269))
 1. Fix 'Connecting to...' message in interactive window not being updated in-place if a code cell is inserted before the connection completes.
    ([#7280](https://github.com/Microsoft/vscode-jupyter/issues/7280))
