@@ -6,8 +6,9 @@
 import { assert } from 'chai';
 import { workspace } from 'vscode';
 import { traceInfo } from '../../client/common/logger';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
-import { submitFromPythonFile } from './interactiveWindow.vscode.test';
+import { submitFromPythonFile } from './helpers';
 import {
     assertHasTextOutputInVSCode,
     closeNotebooksAndCleanUpAfterTests,
@@ -16,11 +17,13 @@ import {
 } from './notebook/helper';
 
 suite('Interactive window (remote)', async () => {
+    let interactiveWindowProvider: IInteractiveWindowProvider;
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await initialize();
+        const api = await initialize();
+        interactiveWindowProvider = api.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         await startJupyterServer();
     });
     teardown(async function () {
@@ -31,7 +34,7 @@ suite('Interactive window (remote)', async () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
 
     async function runCellInRemoveInteractiveWindow(source: string) {
-        const { activeInteractiveWindow } = await submitFromPythonFile(source);
+        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source);
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
