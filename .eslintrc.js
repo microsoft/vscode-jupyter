@@ -676,7 +676,6 @@ module.exports = {
         'src/client/datascience/progress/messages.ts',
         'src/client/datascience/progress/types.ts',
         'src/client/datascience/progress/decorator.ts',
-        'src/client/datascience/kernel-launcher/kernelDaemonPool.ts',
         'src/client/datascience/ipywidgets/rceProvider.ts',
         'src/client/datascience/ipywidgets/types.ts',
         'src/client/datascience/ipywidgets/remoteWidgetScriptSourceProvider.ts',
