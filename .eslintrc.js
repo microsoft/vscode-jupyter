@@ -167,7 +167,6 @@ module.exports = {
         'src/test/datascience/mockPythonSettings.ts',
         'src/test/datascience/progress/progressReporter.unit.test.ts',
         'src/test/datascience/progress/decorators.unit.test.ts',
-        'src/test/datascience/kernel-launcher/kernelDaemonPool.unit.test.ts',
         'src/test/datascience/ipywidgets/incompatibleWidgetHandler.unit.test.ts',
         'src/test/datascience/datascienceSurveyBanner.unit.test.ts',
         'src/test/datascience/color.test.ts',
