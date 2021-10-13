@@ -141,6 +141,7 @@ export class KernelProvider implements IKernelProvider {
                         kernel.notebookDocument.uri.toString()
                     );
                 }
+                this.pendingDisposables.delete(kernel);
             },
             this,
             this.disposables
