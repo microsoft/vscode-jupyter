@@ -6,7 +6,6 @@
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import { BaseError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
@@ -17,17 +16,6 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IPythonKernelDaemon } from './types';
-
-export class UnsupportedKernelSpec extends BaseError {
-    constructor(args: string[]) {
-        super(
-            'unsupportedKernelSpec',
-            `Unsupported KernelSpec file. args must be [<pythonPath>, '-m', <moduleName>, arg1, arg2, ..]. Provied ${args.join(
-                ' '
-            )}`
-        );
-    }
-}
 
 /**
  * Launches a Python kernel in a daemon.
