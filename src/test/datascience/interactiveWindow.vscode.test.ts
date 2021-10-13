@@ -8,7 +8,6 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
 import { IDisposable } from '../../client/common/types';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
@@ -170,12 +169,10 @@ suite('Interactive window', async function () {
     });
     test('Execute cell from input box', async () => {
         // Create new interactive window
-        const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
 
         // Add code to the input box
-        await vscode.window.activeTextEditor?.edit((editBuilder) => {
-            editBuilder.insert(new vscode.Position(0, 0), 'print("foo")');
-        });
+        await insertIntoInputEditor('print("foo")');
 
         // Run the code in the input box
         await vscode.commands.executeCommand('interactive.execute');

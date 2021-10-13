@@ -3,34 +3,43 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, CompletionList, Position } from 'vscode';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
+import { languages } from 'vscode';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
-import { captureScreenShot, IExtensionTestApi } from '../../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType } from '../../../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
-    runCell,
     insertCodeCell,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    waitForKernelToChange,
+    waitForDiagnostics
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {
+suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
+    const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
+    const venvNoKernelPython = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src/test/datascience/.venvnokernel',
+        executable
+    );
+    const venvKernelPython = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
+    let venvNoKernelPythonPath: string;
+    let venvKernelPythonPath: string;
+
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Suite Code Completion via Jupyter`);
+        traceInfo(`Start Suite Intellisense Switch interpreters in a notebook`);
         this.timeout(120_000);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST) {
@@ -40,11 +49,24 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        // Wait for all interpreters so we can make sure we can get details on the paths we have
+        await interpreterService.getInterpreters();
+        const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
+            interpreterService.getActiveInterpreter(),
+            interpreterService.getInterpreterDetails(venvNoKernelPython),
+            interpreterService.getInterpreterDetails(venvKernelPython)
+        ]);
+        if (!activeInterpreter || !interpreter1 || !interpreter2) {
+            throw new Error('Unable to get information for interpreter 1');
+        }
+        venvNoKernelPythonPath = interpreter1.path;
+        venvKernelPythonPath = interpreter2.path;
+
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
+        traceInfo(`Start Suite (Completed) Intellisense Switch interpreters in a notebook`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -65,46 +87,24 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and get completions for variable', async () => {
-        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+    test('Check diagnostics with and without an import', async () => {
+        // Make sure .venvkernel is selected
+        await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
+        let cell = await insertCodeCell('import pandas as pd');
 
-        await runCell(cell);
+        // There should be no diagnostics at the moment
+        let diagnostics = languages.getDiagnostics(cell.document.uri);
+        assert.isEmpty(diagnostics, 'No diagnostics should be found in the first cell');
 
-        // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell);
-        const outputText = getTextOutputValue(cell.outputs[0]).trim();
-        traceInfo(`Cell Output ${outputText}`);
-        await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+        // Switch to the other kernel
+        await waitForKernelToChange({ interpreterPath: venvNoKernelPythonPath });
 
-        const position = new Position(0, 2);
-        traceInfo('Get completions in test');
-        // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
-        const completions = (await commands.executeCommand(
-            'vscode.executeCompletionItemProvider',
-            cell2.document.uri,
-            position
-        )) as CompletionList;
-        const items = completions.items.map((item) => item.label);
-        assert.isOk(items.length);
+        // Wait for an error to show up
+        diagnostics = await waitForDiagnostics(cell.document.uri);
+        assert.ok(diagnostics, 'Import pandas should generate a diag error on first cell');
         assert.ok(
-            items.find((item) =>
-                typeof item === 'string' ? item.includes('bit_length') : item.label.includes('bit_length')
-            )
+            diagnostics.find((item) => item.message.includes('pandas')),
+            'Pandas message not found'
         );
-        assert.ok(
-            items.find((item) =>
-                typeof item === 'string' ? item.includes('to_bytes') : item.label.includes('to_bytes')
-            )
-        );
-    });
-
-    test('Get completions in interactive window', async () => {
-        // Waiting for Joyce's work for creating IW
-        // gist of test
-        // get the uri of the input box
-        // get completions after typing in the input box
-        // test completions have expected results
     });
 });
