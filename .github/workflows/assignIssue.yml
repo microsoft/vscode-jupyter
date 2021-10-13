@@ -19,7 +19,7 @@ jobs:
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'DavidKutu', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -67,7 +67,7 @@ jobs:
               repo: context.repo.repo,
               assignees: ['claudiaregio']
             })
-      - name: Sunday (David)
+      - name: Sunday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
         uses: actions/github-script@v4
         with:
@@ -77,9 +77,9 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['DavidKutu']
+              assignees: ['DonJayamanne']
             })
-      - name: Monday (David)
+      - name: Monday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
         uses: actions/github-script@v4
         with:
@@ -89,9 +89,9 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['DavidKutu']
+              assignees: ['DonJayamanne']
             })
-      - name: Tuesday (Ian)
+      - name: Tuesday (Rich)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
         uses: actions/github-script@v4
         with:
@@ -101,7 +101,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['IanMatthewHuff']
+              assignees: ['rchiodo']
             })
       - name: Wednesday (Rich)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
@@ -115,7 +115,7 @@ jobs:
               repo: context.repo.repo,
               assignees: ['rchiodo']
             })
-      - name: Thursday (Don)
+      - name: Thursday (Ian)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 3 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 4 && steps.hour.outputs.hour < 16)
         uses: actions/github-script@v4
         with:
@@ -125,7 +125,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['DonJayamanne']
+              assignees: ['IanMatthewHuff']
             })
       - name: Friday (Claudia)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5)
