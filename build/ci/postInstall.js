@@ -74,7 +74,5 @@ function makeVariableExplorerAlwaysSorted() {
     }
 }
 
-(async () => {
-    makeVariableExplorerAlwaysSorted();
-    createJupyterKernelWithoutSerialization();
-})().catch((ex) => console.error('Encountered error while running postInstall step', ex));
+makeVariableExplorerAlwaysSorted();
+createJupyterKernelWithoutSerialization();

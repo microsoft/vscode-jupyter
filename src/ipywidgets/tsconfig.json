@@ -23,7 +23,8 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "useUnknownInCatchVariables": false
     },
     "exclude": ["node_modules", "../node_modules"]
 }
