@@ -186,7 +186,7 @@ export interface INotebook extends IAsyncDisposable {
     ): Promise<INotebookCompletion>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     setLaunchingFile(file: string): Promise<void>;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
 }
 
 // Options for connecting to a notebook provider

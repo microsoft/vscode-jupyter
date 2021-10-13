@@ -97,7 +97,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return sleep(this.timedelay);
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return {
             channel: 'shell',
             content: {

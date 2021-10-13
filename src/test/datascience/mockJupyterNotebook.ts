@@ -54,7 +54,7 @@ export class MockJupyterNotebook implements INotebook {
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return {
             channel: 'shell',
             content: {
