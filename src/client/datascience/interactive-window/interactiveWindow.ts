@@ -46,7 +46,7 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
@@ -437,7 +437,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         const notebook = kernel?.notebook;
-        if (!notebook) {
+        if (!kernel || !notebook) {
             return false;
         }
         this.lastExecutedFileUri = fileUri;
