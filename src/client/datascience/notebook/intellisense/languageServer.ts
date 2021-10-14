@@ -145,7 +145,7 @@ export class LanguageServer implements Disposable {
 
     public static async createLanguageServer(
         interpreter: PythonEnvironment,
-        shouldAllowIntellisense: (uri: Uri, interpreterId: string) => boolean
+        shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: string) => boolean
     ): Promise<LanguageServer | undefined> {
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
@@ -160,7 +160,7 @@ export class LanguageServer implements Disposable {
                 NOTEBOOK_SELECTOR,
                 /.*\.(ipynb|interactive)/m,
                 interpreter.path,
-                (uri) => shouldAllowIntellisense(uri, interpreterId)
+                (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
             );
 
             // Client options should be the same for all servers we support.

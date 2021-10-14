@@ -6,7 +6,7 @@ import { NotebookDocument, Uri } from 'vscode';
 import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { IDisposableRegistry, Resource } from '../../../common/types';
+import { IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
@@ -54,12 +54,12 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     private handleInterpreterChange() {
         const folders = [...this.activeInterpreterCache.keys()];
         this.activeInterpreterCache.clear();
-        folders.forEach((f) => this.getActiveInterpreterSync(Uri.file(f)));
+        folders.forEach((f) => this.getActiveInterpreterSync(f));
     }
 
-    private getActiveInterpreterSync(resource: Resource): PythonEnvironment | undefined {
+    private getActiveInterpreterSync(fsPath: string | undefined): PythonEnvironment | undefined {
         const folder =
-            this.workspaceService.getWorkspaceFolder(resource)?.uri ||
+            this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
         if (folder && !this.activeInterpreterCache.has(folder.fsPath)) {
             this.interpreterService
@@ -80,7 +80,7 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         const oldController = this.knownControllers.get(e.notebook);
         const oldInterpreter = oldController
             ? oldController.connection.interpreter
-            : this.getActiveInterpreterSync(e.notebook.uri);
+            : this.getActiveInterpreterSync(e.notebook.uri.fsPath);
         const oldInterpreterId = oldInterpreter ? this.getInterpreterIdFromCache(oldInterpreter) : undefined;
         const oldLanguageServer = oldInterpreterId ? await this.servers.get(oldInterpreterId) : undefined;
 
@@ -108,6 +108,9 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
                 this.knownControllers.set(n, controller);
             }
 
+            // Make sure the active interpreter cache is up to date
+            this.getActiveInterpreterSync(n.uri.fsPath);
+
             // If the controller is empty, default to the active interpreter
             const interpreter =
                 controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
@@ -130,14 +133,16 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         return id;
     }
 
-    private shouldAllowIntellisense(uri: Uri, interpreterId: string) {
+    private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: string) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
         const notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
-        const notebookInterpreter = controller ? controller.connection.interpreter : this.getActiveInterpreterSync(uri);
+        const notebookInterpreter = controller
+            ? controller.connection.interpreter
+            : this.getActiveInterpreterSync(uri.fsPath);
         const notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
 
         return interpreterId == notebookId;
