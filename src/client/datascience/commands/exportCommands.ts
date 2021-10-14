@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellData, NotebookData, NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IDisposable, IExtensions } from '../../common/types';
+import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -37,7 +37,6 @@ export class ExportCommands implements IDisposable {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {}
     public register() {
@@ -128,28 +127,6 @@ export class ExportCommands implements IDisposable {
             }
         }
     }
-    public getContent(document: NotebookDocument): string {
-        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
-            'vscode.ipynb'
-        );
-        if (!serializerApi) {
-            throw new Error(
-                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
-            );
-        }
-        const cells = document.getCells();
-        const cellData = cells.map((c) => {
-            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
-            data.metadata = c.metadata;
-            data.mime = c.mime;
-            data.outputs = [...c.outputs];
-            return data;
-        });
-        const notebookData = new NotebookData(cellData);
-        notebookData.metadata = document.metadata;
-        return serializerApi.exports.exportNotebook(notebookData);
-    }
-
     private getExportQuickPickItems(
         sourceDocument: NotebookDocument,
         defaultFileName?: string,

@@ -667,15 +667,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
-        const notebookEditor = await this._editorReadyPromise;
+        // const notebookEditor = await this._editorReadyPromise;
         const kernel = await this._kernelReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
-        const cells = generateCellsFromNotebookDocument(notebookEditor.document, magicCommandsAsComments);
+        // const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
+        // const cells = generateCellsFromNotebookDocument(notebookEditor.document, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
@@ -684,11 +684,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Turn the cells into a json object
-        const json = await this.jupyterExporter.translateToNotebook(cells, undefined, metadata.kernelspec);
+        //const json = await this.jupyterExporter.translateToNotebook(cells, undefined, metadata.kernelspec);
 
         // Turn this into a string
         // IANHU: remove
-        const contents = JSON.stringify(json, undefined, 4);
+        //const contents = JSON.stringify(json, undefined, 4);
 
         let defaultFileName;
         if (this.submitters && this.submitters.length) {

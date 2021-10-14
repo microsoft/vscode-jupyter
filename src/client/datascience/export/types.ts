@@ -13,8 +13,8 @@ export interface IExportManager {
     export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
 }
 
-export const IExport = Symbol('IExport');
-export interface IExport {
+export const INbConvertExport = Symbol('INbConvertExport');
+export interface INbConvertExport {
     export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
 }
 

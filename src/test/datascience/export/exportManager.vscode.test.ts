@@ -12,14 +12,14 @@ import { ExportFileOpener } from '../../../client/datascience/export/exportFileO
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportDialog } from '../../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
 suite('DataScience - Export Manager', () => {
     let exporter: ExportManager;
-    let exportPython: IExport;
-    let exportHtml: IExport;
-    let exportPdf: IExport;
+    let exportPython: INbConvertExport;
+    let exportHtml: INbConvertExport;
+    let exportPdf: INbConvertExport;
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
@@ -31,9 +31,9 @@ suite('DataScience - Export Manager', () => {
         const reporter = mock(ProgressReporter);
         filePicker = mock<IExportDialog>();
         fileSystem = mock<IFileSystem>();
-        exportPython = mock<IExport>();
-        exportHtml = mock<IExport>();
-        exportPdf = mock<IExport>();
+        exportPython = mock<INbConvertExport>();
+        exportHtml = mock<INbConvertExport>();
+        exportPdf = mock<INbConvertExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();

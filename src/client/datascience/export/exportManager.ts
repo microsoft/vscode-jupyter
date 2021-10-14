@@ -1,9 +1,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, NotebookDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
+import { IExtensions } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -12,21 +13,22 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, IExport, IExportDialog, IExportManager } from './types';
+import { ExportFormat, INbConvertExport, IExportDialog, IExportManager } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {
     constructor(
-        @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
-        @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
-        @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
+        @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
+        @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
+        @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener,
-        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
+        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
 
     public async export(
@@ -65,6 +67,9 @@ export class ExportManager implements IExportManager {
         target: Uri,
         interpreter: PythonEnvironment
     ) {
+        // IANHU: Move to a new spot? Separate out NB Convert exports
+        const contents = this.getContent(sourceDocument);
+
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique
@@ -141,5 +146,26 @@ export class ExportManager implements IExportManager {
             default:
                 break;
         }
+    }
+    private getContent(document: NotebookDocument): string {
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
+        }
+        const cells = document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
+        });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
 }
