@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
 import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
-import { IExtensionSingleActivationService } from '../../../activation/types';
-import { IVSCodeNotebook } from '../../../common/application/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IExtensionSyncActivationService } from '../../../activation/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import { IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
@@ -18,9 +18,9 @@ import { LanguageServer } from './languageServer';
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
  */
 @injectable()
-export class IntellisenseProvider implements IExtensionSingleActivationService {
+export class IntellisenseProvider implements IExtensionSyncActivationService {
     private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
-    private activeInterpreter: PythonEnvironment | undefined;
+    private activeInterpreterCache = new Map<Uri, PythonEnvironment | undefined>();
     private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
     private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
         NotebookDocument,
@@ -31,9 +31,10 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         // Sign up for kernel change events on notebooks
         this.notebookControllerManager.onNotebookControllerSelected(this.controllerChanged, this, this.disposables);
         // Sign up for notebook open and close events.
@@ -45,17 +46,29 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
 
         // Track active interpreter, but synchronously. We need synchronously so we
         // can compare during intellisense operations.
-        this.interpreterService
-            .getActiveInterpreter()
-            .then((r) => (this.activeInterpreter = r))
-            .ignoreErrors();
-        this.interpreterService.onDidChangeInterpreter(
-            async () => {
-                this.activeInterpreter = await this.interpreterService.getActiveInterpreter();
-            },
-            this,
-            this.disposables
-        );
+        this.getActiveInterpreterSync(undefined);
+        this.interpreterService.onDidChangeInterpreter(this.handleInterpreterChange, this, this.disposables);
+    }
+
+    private handleInterpreterChange() {
+        const folders = [...this.activeInterpreterCache.keys()];
+        this.activeInterpreterCache.clear();
+        folders.forEach((f) => this.getActiveInterpreterSync(f));
+    }
+
+    private getActiveInterpreterSync(resource: Resource): PythonEnvironment | undefined {
+        const folder =
+            this.workspaceService.getWorkspaceFolder(resource)?.uri ||
+            (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
+        if (folder && !this.activeInterpreterCache.has(folder)) {
+            this.interpreterService
+                .getActiveInterpreter(folder)
+                .then((a) => {
+                    this.activeInterpreterCache.set(folder, a);
+                })
+                .ignoreErrors();
+        }
+        return folder ? this.activeInterpreterCache.get(folder) : undefined;
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
@@ -119,7 +132,7 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
-        const notebookInterpreter = controller ? controller.connection.interpreter : this.activeInterpreter;
+        const notebookInterpreter = controller ? controller.connection.interpreter : this.getActiveInterpreterSync(uri);
         const notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
 
         return interpreterId == notebookId;
