@@ -82,6 +82,10 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {path: strin
     return sha256().update(interpreterPath).digest('hex');
 }
 
+export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {
+    return areInterpreterPathsSame(i1?.path, i2?.path) && i1?.displayName == i2?.displayName;
+}
+
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
  *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
@@ -116,4 +120,13 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = '', o
         return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/python') : path;
     }
     return path;
+}
+
+/**
+ * Generates a unique id for an intepreter
+ * @param interpreter 
+ * @returns 
+ */
+export function getInterpreterId(interpreter: PythonEnvironment) {
+    return getInterpreterHash(interpreter);
 }

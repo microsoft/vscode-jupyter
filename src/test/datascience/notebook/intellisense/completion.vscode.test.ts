@@ -8,10 +8,13 @@ import { commands, CompletionList, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
+import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
+import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { captureScreenShot, IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
+import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -28,6 +31,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    let interactiveWindowProvider: InteractiveWindowProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
@@ -44,6 +48,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -100,11 +105,35 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         );
     });
 
-    test('Get completions in interactive window', async () => {
-        // Waiting for Joyce's work for creating IW
-        // gist of test
-        // get the uri of the input box
-        // get completions after typing in the input box
-        // test completions have expected results
+    test('Get completions in interactive window', async function () {
+        // Waiting on fix here: https://github.com/microsoft/vscode/issues/135097
+        this.skip();
+
+        // Create new interactive window
+        await createStandaloneInteractiveWindow(interactiveWindowProvider);
+
+        // Add code to the input box
+        await insertIntoInputEditor('import sys');
+
+        // Run the code in the input box
+        await commands.executeCommand('interactive.execute');
+
+        // Now try getting completions.
+        const editor = await insertIntoInputEditor('sys.');
+
+        // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
+        const position = new Position(0, 4);
+        const completions = (await commands.executeCommand(
+            'vscode.executeCompletionItemProvider',
+            editor?.document.uri,
+            position
+        )) as CompletionList;
+        const items = completions.items.map((item) => item.label);
+        assert.isOk(items.length);
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('executable') : item.label.includes('executable')
+            )
+        );
     });
 });
