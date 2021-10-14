@@ -22,10 +22,10 @@ import {
     createEmptyPythonNotebook,
     waitForKernelToChange,
     waitForDiagnostics,
-    defaultNotebookTestTimeout,
-    waitForExecutionCompletedSuccessfully
+    defaultNotebookTestTimeout
 } from '../helper';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
+import { IPythonExecutionFactory } from '../../../../client/common/process/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
@@ -78,6 +78,11 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         venvNoKernelPythonPath = interpreter1.path;
         venvKernelPythonPath = interpreter2.path;
 
+        // Make sure to remove pandas from the venvnokernel. This test relies on it.
+        const factory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const process = await factory.create({ pythonPath: venvNoKernelPythonPath });
+        await process.execModule('pip', ['uninstall', 'pandas'], { throwOnStdErr: false });
+
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
@@ -107,41 +112,36 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
         let cell = await insertCodeCell('import pandas as pd');
 
-        // There should be no diagnostics at the moment
-        let diagnostics = languages.getDiagnostics(cell.document.uri);
-        assert.isEmpty(diagnostics, 'No diagnostics should be found in the first cell');
+        // There should be 1 diagnostic at the moment
+        let diagnostics = await waitForDiagnostics(cell.document.uri);
+        assert.isOk(diagnostics, 'No diagnostics found in the first cell');
 
         // Switch to the other kernel
         await waitForKernelToChange({ interpreterPath: venvNoKernelPythonPath });
 
-        // List pip results
-        const listCell = await insertCodeCell('%pip list');
-        await waitForExecutionCompletedSuccessfully(listCell);
-
-        // Insert a cell that explicitly removes pandas to make sure it isn't there (not sure if pylance will pick up on this or not)
-        const removeCell = await insertCodeCell('%pip uninstall pandas');
-        await waitForExecutionCompletedSuccessfully(removeCell);
-
         // Wait for an error to show up
         cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        diagnostics = await waitForDiagnostics(cell.document.uri);
-        assert.ok(diagnostics, 'Import pandas should generate a diag error on first cell');
-        assert.ok(
-            diagnostics.find((item) => item.message.includes('pandas')),
-            'Pandas message not found'
+        await waitForCondition(
+            async () => {
+                diagnostics = languages.getDiagnostics(cell.document.uri);
+                return diagnostics && diagnostics.length > 1;
+            },
+            defaultNotebookTestTimeout,
+            `Diagnostics did not change after switching kernels`
         );
 
         // Switch back to the first kernel.
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
 
-        // Now there should be no errors
+        // Now there should be 1 error again
+        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForCondition(
             async () => {
                 diagnostics = languages.getDiagnostics(cell.document.uri);
-                return !diagnostics || diagnostics.length == 0;
+                return diagnostics && diagnostics.length == 1;
             },
             defaultNotebookTestTimeout,
-            `Import pandas after switching final time should not cause an error`
+            `Diagnostics did not change after switching back`
         );
     });
 });
