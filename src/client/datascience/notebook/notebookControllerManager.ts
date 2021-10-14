@@ -47,6 +47,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
+import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -448,9 +449,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                                     kernelConnection.interpreter?.envType &&
                                     kernelConnection.interpreter.envType !== EnvironmentType.Global
                                 ) {
-                                    const pythonVersion = `Python ${
+                                    const pythonVersion = `Python ${getTelemetrySafeVersion(
                                         kernelConnection.interpreter.version?.raw || ''
-                                    }`.trim();
+                                    )}`.trim();
                                     if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                                         const bitness = kernelConnection.interpreter.displayName?.includes('64-bit')
                                             ? '64-bit'
@@ -472,16 +473,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                                 kernelConnection.interpreter.envType &&
                                 kernelConnection.interpreter.envType !== EnvironmentType.Global
                             ) {
-                                const pythonVersion = `Python ${
+                                const pythonVersion = `Python ${getTelemetrySafeVersion(
                                     kernelConnection.interpreter.version?.raw || ''
-                                }`.trim();
+                                )}`.trim();
                                 const bitness = kernelConnection.interpreter.displayName?.includes('64-bit')
                                     ? '64-bit'
                                     : '';
                                 const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
-                                const envPrefix = `${kernelConnection.interpreter.envType} ${
-                                    kernelConnection.interpreter.envName || kernelConnection.interpreter.sysVersion
-                                }`.trim();
+                                const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
                                 label = `${envPrefix} (${pythonDisplayName})`.trim();
                             }
                             break;
