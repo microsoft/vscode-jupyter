@@ -29,12 +29,7 @@ import {
     isLocalLaunch,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import {
-    IKernelProvider,
-    KernelConnectionMetadata,
-    KernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
