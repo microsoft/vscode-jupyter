@@ -1,4 +1,4 @@
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export enum ExportFormat {
@@ -10,7 +10,7 @@ export enum ExportFormat {
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
-    export(format: ExportFormat, contents: string, source: Uri, defaultFileName?: string): Promise<undefined>;
+    export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
 }
 
 export const IExport = Symbol('IExport');

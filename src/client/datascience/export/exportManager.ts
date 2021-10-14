@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
@@ -31,8 +31,7 @@ export class ExportManager implements IExportManager {
 
     public async export(
         format: ExportFormat,
-        contents: string,
-        source: Uri,
+        sourceDocument: NotebookDocument,
         defaultFileName?: string,
         candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
@@ -43,11 +42,11 @@ export class ExportManager implements IExportManager {
                 format,
                 candidateInterpreter
             );
-            target = await this.getTargetFile(format, source, defaultFileName);
+            target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, contents, target, exportInterpreter);
+            await this.performExport(format, sourceDocument, target, exportInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -60,7 +59,12 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async performExport(format: ExportFormat, contents: string, target: Uri, interpreter: PythonEnvironment) {
+    private async performExport(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        target: Uri,
+        interpreter: PythonEnvironment
+    ) {
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique

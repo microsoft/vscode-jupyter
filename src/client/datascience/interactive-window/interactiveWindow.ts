@@ -687,6 +687,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const json = await this.jupyterExporter.translateToNotebook(cells, undefined, metadata.kernelspec);
 
         // Turn this into a string
+        // IANHU: remove
         const contents = JSON.stringify(json, undefined, 4);
 
         let defaultFileName;
@@ -696,14 +697,23 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Then run the export command with these contents
+        // IANHU: This needs to change!
         this.commandManager
             .executeCommand(
                 Commands.Export,
-                contents,
-                this.owningResource,
+                this.notebookDocument,
                 defaultFileName,
                 kernel?.kernelConnectionMetadata.interpreter
             )
             .then(noop, noop);
+        //this.commandManager
+        //.executeCommand(
+        //Commands.Export,
+        //contents,
+        //this.owningResource,
+        //defaultFileName,
+        //kernel?.kernelConnectionMetadata.interpreter
+        //)
+        //.then(noop, noop);
     }
 }
