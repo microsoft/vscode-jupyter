@@ -24,7 +24,8 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "useUnknownInCatchVariables": false
+        "useUnknownInCatchVariables": false,
+        "skipLibCheck": true
     },
     "exclude": ["node_modules", "../node_modules"]
 }
