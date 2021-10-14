@@ -4,14 +4,15 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
 import { languages } from 'vscode';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType } from '../../../common';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { initialize } from '../../../initialize';
+import { initialize, IS_CI_SERVER } from '../../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -20,7 +21,8 @@ import {
     prewarmNotebooks,
     createEmptyPythonNotebook,
     waitForKernelToChange,
-    waitForDiagnostics
+    waitForDiagnostics,
+    defaultNotebookTestTimeout
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -47,6 +49,15 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
             return this.skip();
         }
         if (!(await canRunNotebookTests())) {
+            return this.skip();
+        }
+        // These are slow tests, hence lets run only on linux on CI.
+        if (
+            (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
+            !fs.pathExistsSync(venvNoKernelPython) ||
+            !fs.pathExistsSync(venvKernelPython)
+        ) {
+            // Virtual env does not exist.
             return this.skip();
         }
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -105,6 +116,19 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         assert.ok(
             diagnostics.find((item) => item.message.includes('pandas')),
             'Pandas message not found'
+        );
+
+        // Switch back to the first kernel.
+        await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
+
+        // Now there should be no errors
+        await waitForCondition(
+            async () => {
+                diagnostics = languages.getDiagnostics(cell.document.uri);
+                return !diagnostics || diagnostics.length == 0;
+            },
+            defaultNotebookTestTimeout,
+            `Import pandas after switching final time should not cause an error`
         );
     });
 });
