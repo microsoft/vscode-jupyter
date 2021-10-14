@@ -10,6 +10,7 @@ import { IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
+import { isJupyterNotebook } from '../helpers/helpers';
 import { INotebookControllerManager } from '../types';
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
@@ -19,8 +20,8 @@ import { LanguageServer } from './languageServer';
  */
 @injectable()
 export class IntellisenseProvider implements IExtensionSyncActivationService {
-    private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
-    private activeInterpreterCache = new Map<Uri, PythonEnvironment | undefined>();
+    private servers = new Map<string, Promise<LanguageServer | undefined>>();
+    private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
     private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
     private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
         NotebookDocument,
@@ -53,22 +54,22 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     private handleInterpreterChange() {
         const folders = [...this.activeInterpreterCache.keys()];
         this.activeInterpreterCache.clear();
-        folders.forEach((f) => this.getActiveInterpreterSync(f));
+        folders.forEach((f) => this.getActiveInterpreterSync(Uri.file(f)));
     }
 
     private getActiveInterpreterSync(resource: Resource): PythonEnvironment | undefined {
         const folder =
             this.workspaceService.getWorkspaceFolder(resource)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
-        if (folder && !this.activeInterpreterCache.has(folder)) {
+        if (folder && !this.activeInterpreterCache.has(folder.fsPath)) {
             this.interpreterService
                 .getActiveInterpreter(folder)
                 .then((a) => {
-                    this.activeInterpreterCache.set(folder, a);
+                    this.activeInterpreterCache.set(folder.fsPath, a);
                 })
                 .ignoreErrors();
         }
-        return folder ? this.activeInterpreterCache.get(folder) : undefined;
+        return folder ? this.activeInterpreterCache.get(folder.fsPath) : undefined;
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
@@ -77,18 +78,20 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
 
         // Get the language server for the old connection (if we have one)
         const oldController = this.knownControllers.get(e.notebook);
-        if (oldController && oldController.connection.interpreter) {
-            const oldLanguageServer = this.servers.get(getInterpreterId(oldController.connection.interpreter));
+        const oldInterpreter = oldController
+            ? oldController.connection.interpreter
+            : this.getActiveInterpreterSync(e.notebook.uri);
+        const oldInterpreterId = oldInterpreter ? this.getInterpreterIdFromCache(oldInterpreter) : undefined;
+        const oldLanguageServer = oldInterpreterId ? await this.servers.get(oldInterpreterId) : undefined;
 
-            // If we had one, tell the old language server to stop watching this notebook
-            if (oldLanguageServer) {
-                oldLanguageServer.stopWatching(e.notebook);
-            }
+        // If we had one, tell the old language server to stop watching this notebook
+        if (oldLanguageServer && newServer?.interpreterId != oldLanguageServer.interpreterId) {
+            oldLanguageServer.stopWatching(e.notebook);
+        }
 
-            // Tell the new server about the file
-            if (newServer) {
-                newServer.startWatching(e.notebook);
-            }
+        // Tell the new server about the file
+        if (newServer) {
+            newServer.startWatching(e.notebook);
         }
 
         // Update the new controller
@@ -96,18 +99,20 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     }
 
     private async openedNotebook(n: NotebookDocument) {
-        // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
-        const controller = this.notebookControllerManager.getSelectedNotebookController(n);
+        if (isJupyterNotebook(n)) {
+            // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
+            const controller = this.notebookControllerManager.getSelectedNotebookController(n);
 
-        // Save mapping from notebook to controller
-        if (controller) {
-            this.knownControllers.set(n, controller);
+            // Save mapping from notebook to controller
+            if (controller) {
+                this.knownControllers.set(n, controller);
+            }
+
+            // If the controller is empty, default to the active interpreter
+            const interpreter =
+                controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
+            return this.ensureLanguageServer(interpreter, n);
         }
-
-        // If the controller is empty, default to the active interpreter
-        const interpreter =
-            controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
-        return this.ensureLanguageServer(interpreter, n);
     }
 
     private closedNotebook(n: NotebookDocument) {
@@ -146,16 +151,15 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         if (id && !this.servers.has(id) && interpreter) {
             // We don't already have one. Create a new one for this interpreter.
             // The logic for whether or not
-            const languageServer = await LanguageServer.createLanguageServer(
+            const languageServerPromise = LanguageServer.createLanguageServer(
                 interpreter,
                 this.shouldAllowIntellisense.bind(this)
-            );
-            if (languageServer) {
-                this.servers.set(id, languageServer);
-
+            ).then((l) => {
                 // If we just created it, indicate to the language server to start watching this notebook
-                languageServer.startWatching(notebook);
-            }
+                l?.startWatching(notebook);
+                return l;
+            });
+            this.servers.set(id, languageServerPromise);
         }
 
         return id ? this.servers.get(id) : undefined;
