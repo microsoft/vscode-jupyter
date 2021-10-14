@@ -105,7 +105,10 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         );
     });
 
-    test('Get completions in interactive window', async () => {
+    test('Get completions in interactive window', async function () {
+        // Waiting on fix here: https://github.com/microsoft/vscode/issues/135097
+        this.skip();
+
         // Create new interactive window
         await createStandaloneInteractiveWindow(interactiveWindowProvider);
 
@@ -116,13 +119,13 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         await commands.executeCommand('interactive.execute');
 
         // Now try getting completions.
-        await insertIntoInputEditor('sys.');
+        const editor = await insertIntoInputEditor('sys.');
 
         // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
         const position = new Position(0, 4);
         const completions = (await commands.executeCommand(
             'vscode.executeCompletionItemProvider',
-            window.activeTextEditor?.document.uri,
+            editor?.document.uri,
             position
         )) as CompletionList;
         const items = completions.items.map((item) => item.label);

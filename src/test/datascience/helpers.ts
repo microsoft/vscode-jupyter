@@ -94,6 +94,7 @@ export async function insertIntoInputEditor(source: string) {
     await vscode.window.activeTextEditor?.edit((editBuilder) => {
         editBuilder.insert(new vscode.Position(0, 0), source);
     });
+    return vscode.window.activeTextEditor;
 }
 
 export async function submitFromPythonFile(interactiveWindowProvider: IInteractiveWindowProvider, source: string) {
