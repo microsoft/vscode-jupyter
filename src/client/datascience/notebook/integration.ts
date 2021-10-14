@@ -6,9 +6,7 @@ import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
-import { NotebookCompletionProvider } from './intellisense/completionProvider';
-
-export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTING_MEMENTO_KEY';
+import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvider';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -18,7 +16,7 @@ export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTI
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
+        @inject(JupyterCompletionProvider) private readonly completionProvider: JupyterCompletionProvider
     ) {}
     public async activate(): Promise<void> {
         this.registerCompletionItemProvider();

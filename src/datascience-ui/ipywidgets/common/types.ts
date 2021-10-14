@@ -5,10 +5,10 @@
 
 import * as jupyterlab from '@jupyter-widgets/base/lib';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
-import { ISignal } from '@phosphor/signaling';
-import { Widget } from '@phosphor/widgets';
+import type * as nbformat from '@jupyterlab/nbformat';
+import { ISignal } from '@lumino/signaling';
 import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { Widget } from '@lumino/widgets';
 
 export interface IMessageSender {
     sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;

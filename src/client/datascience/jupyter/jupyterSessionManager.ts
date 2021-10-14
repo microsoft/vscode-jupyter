@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    ContentsManager,
+    Kernel,
+    KernelSpecManager,
+    KernelManager,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
+import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { EventEmitter } from 'vscode';
@@ -18,7 +27,6 @@ import {
 } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import {
     IJupyterConnection,
     IJupyterKernel,
@@ -43,6 +51,8 @@ const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnec
 export class JupyterSessionManager implements IJupyterSessionManager {
     private static secureServers = new Map<string, Promise<boolean>>();
     private sessionManager: SessionManager | undefined;
+    private specsManager: KernelSpecManager | undefined;
+    private kernelManager: KernelManager | undefined;
     private contentsManager: ContentsManager | undefined;
     private connInfo: IJupyterConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
@@ -94,24 +104,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const sessionManager = this.sessionManager as any;
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
-
-                // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
-                // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
-                if (sessionManager._specs) {
-                    sessionManager._specs = {};
-                }
-                if (sessionManager._sessions && sessionManager._sessions.clear) {
-                    sessionManager._sessions.clear();
-                }
-                if (sessionManager._pollModels) {
-                    this.clearPoll(sessionManager._pollModels);
-                }
-                if (sessionManager._pollSpecs) {
-                    this.clearPoll(sessionManager._pollSpecs);
-                }
             }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
@@ -123,7 +117,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
         this.serverSettings = await this.getServerConnectSettings(connInfo);
-        this.sessionManager = new this.jupyterlab.SessionManager({ serverSettings: this.serverSettings });
+        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
+        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
+        this.sessionManager = new this.jupyterlab.SessionManager({
+            serverSettings: this.serverSettings,
+            kernelManager: this.kernelManager
+        });
         this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
     }
 
@@ -147,16 +146,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
-        const models = await this.jupyterlab.Kernel.listRunning(this.serverSettings);
+        const models = await this.jupyterlab.KernelAPI.listRunning(this.serverSettings);
         // Remove duplicates.
         const dup = new Set<string>();
         return models
             .map((m) => {
+                const jsonObject: JSONObject = m as any;
                 return {
                     id: m.id,
                     name: m.name,
-                    lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
-                    numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+                    lastActivityTime: jsonObject.last_activity
+                        ? new Date(Date.parse(jsonObject.last_activity.toString()))
+                        : new Date(),
+                    numberOfConnections: jsonObject.connections ? parseInt(jsonObject.connections.toString(), 10) : 0
                 };
             })
             .filter((item) => {
@@ -175,15 +177,21 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<IJupyterSession> {
-        if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
+        if (
+            !this.connInfo ||
+            !this.sessionManager ||
+            !this.contentsManager ||
+            !this.serverSettings ||
+            !this.specsManager
+        ) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(
             resource,
             this.connInfo,
-            this.serverSettings,
             kernelConnection,
+            this.specsManager,
             this.sessionManager,
             this.contentsManager,
             this.outputChannel,
@@ -210,8 +218,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         try {
             // Fetch the list the session manager already knows about. Refreshing may not work.
             const oldKernelSpecs =
-                this.sessionManager.specs && Object.keys(this.sessionManager.specs.kernelspecs).length
-                    ? this.sessionManager.specs.kernelspecs
+                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
+                    ? this.specsManager.specs.kernelspecs
                     : {};
 
             // Wait for the session to be ready
@@ -219,18 +227,18 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
-            await Promise.race([sleep(10_000), this.sessionManager.refreshSpecs()]);
+            await Promise.race([sleep(10_000), this.specsManager?.refreshSpecs()]);
 
             // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
             const kernelspecs =
-                this.sessionManager.specs && Object.keys(this.sessionManager.specs.kernelspecs).length
-                    ? this.sessionManager.specs.kernelspecs
+                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
+                    ? this.specsManager.specs.kernelspecs
                     : oldKernelSpecs;
             const keys = Object.keys(kernelspecs);
             if (keys && keys.length) {
                 return keys.map((k) => {
                     const spec = kernelspecs[k];
-                    return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
+                    return new JupyterKernelSpec(spec!) as IJupyterKernelSpec;
                 });
             } else {
                 traceError(
@@ -244,15 +252,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             traceError(`SessionManager:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
             return [];
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private clearPoll(poll: { _timeout: any }) {
-        try {
-            clearTimeout(poll._timeout);
-        } catch {
-            noop();
         }
     }
 
@@ -306,7 +305,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error(localize.DataScience.passwordFailure());
             }
         } else {
-            serverSettings = { ...serverSettings, token: connInfo.token };
+            serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
         }
 
         const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;

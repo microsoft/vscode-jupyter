@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
+import { JSONObject } from '@lumino/coreutils';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 

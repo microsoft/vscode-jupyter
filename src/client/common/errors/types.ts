@@ -57,7 +57,7 @@ export type ErrorCategory =
     | 'fetcherror'
     | 'notinstalled'
     | 'kernelspecnotfound'
-    | 'unsupportedKernelSpec'
+    | 'unsupportedKernelSpec' // Left for historical purposes, not used anymore
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

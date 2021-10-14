@@ -54,7 +54,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -76,6 +76,9 @@ export class Kernel implements IKernel {
     }
     get onWillInterrupt(): Event<void> {
         return this._onWillInterrupt.event;
+    }
+    get onStarted(): Event<void> {
+        return this._onStarted.event;
     }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
@@ -100,11 +103,13 @@ export class Kernel implements IKernel {
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onWillRestart = new EventEmitter<void>();
     private readonly _onWillInterrupt = new EventEmitter<void>();
+    private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
+    private disposingPromise?: Promise<void>;
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly notebookDocument: NotebookDocument,
@@ -186,23 +191,34 @@ export class Kernel implements IKernel {
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
-        traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
-        this.restarting = undefined;
-        this.notebook = this.notebook ? this.notebook : this._notebookPromise ? await this._notebookPromise : undefined;
-        this._notebookPromise = undefined;
-        const promises: Promise<void>[] = [];
-        if (this.notebook) {
-            promises.push(this.notebook.dispose().catch(noop));
-            this._disposed = true;
-            this._onDisposed.fire();
-            this._onStatusChanged.fire(ServerStatus.Dead);
-            this.notebook = undefined;
+        if (this.disposingPromise) {
+            return this.disposingPromise;
         }
-        this.kernelExecution.dispose();
-        promises.push(
-            this.notebookProvider.disposeAssociatedNotebook({ identity: this.notebookDocument.uri }).catch(noop)
-        );
-        await Promise.all(promises);
+        const disposeImpl = async () => {
+            traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
+            this.restarting = undefined;
+            this.notebook = this.notebook
+                ? this.notebook
+                : this._notebookPromise
+                ? await this._notebookPromise
+                : undefined;
+            this._notebookPromise = undefined;
+            const promises: Promise<void>[] = [];
+            if (this.notebook) {
+                promises.push(this.notebook.dispose().catch(noop));
+                this._disposed = true;
+                this._onDisposed.fire();
+                this._onStatusChanged.fire(ServerStatus.Dead);
+                this.notebook = undefined;
+            }
+            this.kernelExecution.dispose();
+            promises.push(
+                this.notebookProvider.disposeAssociatedNotebook({ identity: this.notebookDocument.uri }).catch(noop)
+            );
+            await Promise.all(promises);
+        };
+        this.disposingPromise = disposeImpl();
+        await this.disposingPromise;
     }
     public async restart(): Promise<void> {
         this._onWillRestart.fire();
@@ -295,6 +311,7 @@ export class Kernel implements IKernel {
                         this.updateRemoteUriList(this.notebook.connection).catch(noop);
                     }
                     resolve(this.notebook);
+                    this._onStarted.fire();
                 } catch (ex) {
                     sendKernelTelemetryEvent(
                         this.resourceUri,
@@ -420,7 +437,7 @@ export class Kernel implements IKernel {
 
         try {
             const info = await this.notebook.requestKernelInfo();
-            this._info = info.content;
+            this._info = info?.content;
             traceInfoIfCI('Step N1');
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
             traceInfoIfCI('Step N2');

@@ -1,16 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IChangedArgs } from '@jupyterlab/coreutils';
 import {
     ContentsManager,
     Kernel,
     KernelMessage,
+    KernelSpecManager,
     ServerConnection,
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
-import { DefaultSession } from '@jupyterlab/services/lib/session/default';
-import { ISignal } from '@phosphor/commands/node_modules/@phosphor/signaling';
+import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
+import { SessionConnection } from '@jupyterlab/services/lib/session/default';
+import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -30,25 +32,15 @@ import { MockOutputChannel } from '../../mockClasses';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
-    interface IKernelChangedArgs {
-        /**
-         * The old kernel.
-         */
-        oldValue: Kernel.IKernelConnection | null;
-        /**
-         * The new kernel.
-         */
-        newValue: Kernel.IKernelConnection | null;
-    }
-
+    type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let restartSessionCreatedEvent: Deferred<void>;
     let restartSessionUsedEvent: Deferred<void>;
     let connection: IJupyterConnection;
-    let serverSettings: typemoq.IMock<ServerConnection.ISettings>;
     let mockKernelSpec: typemoq.IMock<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
     let contentsManager: ContentsManager;
+    let specManager: KernelSpecManager;
     let session: ISessionWithSocket;
     let kernel: Kernel.IKernelConnection;
     let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
@@ -58,10 +50,9 @@ suite('DataScience - JupyterSession', () => {
         restartSessionCreatedEvent = createDeferred();
         restartSessionUsedEvent = createDeferred();
         connection = mock<IJupyterConnection>();
-        serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
         mockKernelSpec = typemoq.Mock.ofType<KernelConnectionMetadata>();
         session = mock<ISessionWithSocket>();
-        kernel = mock(DefaultKernel);
+        kernel = mock(KernelConnection);
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
         kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
@@ -71,6 +62,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
+        when(session.unhandledMessage).thenReturn(instance(ioPubSignal));
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
@@ -82,11 +74,12 @@ suite('DataScience - JupyterSession', () => {
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
+        specManager = mock(KernelSpecManager);
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
-            serverSettings.object,
             mockKernelSpec.object,
+            instance(specManager),
             instance(sessionManager),
             instance(contentsManager),
             channel,
@@ -110,7 +103,7 @@ suite('DataScience - JupyterSession', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
         when(contentsManager.delete(anything())).thenResolve();
-        when(sessionManager.startNew(anything())).thenResolve(instance(session));
+        when(sessionManager.startNew(anything(), anything())).thenResolve(instance(session));
         const specOrModel = { name: 'some name', id: undefined } as any;
         mockKernelSpec.setup((k: any) => k.kernelModel).returns(() => specOrModel);
         mockKernelSpec.setup((k: any) => k.kernelSpec).returns(() => specOrModel);
@@ -123,7 +116,7 @@ suite('DataScience - JupyterSession', () => {
         await connect();
 
         assert.isTrue(jupyterSession.isConnected);
-        verify(sessionManager.startNew(anything())).once();
+        verify(sessionManager.startNew(anything(), anything())).once();
         verify(contentsManager.newUntitled(anything())).once();
     });
 
@@ -282,7 +275,7 @@ suite('DataScience - JupyterSession', () => {
                 path: 'path',
                 lastActivityTime: new Date(),
                 numberOfConnections: 1,
-                session: {
+                model: {
                     statusChanged: {
                         connect: noop,
                         disconnect: noop
@@ -311,12 +304,12 @@ suite('DataScience - JupyterSession', () => {
             let remoteSessionInstance: ISessionWithSocket;
             setup(() => {
                 remoteSession = mock<ISessionWithSocket>();
-                remoteKernel = mock(DefaultKernel);
+                remoteKernel = mock(KernelConnection);
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
-                when(sessionManager.startNew(anything())).thenCall(() => {
+                when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     return Promise.resolve(instance(remoteSession));
                 });
             });
@@ -324,10 +317,10 @@ suite('DataScience - JupyterSession', () => {
                 setup(async () => {
                     const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
-                    verify(sessionManager.startNew(anything())).once();
-                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
+                    verify(sessionManager.startNew(anything(), anything())).once();
+                    when(sessionManager.connectTo(anything())).thenReturn(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        newActiveRemoteKernel.session as any
+                        newActiveRemoteKernel.model as any
                     );
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
@@ -341,14 +334,14 @@ suite('DataScience - JupyterSession', () => {
                     verify(session.shutdown()).once();
                 });
                 test('Will connect to existing session', async () => {
-                    verify(sessionManager.connectTo(newActiveRemoteKernel.session)).once();
+                    verify(sessionManager.connectTo(anything())).once();
                 });
                 test('Will flag new session as being remote', async () => {
                     // Confirm the new session is flagged as remote
-                    assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
+                    assert.isTrue((newActiveRemoteKernel.model as any).isRemoteSession);
                 });
                 test('Will not create a new session', async () => {
-                    verify(sessionManager.startNew(anything())).once();
+                    verify(sessionManager.startNew(anything(), anything())).once();
                 });
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();
@@ -363,24 +356,25 @@ suite('DataScience - JupyterSession', () => {
             });
         });
         suite('Local Sessions', async () => {
-            let newSession: Session.ISession;
+            let newSession: Session.ISessionConnection;
             let newKernelConnection: Kernel.IKernelConnection;
-            let newStatusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
-            let newKernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
+            let newStatusChangedSignal: ISignal<Session.ISessionConnection, Kernel.Status>;
+            let newKernelChangedSignal: ISignal<Session.ISessionConnection, IKernelChangedArgs>;
             let newSessionCreated: Deferred<void>;
             setup(async () => {
-                newSession = mock(DefaultSession);
-                newKernelConnection = mock(DefaultKernel);
-                newStatusChangedSignal = mock<ISignal<Session.ISession, Kernel.Status>>();
-                newKernelChangedSignal = mock<ISignal<Session.ISession, IKernelChangedArgs>>();
+                newSession = mock(SessionConnection);
+                newKernelConnection = mock(KernelConnection);
+                newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
+                newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
                 const newIoPubSignal = mock<
-                    ISignal<Session.ISession, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                    ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
                 >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
+                when(newSession.unhandledMessage).thenReturn(instance(newIoPubSignal));
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -389,7 +383,7 @@ suite('DataScience - JupyterSession', () => {
                 when(newKernelConnection.clientId).thenReturn('restartClientId');
                 when(newKernelConnection.status).thenReturn('idle');
                 when(newSession.kernel).thenReturn(instance(newKernelConnection));
-                when(sessionManager.startNew(anything())).thenCall(() => {
+                when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
@@ -398,7 +392,7 @@ suite('DataScience - JupyterSession', () => {
                 verify(sessionManager.connectTo(anything())).never();
             });
             test('Switching kernels will kill current session and start a new one', async () => {
-                verify(sessionManager.startNew(anything())).once();
+                verify(sessionManager.startNew(anything(), anything())).once();
 
                 const newKernel: IJupyterKernelSpec = {
                     argv: [],
@@ -418,7 +412,7 @@ suite('DataScience - JupyterSession', () => {
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;
                 // One original, one new session.
-                verify(sessionManager.startNew(anything())).twice();
+                verify(sessionManager.startNew(anything(), anything())).twice();
             });
             suite('Executing user code', async () => {
                 setup(executeUserCode);

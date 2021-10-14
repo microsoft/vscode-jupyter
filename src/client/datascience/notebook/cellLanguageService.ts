@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';

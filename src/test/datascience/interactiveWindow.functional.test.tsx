@@ -19,7 +19,7 @@ suite('Dummy6', () => {
 // import * as TypeMoq from 'typemoq';
 // import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { ReactWrapper } from 'enzyme';
 // import { anything, when } from 'ts-mockito';
 // import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';

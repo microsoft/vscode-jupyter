@@ -1,4 +1,4 @@
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -47,8 +47,8 @@ export class ExportUtil {
         const model = await this.fs.readLocalFile(source.fsPath);
         const content = JSON.parse(model) as nbformat.INotebookContent;
         for (const cell of content.cells) {
-            const outputs = cell.outputs as nbformat.IOutput[];
-            if (Array.isArray(outputs)) {
+            const outputs = 'outputs' in cell ? (cell.outputs as nbformat.IOutput[]) : undefined;
+            if (outputs && Array.isArray(outputs)) {
                 this.removeSvgFromOutputs(outputs);
             }
         }
@@ -59,7 +59,7 @@ export class ExportUtil {
         const SVG = 'image/svg+xml';
         const PNG = 'image/png';
         for (const output of outputs as nbformat.IOutput[]) {
-            if (output.data as nbformat.IMimeBundle) {
+            if ('data' in output) {
                 const data = output.data as nbformat.IMimeBundle;
                 // only remove the svg if there is a png available
                 if (!(SVG in data)) {

@@ -18,6 +18,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
+const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
@@ -112,6 +113,14 @@ gulp.task('checkNpmDependencies', (done) => {
         throw new Error(errors.join(', '));
     }
     done();
+});
+
+gulp.task('installPythonLibs', async () => {
+    const output = spawnSync('python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt');
+    if (output.error){
+        console.error(output.stderr);
+        throw output.error;
+    }
 });
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());

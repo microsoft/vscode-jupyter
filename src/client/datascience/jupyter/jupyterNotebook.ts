@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { KernelMessage } from '@jupyterlab/services';
+import type { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
@@ -12,7 +12,7 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import '../../common/extensions';
 import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { CodeSnippets } from '../constants';
@@ -25,21 +25,17 @@ import {
     KernelSocketInformation
 } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
-import { KernelConnectionMetadata } from './kernels/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { IFileSystem } from '../../common/platform/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
+import { isPythonKernelConnection } from './kernels/helpers';
 import { executeSilently } from './kernels/kernel';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterNotebookBase implements INotebook {
-    private _resource: Resource;
-    private _identity: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _executionInfo: INotebookExecutionInfo;
@@ -53,10 +49,6 @@ export class JupyterNotebookBase implements INotebook {
     public get disposed() {
         return this._disposed;
     }
-    public get onKernelRestarted(): Event<void> {
-        return this.kernelRestarted.event;
-    }
-    private readonly kernelRestarted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
     private finishedExecuting = new EventEmitter<ICell>();
     private sessionStatusChanged: Disposable | undefined;
@@ -71,8 +63,7 @@ export class JupyterNotebookBase implements INotebook {
         private readonly _session: IJupyterSession,
         private disposableRegistry: IDisposableRegistry,
         executionInfo: INotebookExecutionInfo,
-        resource: Resource,
-        identity: Uri,
+        private readonly identity: Uri,
         private workspace: IWorkspaceService,
         private fs: IFileSystem
     ) {
@@ -82,8 +73,6 @@ export class JupyterNotebookBase implements INotebook {
             }
         };
         this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
-        this._identity = identity;
-        this._resource = resource;
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
@@ -114,7 +103,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         }
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return this.session.requestKernelInfo();
     }
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -126,13 +115,6 @@ export class JupyterNotebookBase implements INotebook {
 
     public get status(): ServerStatus {
         return this.session.status;
-    }
-
-    public get resource(): Resource {
-        return this._resource;
-    }
-    public get identity(): Uri {
-        return this._identity;
     }
 
     public waitForIdle(timeoutMs: number): Promise<void> {
@@ -180,10 +162,6 @@ export class JupyterNotebookBase implements INotebook {
         // Update our working directory if we don't have one set already
         return this.updateWorkingDirectoryAndPath(file);
     }
-
-    public fireRestart() {
-        this.kernelRestarted.fire();
-    }
     public async getCompletion(
         cellCode: string,
         offsetInCode: number,
@@ -227,33 +205,6 @@ export class JupyterNotebookBase implements INotebook {
             metadata: {}
         };
     }
-
-    public getMatchingInterpreter(): PythonEnvironment | undefined {
-        return getInterpreterFromKernelConnectionMetadata(this.getKernelConnection()) as PythonEnvironment | undefined;
-    }
-
-    public getKernelConnection(): KernelConnectionMetadata | undefined {
-        return this._executionInfo.kernelConnectionMetadata;
-    }
-    public registerCommTarget(
-        targetName: string,
-        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ) {
-        this.session.registerCommTarget(targetName, callback);
-    }
-    public registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void {
-        return this.session.registerMessageHook(msgId, hook);
-    }
-    public removeMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void {
-        return this.session.removeMessageHook(msgId, hook);
-    }
-
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Jupyter Notebook');
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {

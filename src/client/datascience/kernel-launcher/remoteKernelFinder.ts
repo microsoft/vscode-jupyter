@@ -3,7 +3,7 @@
 'use strict';
 
 import { Kernel } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -136,9 +136,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     const numberOfConnections = liveKernel.connections
                         ? parseInt(liveKernel.connections.toString(), 10)
                         : 0;
-                    const activeKernel = running.find((active) => active.id === s.kernel.id) || {};
+                    const activeKernel = running.find((active) => active.id === s.kernel?.id) || {};
                     const matchingSpec: Partial<IJupyterKernelSpec> =
-                        specs.find((spec) => spec.name === s.kernel.name) || {};
+                        specs.find((spec) => spec.name === s.kernel?.name) || {};
 
                     const kernel: LiveKernelConnectionMetadata = {
                         kind: 'connectToLiveKernel',
@@ -146,11 +146,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             ...s.kernel,
                             ...matchingSpec,
                             ...activeKernel,
+                            name: s.kernel?.name || '',
                             lastActivityTime,
                             numberOfConnections,
-                            session: s
+                            model: s
                         },
-                        id: s.kernel.id
+                        id: s.kernel?.id || ''
                     };
                     return kernel;
                 });

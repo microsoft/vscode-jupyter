@@ -6,7 +6,7 @@ import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
 import { Event } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
-import { INotebook } from '../types';
+import { IKernel } from '../jupyter/kernels/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -108,7 +108,7 @@ export interface IDataViewerFactory {
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     readonly active: boolean;
-    readonly notebook?: INotebook | undefined;
+    readonly kernel?: IKernel | undefined;
     readonly title: string;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;

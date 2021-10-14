@@ -8,7 +8,7 @@ import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Posi
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
+import { JupyterCompletionProvider } from '../../../../client/datascience/notebook/intellisense/jupyterCompletionProvider';
 import { IExtensionTestApi, sleep } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
@@ -29,7 +29,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    let completionProvider: NotebookCompletionProvider;
+    let completionProvider: JupyterCompletionProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
@@ -46,7 +46,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        completionProvider = api.serviceContainer.get<NotebookCompletionProvider>(NotebookCompletionProvider);
+        completionProvider = api.serviceContainer.get<JupyterCompletionProvider>(JupyterCompletionProvider);
         traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).

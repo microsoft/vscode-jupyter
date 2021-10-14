@@ -13,13 +13,12 @@ const constants = require('../../build/constants');
 const outDir = path.join(__dirname, '..', '..', 'out', 'ipywidgets');
 const version = require(path.join(
     __dirname,
-    '..',
-    '..',
     'node_modules',
     '@jupyter-widgets',
     'jupyterlab-manager',
     'package.json'
 )).version;
+const rootDir = __dirname;
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
 const publicPath = 'https://unpkg.com/@jupyter-widgets/jupyterlab-manager@' + version + '/dist/';
@@ -86,7 +85,6 @@ const rules = [
         ]
     }
 ];
-
 module.exports = [
     {
         mode: isProdBuild ? 'production' : 'development',
@@ -97,6 +95,12 @@ module.exports = [
             path: path.resolve(outDir, 'dist'),
             publicPath: 'built/',
             pathinfo: false
+        },
+        resolve: {
+            modules: [
+                path.resolve(__dirname, 'node_modules'),
+                path.resolve(__dirname, './'),
+            ]
         },
         plugins: [...common.getDefaultPlugins('ipywidgets')],
         module: {
@@ -121,11 +125,11 @@ module.exports = [
                                     }),
                                     postcss.plugin('prepend', function () {
                                         return function (css) {
-                                            css.prepend("@import '@jupyter-widgets/controls/css/labvariables.css';");
+                                            css.prepend("@import 'src/ipywidgets/node_modules/@jupyter-widgets/controls/css/labvariables.css';");
                                         };
                                     }),
                                     require('postcss-import')(),
-                                    require('postcss-cssnext')()
+                                    require('postcss-cssnext')()    
                                 ]
                             }
                         }

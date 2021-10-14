@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { cloneDeep } from 'lodash';

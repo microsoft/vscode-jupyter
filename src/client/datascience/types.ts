@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
 import {
@@ -171,16 +171,13 @@ export interface IJupyterNotebookProvider {
 }
 
 export interface INotebook extends IAsyncDisposable {
-    readonly resource: Resource;
     readonly connection: INotebookProviderConnection | undefined;
     kernelSocket: Observable<KernelSocketInformation | undefined>;
-    readonly identity: Uri;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
-    onKernelRestarted: Event<void>;
     inspect(code: string, offsetInCode?: number, cancelToken?: CancellationToken): Promise<JSONObject>;
     getCompletion(
         cellCode: string,
@@ -189,21 +186,7 @@ export interface INotebook extends IAsyncDisposable {
     ): Promise<INotebookCompletion>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     setLaunchingFile(file: string): Promise<void>;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    getMatchingInterpreter(): PythonEnvironment | undefined;
-    /**
-     * Gets the metadata that's used to start/connect to a Kernel.
-     */
-    getKernelConnection(): KernelConnectionMetadata | undefined;
-    registerCommTarget(
-        targetName: string,
-        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ): void;
-    registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void;
-    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
 }
 
 // Options for connecting to a notebook provider
@@ -291,11 +274,11 @@ export interface IJupyterSession extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     shutdown(): Promise<void>;
 }
 
-export type ISessionWithSocket = Session.ISession & {
+export type ISessionWithSocket = Session.ISessionConnection & {
     // The resource associated with this session.
     resource: Resource;
     // Whether this is a remote session that we attached to.
@@ -691,27 +674,27 @@ export interface IJupyterVariable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
-    readonly notebook: INotebook | undefined;
-    setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
+    readonly kernel: IKernel | undefined;
+    setDependencies(variable: IJupyterVariable, kernel?: IKernel): void;
 }
 
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
 export interface IJupyterVariableDataProviderFactory {
-    create(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariableDataProvider>;
+    create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
-    getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
+    getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
         variable: IJupyterVariable,
-        notebook?: INotebook,
+        kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable>;
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable>;
@@ -719,16 +702,16 @@ export interface IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        notebook?: INotebook,
+        kernel?: IKernel,
         sliceExpression?: string
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
-        notebook?: INotebook,
+        kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
     // This is currently only defined in kernelVariables.ts
-    getVariableProperties?(name: string, notebook?: INotebook, cancelToken?: CancellationToken): Promise<JSONObject>;
+    getVariableProperties?(name: string, kernel?: IKernel, cancelToken?: CancellationToken): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -1076,26 +1059,22 @@ export interface IKernelDependencyService {
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
-    getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
-    getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}>;
+    getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}>;
     getVariableProperties(
         word: string,
-        notebook: INotebook,
+        kernel: IKernel,
         cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined,
         languageSettings: { [typeNameKey: string]: string[] },
         inEnhancedTooltipsExperiment: boolean
     ): Promise<{ [attributeName: string]: string }>;
-    getDataFrameInfo(
-        targetVariable: IJupyterVariable,
-        notebook: INotebook,
-        expression: string
-    ): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
 
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');

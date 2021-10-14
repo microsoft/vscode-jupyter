@@ -1,5 +1,31 @@
 # Changelog
 
+## 2021.9.110 (14 October 2021)
+
+### Fixes
+
+1. Ensure `Change Kernel` option in the prmopt allows users to change kernels.
+   ([#7779](https://github.com/Microsoft/vscode-jupyter/issues/7779))
+1. Ensure restarting kernels in `Interactive Window` retains support for `__file__`.
+   ([#7883](https://github.com/Microsoft/vscode-jupyter/issues/7883))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2021.9.100 (6 October 2021)
 
 ### Enhancements

@@ -3,7 +3,7 @@
 'use strict';
 import './mainPanel.css';
 
-import { JSONArray } from '@phosphor/coreutils';
+import { JSONArray } from '@lumino/coreutils';
 import * as React from 'react';
 
 import {

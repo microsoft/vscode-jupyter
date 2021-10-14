@@ -13,7 +13,7 @@ import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
-import { NotebookCompletionProvider } from './intellisense/completionProvider';
+import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvider';
 import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
@@ -23,6 +23,7 @@ import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
 import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
+import { IntellisenseProvider } from './intellisense/intellisenseProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -54,7 +55,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookCellLanguageService
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addSingleton<NotebookCompletionProvider>(NotebookCompletionProvider, NotebookCompletionProvider);
+    serviceManager.addSingleton<JupyterCompletionProvider>(JupyterCompletionProvider, JupyterCompletionProvider);
+    serviceManager.addSingleton<IntellisenseProvider>(IExtensionSingleActivationService, IntellisenseProvider);
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);

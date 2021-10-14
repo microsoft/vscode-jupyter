@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 export const __ = '';
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import * as fakeTimers from '@sinonjs/fake-timers';
 // import { expect } from 'chai';
 // // eslint-disable-next-line

@@ -1,40 +1,43 @@
-// import { nbformat } from '@jupyterlab/coreutils';
-import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import stripAnsi from 'strip-ansi';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, NotebookDocument } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, GetVariableInfo } from '../constants';
-import { IJupyterVariable, IKernelVariableRequester, INotebook } from '../types';
+import { IJupyterVariable, IKernelVariableRequester } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { executeSilently } from './kernels/kernel';
+import { IKernel } from './kernels/types';
 
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
-    private importedDataFrameScripts = new Map<string, boolean>();
-    private importedGetVariableInfoScripts = new Map<string, boolean>();
+    private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
+    private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
     constructor(@inject(IFileSystem) private fs: IFileSystem) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         expression: string
     ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook);
+        await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = await executeSilently(
-            notebook.session,
-            `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`
-        );
+        const results = kernel.notebook?.session
+            ? await executeSilently(
+                  kernel.notebook.session,
+                  `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`
+              )
+            : [];
 
-        const fileName = path.basename(notebook.identity.path);
+        const fileName = path.basename(kernel.notebookDocument.uri.path);
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -44,28 +47,30 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         };
     }
 
-    public async getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}> {
-        await this.importDataFrameScripts(notebook);
+    public async getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}> {
+        await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the rows and turn it into JSON
-        const results = await executeSilently(
-            notebook.session,
-            `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
-        );
+        const results = kernel.notebook?.session
+            ? await executeSilently(
+                  kernel.notebook.session,
+                  `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
+              )
+            : [];
 
         return this.deserializeJupyterResult(results);
     }
 
     public async getVariableProperties(
         word: string,
-        notebook: INotebook,
+        kernel: IKernel,
         _cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined,
         languageSettings: { [typeNameKey: string]: string[] },
         inEnhancedTooltipsExperiment: boolean
     ): Promise<{ [attributeName: string]: string }> {
         // Import the variable info script directory if we haven't already
-        await this.importGetVariableInfoScripts(notebook);
+        await this.importGetVariableInfoScripts(kernel);
 
         let result: { [attributeName: string]: string } = {};
         if (matchingVariable && matchingVariable.value) {
@@ -74,10 +79,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const attributes = await executeSilently(
-                    notebook.session,
-                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
-                );
+                const attributes = kernel.notebook?.session
+                    ? await executeSilently(
+                          kernel.notebook.session,
+                          `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
+                      )
+                    : [];
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
             } else {
                 result[`${word}`] = matchingVariable.value;
@@ -87,18 +94,20 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     public async getVariableNamesAndTypesFromKernel(
-        notebook: INotebook,
+        kernel: IKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
-        if (notebook) {
+        if (kernel.notebook) {
             // Add in our get variable info script to get types
-            await this.importGetVariableInfoScripts(notebook);
+            await this.importGetVariableInfoScripts(kernel);
 
             // VariableTypesFunc takes in list of vars and the corresponding var names
-            const results = await executeSilently(
-                notebook.session,
-                `_rwho_ls = %who_ls\nprint(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
-            );
+            const results = kernel.notebook?.session
+                ? await executeSilently(
+                      kernel.notebook.session,
+                      `_rwho_ls = %who_ls\nprint(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
+                  )
+                : [];
 
             const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
 
@@ -124,17 +133,19 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     public async getFullVariable(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
+        kernel: IKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable> {
         // Import the variable info script directory if we haven't already
-        await this.importGetVariableInfoScripts(notebook);
+        await this.importGetVariableInfoScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = await executeSilently(
-            notebook.session,
-            `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
-        );
+        const results = kernel.notebook?.session
+            ? await executeSilently(
+                  kernel.notebook.session,
+                  `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
+              )
+            : [];
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -143,8 +154,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         };
     }
 
-    private async importDataFrameScripts(notebook: INotebook): Promise<void> {
-        const key = notebook.identity.toString();
+    private async importDataFrameScripts(kernel: IKernel): Promise<void> {
+        const key = kernel.notebookDocument;
         if (!this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
@@ -152,18 +163,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 this.importedDataFrameScripts.delete(key);
                 disposables.forEach((d) => d.dispose());
             };
-            disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelRestarted(handler));
+            disposables.push(kernel.onDisposed(handler));
+            disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(notebook, DataFrameLoading.ScriptPath);
+            await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
 
-            this.importedDataFrameScripts.set(notebook.identity.toString(), true);
+            this.importedDataFrameScripts.set(kernel.notebookDocument, true);
         }
     }
 
-    private async importGetVariableInfoScripts(notebook: INotebook): Promise<void> {
-        const key = notebook.identity.toString();
+    private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
+        const key = kernel.notebookDocument;
         if (!this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
@@ -171,23 +182,22 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 this.importedGetVariableInfoScripts.delete(key);
                 disposables.forEach((d) => d.dispose());
             };
-            disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelRestarted(handler));
+            disposables.push(kernel.onDisposed(handler));
+            disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(notebook, GetVariableInfo.ScriptPath);
+            await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
 
-            this.importedGetVariableInfoScripts.set(notebook.identity.toString(), true);
+            this.importedGetVariableInfoScripts.set(kernel.notebookDocument, true);
         }
     }
 
     // Read in a .py file and execute it silently in the given notebook
-    private async runScriptFile(notebook: INotebook, scriptFile: string) {
+    private async runScriptFile(kernel: IKernel, scriptFile: string) {
         if (await this.fs.localFileExists(scriptFile)) {
             const fileContents = await this.fs.readLocalFile(scriptFile);
-            return executeSilently(notebook.session, fileContents);
-        } else {
-            traceError('Cannot run non-existant script file');
+            return kernel.notebook?.session ? executeSilently(kernel.notebook?.session, fileContents) : [];
         }
+        traceError('Cannot run non-existant script file');
     }
 
     private extractJupyterResultText(outputs: nbformat.IOutput[]): string {

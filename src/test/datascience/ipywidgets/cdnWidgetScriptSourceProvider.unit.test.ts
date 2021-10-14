@@ -8,7 +8,7 @@ import * as nock from 'nock';
 import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -19,8 +19,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSource } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -31,7 +30,6 @@ const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
-    let notebook: INotebook;
     let configService: IConfigurationService;
     let settings: JupyterSettings;
     let fileSystem: IFileSystem;
@@ -44,7 +42,6 @@ suite('DataScience - ipywidget - CDN', () => {
         return this.skip();
     });
     setup(() => {
-        notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
         fileSystem = mock(FileSystem);
         webviewUriConverter = mock(IPyWidgetScriptSource);
@@ -113,22 +110,6 @@ suite('DataScience - ipywidget - CDN', () => {
 
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
-            setup(() => {
-                const connection: IJupyterConnection = {
-                    type: 'jupyter',
-                    baseUrl: '',
-                    localProcExitCode: undefined,
-                    valid: true,
-                    displayName: '',
-                    disconnected: new EventEmitter<number>().event,
-                    dispose: noop,
-                    hostName: '',
-                    localLaunch,
-                    token: '',
-                    rootDirectory: ''
-                };
-                when(notebook.connection).thenReturn(connection);
-            });
             test('Script source will be empty if CDN is not a configured source of widget scripts in settings', async () => {
                 const value = await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import * as os from 'os';
 import * as fsExtra from 'fs-extra';
 import { parse, SemVer } from 'semver';
@@ -34,7 +34,6 @@ const dummyDisplayObj: nbformat.IDisplayData = {
 };
 const dummyExecuteResultObj: nbformat.IExecuteResult = {
     output_type: 'execute_result',
-    name: '',
     execution_count: 0,
     data: {},
     metadata: {}
@@ -68,7 +67,8 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
     const result = { ...output };
     for (const k of Object.keys(output)) {
         if (!allowedKeys.has(k)) {
-            delete result[k];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (result as any)[k];
         }
     }
     return result;
@@ -89,9 +89,10 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
         delete (<any>result).outputs;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (<any>result).execution_count;
-    } else {
+    } else if (result.cell_type) {
         // Clean outputs from code cells
-        result.outputs = result.outputs ? (result.outputs as nbformat.IOutput[]).map(fixupOutput) : [];
+        const cellResult = result as nbformat.ICodeCell;
+        cellResult.outputs = cellResult.outputs ? (cellResult.outputs as nbformat.IOutput[]).map(fixupOutput) : [];
     }
 
     return result;
@@ -100,15 +101,17 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
 export function traceCellResults(prefix: string, results: ICell[]) {
     if (results.length > 0 && results[0].data.cell_type === 'code') {
         const cell = results[0].data as nbformat.ICodeCell;
-        const error = cell.outputs && cell.outputs[0] ? cell.outputs[0].evalue : undefined;
+        const error = cell.outputs && cell.outputs[0] ? 'evalue' in cell.outputs[0] : undefined;
         if (error) {
             traceError(`${prefix} Error : ${error}`);
         } else if (cell.outputs && cell.outputs[0]) {
             if (cell.outputs[0].output_type.includes('image')) {
                 traceInfo(`${prefix} Output: image`);
             } else {
-                const data = cell.outputs[0].data;
-                const text = cell.outputs[0].text;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const data = (cell.outputs[0] as any).data;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const text = (cell.outputs[0] as any).text;
                 traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
             }
         }

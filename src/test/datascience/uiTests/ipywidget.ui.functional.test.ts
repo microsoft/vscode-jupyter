@@ -9,7 +9,7 @@ suite('Dummy14', () => {
 });
 // /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any, no-console */
 
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert, use } from 'chai';
 // import * as chaiAsPromised from 'chai-as-promised';
 // import * as fs from 'fs-extra';

@@ -163,13 +163,13 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     public async showDataViewer(request: IShowDataViewer): Promise<IDataViewer | undefined> {
         try {
             if (
-                this.notebookWatcher.activeNotebook &&
+                this.notebookWatcher.activeKernel &&
                 (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource))
             ) {
                 // Create a variable data provider and pass it to the data viewer factory to create the data viewer
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
-                    this.notebookWatcher.activeNotebook
+                    this.notebookWatcher.activeKernel
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
                 return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
@@ -184,7 +184,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        const activeNotebook = this.notebookWatcher.activeNotebook;
+        const activeNotebook = this.notebookWatcher.activeKernel;
         if (activeNotebook) {
             const response = await this.variables.getVariables(args, activeNotebook);
 

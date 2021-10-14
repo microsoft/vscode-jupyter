@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import type { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 

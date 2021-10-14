@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils/lib/json';
+import { JSONObject } from '@lumino/coreutils';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
@@ -16,7 +16,7 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
@@ -97,7 +97,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return sleep(this.timedelay);
     }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
         return {
             channel: 'shell',
             content: {

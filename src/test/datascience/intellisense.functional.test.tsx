@@ -11,7 +11,7 @@ suite('Dummy5', () => {
 // import { ReactWrapper } from 'enzyme';
 // import { Disposable } from 'vscode';
 
-// import { nbformat } from '@jupyterlab/coreutils';
+// import type * as nbformat from '@jupyterlab/nbformat';
 // import { ILanguageServerProvider } from '../../client/api/types';
 // import { createDeferred } from '../../client/common/utils/async';
 // import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';

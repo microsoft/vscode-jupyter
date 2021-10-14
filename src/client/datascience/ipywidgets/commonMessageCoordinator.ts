@@ -6,7 +6,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import {
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
@@ -14,7 +14,7 @@ import {
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import {
@@ -34,7 +34,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookProvider } from '../types';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher } from './types';
@@ -65,17 +65,23 @@ export class CommonMessageCoordinator {
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
+    private constructor(
+        private readonly document: NotebookDocument,
+        private readonly serviceContainer: IServiceContainer
+    ) {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
-    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer);
+    public static async create(
+        document: NotebookDocument,
+        serviceContainer: IServiceContainer
+    ): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(document, serviceContainer);
         await result.initialize();
-        traceInfo('Created and initailized CommonMessageCoordinator');
+        traceVerbose('Created and initailized CommonMessageCoordinator');
         return result;
     }
 
@@ -106,7 +112,7 @@ export class CommonMessageCoordinator {
     }
 
     private async initialize(): Promise<void> {
-        traceInfo('initialize CommonMessageCoordinator');
+        traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
         const promise = this.getIPyWidgetScriptSource()?.initialize();
         await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
@@ -206,7 +212,7 @@ export class CommonMessageCoordinator {
         if (!this.ipyWidgetMessageDispatcher) {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
-                .create(this.identity);
+                .create(this.document);
             this.disposables.push(this.ipyWidgetMessageDispatcher.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetMessageDispatcher;
@@ -215,8 +221,8 @@ export class CommonMessageCoordinator {
     private getIPyWidgetScriptSource() {
         if (!this.ipyWidgetScriptSource) {
             this.ipyWidgetScriptSource = new IPyWidgetScriptSource(
-                this.identity,
-                this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+                this.document,
+                this.serviceContainer.get<IKernelProvider>(IKernelProvider),
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 this.serviceContainer.get<IFileSystem>(IFileSystem),
                 this.serviceContainer.get<IInterpreterService>(IInterpreterService),

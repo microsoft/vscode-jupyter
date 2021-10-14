@@ -27,6 +27,7 @@
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
         "removeComments": true,
+        "useUnknownInCatchVariables": false,
         "types": ["@types/vscode-notebook-renderer/preload"]
     },
     "exclude": [

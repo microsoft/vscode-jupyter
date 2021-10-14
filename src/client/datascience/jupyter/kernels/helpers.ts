@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
 
 import * as path from 'path';
-import type { Kernel } from '@jupyterlab/services';
+import type { KernelSpec } from '@jupyterlab/services';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
@@ -164,7 +165,18 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return model?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
+    if (
+        kernelConnection.kind === 'startUsingPythonInterpreter' ||
+        (kernelConnection.kind === 'startUsingKernelSpec' && kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
+    ) {
+        return kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
+    } else {
+        // For non python kernels, give preference to the executable path in the kernelspec
+        // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
+        return (
+            model?.path || kernelSpec?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath
+        );
+    }
 }
 
 export function getDescriptionOfKernelConnection(
@@ -187,7 +199,7 @@ export function getDetailOfKernelConnection(
 ): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     const notebookPath =
-        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel.session.path})` : '';
+        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     return `${kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue} ${notebookPath}`;
 }
 
@@ -304,7 +316,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
-    const defaultSpec: Kernel.ISpecModel = {
+    const defaultSpec: KernelSpec.ISpecModel = {
         name: getInterpreterKernelSpecName(interpreter),
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
@@ -431,7 +443,8 @@ export function findPreferredKernel(
                 !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                     ? PYTHON_LANGUAGE
                     : (
-                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                          ((notebookMetadata?.kernelspec as any)?.language as string) ||
+                          notebookMetadata?.language_info?.name
                       )?.toLowerCase();
         }
         let bestScore = -1;
@@ -545,12 +558,12 @@ export function findPreferredKernel(
                 if (
                     typeof notebookMetadata === 'object' &&
                     'interpreter' in notebookMetadata &&
-                    notebookMetadata.interpreter &&
-                    typeof notebookMetadata.interpreter === 'object' &&
-                    'hash' in notebookMetadata.interpreter &&
+                    (notebookMetadata as any).interpreter &&
+                    typeof (notebookMetadata as any).interpreter === 'object' &&
+                    'hash' in (notebookMetadata as any).interpreter &&
                     (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
+                    getInterpreterHash(metadata.interpreter) === (notebookMetadata as any).interpreter.hash
                 ) {
                     // This is a perfect match.
                     traceInfoIfCI('Increased score by +100 for matching interpreter in notbeook metadata');
@@ -662,11 +675,13 @@ export function findPreferredKernel(
                     if (
                         typeof notebookMetadata === 'object' &&
                         'interpreter' in notebookMetadata &&
-                        notebookMetadata.interpreter &&
-                        typeof notebookMetadata.interpreter === 'object' &&
+                        (notebookMetadata as any).interpreter &&
+                        typeof (notebookMetadata as any).interpreter === 'object' &&
                         metadata.kind === 'startUsingPythonInterpreter'
                     ) {
-                        const nbMetadataInterpreter = notebookMetadata.interpreter as Partial<PythonEnvironment>;
+                        const nbMetadataInterpreter = (notebookMetadata as any).interpreter as Partial<
+                            PythonEnvironment
+                        >;
                         if (
                             nbMetadataInterpreter.version?.raw &&
                             nbMetadataInterpreter.version?.raw === metadata.interpreter.version?.raw

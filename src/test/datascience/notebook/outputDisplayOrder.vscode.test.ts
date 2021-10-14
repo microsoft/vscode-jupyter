@@ -12,7 +12,7 @@ import { openNotebook } from '../helpers';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
-import { nbformat } from '@jupyterlab/coreutils';
+import type * as nbformat from '@jupyterlab/nbformat';
 import { cellOutputToVSCCellOutput } from '../../../client/datascience/notebook/helpers/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

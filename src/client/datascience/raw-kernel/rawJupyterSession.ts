@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
-import type { Slot } from '@phosphor/signaling';
+import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
@@ -158,14 +158,16 @@ export class RawJupyterSession extends BaseJupyterSession {
                     Telemetry.RawKernelSessionStart,
                     stopWatch.elapsedTime,
                     undefined,
-                    error
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    error as any
                 );
                 sendKernelTelemetryEvent(
                     resource,
                     Telemetry.RawKernelSessionStartException,
                     undefined,
                     undefined,
-                    error
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    error as any
                 );
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
@@ -298,8 +300,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process, this.resource);
 
-        // When our kernel connects and gets a status message it triggers the ready promise
-        await result.kernel.ready;
+        // Wait for it to be ready
+        await result.waitForReady();
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
