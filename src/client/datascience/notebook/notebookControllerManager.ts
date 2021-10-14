@@ -44,9 +44,11 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
+import { getTelemetrySafeVersion } from '../../telemetry/helpers';
+
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -440,7 +442,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         kernelConnection,
                         id,
                         viewType,
-                        label,
+                        getControllerDisplayName(kernelConnection, label),
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,
@@ -558,4 +560,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             controller.dispose();
         });
     }
+}
+
+export function getControllerDisplayName(kernelConnection: KernelConnectionMetadata, currentDisplayName: string) {
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel': {
+            return `Jupyter Kernel (${currentDisplayName})`;
+        }
+        case 'startUsingKernelSpec': {
+            if (
+                kernelConnection.interpreter?.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                const pythonVersion = `Python ${
+                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                }`.trim();
+                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
+                    const bitness = kernelConnection.interpreter.displayName?.includes('64-bit') ? '64-bit' : '';
+                    const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
+                    const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
+                    return `${envPrefix} (${pythonDisplayName})`.trim();
+                } else {
+                    const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
+                    return `${envPrefix || 'Jupyter Kernel'} (${currentDisplayName})`.trim();
+                }
+            } else {
+                return `Jupyter Kernel (${currentDisplayName})`;
+            }
+        }
+        case 'startUsingPythonInterpreter':
+            if (
+                kernelConnection.interpreter.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                const pythonVersion = `Python ${
+                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                }`.trim();
+                const bitness = kernelConnection.interpreter.displayName?.includes('64-bit') ? '64-bit' : '';
+                const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
+                const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
+                return `${envPrefix} (${pythonDisplayName})`.trim();
+            }
+    }
+    return currentDisplayName;
 }

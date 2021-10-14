@@ -18,7 +18,17 @@ export type PythonVersionInfo = [number, number, number, ReleaseLevel];
  * The supported Python environment types.
  */
 export enum EnvironmentType {
+    Unknown = 'Unknown',
     Conda = 'Conda',
+    VirtualEnv = 'VirtualEnv',
+    Pipenv = 'PipEnv',
+    Pyenv = 'Pyenv',
+    Venv = 'Venv',
+    WindowsStore = 'WindowsStore',
+    Poetry = 'Poetry',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+    Global = 'Global',
+    System = 'System',
 }
 
 /**
