@@ -22,8 +22,10 @@ import {
     createEmptyPythonNotebook,
     waitForKernelToChange,
     waitForDiagnostics,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    waitForExecutionCompletedSuccessfully
 } from '../helper';
+import { IVSCodeNotebook } from '../../../../client/common/application/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
@@ -38,6 +40,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
     const venvKernelPython = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
     let venvNoKernelPythonPath: string;
     let venvKernelPythonPath: string;
+    let vscodeNotebook: IVSCodeNotebook;
 
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -60,6 +63,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
             // Virtual env does not exist.
             return this.skip();
         }
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         // Wait for all interpreters so we can make sure we can get details on the paths we have
         await interpreterService.getInterpreters();
@@ -110,7 +114,16 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         // Switch to the other kernel
         await waitForKernelToChange({ interpreterPath: venvNoKernelPythonPath });
 
+        // List pip results
+        const listCell = await insertCodeCell('%pip list');
+        await waitForExecutionCompletedSuccessfully(listCell);
+
+        // Insert a cell that explicitly removes pandas to make sure it isn't there (not sure if pylance will pick up on this or not)
+        const removeCell = await insertCodeCell('%pip uninstall pandas');
+        await waitForExecutionCompletedSuccessfully(removeCell);
+
         // Wait for an error to show up
+        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         diagnostics = await waitForDiagnostics(cell.document.uri);
         assert.ok(diagnostics, 'Import pandas should generate a diag error on first cell');
         assert.ok(
