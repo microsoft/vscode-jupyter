@@ -44,9 +44,10 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
+
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -436,6 +437,55 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
                 .forEach(([id, viewType]) => {
+                    switch (kernelConnection.kind) {
+                        case 'connectToLiveKernel': {
+                            label = `Jupyter Kernel (${label})`;
+                            break;
+                        }
+                        case 'startUsingKernelSpec':
+                            {
+                                if (
+                                    kernelConnection.interpreter?.envType &&
+                                    kernelConnection.interpreter.envType !== EnvironmentType.Global
+                                ) {
+                                    const pythonVersion = `Python ${
+                                        kernelConnection.interpreter.version?.raw || ''
+                                    }`.trim();
+                                    if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
+                                        const bitness = kernelConnection.interpreter.displayName?.includes('64-bit')
+                                            ? '64-bit'
+                                            : '';
+                                        const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
+                                        const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
+                                        label = `${envPrefix} (${pythonDisplayName})`.trim();
+                                    } else {
+                                        const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
+                                        label = `${envPrefix || 'Jupyter Kernel'} (${label})`.trim();
+                                    }
+                                } else {
+                                    label = `Jupyter Kernel (${label})`;
+                                }
+                            }
+                            break;
+                        case 'startUsingPythonInterpreter':
+                            if (
+                                kernelConnection.interpreter.envType &&
+                                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                            ) {
+                                const pythonVersion = `Python ${
+                                    kernelConnection.interpreter.version?.raw || ''
+                                }`.trim();
+                                const bitness = kernelConnection.interpreter.displayName?.includes('64-bit')
+                                    ? '64-bit'
+                                    : '';
+                                const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
+                                const envPrefix = `${kernelConnection.interpreter.envType} ${
+                                    kernelConnection.interpreter.envName || kernelConnection.interpreter.sysVersion
+                                }`.trim();
+                                label = `${envPrefix} (${pythonDisplayName})`.trim();
+                            }
+                            break;
+                    }
                     const controller = new VSCodeNotebookController(
                         kernelConnection,
                         id,
