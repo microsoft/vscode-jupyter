@@ -165,12 +165,17 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    if (kernelConnection.kind === 'startUsingPythonInterpreter' || (kernelConnection.kind === 'startUsingKernelSpec' && kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)){
+    if (
+        kernelConnection.kind === 'startUsingPythonInterpreter' ||
+        (kernelConnection.kind === 'startUsingKernelSpec' && kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
+    ) {
         return kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
-        return model?.path || kernelSpec?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath;
+        return (
+            model?.path || kernelSpec?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath
+        );
     }
 }
 
