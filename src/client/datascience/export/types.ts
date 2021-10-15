@@ -11,6 +11,7 @@ export enum ExportFormat {
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
     export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
+    exportContents(format: ExportFormat, contents: string, source: Uri): Promise<undefined>;
 }
 
 export const INbConvertExport = Symbol('INbConvertExport');

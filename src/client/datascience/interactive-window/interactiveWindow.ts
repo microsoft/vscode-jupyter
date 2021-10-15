@@ -667,28 +667,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
-        // const notebookEditor = await this._editorReadyPromise;
         const kernel = await this._kernelReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        // const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
-        // const cells = generateCellsFromNotebookDocument(notebookEditor.document, magicCommandsAsComments);
-
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (kernel) {
             updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
         }
-
-        // Turn the cells into a json object
-        //const json = await this.jupyterExporter.translateToNotebook(cells, undefined, metadata.kernelspec);
-
-        // Turn this into a string
-        // IANHU: remove
-        //const contents = JSON.stringify(json, undefined, 4);
 
         let defaultFileName;
         if (this.submitters && this.submitters.length) {
@@ -697,7 +686,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Then run the export command with these contents
-        // IANHU: This needs to change!
         this.commandManager
             .executeCommand(
                 Commands.Export,
@@ -706,14 +694,5 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 kernel?.kernelConnectionMetadata.interpreter
             )
             .then(noop, noop);
-        //this.commandManager
-        //.executeCommand(
-        //Commands.Export,
-        //contents,
-        //this.owningResource,
-        //defaultFileName,
-        //kernel?.kernelConnectionMetadata.interpreter
-        //)
-        //.then(noop, noop);
     }
 }
