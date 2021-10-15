@@ -1,42 +1,46 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, IExtensions } from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
-import { ExportManager } from '../../../client/datascience/export/exportManager';
+import { FileConverter } from '../../../client/datascience/export/fileConverter';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportDialog } from '../../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
 suite('DataScience - Export Manager', () => {
-    let exporter: ExportManager;
-    let exportPython: IExport;
-    let exportHtml: IExport;
-    let exportPdf: IExport;
+    let fileConverter: FileConverter;
+    let exportPython: INbConvertExport;
+    let exportHtml: INbConvertExport;
+    let exportPdf: INbConvertExport;
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
     let exportInterpreterFinder: ExportInterpreterFinder;
+    let extensions: IExtensions;
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         filePicker = mock<IExportDialog>();
         fileSystem = mock<IFileSystem>();
-        exportPython = mock<IExport>();
-        exportHtml = mock<IExport>();
-        exportPdf = mock<IExport>();
+        exportPython = mock<INbConvertExport>();
+        exportHtml = mock<INbConvertExport>();
+        exportPdf = mock<INbConvertExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
+        extensions = mock<IExtensions>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
@@ -54,7 +58,7 @@ suite('DataScience - Export Manager', () => {
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
-        exporter = new ExportManager(
+        fileConverter = new FileConverter(
             instance(exportPdf),
             instance(exportHtml),
             instance(exportPython),
@@ -64,32 +68,38 @@ suite('DataScience - Export Manager', () => {
             instance(exportUtil),
             instance(appShell),
             instance(exportFileOpener),
-            instance(exportInterpreterFinder)
+            instance(exportInterpreterFinder),
+            instance(extensions)
         );
+
+        // Stub out the getContent inner method of the ExportManager we don't care about the content returned
+        const getContentStub = sinon.stub(FileConverter.prototype, 'getContent' as any);
+        getContentStub.resolves('teststring');
     });
+    teardown(() => sinon.restore());
 
     test('Remove svg is called when exporting to PDF', async () => {
-        await exporter.export(ExportFormat.pdf, 'model', Uri.file('foo'));
+        await fileConverter.export(ExportFormat.pdf, {} as any);
         verify(exportUtil.removeSvgs(anything())).once();
     });
     test('Erorr message is shown if export fails', async () => {
         when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
-        await exporter.export(ExportFormat.html, 'model', Uri.file('foo'));
+        await fileConverter.export(ExportFormat.html, {} as any);
         verify(appShell.showErrorMessage(anything())).once();
         verify(exportFileOpener.openFile(anything(), anything())).never();
     });
     test('Export to PDF is called when export method is PDF', async () => {
-        await exporter.export(ExportFormat.pdf, 'model', Uri.file('foo'));
+        await fileConverter.export(ExportFormat.pdf, {} as any);
         verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
     });
     test('Export to HTML is called when export method is HTML', async () => {
-        await exporter.export(ExportFormat.html, 'model', Uri.file('foo'));
+        await fileConverter.export(ExportFormat.html, {} as any);
         verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
     });
     test('Export to Python is called when export method is Python', async () => {
-        await exporter.export(ExportFormat.python, 'model', Uri.file('foo'));
+        await fileConverter.export(ExportFormat.python, {} as any);
         verify(exportPython.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });
