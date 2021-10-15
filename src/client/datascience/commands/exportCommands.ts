@@ -16,8 +16,8 @@ import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { ExportManager } from '../export/exportManager';
-import { ExportFormat, IExportManager } from '../export/types';
+import { FileConverter } from '../export/exportManager';
+import { ExportFormat, IFileConverter } from '../export/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
 import { INotebookControllerManager } from '../notebook/types';
@@ -32,7 +32,7 @@ export class ExportCommands implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IExportManager) private exportManager: ExportManager,
+        @inject(IFileConverter) private fileConverter: FileConverter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
@@ -112,7 +112,7 @@ export class ExportCommands implements IDisposable {
         }
 
         if (exportMethod) {
-            await this.exportManager.export(exportMethod, sourceDocument, defaultFileName, interpreter);
+            await this.fileConverter.export(exportMethod, sourceDocument, defaultFileName, interpreter);
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu

@@ -12,13 +12,13 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable, IExtensions } from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
-import { ExportManager } from '../../../client/datascience/export/exportManager';
+import { FileConverter } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
 suite('DataScience - Export Manager', () => {
-    let exporter: ExportManager;
+    let fileConverter: FileConverter;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
     let exportPdf: INbConvertExport;
@@ -58,7 +58,7 @@ suite('DataScience - Export Manager', () => {
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
-        exporter = new ExportManager(
+        fileConverter = new FileConverter(
             instance(exportPdf),
             instance(exportHtml),
             instance(exportPython),
@@ -73,33 +73,33 @@ suite('DataScience - Export Manager', () => {
         );
 
         // Stub out the getContent inner method of the ExportManager we don't care about the content returned
-        const getContentStub = sinon.stub(ExportManager.prototype, 'getContent' as any);
+        const getContentStub = sinon.stub(FileConverter.prototype, 'getContent' as any);
         getContentStub.resolves('teststring');
     });
     teardown(() => sinon.restore());
 
     test('Remove svg is called when exporting to PDF', async () => {
-        await exporter.export(ExportFormat.pdf, {} as any);
+        await fileConverter.export(ExportFormat.pdf, {} as any);
         verify(exportUtil.removeSvgs(anything())).once();
     });
     test('Erorr message is shown if export fails', async () => {
         when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
-        await exporter.export(ExportFormat.html, {} as any);
+        await fileConverter.export(ExportFormat.html, {} as any);
         verify(appShell.showErrorMessage(anything())).once();
         verify(exportFileOpener.openFile(anything(), anything())).never();
     });
     test('Export to PDF is called when export method is PDF', async () => {
-        await exporter.export(ExportFormat.pdf, {} as any);
+        await fileConverter.export(ExportFormat.pdf, {} as any);
         verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
     });
     test('Export to HTML is called when export method is HTML', async () => {
-        await exporter.export(ExportFormat.html, {} as any);
+        await fileConverter.export(ExportFormat.html, {} as any);
         verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
     });
     test('Export to Python is called when export method is Python', async () => {
-        await exporter.export(ExportFormat.python, {} as any);
+        await fileConverter.export(ExportFormat.python, {} as any);
         verify(exportPython.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });

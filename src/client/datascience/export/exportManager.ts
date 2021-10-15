@@ -13,10 +13,11 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog, IExportManager, IImportManager } from './types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from './types';
 
+// Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
-export class ExportManager implements IExportManager, IImportManager {
+export class FileConverter implements IFileConverter {
     constructor(
         @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
@@ -31,8 +32,6 @@ export class ExportManager implements IExportManager, IImportManager {
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
 
-    // We use nbconvert to import notebooks to .py file, uses the same plumbing as export
-    // so IImportManager lives on the same class, but separate interface for clarity
     public async importIpynb(contents: string, source: Uri): Promise<void> {
         const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
             ExportFormat.python,

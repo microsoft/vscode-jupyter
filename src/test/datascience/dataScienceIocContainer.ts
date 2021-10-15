@@ -125,13 +125,13 @@ import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/e
 import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
-import { ExportManager } from '../../client/datascience/export/exportManager';
+import { FileConverter } from '../../client/datascience/export/exportManager';
 import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
-import { ExportFormat, INbConvertExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
@@ -395,7 +395,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(this.webPanelProvider)
         );
         this.serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
-        this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+        this.serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
         this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
         this.serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
