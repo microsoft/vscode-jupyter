@@ -19,8 +19,10 @@ function ignoreTypescript4File(relativePath, searchString) {
             while (fileContents[searchIndex] != '\n') {
                 searchIndex--;
             }
-            const newFileContents = `${fileContents.substr(0, searchIndex+1)}\n// @ts-ignore\n${fileContents.substr(searchIndex+1)}`;
-            fs.writeFileSync(filePath, newFileContents, {encoding: 'utf-8'});
+            const newFileContents = `${fileContents.substr(0, searchIndex + 1)}\n// @ts-ignore\n${fileContents.substr(
+                searchIndex + 1
+            )}`;
+            fs.writeFileSync(filePath, newFileContents, { encoding: 'utf-8' });
         }
     }
 }
@@ -36,12 +38,14 @@ function updateWidgetTypescript4() {
         'node_modules/@jupyter-widgets/controls/lib/widget_image.d.ts',
         'node_modules/@jupyter-widgets/controls/lib/widget_upload.d.ts',
         'node_modules/@jupyter-widgets/controls/lib/widget_video.d.ts'
-    ]
-    tagNameFiles.forEach(f => {
+    ];
+    tagNameFiles.forEach((f) => {
         ignoreTypescript4File(f, 'get tagName(): string;');
     });
-    const isDisposeFile = `node_modules/@jupyter-widgets/jupyterlab-manager/lib/renderer.d.ts`
+    const isDisposeFile = `node_modules/@jupyter-widgets/jupyterlab-manager/lib/renderer.d.ts`;
     ignoreTypescript4File(isDisposeFile, 'get isDisposed(): boolean;');
+    const clientRectFile = `node_modules/@jupyterlab/codeeditor/lib/editor.d.ts`;
+    ignoreTypescript4File(clientRectFile, ', ClientRect');
 }
 
 (async () => {
