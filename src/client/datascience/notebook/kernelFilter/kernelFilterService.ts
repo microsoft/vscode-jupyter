@@ -8,15 +8,13 @@ import { KernelFilterStorage } from './kernelFilterStorage';
 @injectable()
 export class KernelFilterService {
     private readonly _onChanged = new EventEmitter<void>();
-    public get onDidChange(){
+    public get onDidChange() {
         return this._onChanged.event;
     }
-    constructor(@inject(KernelFilterStorage) private readonly storage: KernelFilterStorage
-        ) {}
+    constructor(@inject(KernelFilterStorage) private readonly storage: KernelFilterStorage) {}
 
     public isKernelHidden(kernelConnection: KernelConnectionMetadata): boolean {
-        const hiddenList = this.storage.getHiddenKernels();
-        return hiddenList.some(item => item.id === kernelConnection.id);
+        return this.storage.isKernelHidden(kernelConnection);
     }
     public shouldCorrespondingControllerBeDisplay(
         _document: NotebookDocument,
