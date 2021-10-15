@@ -32,7 +32,7 @@ suite('DataScience - Export Python', function () {
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
         const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
-        const exportToPython = api.serviceContainer.get<INbConvertExport>(IExport, ExportFormat.python);
+        const exportToPython = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.python);
         const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
         const token = new CancellationTokenSource();
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);

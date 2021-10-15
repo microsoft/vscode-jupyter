@@ -31,7 +31,7 @@ suite('DataScience - Export HTML', function () {
     suiteTeardown(closeActiveWindows);
     test('Export To HTML', async () => {
         const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
-        const exportToHTML = api.serviceContainer.get<INbConvertExport>(IExport, ExportFormat.html);
+        const exportToHTML = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.html);
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
         const file = await fileSystem.createTemporaryLocalFile('.html');
         const target = Uri.file(file.filePath);
