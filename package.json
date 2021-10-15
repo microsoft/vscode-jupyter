@@ -1772,6 +1772,36 @@
                         ]
                     ]
                 },
+                "jupyter.kernels.filter": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "enum": ["jupyterKernelspec", "pythonEnvironment"]
+                             },
+                            "path": {
+                                "type": "string",
+                                "markdownDescription": "Fully qualified path to the kernel spec or the python enviornment. \nE.g. `~/miniconda3/envs/sample/bin/python`."
+                            },
+                            "required": ["type", "path"]
+                        }
+                    },
+                    "markdownDescription": "List of Jupyter Kernels and/or python environments that are to be excluded from the Kernel picker.",
+                    "scope": "machine-overridable",
+                    "examples": [
+                        [
+                            {
+                                "type": "jupyterKernelspec",
+                                "path": "/usr/share/jupyter/kernels/sample/kernelspec.json"
+                            },
+                            {
+                                "type": "jupyterKernelspec",
+                                "path": "~/miniconda3/envs/sample/scripts/python.exe"
+                            }
+                        ]
+                    ]
+                },
                 "jupyter.interactiveWindowMode": {
                     "type": "string",
                     "enum": [

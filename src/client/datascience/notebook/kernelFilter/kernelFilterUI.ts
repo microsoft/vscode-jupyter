@@ -37,7 +37,10 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         // We end up duplicating controllers, one for interactive & one for ipynb.
         const nbControllers = controllers.filter((item) => item.controller.notebookType === JupyterNotebookView);
         const quickPick = this.appShell.createQuickPick<QuickPickType>();
-        const createQuickPickItems = (controllers: VSCodeNotebookController[], _favorite?: VSCodeNotebookController) => {
+        const createQuickPickItems = (
+            controllers: VSCodeNotebookController[],
+            _favorite?: VSCodeNotebookController
+        ) => {
             return controllers.map((item) => {
                 return <QuickPickType>{
                     label: item.label,
@@ -46,7 +49,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                     controller: item
                 };
             });
-        }
+        };
         const items = createQuickPickItems(nbControllers);
         items.sort((a, b) => {
             if (a.label > b.label) {
