@@ -17,7 +17,7 @@ import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
-suite('IANHU DataScience - Export Manager', () => {
+suite('DataScience - Export Manager', () => {
     let exporter: ExportManager;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
