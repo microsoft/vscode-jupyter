@@ -13,10 +13,10 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog, IExportManager } from './types';
+import { ExportFormat, INbConvertExport, IExportDialog, IExportManager, IImportManager } from './types';
 
 @injectable()
-export class ExportManager implements IExportManager {
+export class ExportManager implements IExportManager, IImportManager {
     constructor(
         @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
@@ -31,6 +31,16 @@ export class ExportManager implements IExportManager {
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
 
+    // We use nbconvert to import notebooks to .py file, uses the same plumbing as export
+    // so IImportManager lives on the same class, but separate interface for clarity
+    public async importIpynb(contents: string, source: Uri): Promise<void> {
+        const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
+            ExportFormat.python,
+            undefined
+        );
+        await this.performNbConvertExport(ExportFormat.python, contents, source, exportInterpreter);
+    }
+
     public async export(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
@@ -39,16 +49,11 @@ export class ExportManager implements IExportManager {
     ): Promise<undefined> {
         let target;
         try {
-            // Get the interpreter to use for the export, checking the candidate interpreter first
-            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
-                format,
-                candidateInterpreter
-            );
             target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, sourceDocument, target, exportInterpreter);
+            await this.performExport(format, sourceDocument, target, candidateInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -65,11 +70,29 @@ export class ExportManager implements IExportManager {
         format: ExportFormat,
         sourceDocument: NotebookDocument,
         target: Uri,
+        candidateInterpreter?: PythonEnvironment
+    ) {
+        switch (format) {
+            case ExportFormat.html:
+            case ExportFormat.pdf:
+            case ExportFormat.ipynb:
+            case ExportFormat.python:
+                // Get the interpreter to use for the export, checking the candidate interpreter first
+                const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
+                    format,
+                    candidateInterpreter
+                );
+                const contents = this.getContent(sourceDocument);
+                return this.performNbConvertExport(format, contents, target, exportInterpreter);
+        }
+    }
+
+    private async performNbConvertExport(
+        format: ExportFormat,
+        contents: string,
+        target: Uri,
         interpreter: PythonEnvironment
     ) {
-        // IANHU: Move to a new spot? Separate out NB Convert exports
-        const contents = this.getContent(sourceDocument);
-
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique

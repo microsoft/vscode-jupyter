@@ -33,7 +33,7 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { ExportFormat, IExportDialog, IExportManager } from '../export/types';
+import { ExportFormat, IExportDialog, IImportManager } from '../export/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
@@ -63,7 +63,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
-        @inject(IExportManager) private exportManager: IExportManager,
+        @inject(IImportManager) private importManager: IImportManager,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
@@ -394,9 +394,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(
                 async () => {
-                    // IANHU: Fix these up, can just directly call nbconvert export?
-                    // const contents = await this.fileSystem.readFile(uris[0]);
-                    // await this.exportManager.export(ExportFormat.python, contents, uris[0]);
+                    const contents = await this.fileSystem.readFile(uris[0]);
+                    await this.importManager.importIpynb(contents, uris[0]);
                 },
                 localize.DataScience.importingFormat(),
                 uris[0].fsPath
@@ -409,9 +408,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         if (file.fsPath && file.fsPath.length > 0) {
             await this.waitForStatus(
                 async () => {
-                    // IANHU: Fix these up
-                    // const contents = await this.fileSystem.readFile(file);
-                    // await this.exportManager.export(ExportFormat.python, contents, file);
+                    const contents = await this.fileSystem.readFile(file);
+                    await this.importManager.importIpynb(contents, file);
                 },
                 localize.DataScience.importingFormat(),
                 file.fsPath
