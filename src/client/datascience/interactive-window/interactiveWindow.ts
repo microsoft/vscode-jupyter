@@ -190,7 +190,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async createEditorReadyPromise(): Promise<NotebookEditor> {
         const preferredController = await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
-            InteractiveWindowView
+            InteractiveWindowView,
+            this.owner
         );
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);

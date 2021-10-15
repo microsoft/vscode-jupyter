@@ -18,7 +18,8 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IExtensions,
-    IPathUtils
+    IPathUtils,
+    Resource
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
@@ -101,10 +102,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getActiveInterpreterOrDefaultController(
-        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        resource: Resource
     ): Promise<VSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
-            return this.createActiveInterpreterController(notebookType);
+            return this.createActiveInterpreterController(notebookType, resource);
         } else {
             return this.createDefaultRemoteController();
         }
@@ -199,11 +201,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async createActiveInterpreterController(
-        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        resource: Resource
     ) {
         // Fetch the active interpreter and use the matching controller
         const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
+        const activeInterpreter = await api.getActiveInterpreter(resource);
 
         if (!activeInterpreter) {
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
@@ -338,7 +341,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.isLocalLaunch
         ) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-            this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
+            this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
         }
 
         try {
