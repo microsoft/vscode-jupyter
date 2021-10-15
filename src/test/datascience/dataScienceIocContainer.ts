@@ -125,7 +125,7 @@ import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/e
 import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
-import { FileConverter } from '../../client/datascience/export/exportManager';
+import { FileConverter } from '../../client/datascience/export/fileConverter';
 import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';

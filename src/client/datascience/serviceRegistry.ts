@@ -39,7 +39,7 @@ import { ExportBase } from './export/exportBase';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportInterpreterFinder } from './export/exportInterpreterFinder';
-import { FileConverter } from './export/exportManager';
+import { FileConverter } from './export/fileConverter';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';

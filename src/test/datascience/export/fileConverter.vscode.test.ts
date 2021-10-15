@@ -12,7 +12,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable, IExtensions } from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
-import { FileConverter } from '../../../client/datascience/export/exportManager';
+import { FileConverter } from '../../../client/datascience/export/fileConverter';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';

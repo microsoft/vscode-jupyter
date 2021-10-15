@@ -16,7 +16,7 @@ import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { FileConverter } from '../export/exportManager';
+import { FileConverter } from '../export/fileConverter';
 import { ExportFormat, IFileConverter } from '../export/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
