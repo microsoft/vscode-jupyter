@@ -5,6 +5,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -16,7 +17,7 @@ import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
-suite('DataScience - Export Manager', () => {
+suite('IANHU DataScience - Export Manager', () => {
     let exporter: ExportManager;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
@@ -70,9 +71,13 @@ suite('DataScience - Export Manager', () => {
             instance(exportInterpreterFinder),
             instance(extensions)
         );
-    });
 
-    // IANHU? Any Actual value in these tests?
+        // Stub out the getContent inner method of the ExportManager we don't care about the content returned
+        const getContentStub = sinon.stub(ExportManager.prototype, 'getContent' as any);
+        getContentStub.resolves('teststring');
+    });
+    teardown(() => sinon.restore());
+
     test('Remove svg is called when exporting to PDF', async () => {
         await exporter.export(ExportFormat.pdf, {} as any);
         verify(exportUtil.removeSvgs(anything())).once();
