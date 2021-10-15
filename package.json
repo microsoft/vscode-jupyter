@@ -68,6 +68,7 @@
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onCommand:jupyter.clearSavedJupyterUris",
+        "onCommand:jupyter.manageKernels",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive"
     ],
@@ -215,6 +216,11 @@
                 "icon": "$(bug)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.manageKernels",
+                "title": "Manage Kernels",
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.runByLine",
