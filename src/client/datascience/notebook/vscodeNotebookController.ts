@@ -56,6 +56,7 @@ export class VSCodeNotebookController implements Disposable {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
@@ -81,6 +82,9 @@ export class VSCodeNotebookController implements Disposable {
     }
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
+    }
+    get onDidDispose() {
+        return this._onDidDispose.event;
     }
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
@@ -147,6 +151,8 @@ export class VSCodeNotebookController implements Disposable {
             this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
+        this._onDidDispose.fire();
+        this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
     }
 
