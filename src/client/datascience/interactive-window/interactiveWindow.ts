@@ -112,7 +112,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _submitters: Uri[] = [];
     private mode: InteractiveWindowMode = 'multiple';
     private fileInKernel: string | undefined;
-    private lastExecutedFileUri?: Uri;
     private cellMatcher;
 
     private internalDisposables: Disposable[] = [];
@@ -168,22 +167,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async createKernelReadyPromise(): Promise<IKernel> {
         const editor = await this._editorReadyPromise;
         const controller = await this._controllerReadyPromise.promise;
-        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller!.connection);
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller.connection);
         const kernel = this.kernelProvider.getOrCreate(editor.document, {
-            metadata: controller!.connection,
-            controller: controller!.controller,
+            metadata: controller.connection,
+            controller: controller.controller,
             resourceUri: this.owner
         });
         kernel.onRestarted(
             async () => {
                 this.fileInKernel = undefined;
-                await this.runIntialization(kernel);
+                await this.runIntialization(kernel, this.owner);
             },
             this,
             this.internalDisposables
         );
-        await kernel.start();
         this.internalDisposables.push(kernel);
+        await kernel.start();
+        this.fileInKernel = undefined;
+        await this.runIntialization(kernel, this.owner);
         return kernel;
     }
 
@@ -412,9 +413,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this.executionPromise;
     }
     private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
-        const notebookEditor = await this._editorReadyPromise;
-        const kernel = await this._kernelReadyPromise;
-        await this.updateOwners(fileUri);
+        const [notebookEditor, kernel] = await Promise.all([
+            this._editorReadyPromise,
+            this._kernelReadyPromise,
+            this.updateOwners(fileUri)
+        ]);
         const id = uuid();
 
         // Compute isAtBottom based on last notebook cell before adding a notebook cell,
@@ -436,12 +439,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (!kernel || !notebook) {
             return false;
         }
-        this.lastExecutedFileUri = fileUri;
         const file = fileUri.fsPath;
         let result = true;
         try {
-            await this.runIntialization(kernel);
-
             if (isDebug) {
                 await kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`
@@ -459,21 +459,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return result;
     }
-    private async runIntialization(kernel: IKernel) {
-        const fileUri = this.lastExecutedFileUri;
-        if (!fileUri || !kernel.notebook) {
+    private async runIntialization(kernel: IKernel, fileUri: Resource) {
+        if (!fileUri || !kernel.notebook || fileUri.fsPath === Identifiers.EmptyFileName) {
             return;
         }
 
-        const file = fileUri.fsPath;
         // Before we try to execute code make sure that we have an initial directory set
         // Normally set via the workspace, but we might not have one here if loading a single loose file
-        if (file !== Identifiers.EmptyFileName) {
-            await kernel.notebook.setLaunchingFile(file);
-        }
+        await kernel.notebook.setLaunchingFile(fileUri.fsPath);
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(file, kernel!);
+        await this.setFileInKernel(fileUri.fsPath, kernel!);
     }
 
     public async exportCells() {
@@ -561,15 +557,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
+        if (file === Identifiers.EmptyFileName) {
+            return;
+        }
         // If in perFile mode, set only once
-        if (this.mode === 'perFile' && !this.fileInKernel && kernel && file !== Identifiers.EmptyFileName) {
+        if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
-            kernel &&
-            file !== Identifiers.EmptyFileName
+            kernel
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
