@@ -5,10 +5,11 @@ import { QuickPickItem } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
-import { IDisposable, IDisposableRegistry } from '../../../common/types';
-import { JupyterNotebookView } from '../constants';
+import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
+import { getDetailOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from '../../jupyter/kernels/helpers';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { getControllerDisplayName } from '../notebookControllerManager';
 import { INotebookControllerManager } from '../types';
-import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { KernelFilterService } from './kernelFilterService';
 import { KernelFilterStorage } from './kernelFilterStorage';
 
@@ -21,7 +22,8 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
         @inject(KernelFilterStorage) private readonly storage: KernelFilterStorage,
-        @inject(KernelFilterService) private readonly filter: KernelFilterService
+        @inject(KernelFilterService) private readonly filter: KernelFilterService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         disposales.push(this);
     }
@@ -32,25 +34,25 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         disposeAllDisposables(this.disposables);
     }
     private showUI() {
-        const controllers = this.controllers.registeredNotebookControllers();
-        type QuickPickType = QuickPickItem & { controller: VSCodeNotebookController };
-        // We end up duplicating controllers, one for interactive & one for ipynb.
-        const nbControllers = controllers.filter((item) => item.controller.notebookType === JupyterNotebookView);
+        type QuickPickType = QuickPickItem & { connection: KernelConnectionMetadata };
         const quickPick = this.appShell.createQuickPick<QuickPickType>();
-        const createQuickPickItems = (
-            controllers: VSCodeNotebookController[],
-            _favorite?: VSCodeNotebookController
-        ) => {
-            return controllers.map((item) => {
+        const duplicates = new Set<string>();
+        const items = this.controllers.kernelConnections
+            .filter((item) => {
+                if (duplicates.has(item.id)) {
+                    return false;
+                }
+                duplicates.add(item.id);
+                return true;
+            })
+            .map((item) => {
                 return <QuickPickType>{
-                    label: item.label,
-                    picked: !this.filter.isKernelHidden(item.connection),
-                    detail: item.controller.detail,
-                    controller: item
+                    label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
+                    picked: !this.filter.isKernelHidden(item),
+                    detail: getDetailOfKernelConnection(item, this.pathUtils),
+                    connection: item
                 };
             });
-        };
-        const items = createQuickPickItems(nbControllers);
         items.sort((a, b) => {
             if (a.label > b.label) {
                 return 1;
@@ -70,16 +72,26 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.selectedItems = items.filter((item) => item.picked);
         quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
         quickPick.show();
-        quickPick.onDidAccept(() => {
-            quickPick.hide();
-            const selectedItems = new Set(quickPick.selectedItems.map((item) => item.controller));
-            const hiddenItems = items.map((item) => item.controller).filter((item) => !selectedItems.has(item));
-            hiddenItems.map((item) => item.dispose());
-            this.updateSelection(hiddenItems);
-            quickPick.dispose();
-        });
-    }
-    private async updateSelection(itemsToHide: VSCodeNotebookController[]) {
-        await this.storage.storeHiddenKernels(itemsToHide.map((item) => item.connection));
+        const disposables: IDisposable[] = [];
+        quickPick.onDidHide(
+            () => {
+                disposeAllDisposables(disposables);
+            },
+            this,
+            disposables
+        );
+        quickPick.onDidAccept(
+            () => {
+                quickPick.hide();
+                disposeAllDisposables(disposables);
+                const selectedItems = new Set(quickPick.selectedItems.map((item) => item.connection));
+                const hiddenConnections = items
+                    .map((item) => item.connection)
+                    .filter((item) => !selectedItems.has(item));
+                void this.storage.storeHiddenKernels(hiddenConnections.map((item) => item));
+            },
+            this,
+            disposables
+        );
     }
 }

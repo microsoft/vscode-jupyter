@@ -12,7 +12,7 @@ import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 export class KernelFilterStorage implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _onDidChange = new EventEmitter<void>();
-    public get onDidChagne() {
+    public get onDidChange() {
         return this._onDidChange.event;
     }
     constructor(
@@ -24,6 +24,7 @@ export class KernelFilterStorage implements IDisposable {
         disposales.push(this);
     }
     public dispose() {
+        this._onDidChange.dispose();
         disposeAllDisposables(this.disposables);
     }
     public isKernelHidden(kernelConnection: KernelConnectionMetadata): boolean {
@@ -89,6 +90,7 @@ export class KernelFilterStorage implements IDisposable {
         } else {
             await this.config.updateSetting('kernels.filter', itemsToHide, undefined, ConfigurationTarget.Global);
         }
+        this._onDidChange.fire();
     }
     private translateConnectionToFilter(connection: KernelConnectionMetadata): KernelFilter | undefined {
         if (connection.kind === 'connectToLiveKernel' || connection.kind === 'startUsingDefaultKernel') {
@@ -109,8 +111,8 @@ export class KernelFilterStorage implements IDisposable {
     }
 }
 
-export type KernelFilter = KernelSpecFiter | InterpreterFiter;
-export type KernelSpecFiter = {
+type KernelFilter = KernelSpecFiter | InterpreterFiter;
+type KernelSpecFiter = {
     type: 'jupyterKernelspec';
     /**
      * Can contain paths prefixed with `~`
@@ -121,7 +123,7 @@ export type KernelSpecFiter = {
      */
     path: string;
 };
-export type InterpreterFiter = {
+type InterpreterFiter = {
     type: 'pythonEnvironment';
     /**
      * Can contain paths prefixed with `~`
