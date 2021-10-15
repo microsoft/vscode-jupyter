@@ -305,7 +305,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
                         viewColumn: ViewColumn.Beside
                     });
                     const preferredController = await this.controllerManager.getActiveInterpreterOrDefaultController(
-                        JupyterNotebookView
+                        JupyterNotebookView,
+                        file
                     );
                     if (preferredController) {
                         await this.commandManager.executeCommand('notebook.selectKernel', {
