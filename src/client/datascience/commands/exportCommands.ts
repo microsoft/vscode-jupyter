@@ -75,7 +75,6 @@ export class ExportCommands implements IDisposable {
             : this.notebooks.activeNotebookEditor?.document;
 
         if (document) {
-            // const contents = this.getContent(document);
             const interpreter =
                 this.controllers.getSelectedNotebookController(document)?.connection.interpreter ||
                 this.controllers.getPreferredNotebookController(document)?.connection.interpreter;
