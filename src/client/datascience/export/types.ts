@@ -14,16 +14,6 @@ export interface IFileConverter {
     importIpynb(contents: string, source: Uri): Promise<void>;
 }
 
-export const IExportManager = Symbol('IExportManager');
-export interface IExportManager {
-    export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
-}
-
-export const IImportManager = Symbol('IImportManager');
-export interface IImportManager {
-    importIpynb(contents: string, source: Uri): Promise<void>;
-}
-
 export const INbConvertExport = Symbol('INbConvertExport');
 export interface INbConvertExport {
     export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
