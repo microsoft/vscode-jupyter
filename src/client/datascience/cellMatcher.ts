@@ -27,8 +27,8 @@ export class CellMatcher {
         );
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
-        this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '#\\s*%%';
-        this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /#\s*%%(.*)/);
+        this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';
+        this.defaultCellMarkerExec = this.createRegExp(`(${this.defaultCellMarker}|#\\s*%%)(.*)`, /#\s*%%(.*)/);
     }
 
     public isCell(code: string): boolean {
