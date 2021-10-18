@@ -256,19 +256,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        let connections = await this.getKernelConnectionMetadata(
+        const connections = await this.getKernelConnectionMetadata(
             listLocalNonPythonKernels,
             cancelToken.token,
             useCache
         );
-
-        // Filter the connections.
-        connections = connections
-            .map((item) => {
-                this.allKernelConnections.add(item);
-                return item;
-            })
-            .filter((item) => !this.filter.isKernelHidden(item));
 
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
@@ -426,7 +418,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
-            this.allKernelConnections.add(value);
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
         connectionsWithLabel.sort((a, b) => {
