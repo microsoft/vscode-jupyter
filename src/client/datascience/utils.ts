@@ -3,15 +3,11 @@
 'use strict';
 
 import * as path from 'path';
-import { NotebookCellKind, NotebookCell, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 
-import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
-import { CellState, ICell } from './types';
-import { NotebookCellRunState } from './jupyter/kernels/types';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
@@ -51,46 +47,4 @@ export async function calculateWorkingDirectory(
         }
     }
     return workingDir;
-}
-
-export function translateCellToNative(
-    cell: ICell,
-    language: string
-): (Partial<NotebookCell> & { code: string }) | undefined {
-    if (cell && cell.data && cell.data.source) {
-        const query = '?query#';
-        return {
-            index: 0,
-            metadata: {},
-            executionSummary: {
-                executionOrder: cell.data.execution_count as number,
-                success: true,
-                timing: { startTime: 0, endTime: 0 }
-            },
-            outputs: [],
-            kind: NotebookCellKind.Code,
-            code: concatMultilineString(cell.data.source),
-            document: {
-                languageId: language,
-                getText: () => concatMultilineString(cell.data.source),
-                uri: Uri.parse(cell.file + query + cell.id)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any
-        };
-    }
-}
-
-export function translateCellStateFromNative(state: NotebookCellRunState): CellState {
-    switch (state) {
-        case NotebookCellRunState.Error:
-            return CellState.error;
-        case NotebookCellRunState.Idle:
-            return CellState.init;
-        case NotebookCellRunState.Running:
-            return CellState.executing;
-        case NotebookCellRunState.Success:
-            return CellState.finished;
-        default:
-            return CellState.init;
-    }
 }

@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, IJupyterExtraSettings } from '../../client/datascience/types';
-import { createCodeCell } from '../common/cellFactory';
+import { IJupyterExtraSettings } from '../../client/datascience/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {
@@ -46,13 +44,6 @@ export type IMainState = {
     focusPending: number;
     loaded: boolean;
     kernel: IServerState;
-};
-
-export type SelectionAndFocusedInfo = {
-    selectedCellId?: string;
-    selectedCellIndex?: number;
-    focusedCellId?: string;
-    focusedCellIndex?: number;
 };
 
 export interface IFont {
@@ -119,17 +110,5 @@ export function generateTestState(_filePath: string = '', _editable: boolean = f
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         }
-    };
-}
-
-export function createEmptyCell(id: string | undefined, executionCount: number | null): ICell {
-    const emptyCodeCell = createCodeCell();
-    emptyCodeCell.execution_count = executionCount ?? null;
-    return {
-        data: emptyCodeCell,
-        id: id ? id : Identifiers.EditCellId,
-        file: Identifiers.EmptyFileName,
-        line: 0,
-        state: CellState.finished
     };
 }

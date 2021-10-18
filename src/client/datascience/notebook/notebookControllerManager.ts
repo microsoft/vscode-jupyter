@@ -256,13 +256,23 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        const connections = await this.getKernelConnectionMetadata(
+        let connections = await this.getKernelConnectionMetadata(
             listLocalNonPythonKernels,
             cancelToken.token,
             useCache
         );
+
+        // Filter the connections.
+        connections = connections
+            .map((item) => {
+                this.allKernelConnections.add(item);
+                return item;
+            })
+            .filter((item) => !this.filter.isKernelHidden(item));
+
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
+
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
         if (!listLocalNonPythonKernels) {
             if (connections.some((item) => isPythonKernelConnection(item))) {
@@ -416,6 +426,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
+            this.allKernelConnections.add(value);
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
         connectionsWithLabel.sort((a, b) => {

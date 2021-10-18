@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { Resource } from '../../common/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
@@ -10,6 +11,7 @@ export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    readonly kernelConnections: readonly Readonly<KernelConnectionMetadata>[];
     loadNotebookControllers(): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers

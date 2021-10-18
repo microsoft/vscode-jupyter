@@ -26,7 +26,6 @@ import {
     IMemento,
     InstallerResponse,
     Product,
-    ProductInstallStatus,
     Resource
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -285,15 +284,6 @@ export class PythonInstaller implements IPythonInstaller {
                 moduleName: ProductNames.get(product)!
             });
         }
-    }
-
-    public async isProductVersionCompatible(
-        product: Product,
-        semVerRequirement: string,
-        resource?: PythonEnvironment
-    ): Promise<ProductInstallStatus> {
-        const api = await this.apiProvider.getApi();
-        return api.isProductVersionCompatible(product, semVerRequirement, resource);
     }
 }
 
