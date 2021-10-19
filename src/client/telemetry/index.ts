@@ -1304,7 +1304,7 @@ export interface IEventNamePropertyMapping {
          * Such conda envs don't work today in the extension.
          * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
          */
-        condaEnvsSharingSameInterpreter: number
+        condaEnvsSharingSameInterpreter: number;
     } & ResourceSpecificTelemetryProperties;
 
     // Native notebooks events
