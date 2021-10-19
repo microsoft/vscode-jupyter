@@ -24,7 +24,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Identifiers } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernel } from '../jupyter/kernels/types';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
@@ -118,10 +117,7 @@ export class CellHashProvider implements ICellHashProvider {
             this.executionCount += 1;
 
             // Skip hash on unknown file though
-            if (
-                cell.metadata.interactive !== undefined &&
-                cell.metadata.interactive?.file !== Identifiers.EmptyFileName
-            ) {
+            if (getInteractiveCellMetadata(cell)?.interactive?.file) {
                 await this.generateHash(cell, this.executionCount);
             }
         }

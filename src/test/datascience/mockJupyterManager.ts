@@ -309,7 +309,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     ) {
         const cells = doNotUseICell
             ? [createCodeCell(code)]
-            : generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+            : generateCells(undefined, code, Uri.file('foo.py').fsPath, true);
         cells.forEach((c) => {
             const source = doNotUseICell ? (c as nbformat.ICodeCell).source : (c as ICell).data.source;
             const key = concatMultilineString(source).replace(LineFeedRegEx, '').toLowerCase();

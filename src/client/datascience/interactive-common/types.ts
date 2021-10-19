@@ -3,10 +3,6 @@
 
 'use strict';
 
-import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { CssMessages, SharedMessages } from '../messages';
-import { InteractiveWindowMessages } from './interactiveWindowTypes';
-
 // Stuff common to React and Extensions.
 
 type BaseData = {
@@ -32,8 +28,3 @@ export type BaseReduxActionPayload<T = never | undefined> = T extends never
         ? BaseData
         : BaseDataWithPayload<T>
     : BaseDataWithPayload<T>;
-export type SyncPayload = {
-    type: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload: BaseReduxActionPayload<any>;
-};

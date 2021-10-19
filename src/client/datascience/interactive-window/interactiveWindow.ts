@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -44,7 +44,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, defaultNotebookFormat, Identifiers } from '../constants';
+import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
@@ -175,6 +175,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         });
         kernel.onRestarted(
             async () => {
+                traceInfoIfCI('inside onRestarted of interactiveWindow.ts');
                 this.fileInKernel = undefined;
                 await this.runIntialization(kernel, this.owner);
             },
@@ -461,9 +462,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri || !kernel.notebook || fileUri.fsPath === Identifiers.EmptyFileName) {
+        if (!fileUri || !kernel.notebook) {
+            traceInfoIfCI('Exit runInitialization');
             return;
         }
+        traceInfoIfCI('Inside runInitialization');
 
         // Before we try to execute code make sure that we have an initial directory set
         // Normally set via the workspace, but we might not have one here if loading a single loose file
@@ -558,21 +561,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
-        if (file === Identifiers.EmptyFileName) {
-            return;
-        }
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;
+            traceInfoIfCI('Initializing __file__ for perfile');
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
             kernel
         ) {
+            traceInfoIfCI('Initializing __file__ for != perfile');
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
+        } else {
+            traceInfoIfCI(
+                `Not Initializing __file__ file = ${file}, mode = ${this.mode}, fileInKernel = ${this.fileInKernel}`
+            );
         }
     }
 

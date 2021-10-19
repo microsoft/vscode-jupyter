@@ -3,7 +3,6 @@
 'use strict';
 import '../common/extensions';
 
-import * as uuid from 'uuid/v4';
 import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
 import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
@@ -11,39 +10,27 @@ import { createCodeCell, createMarkdownCell, uncommentMagicCommands } from '../.
 import { IJupyterSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
-import { Identifiers } from './constants';
-import { CellState, ICell, ICellRange } from './types';
+import { ICell, ICellRange } from './types';
 import { createJupyterCellFromVSCNotebookCell } from './notebook/helpers/helpers';
+import { getInteractiveCellMetadata } from './interactive-window/interactiveWindow';
 
-function generateCodeCell(
-    code: string[],
-    file: string,
-    line: number,
-    id: string,
-    magicCommandsAsComments: boolean
-): ICell {
+function generateCodeCell(code: string[], file: string, magicCommandsAsComments: boolean): ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: createCodeCell(code, magicCommandsAsComments),
-        id: id,
-        file: file,
-        line: line,
-        state: CellState.init
+        file: file
     };
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number, id: string, useSourceAsIs = false): ICell {
+function generateMarkdownCell(code: string[], file: string, useSourceAsIs = false): ICell {
     return {
-        id: id,
         file: file,
-        line: line,
-        state: CellState.finished,
         data: createMarkdownCell(code, useSourceAsIs)
     };
 }
 
 export function getCellResource(cell: NotebookCell): Resource {
-    if (cell.metadata.interactive?.file !== undefined && cell.metadata.interactive.file !== Identifiers.EmptyFileName) {
+    if (getInteractiveCellMetadata(cell)?.interactive.file) {
         return Uri.file(cell.metadata.interactive.file);
     }
     return undefined;
@@ -53,9 +40,7 @@ export function generateCells(
     settings: IJupyterSettings | undefined,
     code: string,
     file: string,
-    line: number,
-    splitMarkdown: boolean,
-    id: string
+    splitMarkdown: boolean
 ): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({ trim: false });
@@ -79,22 +64,16 @@ export function generateCells(
         if (firstNonMarkdown >= 0) {
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
-                generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(
-                    split.slice(firstNonMarkdown),
-                    file,
-                    line + firstNonMarkdown,
-                    uuid(),
-                    magicCommandsAsComments
-                )
+                generateMarkdownCell(split.slice(0, firstNonMarkdown), file),
+                generateCodeCell(split.slice(firstNonMarkdown), file, magicCommandsAsComments)
             ];
         } else {
             // Just a single markdown cell
-            return [generateMarkdownCell(split, file, line, id)];
+            return [generateMarkdownCell(split, file)];
         }
     } else {
         // Just code
-        return [generateCodeCell(split, file, line, id, magicCommandsAsComments)];
+        return [generateCodeCell(split, file, magicCommandsAsComments)];
     }
 }
 
@@ -108,47 +87,6 @@ export function hasCells(document: TextDocument, settings?: IJupyterSettings): b
     }
 
     return false;
-}
-
-export function generateCellsFromString(source: string, settings?: IJupyterSettings): ICell[] {
-    const lines: string[] = source.splitLines({ trim: false, removeEmptyEntries: false });
-
-    // Find all the lines that start a cell
-    const matcher = new CellMatcher(settings);
-    const starts: { startLine: number; title: string; code: string; cell_type: string }[] = [];
-    let currentCode: string | undefined;
-    for (let index = 0; index < lines.length; index += 1) {
-        const line = lines[index];
-        if (matcher.isCell(line)) {
-            if (starts.length > 0 && currentCode) {
-                const previousCell = starts[starts.length - 1];
-                previousCell.code = currentCode;
-            }
-            const results = matcher.exec(line);
-            if (results !== undefined) {
-                starts.push({
-                    startLine: index + 1,
-                    title: results,
-                    cell_type: matcher.getCellType(line),
-                    code: ''
-                });
-            }
-            currentCode = undefined;
-        }
-        currentCode = currentCode ? `${currentCode}\n${line}` : line;
-    }
-
-    if (starts.length >= 1 && currentCode) {
-        const previousCell = starts[starts.length - 1];
-        previousCell.code = currentCode;
-    }
-
-    // For each one, get its text and turn it into a cell
-    return Array.prototype.concat(
-        ...starts.map((s) => {
-            return generateCells(settings, s.code, '', s.startLine, false, uuid());
-        })
-    );
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
@@ -190,7 +128,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
     return Array.prototype.concat(
         ...ranges.map((cr) => {
             const code = document.getText(cr.range);
-            return generateCells(settings, code, '', cr.range.start.line, false, uuid());
+            return generateCells(settings, code, '', false);
         })
     );
 }
@@ -215,10 +153,7 @@ export function generateCellsFromNotebookDocument(
                     : appendLineFeed(code);
             return {
                 data,
-                id: uuid(),
-                file: '',
-                line: 0,
-                state: CellState.init
+                file: ''
             };
         });
 }

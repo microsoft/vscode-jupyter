@@ -289,8 +289,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             cancelToken.token,
             useCache
         );
+
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
+
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
         if (!listLocalNonPythonKernels) {
             if (connections.some((item) => isPythonKernelConnection(item))) {

@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
+import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
@@ -29,7 +30,7 @@ import {
 } from './notebook/helper';
 
 suite('Interactive window', async function () {
-    this.timeout(60_000);
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
@@ -38,11 +39,13 @@ suite('Interactive window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-
     teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
         }
@@ -88,8 +91,7 @@ suite('Interactive window', async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         assertHasTextOutputInVSCode(secondCell!, '42');
     });
-
-    test('__file__ exists even after restarting a kernel', async () => {
+    test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
@@ -133,7 +135,7 @@ suite('Interactive window', async function () {
             const secondCell = notebookDocument.cellAt(1);
             const actualSource = secondCell.document.getText();
             assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-            await waitForExecutionCompletedSuccessfully(secondCell!);
+            await waitForExecutionCompletedSuccessfully(secondCell!, 30_000);
         }
 
         console.log('Step4');
@@ -156,8 +158,9 @@ suite('Interactive window', async function () {
             'Kernel info not printed'
         );
         console.log('Step9');
-        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
-        console.log('Step10');
+        await sleep(500);
+        const result = await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+        console.log(`Step10 with result = ${result}`);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
             defaultNotebookTestTimeout,
