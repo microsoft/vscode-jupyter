@@ -93,7 +93,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -155,6 +155,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.interpreters.onDidChangeInterpreters(
                         () => {
                             if (timer) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 clearTimeout(timer as any);
                             }
                             timer = setTimeout(

@@ -157,7 +157,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): Promise<LocalKernelConnectionMetadata[]> {
         let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
             this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
-            this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
+            this.pythonKernelFinder.listKernelSpecs(resource, true, cancelToken)
         ]);
 
         const kernels = this.filterKernels(nonPythonKernelSpecs.concat(pythonRelatedKernelSpecs));
