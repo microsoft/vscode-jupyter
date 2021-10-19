@@ -166,6 +166,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                                             ex
                                         )
                                     ),
+                                // This hacky solution should be removed in favor of https://github.com/microsoft/vscode-jupyter/issues/7583
+                                // as a proper fix for https://github.com/microsoft/vscode-jupyter/issues/5319
                                 1_000
                             );
                         },
