@@ -17,7 +17,6 @@ import { Common, DataScience } from '../../../client/common/utils/localize';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { InterpreterService } from '../../interpreters/interpreterService';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
@@ -39,7 +38,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         installer = mock(ProductInstaller);
         appShell = mock(ApplicationShell);
         pythonExecFactory = mock(PythonExecutionFactory);
-        interpreterService = mock(InterpreterService);
+        interpreterService = mock<IInterpreterService>();
 
         dependencyService = new DataViewerDependencyService(
             instance(appShell),

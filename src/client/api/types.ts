@@ -56,6 +56,7 @@ export type PythonApi = {
      * IInterpreterService
      */
     onDidChangeInterpreter: Event<void>;
+    onDidChangeInterpreters: Event<void>;
     /**
      * IInterpreterService
      */
