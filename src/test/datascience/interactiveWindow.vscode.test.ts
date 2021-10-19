@@ -131,8 +131,6 @@ suite('Interactive window', async function () {
     });
 
     test('__file__ exists even after restarting a kernel', async function () {
-        return this.skip();
-
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
