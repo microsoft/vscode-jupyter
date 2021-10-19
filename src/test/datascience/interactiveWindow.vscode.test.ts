@@ -91,45 +91,6 @@ suite('Interactive window', async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         assertHasTextOutputInVSCode(secondCell!, '42');
     });
-    test('Execute cell from Python file_2', async () => {
-        const source = 'print(42)';
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source);
-        const notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-        );
-        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
-            INotebookControllerManager
-        );
-
-        // Ensure we picked up the active interpreter for use as the kernel
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-
-        // Give it a bit to warm up
-        await sleep(500);
-
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
-        const activeInterpreter = await pythonApi.getActiveInterpreter();
-        assert.equal(
-            controller?.connection.interpreter?.path,
-            activeInterpreter?.path,
-            `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
-        );
-
-        // Verify sys info cell
-        const firstCell = notebookDocument?.cellAt(0);
-        assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
-        assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
-
-        // Verify executed cell input and output
-        const secondCell = notebookDocument?.cellAt(1);
-        const actualSource = secondCell?.document.getText();
-        assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-        await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, '42');
-    });
-
     test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
