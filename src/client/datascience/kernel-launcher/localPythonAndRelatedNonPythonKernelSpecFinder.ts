@@ -54,9 +54,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 resource,
                 resource?.fsPath || this.workspaceService.rootPath
             ) || 'root';
-        return this.listKernelsWithCache(workspaceFolderId, true, () =>
-            this.listKernelsImplementation(resource, cancelToken)
-        , ignoreCache);
+        return this.listKernelsWithCache(
+            workspaceFolderId,
+            true,
+            () => this.listKernelsImplementation(resource, cancelToken),
+            ignoreCache
+        );
     }
     private async listKernelsImplementation(
         resource: Resource,
