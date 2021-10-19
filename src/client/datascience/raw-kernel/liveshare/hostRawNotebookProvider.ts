@@ -121,7 +121,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 resource,
                 this.outputChannel,
                 noop,
-                noop,
                 workingDirectory
             );
 
