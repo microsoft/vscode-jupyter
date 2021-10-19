@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
+import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
@@ -38,11 +39,13 @@ suite('Interactive window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-
     teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
         }
@@ -133,7 +136,7 @@ suite('Interactive window', async function () {
             const secondCell = notebookDocument.cellAt(1);
             const actualSource = secondCell.document.getText();
             assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-            await waitForExecutionCompletedSuccessfully(secondCell!);
+            await waitForExecutionCompletedSuccessfully(secondCell!, 30_000);
         }
 
         console.log('Step4');
@@ -156,8 +159,9 @@ suite('Interactive window', async function () {
             'Kernel info not printed'
         );
         console.log('Step9');
-        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
-        console.log('Step10');
+        await sleep(500);
+        const result = await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+        console.log(`Step10 with result = ${result}`);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
             defaultNotebookTestTimeout,
