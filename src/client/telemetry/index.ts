@@ -1298,6 +1298,13 @@ export interface IEventNamePropertyMapping {
         kernelSpecCount: number; // Total number of kernel specs in the kernel list.
         kernelInterpreterCount: number; // Total number of interpreters in the kernel list.
         kernelLiveCount: number; // Total number of live kernels in the kernel list.
+        /**
+         * Total number of conda environments that share the same interpreter
+         * This happens when we create conda envs without the `python` argument.
+         * Such conda envs don't work today in the extension.
+         * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
+         */
+        condaEnvsSharingSameInterpreter: number
     } & ResourceSpecificTelemetryProperties;
 
     // Native notebooks events
