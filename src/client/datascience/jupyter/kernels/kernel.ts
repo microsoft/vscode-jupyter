@@ -379,11 +379,9 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
-        traceInfoIfCI('Step A');
         if (!this.notebook) {
             return;
         }
-        traceInfoIfCI('Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -403,22 +401,16 @@ export class Kernel implements IKernel {
                 this,
                 this.disposables
             );
-            traceInfoIfCI('Step C');
         }
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
-            traceInfoIfCI('Step D');
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-            traceInfoIfCI('Step H');
 
-            traceInfoIfCI('Step I');
             await this.disableJedi();
-            traceInfoIfCI('Step J');
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
-            traceInfoIfCI('Step L');
 
             if (this.connection?.localLaunch && this.notebook) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -431,22 +423,16 @@ export class Kernel implements IKernel {
         }
 
         // Run any startup commands that we have specified
-        traceInfoIfCI('Step M');
         await this.runStartupCommands();
-        traceInfoIfCI('Step N');
 
         try {
             const info = await this.notebook.requestKernelInfo();
             this._info = info?.content;
-            traceInfoIfCI('Step N1');
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
-            traceInfoIfCI('Step N2');
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
-        traceInfoIfCI('Step O');
         await this.notebook.waitForIdle(this.launchTimeout);
-        traceInfoIfCI('Step P');
     }
 
     private async disableJedi() {
@@ -579,19 +565,15 @@ export class Kernel implements IKernel {
 
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-            traceInfoIfCI('Begin Run startup code for notebook');
             const cleanedUp = setting.replace(/\\n/g, '\n');
             await this.executeSilently(cleanedUp);
-            traceInfoIfCI(`Run startup code for notebook: ${cleanedUp}`);
         }
     }
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (this.connection && this.connection.localLaunch) {
-            traceInfoIfCI('Step E');
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
-            traceInfoIfCI('Step F');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 return this.changeDirectoryIfPossible(suggestedDir);
@@ -603,7 +585,6 @@ export class Kernel implements IKernel {
                 }
             }
         }
-        traceInfoIfCI('Step G');
     }
 
     // Update both current working directory and sys.path with the desired directory
