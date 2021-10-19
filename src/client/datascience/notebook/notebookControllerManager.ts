@@ -49,6 +49,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -92,6 +93,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -146,7 +148,33 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             Promise.all([
                 this.loadNotebookControllersImpl(true, 'ignoreCache'),
                 this.loadNotebookControllersImpl(false, 'ignoreCache')
-            ]).catch((ex) => console.error('Failed to fetch controllers without cache', ex));
+            ])
+                .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
+                .finally(() => {
+                    let timer: NodeJS.Timeout | number | undefined;
+                    this.interpreters.onDidChangeInterpreters(
+                        () => {
+                            if (timer) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                clearTimeout(timer as any);
+                            }
+                            timer = setTimeout(
+                                () =>
+                                    this.loadNotebookControllersImpl(false, 'ignoreCache').catch((ex) =>
+                                        console.error(
+                                            'Failed to re-query python kernels after changes to list of interpreters',
+                                            ex
+                                        )
+                                    ),
+                                // This hacky solution should be removed in favor of https://github.com/microsoft/vscode-jupyter/issues/7583
+                                // as a proper fix for https://github.com/microsoft/vscode-jupyter/issues/5319
+                                1_000
+                            );
+                        },
+                        this,
+                        this.disposables
+                    );
+                });
 
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             this.controllersPromise = Promise.all([

@@ -55,11 +55,12 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
+        finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        ignoreCache?: boolean
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
-        if (result) {
+        if (result && !ignoreCache) {
             // If python extension is now installed & was not installed previously, then ignore the previous cache.
             if (
                 result.usesPython &&
