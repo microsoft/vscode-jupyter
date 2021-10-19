@@ -30,7 +30,7 @@ import {
 } from './notebook/helper';
 
 suite('Interactive window', async function () {
-    this.timeout(60_000);
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
