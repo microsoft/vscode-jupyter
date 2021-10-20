@@ -173,16 +173,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             controller: controller.controller,
             resourceUri: this.owner
         });
-        kernel.onRestarted(
-            async () => {
-                this.fileInKernel = undefined;
-                const promise = this.runIntialization(kernel, this.owner);
-                this._kernelReadyPromise = promise.then(() => kernel);
-                await promise;
-            },
-            this,
-            this.internalDisposables
-        );
+        kernel.addRestartHook(async () => {
+            this.fileInKernel = undefined;
+            await this.runIntialization(kernel, this.owner);
+        });
         this.internalDisposables.push(kernel);
         await kernel.start();
         this.fileInKernel = undefined;
