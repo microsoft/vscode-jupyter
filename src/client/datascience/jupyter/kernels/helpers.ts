@@ -204,7 +204,8 @@ export function getDetailOfKernelConnection(
         kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
-    const cwd = workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
+    const cwd =
+        workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
     return `${kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : defaultValue} ${notebookPath}`;
 }
 

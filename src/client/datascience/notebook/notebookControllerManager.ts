@@ -610,9 +610,13 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                 }`.trim();
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                     const pythonDisplayName = pythonVersion.trim();
-                    return kernelConnection.interpreter.envName ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})` : pythonDisplayName;
+                    return kernelConnection.interpreter.envName
+                        ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                        : pythonDisplayName;
                 } else {
-                    return kernelConnection.interpreter.envName ? `${kernelConnection.interpreter.envName} (${currentDisplayName})` : currentDisplayName;
+                    return kernelConnection.interpreter.envName
+                        ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
+                        : currentDisplayName;
                 }
             } else {
                 return currentDisplayName;
@@ -627,7 +631,9 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
                 }`.trim();
                 const pythonDisplayName = pythonVersion.trim();
-                return kernelConnection.interpreter.envName ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})` : pythonDisplayName;
+                return kernelConnection.interpreter.envName
+                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                    : pythonDisplayName;
             }
     }
     return currentDisplayName;

@@ -417,9 +417,9 @@ export class VSCodeNotebookController implements Disposable {
 function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel':
-            return 'Jupyter Session'
+            return 'Jupyter Session';
         case 'startUsingKernelSpec':
-            return 'Jupyter Kernel'
+            return 'Jupyter Kernel';
         case 'startUsingPythonInterpreter': {
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
