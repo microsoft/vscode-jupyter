@@ -460,11 +460,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
         if (!fileUri) {
+            traceInfoIfCI('Unable to run initialization for IW');
             return;
         }
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
         await this.setFileInKernel(fileUri.fsPath, kernel!);
+        traceInfoIfCI('file in kernel set for IW');
     }
 
     public async exportCells() {
@@ -563,6 +565,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
+            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else {
