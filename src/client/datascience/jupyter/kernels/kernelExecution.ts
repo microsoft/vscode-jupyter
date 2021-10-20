@@ -54,7 +54,7 @@ export class KernelExecution implements IDisposable {
     }
 
     public async executeCell(
-        kernelConnectionPromise: Promise<IJupyterSession>,
+        sessionPromise: Promise<IJupyterSession>,
         cell: NotebookCell
     ): Promise<NotebookCellRunState> {
         if (cell.kind == NotebookCellKind.Markup) {
@@ -66,7 +66,7 @@ export class KernelExecution implements IDisposable {
             await this._restartPromise;
         }
 
-        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, kernelConnectionPromise);
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
         return result[0];
@@ -143,21 +143,14 @@ export class KernelExecution implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-    private getOrCreateCellExecutionQueue(
-        document: NotebookDocument,
-        kernelConnectionPromise: Promise<IJupyterSession>
-    ) {
+    private getOrCreateCellExecutionQueue(document: NotebookDocument, sessionPromise: Promise<IJupyterSession>) {
         const existingExecutionQueue = this.documentExecutions.get(document);
         // Re-use the existing Queue if it can be used.
         if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(
-            kernelConnectionPromise,
-            this.executionFactory,
-            this.metadata
-        );
+        const newCellExecutionQueue = new CellExecutionQueue(sessionPromise, this.executionFactory, this.metadata);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
         workspace.onDidCloseNotebookDocument(
