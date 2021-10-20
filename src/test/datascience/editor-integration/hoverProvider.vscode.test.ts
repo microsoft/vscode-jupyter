@@ -13,7 +13,7 @@ import {
 } from '../../../client/common/types';
 import { IInteractiveWindowProvider, IJupyterVariables } from '../../../client/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
 import { HoverProvider } from '../../../client/datascience/editor-integration/hoverProvider';
 import { Identifiers } from '../../../client/datascience/constants';
@@ -37,10 +37,6 @@ suite('Hover provider', async () => {
     let sandbox: sinon.SinonSandbox;
     let disposables: IDisposable[] = [];
     suiteSetup(async function () {
-        if (IS_WEBVIEW_BUILD_SKIPPED) {
-            console.log('Hover provider tests require webview build to be enabled');
-            return this.skip();
-        }
         return this.skip();
         api = await initialize();
         const configService = api.serviceManager.get<IConfigurationService>(IConfigurationService);
