@@ -28,6 +28,7 @@ import {
 } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
@@ -124,7 +125,8 @@ export class VSCodeNotebookController implements Disposable {
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
-        this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
+        this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils, this.workspace);
+        this.controller.category = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
@@ -408,6 +410,33 @@ export class VSCodeNotebookController implements Disposable {
             this.localOrRemoteKernel === 'local'
         ) {
             await newKernel.start({ disableUI: true }).catch(noop);
+        }
+    }
+}
+
+function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel':
+            return 'Jupyter Session'
+        case 'startUsingKernelSpec':
+            return 'Jupyter Kernel'
+        case 'startUsingPythonInterpreter': {
+            switch (kernelConnection.interpreter.envType) {
+                case EnvironmentType.Conda:
+                    return 'Conda Environment';
+                case EnvironmentType.Pipenv:
+                    return 'Pipenv Environment';
+                case EnvironmentType.Poetry:
+                    return 'Poetry Environment';
+                case EnvironmentType.Pyenv:
+                    return 'PyEnv Environment';
+                case EnvironmentType.Venv:
+                case EnvironmentType.VirtualEnv:
+                case EnvironmentType.VirtualEnvWrapper:
+                    return 'Virtual Environment';
+                default:
+                    return 'Global Environment';
+            }
         }
     }
 }

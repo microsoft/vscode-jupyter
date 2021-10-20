@@ -1575,6 +1575,7 @@ declare module 'vscode' {
 	}
 
 	export interface NotebookController {
+		category?: string;
 
 		// todo@API allow add, not remove
 		readonly rendererScripts: NotebookRendererScript[];

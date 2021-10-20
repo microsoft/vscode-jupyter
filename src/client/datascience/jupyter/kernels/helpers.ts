@@ -42,6 +42,7 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { executeSilently } from './kernel';
+import { IWorkspaceService } from '../../../common/application/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -195,12 +196,16 @@ export function getDescriptionOfKernelConnection(
 export function getDetailOfKernelConnection(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
+    workspaceService: IWorkspaceService,
     defaultValue: string = ''
 ): string {
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     const notebookPath =
         kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
-    return `${kernelPath ? pathUtils.getDisplayName(kernelPath) : defaultValue} ${notebookPath}`;
+    // If we have just one workspace folder opened, then ensure to use relative paths
+    // where possible (e.g. for virtual environments).
+    const cwd = workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
+    return `${kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : defaultValue} ${notebookPath}`;
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
