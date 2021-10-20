@@ -108,7 +108,7 @@ export class Kernel implements IKernel {
     private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
-    private restarting?: Deferred<void>;
+    private restarting?: Promise<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
     private startCancellation = new CancellationTokenSource();
@@ -185,7 +185,7 @@ export class Kernel implements IKernel {
                 ).toString()}`
             );
             trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
-            await this.restarting.promise;
+            await this.restarting;
         }
         traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
         this.startCancellation.cancel();
@@ -225,23 +225,29 @@ export class Kernel implements IKernel {
     public async restart(): Promise<void> {
         this._onWillRestart.fire();
         if (this.restarting) {
-            return this.restarting.promise;
+            return this.restarting;
         }
-        traceInfo(`Restart requested ${this.notebookDocument.uri}`);
-        this.startCancellation.cancel();
-        await this.kernelExecution.restart(this._notebookPromise);
-        traceInfoIfCI(`Restarted ${this.notebookDocument.uri}`);
+        const promise = (async () => {
+            traceInfo(`Restart requested ${this.notebookDocument.uri}`);
+            this.startCancellation.cancel();
+            await this.kernelExecution.restart(this._notebookPromise);
+            traceInfoIfCI(`Restarted ${this.notebookDocument.uri}`);
 
-        // Interactive window needs a restart sys info
-        await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
-        traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
+            // Interactive window needs a restart sys info
+            await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
+            traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
 
-        // Wait for all restart hooks to complete.
-        await Promise.all(this.restartHooks.values());
+            // Wait for all restart hooks to complete.
+            traceInfoIfCI('Running restart initialization in Kernel after restart');
+            await Promise.all(this.restartHooks.values());
+            traceInfoIfCI('Completed restart initialization in Kernel after restart');
 
-        // Indicate a restart occurred if it succeeds
-        this._onRestarted.fire();
-        traceInfoIfCI(`Event fired after restart ${this.notebookDocument.uri}`);
+            // Indicate a restart occurred if it succeeds
+            this._onRestarted.fire();
+            traceInfoIfCI(`Event fired after restart ${this.notebookDocument.uri}`);
+        })();
+        this.restarting = promise;
+        await promise;
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -270,7 +276,7 @@ export class Kernel implements IKernel {
             initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
         }
         if (this.restarting) {
-            await this.restarting.promise;
+            await this.restarting;
         }
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
