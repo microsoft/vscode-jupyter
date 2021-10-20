@@ -333,21 +333,21 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
             // When our kernel connects and gets a status message it triggers the ready promise
             const deferred = createDeferred<string>();
-            const handler = (_session: Kernel.IKernelConnection, status: Kernel.ConnectionStatus) => {
-                if (status == 'connected') {
+            const handler = (_session: Kernel.IKernelConnection, status: Kernel.Status) => {
+                if (status == 'idle') {
                     deferred.resolve(status);
                 }
             };
-            session.kernel.connectionStatusChanged.connect(handler);
-            if (session.kernel.connectionStatus == 'connected') {
+            session.kernel.statusChanged?.connect(handler);
+            if (session.kernel.status == 'idle') {
                 deferred.resolve(session.kernel.status);
             }
 
             const result = await Promise.race([deferred.promise, sleep(timeout)]);
-            session.kernel.connectionStatusChanged?.disconnect(handler);
+            session.kernel.statusChanged?.disconnect(handler);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            if (result.toString() == 'connected') {
+            if (result.toString() == 'idle') {
                 return;
             }
             // If we throw an exception, make sure to shutdown the session as it's not usable anymore
