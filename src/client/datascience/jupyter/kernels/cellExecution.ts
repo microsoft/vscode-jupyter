@@ -326,7 +326,7 @@ export class CellExecution implements IDisposable {
 
         this.endCellTask(success);
         this._completed = true;
-        traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
+        traceCellMessage(this.cell, 'Completed successfully & resolving');
         this._result.resolve(runState);
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled') {

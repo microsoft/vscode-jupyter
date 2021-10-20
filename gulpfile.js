@@ -142,10 +142,18 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task(
-    'compile-webviews',
-    gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers'))
-);
+// On CI, when running Notebook tests, we don't need old webviews.
+// Simple & temporary optimization for the Notebook Test Job.
+if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
+    gulp.task('compile-webviews', async () => {
+        // Do nothing, just eliminate js errors
+    });
+} else {
+    gulp.task(
+        'compile-webviews',
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers'))
+    );
+}
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -300,10 +308,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
 
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
-gulp.task(
-    'prePublishNonBundle',
-    gulp.parallel('compile', gulp.series('compile-webviews'))
-);
+// On CI, when running Notebook tests, we don't need old webviews.
+// Simple & temporary optimization for the Notebook Test Job.
+if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
+    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
+} else {
+    gulp.task(
+        'prePublishNonBundle',
+        gulp.parallel('compile', gulp.series('compile-webviews'))
+    );
+}
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};

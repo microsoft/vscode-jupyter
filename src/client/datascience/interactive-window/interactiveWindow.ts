@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -169,22 +169,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             controller: controller.controller,
             resourceUri: this.owner
         });
-        kernel.addRestartHook(async () => {
-            traceInfoIfCI('Running initialization in IW after restart');
-            this.fileInKernel = undefined;
-            await this.runIntialization(kernel, this.owner);
-            traceInfoIfCI('Completed initialization in IW after restart');
-        });
-        // kernel.onRestarted(
-        //     async () => {
-        //         this.fileInKernel = undefined;
-        //         const promise = this.runIntialization(kernel, this.owner);
-        //         this._kernelReadyPromise = promise.then(() => kernel);
-        //         await promise;
-        //     },
-        //     this,
-        //     this.internalDisposables
-        // );
+        kernel.onRestarted(
+            async () => {
+                this.fileInKernel = undefined;
+                await this.runIntialization(kernel, this.owner);
+            },
+            this,
+            this.internalDisposables
+        );
         this.internalDisposables.push(kernel);
         await kernel.start();
         this.fileInKernel = undefined;
@@ -558,22 +550,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
-        if (this.mode === 'perFile' && !this.fileInKernel) {
-            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
+        if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
-            this.mode !== 'perFile'
+            this.mode !== 'perFile' &&
+            kernel
         ) {
-            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
-        } else {
-            traceInfoIfCI(
-                `Not Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode} currently ${this.fileInKernel}`
-            );
         }
     }
 
