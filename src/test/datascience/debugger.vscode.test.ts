@@ -7,7 +7,7 @@ import { IDisposable } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../initialize';
 import {
     canRunNotebookTests,
     closeNotebooks,
@@ -43,6 +43,13 @@ suite('VSCode Notebook - Run By Line', function () {
     suiteSetup(async function () {
         traceInfo(`Start Test Suite`);
         this.timeout(120_000);
+
+        // We need to have webviews built to run this, so skip if we don't have them
+        if (IS_WEBVIEW_BUILD_SKIPPED) {
+            console.log('Debugging tests require webview build to be enabled (for the variable view)');
+            return this.skip();
+        }
+
         // Don't run if we can't use the native notebook interface
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
