@@ -33,7 +33,7 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { ExportFormat, IExportDialog, IExportManager } from '../export/types';
+import { ExportFormat, IExportDialog, IFileConverter } from '../export/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
@@ -63,7 +63,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
-        @inject(IExportManager) private exportManager: IExportManager,
+        @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
@@ -305,7 +305,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
                         viewColumn: ViewColumn.Beside
                     });
                     const preferredController = await this.controllerManager.getActiveInterpreterOrDefaultController(
-                        JupyterNotebookView
+                        JupyterNotebookView,
+                        file
                     );
                     if (preferredController) {
                         await this.commandManager.executeCommand('notebook.selectKernel', {
@@ -395,7 +396,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             await this.waitForStatus(
                 async () => {
                     const contents = await this.fileSystem.readFile(uris[0]);
-                    await this.exportManager.export(ExportFormat.python, contents, uris[0]);
+                    await this.fileConverter.importIpynb(contents, uris[0]);
                 },
                 localize.DataScience.importingFormat(),
                 uris[0].fsPath
@@ -409,7 +410,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             await this.waitForStatus(
                 async () => {
                     const contents = await this.fileSystem.readFile(file);
-                    await this.exportManager.export(ExportFormat.python, contents, file);
+                    await this.fileConverter.importIpynb(contents, file);
                 },
                 localize.DataScience.importingFormat(),
                 file.fsPath

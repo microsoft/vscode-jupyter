@@ -18,7 +18,8 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IExtensions,
-    IPathUtils
+    IPathUtils,
+    Resource
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
@@ -48,6 +49,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -91,6 +93,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -101,10 +104,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getActiveInterpreterOrDefaultController(
-        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        resource: Resource
     ): Promise<VSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
-            return this.createActiveInterpreterController(notebookType);
+            return this.createActiveInterpreterController(notebookType, resource);
         } else {
             return this.createDefaultRemoteController();
         }
@@ -144,7 +148,33 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             Promise.all([
                 this.loadNotebookControllersImpl(true, 'ignoreCache'),
                 this.loadNotebookControllersImpl(false, 'ignoreCache')
-            ]).catch((ex) => console.error('Failed to fetch controllers without cache', ex));
+            ])
+                .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
+                .finally(() => {
+                    let timer: NodeJS.Timeout | number | undefined;
+                    this.interpreters.onDidChangeInterpreters(
+                        () => {
+                            if (timer) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                clearTimeout(timer as any);
+                            }
+                            timer = setTimeout(
+                                () =>
+                                    this.loadNotebookControllersImpl(false, 'ignoreCache').catch((ex) =>
+                                        console.error(
+                                            'Failed to re-query python kernels after changes to list of interpreters',
+                                            ex
+                                        )
+                                    ),
+                                // This hacky solution should be removed in favor of https://github.com/microsoft/vscode-jupyter/issues/7583
+                                // as a proper fix for https://github.com/microsoft/vscode-jupyter/issues/5319
+                                1_000
+                            );
+                        },
+                        this,
+                        this.disposables
+                    );
+                });
 
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             this.controllersPromise = Promise.all([
@@ -199,11 +229,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async createActiveInterpreterController(
-        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        resource: Resource
     ) {
         // Fetch the active interpreter and use the matching controller
         const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
+        const activeInterpreter = await api.getActiveInterpreter(resource);
 
         if (!activeInterpreter) {
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
@@ -258,8 +289,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             cancelToken.token,
             useCache
         );
+
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
+
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
         if (!listLocalNonPythonKernels) {
             if (connections.some((item) => isPythonKernelConnection(item))) {
@@ -338,7 +371,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.isLocalLaunch
         ) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-            this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
+            this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
         }
 
         try {

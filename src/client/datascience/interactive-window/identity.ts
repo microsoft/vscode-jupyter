@@ -9,24 +9,12 @@ import * as localize from '../../common/utils/localize';
 let identities: string[] = [];
 let createCount = 0;
 
-export function getDefaultInteractiveIdentity(): Uri {
-    // Always return the first one
-    if (identities.length <= 0) {
-        identities.push(uuid());
-    }
-    return Uri.parse(`history://${identities[0]}`);
-}
-
 export function createInteractiveIdentity(): Uri {
     if (createCount > 0 || identities.length <= 0) {
         identities.push(uuid());
     }
     createCount += 1;
     return Uri.parse(`history://${identities[identities.length - 1]}`);
-}
-
-export function createExportInteractiveIdentity(): Uri {
-    return Uri.parse(`history://${uuid()}`);
 }
 
 export function getInteractiveWindowTitle(owner: Uri): string {

@@ -1,9 +1,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
+import { IExtensions } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -12,42 +13,46 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, IExport, IExportDialog, IExportManager } from './types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from './types';
 
+// Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
-export class ExportManager implements IExportManager {
+export class FileConverter implements IFileConverter {
     constructor(
-        @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
-        @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
-        @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
+        @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
+        @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
+        @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener,
-        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
+        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
+
+    public async importIpynb(contents: string, source: Uri): Promise<void> {
+        const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
+            ExportFormat.python,
+            undefined
+        );
+        await this.performNbConvertExport(ExportFormat.python, contents, source, exportInterpreter);
+    }
 
     public async export(
         format: ExportFormat,
-        contents: string,
-        source: Uri,
+        sourceDocument: NotebookDocument,
         defaultFileName?: string,
         candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
         let target;
         try {
-            // Get the interpreter to use for the export, checking the candidate interpreter first
-            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
-                format,
-                candidateInterpreter
-            );
-            target = await this.getTargetFile(format, source, defaultFileName);
+            target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, contents, target, exportInterpreter);
+            await this.performExport(format, sourceDocument, target, candidateInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -60,7 +65,33 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async performExport(format: ExportFormat, contents: string, target: Uri, interpreter: PythonEnvironment) {
+    private async performExport(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        target: Uri,
+        candidateInterpreter?: PythonEnvironment
+    ) {
+        switch (format) {
+            case ExportFormat.html:
+            case ExportFormat.pdf:
+            case ExportFormat.ipynb:
+            case ExportFormat.python:
+                // Get the interpreter to use for the export, checking the candidate interpreter first
+                const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
+                    format,
+                    candidateInterpreter
+                );
+                const contents = this.getContent(sourceDocument);
+                return this.performNbConvertExport(format, contents, target, exportInterpreter);
+        }
+    }
+
+    private async performNbConvertExport(
+        format: ExportFormat,
+        contents: string,
+        target: Uri,
+        interpreter: PythonEnvironment
+    ) {
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique
@@ -137,5 +168,26 @@ export class ExportManager implements IExportManager {
             default:
                 break;
         }
+    }
+    private getContent(document: NotebookDocument): string {
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
+        }
+        const cells = document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
+        });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
 }

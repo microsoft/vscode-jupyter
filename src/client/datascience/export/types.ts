@@ -1,4 +1,4 @@
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export enum ExportFormat {
@@ -8,13 +8,14 @@ export enum ExportFormat {
     ipynb = 'ipynb'
 }
 
-export const IExportManager = Symbol('IExportManager');
-export interface IExportManager {
-    export(format: ExportFormat, contents: string, source: Uri, defaultFileName?: string): Promise<undefined>;
+export const IFileConverter = Symbol('IFileConverter');
+export interface IFileConverter {
+    export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
+    importIpynb(contents: string, source: Uri): Promise<void>;
 }
 
-export const IExport = Symbol('IExport');
-export interface IExport {
+export const INbConvertExport = Symbol('INbConvertExport');
+export interface INbConvertExport {
     export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
 }
 

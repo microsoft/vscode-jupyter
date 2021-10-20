@@ -16,7 +16,11 @@ export class InterpreterService implements IInterpreterService {
     public get onDidChangeInterpreter(): Event<void> {
         return this.didChangeInterpreter.event;
     }
+    public get onDidChangeInterpreters(): Event<void> {
+        return this.didChangeInterpreters.event;
+    }
     public readonly didChangeInterpreter = new EventEmitter<void>();
+    public readonly didChangeInterpreters = new EventEmitter<void>();
 
     private readonly customInterpretersPerUri = new Map<string, string>();
     constructor(@inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker) {}

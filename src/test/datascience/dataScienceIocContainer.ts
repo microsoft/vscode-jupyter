@@ -92,7 +92,6 @@ import {
     IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
-    ProductInstallStatus,
     Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
@@ -125,13 +124,13 @@ import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/e
 import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
-import { ExportManager } from '../../client/datascience/export/exportManager';
+import { FileConverter } from '../../client/datascience/export/fileConverter';
 import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
-import { ExportFormat, IExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
@@ -395,13 +394,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(this.webPanelProvider)
         );
         this.serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
-        this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+        this.serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
         this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
-        this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
-        this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
-        this.serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
-        this.serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
+        this.serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
+        this.serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
+        this.serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
+        this.serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportBase, 'Export Base');
         this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
         this.serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
@@ -418,9 +417,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             NbConvertExportToPythonService
         );
         const mockInstaller = mock<IPythonInstaller>();
-        when(mockInstaller.isProductVersionCompatible(anything(), anything(), anything())).thenResolve(
-            ProductInstallStatus.NeedsUpgrade
-        );
         this.serviceManager.addSingletonInstance<IPythonInstaller>(IPythonInstaller, instance(mockInstaller));
         this.serviceManager.addSingletonInstance<InterpreterPackages>(
             InterpreterPackages,

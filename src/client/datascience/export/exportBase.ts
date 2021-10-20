@@ -8,10 +8,10 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
-import { ExportFormat, IExport } from './types';
+import { ExportFormat, INbConvertExport } from './types';
 
 @injectable()
-export class ExportBase implements IExport {
+export class ExportBase implements INbConvertExport {
     constructor(
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)

@@ -155,10 +155,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.GotoPrevCellInFile]: [];
     [DSCommands.ScrollToCell]: [Uri, string];
     [DSCommands.ViewJupyterOutput]: [];
-    [DSCommands.ExportAsPythonScript]: [string | undefined, Uri | undefined, PythonEnvironment | undefined];
-    [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportAsPythonScript]: [NotebookDocument | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportToHTML]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.ExportToPDF]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
+    [DSCommands.Export]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.LatestExtension]: [string];

@@ -10,8 +10,7 @@ export enum CssMessages {
 export enum SharedMessages {
     UpdateSettings = 'update_settings',
     Started = 'started',
-    LocInit = 'loc_init',
-    StyleUpdate = 'style_update'
+    LocInit = 'loc_init'
 }
 
 export interface IGetCssRequest {
@@ -21,5 +20,4 @@ export interface IGetCssRequest {
 export interface IGetCssResponse {
     css: string;
     theme: string;
-    knownDark?: boolean;
 }
