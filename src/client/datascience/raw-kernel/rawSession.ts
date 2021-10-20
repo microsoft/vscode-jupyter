@@ -119,20 +119,20 @@ export class RawSession implements ISessionWithSocket {
     public async waitForReady(): Promise<void> {
         // When our kernel connects and gets a status message it triggers the ready promise
         const deferred = createDeferred<string>();
-        const handler = (_session: RawSession, status: Kernel.Status) => {
-            if (status == 'idle') {
+        const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
+            if (status == 'connected') {
                 deferred.resolve(status);
             }
         };
-        this.statusChanged.connect(handler);
-        if (this.status == 'idle') {
-            deferred.resolve(this.status);
+        this.connectionStatusChanged.connect(handler);
+        if (this.connectionStatus === 'connected') {
+            deferred.resolve(this.connectionStatus);
         }
 
         const result = await Promise.race([deferred.promise, sleep(30_000)]);
-        this.statusChanged.disconnect(handler);
+        this.connectionStatusChanged.disconnect(handler);
 
-        if (result.toString() != 'idle') {
+        if (result.toString() !== 'connected') {
             throw new TimedOutError(`Kernel with ${this.id} never connected.`);
         }
     }

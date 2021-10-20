@@ -44,7 +44,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, defaultNotebookFormat, Identifiers } from '../constants';
+import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
@@ -461,7 +461,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri || !kernel.notebook || fileUri.fsPath === Identifiers.EmptyFileName) {
+        if (!fileUri || !kernel.notebook) {
             return;
         }
 
@@ -558,9 +558,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
-        if (file === Identifiers.EmptyFileName) {
-            return;
-        }
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;

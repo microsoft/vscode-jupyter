@@ -6,7 +6,6 @@ import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';
@@ -25,18 +24,6 @@ import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { ISessionWithSocket } from '../types';
 
-// Error thrown when we are unable to start a raw kernel session
-export class RawKernelSessionStartError extends WrappedError {
-    constructor(kernelConnection: KernelConnectionMetadata, originalException?: Error) {
-        super(
-            localize.DataScience.rawKernelSessionFailed().format(
-                getDisplayNameOrNameOfKernelConnection(kernelConnection)
-            ),
-            originalException
-        );
-    }
-}
-
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
 connecting to JupyterLab services it instead connects to a kernel directly
@@ -51,7 +38,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
         private readonly outputChannel: IOutputChannel,
-        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         workingDirectory: string
     ) {
@@ -136,8 +122,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 );
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
-                // Translate into original error
-                throw new RawKernelSessionStartError(kernelConnection, error);
+                throw error;
             } else if (error instanceof IpyKernelNotInstalledError) {
                 sendKernelTelemetryEvent(
                     resource,
@@ -264,11 +249,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        const startPromise = this.startRawSession(this.resource, this.kernelConnectionMetadata, timeout, cancelToken);
-        return startPromise.then((session) => {
-            this.restartSessionCreated(session.kernel);
-            return session;
-        });
+        return this.startRawSession(this.resource, this.kernelConnectionMetadata, timeout, cancelToken);
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)

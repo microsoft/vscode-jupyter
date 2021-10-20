@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
+import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
@@ -29,7 +30,7 @@ import {
 } from './notebook/helper';
 
 suite('Interactive window', async function () {
-    this.timeout(60_000);
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
@@ -38,11 +39,13 @@ suite('Interactive window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-
     teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
         }
@@ -88,8 +91,7 @@ suite('Interactive window', async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         assertHasTextOutputInVSCode(secondCell!, '42');
     });
-
-    test('__file__ exists even after restarting a kernel', async () => {
+    test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
@@ -104,13 +106,11 @@ suite('Interactive window', async function () {
         const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
             INotebookControllerManager
         );
-        console.log('Step1');
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
 
         // Give it a bit to warm up
         await sleep(500);
-        console.log('Step2');
 
         const controller = notebookDocument
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
@@ -122,7 +122,6 @@ suite('Interactive window', async function () {
             `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
         );
 
-        console.log('Step3');
         async function verifyCells() {
             // Verify sys info cell
             const firstCell = notebookDocument.cellAt(0);
@@ -136,34 +135,26 @@ suite('Interactive window', async function () {
             await waitForExecutionCompletedSuccessfully(secondCell!);
         }
 
-        console.log('Step4');
         await verifyCells();
-        console.log('Step5');
 
         // CLear all cells
         await vscode.commands.executeCommand('jupyter.interactive.clearAllCells');
-        console.log('Step6');
         await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
-        console.log('Step7');
 
         // Restart kernel
         await vscode.commands.executeCommand('jupyter.restartkernel');
-        console.log('Step8');
         // Wait for first cell to get output.
         await waitForCondition(
             async () => notebookDocument.cellCount > 0,
             defaultNotebookTestTimeout,
             'Kernel info not printed'
         );
-        console.log('Step9');
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
-        console.log('Step10');
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
             defaultNotebookTestTimeout,
             'Code not executed'
         );
-        console.log('Step11');
 
         await verifyCells();
     });

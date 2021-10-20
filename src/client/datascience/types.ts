@@ -531,21 +531,10 @@ export interface ICodeLensFactory {
     getCellRanges(document: TextDocument): ICellRange[];
 }
 
-export enum CellState {
-    editing = -1,
-    init = 0,
-    executing = 1,
-    finished = 2,
-    error = 3
-}
-
 // Basic structure for a cell from a notebook
 export interface ICell {
-    id: string; // This value isn't unique. File and line are needed too.
-    file: string;
-    line: number;
-    state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
+    file?: string;
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
 }
 
 // CellRange is used as the basis for creating new ICells.
@@ -558,18 +547,6 @@ export interface ICellRange {
     range: Range;
     title: string;
     cell_type: string;
-}
-
-export interface IInteractiveWindowInfo {
-    cellCount: number;
-    undoCount: number;
-    redoCount: number;
-    selectedCell: string | undefined;
-}
-
-export interface IMessageCell extends nbformat.IBaseCell {
-    cell_type: 'messages';
-    messages: string[];
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
@@ -608,12 +585,6 @@ export interface IJupyterCommandFactory {
         isActiveInterpreter: boolean
     ): IJupyterCommand;
 }
-
-// Config settings we pass to our react code
-export type FileSettings = {
-    autoSaveDelay: number;
-    autoSave: 'afterDelay' | 'off' | 'onFocusChange' | 'onWindowChange';
-};
 
 export interface IJupyterExtraSettings extends IJupyterSettings {
     extraSettings: {
@@ -1142,12 +1113,6 @@ export interface IJupyterUriProviderRegistration {
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
-}
-
-export interface ISwitchKernelOptions {
-    identity: Resource;
-    resource: Resource;
-    currentKernelDisplayName: string | undefined;
 }
 
 // Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
