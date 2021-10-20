@@ -11,9 +11,9 @@ import * as fs from 'fs-extra';
 import { getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
+import { LocalKernelSpecFinderBase, oldKernelsSpecFolderName } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { IPythonExtensionChecker } from '../../api/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -91,7 +91,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     private async deleteOldKernelSpec(kernelSpecFile: string) {
         // Just move this folder into a seprate location.
         const kernelspecFolderName = path.basename(path.dirname(kernelSpecFile));
-        const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), '__old_vscode_kernelspecs');
+        const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), oldKernelsSpecFolderName);
         if (!fs.pathExistsSync(destinationFolder)) {
             fs.mkdirSync(destinationFolder);
         }
@@ -121,7 +121,8 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
 
                 if (kernelspec) {
-                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec)) {
+                    // Never delete on CI (could break tests).
+                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec) && !isCI) {
                         await this.deleteOldKernelSpec(resultPath.kernelSpecFile).catch(noop);
                         return;
                     }
