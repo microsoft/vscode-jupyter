@@ -239,7 +239,7 @@ export class Kernel implements IKernel {
 
             // Wait for all restart hooks to complete.
             traceInfoIfCI(`Running restart initialization in Kernel after restart hooks = ${this.restartHooks}`);
-            await Promise.all(Array.from(this.restartHooks.values()).map(fn => fn()));
+            await Promise.all(Array.from(this.restartHooks.values()).map((fn) => fn()));
             traceInfoIfCI('Completed restart initialization in Kernel after restart');
 
             // Indicate a restart occurred if it succeeds

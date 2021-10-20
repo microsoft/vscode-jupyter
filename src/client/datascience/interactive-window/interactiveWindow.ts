@@ -179,10 +179,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             async () => {
                 traceInfoIfCI('Restart event handled in IW');
 
-        //         this.fileInKernel = undefined;
-        //         const promise = this.runIntialization(kernel, this.owner);
-        //         this._kernelReadyPromise = promise.then(() => kernel);
-        //         await promise;
+                //         this.fileInKernel = undefined;
+                //         const promise = this.runIntialization(kernel, this.owner);
+                //         this._kernelReadyPromise = promise.then(() => kernel);
+                //         await promise;
             },
             this,
             this.internalDisposables
