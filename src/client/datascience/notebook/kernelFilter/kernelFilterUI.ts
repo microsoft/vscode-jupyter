@@ -10,7 +10,6 @@ import { getDetailOfKernelConnection, getDisplayNameOrNameOfKernelConnection } f
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { getControllerDisplayName } from '../notebookControllerManager';
 import { INotebookControllerManager } from '../types';
-import { KernelFilterService } from './kernelFilterService';
 import { KernelFilterStorage } from './kernelFilterStorage';
 
 @injectable()
@@ -22,7 +21,6 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
         @inject(KernelFilterStorage) private readonly storage: KernelFilterStorage,
-        @inject(KernelFilterService) private readonly filter: KernelFilterService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         disposales.push(this);
@@ -48,7 +46,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
             .map((item) => {
                 return <QuickPickType>{
                     label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
-                    picked: !this.filter.isKernelHidden(item),
+                    picked: !this.storage.isKernelHidden(item),
                     detail: getDetailOfKernelConnection(item, this.pathUtils),
                     connection: item
                 };
