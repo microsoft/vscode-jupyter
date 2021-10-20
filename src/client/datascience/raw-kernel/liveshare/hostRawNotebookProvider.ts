@@ -11,13 +11,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IOutputChannel,
-    Resource
-} from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -51,7 +45,6 @@ import { JupyterNotebookBase } from '../../jupyter/jupyterNotebook';
 export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRawNotebookProvider {
     private disposed = false;
     constructor(
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -74,19 +67,19 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
     }
     protected async createNotebookInstance(
         resource: Resource,
-        identity: vscode.Uri,
+        document: vscode.NotebookDocument,
         disableUI?: boolean,
         notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        traceInfo(`Creating raw notebook for ${identity.toString()}`);
+        traceInfo(`Creating raw notebook for ${document.uri.toString()}`);
         const notebookPromise = createDeferred<INotebook>();
-        this.setNotebook(identity, notebookPromise.promise);
+        this.setNotebook(document, notebookPromise.promise);
         let progressDisposable: vscode.Disposable | undefined;
         let rawSession: RawJupyterSession | undefined;
 
-        traceInfo(`Getting preferred kernel for ${identity.toString()}`);
+        traceInfo(`Getting preferred kernel for ${document.uri.toString()}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -112,7 +105,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                   )
                 : undefined;
 
-            traceInfo(`Computing working directory ${identity.toString()}`);
+            traceInfo(`Computing working directory ${document.uri.toString()}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
@@ -120,7 +113,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 this.kernelLauncher,
                 resource,
                 this.outputChannel,
-                noop,
                 noop,
                 workingDirectory
             );
@@ -145,7 +137,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                     trackKernelResourceInformation(resource, { kernelConnection: kernelConnectionMetadata });
                 }
                 traceInfo(
-                    `Connecting to raw session for ${identity.toString()} with connection ${JSON.stringify(
+                    `Connecting to raw session for ${document.uri.toString()} with connection ${JSON.stringify(
                         kernelConnectionMetadata
                     )}`
                 );
@@ -156,14 +148,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
                 if (rawSession.isConnected) {
                     // Create our notebook
-                    const notebook = new JupyterNotebookBase(
-                        rawSession,
-                        this.disposableRegistry,
-                        info,
-                        identity,
-                        this.workspaceService,
-                        this.fs
-                    );
+                    const notebook = new JupyterNotebookBase(rawSession, info, document.uri);
 
                     traceInfo(`Finished connecting ${this.id}`);
 

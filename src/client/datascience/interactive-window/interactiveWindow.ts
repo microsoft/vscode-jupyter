@@ -44,7 +44,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, defaultNotebookFormat, Identifiers } from '../constants';
+import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
@@ -52,7 +52,7 @@ import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import { IInteractiveWindow, IInteractiveWindowLoadable, IJupyterDebugger, INotebookExporter } from '../types';
-import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
+import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
@@ -93,9 +93,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get submitters(): Uri[] {
         return this._submitters;
     }
-    public get identity(): Uri {
-        return this._identity;
-    }
     public get notebookUri(): Uri | undefined {
         return this._notebookDocument?.uri;
     }
@@ -108,7 +105,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private _owner: Uri | undefined;
-    private _identity: Uri = createInteractiveIdentity();
     private _submitters: Uri[] = [];
     private mode: InteractiveWindowMode = 'multiple';
     private fileInKernel: string | undefined;
@@ -436,8 +432,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.revealCell(notebookCell, notebookEditor, false);
         }
 
-        const notebook = kernel?.notebook;
-        if (!kernel || !notebook) {
+        if (!kernel) {
             return false;
         }
         const file = fileUri.fsPath;
@@ -461,13 +456,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri || !kernel.notebook || fileUri.fsPath === Identifiers.EmptyFileName) {
+        if (!fileUri) {
             return;
         }
-
-        // Before we try to execute code make sure that we have an initial directory set
-        // Normally set via the workspace, but we might not have one here if loading a single loose file
-        await kernel.notebook.setLaunchingFile(fileUri.fsPath);
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
         await this.setFileInKernel(fileUri.fsPath, kernel!);
@@ -558,9 +549,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
-        if (file === Identifiers.EmptyFileName) {
-            return;
-        }
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;

@@ -34,18 +34,21 @@ export class RawSession implements ISessionWithSocket {
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
+    private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
     private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
+    private readonly signaling: typeof import('@lumino/signaling');
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const signaling = require('@lumino/signaling') as typeof import('@lumino/signaling');
+        const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
+        this._terminated = new signaling.Signal<this, void>(this);
         this._connectionStatusChanged = new signaling.Signal<this, Kernel.ConnectionStatus>(this);
         // Unique ID for this session instance
         this._id = uuid();
@@ -86,6 +89,7 @@ export class RawSession implements ISessionWithSocket {
             await this.kernelProcess.dispose().catch(noop);
         }
         this.isDisposed = true;
+        this.signaling.Signal.disconnectAll(this);
     }
 
     // Return the ID, this is session's ID, not clientID for messages
@@ -119,20 +123,20 @@ export class RawSession implements ISessionWithSocket {
     public async waitForReady(): Promise<void> {
         // When our kernel connects and gets a status message it triggers the ready promise
         const deferred = createDeferred<string>();
-        const handler = (_session: RawSession, status: Kernel.Status) => {
-            if (status == 'idle') {
+        const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
+            if (status == 'connected') {
                 deferred.resolve(status);
             }
         };
-        this.statusChanged.connect(handler);
-        if (this.status == 'idle') {
-            deferred.resolve(this.status);
+        this.connectionStatusChanged.connect(handler);
+        if (this.connectionStatus === 'connected') {
+            deferred.resolve(this.connectionStatus);
         }
 
         const result = await Promise.race([deferred.promise, sleep(30_000)]);
-        this.statusChanged.disconnect(handler);
+        this.connectionStatusChanged.disconnect(handler);
 
-        if (result.toString() != 'idle') {
+        if (result.toString() !== 'connected') {
             throw new TimedOutError(`Kernel with ${this.id} never connected.`);
         }
     }
@@ -144,7 +148,7 @@ export class RawSession implements ISessionWithSocket {
 
     // Not Implemented ISession
     get terminated(): ISignal<this, void> {
-        throw new Error('Not yet implemented');
+        return this._terminated;
     }
     get kernelChanged(): ISignal<this, Session.ISessionConnection.IKernelChangedArgs> {
         return this._kernelChanged;
@@ -165,13 +169,13 @@ export class RawSession implements ISessionWithSocket {
         throw new Error('Not yet implemented');
     }
     get name(): string {
-        throw new Error('Not yet implemented');
+        return this.kernel.name;
     }
     get type(): string {
-        throw new Error('Not yet implemented');
+        return 'notebook';
     }
     get serverSettings(): ServerConnection.ISettings {
-        throw new Error('Not yet implemented');
+        return this.kernel.serverSettings;
     }
     get model(): Session.IModel {
         return {

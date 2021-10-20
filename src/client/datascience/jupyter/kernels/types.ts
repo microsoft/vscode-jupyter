@@ -5,14 +5,7 @@
 
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type {
-    CancellationToken,
-    Event,
-    NotebookCell,
-    NotebookController,
-    NotebookDocument,
-    QuickPickItem
-} from 'vscode';
+import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem } from 'vscode';
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -116,9 +109,6 @@ export type LocalKernelConnectionMetadata =
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {
     selection: T;
-}
-export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
-    getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem<T>[]>;
 }
 
 export interface IKernel extends IAsyncDisposable {

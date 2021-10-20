@@ -369,7 +369,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             if (debug) {
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: debug.document.uri,
-                    identity: debug.document.uri,
+                    document: debug.document,
                     getOnly: true
                 });
                 if (notebook && notebook.session) {

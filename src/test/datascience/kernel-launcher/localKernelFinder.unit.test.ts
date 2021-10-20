@@ -332,11 +332,15 @@ import { OSType } from '../../../client/common/utils/platform';
             when(fs.localDirectoryExists(anything())).thenResolve(true);
 
             const jupyterPaths = new JupyterPaths(instance(platformService), pathUtils, instance(envVarsProvider));
+            const memento = mock<Memento>();
+            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.update(anything(), anything())).thenResolve();
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
                 jupyterPaths,
-                instance(extensionChecker)
+                instance(extensionChecker),
+                instance(memento)
             );
             const memeto = mock<Memento>();
             when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);

@@ -252,21 +252,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 },
                 theme,
                 hasPythonExtension: pythonExt !== undefined
-            },
-            intellisenseOptions: {
-                quickSuggestions: {
-                    other: this.getValue(editor, 'quickSuggestions.other', true),
-                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
-                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
-                },
-                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
-                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
-                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
-                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
-                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
-                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
-                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
-                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
             }
         };
     }

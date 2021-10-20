@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-10-11"
+    "value": "$TODAYS_DATE=2021-10-20"
   },
   {
     "kind": 1,
@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPO=repo:microsoft/vscode\r\n$VSCODE_INTERNAL_REPO=repo:microsoft/vscode-internalbacklog\r\n$VSCODE_ALL_REPOS=$VSCODE_REPO $VSCODE_INTERNAL_REPO\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_ALL_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff assignee:rebornix assignee:roblourens"
   },
   {
     "kind": 1,
@@ -47,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
+    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=aggregate-issue,bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,conda,data-prep,data-viewer,dotnet-interactive,gather,interactive-window,interactive-window-debugging,ipywidgets,kernel-crash,kernel-enumeration,kernel-management,language-any,language-julia,language-python,language-python-environment,language-R,notebook,notebook-automated-testing,notebook-codespaces,notebook-compatibility,notebook-debugging,notebook-diff,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-intellisense,notebook-kernel,notebook-keybinding,notebook-liveshare,notebook-markdown,notebook-output,notebook-params-papermill,notebook-polyglot,notebook-remote,notebook-run-by-line,notebook-serialization-save-load,notebook-templates,notebook-toc-outline,plot-viewer,pyspark,pytorch,telemetry,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$JUPYTER_INTERNAL_FEATURE_AREAS=data-prep,data-viewer,interactive-window,ipywidgets,language-any,notebook-codespaces,notebook-extensibility,notebook-getting-started,notebook-intellisense,notebook-kernel,notebook-liveshare,notebook-output,notebook-polyglot,notebook-remote,notebook-run-by-line,notebook-templates,security,telemetry,variable-explorer,webview-cleanup\r\n$JUPYTER_ALL_AREAS=$JUPYTER_FEATURE_AREAS,$JUPYTER_INTERNAL_FEATURE_AREAS\r\n$VSCODE_FEATURE_AREAS=interactive-window,notebook-api,notebook-cell-editor,notebook-celltoolbar,notebook-clipboard,notebook-debugging,notebook-diff,notebook-dnd,notebook-find,notebook-folding,notebook-getting-started,notebook-globaltoolbar,notebook-intellisense,notebook-ipynb,notebook-kernel,notebook-keybinding,notebook-layout,notebook-markdown,notebook-math,notebook-minimap,notebook-multiselect,notebook-output,notebook-perf,notebook-remote,notebook-serialization,notebook-serverless-web,notebook-statusbar,notebook-toc-outline"
   },
   {
     "kind": 1,
@@ -87,7 +87,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:discuss-at-standup "
+    "value": "$ALL_REPOS is:open is:issue label:discuss-at-standup "
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:author-date"
+    "value": "$ALL_REPOS is:issue is:open label:needs-triage,notebook-triage $TEAM_AUTHOR_EXLUSION sort:author-date\r\n"
   },
   {
     "kind": 1,
@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$ALL_REPOS is:issue is:open label:needs-triage,needs-jupyter-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -123,6 +123,26 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## VSCode Notebook bugs closed since 10/1/2021"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:closed label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate closed:2021-10-01..$TODAYS_DATE"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Feature-requests in VS Code repo that were closed as *extension-candidate\r\nDue to the algorithm VS Code uses for closing feature requests, it's possible that some requests were auto-closed, but have seen much interest in the Jupyter repo. They should be transferred to the vscode-repo."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
   },
   {
     "kind": 1,
@@ -282,7 +302,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug -label:$JUPYTER_ALL_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement -label:$JUPYTER_ALL_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation -label:$JUPYTER_ALL_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:aggregate-issue -label:$JUPYTER_ALL_AREAS -label:needs-triage\r\n"
   },
   {
     "kind": 1,

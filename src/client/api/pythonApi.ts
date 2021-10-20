@@ -26,7 +26,6 @@ import {
     IMemento,
     InstallerResponse,
     Product,
-    ProductInstallStatus,
     Resource
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -286,15 +285,6 @@ export class PythonInstaller implements IPythonInstaller {
             });
         }
     }
-
-    public async isProductVersionCompatible(
-        product: Product,
-        semVerRequirement: string,
-        resource?: PythonEnvironment
-    ): Promise<ProductInstallStatus> {
-        const api = await this.apiProvider.getApi();
-        return api.isProductVersionCompatible(product, semVerRequirement, resource);
-    }
 }
 
 // eslint-disable-next-line max-classes-per-file
@@ -326,6 +316,7 @@ export class InterpreterSelector implements IInterpreterSelector {
 @injectable()
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
+    private readonly didChangeInterpreters = new EventEmitter<void>();
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     constructor(
@@ -351,6 +342,11 @@ export class InterpreterService implements IInterpreterService {
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
+    }
+
+    public get onDidChangeInterpreters(): Event<void> {
+        this.hookupOnDidChangeInterpreterEvent();
+        return this.didChangeInterpreters.event;
     }
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
@@ -446,6 +442,14 @@ export class InterpreterService implements IInterpreterService {
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
                             this.didChangeInterpreter.fire();
+                        },
+                        this,
+                        this.disposables
+                    );
+                    api.onDidChangeInterpreters(
+                        () => {
+                            this.interpreterListCachePromise = undefined;
+                            this.didChangeInterpreters.fire();
                         },
                         this,
                         this.disposables

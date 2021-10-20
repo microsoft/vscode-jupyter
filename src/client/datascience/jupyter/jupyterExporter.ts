@@ -5,7 +5,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 
 import { Uri } from 'vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
@@ -18,9 +17,8 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { pruneCell } from '../common';
-import { CodeSnippets, defaultNotebookFormat, Identifiers } from '../constants';
+import { CodeSnippets, defaultNotebookFormat } from '../constants';
 import {
-    CellState,
     ICell,
     IDataScienceErrorHandler,
     IJupyterExecution,
@@ -137,11 +135,7 @@ export class JupyterExporter implements INotebookExporter {
             );
 
             const cell: ICell = {
-                data: createCodeCell(exportChangeDirectory),
-                id: uuid(),
-                file: Identifiers.EmptyFileName,
-                line: 0,
-                state: CellState.finished
+                data: createCodeCell(exportChangeDirectory)
             };
 
             return [cell, ...cells];
@@ -156,7 +150,7 @@ export class JupyterExporter implements INotebookExporter {
             const filename = cell.file;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {
+            if (filename && path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
                     if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
@@ -209,7 +203,7 @@ export class JupyterExporter implements INotebookExporter {
 
     private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
-        const filtered = cells.filter((c) => c.data.cell_type !== 'messages');
+        const filtered = cells;
 
         // Then prune each cell down to just the cell data.
         return filtered.map((c) => this.pruneCell(c, cellMatcher));

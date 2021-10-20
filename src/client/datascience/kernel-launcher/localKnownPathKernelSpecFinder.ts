@@ -2,19 +2,24 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { CancellationToken, Memento } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { getKernelId } from '../jupyter/kernels/helpers';
+import * as path from 'path';
+import * as fs from 'fs-extra';
+import { getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
+import { LocalKernelSpecFinderBase, oldKernelsSpecFolderName } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { IPythonExtensionChecker } from '../../api/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { IMemento, GLOBAL_MEMENTO } from '../../common/types';
+import { noop } from '../../common/utils/misc';
+import { traceInfo } from '../../common/logger';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -23,13 +28,35 @@ import { Telemetry } from '../constants';
  */
 @injectable()
 export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
+    private _oldKernelSpecsDeleted = false;
+    private _oldKernelSpecsFolder?: string;
+    private get oldKernelSpecsDeleted() {
+        return this._oldKernelSpecsDeleted || this.memento.get<boolean>('OLD_KERNEL_SPECS_DELETED__', false);
+    }
+    private set oldKernelSpecsDeleted(value: boolean) {
+        this._oldKernelSpecsDeleted = value;
+        void this.memento.update('OLD_KERNEL_SPECS_DELETED__', value);
+    }
+    private get oldKernelSpecsFolder() {
+        return this._oldKernelSpecsFolder || this.memento.get<string>('OLD_KERNEL_SPECS_FOLDER__', '');
+    }
+    private set oldKernelSpecsFolder(value: string) {
+        this._oldKernelSpecsFolder = value;
+        void this.memento.update('OLD_KERNEL_SPECS_FOLDER__', value);
+    }
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {
         super(fs, workspaceService, extensionChecker);
+        if (this.oldKernelSpecsFolder) {
+            traceInfo(
+                `Old kernelspecs (created by Jupyter extension) stored in directory ${this.oldKernelSpecsFolder}`
+            );
+        }
     }
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
@@ -61,12 +88,29 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
         });
     }
+    private async deleteOldKernelSpec(kernelSpecFile: string) {
+        // Just move this folder into a seprate location.
+        const kernelspecFolderName = path.basename(path.dirname(kernelSpecFile));
+        const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), oldKernelsSpecFolderName);
+        if (!fs.pathExistsSync(destinationFolder)) {
+            fs.mkdirSync(destinationFolder);
+        }
+        this.oldKernelSpecsFolder = destinationFolder;
+        await fs
+            .move(path.dirname(kernelSpecFile), path.join(destinationFolder, kernelspecFolderName), {
+                overwrite: true
+            })
+            .catch(noop);
+        traceInfo(`Old kernelspec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
+    }
     private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        const oldDernelSpecsDeleted = this.oldKernelSpecsDeleted;
+        this.oldKernelSpecsDeleted = true; // From now on, don't attempt to delete anything (even for new users).
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
@@ -77,6 +121,11 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
 
                 if (kernelspec) {
+                    // Never delete on CI (could break tests).
+                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec) && !isCI) {
+                        await this.deleteOldKernelSpec(resultPath.kernelSpecFile).catch(noop);
+                        return;
+                    }
                     results.push(kernelspec);
                 }
             })

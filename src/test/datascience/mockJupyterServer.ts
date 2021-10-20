@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as uuid from 'uuid/v4';
-import { Uri } from 'vscode';
+import { NotebookDocument, Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
 import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
 import {
@@ -37,7 +37,7 @@ export class MockJupyterServer implements INotebookServer {
         return new MockJupyterNotebook(this.getConnectionInfo());
     }
 
-    public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
+    public async getNotebook(_document: NotebookDocument): Promise<INotebook | undefined> {
         return new MockJupyterNotebook(this.getConnectionInfo());
     }
     public getConnectionInfo(): IJupyterConnection | undefined {

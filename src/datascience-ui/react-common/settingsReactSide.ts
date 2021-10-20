@@ -52,21 +52,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
             theme: 'Default Dark+',
             hasPythonExtension: true
         },
-        intellisenseOptions: {
-            quickSuggestions: {
-                other: true,
-                comments: false,
-                strings: false
-            },
-            acceptSuggestionOnEnter: 'on',
-            quickSuggestionsDelay: 10,
-            suggestOnTriggerCharacters: true,
-            tabCompletion: 'on',
-            suggestLocalityBonus: true,
-            suggestSelection: 'recentlyUsed',
-            wordBasedSuggestions: true,
-            parameterHintsEnabled: true
-        },
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

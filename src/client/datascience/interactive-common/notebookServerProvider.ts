@@ -5,7 +5,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, ConfigurationTarget, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { CancellationError, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
@@ -26,7 +26,6 @@ import {
     IJupyterExecution,
     IJupyterServerProvider,
     IJupyterServerUriStorage,
-    INotebook,
     INotebookServer,
     INotebookServerOptions
 } from '../types';
@@ -35,7 +34,6 @@ import {
 export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
     private allowingUI = false;
-    private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     constructor(
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -45,10 +43,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
     ) {}
-    public get onNotebookCreated() {
-        return this._notebookCreated.event;
-    }
-
     public async getOrCreateServer(
         options: GetServerOptions,
         token?: CancellationToken

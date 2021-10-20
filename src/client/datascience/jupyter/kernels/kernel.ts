@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import type { Kernel as JupyterKernel, KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import {
@@ -37,6 +37,7 @@ import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
+    IJupyterSession,
     INotebook,
     INotebookProvider,
     INotebookProviderConnection,
@@ -88,7 +89,7 @@ export class Kernel implements IKernel {
         return this._info;
     }
     get status(): ServerStatus {
-        return this.notebook?.status ?? ServerStatus.NotStarted;
+        return this.notebook?.session?.status ?? ServerStatus.NotStarted;
     }
     get disposed(): boolean {
         return this._disposed === true || this.notebook?.disposed === true;
@@ -156,19 +157,19 @@ export class Kernel implements IKernel {
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook();
+        const sessionPromise = this.startNotebook().then((nb) => nb.session);
         if (cell.notebook.notebookType === InteractiveWindowView) {
             await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
         }
-        const promise = this.kernelExecution.executeCell(notebookPromise, cell);
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        const promise = this.kernelExecution.executeCell(sessionPromise, cell);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook();
-        const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        const sessionPromise = this.startNotebook().then((nb) => nb.session);
+        const promise = sessionPromise.then((session) => executeSilently(session, code));
+        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
     public async start(options: { disableUI?: boolean } = {}): Promise<void> {
@@ -212,9 +213,6 @@ export class Kernel implements IKernel {
                 this.notebook = undefined;
             }
             this.kernelExecution.dispose();
-            promises.push(
-                this.notebookProvider.disposeAssociatedNotebook({ identity: this.notebookDocument.uri }).catch(noop)
-            );
             await Promise.all(promises);
         };
         this.disposingPromise = disposeImpl();
@@ -240,13 +238,13 @@ export class Kernel implements IKernel {
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
-        notebookPromise: Promise<INotebook | undefined>,
+        started: Promise<unknown>,
         executionPromise: Promise<unknown>
     ): Promise<void> {
         if (this.perceivedJupyterStartupTelemetryCaptured) {
             return;
         }
-        const notebook = await notebookPromise;
+        const notebook = await started;
         if (!notebook) {
             return;
         }
@@ -280,7 +278,7 @@ export class Kernel implements IKernel {
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
-                            identity: this.notebookDocument.uri,
+                            document: this.notebookDocument,
                             resource: this.resourceUri,
                             disableUI: options?.disableUI,
                             getOnly: false,
@@ -379,14 +377,12 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
-        traceInfoIfCI('Step A');
         if (!this.notebook) {
             return;
         }
-        traceInfoIfCI('Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
-            this.notebook.kernelSocket.subscribe(this._kernelSocket);
+            this.notebook.session.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
                 traceInfo(
                     `Kernel got disposed as a result of notebook.onDisposed ${(
@@ -396,29 +392,20 @@ export class Kernel implements IKernel {
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
-            this.notebook.onSessionStatusChanged(
-                (e) => {
-                    this._onStatusChanged.fire(e);
-                },
-                this,
-                this.disposables
-            );
-            traceInfoIfCI('Step C');
+            const statusChangeHandler = (status: ServerStatus) => {
+                this._onStatusChanged.fire(status);
+            };
+            this.disposables.push(this.notebook.session.onSessionStatusChanged(statusChangeHandler));
         }
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
-            traceInfoIfCI('Step D');
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-            traceInfoIfCI('Step H');
 
-            traceInfoIfCI('Step I');
             await this.disableJedi();
-            traceInfoIfCI('Step J');
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
-            traceInfoIfCI('Step L');
 
             if (this.connection?.localLaunch && this.notebook) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -431,22 +418,16 @@ export class Kernel implements IKernel {
         }
 
         // Run any startup commands that we have specified
-        traceInfoIfCI('Step M');
         await this.runStartupCommands();
-        traceInfoIfCI('Step N');
 
         try {
-            const info = await this.notebook.requestKernelInfo();
+            const info = await this.notebook.session.requestKernelInfo();
             this._info = info?.content;
-            traceInfoIfCI('Step N1');
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
-            traceInfoIfCI('Step N2');
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
-        traceInfoIfCI('Step O');
-        await this.notebook.waitForIdle(this.launchTimeout);
-        traceInfoIfCI('Step P');
+        await this.notebook.session.waitForIdle(this.launchTimeout);
     }
 
     private async disableJedi() {
@@ -579,19 +560,15 @@ export class Kernel implements IKernel {
 
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-            traceInfoIfCI('Begin Run startup code for notebook');
             const cleanedUp = setting.replace(/\\n/g, '\n');
             await this.executeSilently(cleanedUp);
-            traceInfoIfCI(`Run startup code for notebook: ${cleanedUp}`);
         }
     }
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (this.connection && this.connection.localLaunch) {
-            traceInfoIfCI('Step E');
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
-            traceInfoIfCI('Step F');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 return this.changeDirectoryIfPossible(suggestedDir);
@@ -603,7 +580,6 @@ export class Kernel implements IKernel {
                 }
             }
         }
-        traceInfoIfCI('Step G');
     }
 
     // Update both current working directory and sys.path with the desired directory
@@ -622,10 +598,7 @@ export class Kernel implements IKernel {
     }
 }
 
-export async function executeSilently(
-    session: Pick<JupyterKernel.IKernelConnection, 'requestExecute'>,
-    code: string
-): Promise<nbformat.IOutput[]> {
+export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 

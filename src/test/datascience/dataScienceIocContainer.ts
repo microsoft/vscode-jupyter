@@ -92,7 +92,6 @@ import {
     IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
-    ProductInstallStatus,
     Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
@@ -418,9 +417,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             NbConvertExportToPythonService
         );
         const mockInstaller = mock<IPythonInstaller>();
-        when(mockInstaller.isProductVersionCompatible(anything(), anything(), anything())).thenResolve(
-            ProductInstallStatus.NeedsUpgrade
-        );
         this.serviceManager.addSingletonInstance<IPythonInstaller>(IPythonInstaller, instance(mockInstaller));
         this.serviceManager.addSingletonInstance<InterpreterPackages>(
             InterpreterPackages,

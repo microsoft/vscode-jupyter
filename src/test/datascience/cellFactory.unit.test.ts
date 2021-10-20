@@ -8,26 +8,26 @@ import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui
 /* eslint-disable  */
 suite('DataScience CellFactory', () => {
     test('parsing cells', () => {
-        let cells = generateCells(undefined, '#%%\na=1\na', 'foo', 0, true, '1');
+        let cells = generateCells(undefined, '#%%\na=1\na', 'foo', true);
         assert.equal(cells.length, 1, 'Simple cell, not right number found');
-        cells = generateCells(undefined, '#%% [markdown]\na=1\na', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\na=1\na', 'foo', true);
         assert.equal(cells.length, 2, 'Split cell, not right number found');
-        cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', 'foo', true);
         assert.equal(cells.length, 1, 'Markdown split wrong');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", 'foo', 0, true, '1');
+        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", 'foo', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', 'foo', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', 'foo', true);
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', 'foo', true);
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
@@ -55,11 +55,11 @@ Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """ print('bob')`;
 
-        cells = generateCells(undefined, multilineCode, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineCode, 'foo', true);
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-        cells = generateCells(undefined, multilineTwo, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineTwo, 'foo', true);
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
@@ -87,7 +87,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 #          - Item 1-a-3-c
 #
 #   2. Item 2`;
-        cells = generateCells(undefined, multilineMarkdown, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineMarkdown, 'foo', true);
         assert.equal(cells.length, 1, 'markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
         assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
@@ -101,7 +101,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """ Not a comment delimiter
 '''
 `;
-        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineQuoteWithOtherDelimiter, 'foo', true);
         assert.equal(cells.length, 1, 'markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
         assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
@@ -117,7 +117,7 @@ def download(url, filename):
         for data in response.iter_content():
             handle.write(data)
 `;
-        cells = generateCells(undefined, multilineQuoteInFunc, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineQuoteInFunc, 'foo', true);
         assert.equal(cells.length, 1, 'cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
@@ -138,7 +138,7 @@ class Pizza(object):
         self.rating = rating
         `;
 
-        cells = generateCells(undefined, multilineMarkdownWithCell, 'foo', 0, true, '1');
+        cells = generateCells(undefined, multilineMarkdownWithCell, 'foo', true);
         assert.equal(cells.length, 2, 'cell split failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
         assert.equal(cells[0].data.source.length, 1, 'Lines for markdown not emitted');
