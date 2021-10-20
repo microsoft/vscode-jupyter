@@ -10,7 +10,7 @@ import { getDetailOfKernelConnection, getDisplayNameOrNameOfKernelConnection } f
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { getControllerDisplayName } from '../notebookControllerManager';
 import { INotebookControllerManager } from '../types';
-import { KernelFilterStorage } from './kernelFilterStorage';
+import { KernelFilterService } from './kernelFilterService';
 
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
@@ -20,7 +20,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
-        @inject(KernelFilterStorage) private readonly storage: KernelFilterStorage,
+        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         disposales.push(this);
@@ -46,7 +46,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
             .map((item) => {
                 return <QuickPickType>{
                     label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
-                    picked: !this.storage.isKernelHidden(item),
+                    picked: !this.kernelFilter.isKernelHidden(item),
                     detail: getDetailOfKernelConnection(item, this.pathUtils),
                     connection: item
                 };
@@ -86,7 +86,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 const hiddenConnections = items
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
-                void this.storage.storeHiddenKernels(hiddenConnections.map((item) => item));
+                void this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item));
             },
             this,
             disposables

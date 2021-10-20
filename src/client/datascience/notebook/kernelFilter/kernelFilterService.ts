@@ -9,7 +9,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } f
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 
 @injectable()
-export class KernelFilterStorage implements IDisposable {
+export class KernelFilterService implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _onDidChange = new EventEmitter<void>();
     public get onDidChange() {

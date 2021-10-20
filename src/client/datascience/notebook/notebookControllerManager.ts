@@ -50,7 +50,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { KernelFilterStorage } from './kernelFilter/kernelFilterStorage';
+import { KernelFilterService } from './kernelFilter/kernelFilterService';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -100,7 +100,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(KernelFilterStorage) private readonly storage: KernelFilterStorage
+        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -108,7 +108,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
-        this.storage.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
+        this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
     }
     public async getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
@@ -303,7 +303,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.allKernelConnections.add(item);
                 return item;
             })
-            .filter((item) => !this.storage.isKernelHidden(item));
+            .filter((item) => !this.kernelFilter.isKernelHidden(item));
 
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
@@ -459,7 +459,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     private onDidChangeKernelFilter() {
         // Filter the connections.
-        const connections = Array.from(this.allKernelConnections).filter((item) => !this.storage.isKernelHidden(item));
+        const connections = Array.from(this.allKernelConnections).filter(
+            (item) => !this.kernelFilter.isKernelHidden(item)
+        );
 
         // Try to re-create the missing controllers.
         this.createNotebookControllers(connections);
@@ -470,7 +472,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // TODO: Don't hide controllers that are already associated with a notebook.
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
-            if (this.storage.isKernelHidden(item.connection) && !this.isControllerAttachedToADocument(item)) {
+            if (this.kernelFilter.isKernelHidden(item.connection) && !this.isControllerAttachedToADocument(item)) {
                 item.dispose();
             }
         });
@@ -523,7 +525,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         if (viewType === InteractiveWindowView && doNotHideInteractiveKernel) {
                             hideController = false;
                         } else {
-                            hideController = this.storage.isKernelHidden(kernelConnection);
+                            hideController = this.kernelFilter.isKernelHidden(kernelConnection);
                         }
                     }
                     if (hideController) {
