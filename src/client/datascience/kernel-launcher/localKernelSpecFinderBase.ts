@@ -20,6 +20,7 @@ import { IJupyterKernelSpec } from '../types';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
+export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
 @injectable()
 export abstract class LocalKernelSpecFinderBase {
@@ -115,6 +116,10 @@ export abstract class LocalKernelSpecFinderBase {
         interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
+        // This is a backup folder for old kernels created by us.
+        if (specPath.includes(oldKernelsSpecFolderName)) {
+            return;
+        }
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(specPath)) {
             this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter, cancelToken));
@@ -141,6 +146,10 @@ export abstract class LocalKernelSpecFinderBase {
         interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
+        // This is a backup folder for old kernels created by us.
+        if (specPath.includes(oldKernelsSpecFolderName)) {
+            return;
+        }
         let kernelJson: ReadWrite<IJupyterKernelSpec>;
         try {
             traceInfo(`Loading kernelspec from ${specPath} for ${interpreter?.path}`);
