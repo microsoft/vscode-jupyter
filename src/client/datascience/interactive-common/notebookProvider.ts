@@ -4,11 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { NotebookDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings, Telemetry } from '../constants';
@@ -26,14 +24,9 @@ import {
 @injectable()
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
-    private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
-    private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
     private readonly _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
-    }
-    public get onSessionStatusChanged() {
-        return this._onSessionStatusChanged.event;
     }
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -44,9 +37,6 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
         this._type = this.rawNotebookProvider.isSupported ? 'raw' : 'jupyter';
-    }
-    public get onNotebookCreated() {
-        return this._notebookCreated.event;
     }
 
     public get type(): 'jupyter' | 'raw' {
@@ -74,30 +64,20 @@ export class NotebookProvider implements INotebookProvider {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
-    public async disposeAssociatedNotebook(options: { identity: Uri }) {
-        const nbPromise = this.notebooks.get(options.identity.toString());
-        if (!nbPromise) {
-            return;
-        }
-        this.notebooks.delete(options.identity.toString());
-        await nbPromise
-            .then((nb) => nb.dispose())
-            .catch((ex) => traceWarning('Failed to dispose notebook in disposeAssociatedNotebook', ex));
-    }
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = this.rawNotebookProvider.isSupported;
 
         // Check our own promise cache
-        if (this.notebooks.get(options.identity.toString())) {
-            return this.notebooks.get(options.identity.toString())!!;
+        if (this.notebooks.get(options.document.toString())) {
+            return this.notebooks.get(options.document.toString())!!;
         }
 
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
-            ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
+            ? await this.rawNotebookProvider.getNotebook(options.document, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
         if (notebook && !notebook.disposed) {
-            this.cacheNotebookPromise(options.identity, Promise.resolve(notebook));
+            this.cacheNotebookPromise(options.document, Promise.resolve(notebook));
             return notebook;
         }
 
@@ -117,7 +97,8 @@ export class NotebookProvider implements INotebookProvider {
 
         // Finally create if needed
         let resource: Resource = options.resource;
-        if (options.identity.scheme === Identifiers.HistoryPurpose && !resource) {
+        // TODO: This is a bug, this will never be true, `options.document.uri.scheme will never be Identifiers.HistoryPurpose`
+        if (options.document.uri.scheme === Identifiers.HistoryPurpose && !resource) {
             // If we have any workspaces, then use the first available workspace.
             // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
             // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
@@ -130,7 +111,7 @@ export class NotebookProvider implements INotebookProvider {
         trackKernelResourceInformation(resource, { kernelConnection: options.kernelConnection });
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(
-                  options.identity,
+                  options.document,
                   resource,
                   options.disableUI,
                   options.metadata,
@@ -143,33 +124,27 @@ export class NotebookProvider implements INotebookProvider {
             disableUI: options.disableUI
         });
 
-        this.cacheNotebookPromise(options.identity, promise);
+        this.cacheNotebookPromise(options.document, promise);
 
         return promise;
     }
 
     // Cache the promise that will return a notebook
-    private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook>) {
-        this.notebooks.set(identity.toString(), promise);
+    private cacheNotebookPromise(document: NotebookDocument, promise: Promise<INotebook>) {
+        this.notebooks.set(document.uri.toString(), promise);
 
         // Remove promise from cache if the same promise still exists.
         const removeFromCache = () => {
-            const cachedPromise = this.notebooks.get(identity.toString());
+            const cachedPromise = this.notebooks.get(document.uri.toString());
             if (cachedPromise === promise) {
-                this.notebooks.delete(identity.toString());
+                this.notebooks.delete(document.uri.toString());
             }
         };
 
         promise
             .then((nb) => {
                 // If the notebook is disposed, remove from cache.
-                nb.onDisposed(removeFromCache);
-                nb.onSessionStatusChanged(
-                    (e) => this._onSessionStatusChanged.fire({ status: e, notebook: nb }),
-                    this,
-                    this.disposables
-                );
-                this._notebookCreated.fire({ identity: identity, notebook: nb });
+                nb.onDisposed(removeFromCache, this, this.disposables);
             })
             .catch(noop);
 

@@ -5,7 +5,7 @@ import { NotebookCell } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
-import { INotebook } from '../../types';
+import { IJupyterSession } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { KernelConnectionMetadata, NotebookCellRunState } from './types';
 
@@ -32,7 +32,7 @@ export class CellExecutionQueue {
         return this.cancelledOrCompletedWithErrors;
     }
     constructor(
-        private readonly notebookPromise: Promise<INotebook>,
+        private readonly session: Promise<IJupyterSession>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
     ) {}
@@ -101,7 +101,7 @@ export class CellExecutionQueue {
         }
     }
     private async executeQueuedCells() {
-        const notebook = await this.notebookPromise;
+        const kernelConnection = await this.session;
         this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
         while (this.queueOfCellsToExecute.length) {
             // Take the first item from the queue, this way we maintain order of cell executions.
@@ -112,7 +112,7 @@ export class CellExecutionQueue {
 
             let executionResult: NotebookCellRunState | undefined;
             try {
-                await cellToExecute.start(notebook);
+                await cellToExecute.start(kernelConnection);
                 executionResult = await cellToExecute.result;
             } finally {
                 // Once the cell has completed execution, remove it from the queue.

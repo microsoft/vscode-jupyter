@@ -275,10 +275,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.session.kernel.requestComplete(content);
     }
 
-    public sendInputReply(content: string) {
+    public sendInputReply(content: KernelMessage.IInputReply) {
         if (this.session && this.session.kernel) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.session.kernel.sendInputReply({ value: content, status: 'ok' });
+            this.session.kernel.sendInputReply(content);
         }
     }
 
@@ -333,21 +333,21 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
             // When our kernel connects and gets a status message it triggers the ready promise
             const deferred = createDeferred<string>();
-            const handler = (_session: Kernel.IKernelConnection, status: Kernel.Status) => {
-                if (status == 'idle') {
+            const handler = (_session: Kernel.IKernelConnection, status: Kernel.ConnectionStatus) => {
+                if (status == 'connected') {
                     deferred.resolve(status);
                 }
             };
-            session.kernel.statusChanged?.connect(handler);
-            if (session.kernel.status == 'idle') {
+            session.kernel.connectionStatusChanged.connect(handler);
+            if (session.kernel.connectionStatus == 'connected') {
                 deferred.resolve(session.kernel.status);
             }
 
             const result = await Promise.race([deferred.promise, sleep(timeout)]);
-            session.kernel.statusChanged?.disconnect(handler);
+            session.kernel.connectionStatusChanged?.disconnect(handler);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            if (result.toString() == 'idle') {
+            if (result.toString() == 'connected') {
                 return;
             }
             // If we throw an exception, make sure to shutdown the session as it's not usable anymore

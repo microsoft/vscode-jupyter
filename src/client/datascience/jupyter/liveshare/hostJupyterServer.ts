@@ -10,13 +10,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IOutputChannel,
-    Resource
-} from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -44,7 +38,6 @@ import { JupyterNotebookBase } from '../jupyterNotebook';
 export class HostJupyterServer extends JupyterServerBase implements INotebookServer {
     private disposed = false;
     constructor(
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
@@ -58,7 +51,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(asyncRegistry, disposableRegistry, configService, sessionManager, outputChannel);
+        super(asyncRegistry, configService, sessionManager, outputChannel);
     }
 
     public async dispose(): Promise<void> {
@@ -80,17 +73,16 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
 
     protected async createNotebookInstance(
         resource: Resource,
-        identity: vscode.Uri,
+        document: vscode.NotebookDocument,
         sessionManager: IJupyterSessionManager,
         possibleSession: IJupyterSession | undefined,
-        disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
-        const existing = await this.getNotebook(identity);
+        const existing = await this.getNotebook(document);
         if (existing) {
             // Dispose the possible session as we don't need it
             if (possibleSession) {
@@ -106,7 +98,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
-        this.setNotebook(identity, notebookPromise.promise);
+        this.setNotebook(document, notebookPromise.promise);
 
         const getExistingSession = async () => {
             const { info, changedKernel } = await this.computeLaunchInfo(
@@ -160,19 +152,12 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
 
             if (session) {
                 // Create our notebook
-                const notebook = new JupyterNotebookBase(
-                    session,
-                    disposableRegistry,
-                    info,
-                    identity,
-                    this.workspaceService,
-                    this.fs
-                );
+                const notebook = new JupyterNotebookBase(session, info, document.uri);
 
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);
                 const idleTimeout = configService.getSettings().jupyterLaunchTimeout;
-                await notebook.waitForIdle(idleTimeout);
+                await notebook.session.waitForIdle(idleTimeout);
 
                 traceInfo(`Finished connecting ${this.id}`);
 

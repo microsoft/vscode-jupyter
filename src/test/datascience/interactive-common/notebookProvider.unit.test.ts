@@ -64,9 +64,11 @@ suite('DataScience - NotebookProvider', () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
         notebookMock.setup((notebook) => notebook.disposed).returns(() => false);
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(notebookMock.object);
+        const doc = mock<vscode.NotebookDocument>();
+        when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri('C:\\\\foo.py'),
+            document: instance(doc),
             resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
@@ -77,9 +79,11 @@ suite('DataScience - NotebookProvider', () => {
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
         when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
+        const doc = mock<vscode.NotebookDocument>();
+        when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri('C:\\\\foo.py'),
+            document: instance(doc),
             resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
@@ -90,15 +94,17 @@ suite('DataScience - NotebookProvider', () => {
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
         when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
+        const doc = mock<vscode.NotebookDocument>();
+        when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri('C:\\\\foo.py'),
+            document: instance(doc),
             resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.getOrCreateNotebook({
-            identity: Uri('C:\\\\foo.py'),
+            document: instance(doc),
             resource: Uri('C:\\\\foo.py')
         });
         expect(notebook2).to.equal(notebook);

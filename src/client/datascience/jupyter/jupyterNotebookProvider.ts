@@ -42,7 +42,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         if (server) {
             return server.createNotebook(
                 options.resource,
-                options.identity,
+                options.document,
                 options.metadata,
                 options.kernelConnection,
                 options.token
@@ -62,7 +62,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             kernelConnection: options.kernelConnection
         });
         if (server) {
-            return server.getNotebook(options.identity, options.token);
+            return server.getNotebook(options.document, options.token);
         }
     }
 }
