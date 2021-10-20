@@ -489,15 +489,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.allKernelConnections.add(value);
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
-        // connectionsWithLabel.sort((a, b) => {
-        //     if (a.label > b.label) {
-        //         return 1;
-        //     } else if (a.label === b.label) {
-        //         return 0;
-        //     } else {
-        //         return -1;
-        //     }
-        // });
 
         connectionsWithLabel.forEach((value) => {
             this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
