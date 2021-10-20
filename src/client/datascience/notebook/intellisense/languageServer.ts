@@ -216,7 +216,7 @@ export class LanguageServer implements Disposable {
         cancellationStrategy: FileBasedCancellationStrategy
     ): Promise<ServerOptions | undefined> {
         const pythonConfig = workspace.getConfiguration('python');
-        if (pythonConfig && pythonConfig.get<string>('languageServer') === 'JediLSP') {
+        if (pythonConfig && pythonConfig.get<string>('languageServer') === 'Jedi') {
             // Use jedi to start our language server.
             return LanguageServer.createJediLSPServerOptions(interpreter);
         }
