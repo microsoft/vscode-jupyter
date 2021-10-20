@@ -173,7 +173,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
-        kernel.notebook.kernelSocket.subscribe((info) => {
+        kernel.notebook.session.kernelSocket.subscribe((info) => {
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR

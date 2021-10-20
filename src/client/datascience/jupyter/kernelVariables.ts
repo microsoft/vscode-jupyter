@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
-import { IConfigurationService, IExperimentService } from '../../common/types';
+import { traceError } from '../../common/logger';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
+import { DataScience } from '../../common/utils/localize';
 import { Identifiers } from '../constants';
 import {
+    IJupyterSession,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -55,7 +61,8 @@ export class KernelVariables implements IJupyterVariables {
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
-        pythonVariableRequester: IKernelVariableRequester
+        pythonVariableRequester: IKernelVariableRequester,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.variableRequesters.set(PYTHON_LANGUAGE, pythonVariableRequester);
     }
@@ -286,7 +293,60 @@ export class KernelVariables implements IJupyterVariables {
 
         return [];
     }
+    private checkForExit(kernel: IKernel): Error | undefined {
+        if (kernel.connection?.valid) {
+            if (kernel.connection.type === 'jupyter') {
+                // Not running, just exit
+                if (kernel.connection.localProcExitCode) {
+                    const exitCode = kernel.connection.localProcExitCode;
+                    traceError(`Jupyter crashed with code ${exitCode}`);
+                    return new Error(DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                }
+            }
+        }
+    }
 
+    private inspect(
+        kernel: IKernel,
+        session: IJupyterSession,
+        code: string,
+        offsetInCode = 0,
+        cancelToken?: CancellationToken
+    ): Promise<JSONObject> {
+        // Create a deferred that will fire when the request completes
+        const deferred = createDeferred<JSONObject>();
+
+        // First make sure still valid.
+        const exitError = this.checkForExit(kernel);
+        if (exitError) {
+            // Not running, just exit
+            deferred.reject(exitError);
+        } else {
+            try {
+                // Ask session for inspect result
+                session
+                    .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
+                    .then((r) => {
+                        if (r && r.content.status === 'ok') {
+                            deferred.resolve(r.content.data);
+                        } else {
+                            deferred.resolve(undefined);
+                        }
+                    })
+                    .catch((ex) => {
+                        deferred.reject(ex);
+                    });
+            } catch (ex) {
+                deferred.reject(ex);
+            }
+        }
+
+        if (cancelToken) {
+            this.disposables.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+        }
+
+        return deferred.promise;
+    }
     // eslint-disable-next-line complexity
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
@@ -294,8 +354,8 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
-        if (kernel && kernel.notebook) {
-            const output = await kernel.notebook.inspect(targetVariable.name, 0, token);
+        if (kernel && kernel.notebook?.session) {
+            const output = await this.inspect(kernel, kernel.notebook.session, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {

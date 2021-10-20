@@ -275,10 +275,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.session.kernel.requestComplete(content);
     }
 
-    public sendInputReply(content: string) {
+    public sendInputReply(content: KernelMessage.IInputReply) {
         if (this.session && this.session.kernel) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.session.kernel.sendInputReply({ value: content, status: 'ok' });
+            this.session.kernel.sendInputReply(content);
         }
     }
 

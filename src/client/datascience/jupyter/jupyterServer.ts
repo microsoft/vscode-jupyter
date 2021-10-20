@@ -4,17 +4,11 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, NotebookDocument } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IOutputChannel,
-    Resource
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -49,7 +43,6 @@ export class JupyterServerBase implements INotebookServer {
 
     constructor(
         private asyncRegistry: IAsyncDisposableRegistry,
-        private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,
         private sessionManagerFactory: IJupyterSessionManagerFactory,
         private jupyterOutputChannel: IOutputChannel
@@ -116,7 +109,7 @@ export class JupyterServerBase implements INotebookServer {
 
     public async createNotebook(
         resource: Resource,
-        identity: Uri,
+        document: NotebookDocument,
         notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
@@ -132,10 +125,9 @@ export class JupyterServerBase implements INotebookServer {
         try {
             const notebook = await this.createNotebookInstance(
                 resource,
-                identity,
+                document,
                 this.sessionManager,
                 savedSession,
-                this.disposableRegistry,
                 this.configService,
                 notebookMetadata,
                 kernelConnection,
@@ -240,18 +232,18 @@ export class JupyterServerBase implements INotebookServer {
         return new Error(localize.DataScience.sessionDisposed());
     }
 
-    public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
-        return this.notebooks.get(identity.toString());
+    public async getNotebook(document: NotebookDocument): Promise<INotebook | undefined> {
+        return this.notebooks.get(document.uri.toString());
     }
 
     protected getNotebooks(): Promise<INotebook>[] {
         return [...this.notebooks.values()];
     }
 
-    protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+    protected setNotebook(document: NotebookDocument, notebook: Promise<INotebook>) {
         const removeNotebook = () => {
-            if (this.notebooks.get(identity.toString()) === notebook) {
-                this.notebooks.delete(identity.toString());
+            if (this.notebooks.get(document.uri.toString()) === notebook) {
+                this.notebooks.delete(document.uri.toString());
             }
         };
 
@@ -259,22 +251,21 @@ export class JupyterServerBase implements INotebookServer {
             .then((nb) => {
                 const oldDispose = nb.dispose.bind(nb);
                 nb.dispose = () => {
-                    this.notebooks.delete(identity.toString());
+                    this.notebooks.delete(document.uri.toString());
                     return oldDispose();
                 };
             })
             .catch(removeNotebook);
 
         // Save the notebook
-        this.notebooks.set(identity.toString(), notebook);
+        this.notebooks.set(document.uri.toString(), notebook);
     }
 
     protected createNotebookInstance(
         _resource: Resource,
-        _identity: Uri,
+        _document: NotebookDocument,
         _sessionManager: IJupyterSessionManager,
         _savedSession: IJupyterSession | undefined,
-        _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,

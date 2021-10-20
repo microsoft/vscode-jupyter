@@ -195,7 +195,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: kernel.resourceUri,
-                    identity: kernel.notebookDocument.uri,
+                    document: kernel.notebookDocument,
                     getOnly: true
                 });
                 if (notebook) {

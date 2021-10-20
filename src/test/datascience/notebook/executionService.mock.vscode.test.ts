@@ -32,7 +32,7 @@ import {
     INotebookProvider,
     KernelSocketInformation
 } from '../../../client/datascience/types';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import { Subject } from 'rxjs-compat/Subject';
 import { EventEmitter, NotebookDocument } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -124,43 +124,43 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const kernelSocket = new Subject<KernelSocketInformation>();
         kernelSocket.next();
         kernelSocket.complete();
-        when(inotebook.kernelSocket).thenReturn(kernelSocket.asObservable());
-        const statusChange = ServerStatus.Idle;
-        when(inotebook.status).thenReturn(statusChange);
+        // when(inotebook.kernelSocket).thenReturn(kernelSocket.asObservable());
+        // const statusChange = ServerStatus.Idle;
+        // when(inotebook.status).thenReturn(statusChange);
         const statusEvent = new EventEmitter<ServerStatus>();
         disposables.push(statusEvent);
-        when(inotebook.onSessionStatusChanged).thenReturn(statusEvent.event);
-        when(inotebook.setLaunchingFile(anything())).thenResolve();
-        when(inotebook.requestKernelInfo()).thenResolve({
-            channel: 'shell',
-            content: {
-                banner: '',
-                help_links: [],
-                implementation: '',
-                implementation_version: '',
-                language_info: { name: '', version: '' },
-                protocol_version: '',
-                status: 'ok'
-            },
-            header: {
-                date: '',
-                msg_id: '',
-                msg_type: 'kernel_info_reply',
-                session: '',
-                username: '',
-                version: ''
-            },
-            metadata: {},
-            parent_header: {
-                date: '',
-                msg_id: '',
-                msg_type: 'kernel_info_request',
-                session: '',
-                username: '',
-                version: ''
-            }
-        });
-        when(inotebook.waitForIdle(anything())).thenResolve();
+        // when(inotebook.onSessionStatusChanged).thenReturn(statusEvent.event);
+        // when(inotebook.setLaunchingFile(anything())).thenResolve();
+        // when(inotebook.requestKernelInfo()).thenResolve({
+        //     channel: 'shell',
+        //     content: {
+        //         banner: '',
+        //         help_links: [],
+        //         implementation: '',
+        //         implementation_version: '',
+        //         language_info: { name: '', version: '' },
+        //         protocol_version: '',
+        //         status: 'ok'
+        //     },
+        //     header: {
+        //         date: '',
+        //         msg_id: '',
+        //         msg_type: 'kernel_info_reply',
+        //         session: '',
+        //         username: '',
+        //         version: ''
+        //     },
+        //     metadata: {},
+        //     parent_header: {
+        //         date: '',
+        //         msg_id: '',
+        //         msg_type: 'kernel_info_request',
+        //         session: '',
+        //         username: '',
+        //         version: ''
+        //     }
+        // });
+        // when(inotebook.waitForIdle(anything())).thenResolve();
         when(inotebook.session).thenReturn(session);
         return kernelProvider.getOrCreate(notebook, {
             controller: controller.controller,

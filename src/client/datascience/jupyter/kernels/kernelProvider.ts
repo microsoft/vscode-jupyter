@@ -21,7 +21,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { INotebookControllerManager } from '../../notebook/types';
-import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebook, INotebookProvider } from '../../types';
+import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebookProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
@@ -62,7 +62,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
-        this.notebookProvider.onSessionStatusChanged(this.onNotebookSessionChanged, this, this.disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -122,6 +121,11 @@ export class KernelProvider implements IKernelProvider {
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
+        kernel.onStatusChanged(
+            (status) => this._onKernelStatusChanged.fire({ kernel, status }),
+            this,
+            this.disposables
+        );
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
         this.deleteMappingIfKernelIsDisposed(notebook, kernel);
@@ -158,11 +162,5 @@ export class KernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
-    }
-    private onNotebookSessionChanged({ status, notebook }: { status: ServerStatus; notebook: INotebook }) {
-        const kernel = this.kernels.find((item) => item.notebook === notebook);
-        if (kernel) {
-            this._onKernelStatusChanged.fire({ status, kernel });
-        }
     }
 }
