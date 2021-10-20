@@ -22,7 +22,7 @@ import { LanguageServer } from './languageServer';
 export class IntellisenseProvider implements IExtensionSyncActivationService {
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
-    private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
+    private interpreterIdCache: Map<string, string> = new Map<string, string>();
     private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
         NotebookDocument,
         VSCodeNotebookController
@@ -114,7 +114,12 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
             // If the controller is empty, default to the active interpreter
             const interpreter =
                 controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
-            return this.ensureLanguageServer(interpreter, n);
+            const server = await this.ensureLanguageServer(interpreter, n);
+
+            // If we created one, make sure the server thinks this file is open
+            if (server) {
+                server.startWatching(n);
+            }
         }
     }
 
@@ -124,11 +129,11 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     }
 
     private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
-        let id = this.interpreterIdCache.get(interpreter);
+        let id = this.interpreterIdCache.get(interpreter.path);
         if (!id) {
             // Making an assumption that the id for an interpreter never changes.
             id = getInterpreterId(interpreter);
-            this.interpreterIdCache.set(interpreter, id);
+            this.interpreterIdCache.set(interpreter.path, id);
         }
         return id;
     }
