@@ -598,11 +598,11 @@ export class Kernel implements IKernel {
     }
 }
 
-export async function executeSilently(kernelConnection: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-    const request = kernelConnection.requestExecute(
+    const request = session.requestExecute(
         {
             code: code.replace(/\r\n/g, '\n'),
             silent: false,
