@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-10-14"
+    "value": "$TODAYS_DATE=2021-10-20"
   },
   {
     "kind": 1,
@@ -123,6 +123,26 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## VSCode Notebook bugs closed since 10/1/2021"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:closed label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate closed:2021-10-01..$TODAYS_DATE"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Feature-requests in VS Code repo that were closed as *extension-candidate\r\nDue to the algorithm VS Code uses for closing feature requests, it's possible that some requests were auto-closed, but have seen much interest in the Jupyter repo. They should be transferred to the vscode-repo."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
   },
   {
     "kind": 1,
