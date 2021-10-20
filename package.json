@@ -1783,6 +1783,12 @@
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
                 },
+                "jupyter.commentMagicCommandsOnExport": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Comment shell commands (!), line magic (%) and cell magic (%%) when exporting notebooks.",
+                    "scope": "resource"
+                },
                 "jupyter.runStartupCommands": {
                     "type": "array",
                     "default": "",

@@ -28,6 +28,7 @@
     "webview.experimental.useIframes": true,
     "jupyter.interactiveWindowMode": "multiple",
     "jupyter.magicCommandsAsComments": false,
+    "jupyter.commentMagicCommandsOnExport": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true
 }

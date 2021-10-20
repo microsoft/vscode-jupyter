@@ -13,6 +13,7 @@ export class ExportToPythonPlain implements IExport {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService
     ) {}
 
+    // Export the given document to the target source file
     public async export(sourceDocument: NotebookDocument, target: Uri, token: CancellationToken): Promise<void> {
         if (token.isCancellationRequested) {
             return;
@@ -27,6 +28,7 @@ export class ExportToPythonPlain implements IExport {
     private exportDocument(document: NotebookDocument): string {
         return document
             .getCells()
+            .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
             .reduce((previousValue, currentValue) => previousValue + this.exportCell(currentValue), '');
     }
 
@@ -34,21 +36,55 @@ export class ExportToPythonPlain implements IExport {
     private exportCell(cell: NotebookCell): string {
         if (cell.document.lineCount) {
             const cellMarker = this.cellMarker(cell);
-            let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
 
-            // IANHU: Combine
-            const results = appendLineFeed([cellMarker, ...code, '\n']).join('');
-            return results;
+            switch (cell.kind) {
+                case NotebookCellKind.Code:
+                    return `${cellMarker}\n${this.exportCodeCell(cell)}\n`;
+                case NotebookCellKind.Markup:
+                    return `${cellMarker} [markdown]\n${this.exportMarkdownCell(cell)}\n`;
+            }
         }
 
         return '';
+    }
+
+    // Convert one Code cell to a string
+    private exportCodeCell(cell: NotebookCell): string {
+        let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+
+        // Check to see if we should comment out Shell / Magic commands
+        const commentMagic = this.configuration.getSettings(cell.notebook.uri).commentMagicCommandsOnExport;
+
+        return appendLineFeed(code, commentMagic ? commentMagicCommands : undefined).join('');
+    }
+
+    // Convert one Markup cell to a string
+    private exportMarkdownCell(cell: NotebookCell): string {
+        let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+
+        // Comment out lines of markdown cells
+        return appendLineFeed(code, commentLine).join('');
     }
 
     // Determine the cell marker for a notebook cell, if it's in the metadata use that
     // if not use the default setting
     private cellMarker(cell: NotebookCell): string {
         const settings = this.configuration.getSettings(cell.notebook.uri);
-        const marker = cell.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker;
-        return cell.kind === NotebookCellKind.Code ? `${marker}` : `${marker} [markdown]`;
+        return cell.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker;
     }
+}
+
+// Comment out lines starting with !, % or %% for shell commands
+// and line and cell magics
+function commentMagicCommands(line: string): string {
+    if (/^\s*!/.test(line) || /^\s*%/.test(line)) {
+        return `# ${line}`;
+    } else {
+        return line;
+    }
+}
+
+// Comment out all lines
+function commentLine(line: string): string {
+    return `# ${line}`;
 }
