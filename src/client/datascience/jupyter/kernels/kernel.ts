@@ -112,6 +112,7 @@ export class Kernel implements IKernel {
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
     private startCancellation = new CancellationTokenSource();
+    private readonly restartHooks = new Set<() => Promise<void>>();
     constructor(
         public readonly notebookDocument: NotebookDocument,
         public readonly resourceUri: Resource,
@@ -191,6 +192,9 @@ export class Kernel implements IKernel {
         const interruptResultPromise = this.kernelExecution.interrupt(this._notebookPromise);
         return interruptResultPromise;
     }
+    addRestartHook(hook: () => Promise<void>): void {
+        this.restartHooks.add(hook);
+    }
     public async dispose(): Promise<void> {
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -231,6 +235,9 @@ export class Kernel implements IKernel {
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
         traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
+
+        // Wait for all restart hooks to complete.
+        await Promise.all(this.restartHooks.values());
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
