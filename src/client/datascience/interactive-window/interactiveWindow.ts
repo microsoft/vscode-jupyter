@@ -175,16 +175,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             await this.runIntialization(kernel, this.owner);
             traceInfoIfCI('Completed initialization in IW after restart');
         });
-        // kernel.onRestarted(
-        //     async () => {
+        kernel.onRestarted(
+            async () => {
+                traceInfoIfCI('Restart event handled in IW');
+
         //         this.fileInKernel = undefined;
         //         const promise = this.runIntialization(kernel, this.owner);
         //         this._kernelReadyPromise = promise.then(() => kernel);
         //         await promise;
-        //     },
-        //     this,
-        //     this.internalDisposables
-        // );
+            },
+            this,
+            this.internalDisposables
+        );
         this.internalDisposables.push(kernel);
         await kernel.start();
         this.fileInKernel = undefined;

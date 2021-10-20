@@ -192,6 +192,7 @@ export class Kernel implements IKernel {
         return interruptResultPromise;
     }
     addRestartHook(hook: () => Promise<void>): void {
+        traceInfoIfCI('Hook added');
         this.restartHooks.add(hook);
     }
     public async dispose(): Promise<void> {
@@ -237,8 +238,8 @@ export class Kernel implements IKernel {
             traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
 
             // Wait for all restart hooks to complete.
-            traceInfoIfCI('Running restart initialization in Kernel after restart');
-            await Promise.all(this.restartHooks.values());
+            traceInfoIfCI(`Running restart initialization in Kernel after restart hooks = ${this.restartHooks}`);
+            await Promise.all(Array.from(this.restartHooks.values()));
             traceInfoIfCI('Completed restart initialization in Kernel after restart');
 
             // Indicate a restart occurred if it succeeds
