@@ -51,6 +51,7 @@ import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookCont
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
+import { sleep } from '../../common/utils/async';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -68,8 +69,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
+    private _controllersLoaded?: boolean;
     public get kernelConnections() {
-        return Array.from(this.allKernelConnections.values());
+        return this.loadNotebookControllers().then(() => Array.from(this.allKernelConnections.values()));
+    }
+    public get controllersLoaded() {
+        return this._controllersLoaded === true;
     }
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
@@ -158,6 +163,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ])
                 .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
                 .finally(() => {
+                    this._controllersLoaded = true;
                     let timer: NodeJS.Timeout | number | undefined;
                     this.interpreters.onDidChangeInterpreters(
                         () => {
