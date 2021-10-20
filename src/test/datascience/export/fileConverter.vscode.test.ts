@@ -14,7 +14,7 @@ import { ExportFileOpener } from '../../../client/datascience/export/exportFileO
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { FileConverter } from '../../../client/datascience/export/fileConverter';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog, IExport } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
 suite('DataScience - Export Manager', () => {
@@ -22,6 +22,7 @@ suite('DataScience - Export Manager', () => {
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
     let exportPdf: INbConvertExport;
+    let exportPythonPlain: IExport;
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
@@ -37,6 +38,7 @@ suite('DataScience - Export Manager', () => {
         exportPython = mock<INbConvertExport>();
         exportHtml = mock<INbConvertExport>();
         exportPdf = mock<INbConvertExport>();
+        exportPythonPlain = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
@@ -62,6 +64,7 @@ suite('DataScience - Export Manager', () => {
             instance(exportPdf),
             instance(exportHtml),
             instance(exportPython),
+            instance(exportPythonPlain),
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),

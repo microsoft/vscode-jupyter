@@ -13,7 +13,7 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from './types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
@@ -22,6 +22,7 @@ export class FileConverter implements IFileConverter {
         @inject(INbConvertExport) @named(ExportFormat.pdf) private readonly exportToPDF: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
+        @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
@@ -72,10 +73,11 @@ export class FileConverter implements IFileConverter {
         candidateInterpreter?: PythonEnvironment
     ) {
         switch (format) {
+            case ExportFormat.python:
+                return this.performPlainExport(format, sourceDocument, target);
             case ExportFormat.html:
             case ExportFormat.pdf:
             case ExportFormat.ipynb:
-            case ExportFormat.python:
                 // Get the interpreter to use for the export, checking the candidate interpreter first
                 const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
                     format,
@@ -84,6 +86,28 @@ export class FileConverter implements IFileConverter {
                 const contents = this.getContent(sourceDocument);
                 return this.performNbConvertExport(format, contents, target, exportInterpreter);
         }
+    }
+
+    // IANHU: Shared with NbConvert version?
+    private async performPlainExport(format: ExportFormat, sourceDocument: NotebookDocument, target: Uri) {
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
+
+        try {
+            // IANHU: Right now just do python
+            switch (format) {
+                case ExportFormat.python:
+                    await this.exportToPythonPlain.export(sourceDocument, target, reporter.token);
+                    break;
+            }
+        } finally {
+            reporter.dispose();
+        }
+
+        if (reporter.token.isCancellationRequested) {
+            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, cancelled: true });
+            return;
+        }
+        await this.exportFileOpener.openFile(format, target);
     }
 
     private async performNbConvertExport(

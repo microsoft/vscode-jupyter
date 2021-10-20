@@ -44,7 +44,7 @@ import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter } from './export/types';
+import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './export/types';
 import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
@@ -164,6 +164,7 @@ import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from './raw-kernel/liveshare/hostRawNotebookProvider';
 import { KernelCommandListener } from './jupyter/kernels/kernelCommandListener';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
+import { ExportToPythonPlain } from './export/exportToPythonPlain';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -284,6 +285,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportBase, 'Export Base');
+    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
