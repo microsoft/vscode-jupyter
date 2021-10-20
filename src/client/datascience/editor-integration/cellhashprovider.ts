@@ -6,6 +6,8 @@ import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import {
     Disposable,
+    Event,
+    EventEmitter,
     NotebookCell,
     NotebookCellKind,
     Position,
@@ -44,9 +46,16 @@ interface IRangedCellHash extends ICellHash {
 // hashes for cells.
 @injectable()
 export class CellHashProvider implements ICellHashProvider {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        payload: any;
+    }>();
     // Map of file to Map of start line to actual hash
     private executionCount: number = 0;
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
+    private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private traceBackRegexes = new Map<string, RegExp[]>();
     private disposables: Disposable[] = [];
 
@@ -68,6 +77,16 @@ export class CellHashProvider implements ICellHashProvider {
         this.traceBackRegexes.clear();
         this.disposables.forEach((d) => d.dispose());
     }
+
+    public get updated(): Event<void> {
+        return this.updateEventEmitter.event;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
+
     public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()]
             .map((e) => {
@@ -83,6 +102,7 @@ export class CellHashProvider implements ICellHashProvider {
         this.hashes.clear();
         this.traceBackRegexes.clear();
         this.executionCount = 0;
+        this.updateEventEmitter.fire();
     }
 
     public async addCellHash(cell: NotebookCell) {
@@ -204,9 +224,21 @@ export class CellHashProvider implements ICellHashProvider {
             if (this.listeners) {
                 const hashes = this.getHashes();
                 await Promise.all(this.listeners.map((l) => l.hashesUpdated(hashes)));
+
+                // Then fire our event
+                this.updateEventEmitter.fire();
             }
         }
     }
+
+    public getExecutionCount(): number {
+        return this.executionCount;
+    }
+
+    public incExecutionCount(): void {
+        this.executionCount += 1;
+    }
+
     private onChangedDocument(e: TextDocumentChangeEvent) {
         // See if the document is in our list of docs to watch
         const perFile = this.hashes.get(e.document.fileName);
