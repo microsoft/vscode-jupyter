@@ -13,7 +13,7 @@ import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 
-suite('DataScience - Export Python', function () {
+suite('IANHU DataScience - Export Python', function () {
     let api: IExtensionTestApi;
     this.timeout(10_000);
     suiteSetup(async function () {

@@ -17,7 +17,7 @@ import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog, IExport } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
-suite('DataScience - Export Manager', () => {
+suite('IANHU DataScience - File Converter', () => {
     let fileConverter: FileConverter;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
@@ -55,6 +55,7 @@ suite('DataScience - Export Manager', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
+        when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
@@ -103,7 +104,7 @@ suite('DataScience - Export Manager', () => {
     });
     test('Export to Python is called when export method is Python', async () => {
         await fileConverter.export(ExportFormat.python, {} as any);
-        verify(exportPython.export(anything(), anything(), anything(), anything())).once();
+        verify(exportPythonPlain.export(anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });
 });
