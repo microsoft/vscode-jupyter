@@ -11,7 +11,7 @@ export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
-    readonly kernelConnections: readonly Readonly<KernelConnectionMetadata>[];
+    readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
     loadNotebookControllers(): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers

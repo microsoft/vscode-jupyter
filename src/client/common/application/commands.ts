@@ -78,7 +78,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
-    ['jupyter.manageKernels']: [never];
+    ['jupyter.filterKernels']: [never];
     ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter'];
     ['workbench.action.files.openFolder']: [];

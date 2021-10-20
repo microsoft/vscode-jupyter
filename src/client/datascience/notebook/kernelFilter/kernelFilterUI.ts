@@ -26,53 +26,60 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         disposales.push(this);
     }
     public activate() {
-        this.disposables.push(this.commandManager.registerCommand('jupyter.manageKernels', this.showUI, this));
+        this.disposables.push(this.commandManager.registerCommand('jupyter.filterKernels', this.showUI, this));
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    private showUI() {
+    private async showUI() {
         type QuickPickType = QuickPickItem & { connection: KernelConnectionMetadata };
         const quickPick = this.appShell.createQuickPick<QuickPickType>();
         const duplicates = new Set<string>();
-        const items = this.controllers.kernelConnections
-            .filter((item) => {
-                if (duplicates.has(item.id)) {
-                    return false;
-                }
-                duplicates.add(item.id);
-                return true;
-            })
-            .map((item) => {
-                return <QuickPickType>{
-                    label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
-                    picked: !this.kernelFilter.isKernelHidden(item),
-                    detail: getDetailOfKernelConnection(item, this.pathUtils),
-                    connection: item
-                };
-            });
-        items.sort((a, b) => {
-            if (a.label > b.label) {
-                return 1;
-            } else if (a.label === b.label) {
-                return 0;
-            } else {
-                return -1;
+        let quickPickHidden = false;
+        quickPick.canSelectMany = false;
+        quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
+        quickPick.busy = true;
+        quickPick.enabled = false;
+
+        this.controllers.kernelConnections.then((connections) => {
+            if (quickPickHidden){
+                return;
             }
+            const items = connections
+                .filter((item) => {
+                    if (duplicates.has(item.id)) {
+                        return false;
+                    }
+                    duplicates.add(item.id);
+                    return true;
+                })
+                .map((item) => {
+                    return <QuickPickType>{
+                        label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
+                        picked: !this.kernelFilter.isKernelHidden(item),
+                        detail: getDetailOfKernelConnection(item, this.pathUtils),
+                        connection: item
+                    };
+                });
+            items.sort((a, b) => a.label.localeCompare(b.label));
+
+            quickPick.canSelectMany = true;
+            quickPick.activeItems = items;
+            quickPick.items = items;
+            quickPick.matchOnDescription = true;
+            quickPick.matchOnDetail = true;
+            quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
+            quickPick.selectedItems = items.filter((item) => item.picked);
+            quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
+            quickPick.enabled = true;
+            quickPick.busy = false;
         });
 
-        quickPick.canSelectMany = true;
-        quickPick.activeItems = items;
-        quickPick.items = items;
-        quickPick.matchOnDescription = true;
-        quickPick.matchOnDetail = true;
-        quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
-        quickPick.selectedItems = items.filter((item) => item.picked);
-        quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
-        quickPick.show();
         const disposables: IDisposable[] = [];
+        quickPick.show();
         quickPick.onDidHide(
             () => {
+                quickPickHidden = true;
                 disposeAllDisposables(disposables);
             },
             this,
@@ -80,9 +87,11 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         );
         quickPick.onDidAccept(
             () => {
+                quickPickHidden = true;
                 quickPick.hide();
                 disposeAllDisposables(disposables);
                 const selectedItems = new Set(quickPick.selectedItems.map((item) => item.connection));
+                const items = quickPick.items;
                 const hiddenConnections = items
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
