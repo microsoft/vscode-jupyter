@@ -33,12 +33,20 @@ export class FileConverter implements IFileConverter {
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
 
+    // Import a notebook file on disk to a .py file
     public async importIpynb(contents: string, source: Uri): Promise<void> {
-        const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
-            ExportFormat.python,
-            undefined
-        );
-        await this.performNbConvertExport(ExportFormat.python, contents, source, exportInterpreter);
+        const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb(), true);
+        try {
+            const target = await this.getTargetFile(ExportFormat.python, source);
+            if (!target) {
+                return;
+            }
+            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(undefined);
+            await this.performNbConvertExport(ExportFormat.python, contents, target, exportInterpreter, reporter.token);
+            await this.exportFileOpener.openFile(ExportFormat.python, target);
+        } finally {
+            reporter.dispose();
+        }
     }
 
     public async export(
@@ -72,31 +80,25 @@ export class FileConverter implements IFileConverter {
         target: Uri,
         candidateInterpreter?: PythonEnvironment
     ) {
-        switch (format) {
-            case ExportFormat.python:
-                return this.performPlainExport(format, sourceDocument, target);
-            case ExportFormat.html:
-            case ExportFormat.pdf:
-            case ExportFormat.ipynb:
-                // Get the interpreter to use for the export, checking the candidate interpreter first
-                const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
-                    format,
-                    candidateInterpreter
-                );
-                const contents = this.getContent(sourceDocument);
-                return this.performNbConvertExport(format, contents, target, exportInterpreter);
-        }
-    }
-
-    // IANHU: Shared with NbConvert version?
-    private async performPlainExport(format: ExportFormat, sourceDocument: NotebookDocument, target: Uri) {
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
+        const reporter = this.progressReporter.createProgressIndicator(
+            localize.DataScience.exportingToFormat().format(format.toString()),
+            true
+        );
 
         try {
-            // IANHU: Right now just do python
             switch (format) {
                 case ExportFormat.python:
-                    await this.exportToPythonPlain.export(sourceDocument, target, reporter.token);
+                    await this.performPlainExport(format, sourceDocument, target, reporter.token);
+                    break;
+                case ExportFormat.html:
+                case ExportFormat.pdf:
+                case ExportFormat.ipynb:
+                    // Get the interpreter to use for the export, checking the candidate interpreter first
+                    const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
+                        candidateInterpreter
+                    );
+                    const contents = this.getContent(sourceDocument);
+                    await this.performNbConvertExport(format, contents, target, exportInterpreter, reporter.token);
                     break;
             }
         } finally {
@@ -110,11 +112,25 @@ export class FileConverter implements IFileConverter {
         await this.exportFileOpener.openFile(format, target);
     }
 
+    private async performPlainExport(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        target: Uri,
+        cancelToken: CancellationToken
+    ) {
+        switch (format) {
+            case ExportFormat.python:
+                await this.exportToPythonPlain.export(sourceDocument, target, cancelToken);
+                break;
+        }
+    }
+
     private async performNbConvertExport(
         format: ExportFormat,
         contents: string,
         target: Uri,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        cancelToken: CancellationToken
     ) {
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
@@ -124,19 +140,11 @@ export class FileConverter implements IFileConverter {
         const tempDir = await this.exportUtil.generateTempDir();
         const source = await this.makeSourceFile(target, contents, tempDir);
 
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
         try {
-            await this.exportToFormat(source, target, format, interpreter, reporter.token);
+            await this.exportToFormat(source, target, format, interpreter, cancelToken);
         } finally {
             tempDir.dispose();
-            reporter.dispose();
         }
-
-        if (reporter.token.isCancellationRequested) {
-            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, cancelled: true });
-            return;
-        }
-        await this.exportFileOpener.openFile(format, target);
     }
 
     private async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {

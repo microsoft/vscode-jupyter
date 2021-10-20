@@ -511,5 +511,7 @@
     "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
     "DataScience.noNotebookToDebug": "No active notebook document to debug.",
     "DataScience.cantStartDebugging": "Can't start debugging.",
-    "DataScience.customEditorBanner": "This editor is deprecated and we'll remove it after 1.59 of VS Code.  [Learn more about our new notebook editor](https://aka.ms/vscodeNotebookEditorBanner)."
+    "DataScience.customEditorBanner": "This editor is deprecated and we'll remove it after 1.59 of VS Code.  [Learn more about our new notebook editor](https://aka.ms/vscodeNotebookEditorBanner).",
+    "DataScience.importingIpynb": "Importing notebook file.",
+    "DataScience.exportingToFormat": "Exporting to {0}."
 }
