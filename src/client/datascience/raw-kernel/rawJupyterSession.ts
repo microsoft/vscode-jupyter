@@ -6,7 +6,7 @@ import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -282,9 +282,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         const result = new RawSession(process, this.resource);
 
         // Wait for it to be ready
-        traceInfoIfCI('Waiting for ready');
         await result.waitForReady();
-        traceInfoIfCI('Done waiting for ready');
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.

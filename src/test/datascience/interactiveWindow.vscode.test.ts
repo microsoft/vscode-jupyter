@@ -106,13 +106,11 @@ suite('Interactive window', async function () {
         const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
             INotebookControllerManager
         );
-        console.log('Step1');
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
 
         // Give it a bit to warm up
         await sleep(500);
-        console.log('Step2');
 
         const controller = notebookDocument
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
@@ -124,7 +122,6 @@ suite('Interactive window', async function () {
             `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
         );
 
-        console.log('Step3');
         async function verifyCells() {
             // Verify sys info cell
             const firstCell = notebookDocument.cellAt(0);
@@ -135,38 +132,29 @@ suite('Interactive window', async function () {
             const secondCell = notebookDocument.cellAt(1);
             const actualSource = secondCell.document.getText();
             assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-            await waitForExecutionCompletedSuccessfully(secondCell!, 30_000);
+            await waitForExecutionCompletedSuccessfully(secondCell!);
         }
 
-        console.log('Step4');
         await verifyCells();
-        console.log('Step5');
 
         // CLear all cells
         await vscode.commands.executeCommand('jupyter.interactive.clearAllCells');
-        console.log('Step6');
         await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
-        console.log('Step7');
 
         // Restart kernel
         await vscode.commands.executeCommand('jupyter.restartkernel');
-        console.log('Step8');
         // Wait for first cell to get output.
         await waitForCondition(
             async () => notebookDocument.cellCount > 0,
             defaultNotebookTestTimeout,
             'Kernel info not printed'
         );
-        console.log('Step9');
-        await sleep(500);
-        const result = await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
-        console.log(`Step10 with result = ${result}`);
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
             defaultNotebookTestTimeout,
             'Code not executed'
         );
-        console.log('Step11');
 
         await verifyCells();
     });

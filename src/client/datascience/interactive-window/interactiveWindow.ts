@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -175,7 +175,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         });
         kernel.onRestarted(
             async () => {
-                traceInfoIfCI('inside onRestarted of interactiveWindow.ts');
                 this.fileInKernel = undefined;
                 await this.runIntialization(kernel, this.owner);
             },
@@ -463,10 +462,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
         if (!fileUri || !kernel.notebook) {
-            traceInfoIfCI('Exit runInitialization');
             return;
         }
-        traceInfoIfCI('Inside runInitialization');
 
         // Before we try to execute code make sure that we have an initial directory set
         // Normally set via the workspace, but we might not have one here if loading a single loose file
@@ -564,21 +561,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
             this.fileInKernel = file;
-            traceInfoIfCI('Initializing __file__ for perfile');
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
             kernel
         ) {
-            traceInfoIfCI('Initializing __file__ for != perfile');
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
-        } else {
-            traceInfoIfCI(
-                `Not Initializing __file__ file = ${file}, mode = ${this.mode}, fileInKernel = ${this.fileInKernel}`
-            );
         }
     }
 
