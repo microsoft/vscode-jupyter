@@ -13,7 +13,7 @@ import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '..
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase, oldKernelsSpecFolderName } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { IPythonExtensionChecker } from '../../api/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -121,7 +121,8 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 );
 
                 if (kernelspec) {
-                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec)) {
+                    // Never delete on CI (could break tests).
+                    if (!oldDernelSpecsDeleted && isKernelRegisteredByUs(kernelspec) && !isCI) {
                         await this.deleteOldKernelSpec(resultPath.kernelSpecFile).catch(noop);
                         return;
                     }
