@@ -72,17 +72,18 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 });
             items.sort((a, b) => a.label.localeCompare(b.label));
 
-            quickPick.canSelectMany = true;
-            quickPick.activeItems = items;
-            quickPick.items = items;
-            quickPick.matchOnDescription = true;
-            quickPick.matchOnDetail = true;
-            quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
-            quickPick.selectedItems = items.filter((item) => item.picked);
-            quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
-            quickPick.enabled = true;
-            quickPick.busy = false;
-        }).catch(noop);
+                quickPick.canSelectMany = true;
+                quickPick.activeItems = items;
+                quickPick.items = items;
+                quickPick.matchOnDescription = true;
+                quickPick.matchOnDetail = true;
+                quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
+                quickPick.selectedItems = items.filter((item) => item.picked);
+                quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
+                quickPick.enabled = true;
+                quickPick.busy = false;
+            })
+            .catch(noop);
 
         const disposables: IDisposable[] = [];
         quickPick.show();
