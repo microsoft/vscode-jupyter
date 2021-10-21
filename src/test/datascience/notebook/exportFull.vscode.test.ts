@@ -33,7 +33,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -90,7 +90,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Export a basic notebook document', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
-        await insertMarkdownCell('# Markdown Header${os.EOL}markdown string', { index: 1 });
+        await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos', { index: 2 });
 
         const deferred = createDeferred<any>();
