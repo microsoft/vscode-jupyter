@@ -42,7 +42,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.enabled = false;
 
         this.controllers.kernelConnections.then((connections) => {
-            if (quickPickHidden){
+            if (quickPickHidden) {
                 return;
             }
             const items = connections
