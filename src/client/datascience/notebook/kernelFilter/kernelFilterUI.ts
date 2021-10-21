@@ -6,6 +6,7 @@ import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
+import { noop } from '../../../common/utils/misc';
 import {
     getKernelConnectionPath,
     getDisplayNameOrNameOfKernelConnection,
@@ -81,7 +82,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
             quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
             quickPick.enabled = true;
             quickPick.busy = false;
-        });
+        }).catch(noop);
 
         const disposables: IDisposable[] = [];
         quickPick.show();

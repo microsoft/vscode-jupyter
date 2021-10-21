@@ -132,11 +132,8 @@ export class VSCodeNotebookController implements Disposable {
             kernelConnection.kind === 'connectToLiveKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)
                 : getKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
-        this.controller.category = getKernelConnectionCategory(kernelConnection);
+        this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
-        (this.controller as any).category = kernelConnection.interpreter?.envType
-            ? kernelConnection.interpreter.envType
-            : '';
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
@@ -434,19 +431,19 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
         case 'startUsingPythonInterpreter': {
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
-                    return 'Conda Environment';
+                    return 'Conda Env';
                 case EnvironmentType.Pipenv:
-                    return 'Pipenv Environment';
+                    return 'Pipenv Env';
                 case EnvironmentType.Poetry:
-                    return 'Poetry Environment';
+                    return 'Poetry Env';
                 case EnvironmentType.Pyenv:
-                    return 'PyEnv Environment';
+                    return 'PyEnv Env';
                 case EnvironmentType.Venv:
                 case EnvironmentType.VirtualEnv:
                 case EnvironmentType.VirtualEnvWrapper:
-                    return 'Virtual Environment';
+                    return 'Virtual Env';
                 default:
-                    return 'Global Environment';
+                    return 'Global Env';
             }
         }
     }
