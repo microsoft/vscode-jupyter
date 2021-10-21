@@ -139,7 +139,7 @@ suite('VSCode Notebook - Run By Line', function () {
         await waitForCondition(
             async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
             defaultNotebookTestTimeout,
-            'Cell should have KeyboardInterrupt output'
+            () => 'Cell should have KeyboardInterrupt output but has ' + getCellOutputs(cell)
         );
     });
 
@@ -219,7 +219,7 @@ suite('VSCode Notebook - Run By Line', function () {
         await waitForCondition(
             async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
             defaultNotebookTestTimeout,
-            'Cell should have KeyboardInterrupt output'
+            () => 'Cell should have KeyboardInterrupt output but has ' + getCellOutputs(cell)
         );
 
         void commandManager.executeCommand(Commands.RunByLine, cell);
