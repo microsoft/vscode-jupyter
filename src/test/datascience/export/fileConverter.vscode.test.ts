@@ -9,7 +9,12 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IDisposable, IExtensions } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IExtensions,
+    IWatchableJupyterSettings
+} from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { FileConverter } from '../../../client/datascience/export/fileConverter';
@@ -30,6 +35,8 @@ suite('DataScience - File Converter', () => {
     let exportFileOpener: ExportFileOpener;
     let exportInterpreterFinder: ExportInterpreterFinder;
     let extensions: IExtensions;
+    let configuration: IConfigurationService;
+    let settings: IWatchableJupyterSettings;
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
@@ -43,6 +50,10 @@ suite('DataScience - File Converter', () => {
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         extensions = mock<IExtensions>();
+        configuration = mock<IConfigurationService>();
+        settings = mock<IWatchableJupyterSettings>();
+        when(configuration.getSettings(anything())).thenReturn(instance(settings));
+        when(settings.pythonExportMethod).thenReturn('direct');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
@@ -73,7 +84,8 @@ suite('DataScience - File Converter', () => {
             instance(appShell),
             instance(exportFileOpener),
             instance(exportInterpreterFinder),
-            instance(extensions)
+            instance(extensions),
+            instance(configuration)
         );
 
         // Stub out the getContent inner method of the ExportManager we don't care about the content returned

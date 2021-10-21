@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Common } from '../../../client/common/utils/localize';
@@ -32,7 +32,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -111,9 +111,13 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        assert(
-            text ===
-                `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
+        //assert(
+        //text ===
+        //`# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
+        //'Exported text does not match'
+        //);
+        expect(text).to.equal(
+            `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
             'Exported text does not match'
         );
 
@@ -146,9 +150,50 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        assert(
-            text ===
-                `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
+        // assert(
+        // text ===
+        // `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
+        // 'Exported text does not match'
+        // );
+        expect(text).to.equal(
+            `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
+            'Exported text does not match'
+        );
+
+        // Clean up dispose
+        onDidChangeDispose.dispose();
+
+        // Revert back our settings
+        await settings.update('pythonExportMethod', 'direct');
+    });
+    test('Export a basic notebook document with nbconvert', async () => {
+        await insertCodeCell('print("Hello World")', { index: 0 });
+        await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
+        await insertCodeCell('%whos\n!shellcmd', { index: 2 });
+
+        const deferred = createDeferred<any>();
+        const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
+            if (te) {
+                deferred.resolve();
+            }
+        });
+
+        const settings = workspace.getConfiguration('jupyter', null);
+        await settings.update('pythonExportMethod', 'nbconvert');
+
+        // Execute our export command
+        await commands.executeCommand('jupyter.exportAsPythonScript');
+
+        // Wait until our active document changes
+        await deferred;
+
+        assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
+
+        const text = window.activeTextEditor?.document.getText();
+
+        // Verify text content
+        expect(text).to.equal(
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n`,
             'Exported text does not match'
         );
 
@@ -187,9 +232,13 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        assert(
-            text ===
-                `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+        //assert(
+        //text ===
+        //`# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+        //'Exported text does not match'
+        //);
+        expect(text).to.equal(
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
             'Exported text does not match'
         );
 
