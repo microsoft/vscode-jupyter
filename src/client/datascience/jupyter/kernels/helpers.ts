@@ -180,7 +180,7 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     }
 }
 
-export function getDescriptionOfKernelConnection(
+export function getRemoteKernelSessionInformation(
     kernelConnection: KernelConnectionMetadata | undefined,
     defaultValue: string = ''
 ): string {
@@ -193,7 +193,7 @@ export function getDescriptionOfKernelConnection(
     return defaultValue;
 }
 
-export function getDetailOfKernelConnection(
+export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
     workspaceService: IWorkspaceService,

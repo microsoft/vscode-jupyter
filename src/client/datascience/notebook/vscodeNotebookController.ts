@@ -35,8 +35,8 @@ import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes'
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import {
     areKernelConnectionsEqual,
-    getDescriptionOfKernelConnection,
-    getDetailOfKernelConnection,
+    getRemoteKernelSessionInformation,
+    getKernelConnectionPath,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -124,8 +124,10 @@ export class VSCodeNotebookController implements Disposable {
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
-        this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils, this.workspace);
+        this.controller.description =
+            kernelConnection.kind === 'connectToLiveKernel'
+                ? getRemoteKernelSessionInformation(kernelConnection)
+                : getKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
         this.controller.category = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
