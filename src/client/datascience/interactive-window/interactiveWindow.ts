@@ -169,20 +169,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             controller: controller.controller,
             resourceUri: this.owner
         });
-        kernel.addRestartHook(async () => {
-            traceInfoIfCI('Running initialization in IW after restart');
-            this.fileInKernel = undefined;
-            await this.runIntialization(kernel, this.owner);
-            traceInfoIfCI('Completed initialization in IW after restart');
-        });
         kernel.onRestarted(
             async () => {
                 traceInfoIfCI('Restart event handled in IW');
-
-                //         this.fileInKernel = undefined;
-                //         const promise = this.runIntialization(kernel, this.owner);
-                //         this._kernelReadyPromise = promise.then(() => kernel);
-                //         await promise;
+                this.fileInKernel = undefined;
+                const promise = this.runIntialization(kernel, this.owner);
+                this._kernelReadyPromise = promise.then(() => kernel);
+                await promise;
             },
             this,
             this.internalDisposables
