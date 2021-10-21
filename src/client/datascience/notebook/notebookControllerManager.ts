@@ -51,7 +51,6 @@ import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookCont
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { sleep } from '../../common/utils/async';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
