@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
 import { appendLineFeed } from '../../../datascience-ui/common';
 import { IFileSystem } from '../../common/platform/types';
@@ -39,9 +40,9 @@ export class ExportToPythonPlain implements IExport {
 
             switch (cell.kind) {
                 case NotebookCellKind.Code:
-                    return `${cellMarker}\n${this.exportCodeCell(cell)}\n\n`;
+                    return `${cellMarker}${os.EOL}${this.exportCodeCell(cell)}${os.EOL}${os.EOL}`;
                 case NotebookCellKind.Markup:
-                    return `${cellMarker} [markdown]\n${this.exportMarkdownCell(cell)}\n\n`;
+                    return `${cellMarker} [markdown]${os.EOL}${this.exportMarkdownCell(cell)}${os.EOL}${os.EOL}`;
             }
         }
 

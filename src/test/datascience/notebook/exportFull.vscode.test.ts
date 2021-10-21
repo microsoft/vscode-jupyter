@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
+import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Common } from '../../../client/common/utils/localize';
@@ -89,7 +90,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Export a basic notebook document', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
-        await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
+        await insertMarkdownCell('# Markdown Header${os.EOL}markdown string', { index: 1 });
         await insertCodeCell('%whos', { index: 2 });
 
         const deferred = createDeferred<any>();
@@ -112,7 +113,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
+            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}`,
             'Exported text does not match'
         );
 
@@ -146,7 +147,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
+            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}`,
             'Exported text does not match'
         );
 
@@ -183,7 +184,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n`,
+            `# To add a new cell, type '# %%'${os.EOL}# To add a new markdown cell, type '# %% [markdown]'${os.EOL}# %%${os.EOL}from IPython import get_ipython${os.EOL}${os.EOL}# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}get_ipython().run_line_magic('whos', '')${os.EOL}get_ipython().system('shellcmd')${os.EOL}${os.EOL}`,
             'Exported text does not match'
         );
 
@@ -223,7 +224,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+            `# To add a new cell, type '# %%'${os.EOL}# To add a new markdown cell, type '# %% [markdown]'${os.EOL}# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`,
             'Exported text does not match'
         );
 
