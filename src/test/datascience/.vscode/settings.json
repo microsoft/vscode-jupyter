@@ -28,7 +28,7 @@
     "webview.experimental.useIframes": true,
     "jupyter.interactiveWindowMode": "multiple",
     "jupyter.magicCommandsAsComments": false,
-    "jupyter.commentMagicCommandsOnExport": false,
+    "jupyter.pythonExportMethod": "direct",
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
     "python.defaultInterpreterPath": "/Users/ianhuff/opt/miniconda3/envs/functionalTestEnv/bin/python"

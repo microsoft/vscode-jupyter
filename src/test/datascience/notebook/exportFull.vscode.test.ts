@@ -32,7 +32,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -113,7 +113,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         // Verify text content
         assert(
             text ===
-                `# %%\nprint("Hello World")\n# %% [markdown]\n# # Markdown Header\n# markdown string\n# %%\n%whos\n`,
+                `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
             'Exported text does not match'
         );
 
@@ -133,7 +133,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         });
 
         const settings = workspace.getConfiguration('jupyter', null);
-        await settings.update('commentMagicCommandsOnExport', true);
+        await settings.update('pythonExportMethod', 'commentMagics');
 
         // Execute our export command
         await commands.executeCommand('jupyter.exportAsPythonScript');
@@ -148,7 +148,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         // Verify text content
         assert(
             text ===
-                `# %%\nprint("Hello World")\n# %% [markdown]\n# # Markdown Header\n# markdown string\n# %%\n# %whos\n# !shellcmd\n`,
+                `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
             'Exported text does not match'
         );
 
@@ -156,7 +156,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         onDidChangeDispose.dispose();
 
         // Revert back our settings
-        await settings.update('commentMagicCommandsOnExport', false);
+        await settings.update('pythonExportMethod', 'direct');
     });
     test('Import a notebook file from disk', async () => {
         // Prep to see when

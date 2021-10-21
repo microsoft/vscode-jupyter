@@ -74,7 +74,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public stopOnFirstLineWhileDebugging: boolean = false;
     public textOutputLimit: number = 0;
     public magicCommandsAsComments: boolean = false;
-    public commentMagicCommandsOnExport: boolean = false;
+    public pythonExportMethod: string = 'direct';
     public stopOnError: boolean = false;
     public remoteDebuggerPort: number = 0;
     public colorizeInputBox: boolean = false;

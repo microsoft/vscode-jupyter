@@ -53,7 +53,7 @@ export class ExportToPythonPlain implements IExport {
         let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
 
         // Check to see if we should comment out Shell / Magic commands
-        const commentMagic = this.configuration.getSettings(cell.notebook.uri).commentMagicCommandsOnExport;
+        const commentMagic = this.configuration.getSettings(cell.notebook.uri).pythonExportMethod === 'commentMagics';
 
         return appendLineFeed(code, commentMagic ? commentMagicCommands : undefined).join('');
     }
