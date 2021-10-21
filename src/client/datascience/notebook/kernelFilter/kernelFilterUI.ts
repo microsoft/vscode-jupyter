@@ -55,9 +55,9 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 })
                 .map((item) => {
                     return <QuickPickType>{
-                        label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)),
+                        label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)).replace(' 64-bit', ''),
                         picked: !this.kernelFilter.isKernelHidden(item),
-                        detail: getDetailOfKernelConnection(item, this.pathUtils),
+                        description: getDetailOfKernelConnection(item, this.pathUtils),
                         connection: item
                     };
                 });
