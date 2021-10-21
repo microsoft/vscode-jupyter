@@ -4,7 +4,7 @@ import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Ur
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IExtensions } from '../../common/types';
+import { IConfigurationService, IExtensions } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -30,7 +30,8 @@ export class FileConverter implements IFileConverter {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener,
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService
     ) {}
 
     // Import a notebook file on disk to a .py file
@@ -85,21 +86,18 @@ export class FileConverter implements IFileConverter {
             true
         );
 
+        const pythonNbconvert = this.configuration.getSettings(sourceDocument.uri).pythonExportMethod === 'nbconvert';
+
         try {
-            switch (format) {
-                case ExportFormat.python:
-                    await this.performPlainExport(format, sourceDocument, target, reporter.token);
-                    break;
-                case ExportFormat.html:
-                case ExportFormat.pdf:
-                case ExportFormat.ipynb:
-                    // Get the interpreter to use for the export, checking the candidate interpreter first
-                    const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
-                        candidateInterpreter
-                    );
-                    const contents = this.getContent(sourceDocument);
-                    await this.performNbConvertExport(format, contents, target, exportInterpreter, reporter.token);
-                    break;
+            if (format === ExportFormat.python && !pythonNbconvert) {
+                // Unless selected by the setting use plain conversion for python script convert
+                await this.performPlainExport(format, sourceDocument, target, reporter.token);
+            } else {
+                // For all others (or if 'nbconvert' set for python export method) use nbconvert path
+                // Get the interpreter to use for the export, checking the candidate interpreter first
+                const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(candidateInterpreter);
+                const contents = this.getContent(sourceDocument);
+                await this.performNbConvertExport(format, contents, target, exportInterpreter, reporter.token);
             }
         } finally {
             reporter.dispose();
