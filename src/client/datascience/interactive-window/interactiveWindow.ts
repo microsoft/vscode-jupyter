@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -171,8 +171,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         });
         kernel.onRestarted(
             async () => {
+                traceInfoIfCI('Restart event handled in IW');
                 this.fileInKernel = undefined;
-                await this.runIntialization(kernel, this.owner);
+                const promise = this.runIntialization(kernel, this.owner);
+                this._kernelReadyPromise = promise.then(() => kernel);
+                await promise;
             },
             this,
             this.internalDisposables
@@ -550,17 +553,22 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
-        if (this.mode === 'perFile' && !this.fileInKernel && kernel) {
+        if (this.mode === 'perFile' && !this.fileInKernel) {
+            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
-            this.mode !== 'perFile' &&
-            kernel
+            this.mode !== 'perFile'
         ) {
+            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
+        } else {
+            traceInfoIfCI(
+                `Not Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode} currently ${this.fileInKernel}`
+            );
         }
     }
 
