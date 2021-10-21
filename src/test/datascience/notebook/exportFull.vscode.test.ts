@@ -5,6 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
@@ -23,14 +24,15 @@ import {
     startJupyterServer,
     workAroundVSCodeNotebookStartPages
 } from './helper';
-import { commands, window, workspace } from 'vscode';
+import { commands, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -121,11 +123,13 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
     test('Export a basic notebook document with magics commented out', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
-        await insertCodeCell('%whos', { index: 2 });
+        await insertCodeCell('%whos\n!shellcmd', { index: 2 });
 
         const deferred = createDeferred<any>();
-        const onDidChangeDispose = window.onDidChangeActiveTextEditor((_te) => {
-            deferred.resolve();
+        const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
+            if (te) {
+                deferred.resolve();
+            }
         });
 
         const settings = workspace.getConfiguration('jupyter', null);
@@ -144,7 +148,7 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         // Verify text content
         assert(
             text ===
-                `# %%\nprint("Hello World")\n# %% [markdown]\n# # Markdown Header\n# markdown string\n# %%\n# %whos\n`,
+                `# %%\nprint("Hello World")\n# %% [markdown]\n# # Markdown Header\n# markdown string\n# %%\n# %whos\n# !shellcmd\n`,
             'Exported text does not match'
         );
 
@@ -153,5 +157,43 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Revert back our settings
         await settings.update('commentMagicCommandsOnExport', false);
+    });
+    test('Import a notebook file from disk', async () => {
+        // Prep to see when
+        const deferred = createDeferred<any>();
+        const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
+            if (te) {
+                deferred.resolve();
+            }
+        });
+
+        // Execute our export command
+        const testFilePath = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'test.ipynb'
+        );
+        const importFile = Uri.file(testFilePath);
+        await commands.executeCommand('jupyter.importnotebook', importFile);
+
+        // Wait until our active document changes
+        await deferred;
+
+        assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
+
+        const text = window.activeTextEditor?.document.getText();
+
+        // Verify text content
+        assert(
+            text ===
+                `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+            'Exported text does not match'
+        );
+
+        // Clean up dispose
+        onDidChangeDispose.dispose();
     });
 });

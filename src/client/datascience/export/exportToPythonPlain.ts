@@ -39,9 +39,9 @@ export class ExportToPythonPlain implements IExport {
 
             switch (cell.kind) {
                 case NotebookCellKind.Code:
-                    return `${cellMarker}\n${this.exportCodeCell(cell)}\n`;
+                    return `${cellMarker}\n${this.exportCodeCell(cell)}\n\n`;
                 case NotebookCellKind.Markup:
-                    return `${cellMarker} [markdown]\n${this.exportMarkdownCell(cell)}\n`;
+                    return `${cellMarker} [markdown]\n${this.exportMarkdownCell(cell)}\n\n`;
             }
         }
 
