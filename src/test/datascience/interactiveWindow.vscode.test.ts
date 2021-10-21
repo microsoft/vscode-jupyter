@@ -12,7 +12,7 @@ import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
+import { IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
@@ -46,9 +46,6 @@ suite('Interactive window', async function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(`Interactive Window-${this.currentTest?.title}`);
-        }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });

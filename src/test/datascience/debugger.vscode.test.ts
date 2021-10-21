@@ -6,7 +6,7 @@ import { ICommandManager, IVSCodeNotebook } from '../../client/common/applicatio
 import { IDisposable } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { IExtensionTestApi, waitForCondition } from '../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     canRunNotebookTests,
@@ -71,6 +71,10 @@ suite('VSCode Notebook - Run By Line', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            // For a flaky interrupt test.
+            await captureScreenShot(`Debugger-Tests-${this.currentTest?.title}`);
+        }
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

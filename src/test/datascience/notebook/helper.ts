@@ -697,7 +697,7 @@ function getOutputText(output: NotebookCellOutputItem) {
     ) {
         return '';
     }
-    return Buffer.from(output.data as Uint8Array).toString('utf8');
+    return Buffer.from(output.data).toString('utf8');
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
@@ -709,7 +709,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return false;
     }
     try {
-        const haystack = Buffer.from(output.data as Uint8Array).toString('utf8');
+        const haystack = Buffer.from(output.data).toString('utf8');
         return isExactMatch
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());
@@ -724,7 +724,7 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     assert.isTrue(
         result,
         `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].items
-            .map((o) => (o.data ? Buffer.from(o.data as Uint8Array).toString('utf8') : ''))
+            .map((o) => (o.data ? Buffer.from(o.data).toString('utf8') : ''))
             .join(' ')}`
     );
     return result;
