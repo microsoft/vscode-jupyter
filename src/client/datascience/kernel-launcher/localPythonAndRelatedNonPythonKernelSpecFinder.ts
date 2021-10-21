@@ -391,9 +391,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // But we could have a kernel spec in global path that points to a completely different interpreter.
         // We already have a way of identifying the interpreter associated with a global kernelspec.
         // Hence exclude global paths from the list of interpreter specific paths (as global paths are NOT interpreter specific).
-        const paths = interpreterPaths.filter((item) =>
-            typeof item === 'string' ? !rootSpecPaths.includes(item) : !rootSpecPaths.includes(item.kernelSearchPath)
-        );
+        const paths = interpreterPaths.filter((item) => !rootSpecPaths.includes(item.kernelSearchPath));
 
         traceInfoIfCI(
             `Finding kernel specs for paths: ${paths
@@ -456,7 +454,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
      */
     private async findKernelPathsOfAllInterpreters(
         interpreters: PythonEnvironment[]
-    ): Promise<(string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]> {
+    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         const kernelSpecPathsAlreadyListed = new Set<string>();
         return interpreters
             .map((interpreter) => {
