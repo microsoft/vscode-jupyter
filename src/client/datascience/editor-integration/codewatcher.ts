@@ -339,8 +339,10 @@ export class CodeWatcher implements ICodeWatcher {
             return;
         }
 
-        // Run the cell that matches the current cursor position. Always advance
-        return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
+        const advance = this.configService.getSettings(this.documentManager.activeTextEditor.document.uri).enableAutoMoveToNextCell;
+
+        // Run the cell that matches the current cursor position.
+        return this.runMatchingCell(this.documentManager.activeTextEditor.selection, advance);
     }
 
     // telemetry captured on CommandRegistry
@@ -1032,7 +1034,7 @@ export class CodeWatcher implements ICodeWatcher {
         const nextRunCellLens = this.getNextCellLens(range.start);
 
         if (currentRunCellLens) {
-            // Move the next cell if allowed.
+            // Move to the next cell if allowed.
             if (advance) {
                 if (nextRunCellLens) {
                     this.advanceToRange(nextRunCellLens.range);
@@ -1045,7 +1047,7 @@ export class CodeWatcher implements ICodeWatcher {
                 }
             }
 
-            // Run the cell after moving the selection
+            // Run the cell after moving the selection.
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
