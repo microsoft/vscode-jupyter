@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
-import { traceInfo } from '../../client/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
@@ -354,10 +354,12 @@ ${actualCode}
 
 
 `;
+        traceInfoIfCI('Before submitting');
         const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
             codeWithWhitespace
         );
+        traceInfoIfCI('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
         assert.equal(actualCellText, actualCode);

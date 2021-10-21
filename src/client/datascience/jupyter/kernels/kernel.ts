@@ -377,7 +377,9 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
+        traceInfoIfCI('Started running kernel initialization');
         if (!this.notebook) {
+            traceInfoIfCI('Not running kernel initialization');
             return;
         }
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
@@ -427,7 +429,9 @@ export class Kernel implements IKernel {
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
+        traceInfoIfCI('End running kernel initialization, now waiting for idle');
         await this.notebook.session.waitForIdle(this.launchTimeout);
+        traceInfoIfCI('End running kernel initialization, session is idle');
     }
 
     private async disableJedi() {
@@ -599,6 +603,7 @@ export class Kernel implements IKernel {
 }
 
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+    traceInfoIfCI(`Executing silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
