@@ -111,11 +111,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        //assert(
-        //text ===
-        //`# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
-        //'Exported text does not match'
-        //);
         expect(text).to.equal(
             `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n%whos\n\n`,
             'Exported text does not match'
@@ -150,11 +145,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        // assert(
-        // text ===
-        // `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
-        // 'Exported text does not match'
-        // );
         expect(text).to.equal(
             `# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\n# %whos\n# !shellcmd\n\n`,
             'Exported text does not match'
@@ -232,11 +222,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        //assert(
-        //text ===
-        //`# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
-        //'Exported text does not match'
-        //);
         expect(text).to.equal(
             `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
             'Exported text does not match'
