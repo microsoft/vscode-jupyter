@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open label:needs-triage,needs-jupyter-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$ALL_REPOS is:issue is:open $TEAM_AUTHOR_INCLUSION sort:created-asc label:needs-triage,notebook-triage"
   },
   {
     "kind": 1,
@@ -122,7 +122,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
+    "value": "$VSCODE_ALL_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
   },
   {
     "kind": 1,
