@@ -603,7 +603,7 @@ export class Kernel implements IKernel {
 }
 
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
-    traceInfoIfCI(`Executing silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`);
+    traceInfo(`Executing silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
