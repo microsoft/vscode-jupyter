@@ -395,6 +395,7 @@ export class Kernel implements IKernel {
                 this._onDisposed.fire();
             });
             const statusChangeHandler = (status: ServerStatus) => {
+                traceInfoIfCI(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(this.notebook.session.onSessionStatusChanged(statusChangeHandler));

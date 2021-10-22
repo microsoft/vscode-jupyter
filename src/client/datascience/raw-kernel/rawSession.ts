@@ -5,7 +5,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import '../../common/extensions';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfoIfCI } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -205,6 +205,7 @@ export class RawSession implements ISessionWithSocket {
     // Private
     // Send out a message when our kernel changes state
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: Kernel.Status) {
+        traceInfoIfCI(`RawSession status changed to ${state}`);
         this._statusChanged.emit(state);
     }
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
