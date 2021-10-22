@@ -502,7 +502,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     private onStatusChanged(_s: Session.ISessionConnection) {
         if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.fire(this.getServerStatus());
+            const status = this.getServerStatus();
+            traceInfoIfCI(`Server Status = ${status}`);
+            this.onStatusChangedEvent.fire(status);
         }
     }
 }
