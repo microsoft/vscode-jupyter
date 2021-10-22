@@ -195,6 +195,7 @@ export namespace EditorContexts {
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
+    export const IsJupyterKernelSelected = 'jupyter.kernel.isjupyter';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
     export const ZmqAvailable = 'jupyter.zmqavailable';

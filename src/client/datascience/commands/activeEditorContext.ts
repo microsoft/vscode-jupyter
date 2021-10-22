@@ -11,12 +11,13 @@ import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { isNotebookCell } from '../../common/utils/misc';
+import { isNotebookCell, noop } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
-import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
+import { INotebookControllerManager } from '../notebook/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 @injectable()
@@ -35,6 +36,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
+    private isJupyterKernelSelected: ContextKey;
     private hasNativeNotebookOrInteractiveWindowOpen: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
@@ -42,7 +44,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -78,6 +81,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
+        this.isJupyterKernelSelected = new ContextKey(EditorContexts.IsJupyterKernelSelected, this.commandManager);
         this.hasNativeNotebookOrInteractiveWindowOpen = new ContextKey(
             EditorContexts.HasNativeNotebookOrInteractiveWindowOpen,
             this.commandManager
@@ -121,6 +125,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
+        this.updateSelectedKernelContext();
     }
 
     private updateNativeNotebookCellContext() {
@@ -170,6 +175,15 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
         }
+        this.updateSelectedKernelContext();
+    }
+    private updateSelectedKernelContext() {
+        const document = this.vscNotebook.activeNotebookEditor?.document ||  getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
+        if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)){
+            this.isJupyterKernelSelected.set(true).catch(noop);
+        } else {
+            this.isJupyterKernelSelected.set(false).catch(noop);
+        }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
         const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
@@ -183,6 +197,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
             this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
         }
+        this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { status: ServerStatus; kernel: IKernel }) {
         if (kernel.notebookDocument.notebookType === InteractiveWindowView) {

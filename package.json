@@ -793,31 +793,31 @@
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "group": "overflow@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true && jupyter.ispythonnotebook && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.openOutlineView",
                     "title": "%jupyter.command.jupyter.openOutlineView.title%",
                     "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && config.notebook.globalToolbar != true && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@4",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true && jupyter.ispythonnotebook"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -830,27 +830,27 @@
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "group": "navigation/execute@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "group": "navigation/execute@2",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.ispythonnotebook && jupyter.kernel.isjupyter"
                 },
                 {
                     "command": "jupyter.openOutlineView",
                     "group": "navigation@2",
-                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "group": "Jupyter",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.ispythonnotebook"
                 }
             ],
             "notebook/cell/title": [
