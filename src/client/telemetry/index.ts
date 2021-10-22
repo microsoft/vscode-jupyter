@@ -1423,6 +1423,10 @@ export interface IEventNamePropertyMapping {
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
     };
+    /*
+     * Telemetry send when we file an issue from the button on the data science survey prompt
+     */
+    [Telemetry.FileIssueFromSurvey]: never | undefined;
     [Telemetry.KernelSpecNotFoundError]: {
         resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
         language: string; // Language defined in notebook metadata.

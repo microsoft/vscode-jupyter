@@ -494,7 +494,8 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
-    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION'
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
+    FileIssueFromSurvey = 'DATASCIENCE.FILE_ISSUE_FROM_SURVEY'
 }
 
 export enum NativeKeyboardCommandTelemetry {

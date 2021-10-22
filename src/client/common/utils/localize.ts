@@ -110,8 +110,9 @@ export namespace DataScienceSurveyBanner {
         'DataScienceSurveyBanner.bannerMessage',
         'Can you please take 2 minutes to tell us how the Python Data Science features are working for you?'
     );
-    export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
-    export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
+    export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes');
+    export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No');
+    export const bannerLabelFileIssue = localize('DataScienceSurveyBanner.bannerLabelFileIssue', 'File Issue');
 }
 export namespace DataScienceRendererExtension {
     export const installingExtension = localize(

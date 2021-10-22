@@ -19,6 +19,8 @@ import {
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
+import { sendTelemetryEvent } from '../telemetry';
+import { Telemetry } from './constants';
 import { isJupyterNotebook } from './notebook/helpers/helpers';
 
 export enum InsidersNotebookSurveyStateKeys {
@@ -38,7 +40,8 @@ export enum BannerType {
 
 enum DSSurveyLabelIndex {
     Yes,
-    No
+    No,
+    FileIssue
 }
 
 export type ShowBannerWithExpiryTime = {
@@ -89,7 +92,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     private disabledInCurrentSession: boolean = false;
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelNo(),
+        localize.DataScienceSurveyBanner.bannerLabelFileIssue()
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
@@ -134,6 +138,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
                 await this.launchSurvey(type);
                 await this.disable(DSSurveyLabelIndex.Yes, type);
+                break;
+            }
+            case this.bannerLabels[DSSurveyLabelIndex.FileIssue]: {
+                // If they want to file an issue, also disable the survey
+                this.fileIssue();
+                await this.disable(DSSurveyLabelIndex.No, type);
                 break;
             }
             // Treat clicking on x as equivalent to clicking No
@@ -247,5 +257,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 traceError('Invalid Banner type');
                 return '';
         }
+    }
+
+    // When "File Issue" is selected link to our issue filing page on github
+    private fileIssue() {
+        sendTelemetryEvent(Telemetry.FileIssueFromSurvey);
+        this.browserService.launch('https://aka.ms/vscjupyternewissue');
     }
 }
