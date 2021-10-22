@@ -25,7 +25,7 @@ import {
     startJupyterServer,
     workAroundVSCodeNotebookStartPages
 } from './helper';
-import { commands, Uri, window, workspace } from 'vscode';
+import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
@@ -33,7 +33,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -82,6 +82,10 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
+        // Revert back our settings just in case
+        const settings = workspace.getConfiguration('jupyter', null);
+        await settings.update('pythonExportMethod', 'direct', ConfigurationTarget.Global);
+
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -133,7 +137,7 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         });
 
         const settings = workspace.getConfiguration('jupyter', null);
-        await settings.update('pythonExportMethod', 'commentMagics');
+        await settings.update('pythonExportMethod', 'commentMagics', ConfigurationTarget.Global);
 
         // Execute our export command
         await commands.executeCommand('jupyter.exportAsPythonScript');
@@ -153,9 +157,6 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Clean up dispose
         onDidChangeDispose.dispose();
-
-        // Revert back our settings
-        await settings.update('pythonExportMethod', 'direct');
     });
     test('Export a basic notebook document with nbconvert', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
@@ -170,7 +171,7 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
         });
 
         const settings = workspace.getConfiguration('jupyter', null);
-        await settings.update('pythonExportMethod', 'nbconvert');
+        await settings.update('pythonExportMethod', 'nbconvert', ConfigurationTarget.Global);
 
         // Execute our export command
         await commands.executeCommand('jupyter.exportAsPythonScript');
@@ -190,9 +191,6 @@ suite('IANHU DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Clean up dispose
         onDidChangeDispose.dispose();
-
-        // Revert back our settings
-        await settings.update('pythonExportMethod', 'direct');
     });
     test('Import a notebook file from disk', async () => {
         // Prep to see when
