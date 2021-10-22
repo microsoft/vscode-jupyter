@@ -121,6 +121,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _notebookDocument: NotebookDocument | undefined;
     private executionPromise: Promise<boolean> | undefined;
     private _notebookEditor: NotebookEditor | undefined;
+    private _inputUri: Uri | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -196,7 +197,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
-        const { notebookEditor } = ((await this.commandManager.executeCommand(
+        const { inputUri, notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
@@ -211,6 +212,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         this._notebookEditor = notebookEditor;
         this._notebookDocument = notebookEditor.document;
+        this._inputUri = inputUri;
         this.internalDisposables.push(
             window.onDidChangeActiveNotebookEditor((e) => {
                 if (e === this._notebookEditor) {
@@ -334,6 +336,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             undefined,
             undefined
         );
+    }
+
+    public get inputUri() {
+        return this._inputUri;
     }
 
     public dispose() {
