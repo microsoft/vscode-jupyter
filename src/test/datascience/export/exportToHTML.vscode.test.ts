@@ -37,7 +37,7 @@ suite('DataScience - Export HTML', function () {
         const target = Uri.file(file.filePath);
         await file.dispose();
         const token = new CancellationTokenSource();
-        const interpreter = await exportInterpreterFinder.getExportInterpreter(ExportFormat.html);
+        const interpreter = await exportInterpreterFinder.getExportInterpreter();
         await exportToHTML.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,

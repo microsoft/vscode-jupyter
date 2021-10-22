@@ -1783,6 +1783,17 @@
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
                 },
+                "jupyter.pythonExportMethod": {
+                    "type": "string",
+                    "enum": [
+                        "direct",
+                        "commentMagics",
+                        "nbconvert"
+                    ],
+                    "default": "direct",
+                    "description": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
+                    "scope": "application"
+                },
                 "jupyter.runStartupCommands": {
                     "type": "array",
                     "default": "",
