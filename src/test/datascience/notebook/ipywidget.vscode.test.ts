@@ -22,7 +22,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../../../client/datascience/ipywidgets/notebookIPyWidgetCoordinator';
@@ -45,12 +45,6 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     let widgetCoordinator: NotebookIPyWidgetCoordinator;
     let testWidgetNb: Uri;
     suiteSetup(async function () {
-        // We need to have webviews built to run this, so skip if we don't have them
-        if (IS_WEBVIEW_BUILD_SKIPPED) {
-            console.log('Widget notebook tests require webview build to be enabled');
-            return this.skip();
-        }
-
         if (!process.env.VSC_JUPYTER_RUN_NB_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }

@@ -23,7 +23,6 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -61,6 +60,7 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
+import { Deferred } from '../../../common/utils/async';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
