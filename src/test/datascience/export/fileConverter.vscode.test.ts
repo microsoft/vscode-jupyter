@@ -9,19 +9,25 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IDisposable, IExtensions } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IExtensions,
+    IWatchableJupyterSettings
+} from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { FileConverter } from '../../../client/datascience/export/fileConverter';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog } from '../../../client/datascience/export/types';
+import { ExportFormat, INbConvertExport, IExportDialog, IExport } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 
-suite('DataScience - Export Manager', () => {
+suite('DataScience - File Converter', () => {
     let fileConverter: FileConverter;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;
     let exportPdf: INbConvertExport;
+    let exportPythonPlain: IExport;
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
@@ -29,6 +35,8 @@ suite('DataScience - Export Manager', () => {
     let exportFileOpener: ExportFileOpener;
     let exportInterpreterFinder: ExportInterpreterFinder;
     let extensions: IExtensions;
+    let configuration: IConfigurationService;
+    let settings: IWatchableJupyterSettings;
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
@@ -37,10 +45,15 @@ suite('DataScience - Export Manager', () => {
         exportPython = mock<INbConvertExport>();
         exportHtml = mock<INbConvertExport>();
         exportPdf = mock<INbConvertExport>();
+        exportPythonPlain = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
         extensions = mock<IExtensions>();
+        configuration = mock<IConfigurationService>();
+        settings = mock<IWatchableJupyterSettings>();
+        when(configuration.getSettings(anything())).thenReturn(instance(settings));
+        when(settings.pythonExportMethod).thenReturn('direct');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(filePicker.showDialog(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
@@ -53,6 +66,7 @@ suite('DataScience - Export Manager', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
+        when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
@@ -62,6 +76,7 @@ suite('DataScience - Export Manager', () => {
             instance(exportPdf),
             instance(exportHtml),
             instance(exportPython),
+            instance(exportPythonPlain),
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),
@@ -69,7 +84,8 @@ suite('DataScience - Export Manager', () => {
             instance(appShell),
             instance(exportFileOpener),
             instance(exportInterpreterFinder),
-            instance(extensions)
+            instance(extensions),
+            instance(configuration)
         );
 
         // Stub out the getContent inner method of the ExportManager we don't care about the content returned
@@ -100,7 +116,7 @@ suite('DataScience - Export Manager', () => {
     });
     test('Export to Python is called when export method is Python', async () => {
         await fileConverter.export(ExportFormat.python, {} as any);
-        verify(exportPython.export(anything(), anything(), anything(), anything())).once();
+        verify(exportPythonPlain.export(anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });
 });

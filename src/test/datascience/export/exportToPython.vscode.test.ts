@@ -36,7 +36,7 @@ suite('DataScience - Export Python', function () {
         const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
         const token = new CancellationTokenSource();
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
-        const interpreter = await exportInterpreterFinder.getExportInterpreter(ExportFormat.html);
+        const interpreter = await exportInterpreterFinder.getExportInterpreter();
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,
