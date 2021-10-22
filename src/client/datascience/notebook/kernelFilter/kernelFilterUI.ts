@@ -47,30 +47,34 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.busy = true;
         quickPick.enabled = false;
 
-        this.controllers.kernelConnections.then((connections) => {
-            if (quickPickHidden) {
-                return;
-            }
-            const items = connections
-                .filter((item) => {
-                    if (duplicates.has(item.id)) {
-                        return false;
-                    }
-                    duplicates.add(item.id);
-                    return true;
-                })
-                .map((item) => {
-                    return <QuickPickType>{
-                        label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)).replace(' 64-bit', ''),
-                        picked: !this.kernelFilter.isKernelHidden(item),
-                        description:
-                            item.kind === 'connectToLiveKernel'
-                                ? getRemoteKernelSessionInformation(item)
-                                : getKernelConnectionPath(item, this.pathUtils, this.workspace),
-                        connection: item
-                    };
-                });
-            items.sort((a, b) => a.label.localeCompare(b.label));
+        this.controllers.kernelConnections
+            .then((connections) => {
+                if (quickPickHidden) {
+                    return;
+                }
+                const items = connections
+                    .filter((item) => {
+                        if (duplicates.has(item.id)) {
+                            return false;
+                        }
+                        duplicates.add(item.id);
+                        return true;
+                    })
+                    .map((item) => {
+                        return <QuickPickType>{
+                            label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)).replace(
+                                ' 64-bit',
+                                ''
+                            ),
+                            picked: !this.kernelFilter.isKernelHidden(item),
+                            description:
+                                item.kind === 'connectToLiveKernel'
+                                    ? getRemoteKernelSessionInformation(item)
+                                    : getKernelConnectionPath(item, this.pathUtils, this.workspace),
+                            connection: item
+                        };
+                    });
+                items.sort((a, b) => a.label.localeCompare(b.label));
 
                 quickPick.canSelectMany = true;
                 quickPick.activeItems = items;
