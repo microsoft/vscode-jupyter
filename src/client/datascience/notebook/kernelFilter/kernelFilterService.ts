@@ -83,8 +83,8 @@ export class KernelFilterService implements IDisposable {
         const folders = (this.workspace.workspaceFolders || []).map((item) => item.uri);
         if (folders.length > 0) {
             await Promise.all(
-                folders.map((item) =>
-                    this.config.updateSetting('kernels.filter', itemsToHide, item, ConfigurationTarget.Workspace)
+                folders.map((folder) =>
+                    this.config.updateSetting('kernels.filter', itemsToHide, folder, ConfigurationTarget.Workspace)
                 )
             );
         } else {

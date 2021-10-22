@@ -568,7 +568,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
-            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else {
