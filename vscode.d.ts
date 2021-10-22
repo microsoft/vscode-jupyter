@@ -766,8 +766,9 @@ declare module 'vscode' {
 		preserveFocus?: boolean;
 
 		/**
-		 * An optional flag that controls if an {@link TextEditor editor}-tab will be replaced
-		 * with the next editor or if it will be kept.
+		 * An optional flag that controls if an {@link TextEditor editor}-tab shows as preview. Preview tabs will
+		 * be replaced and reused until set to stay - either explicitly or through editing. The default behaviour depends
+		 * on the `workbench.editor.enablePreview`-setting.
 		 */
 		preview?: boolean;
 
@@ -2591,6 +2592,18 @@ declare module 'vscode' {
 		supportThemeIcons?: boolean;
 
 		/**
+		 * Indicates that this markdown string can contain raw html tags. Defaults to false.
+		 *
+		 * When `supportHtml` is false, the markdown renderer will strip out any raw html tags
+		 * that appear in the markdown text. This means you can only use markdown syntax for rendering.
+		 *
+		 * When `supportHtml` is true, the markdown render will also allow a safe subset of html tags
+		 * and attributes to be rendered. See https://github.com/microsoft/vscode/blob/6d2920473c6f13759c978dd89104c4270a83422d/src/vs/base/browser/markdownRenderer.ts#L296
+		 * for a list of all supported tags and attributes.
+		 */
+		supportHtml?: boolean;
+
+		/**
 		 * Creates a new markdown string with the given value.
 		 *
 		 * @param value Optional, initial value.
@@ -3538,7 +3551,7 @@ declare module 'vscode' {
 		 *
 		 * This is the id that will be passed to `DocumentSemanticTokensProvider.provideDocumentSemanticTokensEdits` (if implemented).
 		 */
-		readonly resultId?: string;
+		readonly resultId: string | undefined;
 		/**
 		 * The actual tokens data.
 		 * @see {@link DocumentSemanticTokensProvider.provideDocumentSemanticTokens provideDocumentSemanticTokens} for an explanation of the format.
@@ -3558,7 +3571,7 @@ declare module 'vscode' {
 		 *
 		 * This is the id that will be passed to `DocumentSemanticTokensProvider.provideDocumentSemanticTokensEdits` (if implemented).
 		 */
-		readonly resultId?: string;
+		readonly resultId: string | undefined;
 		/**
 		 * The edits to the tokens data.
 		 * All edits refer to the initial data state.
@@ -3584,7 +3597,7 @@ declare module 'vscode' {
 		/**
 		 * The elements to insert.
 		 */
-		readonly data?: Uint32Array;
+		readonly data: Uint32Array | undefined;
 
 		constructor(start: number, deleteCount: number, data?: Uint32Array);
 	}
@@ -5733,7 +5746,7 @@ declare module 'vscode' {
 		 * The priority of this item. Higher value means the item should
 		 * be shown more to the left.
 		 */
-		readonly priority?: number;
+		readonly priority: number | undefined;
 
 		/**
 		 * The name of the entry, like 'Python Language Indicator', 'Git Status' etc.
@@ -5789,7 +5802,7 @@ declare module 'vscode' {
 		/**
 		 * Accessibility information used when a screen reader interacts with this StatusBar item
 		 */
-		accessibilityInformation?: AccessibilityInformation;
+		accessibilityInformation: AccessibilityInformation | undefined;
 
 		/**
 		 * Shows the entry in the status bar.
@@ -10823,8 +10836,8 @@ declare module 'vscode' {
 		 * will be matched against the file paths of resulting matches relative to their workspace. Use a {@link RelativePattern relative pattern}
 		 * to restrict the search results to a {@link WorkspaceFolder workspace folder}.
 		 * @param exclude  A {@link GlobPattern glob pattern} that defines files and folders to exclude. The glob pattern
-		 * will be matched against the file paths of resulting matches relative to their workspace. When `undefined`, default excludes and the user's
-		 * configured excludes will apply. When `null`, no excludes will apply.
+		 * will be matched against the file paths of resulting matches relative to their workspace. When `undefined`, default file-excludes (e.g. the `files.exclude`-setting
+		 * but not `search.exclude`) will apply. When `null`, no excludes will apply.
 		 * @param maxResults An upper-bound for the result.
 		 * @param token A token that can be used to signal cancellation to the underlying search engine.
 		 * @return A thenable that resolves to an array of resource identifiers. Will return no results if no
@@ -11660,7 +11673,7 @@ declare module 'vscode' {
 		 *
 		 * @param selector A selector that defines the documents this provider is applicable to.
 		 * @param provider A type hierarchy provider.
-		 * @return {@link Disposable Disposable} that unregisters this provider when being disposed.
+		 * @return A {@link Disposable} that unregisters this provider when being disposed.
 		 */
 		export function registerTypeHierarchyProvider(selector: DocumentSelector, provider: TypeHierarchyProvider): Disposable;
 

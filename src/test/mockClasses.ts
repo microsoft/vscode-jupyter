@@ -34,7 +34,7 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
     public id!: string;
     public name!: string;
     backgroundColor: vscode.ThemeColor | undefined;
-    accessibilityInformation?: vscode.AccessibilityInformation | undefined;
+    accessibilityInformation: vscode.AccessibilityInformation | undefined;
     public alignment!: vscode.StatusBarAlignment;
     public priority!: number;
     public text!: string;
