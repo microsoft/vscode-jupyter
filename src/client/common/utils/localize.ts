@@ -954,6 +954,17 @@ export namespace DataScience {
     export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
     export const importingIpynb = localize('DataScience.importingIpynb', 'Importing notebook file');
     export const exportingToFormat = localize('DataScience.exportingToFormat', 'Exporting to {0}');
+    export const kernelCategoryForJupyterSession = localize(
+        'jupyter.kernel.category.jupyterSession',
+        'Jupyter Session'
+    );
+    export const kernelCategoryForJupyterKernel = localize('jupyter.kernel.category.jupyterKernel', 'Jupyter Kernel');
+    export const kernelCategoryForConda = localize('jupyter.kernel.category.conda', 'Conda Env');
+    export const kernelCategoryForPoetry = localize('jupyter.kernel.category.poetry', 'Poetry Env');
+    export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');
+    export const kernelCategoryForPyEnv = localize('jupyter.kernel.category.pyenv', 'PyEnv Env');
+    export const kernelCategoryForGlobal = localize('jupyter.kernel.category.global', 'Global Env');
+    export const kernelCategoryForVirtual = localize('jupyter.kernel.category.global', 'Virtual Env');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

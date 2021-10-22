@@ -26,6 +26,7 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
 import { EnvironmentType } from '../../pythonEnvironments/info';
@@ -425,25 +426,25 @@ export class VSCodeNotebookController implements Disposable {
 function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel':
-            return 'Jupyter Session';
+            return DataScience.kernelCategoryForJupyterSession();
         case 'startUsingKernelSpec':
-            return 'Jupyter Kernel';
+            return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
-                    return 'Conda Env';
+                    return DataScience.kernelCategoryForConda();
                 case EnvironmentType.Pipenv:
-                    return 'Pipenv Env';
+                    return DataScience.kernelCategoryForPipEnv();
                 case EnvironmentType.Poetry:
-                    return 'Poetry Env';
+                    return DataScience.kernelCategoryForPoetry();
                 case EnvironmentType.Pyenv:
-                    return 'PyEnv Env';
+                    return DataScience.kernelCategoryForPipEnv();
                 case EnvironmentType.Venv:
                 case EnvironmentType.VirtualEnv:
                 case EnvironmentType.VirtualEnvWrapper:
-                    return 'Virtual Env';
+                    return DataScience.kernelCategoryForVirtual();
                 default:
-                    return 'Global Env';
+                    return DataScience.kernelCategoryForGlobal();
             }
         }
     }
