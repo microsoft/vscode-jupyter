@@ -12,14 +12,16 @@ import {
     Range,
     TextDocument
 } from 'vscode';
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IVSCodeNotebook } from '../../../common/application/types';
+import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
 import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
-import { INotebookCompletion, INotebookProvider } from '../../types';
+import { IJupyterSession, INotebookCompletion, INotebookProvider } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
 @injectable()
@@ -49,7 +51,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
         // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
             resource: notebookDocument.uri,
-            identity: notebookDocument.uri,
+            document: notebookDocument,
             getOnly: true
         });
         if (token.isCancellationRequested) {
@@ -66,7 +68,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const result = await Promise.race([
-            notebook.getCompletion(document.getText(), document.offsetAt(position), token),
+            this.getJupyterCompletion(notebook.session, document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
                 if (token.isCancellationRequested) {
                     return;
@@ -116,6 +118,50 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             };
             return completion;
         });
+    }
+    public async getJupyterCompletion(
+        session: IJupyterSession,
+        cellCode: string,
+        offsetInCode: number,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
+        // If server is busy, then don't delay code completion.
+        if (session.status === ServerStatus.Busy) {
+            return {
+                matches: [],
+                cursor: { start: 0, end: 0 },
+                metadata: {}
+            };
+        }
+        const result = await Promise.race([
+            session.requestComplete({
+                code: cellCode,
+                cursor_pos: offsetInCode
+            }),
+            createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
+        ]);
+        traceInfoIfCI(
+            `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
+                result ? JSON.stringify(result) : 'empty'
+            }`
+        );
+        if (result && result.content) {
+            if ('matches' in result.content) {
+                return {
+                    matches: result.content.matches,
+                    cursor: {
+                        start: result.content.cursor_start,
+                        end: result.content.cursor_end
+                    },
+                    metadata: result.content.metadata
+                };
+            }
+        }
+        return {
+            matches: [],
+            cursor: { start: 0, end: 0 },
+            metadata: {}
+        };
     }
 }
 

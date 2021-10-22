@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import '../../common/extensions';
 import { traceInfo } from '../../common/logger';
@@ -75,7 +75,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
-        identity: Uri,
+        document: NotebookDocument,
         resource: Resource,
         disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
@@ -84,7 +84,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     ): Promise<INotebook> {
         return this.createNotebookInstance(
             resource,
-            identity,
+            document,
             disableUI,
             notebookMetadata,
             kernelConnection,
@@ -92,8 +92,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         );
     }
 
-    public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
-        return this.notebooks.get(identity.toString());
+    public async getNotebook(document: NotebookDocument): Promise<INotebook | undefined> {
+        return this.notebooks.get(document.uri.toString());
     }
 
     public async dispose(): Promise<void> {
@@ -120,10 +120,10 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         return this.rawConnection;
     }
 
-    protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+    protected setNotebook(document: NotebookDocument, notebook: Promise<INotebook>) {
         const removeNotebook = () => {
-            if (this.notebooks.get(identity.toString()) === notebook) {
-                this.notebooks.delete(identity.toString());
+            if (this.notebooks.get(document.uri.toString()) === notebook) {
+                this.notebooks.delete(document.uri.toString());
             }
         };
 
@@ -131,19 +131,19 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
             .then((nb) => {
                 const oldDispose = nb.dispose.bind(nb);
                 nb.dispose = () => {
-                    this.notebooks.delete(identity.toString());
+                    this.notebooks.delete(document.uri.toString());
                     return oldDispose();
                 };
             })
             .catch(removeNotebook);
 
         // Save the notebook
-        this.notebooks.set(identity.toString(), notebook);
+        this.notebooks.set(document.uri.toString(), notebook);
     }
 
     protected createNotebookInstance(
         _resource: Resource,
-        _identity: Uri,
+        _document: NotebookDocument,
         _disableUI?: boolean,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,

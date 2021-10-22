@@ -562,11 +562,6 @@ jobs:
       - name: Install screen capture
         run: npm i -D screenshot-desktop
 
-        # Check to see if we should build webviews or not
-      - name: Check if we need to build webviews
-        if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
-        run: echo "VSC_JUPYTER_SKIP_WEBVIEW_BUILD=true" >> $GITHUB_ENV
-
         # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle

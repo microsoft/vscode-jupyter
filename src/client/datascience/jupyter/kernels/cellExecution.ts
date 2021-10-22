@@ -43,7 +43,7 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { ICellHashProvider, IDataScienceErrorHandler, IJupyterSession, INotebook } from '../../types';
+import { ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
@@ -212,7 +212,7 @@ export class CellExecution implements IDisposable {
             cellHashProvider
         );
     }
-    public async start(notebook: INotebook) {
+    public async start(session: IJupyterSession) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -246,7 +246,7 @@ export class CellExecution implements IDisposable {
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
-        this.execute(notebook.session)
+        this.execute(session)
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -326,7 +326,7 @@ export class CellExecution implements IDisposable {
 
         this.endCellTask(success);
         this._completed = true;
-        traceCellMessage(this.cell, 'Completed successfully & resolving');
+        traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
         this._result.resolve(runState);
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled') {
@@ -621,7 +621,7 @@ export class CellExecution implements IDisposable {
                     cancelToken.token
                 )
                 .then((v) => {
-                    session.sendInputReply(v || '');
+                    session.sendInputReply({ value: v || '', status: 'ok' });
                 }, noop);
 
             this.prompts.delete(cancelToken);

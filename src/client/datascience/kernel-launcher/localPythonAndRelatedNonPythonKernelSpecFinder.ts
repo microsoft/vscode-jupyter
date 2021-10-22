@@ -382,7 +382,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     ): Promise<IJupyterKernelSpec[]> {
         traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`);
         // Find all the possible places to look for this resource
-        const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
+        const [interpreterPaths, rootSpecPaths] = await Promise.all([
+            this.findKernelPathsOfAllInterpreters(interpreters),
+            this.jupyterPaths.getKernelSpecRootPaths()
+        ]);
+        // Exclude the glbal paths from the list.
+        // What could happens is, we could have a global python interpreter and that returns a global path.
+        // But we could have a kernel spec in global path that points to a completely different interpreter.
+        // We already have a way of identifying the interpreter associated with a global kernelspec.
+        // Hence exclude global paths from the list of interpreter specific paths (as global paths are NOT interpreter specific).
+        const paths = interpreterPaths.filter((item) => !rootSpecPaths.includes(item.kernelSearchPath));
+
         traceInfoIfCI(
             `Finding kernel specs for paths: ${paths
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -444,7 +454,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
      */
     private async findKernelPathsOfAllInterpreters(
         interpreters: PythonEnvironment[]
-    ): Promise<(string | { interpreter: PythonEnvironment; kernelSearchPath: string })[]> {
+    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         const kernelSpecPathsAlreadyListed = new Set<string>();
         return interpreters
             .map((interpreter) => {
