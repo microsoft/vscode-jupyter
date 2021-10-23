@@ -123,7 +123,7 @@ function addLoggingForCI() {
         '        ' +
             '\nconsole.log("Sending request to get kernel info");\n' +
             '            reply = (await Private.handleShellMessage(this, msg));' +
-            '\nconsole.log("Got response for kernel info", JSON.stringify(reply));\n'
+            '\nconsole.log("Got response for kernel info");\n'
     );
     fileContents.replace(
         '            // If we rejected because the future was disposed, ignore and return.',
@@ -134,7 +134,7 @@ function addLoggingForCI() {
     fileContents.replace(
         '            this._kernelSession = msg.header.session;',
         '        ' +
-            '\nconsole.log("Got Kernel message", JSON.stringify(msg));\n' +
+            '\nconsole.log("Got Kernel message", msg);\n' +
             '            this._kernelSession = msg.header.session;'
     );
     fileContents.replace(
