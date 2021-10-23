@@ -167,8 +167,10 @@ function addLoggingForCI() {
             '\nconsole.log("EMpty queue and send one by one");\n' +
             '            this._sendMessage(this._pendingMessages[0], false);'
     );
+    fs.writeFileSync(filePath, fileContents);
 }
 
+addLoggingForCI();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
