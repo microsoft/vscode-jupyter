@@ -26,16 +26,18 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import {
     areKernelConnectionsEqual,
-    getDescriptionOfKernelConnection,
-    getDetailOfKernelConnection,
+    getRemoteKernelSessionInformation,
+    getKernelConnectionPath,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -56,6 +58,7 @@ export class VSCodeNotebookController implements Disposable {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
@@ -81,6 +84,9 @@ export class VSCodeNotebookController implements Disposable {
     }
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
+    }
+    get onDidDispose() {
+        return this._onDidDispose.event;
     }
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
@@ -123,8 +129,11 @@ export class VSCodeNotebookController implements Disposable {
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
-        this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
+        this.controller.description =
+            kernelConnection.kind === 'connectToLiveKernel'
+                ? getRemoteKernelSessionInformation(kernelConnection)
+                : getKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
+        this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
@@ -147,6 +156,8 @@ export class VSCodeNotebookController implements Disposable {
             this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
+        this._onDidDispose.fire();
+        this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
     }
 
@@ -408,6 +419,33 @@ export class VSCodeNotebookController implements Disposable {
             this.localOrRemoteKernel === 'local'
         ) {
             await newKernel.start({ disableUI: true }).catch(noop);
+        }
+    }
+}
+
+function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel':
+            return DataScience.kernelCategoryForJupyterSession();
+        case 'startUsingKernelSpec':
+            return DataScience.kernelCategoryForJupyterKernel();
+        case 'startUsingPythonInterpreter': {
+            switch (kernelConnection.interpreter.envType) {
+                case EnvironmentType.Conda:
+                    return DataScience.kernelCategoryForConda();
+                case EnvironmentType.Pipenv:
+                    return DataScience.kernelCategoryForPipEnv();
+                case EnvironmentType.Poetry:
+                    return DataScience.kernelCategoryForPoetry();
+                case EnvironmentType.Pyenv:
+                    return DataScience.kernelCategoryForPipEnv();
+                case EnvironmentType.Venv:
+                case EnvironmentType.VirtualEnv:
+                case EnvironmentType.VirtualEnvWrapper:
+                    return DataScience.kernelCategoryForVirtual();
+                default:
+                    return DataScience.kernelCategoryForGlobal();
+            }
         }
     }
 }

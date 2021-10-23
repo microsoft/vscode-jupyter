@@ -413,6 +413,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this.executionPromise;
     }
     private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         const [notebookEditor, kernel] = await Promise.all([
             this._editorReadyPromise,
             this._kernelReadyPromise,
@@ -425,7 +426,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const isLastCellVisible = notebookEditor?.visibleRanges.find((r) => {
             return r.end === notebookEditor.document.cellCount - 1;
         });
+        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.before.AddNotebookCell');
         const notebookCell = await this.addNotebookCell(notebookEditor.document, code, fileUri, line, id);
+        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.after.AddNotebookCell');
         const settings = this.configuration.getSettings(this.owningResource);
         // The default behavior is to scroll to the last cell if the user is already at the bottom
         // of the history, but not to scroll if the user has scrolled somewhere in the middle
@@ -447,7 +450,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 );
                 await this.jupyterDebugger.startDebugging(kernel!);
             }
-
+            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
 
             traceInfo(`Finished execution for ${id}`);
@@ -460,11 +463,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     private async runIntialization(kernel: IKernel, fileUri: Resource) {
         if (!fileUri) {
+            traceInfoIfCI('Unable to run initialization for IW');
             return;
         }
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
         await this.setFileInKernel(fileUri.fsPath, kernel!);
+        traceInfoIfCI('file in kernel set for IW');
     }
 
     public async exportCells() {

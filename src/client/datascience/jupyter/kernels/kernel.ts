@@ -377,7 +377,9 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
+        traceInfoIfCI('Started running kernel initialization');
         if (!this.notebook) {
+            traceInfoIfCI('Not running kernel initialization');
             return;
         }
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
@@ -393,6 +395,7 @@ export class Kernel implements IKernel {
                 this._onDisposed.fire();
             });
             const statusChangeHandler = (status: ServerStatus) => {
+                traceInfoIfCI(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(this.notebook.session.onSessionStatusChanged(statusChangeHandler));
@@ -401,11 +404,13 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-
+            traceInfoIfCI('After updating working directory');
             await this.disableJedi();
+            traceInfoIfCI('After Disabing jedi');
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
+            traceInfoIfCI('After initializing matplotlib');
 
             if (this.connection?.localLaunch && this.notebook) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -418,7 +423,9 @@ export class Kernel implements IKernel {
         }
 
         // Run any startup commands that we have specified
+        traceInfoIfCI('Run startup commands');
         await this.runStartupCommands();
+        traceInfoIfCI('After running startup commands');
 
         try {
             const info = await this.notebook.session.requestKernelInfo();
@@ -427,7 +434,9 @@ export class Kernel implements IKernel {
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
+        traceInfoIfCI('End running kernel initialization, now waiting for idle');
         await this.notebook.session.waitForIdle(this.launchTimeout);
+        traceInfoIfCI('End running kernel initialization, session is idle');
     }
 
     private async disableJedi() {
@@ -599,6 +608,9 @@ export class Kernel implements IKernel {
 }
 
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+    traceInfo(
+        `Executing (status ${session.status}) silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`
+    );
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -612,12 +624,10 @@ export async function executeSilently(session: IJupyterSession, code: string): P
         },
         true
     );
-    if (!request) {
-        return [];
-    }
     const outputs: nbformat.IOutput[] = [];
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (stream), ${msg.content.text.substr(0, 100).splitLines().join('\\n')}`);
             if (
                 outputs.length > 0 &&
                 outputs[outputs.length - 1].output_type === 'stream' &&
@@ -634,6 +644,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
                 outputs.push(streamOutput);
             }
         } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (execresult)}`);
             const output: nbformat.IExecuteResult = {
                 data: msg.content.data,
                 execution_count: msg.content.execution_count,
@@ -642,6 +653,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
             };
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (displaydata)}`);
             const output: nbformat.IDisplayData = {
                 data: msg.content.data,
                 metadata: msg.content.metadata,
@@ -649,6 +661,11 @@ export async function executeSilently(session: IJupyterSession, code: string): P
             };
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            traceInfoIfCI(
+                `Got io pub message (error), ${msg.content.ename},${
+                    msg.content.evalue
+                }, ${msg.content.traceback.join().substring(0, 100)}}`
+            );
             const output: nbformat.IError = {
                 ename: msg.content.ename,
                 evalue: msg.content.evalue,
@@ -656,9 +673,12 @@ export async function executeSilently(session: IJupyterSession, code: string): P
                 output_type: 'error'
             };
             outputs.push(output);
+        } else {
+            traceInfoIfCI(`Got io pub message (${msg.header.msg_type})`);
         }
     };
     await request.done;
+    traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
 
     return outputs;
 }

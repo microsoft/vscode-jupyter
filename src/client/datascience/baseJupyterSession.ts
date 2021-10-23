@@ -465,11 +465,19 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     return ServerStatus.Restarting;
                 case 'starting':
                     return ServerStatus.Starting;
-                default:
+                default: {
+                    traceInfoIfCI(
+                        `Kernel status not started because real kenrel status is ${this.session.kernel.status}`
+                    );
                     return ServerStatus.NotStarted;
+                }
             }
         }
-
+        traceInfoIfCI(
+            `Kernel status not started because real session is ${
+                this.session ? 'defined' : 'undefined'
+            } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
+        );
         return ServerStatus.NotStarted;
     }
 
@@ -494,7 +502,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     private onStatusChanged(_s: Session.ISessionConnection) {
         if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.fire(this.getServerStatus());
+            const status = this.getServerStatus();
+            traceInfoIfCI(`Server Status = ${status}`);
+            this.onStatusChangedEvent.fire(status);
         }
     }
 }

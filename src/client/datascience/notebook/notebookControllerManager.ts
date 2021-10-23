@@ -50,6 +50,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { KernelFilterService } from './kernelFilter/kernelFilterService';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -66,6 +67,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private controllersPromise?: Promise<void>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
+    private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
+    private _controllersLoaded?: boolean;
+    public get kernelConnections() {
+        return this.loadNotebookControllers().then(() => Array.from(this.allKernelConnections.values()));
+    }
+    public get controllersLoaded() {
+        return this._controllersLoaded === true;
+    }
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private readonly isLocalLaunch: boolean;
@@ -94,7 +103,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -102,6 +112,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
+        this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
     }
     public async getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
@@ -151,6 +162,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ])
                 .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
                 .finally(() => {
+                    this._controllersLoaded = true;
                     let timer: NodeJS.Timeout | number | undefined;
                     this.interpreters.onDidChangeInterpreters(
                         () => {
@@ -200,7 +212,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
-    public getOrCreateController(
+    public getOrCreateControllerForActiveInterpreter(
         pythonInterpreter: PythonEnvironment,
         notebookType: 'interactive' | 'jupyter-notebook'
     ): VSCodeNotebookController | undefined {
@@ -213,7 +225,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
         };
-        this.createNotebookControllers([result]);
+        this.createNotebookControllers([result], notebookType === 'interactive');
 
         // Return the created controller
         return this.registeredNotebookControllers().find(
@@ -241,7 +253,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
         traceInfo(`Creating controller for ${notebookType} with interpreter ${activeInterpreter.path}`);
-        return this.getOrCreateController(activeInterpreter, notebookType);
+        return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     private async createDefaultRemoteController() {
         // Get all remote kernels
@@ -284,11 +296,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        const connections = await this.getKernelConnectionMetadata(
+        let connections = await this.getKernelConnectionMetadata(
             listLocalNonPythonKernels,
             cancelToken.token,
             useCache
         );
+
+        // Filter the connections.
+        connections = connections
+            .map((item) => {
+                this.allKernelConnections.add(item);
+                return item;
+            })
+            .filter((item) => !this.kernelFilter.isKernelHidden(item));
 
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
@@ -442,27 +462,49 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             disposable.dispose();
         }
     }
+    private onDidChangeKernelFilter() {
+        // Filter the connections.
+        const connections = Array.from(this.allKernelConnections).filter(
+            (item) => !this.kernelFilter.isKernelHidden(item)
+        );
 
-    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
+        // Try to re-create the missing controllers.
+        this.createNotebookControllers(connections);
+
+        // Go through all controllers that have been created and hide them.
+        // Unless they are attached to an existing document.
+        Array.from(this.registeredControllers.values()).forEach((item) => {
+            // TODO: Don't hide controllers that are already associated with a notebook.
+            // If we have a notebook opened and its using a kernel.
+            // Else we end up killing the execution as well.
+            if (this.kernelFilter.isKernelHidden(item.connection) && !this.isControllerAttachedToADocument(item)) {
+                item.dispose();
+            }
+        });
+    }
+    private isControllerAttachedToADocument(controller: VSCodeNotebookController) {
+        return this.notebook.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
+    }
+    private createNotebookControllers(
+        kernelConnections: KernelConnectionMetadata[],
+        doNotHideInteractiveKernel?: boolean
+    ) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
+            this.allKernelConnections.add(value);
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
-        });
-        connectionsWithLabel.sort((a, b) => {
-            if (a.label > b.label) {
-                return 1;
-            } else if (a.label === b.label) {
-                return 0;
-            } else {
-                return -1;
-            }
         });
 
         connectionsWithLabel.forEach((value) => {
-            this.createNotebookController(value.connection, value.label);
+            this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
         });
     }
-    private createNotebookController(kernelConnection: KernelConnectionMetadata, label: string) {
+    private createNotebookController(
+        kernelConnection: KernelConnectionMetadata,
+        label: string,
+        doNotHideInteractiveKernel?: boolean
+    ) {
+        this.allKernelConnections.add(kernelConnection);
         try {
             // Create notebook selector
             [
@@ -471,6 +513,21 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
                 .forEach(([id, viewType]) => {
+                    let hideController = false;
+                    if (
+                        kernelConnection.kind === 'connectToLiveKernel' ||
+                        kernelConnection.kind === 'startUsingDefaultKernel'
+                    ) {
+                        if (viewType === InteractiveWindowView && doNotHideInteractiveKernel) {
+                            hideController = false;
+                        } else {
+                            hideController = this.kernelFilter.isKernelHidden(kernelConnection);
+                        }
+                    }
+                    if (hideController) {
+                        return;
+                    }
+
                     const controller = new VSCodeNotebookController(
                         kernelConnection,
                         id,
@@ -494,6 +551,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
                         this.handleOnNotebookControllerSelected,
+                        this,
+                        this.disposables
+                    );
+                    controller.onDidDispose(
+                        () => {
+                            this.registeredControllers.delete(controller.id);
+                        },
                         this,
                         this.disposables
                     );
@@ -598,7 +662,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 export function getControllerDisplayName(kernelConnection: KernelConnectionMetadata, currentDisplayName: string) {
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel': {
-            return `Jupyter Kernel (${currentDisplayName})`;
+            return currentDisplayName;
         }
         case 'startUsingKernelSpec': {
             if (
@@ -609,16 +673,17 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
                 }`.trim();
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const bitness = kernelConnection.interpreter.displayName?.includes('64-bit') ? '64-bit' : '';
-                    const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
-                    const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
-                    return `${envPrefix} (${pythonDisplayName})`.trim();
+                    const pythonDisplayName = pythonVersion.trim();
+                    return kernelConnection.interpreter.envName
+                        ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                        : pythonDisplayName;
                 } else {
-                    const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
-                    return `${envPrefix || 'Jupyter Kernel'} (${currentDisplayName})`.trim();
+                    return kernelConnection.interpreter.envName
+                        ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
+                        : currentDisplayName;
                 }
             } else {
-                return `Jupyter Kernel (${currentDisplayName})`;
+                return currentDisplayName;
             }
         }
         case 'startUsingPythonInterpreter':
@@ -629,10 +694,10 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                 const pythonVersion = `Python ${
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
                 }`.trim();
-                const bitness = kernelConnection.interpreter.displayName?.includes('64-bit') ? '64-bit' : '';
-                const pythonDisplayName = `${pythonVersion} ${bitness}`.trim();
-                const envPrefix = `${kernelConnection.interpreter.envType} ${kernelConnection.interpreter.envName}`.trim();
-                return `${envPrefix} (${pythonDisplayName})`.trim();
+                const pythonDisplayName = pythonVersion.trim();
+                return kernelConnection.interpreter.envName
+                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                    : pythonDisplayName;
             }
     }
     return currentDisplayName;

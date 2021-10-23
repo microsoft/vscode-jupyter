@@ -24,6 +24,8 @@ import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
 import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
 import { IntellisenseProvider } from './intellisense/intellisenseProvider';
+import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
+import { KernelFilterService } from './kernelFilter/kernelFilterService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -66,5 +68,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         RendererCommunication
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
+
+    serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
 }
