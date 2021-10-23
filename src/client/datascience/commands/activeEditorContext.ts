@@ -178,8 +178,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private updateSelectedKernelContext() {
-        const document = this.vscNotebook.activeNotebookEditor?.document ||  getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
-        if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)){
+        const document =
+            this.vscNotebook.activeNotebookEditor?.document ||
+            getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
+        if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
             this.isJupyterKernelSelected.set(false).catch(noop);
