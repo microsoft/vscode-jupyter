@@ -103,6 +103,72 @@ function makeVariableExplorerAlwaysSorted() {
     }
 }
 
+function addLoggingForCI() {
+    const filePath = path.join(constants.ExtensionRootDir, 'node_modules/@jupyterlab/services/lib/kernel/default.js');
+    let fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
+    fileContents.replace(
+        '        if (this._connectionStatus === connectionStatus) {',
+        '        ' +
+            '\nconsole.log("Connection Status " + connectionStatus);\n' +
+            '        if (this._connectionStatus === connectionStatus) {'
+    );
+    fileContents.replace(
+        '        Private.logKernelStatus(this);',
+        '        ' +
+            '\nconsole.log("kernel Status updated to " + this.status);\n' +
+            '        Private.logKernelStatus(this);'
+    );
+    fileContents.replace(
+        '            reply = (await Private.handleShellMessage(this, msg));',
+        '        ' +
+            '\nconsole.log("Sending request to get kernel info");\n' +
+            '            reply = (await Private.handleShellMessage(this, msg));' +
+            '\nconsole.log("Got response for kernel info", JSON.stringify(reply));\n'
+    );
+    fileContents.replace(
+        '            // If we rejected because the future was disposed, ignore and return.',
+        '        ' +
+            '\nconsole.error("Error in to get kernel info", e);\n' +
+            '            // If we rejected because the future was disposed, ignore and return.'
+    );
+    fileContents.replace(
+        '            this._kernelSession = msg.header.session;',
+        '        ' +
+            '\nconsole.log("Got Kernel message", JSON.stringify(msg));\n' +
+            '            this._kernelSession = msg.header.session;'
+    );
+    fileContents.replace(
+        "            if (this.connectionStatus === 'connected') {",
+        '        ' +
+            '\nconsole.log("Sending kernel info message in _sendMessage");\n' +
+            "            if (this.connectionStatus === 'connected') {"
+    );
+    fileContents.replace(
+        '        if (queue && this._pendingMessages.length > 0) {',
+        '        ' +
+            '\nconsole.log("Queue message into pending messages");\n' +
+            '        if (queue && this._pendingMessages.length > 0) {'
+    );
+    fileContents.replace(
+        '            this._kernelSession !== RESTARTING_KERNEL_SESSION) {',
+        '            this._kernelSession !== RESTARTING_KERNEL_SESSION) {' +
+            '        ' +
+            '\nconsole.log("Send message as connection has been established");\n'
+    );
+    fileContents.replace(
+        '        else if (queue) {',
+        '        else if (queue) {' +
+            '        ' +
+            '\nconsole.log("QUeue message as connection has NOT been established");\n'
+    );
+    fileContents.replace(
+        '            this._sendMessage(this._pendingMessages[0], false);',
+        '        ' +
+            '\nconsole.log("EMpty queue and send one by one");\n' +
+            '            this._sendMessage(this._pendingMessages[0], false);'
+    );
+}
+
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
