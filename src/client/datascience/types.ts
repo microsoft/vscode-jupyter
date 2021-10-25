@@ -434,6 +434,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly notebookUri?: Uri;
+    readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     readonly readyPromise: Promise<void>;
     closed: Event<IInteractiveWindow>;

@@ -515,25 +515,40 @@ export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
     errorMessage: string | (() => string),
-    intervalTimeoutMs: number = 10
+    intervalTimeoutMs: number = 10,
+    throwOnError: boolean = false
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            clearInterval(timer);
+            clearTimeout(timer);
             errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
             console.log(`Test failing --- ${errorMessage}`);
             reject(new Error(errorMessage));
         }, timeoutMs);
-        const timer = setInterval(async () => {
-            if (!(await condition().catch(() => false))) {
-                return;
+        let timer: NodeJS.Timer;
+        const timerFunc = async () => {
+            let success = false;
+            try {
+                success = await condition();
+            } catch (exc) {
+                if (throwOnError) {
+                    reject(exc);
+                }
             }
-            clearTimeout(timeout);
-            clearInterval(timer);
-            resolve();
-        }, intervalTimeoutMs);
+            if (!success) {
+                // Start up a timer again, but don't do it until after
+                // the condition is false.
+                timer = setTimeout(timerFunc, intervalTimeoutMs);
+            } else {
+                clearTimeout(timer);
+                clearTimeout(timeout);
+                resolve();
+            }
+        };
+        timer = setTimeout(timerFunc, intervalTimeoutMs);
+
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
     });

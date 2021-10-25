@@ -10,6 +10,7 @@ import { IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
+import { IInteractiveWindowProvider } from '../../types';
 import { isJupyterNotebook } from '../helpers/helpers';
 import { INotebookControllerManager } from '../types';
 import { VSCodeNotebookController } from '../vscodeNotebookController';
@@ -22,7 +23,7 @@ import { LanguageServer } from './languageServer';
 export class IntellisenseProvider implements IExtensionSyncActivationService {
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
-    private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
+    private interpreterIdCache: Map<string, string> = new Map<string, string>();
     private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
         NotebookDocument,
         VSCodeNotebookController
@@ -33,7 +34,8 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     public activate() {
         // Sign up for kernel change events on notebooks
@@ -114,7 +116,12 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
             // If the controller is empty, default to the active interpreter
             const interpreter =
                 controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
-            return this.ensureLanguageServer(interpreter, n);
+            const server = await this.ensureLanguageServer(interpreter, n);
+
+            // If we created one, make sure the server thinks this file is open
+            if (server) {
+                server.startWatching(n);
+            }
         }
     }
 
@@ -124,19 +131,31 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     }
 
     private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
-        let id = this.interpreterIdCache.get(interpreter);
+        let id = this.interpreterIdCache.get(interpreter.path);
         if (!id) {
             // Making an assumption that the id for an interpreter never changes.
             id = getInterpreterId(interpreter);
-            this.interpreterIdCache.set(interpreter, id);
+            this.interpreterIdCache.set(interpreter.path, id);
         }
         return id;
+    }
+
+    private getNotebook(uri: Uri): NotebookDocument | undefined {
+        let notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
+        if (!notebook) {
+            // Might be an interactive window input
+            const interactiveWindow = this.interactiveWindowProvider.windows.find(
+                (w) => w.inputUri?.toString() === uri.toString()
+            );
+            notebook = interactiveWindow?.notebookDocument;
+        }
+        return notebook;
     }
 
     private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: string) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
-        const notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
+        const notebook = this.getNotebook(uri);
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
