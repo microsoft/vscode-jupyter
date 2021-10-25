@@ -104,6 +104,9 @@ function makeVariableExplorerAlwaysSorted() {
 }
 
 function addLoggingForCI() {
+    if (!process.env.VSC_JUPYTER_CI_IS_TEST_JOB) {
+        return;
+    }
     const filePath = path.join(constants.ExtensionRootDir, 'node_modules/@jupyterlab/services/lib/kernel/default.js');
     let fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     fileContents.replace(

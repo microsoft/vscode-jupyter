@@ -352,6 +352,7 @@ jobs:
       VSC_FORCE_REAL_JUPYTER: 1
       VSC_PYTHON_FORCE_LOGGING: 1
       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+      VSC_JUPYTER_CI_IS_TEST_JOB: 1
     strategy:
       fail-fast: false
       matrix:
