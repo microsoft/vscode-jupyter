@@ -125,6 +125,7 @@ export class RawSession implements ISessionWithSocket {
         const deferred = createDeferred<string>();
         const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
             if (status == 'connected') {
+                traceInfoIfCI('Raw session connected');
                 deferred.resolve(status);
             }
         };
