@@ -244,7 +244,7 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockFileSystem } from './mockFileSystem';
-import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+// import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { MockLanguageServerProvider } from './mockLanguageServerProvider';
@@ -272,6 +272,7 @@ import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare
 import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
 import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {

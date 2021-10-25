@@ -137,7 +137,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.lastActiveInteractiveWindow = result;
 
         // When shutting down, we fire an event
-        const handler = result.closed(this.onInteractiveWindowClosed);
+        const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
         this.disposables.push(result);
         this.disposables.push(handler);
         this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
@@ -218,7 +218,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
     }
 
-    private onInteractiveWindowClosed = (interactiveWindow: IInteractiveWindow) => {
+    private onInteractiveWindowClosed(interactiveWindow: IInteractiveWindow) {
         traceInfo(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
         interactiveWindow.dispose();
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
@@ -226,5 +226,5 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.lastActiveInteractiveWindow = this._windows[0];
         }
         this.raiseOnDidChangeActiveInteractiveWindow();
-    };
+    }
 }

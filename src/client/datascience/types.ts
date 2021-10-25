@@ -124,7 +124,6 @@ export interface INotebookCompletion {
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
-    readonly id: string;
     createNotebook(
         resource: Resource,
         document: NotebookDocument,
@@ -135,8 +134,6 @@ export interface INotebookServer extends IAsyncDisposable {
     getNotebook(document: NotebookDocument, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
-    waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
-    shutdown(): Promise<void>;
 }
 
 // Provides a service to determine if raw notebook is supported or not
@@ -235,10 +232,9 @@ export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
-    readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    restart(timeout: number): Promise<void>;
-    interrupt(timeout: number): Promise<void>;
+    restart(): Promise<void>;
+    interrupt(): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
     requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
@@ -436,7 +432,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     readonly readyPromise: Promise<void>;
-    closed: Event<IInteractiveWindow>;
+    closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
@@ -812,14 +808,6 @@ export interface IJupyterSubCommandExecutionService {
      * @memberof IJupyterSubCommandExecutionService
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
-    /**
-     * Opens an ipynb file in a new instance of a jupyter notebook server.
-     *
-     * @param {string} notebookFile
-     * @returns {Promise<void>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    openNotebook(notebookFile: string): Promise<void>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
@@ -881,7 +869,6 @@ export type GetNotebookOptions = {
 
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
-    readonly type: 'raw' | 'jupyter';
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */

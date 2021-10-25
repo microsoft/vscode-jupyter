@@ -82,7 +82,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     constructor(
         protected resource: Resource,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        public workingDirectory: string
+        public workingDirectory: string,
+        private readonly interruptTimeout: number,
+        private readonly restartTimeout: number
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
@@ -118,17 +120,16 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         traceInfo('Shutdown session -- complete');
     }
-    public async interrupt(timeout: number): Promise<void> {
+    public async interrupt(): Promise<void> {
         if (this.session && this.session.kernel) {
             traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
-            // Listen for session status changes
-            this.session.statusChanged.connect(this.statusHandler);
 
-            await this.waitForKernelPromise(
+            await Promise.race([
                 this.session.kernel.interrupt(),
-                timeout,
-                localize.DataScience.interruptingKernelFailed()
-            );
+                sleep(this.interruptTimeout).then(() => {
+                    throw new JupyterKernelPromiseFailedError(localize.DataScience.interruptingKernelFailed());
+                })
+            ]);
         }
     }
     public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
@@ -193,7 +194,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
     }
 
-    public async restart(timeout: number): Promise<void> {
+    public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
             await this.session.kernel.restart();
             return;
@@ -201,7 +202,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Start the restart session now in case it wasn't started
         if (!this.restartSessionPromise) {
-            this.startRestartSession(timeout);
+            this.startRestartSession(this.restartTimeout);
         }
 
         // Just kill the current session and switch to the other
@@ -361,35 +362,44 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Changes the current session.
     protected setSession(session: ISessionWithSocket | undefined) {
         const oldSession = this._session;
-        if (this.ioPubHandler && oldSession) {
-            oldSession.iopubMessage.disconnect(this.ioPubHandler);
-        }
-        if (this.unhandledMessageHandler && oldSession) {
-            oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
+        if (oldSession) {
+            if (this.ioPubHandler) {
+                oldSession.iopubMessage.disconnect(this.ioPubHandler);
+            }
+            if (this.unhandledMessageHandler) {
+                oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
+            }
+            if (this.statusHandler) {
+                oldSession.statusChanged.disconnect(this.statusHandler);
+            }
         }
         this._session = session;
-        if (session && session.iopubMessage) {
-            session.iopubMessage.connect(this.ioPubHandler);
-        }
-        if (session && session.unhandledMessage) {
-            session.unhandledMessage.connect(this.unhandledMessageHandler);
-        }
+        if (session) {
+            // Listen for session status changes
+            session.statusChanged.connect(this.statusHandler);
 
-        // If we have a new session, then emit the new kernel connection information.
-        if (session && oldSession !== session && session.kernel) {
-            if (!session.kernelSocketInformation) {
-                traceError(`Unable to find WebSocket connection associated with kernel ${session.kernel.id}`);
-                this._kernelSocket.next(undefined);
-            } else {
-                this._kernelSocket.next({
-                    options: {
-                        clientId: session.kernel.clientId,
-                        id: session.kernel.id,
-                        model: { ...session.kernel.model },
-                        userName: session.kernel.username
-                    },
-                    socket: session.kernelSocketInformation.socket
-                });
+            if (session.iopubMessage) {
+                session.iopubMessage.connect(this.ioPubHandler);
+            }
+            if (session.unhandledMessage) {
+                session.unhandledMessage.connect(this.unhandledMessageHandler);
+            }
+            // If we have a new session, then emit the new kernel connection information.
+            if (oldSession !== session && session.kernel) {
+                if (!session.kernelSocketInformation) {
+                    traceError(`Unable to find WebSocket connection associated with kernel ${session.kernel.id}`);
+                    this._kernelSocket.next(undefined);
+                } else {
+                    this._kernelSocket.next({
+                        options: {
+                            clientId: session.kernel.clientId,
+                            id: session.kernel.id,
+                            model: { ...session.kernel.model },
+                            userName: session.kernel.username
+                        },
+                        socket: session.kernelSocketInformation.socket
+                    });
+                }
             }
         }
     }
@@ -479,25 +489,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
         );
         return ServerStatus.NotStarted;
-    }
-
-    private async waitForKernelPromise(
-        kernelPromise: Promise<void>,
-        timeout: number,
-        errorMessage: string
-    ): Promise<void | null> {
-        // Wait for this kernel promise to happen
-        try {
-            await waitForPromise(kernelPromise, timeout);
-        } catch (e) {
-            // TODO: This will never get throw, `waitForPromise` never throws when there's a timeout,
-            // TODO: Review usages of `JupyterKernelPromiseFailedError` it might never get thrown.
-            if (!e) {
-                // We timed out. Throw a specific exception
-                throw new JupyterKernelPromiseFailedError(errorMessage);
-            }
-            throw e;
-        }
     }
 
     private onStatusChanged(_s: Session.ISessionConnection) {

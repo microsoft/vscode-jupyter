@@ -189,7 +189,7 @@ export class KernelExecution implements IDisposable {
         const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
 
         // Start our interrupt. If it fails, indicate a restart
-        session.interrupt(this.interruptTimeout).catch((exc) => {
+        session.interrupt().catch((exc) => {
             traceWarning(`Error during interrupt: ${exc}`);
             restarted.resolve(true);
         });
@@ -247,6 +247,6 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.RestartJupyterTime)
     private async restartExecution(notebook: INotebook): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
-        await notebook.session.restart(this.interruptTimeout);
+        await notebook.session.restart();
     }
 }

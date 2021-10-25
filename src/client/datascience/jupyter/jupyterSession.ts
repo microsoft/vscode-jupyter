@@ -43,9 +43,11 @@ export class JupyterSession extends BaseJupyterSession {
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
-        private readonly kernelService: JupyterKernelService
+        private readonly kernelService: JupyterKernelService,
+        interruptTimeout: number,
+        restartTimeout: number
     ) {
-        super(resource, restartSessionUsed, workingDirectory);
+        super(resource, restartSessionUsed, workingDirectory, interruptTimeout, restartTimeout);
         this.kernelConnectionMetadata = kernelSpec;
     }
 

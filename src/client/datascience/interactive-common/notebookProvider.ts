@@ -24,7 +24,6 @@ import {
 @injectable()
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
-    private readonly _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -35,13 +34,7 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {
-        this._type = this.rawNotebookProvider.isSupported ? 'raw' : 'jupyter';
-    }
-
-    public get type(): 'jupyter' | 'raw' {
-        return this._type;
-    }
+    ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {

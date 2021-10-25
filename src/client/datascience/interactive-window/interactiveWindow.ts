@@ -51,7 +51,7 @@ import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kerne
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
-import { IInteractiveWindow, IInteractiveWindowLoadable, IJupyterDebugger, INotebookExporter } from '../types';
+import { IInteractiveWindowLoadable, IJupyterDebugger, INotebookExporter } from '../types';
 import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
@@ -84,7 +84,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get readyPromise(): Promise<void> {
         return Promise.all([this._editorReadyPromise, this._kernelReadyPromise]).then(noop, noop);
     }
-    public get closed(): Event<IInteractiveWindow> {
+    public get closed(): Event<void> {
         return this.closedEvent.event;
     }
     public get owner(): Resource {
@@ -103,7 +103,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._notebookDocument;
     }
     private _onDidChangeViewState = new EventEmitter<void>();
-    private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
+    private closedEvent = new EventEmitter<void>();
     private _owner: Uri | undefined;
     private _submitters: Uri[] = [];
     private mode: InteractiveWindowMode = 'multiple';
@@ -153,7 +153,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this._notebookDocument) {
-                this.closedEvent.fire(this);
+                this.closedEvent.fire();
             }
         }, this.internalDisposables);
 

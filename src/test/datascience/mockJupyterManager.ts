@@ -42,15 +42,15 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { noop, sleep } from '../core';
 import { InterpreterService } from '../interpreters/interpreterService';
-import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
 import { createCodeCell } from '../../datascience-ui/common/cellFactory';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
+import { JupyterSession } from '../../client/datascience/jupyter/jupyterSession';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
-const MockJupyterTimeDelay = 10;
+// const MockJupyterTimeDelay = 10;
 const LineFeedRegEx = /(\r\n|\n)/g;
 
 export enum SupportedCommands {
@@ -94,10 +94,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, nbformat.IBaseCell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
-    private currentSession: MockJupyterSession | undefined;
+    private currentSession: JupyterSession | undefined;
     private cleanTemp: (() => void) | undefined;
-    private pendingSessionFailure = false;
-    private pendingKernelChangeFailure = false;
+    // private pendingSessionFailure = false;
+    // private pendingKernelChangeFailure = false;
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
@@ -217,17 +217,17 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.activeInterpreter = interpreter;
     }
 
-    public getCurrentSession(): MockJupyterSession | undefined {
+    public getCurrentSession(): IJupyterSession | undefined {
         return this.currentSession;
     }
 
-    public forcePendingIdleFailure() {
-        this.pendingSessionFailure = true;
-    }
+    // public forcePendingIdleFailure() {
+    //     this.pendingSessionFailure = true;
+    // }
 
-    public forcePendingKernelChangeFailure() {
-        this.pendingKernelChangeFailure = true;
-    }
+    // public forcePendingKernelChangeFailure() {
+    //     this.pendingKernelChangeFailure = true;
+    // }
 
     public getRunningKernels(): Promise<IJupyterKernel[]> {
         return Promise.resolve([]);
@@ -424,7 +424,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         _kernelConnection: KernelConnectionMetadata | undefined,
         _workingDirectory: string,
         cancelToken?: CancellationToken
-    ): Promise<IJupyterSession> {
+    ): Promise<JupyterSession> {
         if (this.sessionTimeout && cancelToken) {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {
@@ -446,17 +446,18 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell('import sys\nsys.path[0]', path.join(workingDir));
     }
 
-    private createNewSession(): MockJupyterSession {
-        const sessionFailure = this.pendingSessionFailure;
-        const kernelChangeFailure = this.pendingKernelChangeFailure;
-        this.pendingSessionFailure = false;
-        this.pendingKernelChangeFailure = false;
-        this.currentSession = new MockJupyterSession(
-            this.cellDictionary,
-            MockJupyterTimeDelay,
-            sessionFailure,
-            kernelChangeFailure
-        );
+    private createNewSession(): JupyterSession {
+        // const sessionFailure = this.pendingSessionFailure;
+        // const kernelChangeFailure = this.pendingKernelChangeFailure;
+        // this.pendingSessionFailure = false;
+        // this.pendingKernelChangeFailure = false;
+        // this.currentSession = new MockJupyterSession(
+        //     this.cellDictionary,
+        //     MockJupyterTimeDelay,
+        //     sessionFailure,
+        //     kernelChangeFailure
+        // );
+        this.currentSession = instance(mock<JupyterSession>());
         return this.currentSession;
     }
 
