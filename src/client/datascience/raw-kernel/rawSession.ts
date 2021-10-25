@@ -131,6 +131,7 @@ export class RawSession implements ISessionWithSocket {
         };
         this.connectionStatusChanged.connect(handler);
         if (this.connectionStatus === 'connected') {
+            traceInfoIfCI('Raw session connected');
             deferred.resolve(this.connectionStatus);
         }
 
