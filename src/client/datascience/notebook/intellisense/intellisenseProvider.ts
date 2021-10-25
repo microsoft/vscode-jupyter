@@ -3,7 +3,6 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
-import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';
@@ -11,7 +10,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
 import { IInteractiveWindowProvider } from '../../types';
-import { isJupyterNotebook } from '../helpers/helpers';
+import { findAssociatedNotebookDocument, isJupyterNotebook } from '../helpers/helpers';
 import { INotebookControllerManager } from '../types';
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
@@ -140,22 +139,10 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         return id;
     }
 
-    private getNotebook(uri: Uri): NotebookDocument | undefined {
-        let notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
-        if (!notebook) {
-            // Might be an interactive window input
-            const interactiveWindow = this.interactiveWindowProvider.windows.find(
-                (w) => w.inputUri?.toString() === uri.toString()
-            );
-            notebook = interactiveWindow?.notebookDocument;
-        }
-        return notebook;
-    }
-
     private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: string) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
-        const notebook = this.getNotebook(uri);
+        const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;

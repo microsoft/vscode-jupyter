@@ -16,12 +16,11 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
 import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
-import { IJupyterSession, INotebookCompletion, INotebookProvider } from '../../types';
+import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion, INotebookProvider } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
 @injectable()
@@ -29,7 +28,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     public async provideCompletionItems(
         document: TextDocument,
@@ -41,7 +40,11 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             return [];
         }
 
-        const notebookDocument = findAssociatedNotebookDocument(document.uri, this.vscodeNotebook, this.fs);
+        const notebookDocument = findAssociatedNotebookDocument(
+            document.uri,
+            this.vscodeNotebook,
+            this.interactiveWindowProvider
+        );
         if (!notebookDocument) {
             traceError(`Notebook not found for Cell ${document.uri.toString()}`);
             return [];
