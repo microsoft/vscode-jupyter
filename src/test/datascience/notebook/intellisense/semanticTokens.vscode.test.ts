@@ -61,7 +61,9 @@ suite('DataScience - VSCode semantic token tests', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Open a notebook and add a bunch of cells', async () => {
+    test('Open a notebook and add a bunch of cells', async function () {
+        // Skip for now. Need to wait for changes to VS code
+        this.skip();
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
