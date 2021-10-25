@@ -96,6 +96,7 @@ export function updateNotebookMetadata(
             changed = true;
             metadata.kernelspec = {
                 name,
+                language: PYTHON_LANGUAGE,
                 display_name: metadata.kernelspec?.display_name || displayName // Don't change display name in the metadata
             };
             if (isKernelRegisteredByUs(kernelSpec)) {
@@ -114,6 +115,9 @@ export function updateNotebookMetadata(
             name: kernelSpecOrModel.name || kernelSpecOrModel.display_name || '',
             display_name: kernelSpecOrModel.display_name || kernelSpecOrModel.name || ''
         };
+        if (kernelSpecOrModel.language) {
+            metadata.kernelspec.language = kernelSpecOrModel.language;
+        }
         kernelId = kernelSpecOrModel.id;
         changed = true;
     } else if (kernelSpecOrModel && metadata.kernelspec) {
