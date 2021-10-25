@@ -115,7 +115,7 @@ export function updateNotebookMetadata(
             name: kernelSpecOrModel.name || kernelSpecOrModel.display_name || '',
             display_name: kernelSpecOrModel.display_name || kernelSpecOrModel.name || ''
         };
-        if (kernelSpecOrModel.language){
+        if (kernelSpecOrModel.language) {
             metadata.kernelspec.languag = kernelSpecOrModel.language;
         }
         kernelId = kernelSpecOrModel.id;
