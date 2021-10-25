@@ -25,7 +25,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
-import { IJupyterKernelSpec } from '../../types';
+import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../../types';
 import { InteractiveWindowView, JupyterNotebookView } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -35,6 +35,7 @@ import { Uri } from 'vscode';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
+import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -808,8 +809,16 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     return !!errorOutput;
 }
 
-export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
-    return vscodeNotebook.notebookDocuments.find((item) =>
-        item.getCells().some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
-    );
+export function findAssociatedNotebookDocument(
+    uri: Uri,
+    vscodeNotebook: IVSCodeNotebook,
+    iwp: IInteractiveWindowProvider
+) {
+    let notebook = vscodeNotebook.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
+    if (!notebook) {
+        // Might be an interactive window input
+        const interactiveWindow = iwp.windows.find((w) => w.inputUri?.toString() === uri.toString());
+        notebook = interactiveWindow?.notebookDocument;
+    }
+    return notebook;
 }

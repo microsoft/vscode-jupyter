@@ -526,7 +526,6 @@ module.exports = {
         'src/client/common/utils/icons.ts',
         'src/client/common/utils/sysTypes.ts',
         'src/client/common/utils/version.ts',
-        'src/client/common/utils/misc.ts',
         'src/client/common/utils/logging.ts',
         'src/client/common/utils/cacheUtils.ts',
         'src/client/common/utils/workerPool.ts',

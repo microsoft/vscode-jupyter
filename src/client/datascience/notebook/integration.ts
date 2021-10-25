@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { NotebookCellScheme, PYTHON_LANGUAGE } from '../../common/constants';
+import { NOTEBOOK_SELECTOR } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvider';
 
@@ -24,7 +24,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
 
     private registerCompletionItemProvider() {
         const disposable = languages.registerCompletionItemProvider(
-            { language: PYTHON_LANGUAGE, scheme: NotebookCellScheme },
+            NOTEBOOK_SELECTOR,
             this.completionProvider,
             '.',
             '"',
