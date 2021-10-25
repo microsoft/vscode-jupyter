@@ -74,7 +74,7 @@ export class MockJupyterSession implements IJupyterSession {
         return this._status;
     }
 
-    public async restart(_timeout: number): Promise<void> {
+    public async restart(): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach((r) => r.cancel());
@@ -85,7 +85,7 @@ export class MockJupyterSession implements IJupyterSession {
 
         return sleep(this.timedelay);
     }
-    public interrupt(_timeout: number): Promise<void> {
+    public interrupt(): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach((r) => r.cancel());
         return sleep(this.timedelay);

@@ -108,14 +108,17 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
-
+            const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
+            const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
+            const restartTimeout = interruptTimeout;
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
                 this.outputChannel,
                 noop,
-                workingDirectory
+                workingDirectory,
+                interruptTimeout,
+                restartTimeout
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec

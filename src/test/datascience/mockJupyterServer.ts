@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as uuid from 'uuid/v4';
 import { NotebookDocument, Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
 import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
@@ -15,11 +14,6 @@ import { MockJupyterNotebook } from './mockJupyterNotebook';
 export class MockJupyterServer implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private notebookFile: TemporaryFile | undefined;
-    private _id = uuid();
-
-    public get id(): string {
-        return this._id;
-    }
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
         if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelConnectionMetadata) {
             this.launchInfo = launchInfo;
@@ -46,10 +40,6 @@ export class MockJupyterServer implements INotebookServer {
     public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         throw new Error('Method not implemented');
     }
-    public async shutdown() {
-        return Promise.resolve();
-    }
-
     public async dispose(): Promise<void> {
         if (this.launchInfo) {
             this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running

@@ -156,7 +156,6 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { KernelDependencyService } from '../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { JupyterKernelService } from '../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -244,7 +243,7 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockFileSystem } from './mockFileSystem';
-import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+// import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { MockLanguageServerProvider } from './mockLanguageServerProvider';
@@ -273,6 +272,7 @@ import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/ho
 import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
 import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -602,7 +602,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<HoverProvider>(HoverProvider, HoverProvider);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
-        this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
         this.serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
         this.serviceManager.addSingleton<INotebookCreationTracker>(INotebookCreationTracker, NotebookCreationTracker);
         this.serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);

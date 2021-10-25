@@ -39,9 +39,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         resource: Resource,
         private readonly outputChannel: IOutputChannel,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        workingDirectory: string
+        workingDirectory: string,
+        interruptTimeout: number,
+        restartTimeout: number
     ) {
-        super(resource, restartSessionUsed, workingDirectory);
+        super(resource, restartSessionUsed, workingDirectory, interruptTimeout, restartTimeout);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -55,14 +57,6 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async dispose(): Promise<void> {
         this._disposables.forEach((d) => d.dispose());
         await super.dispose();
-    }
-
-    public shutdown(): Promise<void> {
-        if (this.processExitHandler) {
-            this.processExitHandler.dispose();
-            this.processExitHandler = undefined;
-        }
-        return super.shutdown();
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
@@ -233,6 +227,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 });
                 // Next code the user executes will show a session disposed message
             });
+            this._disposables.push(this.processExitHandler);
         }
     }
 
