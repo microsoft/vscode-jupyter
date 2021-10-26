@@ -27,6 +27,7 @@
     "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
     "DataScience.newNotebookUI": "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)",
     "DataScience.customizeLayout": "Customize Layout",
+    "jupyter.kernel.filter.placeholder": "Choose the kernels that are available in the kernel picker.",
     "jupyter.kernel.category.jupyterSession": "Jupyter Session",
     "jupyter.kernel.category.jupyterKernel": "Jupyter Kernel",
     "jupyter.kernel.category.conda": "Conda Env",

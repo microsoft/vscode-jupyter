@@ -577,6 +577,10 @@ export namespace DataScience {
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Change Kernel');
     export const selectDifferentKernel = localize('DataScience.selectDifferentKernel', 'Select a different Kernel');
+    export const kernelFilterPlaceholder = localize(
+        'jupyter.kernel.filter.placeholder',
+        'Choose the kernels that are available in the kernel picker.'
+    );
     export const selectDifferentJupyterInterpreter = localize(
         'DataScience.selectDifferentJupyterInterpreter',
         'Change Interpreter'
