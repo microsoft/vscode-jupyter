@@ -171,9 +171,14 @@ export class KernelProcess implements IKernelProcess {
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
-            await Promise.race([
-                // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
+            // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
+            // Wait for shell & iopub to be used (iopub is where we get a response).
+            const portsUsed = Promise.all([
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
+                tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
+            ]);
+            await Promise.race([
+                portsUsed,
                 deferred.promise,
                 createPromiseFromCancellation({
                     token: cancelToken,

@@ -452,14 +452,13 @@ class KernelConnection {
             KernelMessage.isInfoRequestMsg(msg)
         ) {
             if (this.connectionStatus === 'connected') {
-                console.log('_sendMessage: Sending raw message');
+                console.log('_sendMessage: Raw message serialized and sent (connected)');
                 this._ws.send(serialize.serialize(msg));
                 return;
             } else {
                 throw new Error('Could not send message: status is not connected');
             }
         }
-        console.log('_sendMessage: Raw message not sent');
         // If there are pending messages, add to the queue so we keep messages in order
         if (queue && this._pendingMessages.length > 0) {
             console.log('_sendMessage: Raw message queued');
@@ -471,9 +470,10 @@ class KernelConnection {
             console.log('_sendMessage: Raw message serialized and sent (not restarting)');
             this._ws.send(serialize.serialize(msg));
         } else if (queue) {
-            console.log('_sendMessage: Raw message queued 2');
+            console.log('_sendMessage: Raw message queued');
             this._pendingMessages.push(msg);
         } else {
+            console.log('_sendMessage: Raw message not queued');
             throw new Error('Could not send message');
         }
     }
