@@ -108,7 +108,7 @@ export class CellHashProvider implements ICellHashProvider {
     public async addCellHash(cell: NotebookCell) {
         // Skip non-code cells as they are never actually executed
         if (cell.kind !== NotebookCellKind.Code) {
-            return;
+            return undefined;
         }
         // Don't log empty cells
         const executableLines = this.extractExecutableLines(cell);
@@ -118,7 +118,7 @@ export class CellHashProvider implements ICellHashProvider {
 
             // Skip hash on unknown file though
             if (getInteractiveCellMetadata(cell)?.interactive?.file) {
-                await this.generateHash(cell, this.executionCount);
+                return this.generateHash(cell, this.executionCount);
             }
         }
     }
@@ -134,7 +134,7 @@ export class CellHashProvider implements ICellHashProvider {
         return lines;
     }
 
-    private async generateHash(cell: NotebookCell, expectedCount: number): Promise<void> {
+    private async generateHash(cell: NotebookCell, expectedCount: number) {
         if (cell.metadata.interactive === undefined) {
             return;
         }
@@ -165,9 +165,10 @@ export class CellHashProvider implements ICellHashProvider {
             const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped);
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
+            const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
 
             const hash: IRangedCellHash = {
-                hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
+                hash: hashValue,
                 line: line ? line.lineNumber + 1 : 1,
                 endLine: endLine ? endLine.lineNumber + 1 : 1,
                 firstNonBlankLineIndex: firstNonBlankIndex + trueStartLine,
@@ -179,6 +180,7 @@ export class CellHashProvider implements ICellHashProvider {
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
+                runtimeFile: this.getRuntimeFile(hashValue, expectedCount),
                 id: id,
                 timestamp: Date.now()
             };
@@ -228,6 +230,8 @@ export class CellHashProvider implements ICellHashProvider {
                 // Then fire our event
                 this.updateEventEmitter.fire();
             }
+
+            return hash;
         }
     }
 
@@ -237,6 +241,10 @@ export class CellHashProvider implements ICellHashProvider {
 
     public incExecutionCount(): void {
         this.executionCount += 1;
+    }
+
+    private getRuntimeFile(hash: string, executionCount: number) {
+        return `<ipython-input-${executionCount}-${hash}>`;
     }
 
     private onChangedDocument(e: TextDocumentChangeEvent) {

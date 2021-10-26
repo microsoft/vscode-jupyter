@@ -30,7 +30,12 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IInteractiveWindowDebugger,
+    INotebookExporter
+} from '../types';
 import { InteractiveWindow } from './interactiveWindow';
 
 // Export for testing
@@ -129,7 +134,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.notebookControllerManager,
             this.kernelProvider,
             this.disposables,
-            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
+            this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger)
         );
         this._windows.push(result);
 

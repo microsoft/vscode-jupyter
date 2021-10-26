@@ -213,9 +213,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
     refreshCommands(): Promise<void>;
 }
 
-export const IJupyterDebugger = Symbol('IJupyterDebugger');
-export interface IJupyterDebugger {
-    startDebugging(kernel: IKernel): Promise<void>;
+export const IInteractiveWindowDebugger = Symbol('IInteractiveWindowDebugger');
+export interface IInteractiveWindowDebugger {
+    startDebugging(kernel: IKernel, code: string, file: string): Promise<void>;
     stopDebugging(kernel: IKernel): Promise<void>;
 }
 
@@ -711,6 +711,7 @@ export interface ICellHash {
     endLine: number; // 1 based and inclusive
     runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
+    runtimeFile: string; // Name of the cell's file
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
@@ -731,7 +732,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    addCellHash(notebookCell: NotebookCell): Promise<void>;
+    addCellHash(notebookCell: NotebookCell): Promise<ICellHash | undefined>;
     /**
      * This function will modify a traceback from an error message.
      * Tracebacks take a form like so:
