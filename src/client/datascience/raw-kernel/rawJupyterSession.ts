@@ -289,6 +289,29 @@ export class RawJupyterSession extends BaseJupyterSession {
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
         void result.kernel.requestKernelInfo();
 
+        // In python we send the request, wait for resonse in shell port
+        // Then wait for iopub to be connected.
+        // We might want to do the same.
+    /*
+        # Wait for kernel info reply on shell channel
+        while True:
+            self.kernel_info()
+            try:
+                msg = await self.shell_channel.get_msg(timeout=1)
+            except Empty:
+                pass
+            else:
+                if msg["msg_type"] == "kernel_info_reply":
+                    # Checking that IOPub is connected. If it is not connected, start over.
+                    try:
+                        await self.iopub_channel.get_msg(timeout=0.2)
+                    except Empty:
+                        pass
+                    else:
+                        self._handle_kernel_info_reply(msg)
+                        break
+    */
+
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
         result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
