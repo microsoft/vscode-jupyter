@@ -444,7 +444,9 @@ export class Kernel implements IKernel {
         traceInfoIfCI('After running startup commands');
 
         try {
+            traceInfoIfCI('Requqesting Kernel info');
             const info = await this.notebook.session.requestKernelInfo();
+            traceInfoIfCI('Got Kernel info');
             this._info = info?.content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
         } catch (ex) {
