@@ -59,7 +59,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument(file, [{ range, newText }]);
     }
 
-    function sendCode(code: string, line: number, file?: string): Promise<void> {
+    function sendCode(code: string, line: number, file?: string) {
         const fileName = file ? file : 'foo.py';
         const cell: NotebookCell = {
             index: 0,

@@ -51,7 +51,12 @@ import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kerne
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
-import { IInteractiveWindow, IInteractiveWindowLoadable, IJupyterDebugger, INotebookExporter } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowLoadable,
+    IInteractiveWindowDebugger,
+    INotebookExporter
+} from '../types';
 import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
@@ -134,7 +139,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly jupyterDebugger: IJupyterDebugger
+        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -416,7 +421,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else {
             this.executionPromise = this.createExecutionPromise(code, fileUri, line, isDebug);
         }
-        return this.executionPromise;
+        try {
+            return await this.executionPromise;
+        } catch (exc) {
+            // Rethrow, but clear execution promise so we can execute again
+            this.executionPromise = undefined;
+            throw exc;
+        }
     }
     private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
@@ -451,10 +462,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let result = true;
         try {
             if (isDebug) {
-                await kernel!.executeHidden(
-                    `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`
-                );
-                await this.jupyterDebugger.startDebugging(kernel!);
+                await this.interactiveWindowDebugger.startDebugging(kernel!, code, file);
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
@@ -462,7 +470,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
-                await this.jupyterDebugger.stopDebugging(kernel!);
+                await this.interactiveWindowDebugger.stopDebugging(kernel!);
             }
         }
         return result;

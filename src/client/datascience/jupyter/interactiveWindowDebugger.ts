@@ -10,13 +10,12 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../debugger/jupyter/helper';
 import { Identifiers } from '../constants';
 import {
     ICellHashListener,
     IFileHashes,
     IJupyterConnection,
-    IJupyterDebugger,
+    IInteractiveWindowDebugger,
     IJupyterDebugService,
     ISourceMapRequest
 } from '../types';
@@ -26,7 +25,7 @@ import { executeSilently, getPlainTextOrStreamOutput } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
 @injectable()
-export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
+export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
     private configs: WeakMap<NotebookDocument, DebugConfiguration> = new WeakMap<
         NotebookDocument,
         DebugConfiguration
@@ -36,7 +35,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly waitForDebugClientCode: string;
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
-    private isUsingPyKernel6OrLater?: boolean;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -58,15 +56,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         const settings = this.configService.getSettings(kernel.resourceUri);
-        this.isUsingPyKernel6OrLater = (await isUsingIpykernel6OrLater(kernel)) === IpykernelCheckResult.Ok;
-        return this.startDebugSession(
-            (c) => this.debugService.startDebugging(undefined, c),
-            kernel,
-            {
-                justMyCode: settings.debugJustMyCode
-            },
-            false
-        );
+        return this.startDebugSession((c) => this.debugService.startDebugging(undefined, c), kernel, {
+            justMyCode: settings.debugJustMyCode
+        });
     }
 
     public async stopDebugging(kernel: IKernel): Promise<void> {
@@ -106,15 +98,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async startDebugSession(
         startCommand: (config: DebugConfiguration) => Thenable<boolean>,
         kernel: IKernel,
-        extraConfig: Partial<DebugConfiguration>,
-        runByLine: boolean
+        extraConfig: Partial<DebugConfiguration>
     ) {
         traceInfo('start debugging');
         if (!kernel.notebook?.session) {
             return;
         }
         // Try to connect to this notebook
-        const config = await this.connect(kernel, runByLine, extraConfig);
+        const config = await this.connect(kernel, extraConfig);
         if (config) {
             traceInfo('connected to notebook during debugging');
 
@@ -139,7 +130,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async connect(
         kernel: IKernel,
-        _runByLine: boolean,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
         if (!kernel.notebook) {
@@ -258,9 +248,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
                 runtimeSource: {
-                    path: this.isUsingPyKernel6OrLater
-                        ? fileHash.file
-                        : `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`
+                    path: cellHash.runtimeFile
                 },
                 runtimeLine: cellHash.runtimeLine
             };

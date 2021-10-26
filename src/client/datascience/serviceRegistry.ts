@@ -64,7 +64,7 @@ import { JupyterInterpreterSubCommandExecutionService } from './jupyter/interpre
 import { NbConvertExportToPythonService } from './jupyter/interpreter/nbconvertExportToPythonService';
 import { NbConvertInterpreterDependencyChecker } from './jupyter/interpreter/nbconvertInterpreterDependencyChecker';
 import { CellOutputMimeTypeTracker } from './jupyter/jupyterCellOutputMimeTypeTracker';
-import { JupyterDebugger } from './jupyter/jupyterDebugger';
+import { InteractiveWindowDebugger } from './jupyter/interactiveWindowDebugger';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterNotebookProvider } from './jupyter/jupyterNotebookProvider';
@@ -112,7 +112,7 @@ import {
     IDebugLocationTracker,
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
-    IJupyterDebugger,
+    IInteractiveWindowDebugger,
     IJupyterDebugService,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
@@ -236,7 +236,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);
-    serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
+    serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);

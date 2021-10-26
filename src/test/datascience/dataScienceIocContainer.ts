@@ -148,7 +148,7 @@ import { JupyterInterpreterStateStore } from '../../client/datascience/jupyter/i
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { NbConvertExportToPythonService } from '../../client/datascience/jupyter/interpreter/nbconvertExportToPythonService';
 import { NbConvertInterpreterDependencyChecker } from '../../client/datascience/jupyter/interpreter/nbconvertInterpreterDependencyChecker';
-import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
+import { InteractiveWindowDebugger } from '../../client/datascience/jupyter/interactiveWindowDebugger';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterNotebookProvider } from '../../client/datascience/jupyter/jupyterNotebookProvider';
@@ -190,7 +190,7 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IJupyterCommandFactory,
-    IJupyterDebugger,
+    IInteractiveWindowDebugger,
     IJupyterDebugService,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
@@ -526,9 +526,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             PythonVariablesRequester,
             Identifiers.PYTHON_VARIABLES_REQUESTER
         );
-        this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
-            ICellHashListener
-        ]);
+        this.serviceManager.addSingleton<IInteractiveWindowDebugger>(
+            IInteractiveWindowDebugger,
+            InteractiveWindowDebugger,
+            undefined,
+            [ICellHashListener]
+        );
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
         this.serviceManager.addSingleton<DataViewerDependencyService>(
             DataViewerDependencyService,
