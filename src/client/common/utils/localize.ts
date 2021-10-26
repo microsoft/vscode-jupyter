@@ -968,7 +968,7 @@ export namespace DataScience {
     export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');
     export const kernelCategoryForPyEnv = localize('jupyter.kernel.category.pyenv', 'PyEnv Env');
     export const kernelCategoryForGlobal = localize('jupyter.kernel.category.global', 'Global Env');
-    export const kernelCategoryForVirtual = localize('jupyter.kernel.category.global', 'Virtual Env');
+    export const kernelCategoryForVirtual = localize('jupyter.kernel.category.virtual', 'Virtual Env');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
