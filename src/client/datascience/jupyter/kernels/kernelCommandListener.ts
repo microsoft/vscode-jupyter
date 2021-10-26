@@ -10,16 +10,8 @@ import { DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
-import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
-import {
-    IDataScienceCommandListener,
-    IInteractiveWindowProvider,
-    INotebookProvider,
-    InterruptResult,
-    IStatusProvider
-} from '../../types';
-import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
+import { IDataScienceCommandListener, IInteractiveWindowProvider, InterruptResult, IStatusProvider } from '../../types';
 import { IKernel, IKernelProvider } from './types';
 
 @injectable()
@@ -32,8 +24,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configurationService: IConfigurationService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider
+        @inject(IConfigurationService) private configurationService: IConfigurationService
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -191,31 +182,13 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 undefined,
                 exc
             );
-            if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
-                // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
-                const notebook = await this.notebookProvider.getOrCreateNotebook({
-                    resource: kernel.resourceUri,
-                    document: kernel.notebookDocument,
-                    getOnly: true
-                });
-                if (notebook) {
-                    await notebook.dispose();
-                }
-                await this.notebookProvider.connect({
-                    getOnly: false,
-                    disableUI: false,
-                    resource: kernel.resourceUri,
-                    metadata: getNotebookMetadata(kernel.notebookDocument)
-                });
-            } else {
-                traceError('Failed to restart the kernel', exc);
-                if (exc) {
-                    // Show the error message
-                    void this.applicationShell.showErrorMessage(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        exc instanceof Error ? exc.message : (exc as any).toString()
-                    );
-                }
+            traceError('Failed to restart the kernel', exc);
+            if (exc) {
+                // Show the error message
+                void this.applicationShell.showErrorMessage(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    exc instanceof Error ? exc.message : (exc as any).toString()
+                );
             }
         } finally {
             status.dispose();

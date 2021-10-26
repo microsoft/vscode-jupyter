@@ -99,6 +99,7 @@ export class Kernel implements IKernel {
     }
     public notebook?: INotebook;
     private _disposed?: boolean;
+    private _ignoreNotebookDisposedErrors?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
@@ -225,8 +226,20 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
-        await this.kernelExecution.restart(this._notebookPromise);
-        traceInfoIfCI(`Restarted ${this.notebookDocument.uri}`);
+        try {
+            await this.kernelExecution.restart(this._notebookPromise);
+            traceInfoIfCI(`Restarted ${this.notebookDocument.uri}`);
+        } catch (ex) {
+            traceInfoIfCI(`Restart failed ${this.notebookDocument.uri}`, ex);
+            this._ignoreNotebookDisposedErrors = true;
+            // If restart fails, kill the associated notebook.
+            await this.notebook?.dispose().catch(noop);
+            this.notebook = undefined;
+            this._notebookPromise = undefined;
+            this.restarting = undefined;
+            this._ignoreNotebookDisposedErrors = false;
+            throw ex;
+        }
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
@@ -391,8 +404,11 @@ export class Kernel implements IKernel {
                         this.resourceUri || this.notebookDocument.uri
                     ).toString()}`
                 );
-                this._notebookPromise = undefined;
-                this._onDisposed.fire();
+                // Ignore when notebook is disposed as a result of failed restarts.
+                if (!this._ignoreNotebookDisposedErrors) {
+                    this._notebookPromise = undefined;
+                    this._onDisposed.fire();
+                }
             });
             const statusChangeHandler = (status: ServerStatus) => {
                 traceInfoIfCI(`IKernel Status change to ${status}`);
@@ -412,7 +428,7 @@ export class Kernel implements IKernel {
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
 
-            if (this.connection?.localLaunch && this.notebook) {
+            if (this.connection?.localLaunch) {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this.resourceUri,
