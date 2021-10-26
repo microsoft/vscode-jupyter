@@ -6,6 +6,7 @@ import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
+import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import {
     getKernelConnectionPath,
@@ -43,7 +44,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         const duplicates = new Set<string>();
         let quickPickHidden = false;
         quickPick.canSelectMany = false;
-        quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
+        quickPick.placeholder = DataScience.kernelFilterPlaceholder();
         quickPick.busy = true;
         quickPick.enabled = false;
 
@@ -83,7 +84,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 quickPick.matchOnDetail = true;
                 quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
                 quickPick.selectedItems = items.filter((item) => item.picked);
-                quickPick.placeholder = 'Unselect items you wish to hide from the kernel picker';
+                quickPick.placeholder = DataScience.kernelFilterPlaceholder();
                 quickPick.enabled = true;
                 quickPick.busy = false;
             })
