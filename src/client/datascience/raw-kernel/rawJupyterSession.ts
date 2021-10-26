@@ -292,7 +292,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         // In python we send the request, wait for resonse in shell port
         // Then wait for iopub to be connected.
         // We might want to do the same.
-    /*
+        /*
         # Wait for kernel info reply on shell channel
         while True:
             self.kernel_info()
