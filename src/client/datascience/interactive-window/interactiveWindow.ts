@@ -709,4 +709,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             )
             .then(noop, noop);
     }
+
+    public get kernelPromise() {
+        if (this._kernelReadyPromise) {
+            return this._kernelReadyPromise;
+        }
+        return Promise.resolve(undefined);
+    }
 }
