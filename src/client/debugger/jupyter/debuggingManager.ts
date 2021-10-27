@@ -307,7 +307,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         const opts: DebugSessionOptions | undefined =
             mode === KernelDebugMode.RunByLine
                 ? { debugUI: { simple: true }, suppressSaveBeforeStart: true }
-                : undefined;
+                : { suppressSaveBeforeStart: true };
         return this.startDebuggingConfig(doc, config, opts);
     }
 
