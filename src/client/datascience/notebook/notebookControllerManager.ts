@@ -669,19 +669,9 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
-                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const pythonDisplayName = pythonVersion.trim();
-                    return kernelConnection.interpreter.envName
-                        ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
-                        : pythonDisplayName;
-                } else {
-                    return kernelConnection.interpreter.envName
-                        ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
-                        : currentDisplayName;
-                }
+                return kernelConnection.interpreter.envName
+                    ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
+                    : currentDisplayName;
             } else {
                 return currentDisplayName;
             }
