@@ -136,9 +136,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugCell]: [Uri, number, number, number, number];
-    [DSCommands.DebugStepOver]: [];
-    [DSCommands.DebugStop]: [];
-    [DSCommands.DebugContinue]: [];
+    [DSCommands.DebugStepOver]: [Uri];
+    [DSCommands.DebugStop]: [Uri];
+    [DSCommands.DebugContinue]: [Uri];
     [DSCommands.RunCurrentCellAndAddBelow]: [Uri];
     [DSCommands.InsertCellBelowPosition]: [];
     [DSCommands.InsertCellBelow]: [];
