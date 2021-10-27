@@ -710,9 +710,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .then(noop, noop);
     }
 
-    public get kernel() {
-        if (this._notebookDocument) {
-            return this.kernelProvider.get(this._notebookDocument);
+    public get kernelPromise() {
+        if (this._kernelReadyPromise) {
+            return this._kernelReadyPromise;
         }
+        return Promise.resolve(undefined);
     }
 }
