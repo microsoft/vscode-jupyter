@@ -1853,6 +1853,12 @@
                     "default": true,
                     "description": "Show the Outline button in the Jupyter notebook toolbar.",
                     "scope": "resource"
+                },
+                "jupyter.newCellOnRunLast": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Append a new empty cell to an interactive window file on running the currently last cell.",
+                    "scope": "resource"
                 }
             }
         },
