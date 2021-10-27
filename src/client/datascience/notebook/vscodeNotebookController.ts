@@ -438,7 +438,7 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
                 case EnvironmentType.Poetry:
                     return DataScience.kernelCategoryForPoetry();
                 case EnvironmentType.Pyenv:
-                    return DataScience.kernelCategoryForPipEnv();
+                    return DataScience.kernelCategoryForPyEnv();
                 case EnvironmentType.Venv:
                 case EnvironmentType.VirtualEnv:
                 case EnvironmentType.VirtualEnvWrapper:
