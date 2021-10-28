@@ -454,7 +454,8 @@ export class CellExecution implements IDisposable {
 
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            const hiddenRequest = session.requestExecute(
+            // No need to wait for the result.
+            session.requestExecute(
                 {
                     code: `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`,
                     silent: false,
@@ -464,7 +465,6 @@ export class CellExecution implements IDisposable {
                 },
                 true
             );
-            await hiddenRequest.done;
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
