@@ -184,7 +184,11 @@ export class VSCodeNotebookController implements Disposable {
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
-        traceInfoIfCI(`NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${this.id}. Selected ${event.selected} `);
+        traceInfoIfCI(
+            `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
+                this.id
+            }. Selected ${event.selected} `
+        );
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
             return;
