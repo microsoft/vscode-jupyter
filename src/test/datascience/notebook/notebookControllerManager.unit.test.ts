@@ -17,7 +17,7 @@ suite('Notebook Controller Manager', () => {
 
         assert.strictEqual(name, 'Current Name');
     });
-    suite('Non-pyhton kernels', () => {
+    suite('Non-python kernels', () => {
         test('Display the name if language is not specified', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             when(kernelSpec.language).thenReturn();
@@ -129,7 +129,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, '.env (Current Name)');
+            assert.strictEqual(name, 'Current Name (.env)');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
@@ -148,11 +148,11 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, '.env (Current Name)');
+            assert.strictEqual(name, 'Current Name (.env)');
         });
     });
-    suite('Pyhton kernels (started using kernelspec)', () => {
-        test('DIsplay name if language is python', () => {
+    suite('Python kernels (started using kernelspec)', () => {
+        test('Display name if language is python', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             when(kernelSpec.language).thenReturn('python');
 
@@ -163,7 +163,7 @@ suite('Notebook Controller Manager', () => {
 
             assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name even if kernel is asscociated an unknown Python environment', () => {
+        test('Display name even if kernel is associated an unknown Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -180,7 +180,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name even if kernel is associated with a global Python environment', () => {
+        test('Display name even if kernel is associated with a global Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -197,7 +197,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name if kernel is associated with a non-global Python environment', () => {
+        test('Display name if kernel is associated with a non-global Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -215,9 +215,9 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, 'Python');
+            assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name if kernel is associated with a non-global 64bit Python environment', () => {
+        test('Display name if kernel is associated with a non-global 64bit Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -235,9 +235,9 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, 'Python');
+            assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
+        test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -262,7 +262,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, 'Python 9.8.7');
+            assert.strictEqual(name, 'Current Name');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
@@ -289,7 +289,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, '.env (Python 9.8.7)');
+            assert.strictEqual(name, 'Current Name (Python 9.8.7)');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
@@ -316,10 +316,10 @@ suite('Notebook Controller Manager', () => {
                 },
                 'Current Name'
             );
-            assert.strictEqual(name, '.env (Python 9.8.7)');
+            assert.strictEqual(name, 'Current Name (Python 9.8.7)');
         });
     });
-    suite('Pyhton kernels (started using interpreter)', () => {
+    suite('Python kernels (started using interpreter)', () => {
         test('Return current label if we do not know the type of python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
@@ -354,7 +354,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'Current Name');
         });
-        test('DIsplay name if kernel is associated with a non-global Python environment', () => {
+        test('Display name if kernel is associated with a non-global Python environment', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -394,7 +394,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'Python');
         });
-        test('DIsplay name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
+        test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
@@ -440,7 +440,7 @@ suite('Notebook Controller Manager', () => {
             const name = getControllerDisplayName(
                 {
                     id: '',
-                    kind: 'startUsingKernelSpec',
+                    kind: 'startUsingPythonInterpreter',
                     kernelSpec: instance(kernelSpec),
                     interpreter: instance(interpreter)
                 },
@@ -467,7 +467,7 @@ suite('Notebook Controller Manager', () => {
             const name = getControllerDisplayName(
                 {
                     id: '',
-                    kind: 'startUsingKernelSpec',
+                    kind: 'startUsingPythonInterpreter',
                     kernelSpec: instance(kernelSpec),
                     interpreter: instance(interpreter)
                 },
