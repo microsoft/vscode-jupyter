@@ -8,11 +8,12 @@ import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
-import { sleep, TimedOutError } from '../../common/utils/async';
+import { createDeferred, Deferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -290,9 +291,22 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
         // Try again (twice, jupyter tries this a couple f times).
         // For now, lets try just twice.
-        for (let counter = 0; counter < 2; counter++) {
-            const reply = await Promise.race([result.kernel.requestKernelInfo(), sleep(Math.min(timeout, 10))]);
-            if (typeof reply === 'object' && reply) {
+        // Note: We don't yet want to do what Jupyter does today, it could slow the startup of kernels.
+        // Lets try this and see (hence the telemetry to see the cost of this check).
+        const stopWatch = new StopWatch();
+        let gotIoPubMessage = createDeferred<boolean>();
+        let attempts = 1;
+        for (attempts = 1; attempts <= 2; attempts++) {
+            gotIoPubMessage = createDeferred<boolean>();
+            const iopubHandler = () => gotIoPubMessage.resolve(true);
+            result.iopubMessage.connect(iopubHandler);
+            await Promise.race([
+                Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
+                sleep(Math.min(timeout, 10))
+            ]);
+
+            result.iopubMessage.disconnect(iopubHandler);
+            if (gotIoPubMessage.completed) {
                 traceInfoIfCI(`Get response for requestKernelInfo`);
                 break;
             } else {
@@ -300,6 +314,11 @@ export class RawJupyterSession extends BaseJupyterSession {
                 continue;
             }
         }
+        sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
+            attempts,
+            timedout: !gotIoPubMessage.completed
+        });
+
         /**
          * To get a better understanding of the way Jupyter works, we need to look at Jupyter Client code.
          * Here's an excerpt (there are a lot of checks in a number of different files, this is NOT he only place)
