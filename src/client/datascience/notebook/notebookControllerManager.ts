@@ -62,6 +62,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -69,6 +70,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
+    public get onNotebookControllerSelectionChanged() {
+        return this._onNotebookControllerSelectionChanged.event;
+    }
     public get kernelConnections() {
         return this.loadNotebookControllers().then(() => Array.from(this.allKernelConnections.values()));
     }
@@ -111,6 +115,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             controller: VSCodeNotebookController;
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
+        this.disposables.push(this._onNotebookControllerSelectionChanged);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
     }
@@ -551,6 +556,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
                         this.handleOnNotebookControllerSelected,
+                        this,
+                        this.disposables
+                    );
+                    controller.onNotebookControllerSelectionChanged(
+                        () => this._onNotebookControllerSelectionChanged.fire(),
                         this,
                         this.disposables
                     );
