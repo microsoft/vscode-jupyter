@@ -8,7 +8,7 @@ import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
-import { TimedOutError } from '../../common/utils/async';
+import { sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -287,7 +287,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Attempt to get kernel to respond to requests (this is what jupyter does today).
         // Kinda warms up the kernel communiocation & ensure things are in the right state.
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
-        void result.kernel.requestKernelInfo();
+        // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
+        await Promise.race([result.kernel.requestKernelInfo(), sleep(Math.min(timeout, 10))]);
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
