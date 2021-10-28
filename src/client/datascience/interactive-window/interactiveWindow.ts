@@ -474,7 +474,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // So we have to enable tracing after we send the hidden cell.
                 kernelBeginDisposable = kernel.onPreExecute((c) => {
                     if (c === notebookCell) {
-                        void this.interactiveWindowDebugger.enable(kernel);
+                        this.interactiveWindowDebugger.enable(kernel);
                     }
                 });
             }

@@ -217,8 +217,8 @@ export const IInteractiveWindowDebugger = Symbol('IInteractiveWindowDebugger');
 export interface IInteractiveWindowDebugger {
     attach(kernel: IKernel): Promise<void>;
     detach(kernel: IKernel): Promise<void>;
-    enable(kernel: IKernel): Promise<void>;
-    disable(kernel: IKernel): Promise<void>;
+    enable(kernel: IKernel): void;
+    disable(kernel: IKernel): void;
 }
 
 export interface IJupyterPasswordConnectInfo {

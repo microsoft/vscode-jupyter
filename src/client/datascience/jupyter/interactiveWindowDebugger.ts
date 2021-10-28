@@ -21,7 +21,7 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
-import { executeSilently, getPlainTextOrStreamOutput } from './kernels/kernel';
+import { executeSilently, executeSilentlySync, getPlainTextOrStreamOutput } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
 @injectable()
@@ -76,7 +76,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
             if (kernel.status !== ServerStatus.Dead && kernel.status !== ServerStatus.NotStarted) {
-                await this.disable(kernel);
+                this.disable(kernel);
             }
         }
     }
@@ -95,20 +95,20 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         }
     }
 
-    public async enable(kernel: IKernel): Promise<void> {
+    public enable(kernel: IKernel) {
         const notebook = kernel.notebook;
         if (!notebook) {
             return;
         }
-        await executeSilently(notebook.session, this.tracingEnableCode);
+        executeSilentlySync(notebook.session, this.tracingEnableCode);
     }
 
-    public async disable(kernel: IKernel): Promise<void> {
+    public disable(kernel: IKernel) {
         const notebook = kernel.notebook;
         if (!notebook) {
             return;
         }
-        await executeSilently(notebook.session, this.tracingDisableCode);
+        executeSilentlySync(notebook.session, this.tracingDisableCode);
     }
 
     private async startDebugSession(

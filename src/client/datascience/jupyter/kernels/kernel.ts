@@ -609,6 +609,25 @@ export class Kernel implements IKernel {
     }
 }
 
+export function executeSilentlySync(session: IJupyterSession, code: string) {
+    traceInfo(
+        `Executing (and forget) (status ${session.status}) silently Code = ${code
+            .substring(0, 100)
+            .splitLines()
+            .join('\\n')}`
+    );
+    session.requestExecute(
+        {
+            code: code.replace(/\r\n/g, '\n'),
+            silent: false,
+            stop_on_error: false,
+            allow_stdin: true,
+            store_history: false
+        },
+        true
+    );
+}
+
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
     traceInfo(
         `Executing (status ${session.status}) silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`
