@@ -6,7 +6,7 @@ import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -288,7 +288,20 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Kinda warms up the kernel communiocation & ensure things are in the right state.
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
         // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
-        await Promise.race([result.kernel.requestKernelInfo(), sleep(Math.min(timeout, 10))]);
+        // Try again (twice, jupyter tries this a couple f times).
+        // For now, lets try just twice.
+        for (let counter = 0; counter < 2; counter++) {
+            const reply = await Promise.race([result.kernel.requestKernelInfo(), sleep(Math.min(timeout, 10))]);
+            if (typeof reply === 'object' && reply) {
+                traceInfoIfCI(`Get response for requestKernelInfo`);
+                break;
+            } else {
+                traceWarning(`Didn't get response for requestKernelInfo`);
+                continue;
+            }
+        }
+
+        traceWarning(`Didn't get response for requestKernelInfo`);
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
