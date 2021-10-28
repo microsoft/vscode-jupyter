@@ -718,6 +718,7 @@ export interface ICellHash {
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
+    code: string; // Code that was actually hashed (might include breakpoint)
 }
 
 export interface IFileHashes {

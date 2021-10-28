@@ -472,7 +472,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Hidden cell executes to set next cell to name <ipython-3-hashyotherstuff>
                 // Breakpoint fires in <ipython-2-hashystuff> because hidden cell inherits that value.
                 // So we have to enable tracing after we send the hidden cell.
-                kernelBeginDisposable = kernel.onExecuteBegin((_c) => this.interactiveWindowDebugger.enable(kernel));
+                kernelBeginDisposable = kernel.onPreExecute((c) => {
+                    if (c === notebookCell) {
+                        void this.interactiveWindowDebugger.enable(kernel);
+                    }
+                });
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;

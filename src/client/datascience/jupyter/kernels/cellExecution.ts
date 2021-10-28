@@ -21,7 +21,9 @@ import {
     notebooks,
     NotebookCellOutput,
     NotebookCellExecutionState,
-    CancellationTokenSource
+    CancellationTokenSource,
+    Event,
+    EventEmitter
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -104,6 +106,9 @@ export class CellExecution implements IDisposable {
     public get result(): Promise<NotebookCellRunState> {
         return this._result.promise;
     }
+    public get preExecute(): Event<NotebookCell> {
+        return this._preExecuteEmitter.event;
+    }
     /**
      * To be used only in tests.
      */
@@ -140,6 +145,7 @@ export class CellExecution implements IDisposable {
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
+    private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -424,9 +430,8 @@ export class CellExecution implements IDisposable {
     }
 
     private async execute(session: IJupyterSession) {
-        const code = this.cell.metadata?.interactive?.modifiedSource ?? this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(code, session);
+        await this.executeCodeCell(this.cell.document.getText(), session);
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession) {
@@ -444,11 +449,31 @@ export class CellExecution implements IDisposable {
         };
 
         try {
+            // Compute the hash for the cell we're about to execute
+            const hash = await this.cellHashProvider.addCellHash(this.cell);
+
+            // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
+            // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+            const hiddenRequest = session.requestExecute(
+                {
+                    code: `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`,
+                    silent: false,
+                    stop_on_error: false,
+                    allow_stdin: true,
+                    store_history: false
+                },
+                true
+            );
+            await hiddenRequest.done;
+
+            // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
+            this._preExecuteEmitter.fire(this.cell);
+
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
                 {
-                    code: code.replace(/\r\n/g, '\n'),
+                    code: hash?.code || code,
                     silent: false,
                     stop_on_error: false,
                     allow_stdin: true,
