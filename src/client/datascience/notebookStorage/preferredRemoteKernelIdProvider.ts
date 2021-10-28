@@ -5,6 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
 import { traceInfo } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -32,7 +33,7 @@ export class PreferredRemoteKernelIdProvider {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = this.crypto.createHash(uri.toString(), 'string');
             const entry = list.find((l) => l.fileHash === fileHash);
-            traceInfo(`Preferred kernel for ${uri.toString()} is ${entry?.kernelId}`);
+            traceInfo(`Preferred kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
             return entry?.kernelId;
         }
     }
@@ -59,7 +60,7 @@ export class PreferredRemoteKernelIdProvider {
         while (list.length > MaximumKernelIdListSize) {
             list.shift();
         }
-        traceInfo(`Preferred kernel for ${uri.toString()} is ${id}`);
+        traceInfo(`Preferred kernel for ${getDisplayPath(uri)} is ${id}`);
         await this.globalMemento.update(ActiveKernelIdList, list);
     }
 }

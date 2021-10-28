@@ -6,7 +6,7 @@ import { format } from 'winston';
 import { isTestExecution } from '../common/constants';
 import { getLevel, LogLevel, LogLevelName } from './levels';
 
-const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
+const TIMESTAMP = 'HH:mm:ss';
 
 // Knobs used when creating a formatter.
 export type FormatterOptions = {

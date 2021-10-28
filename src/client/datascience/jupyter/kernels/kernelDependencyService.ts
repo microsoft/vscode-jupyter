@@ -10,6 +10,7 @@ import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
     IInstaller,
@@ -58,7 +59,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         token?: CancellationToken,
         disableUI?: boolean
     ): Promise<void> {
-        traceInfo(`installMissingDependencies ${interpreter.path}`);
+        traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
             return;
         }
@@ -104,7 +105,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(
-                `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                `${interpreter.displayName || getDisplayPath(interpreter.path)}:${getDisplayPath(interpreter.path)}`
             ),
             response
         );

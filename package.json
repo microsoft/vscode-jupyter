@@ -1427,7 +1427,7 @@
                 },
                 "jupyter.logging.level": {
                     "type": "string",
-                    "default": "debug",
+                    "default": "info",
                     "enum": [
                         "off",
                         "error",

@@ -16,6 +16,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
@@ -46,7 +47,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             this.interactiveWindowProvider
         );
         if (!notebookDocument) {
-            traceError(`Notebook not found for Cell ${document.uri.toString()}`);
+            traceError(`Notebook not found for Cell ${getDisplayPath(document.uri)}`);
             return [];
         }
 
@@ -58,11 +59,11 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             getOnly: true
         });
         if (token.isCancellationRequested) {
-            traceInfoIfCI(`Getting completions cancelled for ${notebookDocument.uri.toString()}`);
+            traceInfoIfCI(`Getting completions cancelled for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
         if (!notebook) {
-            traceError(`Live Notebook not available for ${notebookDocument.uri.toString()}`);
+            traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
         const emptyResult: INotebookCompletion = { cursor: { end: 0, start: 0 }, matches: [], metadata: {} };
@@ -76,7 +77,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
                 if (token.isCancellationRequested) {
                     return;
                 }
-                traceInfoIfCI(`Notebook completions request timed out for Cell ${document.uri.toString()}`);
+                traceInfoIfCI(`Notebook completions request timed out for Cell ${getDisplayPath(document.uri)}`);
                 return emptyResult;
             })
         ]);

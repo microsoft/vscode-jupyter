@@ -43,6 +43,7 @@ import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { executeSilently } from './kernel';
 import { IWorkspaceService } from '../../../common/application/types';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -405,7 +406,7 @@ export function findPreferredKernel(
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
 ): KernelConnectionMetadata | undefined {
     traceInfo(
-        `Find preferred kernel for ${resource?.toString()} with metadata ${JSON.stringify(
+        `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
         )} & preferred interpreter ${JSON.stringify(preferredInterpreter || {})}`
     );
@@ -820,7 +821,9 @@ export async function sendTelemetryForPythonKernelExecutable(
                     trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
                     if (!match) {
                         traceError(
-                            `Interpreter started by kernel does not match expectation, expected ${kernelConnection.interpreter?.path}, got ${sysExecutable}`
+                            `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(
+                                kernelConnection.interpreter?.path
+                            )}, got ${getDisplayPath(sysExecutable)}`
                         );
                     }
                 }

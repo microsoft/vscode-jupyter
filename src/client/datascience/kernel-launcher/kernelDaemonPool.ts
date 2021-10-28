@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
@@ -155,7 +156,9 @@ export class KernelDaemonPool implements IDisposable {
             .then((d) => {
                 // Prewarm if we support prewarming
                 if ('preWarm' in d) {
-                    d.preWarm().catch(traceError.bind(`Failed to prewarm kernel daemon ${interpreter.path}`));
+                    d.preWarm().catch(
+                        traceError.bind(`Failed to prewarm kernel daemon ${getDisplayPath(interpreter.path)}`)
+                    );
                 }
             })
             .catch((e) => {

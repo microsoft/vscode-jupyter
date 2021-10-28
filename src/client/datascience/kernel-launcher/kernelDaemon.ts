@@ -6,7 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { Subject } from 'rxjs/Subject';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import { IPythonExecutionService, ObservableExecutionResult, Output, SpawnOptions } from '../../common/process/types';
@@ -89,7 +89,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             // This is why when we run `execModule` in the Kernel daemon, it finishes (comes back) quickly.
             // However in reality it is running in the background.
             // See `m_exec_module_observable` in `kernel_launcher_daemon.py`.
-            traceInfo(`Starting kernel from scratch with options ${JSON.stringify(options)}`);
+            traceVerbose(`Starting kernel from scratch with options ${JSON.stringify(options)}`);
             await this.execModule(moduleName, args, options);
         }
 
@@ -125,18 +125,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         // This is because the kernel is a long running process and that will be the only code in the daemon
         // spitting stuff into stdout/stderr.
         this.outputObservable.subscribe(
-            (out) => {
-                if (out.source === 'stderr') {
-                    // Don't call this.subject.error, as that can only be called once (hence can only be handled once).
-                    // Instead log this error & pass this only when the kernel dies.
-                    stdErr += out.out;
-                    // If we have requested for kernel to be killed, don't raise kernel died error.
-                    if (!this.killed) {
-                        traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
-                    }
-                }
-                this.subject.next(out);
-            },
+            (out) => this.subject.next(out),
             this.subject.error.bind(this.subject),
             this.subject.complete.bind(this.subject)
         );

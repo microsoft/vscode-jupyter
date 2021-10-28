@@ -19,6 +19,7 @@ import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService }
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import {
     IConfigurationService,
     IDisposable,
@@ -167,7 +168,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
-        traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
+        traceInfo(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
@@ -217,7 +218,7 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
 
-        traceInfoIfCI(`Notebook Controller set ${event.notebook.uri.toString()}, ${this.id}`);
+        traceInfoIfCI(`Notebook Controller set ${getDisplayPath(event.notebook.uri)}, ${this.id}`);
         this.associatedDocuments.add(event.notebook);
 
         // Now actually handle the change
@@ -282,7 +283,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
+        traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
             metadata: this.kernelConnection,
             controller: this.controller,

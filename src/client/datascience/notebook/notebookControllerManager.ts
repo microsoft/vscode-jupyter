@@ -51,6 +51,7 @@ import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookCont
 import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -257,7 +258,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
-        traceInfo(`Creating controller for ${notebookType} with interpreter ${activeInterpreter.path}`);
+        traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     private async createDefaultRemoteController() {
@@ -387,7 +388,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
 
         // Prep so that we can track the selected controller for this document
-        traceInfoIfCI(`Clear controller mapping for ${document.uri.toString()}`);
+        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
         if (
@@ -433,14 +434,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     return;
                 }
                 if (!preferredConnection) {
-                    traceInfoIfCI(`PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
+                    traceInfoIfCI(
+                        `PreferredConnection not found for NotebookDocument: ${getDisplayPath(document.uri)}`
+                    );
                     return;
                 }
 
                 traceInfo(
-                    `PreferredConnection: ${
-                        preferredConnection.id
-                    } found for NotebookDocument: ${document.uri.toString()}`
+                    `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${getDisplayPath(
+                        document.uri
+                    )}`
                 );
             }
             // Wait for our controllers to be loaded before we try to set a preferred on
@@ -451,14 +454,18 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             );
 
             if (targetController) {
-                traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
+                traceInfo(
+                    `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
+                );
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
             } else {
                 traceInfoIfCI(
-                    `TargetController not found ID: ${preferredConnection?.id} for document ${document.uri.toString()}`
+                    `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
+                        document.uri
+                    )}`
                 );
             }
         } catch (ex) {

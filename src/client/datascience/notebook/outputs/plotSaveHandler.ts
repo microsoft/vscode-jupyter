@@ -6,6 +6,7 @@ import { DataScience } from '../../../common/utils/localize';
 import * as path from 'path';
 import { saveSvgToPdf } from '../../plotting/plotViewer';
 import { traceError } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {
@@ -29,10 +30,10 @@ export class PlotSaveHandler {
         }
         const output = getOutputItem(notebook, outputId, mimeType);
         if (!output) {
-            return traceError(`Nolot to save ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`);
+            return traceError(`Nolot to save ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
-            return traceError(`Unsupported MimeType ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`);
+            return traceError(`Unsupported MimeType ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
         }
 
         const saveLocation = await this.getSaveTarget(output, mimeType);

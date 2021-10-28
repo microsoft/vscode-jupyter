@@ -9,6 +9,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
@@ -152,7 +153,7 @@ export abstract class LocalKernelSpecFinderBase {
         }
         let kernelJson: ReadWrite<IJupyterKernelSpec>;
         try {
-            traceInfo(`Loading kernelspec from ${specPath} for ${interpreter?.path}`);
+            traceInfo(`Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`);
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);

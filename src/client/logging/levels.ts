@@ -40,13 +40,13 @@ export const configLevels: winston.config.AbstractConfigSetLevels = {
 
 // The level names from winston/config.npm.
 // See: https://www.npmjs.com/package/winston#logging-levels
-type NPMLogLevelName = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
+type NPMLogLevelName = 'error' | 'warn' | 'info' | 'verbose' | 'debug';
 const npmLogLevelMap: { [K in LogLevel]: NPMLogLevelName } = {
     [LogLevel.Error]: 'error',
     [LogLevel.Warn]: 'warn',
     [LogLevel.Info]: 'info',
     [LogLevel.Debug]: 'debug',
-    [LogLevel.Trace]: 'silly'
+    [LogLevel.Trace]: 'verbose'
 };
 
 //======================

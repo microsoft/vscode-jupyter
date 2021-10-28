@@ -8,6 +8,7 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import {
@@ -141,8 +142,10 @@ export class KernelProvider implements IKernelProvider {
                 if (this.kernelsByNotebook.get(notebook)?.kernel === kernel) {
                     this.kernelsByNotebook.delete(notebook);
                     traceInfo(
-                        `Kernel got disposed, hence there is no longer a kernel associated with ${notebook.uri.toString()}`,
-                        kernel.notebookDocument.uri.toString()
+                        `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
+                            notebook.uri
+                        )}`,
+                        getDisplayPath(kernel.notebookDocument.uri)
                     );
                 }
                 this.pendingDisposables.delete(kernel);
