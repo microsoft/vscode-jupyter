@@ -669,8 +669,11 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
+                const pythonVersion = `Python ${
+                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                }`.trim();
                 return kernelConnection.interpreter.envName
-                    ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
+                    ? `${currentDisplayName} (${pythonVersion})`
                     : currentDisplayName;
             } else {
                 return currentDisplayName;
