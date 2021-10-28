@@ -215,8 +215,10 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IInteractiveWindowDebugger = Symbol('IInteractiveWindowDebugger');
 export interface IInteractiveWindowDebugger {
-    startDebugging(kernel: IKernel, code: string, file: string): Promise<void>;
-    stopDebugging(kernel: IKernel): Promise<void>;
+    attach(kernel: IKernel): Promise<void>;
+    detach(kernel: IKernel): Promise<void>;
+    enable(kernel: IKernel): void;
+    disable(kernel: IKernel): void;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -716,6 +718,7 @@ export interface ICellHash {
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
+    code: string; // Code that was actually hashed (might include breakpoint)
 }
 
 export interface IFileHashes {

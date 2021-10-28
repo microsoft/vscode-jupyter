@@ -16,7 +16,7 @@ import {
     TextDocumentContentChangeEvent
 } from 'vscode';
 
-import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
+import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -353,10 +353,6 @@ export class CellHashProvider implements ICellHashProvider {
         ) {
             // Inject the breakpoint line
             source.splice(0, 0, 'breakpoint()\n');
-            // Store the modified source code in the metadata for retrieval in the kernelExecution.ts class.
-            // Longer term we should modify the kernelExecution codepath to understand InteractiveCells as a
-            // first class concept.
-            cell.metadata.interactive.modifiedSource = concatMultilineString(source);
 
             // Start on the second line
             return 2;

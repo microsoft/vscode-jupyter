@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell } from 'vscode';
+import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
@@ -14,10 +14,12 @@ import { KernelConnectionMetadata, NotebookCellRunState } from './types';
  * If this has not completed execution of the cells queued, we can continue to add more cells to this job.
  * All cells queued using `queueCell` are added to the queue and processed in order they were added/queued.
  */
-export class CellExecutionQueue {
+export class CellExecutionQueue implements Disposable {
     private readonly queueOfCellsToExecute: CellExecution[] = [];
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
+    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    private disposables: Disposable[] = [];
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      */
@@ -36,6 +38,14 @@ export class CellExecutionQueue {
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
     ) {}
+
+    public dispose() {
+        this.disposables.forEach((d) => d.dispose());
+    }
+
+    public get onPreExecute() {
+        return this._onPreExecute.event;
+    }
     /**
      * Queue the cell for execution & start processing it immediately.
      */
@@ -46,6 +56,7 @@ export class CellExecutionQueue {
             return;
         }
         const cellExecution = this.executionFactory.create(cell, this.metadata);
+        cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);
 
         traceCellMessage(cell, 'User queued cell for execution');

@@ -21,7 +21,7 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
-import { executeSilently, getPlainTextOrStreamOutput } from './kernels/kernel';
+import { executeSilently, executeSilentlySync, getPlainTextOrStreamOutput } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
 @injectable()
@@ -49,7 +49,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
-    public async startDebugging(kernel: IKernel): Promise<void> {
+    public async attach(kernel: IKernel): Promise<void> {
         const notebook = kernel.notebook;
         if (!notebook) {
             throw new Error('Notebook not initialized');
@@ -61,7 +61,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         });
     }
 
-    public async stopDebugging(kernel: IKernel): Promise<void> {
+    public async detach(kernel: IKernel): Promise<void> {
         const notebook = kernel.notebook;
         if (!notebook) {
             return;
@@ -76,7 +76,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
             if (kernel.status !== ServerStatus.Dead && kernel.status !== ServerStatus.NotStarted) {
-                await executeSilently(notebook.session, this.tracingDisableCode);
+                this.disable(kernel);
             }
         }
     }
@@ -93,6 +93,22 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
                 })
             );
         }
+    }
+
+    public enable(kernel: IKernel) {
+        const notebook = kernel.notebook;
+        if (!notebook) {
+            return;
+        }
+        executeSilentlySync(notebook.session, this.tracingEnableCode);
+    }
+
+    public disable(kernel: IKernel) {
+        const notebook = kernel.notebook;
+        if (!notebook) {
+            return;
+        }
+        executeSilentlySync(notebook.session, this.tracingDisableCode);
     }
 
     private async startDebugSession(
@@ -123,8 +139,8 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
                 traceInfo(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
             }
 
-            // Then enable tracing
-            await executeSilently(kernel.notebook.session, this.tracingEnableCode);
+            // After attach initially disable debugging
+            await this.disable(kernel);
         }
     }
 
