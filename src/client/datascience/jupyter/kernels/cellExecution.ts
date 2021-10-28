@@ -45,13 +45,14 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
+import { ICellHash, ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
+import { InteractiveWindowView } from '../../notebook/constants';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -431,7 +432,7 @@ export class CellExecution implements IDisposable {
 
     private async execute(session: IJupyterSession) {
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(this.cell.document.getText(), session);
+        await this.executeCodeCell(this.cell.document.getText().replace(/\r\n/g, '\n'), session);
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession) {
@@ -449,22 +450,25 @@ export class CellExecution implements IDisposable {
         };
 
         try {
-            // Compute the hash for the cell we're about to execute
-            const hash = await this.cellHashProvider.addCellHash(this.cell);
+            // Compute the hash for the cell we're about to execute if on the interactive window
+            let hash: ICellHash | undefined = undefined;
+            if (this.cell.notebook.notebookType === InteractiveWindowView) {
+                hash = await this.cellHashProvider.addCellHash(this.cell);
 
-            // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
-            // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            // No need to wait for the result.
-            session.requestExecute(
-                {
-                    code: `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`,
-                    silent: false,
-                    stop_on_error: false,
-                    allow_stdin: true,
-                    store_history: false
-                },
-                true
-            );
+                // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
+                // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+                // No need to wait for the result.
+                session.requestExecute(
+                    {
+                        code: `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`,
+                        silent: false,
+                        stop_on_error: false,
+                        allow_stdin: true,
+                        store_history: false
+                    },
+                    true
+                );
+            }
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
