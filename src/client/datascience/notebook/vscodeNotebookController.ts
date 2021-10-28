@@ -58,6 +58,7 @@ export class VSCodeNotebookController implements Disposable {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
@@ -81,6 +82,9 @@ export class VSCodeNotebookController implements Disposable {
 
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
+    }
+    get onNotebookControllerSelectionChanged() {
+        return this._onNotebookControllerSelectionChanged.event;
     }
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
@@ -154,6 +158,7 @@ export class VSCodeNotebookController implements Disposable {
         if (!this.isDisposed) {
             this.isDisposed = true;
             this._onNotebookControllerSelected.dispose();
+            this._onNotebookControllerSelectionChanged.dispose();
             this.controller.dispose();
         }
         this._onDidDispose.fire();
@@ -197,6 +202,7 @@ export class VSCodeNotebookController implements Disposable {
                 void kernel.dispose();
             }
             this.associatedDocuments.delete(event.notebook);
+            this._onNotebookControllerSelectionChanged.fire();
             return;
         }
         // We're only interested in our Notebooks.
@@ -217,6 +223,7 @@ export class VSCodeNotebookController implements Disposable {
 
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
+        this._onNotebookControllerSelectionChanged.fire();
     }
     /**
      * Scenario 1:
@@ -438,7 +445,7 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
                 case EnvironmentType.Poetry:
                     return DataScience.kernelCategoryForPoetry();
                 case EnvironmentType.Pyenv:
-                    return DataScience.kernelCategoryForPipEnv();
+                    return DataScience.kernelCategoryForPyEnv();
                 case EnvironmentType.Venv:
                 case EnvironmentType.VirtualEnv:
                 case EnvironmentType.VirtualEnvWrapper:

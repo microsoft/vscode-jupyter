@@ -306,7 +306,7 @@ export class CodeWatcher implements ICodeWatcher {
             return;
         }
 
-        // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
+        // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to.
         const advance =
             range.contains(this.documentManager.activeTextEditor.selection.start) &&
             this.configService.getSettings(this.documentManager.activeTextEditor.document.uri).enableAutoMoveToNextCell;
@@ -361,6 +361,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cellMatcher = new CellMatcher();
         let index = 0;
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
+        const { newCellOnRunLast } = this.configService.getSettings(this.documentManager.activeTextEditor.document.uri);
 
         if (editor) {
             void editor.edit((editBuilder) => {
@@ -377,7 +378,9 @@ export class CodeWatcher implements ICodeWatcher {
 
                 if (lastCell) {
                     index = editor.document.lineCount;
-                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
+                    if (newCellOnRunLast) {
+                        editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
+                    }
                 }
             });
         }

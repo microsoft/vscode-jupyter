@@ -94,6 +94,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
+    public newCellOnRunLast: boolean = true;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {

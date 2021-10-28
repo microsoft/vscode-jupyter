@@ -324,7 +324,8 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.DebugStepOver,
-                    localize.DataScience.debugStepOverCommandTitle()
+                    localize.DataScience.debugStepOverCommandTitle(),
+                    [document.uri]
                 );
 
             case Commands.DebugContinue:
@@ -335,7 +336,8 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.DebugContinue,
-                    localize.DataScience.debugContinueCommandTitle()
+                    localize.DataScience.debugContinueCommandTitle(),
+                    [document.uri]
                 );
 
             case Commands.DebugStop:
@@ -343,7 +345,9 @@ export class CodeLensFactory implements ICodeLensFactory {
                 if (cell_type !== 'code') {
                     break;
                 }
-                return this.generateCodeLens(range, Commands.DebugStop, localize.DataScience.debugStopCommandTitle());
+                return this.generateCodeLens(range, Commands.DebugStop, localize.DataScience.debugStopCommandTitle(), [
+                    document.uri
+                ]);
 
             case Commands.RunCurrentCell:
             case Commands.RunCell:

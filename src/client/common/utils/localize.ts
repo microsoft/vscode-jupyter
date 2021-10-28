@@ -640,7 +640,7 @@ export namespace DataScience {
     export const debugStopCommandTitle = localize('DataScience.debugStopCommandTitle', 'Stop');
     export const runCurrentCellAndAddBelow = localize(
         'DataScience.runCurrentCellAndAddBelow',
-        'Run current and add cell below'
+        'Run current cell and add empty cell below'
     );
     export const jupyterDebuggerNotInstalledError = localize(
         'DataScience.jupyterDebuggerNotInstalledError',

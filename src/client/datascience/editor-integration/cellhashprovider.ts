@@ -301,6 +301,11 @@ export class CellHashProvider implements ICellHashProvider {
             stripped[lastLinePos] = `${stripped[lastLinePos]}\n`;
         }
 
+        // We also don't send \r\n to jupyter. Remove from the stripped lines
+        for (let i = 0; i < stripped.length; i++) {
+            stripped[i] = stripped[i].replace(/\r\n/g, '\n');
+        }
+
         return { stripped, trueStartLine };
     }
 
