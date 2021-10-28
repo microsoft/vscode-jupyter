@@ -62,6 +62,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -69,6 +70,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
+    public get onNotebookControllerSelectionChanged() {
+        return this._onNotebookControllerSelectionChanged.event;
+    }
     public get kernelConnections() {
         return this.loadNotebookControllers().then(() => Array.from(this.allKernelConnections.values()));
     }
@@ -111,6 +115,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             controller: VSCodeNotebookController;
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
+        this.disposables.push(this._onNotebookControllerSelectionChanged);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
     }
@@ -554,6 +559,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this,
                         this.disposables
                     );
+                    controller.onNotebookControllerSelectionChanged(
+                        () => this._onNotebookControllerSelectionChanged.fire(),
+                        this,
+                        this.disposables
+                    );
                     controller.onDidDispose(
                         () => {
                             this.registeredControllers.delete(controller.id);
@@ -669,17 +679,17 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const pythonDisplayName = pythonVersion.trim();
+                    const pythonVersion = `Python ${
+                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                    }`.trim();
                     return kernelConnection.interpreter.envName
-                        ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
-                        : pythonDisplayName;
+                        ? `${currentDisplayName} (${pythonVersion})`
+                        : currentDisplayName;
                 } else {
+                    // Non-Python kernelspec that launches via python interpreter
                     return kernelConnection.interpreter.envName
-                        ? `${kernelConnection.interpreter.envName} (${currentDisplayName})`
+                        ? `${currentDisplayName} (${kernelConnection.interpreter.envName})`
                         : currentDisplayName;
                 }
             } else {

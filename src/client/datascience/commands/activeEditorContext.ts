@@ -125,6 +125,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
+        this.controllers.onNotebookControllerSelectionChanged(
+            () => this.updateSelectedKernelContext(),
+            this,
+            this.disposables
+        );
         this.updateSelectedKernelContext();
     }
 
