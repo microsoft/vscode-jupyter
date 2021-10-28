@@ -85,6 +85,9 @@ export class Kernel implements IKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
+    get onExecuteBegin(): Event<NotebookCell> {
+        return this._onExecuteBegin.event;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
@@ -107,6 +110,7 @@ export class Kernel implements IKernel {
     private readonly _onWillInterrupt = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
+    private readonly _onExecuteBegin = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
@@ -168,6 +172,8 @@ export class Kernel implements IKernel {
                 await this.executeSilently(`import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`);
             }
         }
+        // Tell listeners we are actually about to start executing a cell
+        this._onExecuteBegin.fire(cell);
         const promise = this.kernelExecution.executeCell(sessionPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;

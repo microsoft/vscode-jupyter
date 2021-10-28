@@ -458,11 +458,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (!kernel) {
             return false;
         }
-        const file = fileUri.fsPath;
         let result = true;
+        let kernelBeginDisposable = undefined;
         try {
+            // If debugging attach to the kernel but don't enable tracing just yet
             if (isDebug) {
-                await this.interactiveWindowDebugger.startDebugging(kernel!, code, file);
+                await this.interactiveWindowDebugger.attach(kernel!);
+
+                // Enable has to happen after the hidden code so that we don't hit breakpoints from previous cells
+                // Example:
+                // User has breakpoint on previous cell with name <ipython-2-hashystuff>
+                // We turn on tracing
+                // Hidden cell executes to set next cell to name <ipython-3-hashyotherstuff>
+                // Breakpoint fires in <ipython-2-hashystuff> because hidden cell inherits that value.
+                // So we have to enable tracing after we send the hidden cell.
+                kernelBeginDisposable = kernel.onExecuteBegin((_c) => this.interactiveWindowDebugger.enable(kernel));
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
@@ -470,7 +480,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
-                await this.interactiveWindowDebugger.stopDebugging(kernel!);
+                await this.interactiveWindowDebugger.detach(kernel!);
+            }
+            if (kernelBeginDisposable) {
+                kernelBeginDisposable.dispose();
             }
         }
         return result;

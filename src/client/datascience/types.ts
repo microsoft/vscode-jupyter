@@ -215,8 +215,10 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IInteractiveWindowDebugger = Symbol('IInteractiveWindowDebugger');
 export interface IInteractiveWindowDebugger {
-    startDebugging(kernel: IKernel, code: string, file: string): Promise<void>;
-    stopDebugging(kernel: IKernel): Promise<void>;
+    attach(kernel: IKernel): Promise<void>;
+    detach(kernel: IKernel): Promise<void>;
+    enable(kernel: IKernel): Promise<void>;
+    disable(kernel: IKernel): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {
