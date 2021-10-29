@@ -27,7 +27,6 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
-import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode, Resource } from '../common/types';
@@ -167,11 +166,9 @@ export interface IJupyterNotebookProvider {
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
-export interface INotebook extends IAsyncDisposable {
+export interface INotebook  {
     readonly connection: INotebookProviderConnection | undefined;
-    readonly disposed: boolean;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
-    onDisposed: Event<void>;
 }
 
 // Options for connecting to a notebook provider
@@ -230,13 +227,18 @@ export interface IJupyterPasswordConnect {
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
+/**
+ * Closely represents Jupyter Labs Kernel.IKernelConnection.
+ */
 export interface IJupyterSession extends IAsyncDisposable {
-    onSessionStatusChanged: Event<ServerStatus>;
-    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
-    readonly status: ServerStatus;
+    readonly disposed: boolean;
+    readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    restart(): Promise<void>;
+    onSessionStatusChanged: Event<KernelMessage.Status>;
+    onDidDispose: Event<void>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     interrupt(): Promise<void>;
+    restart(): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
     requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
@@ -250,7 +252,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
     requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
     sendInputReply(content: KernelMessage.IInputReply): void;
-    changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>

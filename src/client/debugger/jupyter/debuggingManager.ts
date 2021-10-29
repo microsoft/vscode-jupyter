@@ -23,7 +23,6 @@ import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
 import { EditorContexts } from '../../datascience/constants';
@@ -425,7 +424,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 resourceUri: doc.uri
             });
         }
-        if (kernel && kernel.status === ServerStatus.NotStarted) {
+        if (kernel && kernel.status === 'unknown') {
             await kernel.start();
         }
 

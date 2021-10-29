@@ -6,14 +6,12 @@ import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
-import { IMainState, ServerStatus } from '../../interactive-common/mainState';
-import { getLocString } from '../../react-common/locReactSide';
+import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { getDefaultSettings } from '../../react-common/settingsReactSide';
@@ -53,12 +51,6 @@ function generateDefaultState(
             codeTheme: Identifiers.GeneratedThemeName,
             focusPending: 0,
             loaded: false,
-            kernel: {
-                kernelName: getLocString('DataScience.noKernel', 'No Kernel'),
-                serverName: getLocString('DataScience.serverNotStarted', 'Not Started'),
-                jupyterServerStatus: ServerStatus.NotStarted,
-                language: PYTHON_LANGUAGE
-            },
             settings: testMode ? getDefaultSettings() : undefined // When testing, we don't send (or wait) for the real settings.
         };
     }
@@ -135,16 +127,6 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
         // Indicate update from extension side
         if (action.type && action.type === InteractiveWindowMessages.UpdateModel) {
             sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
-        }
-
-        // Kernel state changing
-        const afterKernel = afterState.main.kernel;
-        const prevKernel = prevState.main.kernel;
-        if (
-            afterKernel.jupyterServerStatus !== prevKernel.jupyterServerStatus &&
-            afterKernel.jupyterServerStatus === ServerStatus.Idle
-        ) {
-            sendMessage(InteractiveWindowMessages.KernelIdle);
         }
 
         if (action.type !== 'action.postOutgoingMessage') {

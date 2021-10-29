@@ -14,6 +14,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
+    IDisposableRegistry,
     IOutputChannel,
     Resource
 } from '../../../common/types';
@@ -69,7 +70,8 @@ export class HostJupyterServer implements INotebookServer {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
     }
@@ -168,7 +170,7 @@ export class HostJupyterServer implements INotebookServer {
 
             if (session) {
                 // Create our notebook
-                const notebook = new JupyterNotebookBase(session, info, document.uri);
+                const notebook = new JupyterNotebookBase(session, info);
 
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);
@@ -395,7 +397,7 @@ export class HostJupyterServer implements INotebookServer {
 
             traceInfo(`Shutting down notebooks for ${this.id}`);
             const notebooks = await Promise.all([...this.notebooks.values()]);
-            await Promise.all(notebooks.map((n) => n?.dispose()));
+            await Promise.all(notebooks.map((n) => n?.session.dispose()));
             traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
@@ -462,11 +464,15 @@ export class HostJupyterServer implements INotebookServer {
 
         notebook
             .then((nb) => {
-                const oldDispose = nb.dispose.bind(nb);
-                nb.dispose = () => {
-                    this.notebooks.delete(document.uri.toString());
-                    return oldDispose();
-                };
+                nb.session.onDidDispose(
+                    () => {
+                        if (this.notebooks.get(document.uri.toString()) === notebook) {
+                            this.notebooks.delete(document.uri.toString());
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
             })
             .catch(removeNotebook);
 

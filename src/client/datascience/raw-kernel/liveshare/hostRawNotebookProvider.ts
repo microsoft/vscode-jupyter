@@ -11,7 +11,7 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -55,9 +55,10 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        super(asyncRegistry, rawNotebookSupported);
+        super(asyncRegistry, rawNotebookSupported, disposables);
     }
 
     public async dispose(): Promise<void> {
@@ -152,7 +153,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
                 if (rawSession.isConnected) {
                     // Create our notebook
-                    const notebook = new JupyterNotebookBase(rawSession, info, document.uri);
+                    const notebook = new JupyterNotebookBase(rawSession, info);
 
                     traceInfo(`Finished connecting ${this.id}`);
 

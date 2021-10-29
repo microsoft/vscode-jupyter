@@ -69,7 +69,7 @@ export class NotebookProvider implements INotebookProvider {
         const notebook = rawKernel
             ? await this.rawNotebookProvider.getNotebook(options.document, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
-        if (notebook && !notebook.disposed) {
+        if (notebook && !notebook.session.disposed) {
             this.cacheNotebookPromise(options.document, Promise.resolve(notebook));
             return notebook;
         }
@@ -137,7 +137,7 @@ export class NotebookProvider implements INotebookProvider {
         promise
             .then((nb) => {
                 // If the notebook is disposed, remove from cache.
-                nb.onDisposed(removeFromCache, this, this.disposables);
+                nb.session.onDidDispose(removeFromCache, this, this.disposables);
             })
             .catch(noop);
 

@@ -6,13 +6,12 @@
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem } from 'vscode';
-import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type {
     IJupyterKernel,
     IJupyterKernelSpec,
-    INotebook,
+    IJupyterSession,
     INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
@@ -121,14 +120,14 @@ export interface IKernel extends IAsyncDisposable {
      */
     readonly resourceUri: Resource;
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
-    readonly onStatusChanged: Event<ServerStatus>;
+    readonly onStatusChanged: Event<KernelMessage.Status>;
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
     readonly onWillRestart: Event<void>;
     readonly onWillInterrupt: Event<void>;
     readonly onPreExecute: Event<NotebookCell>;
-    readonly status: ServerStatus;
+    readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     /**
      * Kernel information, used to save in ipynb in the metadata.
@@ -136,7 +135,7 @@ export interface IKernel extends IAsyncDisposable {
      */
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    readonly notebook?: INotebook;
+    readonly session?: IJupyterSession;
     start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<InterruptResult>;
     restart(): Promise<void>;
@@ -159,7 +158,7 @@ export interface IKernelProvider extends IAsyncDisposable {
     onDidStartKernel: Event<IKernel>;
     onDidRestartKernel: Event<IKernel>;
     onDidDisposeKernel: Event<IKernel>;
-    onKernelStatusChanged: Event<{ status: ServerStatus; kernel: IKernel }>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IKernel }>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

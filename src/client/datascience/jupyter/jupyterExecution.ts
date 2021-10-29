@@ -9,7 +9,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -18,7 +18,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
@@ -37,7 +36,6 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
-import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
 
@@ -56,7 +54,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly disposableRegistry: IDisposableRegistry,
         private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        private readonly kernelSelector: KernelSelector,
         private readonly notebookStarter: NotebookStarter,
         private readonly appShell: IApplicationShell,
         private readonly jupyterOutputChannel: IOutputChannel,
@@ -202,25 +199,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         });
                     }
                     // eslint-disable-next-line no-constant-condition
-                    while (true) {
-                        try {
-                            traceInfo(
-                                `Connecting to process for ${options ? options.purpose : 'unknown type of'} server`
-                            );
-                            await result.connect(launchInfo, cancelToken);
-                            traceInfo(
-                                `Connection complete for ${options ? options.purpose : 'unknown type of'} server`
-                            );
-                            break;
-                        } catch (ex) {
-                            traceError('Failed to connect to server', ex);
-                            if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
-                                sendTelemetryEvent(Telemetry.AskUserForNewJupyterKernel);
-                                void this.kernelSelector.askForLocalKernel(options?.resource);
-                            }
-                            throw ex;
-                        }
-                    }
+                    traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
+                    await result.connect(launchInfo, cancelToken);
+                    traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
 
                     sendTelemetryEvent(
                         isLocalConnection ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter

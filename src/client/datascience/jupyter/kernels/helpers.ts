@@ -764,7 +764,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
-    if (!kernel.notebook) {
+    if (!kernel.session) {
         return;
     }
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
@@ -775,7 +775,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     try {
         traceInfoIfCI('Begin sendTelemetryForPythonKernelExecutable');
-        const outputs = await executeSilently(kernel.notebook.session, 'import sys\nprint(sys.executable)');
+        const outputs = await executeSilently(kernel.session, 'import sys\nprint(sys.executable)');
         if (outputs.length === 0) {
             return;
         }

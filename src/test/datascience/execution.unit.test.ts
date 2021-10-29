@@ -44,7 +44,6 @@ import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/j
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
-import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -104,7 +103,6 @@ suite('Jupyter Execution', async () => {
     const pythonSettings = new MockJupyterSettings(undefined);
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
-    let kernelSelector: KernelSelector;
     let notebookStarter: NotebookStarter;
     const workingPython: PythonEnvironment = {
         path: '/foo/bar/python.exe',
@@ -935,7 +933,6 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
             instance(executionFactory)
         );
-        kernelSelector = mock(KernelSelector);
         const dependencyService = mock(JupyterInterpreterDependencyService);
         when(dependencyService.areDependenciesInstalled(anything(), anything())).thenCall(
             async (interpreter: PythonEnvironment) => {
@@ -987,7 +984,6 @@ suite('Jupyter Execution', async () => {
             id: getKernelId(kernelSpec)
         };
         when(kernelFinder.findKernel(anything(), anything(), anything())).thenResolve(kernelMetadata);
-        when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
         return {
@@ -999,7 +995,6 @@ suite('Jupyter Execution', async () => {
                 instance(fileSystem),
                 instance(workspaceService),
                 instance(configService),
-                instance(kernelSelector),
                 notebookStarter,
                 instance(application),
                 instance(jupyterOutputChannel),

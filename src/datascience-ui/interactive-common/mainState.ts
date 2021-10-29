@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
@@ -43,28 +42,11 @@ export type IMainState = {
     settings?: IJupyterExtraSettings;
     focusPending: number;
     loaded: boolean;
-    kernel: IServerState;
 };
 
 export interface IFont {
     size: number;
     family: string;
-}
-
-export interface IServerState {
-    jupyterServerStatus: ServerStatus;
-    serverName: string;
-    kernelName: string;
-    language: string;
-}
-
-export enum ServerStatus {
-    NotStarted = 'Not Started',
-    Busy = 'Busy',
-    Idle = 'Idle',
-    Dead = 'Dead',
-    Starting = 'Starting',
-    Restarting = 'Restarting'
 }
 
 // eslint-disable-next-line no-multi-str
@@ -103,12 +85,6 @@ export function generateTestState(_filePath: string = '', _editable: boolean = f
         settings: defaultSettings,
         focusPending: 0,
         loaded: false,
-        testMode: true,
-        kernel: {
-            serverName: '',
-            kernelName: 'Python',
-            jupyterServerStatus: ServerStatus.NotStarted,
-            language: PYTHON_LANGUAGE
-        }
+        testMode: true
     };
 }

@@ -32,7 +32,7 @@ export class RawSession implements ISessionWithSocket {
     private _id: string;
     private _clientID: string;
     private _kernel: RawKernel;
-    private readonly _statusChanged: Signal<this, Kernel.Status>;
+    private readonly _statusChanged: Signal<this, KernelMessage.Status>;
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
@@ -45,7 +45,7 @@ export class RawSession implements ISessionWithSocket {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
-        this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
+        this._statusChanged = new signaling.Signal<this, KernelMessage.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
@@ -115,7 +115,7 @@ export class RawSession implements ISessionWithSocket {
     }
 
     // Provide status changes for the attached kernel
-    get statusChanged(): ISignal<this, Kernel.Status> {
+    get statusChanged(): ISignal<this, KernelMessage.Status> {
         return this._statusChanged;
     }
 
@@ -188,7 +188,7 @@ export class RawSession implements ISessionWithSocket {
             kernel: this._kernel.model
         };
     }
-    get status(): Kernel.Status {
+    get status(): KernelMessage.Status {
         return this.kernel.status;
     }
     public setPath(_path: string): Promise<void> {
@@ -206,7 +206,7 @@ export class RawSession implements ISessionWithSocket {
 
     // Private
     // Send out a message when our kernel changes state
-    private onKernelStatus(_sender: Kernel.IKernelConnection, state: Kernel.Status) {
+    private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
         traceInfoIfCI(`RawSession status changed to ${state}`);
         this._statusChanged.emit(state);
     }

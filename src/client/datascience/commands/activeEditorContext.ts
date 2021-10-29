@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 'use strict';
-
 import { inject, injectable } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -172,9 +170,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 ? this.kernelProvider.get(activeEditor.document)
                 : undefined;
         if (kernel) {
-            const canStart = kernel.status !== ServerStatus.NotStarted;
+            const canStart = kernel.status !== 'unknown';
             this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
-            const canInterrupt = kernel.status === ServerStatus.Busy;
+            const canInterrupt = kernel.status === 'busy';
             this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
@@ -196,9 +194,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
         const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
         if (kernel) {
-            const canStart = kernel.status !== ServerStatus.NotStarted;
+            const canStart = kernel.status !== 'unknown';
             this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
-            const canInterrupt = kernel.status === ServerStatus.Busy;
+            const canInterrupt = kernel.status === 'busy';
             this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).ignoreErrors();
         } else {
             this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
@@ -206,7 +204,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.updateSelectedKernelContext();
     }
-    private onDidKernelStatusChange({ kernel }: { status: ServerStatus; kernel: IKernel }) {
+    private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
         if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (

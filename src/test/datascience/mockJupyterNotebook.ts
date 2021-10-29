@@ -17,7 +17,6 @@ import {
     KernelSocketInformation
 } from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -26,15 +25,12 @@ export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
         return this.providerConnection;
     }
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
+    public get onSessionStatusChanged(): Event<KernelMessage.Status> {
         return this.onStatusChangedEvent.event;
     }
 
-    public get status(): ServerStatus {
-        return ServerStatus.Idle;
+    public get status(): KernelMessage.Status {
+        return 'idle';
     }
     public get session(): IJupyterSession {
         throw new Error('Method not implemented');
@@ -49,7 +45,7 @@ export class MockJupyterNotebook implements INotebook {
     public onKernelRestarted = new EventEmitter<void>().event;
     public readonly disposed: boolean = false;
     private kernelInterrupted = new EventEmitter<void>();
-    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+    private onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
 
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();

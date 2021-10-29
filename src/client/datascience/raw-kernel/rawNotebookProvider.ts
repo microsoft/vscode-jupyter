@@ -8,7 +8,7 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import '../../common/extensions';
 import { traceInfo } from '../../common/logger';
-import { IAsyncDisposableRegistry, Resource } from '../../common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -49,7 +49,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
     constructor(
         private asyncRegistry: IAsyncDisposableRegistry,
-        private rawNotebookSupportedService: IRawNotebookSupportedService
+        private rawNotebookSupportedService: IRawNotebookSupportedService,
+        private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
     }
@@ -99,7 +100,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     public async dispose(): Promise<void> {
         traceInfo(`Shutting down notebooks for ${this.id}`);
         const notebooks = await Promise.all([...this.notebooks.values()]);
-        await Promise.all(notebooks.map((n) => n?.dispose()));
+        await Promise.all(notebooks.map((n) => n?.session.dispose()));
     }
 
     // This may be a bit of a noop in the raw case
@@ -129,11 +130,15 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
         notebook
             .then((nb) => {
-                const oldDispose = nb.dispose.bind(nb);
-                nb.dispose = () => {
-                    this.notebooks.delete(document.uri.toString());
-                    return oldDispose();
-                };
+                nb.session.onDidDispose(
+                    () => {
+                        if (this.notebooks.get(document.uri.toString()) === notebook) {
+                            this.notebooks.delete(document.uri.toString());
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
             })
             .catch(removeNotebook);
 

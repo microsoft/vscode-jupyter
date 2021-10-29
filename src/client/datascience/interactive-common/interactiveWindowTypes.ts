@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vscode';
-import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import {
@@ -46,11 +45,8 @@ export enum InteractiveWindowMessages {
     OpenLink = 'open_link',
     SavePng = 'save_png',
     NotebookClose = 'close',
-    NativeCommand = 'native_command',
     VariablesComplete = 'variables_complete',
     ExecutionRendered = 'rendered_execution',
-    SelectKernel = 'select_kernel',
-    SelectJupyterServer = 'select_jupyter_server',
     UpdateModel = 'update_model',
     ReceivedUpdateModel = 'received_update_model',
     OpenSettings = 'open_settings',
@@ -59,7 +55,6 @@ export enum InteractiveWindowMessages {
     IPyWidgetRenderFailure = 'ipywidget_render_failure',
     IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message',
     IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported',
-    KernelIdle = 'kernel_idle',
     GetHTMLByIdRequest = 'get_html_by_id_request',
     GetHTMLByIdResponse = 'get_html_by_id_response'
 }
@@ -313,8 +308,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
-    public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
-    public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Interrupt]: never | undefined;
     public [InteractiveWindowMessages.SettingsUpdated]: string;
@@ -336,7 +329,6 @@ export class IInteractiveWindowMapping {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: BaseReduxActionPayload<any>;
     };
-    public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
     public [InteractiveWindowMessages.UpdateModel]: NotebookModelChange;
@@ -350,7 +342,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
     public [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: KernelMessage.IMessage;
-    public [InteractiveWindowMessages.KernelIdle]: never | undefined;
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }
