@@ -1199,6 +1199,22 @@ export interface IEventNamePropertyMapping {
 
     // Telemetry send when we create a notebook for a raw kernel or jupyter
     [Telemetry.RawKernelCreatingNotebook]: never | undefined;
+    /**
+     * After starting a kernel we send a request to get the kernel info.
+     * This tracks the total time taken to get the response back (or wether we timedout).
+     * If we timeout and later we find successful comms for this session, then timeout is too low
+     * or we need more attempts.
+     */
+    [Telemetry.RawKernelInfoResonse]: {
+        /**
+         * Total number of attempts and sending a request and waiting for response.
+         */
+        attempts: number;
+        /**
+         * Whether we timedout while waiting for response for Kernel info request.
+         */
+        timedout: boolean;
+    };
     [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
     // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
     [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;

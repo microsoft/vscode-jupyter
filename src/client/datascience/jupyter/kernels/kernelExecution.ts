@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
+import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -31,6 +31,7 @@ export class KernelExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
+    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
         private readonly kernel: IKernel,
         errorHandler: IDataScienceErrorHandler,
@@ -51,6 +52,10 @@ export class KernelExecution implements IDisposable {
             outputTracker,
             cellHashProviderFactory
         );
+    }
+
+    public get onPreExecute() {
+        return this._onPreExecute.event;
     }
 
     public async executeCell(
@@ -151,6 +156,7 @@ export class KernelExecution implements IDisposable {
         }
 
         const newCellExecutionQueue = new CellExecutionQueue(sessionPromise, this.executionFactory, this.metadata);
+        this.disposables.push(newCellExecutionQueue);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
         workspace.onDidCloseNotebookDocument(
@@ -164,7 +170,7 @@ export class KernelExecution implements IDisposable {
             this,
             this.disposables
         );
-
+        newCellExecutionQueue.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }

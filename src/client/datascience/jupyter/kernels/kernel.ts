@@ -61,7 +61,6 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../../debugger/jupyter/helper';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -85,6 +84,9 @@ export class Kernel implements IKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
+    get onPreExecute(): Event<NotebookCell> {
+        return this._onPreExecute.event;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
@@ -107,13 +109,13 @@ export class Kernel implements IKernel {
     private readonly _onWillInterrupt = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
+    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
     private startCancellation = new CancellationTokenSource();
-    private isUsingPyKernel6OrLater = false;
     constructor(
         public readonly notebookDocument: NotebookDocument,
         public readonly resourceUri: Resource,
@@ -130,7 +132,7 @@ export class Kernel implements IKernel {
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
-        private readonly cellHashProviderFactory: CellHashProviderFactory,
+        readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         notebookControllerManager: INotebookControllerManager
     ) {
@@ -145,6 +147,7 @@ export class Kernel implements IKernel {
             outputTracker,
             cellHashProviderFactory
         );
+        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
         const isPreferredKernel =
             getResourceType(resourceUri) === 'notebook'
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
@@ -160,14 +163,6 @@ export class Kernel implements IKernel {
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
-        if (cell.notebook.notebookType === InteractiveWindowView) {
-            const hash = await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
-            // Every cell needs to set the hash value so that we can
-            // step into other cells
-            if (hash && this.isUsingPyKernel6OrLater) {
-                await this.executeSilently(`import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`);
-            }
-        }
         const promise = this.kernelExecution.executeCell(sessionPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
@@ -181,7 +176,6 @@ export class Kernel implements IKernel {
     }
     public async start(options: { disableUI?: boolean } = {}): Promise<void> {
         await this.startNotebook(options);
-        this.isUsingPyKernel6OrLater = (await isUsingIpykernel6OrLater(this)) === IpykernelCheckResult.Ok;
     }
     public async interrupt(): Promise<InterruptResult> {
         this._onWillInterrupt.fire();
@@ -613,6 +607,25 @@ export class Kernel implements IKernel {
         }
         await executeSilently(this.notebook.session, code);
     }
+}
+
+export function executeSilentlySync(session: IJupyterSession, code: string) {
+    traceInfo(
+        `Executing (and forget) (status ${session.status}) silently Code = ${code
+            .substring(0, 100)
+            .splitLines()
+            .join('\\n')}`
+    );
+    session.requestExecute(
+        {
+            code: code.replace(/\r\n/g, '\n'),
+            silent: false,
+            stop_on_error: false,
+            allow_stdin: true,
+            store_history: false
+        },
+        true
+    );
 }
 
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
