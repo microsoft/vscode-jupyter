@@ -297,12 +297,22 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Issues not categorized at all\r\n\r\nAll issues should be categorized as a bug, enhancement, documentation, pm-task etc ($BASE_CATEGORIES). Should be driven to zero."
+    "value": "### Issues not categorized\r\n\r\nAll issues should be categorized as either a bug, enhancement, documentation, pm-task etc ($BASE_CATEGORIES). Should be driven to zero."
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue -label:$BASE_CATEGORIES -label:needs-triage"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue -label:$BASE_CATEGORIES -label:needs-triage\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Aggregate issues\r\n\r\nAggregate issues can represent bugs, enhancements, docs, etc. Therefore, there should be none that are categorized as aggregate AND something else. Should be driven to zero."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:aggregate-issue label:$BASE_CATEGORIES -label:needs-triage\r\n"
   },
   {
     "kind": 1,
