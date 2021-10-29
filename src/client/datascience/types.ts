@@ -166,7 +166,7 @@ export interface IJupyterNotebookProvider {
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
-export interface INotebook  {
+export interface INotebook {
     readonly connection: INotebookProviderConnection | undefined;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
 }

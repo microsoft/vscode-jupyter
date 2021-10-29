@@ -124,7 +124,6 @@ export class JupyterSession extends BaseJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
     }
 
-
     public async createNewKernelSession(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,

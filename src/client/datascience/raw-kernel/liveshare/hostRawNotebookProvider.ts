@@ -11,7 +11,13 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel, Resource } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
