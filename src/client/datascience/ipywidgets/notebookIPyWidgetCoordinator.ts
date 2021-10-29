@@ -125,6 +125,7 @@ export class NotebookIPyWidgetCoordinator {
                 .filter((editor) => editor.document === notebook)
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
+                    this.previouslyInitialized.delete(editor);
                     this.notebookCommunications.delete(editor);
                     if (comms) {
                         comms.dispose();
