@@ -4,6 +4,10 @@
 
 ### Enhancements
 
+1. Group kernels in kernel picker based on the type of the Python environment & kernel.
+   ([#7934](https://github.com/microsoft/vscode-jupyter/issues/7934))
+1. Add ability to filter kernels displayed in the kernel picker.
+   ([#7373](https://github.com/microsoft/vscode-jupyter/issues/7373))
 1. Add ability to not generate a new cell when hitting SHIFT+ENTER in a python file.
    (Thanks [janosh](https://github.com/janosh))
    ([#7966](https://github.com/Microsoft/vscode-jupyter/issues/7966))
