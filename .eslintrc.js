@@ -707,7 +707,6 @@ module.exports = {
         'src/client/logging/levels.ts',
         'src/client/logging/transports.ts',
         'src/client/logging/util.ts',
-        'src/client/logging/formatters.ts',
         'src/client/logging/trace.ts',
         'src/client/ioc/serviceManager.ts',
         'src/client/ioc/container.ts',
