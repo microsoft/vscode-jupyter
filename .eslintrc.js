@@ -491,7 +491,6 @@ module.exports = {
         'src/client/common/platform/serviceRegistry.ts',
         'src/client/common/platform/errors.ts',
         'src/client/common/platform/fs-temp.ts',
-        'src/client/common/platform/fs-paths.ts',
         'src/client/common/platform/constants.ts',
         'src/client/common/platform/fileSystem.ts',
         'src/client/common/platform/registry.ts',
