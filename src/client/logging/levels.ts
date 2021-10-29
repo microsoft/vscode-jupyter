@@ -18,13 +18,13 @@ export enum LogLevel {
     Debug = 10,
     Trace = 5
 }
-export type LogLevelName = 'ERROR' | 'WARNING' | 'INFORMATION' | 'DEBUG' | 'TRACE';
+export type LogLevelName = 'ERROR' | 'WARNING' | 'INFORMATION' | 'DEBUG' | 'DEBUG-TRACE';
 const logLevelMap: { [K in LogLevel]: LogLevelName } = {
     [LogLevel.Error]: 'ERROR',
     [LogLevel.Warn]: 'WARNING',
     [LogLevel.Info]: 'INFORMATION',
     [LogLevel.Debug]: 'DEBUG',
-    [LogLevel.Trace]: 'TRACE'
+    [LogLevel.Trace]: 'DEBUG-TRACE'
 };
 // This can be used for winston.LoggerOptions.levels.
 export const configLevels: winston.config.AbstractConfigSetLevels = {
@@ -32,7 +32,7 @@ export const configLevels: winston.config.AbstractConfigSetLevels = {
     WARNING: 1,
     INFORMATION: 2,
     DEBUG: 4,
-    TRACE: 5
+    'DEBUG-TRACE': 5
 };
 
 //======================
