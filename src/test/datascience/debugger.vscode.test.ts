@@ -123,7 +123,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test('Interrupt', async function () {
+    test('Interrupt during debugging', async function () {
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
@@ -133,17 +133,12 @@ suite('VSCode Notebook - Run By Line', function () {
 
         await waitForStoppedEvent(debugAdapter!);
 
-        // Interrupt kernel and check that the cell didn't finish running
+        // Interrupt kernel and check we finished
         await commandManager.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
             'DebugSession should end'
-        );
-        await waitForCondition(
-            async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
-            defaultNotebookTestTimeout,
-            () => 'Cell should have KeyboardInterrupt output but has ' + getCellOutputs(cell)
         );
     });
 
@@ -219,11 +214,6 @@ suite('VSCode Notebook - Run By Line', function () {
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
             'DebugSession should end1'
-        );
-        await waitForCondition(
-            async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
-            defaultNotebookTestTimeout,
-            () => 'Cell should have KeyboardInterrupt output but has ' + getCellOutputs(cell)
         );
 
         void commandManager.executeCommand(Commands.RunByLine, cell);
