@@ -17,6 +17,7 @@ import {
 } from 'vscode';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
+import { uncommentMagicCommands } from '../../../datascience-ui/common/cellFactory';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -124,8 +125,13 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     public extractExecutableLines(cell: NotebookCell): string[] {
-        const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
+        const settings = this.configService.getSettings(getCellResource(cell));
+        const cellMatcher = new CellMatcher(settings);
         const lines = splitMultilineString(cell.metadata.interactive?.originalSource ?? cell.document.getText());
+
+        if (settings.magicCommandsAsComments) {
+            lines.forEach((line, index) => (lines[index] = uncommentMagicCommands(line)));
+        }
 
         // Only strip this off the first line. Otherwise we want the markers in the code.
         if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
