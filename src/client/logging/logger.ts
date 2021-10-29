@@ -121,7 +121,7 @@ function getLevelName(level: LogLevel, levels: winston.config.AbstractConfigSetL
         return levelName;
     } else if (isConsole) {
         // XXX Hard-coding this is fragile:
-        return 'verbose';
+        return 'silly';
     } else {
         return resolveLevelName(LogLevel.Info, levels) || 'info';
     }
