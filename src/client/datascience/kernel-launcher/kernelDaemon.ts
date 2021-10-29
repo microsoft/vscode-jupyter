@@ -89,7 +89,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             // This is why when we run `execModule` in the Kernel daemon, it finishes (comes back) quickly.
             // However in reality it is running in the background.
             // See `m_exec_module_observable` in `kernel_launcher_daemon.py`.
-            traceVerbose(`Starting kernel from scratch with options ${JSON.stringify(options)}`);
+            traceInfo('Starting kernel from scratch');
             await this.execModule(moduleName, args, options);
         }
 
