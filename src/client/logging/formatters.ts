@@ -32,6 +32,7 @@ function normalizeLevel(name: LogLevelName): string {
             return norm;
         }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((name as any) === 'silly') {
         return 'Verbose';
     }
