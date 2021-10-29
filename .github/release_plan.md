@@ -9,6 +9,7 @@
     -   [ ] Provide details for any automatically detected npm dependencies
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
 -   [ ] Create new release branch with format `release-YYYY.MM.100`
+    -   [ ] Mark release branch as not deletable (add it explicitly here, https://github.com/microsoft/vscode-jupyter/settings/branches)
     -   [ ] Create a pull request against `release-YYYY.MM` for changes
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
@@ -36,7 +37,6 @@
     -   etc. (ask the team)
 -   [ ] Schedule a sanity test. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
 -   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
--   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
 -   [ ] Ask CTI to test the release candidate
 
 # Testing (Monday of VS Code release week, XXX XX)
