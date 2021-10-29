@@ -66,7 +66,11 @@ function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: 
     const formatted = formatMessages(info, traced, call);
     if (traced.err === undefined) {
         // The call did not fail.
-        if (!info.level || info.level > LogLevel.Error) {
+        if (info.level && info.level === LogLevel.Error) {
+            // No errors, hence nothing to log.
+        } else if (info.level) {
+            logToAll(loggers, info.level, [formatted]);
+        } else {
             logToAll(loggers, LogLevel.Info, [formatted]);
         }
     } else {
