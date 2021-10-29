@@ -385,7 +385,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private async getKernel(): Promise<IKernel | undefined> {
-        if (this.document && !this.kernel?.notebook) {
+        if (this.document && !this.kernel?.session) {
             this.kernel = await this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
