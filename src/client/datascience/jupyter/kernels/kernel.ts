@@ -61,6 +61,7 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -228,7 +229,7 @@ export class Kernel implements IKernel {
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
         await this.kernelExecution.restart(this._notebookPromise);
-        traceInfoIfCI(`Restarted ${this.notebookDocument.uri}`);
+        traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);

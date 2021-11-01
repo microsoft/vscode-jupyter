@@ -6,7 +6,7 @@ import { format } from 'winston';
 import { isTestExecution } from '../common/constants';
 import { getLevel, LogLevel, LogLevelName } from './levels';
 
-const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
+const TIMESTAMP = 'HH:mm:ss';
 
 // Knobs used when creating a formatter.
 export type FormatterOptions = {
@@ -31,6 +31,10 @@ function normalizeLevel(name: LogLevelName): string {
         if (norm) {
             return norm;
         }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((name as any) === 'silly') {
+        return 'Verbose';
     }
     return `${name.substring(0, 1).toUpperCase()}${name.substring(1).toLowerCase()}`;
 }

@@ -19,6 +19,7 @@ import { trackPackageInstalledIntoInterpreter } from '../common/installer/produc
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import { traceInfo, traceInfoIfCI } from '../common/logger';
+import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -379,7 +380,11 @@ export class InterpreterService implements IInterpreterService {
                 if (isCI) {
                     promise
                         .then((item) =>
-                            traceInfo(`Active Interpreter in Python API for ${resource?.toString()} is ${item?.path}`)
+                            traceInfo(
+                                `Active Interpreter in Python API for ${resource?.toString()} is ${getDisplayPath(
+                                    item?.path
+                                )}`
+                            )
                         )
                         .catch(noop);
                 }

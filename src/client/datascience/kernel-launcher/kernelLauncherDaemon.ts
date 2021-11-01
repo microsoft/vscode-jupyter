@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { traceInfo } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -59,7 +60,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
                 bypassCondaExecution: true
             });
 
-            traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
+            traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${getDisplayPath(interpreter?.path)}`);
             const [executionService, wdExists, env] = await Promise.all([
                 executionServicePromise,
                 fs.pathExists(workingDirectory),
@@ -76,7 +77,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         }
 
         const executionServicePromise = this.daemonPool.get(resource, kernelSpec, interpreter);
-        traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
+        traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${getDisplayPath(interpreter?.path)}`);
         const [executionService, wdExists, env] = await Promise.all([
             executionServicePromise,
             fs.pathExists(workingDirectory),

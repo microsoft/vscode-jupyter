@@ -22,6 +22,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
@@ -191,7 +192,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
                             kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
                     ) {
-                        traceInfo(`Hiding default kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
+                        traceInfo(
+                            `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
+                                kernelspec.argv[0]
+                            )}`
+                        );
                         return false;
                     }
                     return true;
@@ -242,7 +247,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                                 );
                             } catch (ex) {
                                 traceError(
-                                    `Failed to get interpreter details for Kernel Spec ${k.specFile} with interpreter path ${k.metadata?.interpreter?.path}`,
+                                    `Failed to get interpreter details for Kernel Spec ${getDisplayPath(
+                                        k.specFile
+                                    )} with interpreter path ${getDisplayPath(k.metadata?.interpreter?.path)}`,
                                     ex
                                 );
                                 return;

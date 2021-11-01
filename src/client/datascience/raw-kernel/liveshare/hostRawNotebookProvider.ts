@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo } from '../../../common/logger';
+import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -37,6 +37,7 @@ import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { JupyterNotebookBase } from '../../jupyter/jupyterNotebook';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -73,13 +74,13 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        traceInfo(`Creating raw notebook for ${document.uri.toString()}`);
+        traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(document, notebookPromise.promise);
         let progressDisposable: vscode.Disposable | undefined;
         let rawSession: RawJupyterSession | undefined;
 
-        traceInfo(`Getting preferred kernel for ${document.uri.toString()}`);
+        traceInfo(`Getting preferred kernel for ${getDisplayPath(document.uri)}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -105,7 +106,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                   )
                 : undefined;
 
-            traceInfo(`Computing working directory ${document.uri.toString()}`);
+            traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
 
@@ -136,8 +137,8 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 if (!kernelConnectionProvided) {
                     trackKernelResourceInformation(resource, { kernelConnection: kernelConnectionMetadata });
                 }
-                traceInfo(
-                    `Connecting to raw session for ${document.uri.toString()} with connection ${JSON.stringify(
+                traceVerbose(
+                    `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${JSON.stringify(
                         kernelConnectionMetadata
                     )}`
                 );

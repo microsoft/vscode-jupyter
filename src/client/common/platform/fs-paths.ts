@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as nodepath from 'path';
+import { Uri } from 'vscode';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -140,5 +141,26 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         } else {
             return filename;
         }
+    }
+}
+
+const homePath = untildify('~');
+export function getDisplayPath(filename?: string | Uri) {
+    let file = '';
+    if (typeof filename === 'string') {
+        file = filename;
+    } else if (!filename) {
+        file = '';
+    } else if (filename.scheme === 'file') {
+        file = filename.fsPath;
+    } else {
+        file = filename.toString();
+    }
+    if (!file) {
+        return '';
+    } else if (file.startsWith(homePath)) {
+        return `~${nodepath.sep}${nodepath.relative(homePath, file)}`;
+    } else {
+        return file;
     }
 }

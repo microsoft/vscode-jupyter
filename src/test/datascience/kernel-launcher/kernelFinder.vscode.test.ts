@@ -14,6 +14,7 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { traceInfo } from '../../../client/common/logger';
 import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -61,7 +62,9 @@ suite('DataScience - Kernels Finder', () => {
 
         assert.isTrue(
             areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec.interpreter.path} but expected ${interpreter?.path}`
+            `No interpreter found, kernelspec interpreter is ${getDisplayPath(
+                kernelSpec.interpreter.path
+            )} but expected ${getDisplayPath(interpreter?.path)}`
         );
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
@@ -78,7 +81,9 @@ suite('DataScience - Kernels Finder', () => {
         }
         assert.isTrue(
             areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec.interpreter.path} but expected ${interpreter?.path}`
+            `No interpreter found, kernelspec interpreter is ${getDisplayPath(
+                kernelSpec.interpreter.path
+            )} but expected ${getDisplayPath(interpreter?.path)}`
         );
     });
     test('Can find a Python kernel based on language', async () => {

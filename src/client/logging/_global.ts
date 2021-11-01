@@ -122,7 +122,7 @@ export namespace traceDecorators {
     const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
-        return createTracingDecorator([globalLogger], { message, opts });
+        return createTracingDecorator([globalLogger], { message, opts, level: LogLevel.Trace });
     }
     export function error(message: string) {
         const opts = DEFAULT_OPTS;
@@ -131,7 +131,7 @@ export namespace traceDecorators {
     }
     export function info(message: string) {
         const opts = TraceOptions.None;
-        return createTracingDecorator([globalLogger], { message, opts });
+        return createTracingDecorator([globalLogger], { message, opts, level: LogLevel.Info });
     }
     export function warn(message: string) {
         const opts = DEFAULT_OPTS;

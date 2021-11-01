@@ -9,7 +9,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -115,12 +115,18 @@ export class KernelProcess implements IKernelProcess {
         });
 
         exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
-            traceInfo(`KernelProcess output: ${(data || '').toString()}`);
+            // We get these from execObs.out.subscribe.
+            // Hence log only using traceLevel = verbose.
+            // But only useful if daemon doesn't start for any reason.
+            traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
         });
 
         exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
+            // We get these from execObs.out.subscribe.
+            // Hence log only using traceLevel = verbose.
+            // But only useful if daemon doesn't start for any reason.
             stderrProc += data.toString();
-            traceInfo(`KernelProcess error: ${(data || '').toString()}`);
+            traceVerbose(`KernelProcess error: ${(data || '').toString()}`);
         });
 
         exeObs.out.subscribe(

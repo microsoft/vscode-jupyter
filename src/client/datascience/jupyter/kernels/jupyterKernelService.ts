@@ -10,6 +10,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
 
 import { ReadWrite, Resource } from '../../../common/types';
@@ -93,7 +94,9 @@ export class JupyterKernelService {
         // Update the kernel environment to use the interpreter's latest
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
             traceInfoIfCI(
-                `updateKernelEnvironment ${kernel.interpreter.displayName}, ${kernel.interpreter.path} for ${kernel.id}`
+                `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
+                    kernel.interpreter.path
+                )} for ${kernel.id}`
             );
             await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, specFile, token);
         }
@@ -222,7 +225,9 @@ export class JupyterKernelService {
                     // If conda is the first word, its possible its a conda activation command.
                     traceInfo(`Spec argv[0], not updated as it is using conda.`);
                 } else {
-                    traceInfo(`Spec argv[0] updated from '${specModel.argv[0]}' to '${interpreter.path}'`);
+                    traceInfo(
+                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.path)}'`
+                    );
                     specModel.argv[0] = interpreter.path;
                 }
 

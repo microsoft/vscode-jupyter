@@ -2,6 +2,7 @@ import sizeOf from 'image-size';
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../../common/logger';
+import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IPlotViewerProvider } from '../../types';
 
 const svgMimeType = 'image/svg+xml';
@@ -22,7 +23,7 @@ export class PlotViewHandler {
             const pngOutput = getOutputItem(notebook, outputId, pngMimeType);
 
             if (!pngOutput) {
-                return traceError(`No SVG or PNG Plot to open ${notebook.uri.toString()}, id: ${outputId}`);
+                return traceError(`No SVG or PNG Plot to open ${getDisplayPath(notebook.uri)}, id: ${outputId}`);
             }
 
             // If we did find a PNG wrap it in an SVG element so that we can display it

@@ -10,7 +10,7 @@ import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { IPlatformService } from '../../common/platform/types';
 import { BaseError } from '../errors/types';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -364,14 +364,15 @@ export abstract class BasePythonDaemon {
             pid?: string;
         }>('log');
         this.connection.onNotification(logNotification, (output) => {
+            // Logging from python code will be displayed only if we have verbose logging turned on.
             const pid = output.pid ? ` (pid: ${output.pid})` : '';
             const msg = `Python Daemon${pid}: ${output.msg}`;
             if (output.level === 'DEBUG' || output.level === 'NOTSET') {
                 traceVerbose(msg);
             } else if (output.level === 'INFO') {
-                traceInfo(msg);
+                traceVerbose(msg);
             } else if (output.level === 'WARN' || output.level === 'WARNING') {
-                traceWarning(msg);
+                traceVerbose(msg);
             } else {
                 traceError(msg);
             }

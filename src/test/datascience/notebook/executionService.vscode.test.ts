@@ -51,6 +51,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -282,7 +283,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
 
         // Interrupt the kernel).
-        traceInfo(`Interrupt requested for ${vscodeNotebook.activeNotebookEditor?.document?.uri.toString()} in test`);
+        traceInfo(
+            `Interrupt requested for ${getDisplayPath(vscodeNotebook.activeNotebookEditor?.document?.uri)} in test`
+        );
         await commands.executeCommand(
             'jupyter.notebookeditor.interruptkernel',
             vscodeNotebook.activeNotebookEditor?.document.uri

@@ -8,6 +8,7 @@ import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IKernelProvider } from '../jupyter/kernels/types';
@@ -23,7 +24,7 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
     }
     private onDidCloseNotebookDocument(document: NotebookDocument) {
-        traceInfo(`Notebook Closed ${document.uri.toString()}`);
+        traceInfo(`Notebook Closed ${getDisplayPath(document.uri)}`);
         const kernel = this.kernelProvider.get(document);
         if (kernel) {
             traceInfo(

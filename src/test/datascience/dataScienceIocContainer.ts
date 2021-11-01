@@ -272,6 +272,7 @@ import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare
 import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
 import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -888,7 +889,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.forceSettingsChanged(undefined, list[0].path, {});
 
                     // Log this all the time. Useful in determining why a test may not pass.
-                    const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
+                    const message = `Setting interpreter to ${
+                        list[0].displayName || getDisplayPath(list[0].path)
+                    } -> ${getDisplayPath(list[0].path)}`;
                     traceInfo(message);
                     // eslint-disable-next-line no-console
                     console.log(message);
@@ -1197,7 +1200,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private async hasFunctionalDependencies(interpreter: PythonEnvironment): Promise<boolean | undefined> {
         try {
-            traceInfo(`Checking ${interpreter.path} for functional dependencies ...`);
+            traceInfo(`Checking ${getDisplayPath(interpreter.path)} for functional dependencies ...`);
             const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
                 JupyterInterpreterDependencyService
             );
@@ -1211,13 +1214,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                         allowEnvironmentFetchExceptions: true
                     });
                 const result = await pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
-                traceInfo(`${interpreter.path} has jupyter with livelossplot indicating : ${result}`);
+                traceInfo(`${getDisplayPath(interpreter.path)} has jupyter with livelossplot indicating : ${result}`);
                 return result;
             } else {
                 traceInfo(`${JSON.stringify(interpreter)} is missing jupyter.`);
             }
         } catch (ex) {
-            traceError(`Exception attempting dependency list for ${interpreter.path}: `, ex);
+            traceError(`Exception attempting dependency list for ${getDisplayPath(interpreter.path)}: `, ex);
             return false;
         }
     }

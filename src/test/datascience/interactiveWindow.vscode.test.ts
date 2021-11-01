@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
 import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
@@ -73,7 +74,7 @@ suite('Interactive window', async function () {
         assert.equal(
             controller?.connection.interpreter?.path,
             activeInterpreter?.path,
-            `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
+            `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 
         // Verify sys info cell
@@ -116,7 +117,7 @@ suite('Interactive window', async function () {
         assert.equal(
             controller?.connection.interpreter?.path,
             activeInterpreter?.path,
-            `Controller does not match active interpreter for ${notebookDocument?.uri.toString()}`
+            `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 
         async function verifyCells() {

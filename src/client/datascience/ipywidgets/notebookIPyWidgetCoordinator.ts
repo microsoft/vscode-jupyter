@@ -14,6 +14,7 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -116,7 +117,7 @@ export class NotebookIPyWidgetCoordinator {
             return;
         }
         // Dispost previous message coordinators.
-        traceInfo(`Setting setActiveController for ${notebook.uri}`);
+        traceInfo(`Setting setActiveController for ${getDisplayPath(notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
             this.messageCoordinators.delete(notebook);
@@ -149,15 +150,19 @@ export class NotebookIPyWidgetCoordinator {
         const controller = this.selectedNotebookController.get(notebook);
         if (!controller) {
             traceVerbose(
-                `No controller, hence notebook communications cannot be initialized for editor ${editor.document.uri.toString()}`
+                `No controller, hence notebook communications cannot be initialized for editor ${getDisplayPath(
+                    editor.document.uri
+                )}`
             );
             return;
         }
         if (this.notebookCommunications.has(editor)) {
-            traceVerbose(`notebook communications already initialized for editor ${editor.document.uri.toString()}`);
+            traceVerbose(
+                `notebook communications already initialized for editor ${getDisplayPath(editor.document.uri)}`
+            );
             return;
         }
-        traceVerbose(`Intiailize notebook communications for editor ${editor.document.uri.toString()}`);
+        traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.document.uri)}`);
         const comms = new NotebookCommunication(editor, controller);
         this.addNotebookDiposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
@@ -171,7 +176,7 @@ export class NotebookIPyWidgetCoordinator {
     ): Promise<void> {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
-        traceVerbose(`Resolving notebook UI Comms (resolve) for ${document.uri.toString()}`);
+        traceVerbose(`Resolving notebook UI Comms (resolve) for ${getDisplayPath(document.uri)}`);
         let promise = this.messageCoordinators.get(document);
         if (promise === undefined) {
             promise = CommonMessageCoordinator.create(document, this.serviceContainer);
@@ -212,12 +217,12 @@ export class NotebookIPyWidgetCoordinator {
         const attachedEditors = this.attachedEditors.get(document) || new Set<NotebookEditor>();
         this.attachedEditors.set(document, attachedEditors);
         if (attachedEditors.has(webview.editor) || this.previouslyInitialized.has(webview.editor)) {
-            traceVerbose(`Coordinator already attached for ${document.uri.toString()}`);
+            traceVerbose(`Coordinator already attached for ${getDisplayPath(document.uri)}`);
             promise.resolve();
         } else {
             attachedEditors.add(webview.editor);
             const disposables: IDisposable[] = [];
-            traceVerbose(`Attach Coordinator for ${document.uri.toString()}`);
+            traceVerbose(`Attach Coordinator for ${getDisplayPath(document.uri)}`);
             // Attach message requests to this webview (should dupe to all of them)
             c.postMessage(
                 (e) => {
