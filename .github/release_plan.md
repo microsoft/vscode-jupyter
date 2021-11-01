@@ -41,7 +41,7 @@
 
 # Testing (Monday of VS Code release week, XXX XX)
 
--  [ ] Obtain VS Code prebuild for sanity testing
+-  [ ] Obtain VS Code [prebuild](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code prebuild
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
 -  [ ] Manually publish Monday's VS Code Insiders release from `main` branch to minimize gap in Insiders program
