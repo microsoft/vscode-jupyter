@@ -11,6 +11,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -18,8 +19,8 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
+import { traceError, traceInfo, traceInfoIfCI } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -38,7 +39,7 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
@@ -51,6 +52,10 @@ import {
     JupyterProductToInstall,
     PythonApi
 } from './types';
+import { ProcessService } from '../common/process/proc';
+import { BufferDecoder } from '../common/process/decoder';
+import { _SCRIPTS_DIR } from '../common/process/internal/scripts';
+import { getOSType, OSType } from '../common/utils/platform';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -291,15 +296,42 @@ export class PythonInstaller implements IPythonInstaller {
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+    ) {}
 
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        return this.apiProvider
+        let env = await this.apiProvider
             .getApi()
             .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
+        if (!env || Object.keys(env).length === 0) {
+            traceError(
+                `Failed to get activated environment variables for Resoruce = ${getDisplayPath(
+                    resource
+                )} & interpreter = ${getDisplayPath(interpreter?.path)}`
+            );
+            if (
+                interpreter?.envName &&
+                interpreter?.envType === EnvironmentType.Conda &&
+                this.extensionChecker.isPythonExtensionInstalled
+            ) {
+                const condaPath = this.workspace.getConfiguration('python', undefined).get('condaPath', 'conda');
+                env = await getActivatedCondaEnvVariables(condaPath, interpreter.envName);
+                if (env) {
+                    traceInfo(
+                        `Got env variables using 'conda run' for Resoruce = ${getDisplayPath(
+                            resource
+                        )} & interpreter = ${getDisplayPath(interpreter?.path)}`
+                    );
+                }
+            }
+        }
+        return env;
     }
 }
 
@@ -463,4 +495,48 @@ export class InterpreterService implements IInterpreterService {
             })
             .catch(noop);
     }
+}
+
+const envVariables = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
+const defaultShells = {
+    [OSType.Windows]: 'cmd',
+    [OSType.OSX]: 'bash',
+    [OSType.Linux]: 'bash',
+    [OSType.Unknown]: undefined
+};
+
+const defaultShell = defaultShells[getOSType()];
+
+export async function getActivatedCondaEnvVariables(
+    condaPath: string,
+    envName: string
+): Promise<NodeJS.ProcessEnv | undefined> {
+    const key = `${condaPath}: ${envName}`;
+    if (envVariables.has(key)) {
+        return envVariables.get(key);
+    }
+    const promise = (async () => {
+        const processService = new ProcessService(new BufferDecoder());
+        const cli = [condaPath, 'run', '-n', envName, 'python'];
+        const argv = [...cli, path.join(_SCRIPTS_DIR, 'printEnvVariables.py')];
+        const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
+        const result = await processService.shellExec(cmd, {
+            timeout: 30_000,
+            maxBuffer: 1000 * 1000,
+            throwOnStdErr: false,
+            env: process.env,
+            shell: defaultShell
+        });
+        if (result.stderr && result.stderr.length) {
+            traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
+            return;
+        }
+        try {
+            return JSON.parse(result.stdout.trim());
+        } catch (ex) {
+            traceError(`Failed to parse interpreter information for ${argv}`, ex);
+        }
+    })();
+    envVariables.set(key, promise);
+    return promise;
 }
