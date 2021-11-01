@@ -33,10 +33,10 @@ jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
-    private isTerminating?: boolean;
+    private terminatingStatus?: KernelMessage.Status;
     public get status(): KernelMessage.Status {
-        if (this.isTerminating && super.status !== 'dead') {
-            return 'terminating';
+        if (this.terminatingStatus && super.status !== 'dead') {
+            return this.terminatingStatus;
         }
         return super.status;
     }
@@ -210,7 +210,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         if (!session) {
             return;
         }
-        this.isTerminating = undefined;
+        this.terminatingStatus = undefined;
         // Watch to see if our process exits
         // This is the place to do this, after this session has been setup as the active kernel.
         const disposable = session.kernelProcess.exited(({ exitCode, reason }) => {
@@ -228,13 +228,22 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceError(`Raw kernel process exited code: ${exitCode}`);
             // If the raw kernel process dies, then send the terminating event, and shutdown the session.
             // Afer shutting down the session, the status changes to `dead`
-            this.isTerminating = true;
+            this.terminatingStatus = 'terminating';
             this.onStatusChangedEvent.fire('terminating');
-            this.shutdown()
+            // Shutdown the session but not this class.
+            this.setSession(undefined);
+            this.shutdownSession(session, this.statusHandler, false)
                 .catch((reason) => {
                     traceError(`Error shutting down jupyter session: ${reason}`);
                 })
-                .finally(() => (this.isTerminating = undefined));
+                .finally(() => {
+                    // If we're still terminanting this session,
+                    // trigger dead status
+                    if (this.terminatingStatus){
+                        this.terminatingStatus = 'dead';
+                        this.onStatusChangedEvent.fire('dead');
+                    }
+                });
         });
         this.disposables.push(disposable);
         this.processExitHandler.set(session, disposable);
@@ -272,7 +281,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(kernelConnection)}`);
 
-        this.isTerminating = undefined;
+        this.terminatingStatus = undefined;
         const process = await this.kernelLauncher.launch(
             kernelConnection,
             timeout,
