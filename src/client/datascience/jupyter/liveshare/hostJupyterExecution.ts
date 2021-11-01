@@ -20,7 +20,6 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { KernelSelector } from '../kernels/kernelSelector';
 import { NotebookStarter } from '../notebookStarter';
 import { ServerCache } from './serverCache';
 import { inject, injectable, named } from 'inversify';
@@ -40,7 +39,6 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
@@ -51,7 +49,6 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             disposableRegistry,
             workspace,
             configService,
-            kernelSelector,
             notebookStarter,
             appShell,
             jupyterOutputChannel,

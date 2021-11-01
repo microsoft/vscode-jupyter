@@ -23,10 +23,11 @@ import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSess
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
-import { getNameOfKernelConnection } from './kernels/helpers';
+import { getNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
 
@@ -43,9 +44,11 @@ export class JupyterSession extends BaseJupyterSession {
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
-        private readonly kernelService: JupyterKernelService
+        private readonly kernelService: JupyterKernelService,
+        interruptTimeout: number,
+        restartTimeout: number
     ) {
-        super(resource, restartSessionUsed, workingDirectory);
+        super(resource, restartSessionUsed, workingDirectory, interruptTimeout, restartTimeout);
         this.kernelConnectionMetadata = kernelSpec;
     }
 
@@ -77,6 +80,48 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Made it this far, we're connected now
         this.connected = true;
+    }
+    public async changeKernel(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        timeoutMS: number
+    ): Promise<void> {
+        this.resource = resource;
+        let newSession: ISessionWithSocket | undefined;
+        // If we are already using this kernel in an active session just return back
+        const currentKernelSpec =
+            this.kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(this.kernelConnectionMetadata)
+                ? this.kernelConnectionMetadata.kernelSpec
+                : undefined;
+        const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+            ? kernelConnection.kernelSpec
+            : undefined;
+        if (this.session && currentKernelSpec && kernelSpecToUse && this.kernelConnectionMetadata) {
+            // If we have selected the same kernel connection, then nothing to do.
+            if (this.kernelConnectionMetadata.id === kernelConnection.id) {
+                traceInfoIfCI(`Kernels are the same, no switching necessary.`);
+                return;
+            }
+        }
+        trackKernelResourceInformation(resource, { kernelConnection });
+        newSession = await this.createNewKernelSession(resource, kernelConnection, timeoutMS);
+
+        // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
+        if (this.session) {
+            this.shutdownSession(this.session, this.statusHandler, false).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined, true)).ignoreErrors(); // NOSONAR
+        }
+
+        traceInfoIfCI(`Switched notebook kernel to ${kernelSpecToUse?.display_name}`);
+
+        // Update our kernel connection metadata.
+        this.kernelConnectionMetadata = kernelConnection;
+
+        // Save the new session
+        this.setSession(newSession);
+
+        // Listen for session status changes
+        this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
     }
 
     public async createNewKernelSession(

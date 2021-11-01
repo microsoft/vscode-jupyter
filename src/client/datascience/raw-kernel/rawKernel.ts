@@ -81,7 +81,7 @@ export class RawKernel implements Kernel.IKernelConnection {
     public get clientId(): string {
         return this.realKernel.clientId;
     }
-    public get status(): Kernel.Status {
+    public get status(): KernelMessage.Status {
         return this.realKernel.status;
     }
     public get info() {

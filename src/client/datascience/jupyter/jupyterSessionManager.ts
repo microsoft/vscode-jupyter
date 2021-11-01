@@ -32,7 +32,6 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
-    IJupyterSession,
     IJupyterSessionManager
 } from '../types';
 import { createAuthorizingRequest } from './jupyterRequest';
@@ -176,7 +175,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         workingDirectory: string,
         cancelToken?: CancellationToken,
         disableUI?: boolean
-    ): Promise<IJupyterSession> {
+    ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
             !this.sessionManager ||
@@ -198,8 +197,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
-            this.configService.getSettings().jupyterLaunchTimeout,
-            this.kernelService
+            this.configService.getSettings(resource).jupyterLaunchTimeout,
+            this.kernelService,
+            this.configService.getSettings(resource).jupyterInterruptTimeout,
+            this.configService.getSettings(resource).jupyterInterruptTimeout
         );
         try {
             await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);

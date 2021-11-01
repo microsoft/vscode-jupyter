@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
-import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
@@ -145,19 +145,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
                 )
             );
         });
-        test('Cannot launch notebook file in jupyter notebook', async () => {
-            const promise = jupyterInterpreterExecutionService.openNotebook('some.ipynb');
-            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
-                Product.notebook
-            ]);
-
-            await expect(promise).to.eventually.be.rejectedWith(
-                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
-                    activePythonInterpreter.displayName!,
-                    ProductNames.get(Product.notebook)!
-                )
-            );
-        });
         test('Cannot get a list of running jupyter servers', async () => {
             const promise = jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
@@ -251,20 +238,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             const args = capture(execService.execModuleObservable).first()[1];
             assert.equal(moduleName, 'jupyter');
             assert.equal(args[0], 'notebook');
-        });
-        test('Can launch notebook file in jupyter notebook', async () => {
-            const file = 'somefile.ipynb';
-            when(execService.execModule('jupyter', anything(), anything())).thenResolve();
-
-            await jupyterInterpreterExecutionService.openNotebook(file);
-
-            verify(
-                execService.execModule(
-                    'jupyter',
-                    deepEqual(['notebook', `--NotebookApp.file_to_run=${file}`]),
-                    anything()
-                )
-            ).once();
         });
         test('Return list of running jupyter servers', async () => {
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');

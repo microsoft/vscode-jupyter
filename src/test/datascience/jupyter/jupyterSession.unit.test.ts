@@ -14,7 +14,6 @@ import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import { SessionConnection } from '@jupyterlab/services/lib/session/default';
 import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
-import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
@@ -91,7 +90,9 @@ suite('DataScience - JupyterSession', () => {
             },
             '',
             60_000,
-            instance(kernelService)
+            instance(kernelService),
+            1_000,
+            1_000
         );
     }
     setup(() => createJupyterSession());
@@ -120,21 +121,12 @@ suite('DataScience - JupyterSession', () => {
         verify(contentsManager.newUntitled(anything())).once();
     });
 
-    test('Shutdown when disposing', async () => {
-        const shutdown = sinon.stub(jupyterSession, 'shutdown');
-        shutdown.resolves();
-
-        await jupyterSession.dispose();
-
-        assert.isTrue(shutdown.calledOnce);
-    });
-
     suite('After connecting', () => {
         setup(connect);
         test('Interrupting will result in kernel being interrupted', async () => {
             when(kernel.interrupt()).thenResolve();
 
-            await jupyterSession.interrupt(1000);
+            await jupyterSession.interrupt();
 
             verify(kernel.interrupt()).once();
         });
@@ -155,7 +147,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.shutdown();
+                await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
@@ -179,7 +171,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.shutdown();
+                await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
@@ -203,7 +195,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.shutdown();
+                await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
@@ -227,7 +219,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.shutdown();
+                await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
@@ -240,7 +232,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
-                await jupyterSession.shutdown();
+                await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).once();
@@ -346,7 +338,7 @@ suite('DataScience - JupyterSession', () => {
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();
 
-                    await jupyterSession.restart(0);
+                    await jupyterSession.restart();
 
                     // We should restart the kernel, not the session.
                     assert.equal(restartCount, 1, 'Did not restart the kernel');
@@ -448,7 +440,7 @@ suite('DataScience - JupyterSession', () => {
                     const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
                     when(session.serverSettings).thenReturn(instance(sessionServerSettings));
 
-                    await jupyterSession.restart(0);
+                    await jupyterSession.restart();
 
                     // We should kill session and switch to new session, startig a new restart session.
                     await restartSessionCreatedEvent.promise;

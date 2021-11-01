@@ -30,11 +30,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = kernel.notebook?.session
-            ? await executeSilently(
-                  kernel.notebook.session,
-                  `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`
-              )
+        const results = kernel.session
+            ? await executeSilently(kernel.session, `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`)
             : [];
 
         const fileName = path.basename(kernel.notebookDocument.uri.path);
@@ -51,9 +48,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the rows and turn it into JSON
-        const results = kernel.notebook?.session
+        const results = kernel.session
             ? await executeSilently(
-                  kernel.notebook.session,
+                  kernel.session,
                   `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
               )
             : [];
@@ -79,9 +76,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const attributes = kernel.notebook?.session
+                const attributes = kernel.session
                     ? await executeSilently(
-                          kernel.notebook.session,
+                          kernel.session,
                           `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
                       )
                     : [];
@@ -97,14 +94,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         kernel: IKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
-        if (kernel.notebook) {
+        if (kernel.session) {
             // Add in our get variable info script to get types
             await this.importGetVariableInfoScripts(kernel);
 
             // VariableTypesFunc takes in list of vars and the corresponding var names
-            const results = kernel.notebook?.session
+            const results = kernel.session
                 ? await executeSilently(
-                      kernel.notebook.session,
+                      kernel.session,
                       `_rwho_ls = %who_ls\nprint(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
                   )
                 : [];
@@ -140,9 +137,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importGetVariableInfoScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = kernel.notebook?.session
+        const results = kernel.session
             ? await executeSilently(
-                  kernel.notebook.session,
+                  kernel.session,
                   `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
               )
             : [];
@@ -195,7 +192,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private async runScriptFile(kernel: IKernel, scriptFile: string) {
         if (await this.fs.localFileExists(scriptFile)) {
             const fileContents = await this.fs.readLocalFile(scriptFile);
-            return kernel.notebook?.session ? executeSilently(kernel.notebook?.session, fileContents) : [];
+            return kernel.session ? executeSilently(kernel.session, fileContents) : [];
         }
         traceError('Cannot run non-existant script file');
     }

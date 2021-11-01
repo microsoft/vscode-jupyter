@@ -62,7 +62,7 @@ suite('DataScience - NotebookProvider', () => {
 
     test('NotebookProvider getOrCreateNotebook jupyter provider has notebook already', async () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
-        notebookMock.setup((notebook) => notebook.disposed).returns(() => false);
+        notebookMock.setup((notebook) => notebook.session.disposed).returns(() => false);
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(notebookMock.object);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));

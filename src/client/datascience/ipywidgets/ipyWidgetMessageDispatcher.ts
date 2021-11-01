@@ -178,12 +178,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this._postMessageEmitter.fire({ message, payload });
     }
     private subscribeToKernelSocket(kernel: IKernel) {
-        if (this.subscribedToKernelSocket || !kernel.notebook) {
+        if (this.subscribedToKernelSocket || !kernel.session) {
             return;
         }
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
-        kernel.notebook.session.kernelSocket.subscribe((info) => {
+        kernel.session.kernelSocket.subscribe((info) => {
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
@@ -345,7 +345,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
     private sendPendingMessages() {
-        if (!this.kernel?.notebook || !this.kernelSocketInfo) {
+        if (!this.kernel?.session || !this.kernelSocketInfo) {
             return;
         }
         while (this.pendingMessages.length) {
@@ -379,13 +379,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // inside the kernel on startup. However we
             // still need to track it here.
             if (targetName !== Identifiers.DefaultCommTarget) {
-                kernel.notebook?.session.registerCommTarget(targetName, noop);
+                kernel.session?.registerCommTarget(targetName, noop);
             }
         }
     }
 
     private async getKernel(): Promise<IKernel | undefined> {
-        if (this.document && !this.kernel?.notebook) {
+        if (this.document && !this.kernel?.session) {
             this.kernel = await this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
@@ -400,7 +400,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
      * This must happen before anything else is processed.
      */
     private async handleKernelRestarts() {
-        if (this.disposed || this.commTargetsRegistered.size === 0 || !this.kernel?.notebook) {
+        if (this.disposed || this.commTargetsRegistered.size === 0 || !this.kernel?.session) {
             return;
         }
         // Ensure we re-register the comm targets.
@@ -415,11 +415,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private registerMessageHook(msgId: string) {
         try {
-            if (this.kernel?.notebook && !this.messageHooks.has(msgId)) {
+            if (this.kernel?.session && !this.messageHooks.has(msgId)) {
                 this.hookCount += 1;
                 const callback = this.messageHookCallback.bind(this);
                 this.messageHooks.set(msgId, callback);
-                this.kernel?.notebook.session.registerMessageHook(msgId, callback);
+                this.kernel?.session.registerMessageHook(msgId, callback);
             }
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
@@ -450,10 +450,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private removeMessageHook(msgId: string) {
-        if (this.kernel?.notebook && this.messageHooks.has(msgId)) {
+        if (this.kernel?.session && this.messageHooks.has(msgId)) {
             const callback = this.messageHooks.get(msgId);
             this.messageHooks.delete(msgId);
-            this.kernel?.notebook.session.removeMessageHook(msgId, callback!);
+            this.kernel?.session.removeMessageHook(msgId, callback!);
         }
     }
 

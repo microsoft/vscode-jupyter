@@ -12,7 +12,6 @@ import {
     Range,
     TextDocument
 } from 'vscode';
-import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI } from '../../../common/logger';
@@ -130,7 +129,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion> {
         // If server is busy, then don't delay code completion.
-        if (session.status === ServerStatus.Busy) {
+        if (session.status === 'busy') {
             return {
                 matches: [],
                 cursor: { start: 0, end: 0 },

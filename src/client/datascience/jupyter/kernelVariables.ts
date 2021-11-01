@@ -354,8 +354,8 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
-        if (kernel && kernel.notebook?.session) {
-            const output = await this.inspect(kernel, kernel.notebook.session, targetVariable.name, 0, token);
+        if (kernel.session) {
+            const output = await this.inspect(kernel, kernel.session, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {

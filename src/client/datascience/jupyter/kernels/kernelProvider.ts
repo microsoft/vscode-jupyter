@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 'use strict';
-
+import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -34,7 +33,7 @@ export class KernelProvider implements IKernelProvider {
     private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     private readonly _onDidStartKernel = new EventEmitter<IKernel>();
     private readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
-    private readonly _onKernelStatusChanged = new EventEmitter<{ status: ServerStatus; kernel: IKernel }>();
+    private readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();

@@ -27,7 +27,6 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
-import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode, Resource } from '../common/types';
@@ -124,7 +123,6 @@ export interface INotebookCompletion {
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
-    readonly id: string;
     createNotebook(
         resource: Resource,
         document: NotebookDocument,
@@ -135,8 +133,6 @@ export interface INotebookServer extends IAsyncDisposable {
     getNotebook(document: NotebookDocument, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
-    waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
-    shutdown(): Promise<void>;
 }
 
 // Provides a service to determine if raw notebook is supported or not
@@ -170,11 +166,9 @@ export interface IJupyterNotebookProvider {
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
-export interface INotebook extends IAsyncDisposable {
+export interface INotebook {
     readonly connection: INotebookProviderConnection | undefined;
-    readonly disposed: boolean;
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
-    onDisposed: Event<void>;
 }
 
 // Options for connecting to a notebook provider
@@ -233,14 +227,18 @@ export interface IJupyterPasswordConnect {
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
+/**
+ * Closely represents Jupyter Labs Kernel.IKernelConnection.
+ */
 export interface IJupyterSession extends IAsyncDisposable {
-    onSessionStatusChanged: Event<ServerStatus>;
-    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
-    readonly status: ServerStatus;
-    readonly workingDirectory: string;
+    readonly disposed: boolean;
+    readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    restart(timeout: number): Promise<void>;
-    interrupt(timeout: number): Promise<void>;
+    onSessionStatusChanged: Event<KernelMessage.Status>;
+    onDidDispose: Event<void>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
+    interrupt(): Promise<void>;
+    restart(): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
     requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
@@ -254,7 +252,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
     requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
     sendInputReply(content: KernelMessage.IInputReply): void;
-    changeKernel(resource: Resource, kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -440,7 +437,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookDocument?: NotebookDocument;
     readonly readyPromise: Promise<void>;
     readonly kernelPromise: Promise<IKernel | undefined>;
-    closed: Event<IInteractiveWindow>;
+    closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
@@ -818,14 +815,6 @@ export interface IJupyterSubCommandExecutionService {
      * @memberof IJupyterSubCommandExecutionService
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
-    /**
-     * Opens an ipynb file in a new instance of a jupyter notebook server.
-     *
-     * @param {string} notebookFile
-     * @returns {Promise<void>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    openNotebook(notebookFile: string): Promise<void>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
@@ -887,7 +876,6 @@ export type GetNotebookOptions = {
 
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
-    readonly type: 'raw' | 'jupyter';
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */

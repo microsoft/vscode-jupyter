@@ -18,7 +18,6 @@ import {
     Range,
     ColorThemeKind
 } from 'vscode';
-import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -67,7 +66,7 @@ export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
     }
-    get onStatusChanged(): Event<ServerStatus> {
+    get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
     }
     get onRestarted(): Event<void> {
@@ -92,19 +91,23 @@ export class Kernel implements IKernel {
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
-    get status(): ServerStatus {
-        return this.notebook?.session?.status ?? ServerStatus.NotStarted;
+    get status(): KernelMessage.Status {
+        return this.notebook?.session?.status ?? 'unknown';
     }
     get disposed(): boolean {
-        return this._disposed === true || this.notebook?.disposed === true;
+        return this._disposed === true || this.notebook?.session.disposed === true;
     }
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    public notebook?: INotebook;
+    private notebook?: INotebook;
+    public get session(): IJupyterSession | undefined {
+        return this.notebook?.session;
+    }
     private _disposed?: boolean;
+    private _ignoreNotebookDisposedErrors?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
-    private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
+    private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onWillRestart = new EventEmitter<void>();
     private readonly _onWillInterrupt = new EventEmitter<void>();
@@ -191,13 +194,16 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
         this.startCancellation.cancel();
-        const interruptResultPromise = this.kernelExecution.interrupt(this._notebookPromise);
+        const interruptResultPromise = this.kernelExecution.interrupt(
+            this._notebookPromise?.then((item) => item.session)
+        );
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
         if (this.disposingPromise) {
             return this.disposingPromise;
         }
+        this._ignoreNotebookDisposedErrors = true;
         const disposeImpl = async () => {
             traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             this.restarting = undefined;
@@ -209,11 +215,11 @@ export class Kernel implements IKernel {
             this._notebookPromise = undefined;
             const promises: Promise<void>[] = [];
             if (this.notebook) {
-                promises.push(this.notebook.dispose().catch(noop));
+                promises.push(this.notebook.session.dispose().catch(noop));
+                this.notebook = undefined;
                 this._disposed = true;
                 this._onDisposed.fire();
-                this._onStatusChanged.fire(ServerStatus.Dead);
-                this.notebook = undefined;
+                this._onStatusChanged.fire('dead');
             }
             this.kernelExecution.dispose();
             await Promise.all(promises);
@@ -228,8 +234,21 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
-        await this.kernelExecution.restart(this._notebookPromise);
-        traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
+        try {
+            await this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session));
+            traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
+        } catch (ex) {
+            traceError(`Restart failed ${getDisplayPath(this.notebookDocument.uri)}`, ex);
+            this._ignoreNotebookDisposedErrors = true;
+            // If restart fails, kill the associated notebook.
+            const notebook = this.notebook;
+            this.notebook = undefined;
+            this._notebookPromise = undefined;
+            this.restarting = undefined;
+            await notebook?.session.dispose().catch(noop);
+            this._ignoreNotebookDisposedErrors = false;
+            throw ex;
+        }
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
@@ -381,27 +400,32 @@ export class Kernel implements IKernel {
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
         traceInfoIfCI('Started running kernel initialization');
-        if (!this.notebook) {
+        const notebook = this.notebook;
+        if (!notebook) {
             traceInfoIfCI('Not running kernel initialization');
             return;
         }
-        if (!this.hookedNotebookForEvents.has(this.notebook)) {
-            this.hookedNotebookForEvents.add(this.notebook);
-            this.notebook.session.kernelSocket.subscribe(this._kernelSocket);
-            this.notebook.onDisposed(() => {
+        if (!this.hookedNotebookForEvents.has(notebook)) {
+            this.hookedNotebookForEvents.add(notebook);
+            notebook.session.kernelSocket.subscribe(this._kernelSocket);
+            notebook.session.onDidDispose(() => {
                 traceInfo(
                     `Kernel got disposed as a result of notebook.onDisposed ${(
                         this.resourceUri || this.notebookDocument.uri
                     ).toString()}`
                 );
-                this._notebookPromise = undefined;
-                this._onDisposed.fire();
+                // this.kernelExecution.cancel();
+                // Ignore when notebook is disposed as a result of failed restarts.
+                if (!this._ignoreNotebookDisposedErrors) {
+                    this._notebookPromise = undefined;
+                    this._onDisposed.fire();
+                }
             });
-            const statusChangeHandler = (status: ServerStatus) => {
+            const statusChangeHandler = (status: KernelMessage.Status) => {
                 traceInfoIfCI(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
-            this.disposables.push(this.notebook.session.onSessionStatusChanged(statusChangeHandler));
+            this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
         }
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
@@ -415,7 +439,7 @@ export class Kernel implements IKernel {
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
 
-            if (this.connection?.localLaunch && this.notebook) {
+            if (this.connection?.localLaunch) {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this.resourceUri,
@@ -431,14 +455,16 @@ export class Kernel implements IKernel {
         traceInfoIfCI('After running startup commands');
 
         try {
-            const info = await this.notebook.session.requestKernelInfo();
+            traceInfoIfCI('Requesting Kernel info');
+            const info = await notebook.session.requestKernelInfo();
+            traceInfoIfCI('Got Kernel info');
             this._info = info?.content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
         traceInfoIfCI('End running kernel initialization, now waiting for idle');
-        await this.notebook.session.waitForIdle(this.launchTimeout);
+        await notebook.session.waitForIdle(this.launchTimeout);
         traceInfoIfCI('End running kernel initialization, session is idle');
     }
 

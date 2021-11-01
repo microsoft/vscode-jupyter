@@ -11,7 +11,13 @@ import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, Resource } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -55,9 +61,10 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        super(asyncRegistry, rawNotebookSupported);
+        super(asyncRegistry, rawNotebookSupported, disposables);
     }
 
     public async dispose(): Promise<void> {
@@ -108,14 +115,17 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
-            const launchTimeout = this.configService.getSettings().jupyterLaunchTimeout;
-
+            const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
+            const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
+            const restartTimeout = interruptTimeout;
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
                 this.outputChannel,
                 noop,
-                workingDirectory
+                workingDirectory,
+                interruptTimeout,
+                restartTimeout
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
@@ -149,7 +159,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
                 if (rawSession.isConnected) {
                     // Create our notebook
-                    const notebook = new JupyterNotebookBase(rawSession, info, document.uri);
+                    const notebook = new JupyterNotebookBase(rawSession, info);
 
                     traceInfo(`Finished connecting ${this.id}`);
 

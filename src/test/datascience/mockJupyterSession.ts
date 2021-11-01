@@ -12,7 +12,6 @@ import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyte
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
-import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
@@ -24,9 +23,10 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockJupyterSession implements IJupyterSession {
     public readonly workingDirectory = '';
+    private _isDisposed?: boolean;
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Map<string, nbformat.IBaseCell>;
-    private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
+    private onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
@@ -34,7 +34,14 @@ export class MockJupyterSession implements IJupyterSession {
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
     private lastRequest: Kernel.IFuture<any, any> | undefined;
-    private _status = ServerStatus.Busy;
+    private _status: KernelMessage.Status = 'busy';
+    private _disposed = new EventEmitter<void>();
+    public get onDidDispose() {
+        return this._disposed.event;
+    }
+    public get disposed() {
+        return this._isDisposed === true;
+    }
     constructor(
         cellDictionary: Record<string, nbformat.IBaseCell> | nbformat.IBaseCell[],
         timedelay: number,
@@ -54,27 +61,27 @@ export class MockJupyterSession implements IJupyterSession {
         }
         this.timedelay = timedelay;
         // Switch to idle after a timeout
-        setTimeout(() => this.changeStatus(ServerStatus.Idle), 100);
+        setTimeout(() => this.changeStatus('idle'), 100);
     }
 
     public shutdown(_force?: boolean): Promise<void> {
+        this._isDisposed = true;
+        this._disposed.fire();
+        this._disposed.dispose();
         return Promise.resolve();
     }
 
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
+    public get onSessionStatusChanged(): Event<KernelMessage.Status> {
         return this.onStatusChangedEvent.event;
     }
     public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
         return new EventEmitter<KernelMessage.IIOPubMessage>().event;
     }
-    public get status(): ServerStatus {
+    public get status(): KernelMessage.Status {
         return this._status;
     }
 
-    public async restart(_timeout: number): Promise<void> {
+    public async restart(): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach((r) => r.cancel());
@@ -85,7 +92,7 @@ export class MockJupyterSession implements IJupyterSession {
 
         return sleep(this.timedelay);
     }
-    public interrupt(_timeout: number): Promise<void> {
+    public interrupt(): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
         requests.forEach((r) => r.cancel());
         return sleep(this.timedelay);
@@ -265,7 +272,7 @@ export class MockJupyterSession implements IJupyterSession {
         noop();
     }
 
-    private changeStatus(newStatus: ServerStatus) {
+    private changeStatus(newStatus: KernelMessage.Status) {
         this._status = newStatus;
         this.onStatusChangedEvent.fire(newStatus);
     }

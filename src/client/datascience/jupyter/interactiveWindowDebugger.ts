@@ -4,7 +4,6 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonDebuggerPathProvider } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -50,8 +49,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
     public async attach(kernel: IKernel): Promise<void> {
-        const notebook = kernel.notebook;
-        if (!notebook) {
+        if (!kernel.session) {
             throw new Error('Notebook not initialized');
         }
 
@@ -62,8 +60,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     public async detach(kernel: IKernel): Promise<void> {
-        const notebook = kernel.notebook;
-        if (!notebook) {
+        if (!kernel.session) {
             return;
         }
         const config = this.configs.get(kernel.notebookDocument);
@@ -75,7 +72,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
 
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
-            if (kernel.status !== ServerStatus.Dead && kernel.status !== ServerStatus.NotStarted) {
+            if (kernel.status !== 'dead' && kernel.status !== 'unknown') {
                 this.disable(kernel);
             }
         }
@@ -96,19 +93,17 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     public enable(kernel: IKernel) {
-        const notebook = kernel.notebook;
-        if (!notebook) {
+        if (!kernel.session) {
             return;
         }
-        executeSilentlySync(notebook.session, this.tracingEnableCode);
+        executeSilentlySync(kernel.session, this.tracingEnableCode);
     }
 
     public disable(kernel: IKernel) {
-        const notebook = kernel.notebook;
-        if (!notebook) {
+        if (!kernel.session) {
             return;
         }
-        executeSilentlySync(notebook.session, this.tracingDisableCode);
+        executeSilentlySync(kernel.session, this.tracingDisableCode);
     }
 
     private async startDebugSession(
@@ -117,7 +112,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         extraConfig: Partial<DebugConfiguration>
     ) {
         traceInfo('start debugging');
-        if (!kernel.notebook?.session) {
+        if (!kernel.session) {
             return;
         }
         // Try to connect to this notebook
@@ -132,7 +127,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             this.debugService.removeBreakpoints([]);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            const importResults = await executeSilently(kernel.notebook.session, this.waitForDebugClientCode);
+            const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode);
             if (importResults.some((item) => item.output_type === 'error')) {
                 traceWarning(`${this.debuggerPackage} not found in path.`);
             } else {
@@ -148,7 +143,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
-        if (!kernel.notebook) {
+        if (!kernel) {
             return;
         }
         // If we already have configuration, we're already attached, don't do it again.
@@ -247,9 +242,9 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         const debuggerPathList = await this.calculateDebuggerPathList(kernel);
 
         if (debuggerPathList && debuggerPathList.length > 0) {
-            const result = kernel.notebook?.session
+            const result = kernel.session
                 ? await executeSilently(
-                      kernel.notebook.session,
+                      kernel.session,
                       `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
                   )
                 : [];
@@ -274,9 +269,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     private async connectToLocal(kernel: IKernel): Promise<{ port: number; host: string }> {
-        const outputs = kernel.notebook?.session
-            ? await executeSilently(kernel.notebook.session, this.enableDebuggerCode)
-            : [];
+        const outputs = kernel.session ? await executeSilently(kernel.session, this.enableDebuggerCode) : [];
 
         // Pull our connection info out from the cells returned by enable_attach
         if (outputs.length > 0) {

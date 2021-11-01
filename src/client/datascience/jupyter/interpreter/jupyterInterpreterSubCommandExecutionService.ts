@@ -137,22 +137,6 @@ export class JupyterInterpreterSubCommandExecutionService
         return serverInfos;
     }
 
-    public async openNotebook(notebookFile: string): Promise<void> {
-        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
-        // Do  not use the daemon for this, its a waste resources. The user will manage the lifecycle of this process.
-        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter,
-            bypassCondaExecution: true,
-            allowEnvironmentFetchExceptions: true
-        });
-        const args: string[] = [`--NotebookApp.file_to_run=${notebookFile}`];
-
-        // Don't wait for the exec to finish and don't dispose. It's up to the user to kill the process
-        executionService
-            .execModule('jupyter', ['notebook'].concat(args), { throwOnStdErr: false, encoding: 'utf8' })
-            .ignoreErrors();
-    }
-
     public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
         await this.jupyterInterpreter.installMissingDependencies(err);
     }
