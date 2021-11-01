@@ -52,7 +52,7 @@ suite('Interactive window', async function () {
 
     test('Execute cell from Python file', async () => {
         const source = 'print(42)';
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source);
+        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
@@ -95,7 +95,8 @@ suite('Interactive window', async function () {
         const source = 'print(__file__)';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
-            source
+            source,
+            disposables
         );
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
@@ -185,7 +186,7 @@ for i in range(10):
     clear_output()
     print("Hello World {0}!".format(i))
 `;
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, text);
+        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, text, disposables);
         const cell = await waitForLastCellToComplete(activeInteractiveWindow);
         assertHasTextOutputInVSCode(cell!, 'Hello World 9!');
     });
@@ -215,7 +216,8 @@ for i in range(10):
         // Cell should initially be collapsed
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
-            'a=1\na'
+            'a=1\na',
+            disposables
         );
         const codeCell = await waitForLastCellToComplete(activeInteractiveWindow);
         assert.ok(codeCell.metadata.inputCollapsed === true, 'Cell input not initially collapsed');
@@ -357,7 +359,8 @@ ${actualCode}
         traceInfoIfCI('Before submitting');
         const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
-            codeWithWhitespace
+            codeWithWhitespace,
+            disposables
         );
         traceInfoIfCI('After submitting');
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
@@ -371,7 +374,7 @@ ${actualCode}
         const code = `# %%
 #!%%time
 print('hi')`;
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, code);
+        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, code, disposables);
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
         assertHasTextOutputInVSCode(lastCell, 'hi', undefined, false);
         return lastCell;
