@@ -319,7 +319,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForTextOutput(cell3, '3', 0, false)
         ]);
     });
-    test('Automatically restart the kernel when running cells against a dead kernel', async function () {
+    test('Can restart a kernel after it dies', async function () {
         if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             // The kernel will auto start if it fails when using Jupyter.
             // When using Raw we don't use jupyter.
@@ -330,7 +330,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         Run cell 1 - Print some value
         Run Cell 2 with some code that will cause the kernel to die.
         Run cell 1 again, it should fail as the kernel is dead.
-        Restart kernel & run cell 1, it should work & execution order should start from 1 again.
+        Restart kernel & run cell 1, it should work.
         */
         await insertCodeCell('1', { index: 0 });
         await insertCodeCell('import IPython\napp = IPython.Application.instance()\napp.kernel.do_shutdown(True)', {
@@ -358,13 +358,36 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Wait a bit to make sure it cleared & for kernel to die.
         await sleep(500);
 
-        // Verify the session is dead
+        // Try to run cell 1 again, it should fail with errors.
+        await Promise.all([
+            runCell(cell1),
+            waitForCondition(async () => cell1.executionSummary?.success === false, 10_000, 'Cell 1 did not fail')
+        ]);
+        assert.isUndefined(
+            cell1.executionSummary?.executionOrder,
+            'Execution order should be undefined as the cell did not run'
+        );
+
+        // Restart the kernel & use event handler to check if it was restarted successfully.
         const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook);
+        if (!kernel) {
+            throw new Error('Kernel not available');
+        }
+        const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
+        traceInfo('Step 9 Wait for restart');
+        await Promise.all([
+            commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop),
+            // Wait for kernel to restart before we execute cells again.
+            waitForKernelToRestart.assertFired(30_000)
+        ]);
+        traceInfo('Step 10 Restarted');
         assert.isUndefined(kernel?.session, 'Kernel.session should be undefined');
 
+        // Run the first cell again & this time it should work.
         // When we re-run the cells, the execution order shouldl start from 1 all over again
         // If its one, then kernel has restarted.
         await Promise.all([
+            runCell(cell1),
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedSuccessfully(cell2),
