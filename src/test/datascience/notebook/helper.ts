@@ -136,12 +136,18 @@ export async function deleteAllCellsAndWait() {
 }
 
 export async function createTemporaryFile(options: {
-    templateFile: string;
-    dir: string;
+    templateFile?: string;
+    contents?: string;
+    extension?: string;
+    dir?: string;
 }): Promise<{ file: string } & IDisposable> {
-    const extension = path.extname(options.templateFile);
+    const extension = options.templateFile ? path.extname(options.templateFile) : options.extension || '.py';
     const tempFile = tmp.tmpNameSync({ postfix: extension, dir: options.dir });
-    await fs.copyFile(options.templateFile, tempFile);
+    if (options.templateFile) {
+        await fs.copyFile(options.templateFile, tempFile);
+    } else if (options.contents) {
+        await fs.writeFile(tempFile, options.contents);
+    }
     return { file: tempFile, dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
 }
 

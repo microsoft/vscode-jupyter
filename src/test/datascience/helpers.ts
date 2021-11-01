@@ -5,13 +5,16 @@
 import { assert } from 'chai';
 import { noop } from 'lodash';
 import * as vscode from 'vscode';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { waitForExecutionCompletedSuccessfully } from './notebook/helper';
+import {
+    createTemporaryFile,
+    waitForCellExecutionToComplete,
+    waitForExecutionCompletedSuccessfully
+} from './notebook/helper';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -97,11 +100,14 @@ export async function insertIntoInputEditor(source: string) {
     return vscode.window.activeTextEditor;
 }
 
-export async function submitFromPythonFile(interactiveWindowProvider: IInteractiveWindowProvider, source: string) {
-    const untitledPythonFile = await vscode.workspace.openTextDocument({
-        language: PYTHON_LANGUAGE,
-        content: source
-    });
+export async function submitFromPythonFile(
+    interactiveWindowProvider: IInteractiveWindowProvider,
+    source: string,
+    disposables: vscode.Disposable[]
+) {
+    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
+    disposables.push(tempFile);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
@@ -110,7 +116,7 @@ export async function submitFromPythonFile(interactiveWindowProvider: IInteracti
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
-export async function waitForLastCellToComplete(interactiveWindow: InteractiveWindow) {
+export async function waitForLastCellToComplete(interactiveWindow: InteractiveWindow, errorsOkay?: boolean) {
     const notebookDocument = vscode.workspace.notebookDocuments.find(
         (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
     );
@@ -124,6 +130,10 @@ export async function waitForLastCellToComplete(interactiveWindow: InteractiveWi
         }
     }
     assert.ok(codeCell !== undefined, 'No code cell found in interactive window notebook document');
-    await waitForExecutionCompletedSuccessfully(codeCell!);
+    if (errorsOkay) {
+        await waitForCellExecutionToComplete(codeCell!);
+    } else {
+        await waitForExecutionCompletedSuccessfully(codeCell!);
+    }
     return codeCell!;
 }
