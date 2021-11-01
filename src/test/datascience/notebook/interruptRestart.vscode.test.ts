@@ -381,7 +381,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForKernelToRestart.assertFired(30_000)
         ]);
         traceInfo('Step 10 Restarted');
-        assert.isUndefined(kernel?.session, 'Kernel.session should be undefined');
 
         // Run the first cell again & this time it should work.
         // When we re-run the cells, the execution order shouldl start from 1 all over again
