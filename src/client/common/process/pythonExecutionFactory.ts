@@ -11,7 +11,7 @@ import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { IDisposable, IDisposableRegistry, Resource } from '../types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
@@ -48,7 +48,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IConfigurationService) private readonly config: IConfigurationService
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -85,7 +86,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             bypassCondaExecution: true
         });
         // No daemon support in Python 2.7 or during shutdown
-        if (!interpreterService || (interpreter?.version && interpreter.version.major < 3)) {
+        if (
+            !interpreterService ||
+            (interpreter?.version && interpreter.version.major < 3) ||
+            this.config.getSettings().disablePythonDaemon
+        ) {
             return activatedProcPromise;
         }
 

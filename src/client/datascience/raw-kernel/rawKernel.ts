@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { ISignal } from '@lumino/signaling';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/misc';
 import { getNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -160,10 +160,29 @@ export class RawKernel implements Kernel.IKernelConnection {
     public reconnect(): Promise<void> {
         throw new Error('Reconnect is not supported.');
     }
-    public interrupt(): Promise<void> {
+    public async interrupt(): Promise<void> {
+        // Send a kernel interrupt request to the real process only for our python kernels.
+
         // Send this directly to our kernel process. Don't send it through the real kernel. The
         // real kernel will send a goofy API request to the websocket.
-        return this.kernelProcess.interrupt();
+        if (this.kernelProcess.canInterrupt) {
+            return this.kernelProcess.interrupt();
+        } else if (this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
+            traceInfo(`Interrupting kernel with a shell message`);
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+            const msg = (jupyterLab.KernelMessage.createMessage({
+                msgType: 'interrupt_request' as any,
+                channel: 'shell',
+                username: this.realKernel.username,
+                session: this.realKernel.clientId,
+                content: {}
+            }) as any) as KernelMessage.IShellMessage<'inspect_request'>;
+            await this.realKernel
+                .sendShellMessage<'interrupt_request'>(msg as any, true, true)
+                .done.catch((ex) => traceError('Failed to interrupt via a message', ex));
+        } else {
+            traceError('Kernel interrupt not supported');
+        }
     }
     public restart(): Promise<void> {
         throw new Error('This method should not be called. Restart is implemented at a higher level');

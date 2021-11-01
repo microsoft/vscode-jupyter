@@ -3,6 +3,7 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
@@ -52,12 +53,21 @@ export class KernelProcess implements IKernelProcess {
     private get isPythonKernel(): boolean {
         return isPythonKernelConnection(this.kernelConnectionMetadata);
     }
+    public get canInterrupt() {
+        if (this.pythonDaemon) {
+            return true;
+        }
+        if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
+            return false;
+        }
+        return true;
+    }
     private _process?: ChildProcess;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
     private launchedOnce?: boolean;
     private disposed?: boolean;
-    private kernelDaemon?: IPythonKernelDaemon;
+    private pythonDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
     private readonly _kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
@@ -75,8 +85,17 @@ export class KernelProcess implements IKernelProcess {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
     public async interrupt(): Promise<void> {
-        if (this.kernelDaemon) {
-            await this.kernelDaemon?.interrupt();
+        if (!this.canInterrupt) {
+            throw new Error('Kernel interrupt not supported in KernelProcess.ts');
+        }
+        if (this.pythonDaemon) {
+            traceInfo('Interrupting kernel via Daemon message');
+            await this.pythonDaemon.interrupt();
+        } else if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' && this._process) {
+            traceInfo('Interrupting kernel via Signals');
+            kill(this._process.pid, 'SIGINT');
+        } else {
+            traceError('No process to interrupt in KernleProcess.ts');
         }
     }
 
@@ -228,9 +247,9 @@ export class KernelProcess implements IKernelProcess {
             return;
         }
         this.disposed = true;
-        if (this.kernelDaemon) {
-            await this.kernelDaemon.kill().catch(noop);
-            swallowExceptions(() => this.kernelDaemon?.dispose());
+        if (this.pythonDaemon) {
+            await this.pythonDaemon.kill().catch(noop);
+            swallowExceptions(() => this.pythonDaemon?.dispose());
         }
         swallowExceptions(() => {
             this._process?.kill(); // NOSONAR
@@ -369,7 +388,7 @@ export class KernelProcess implements IKernelProcess {
                 this._kernelConnectionMetadata.interpreter
             );
 
-            this.kernelDaemon = kernelDaemonLaunch.daemon;
+            this.pythonDaemon = kernelDaemonLaunch.daemon;
             exeObs = kernelDaemonLaunch.observableOutput;
         }
 
