@@ -36,7 +36,7 @@ import { KernelConnectionMetadata } from '../kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
-import { JupyterNotebookBase } from '../jupyterNotebook';
+import { JupyterNotebook } from '../jupyterNotebook';
 import * as uuid from 'uuid/v4';
 import { NotebookDocument } from 'vscode';
 import { noop } from '../../../common/utils/misc';
@@ -170,7 +170,7 @@ export class HostJupyterServer implements INotebookServer {
 
             if (session) {
                 // Create our notebook
-                const notebook = new JupyterNotebookBase(session, info);
+                const notebook = new JupyterNotebook(session, info);
 
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);

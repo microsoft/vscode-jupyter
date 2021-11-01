@@ -141,6 +141,13 @@ export class CellExecutionQueue implements Disposable {
                 await this.cancel();
                 break;
             }
+            // If the kernel is dead, then no point trying the rest.
+            if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {
+                this.cancelledOrCompletedWithErrors = true;
+                traceInfo(`Cancel all remaining cells due to dead kernel`);
+                await this.cancel();
+                break;
+            }
         }
     }
 }
