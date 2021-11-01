@@ -48,6 +48,15 @@ export interface IKernelProcess extends IAsyncDisposable {
      * This event is triggered if the process is exited
      */
     readonly exited: Event<{ exitCode?: number; reason?: string }>;
+    /**
+     * Whether we can interrupt this kernel process.
+     * If not possible, send a shell message to the underlying kernel.
+     */
+    readonly canInterrupt: boolean;
+    /**
+     * Interrupts the Kernel process.
+     * This method is to be used only if `canInterrupt` is true.
+     */
     interrupt(): Promise<void>;
 }
 
