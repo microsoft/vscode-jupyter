@@ -37,7 +37,7 @@
     1. Check to make sure that no outputs have errors
     1. Verify that graphs and progress bars are shown
 -   [ ] Verify export / import
-    1. With the results from `Start and connect to local server` open click the `Export as Jupyter Notebook` button in the Interactive Window
+    1. With the results from `Start and connect to local server` open click the `Save` button in the Interactive Window
     1. Choose a file location and save the generated .ipynb file
     1. When the prompt comes up in the lower right choose to open the file in the ipynb editor.
     1. The file should open in the Notebook Editor.
@@ -47,13 +47,13 @@
 -   [ ] Verify dark and light main themes
     1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
 -   [ ] Verify Variable Explorer
-    1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
+    1. After manualTestFile.py has been run click the Variables button at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
     1. Check that variables have expected values. They will be truncated for longer items
     1. Sort the list ascending and descending by Type. Also sort the list ascending and descending by Count. Values like (X, Y) use the first X value for Count sort ordering
     1. Check that list, Series, ndarray, DataFrame and Tensor types have a button to "Show variable in data viewer" on the right
     1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
-    1. Export the contents of the interactive window as a notebook and open the notebook editor
+    1. Save the contents of the interactive window as a notebook and open the notebook editor
     1. Find the first cell and click on the Run Below button
     1. Open the variable explorer and verify the same variables are there
     1. Add a new cell with a variable in it.
