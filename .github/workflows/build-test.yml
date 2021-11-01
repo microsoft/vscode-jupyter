@@ -437,18 +437,9 @@ jobs:
         with:
           auto-update-conda: true
           activate-environment: functional_test_env
-          environment-file: ./build/conda-functional-requirements.yml
           channels: conda-forge,default
+          environment-file: ./build/conda-functional-requirements.yml          
           python-version: ${{matrix.pythonVersion}}
-        shell: bash -l {0}
-        run: |
-          conda activate functional_test_env
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          python -m pip install --upgrade -r ./build/nonconda-functional-requirements.txt
-          beakerx_kernel_java install
-          conda install pytorch cpuonly -c pytorch
 
       - name: Set CI Path
         uses: ./.github/actions/set-python
@@ -557,6 +548,18 @@ jobs:
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
           python -m pip install --upgrade -r ./build/nonconda-functional-requirements.txt
           python -m ipykernel install --user
+
+      - name: Install Python Libs for conda
+        shell: bash -l {0}
+        if: matrix.python == 'conda'
+        run: |
+          conda activate functional_test_env
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          python -m pip install --upgrade -r ./build/nonconda-functional-requirements.txt
+          beakerx_kernel_java install
+          conda install pytorch cpuonly -c pytorch
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux
