@@ -239,7 +239,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 .finally(() => {
                     // If we're still terminanting this session,
                     // trigger dead status
-                    if (this.terminatingStatus){
+                    if (this.terminatingStatus) {
                         this.terminatingStatus = 'dead';
                         this.onStatusChangedEvent.fire('dead');
                     }
