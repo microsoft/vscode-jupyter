@@ -39,6 +39,19 @@ export class RawSession implements ISessionWithSocket {
     private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
     private readonly signaling: typeof import('@lumino/signaling');
+    private _jupyterLabServices?: typeof import('@jupyterlab/services')
+    private cellExecutedSuccessfully?: boolean;
+    public get AtleastOneCellExecutedSuccessfully() {
+        return this.cellExecutedSuccessfully === true;
+    }
+    private get jupyterLabServices(){
+        if (!this._jupyterLabServices){
+            // Lazy load jupyter lab for faster extension loading.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            this._jupyterLabServices = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        }
+        return this._jupyterLabServices
+    }
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
@@ -211,6 +224,9 @@ export class RawSession implements ISessionWithSocket {
         this._statusChanged.emit(state);
     }
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
+        if (!this.cellExecutedSuccessfully && msg.header.msg_type === 'execute_result' && msg.content && this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) && msg.content.execution_count) {
+            this.cellExecutedSuccessfully = true;
+        }
         this._ioPubMessage.emit(msg);
     }
     private onKernelConnectionStatus(_sender: Kernel.IKernelConnection, state: Kernel.ConnectionStatus) {

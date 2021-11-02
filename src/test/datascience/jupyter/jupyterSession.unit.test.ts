@@ -134,7 +134,6 @@ suite('DataScience - JupyterSession', () => {
             '',
             1,
             instance(kernelService),
-            1,
             1
         );
     }
@@ -152,7 +151,7 @@ suite('DataScience - JupyterSession', () => {
         (mockKernelSpec as any).kernelSpec = specOrModel;
         mockKernelSpec.kind = kind;
 
-        await jupyterSession.connect(100);
+        await jupyterSession.connect();
     }
     teardown(async () => jupyterSession.dispose().catch(noop));
 

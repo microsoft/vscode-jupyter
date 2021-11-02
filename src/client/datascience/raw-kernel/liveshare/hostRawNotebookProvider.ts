@@ -104,7 +104,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
             const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
-            const restartTimeout = interruptTimeout;
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
@@ -112,7 +111,8 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 noop,
                 workingDirectory,
                 interruptTimeout,
-                restartTimeout
+                kernelConnection,
+                launchTimeout
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
@@ -125,7 +125,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                     kernelConnection
                 )}`
             );
-            await rawSession.connect(resource, kernelConnection, launchTimeout, cancelToken, disableUI);
+            await rawSession.connect(cancelToken, disableUI);
 
             // Get the execution info for our notebook
             const info = await this.getExecutionInfo(kernelConnection);
