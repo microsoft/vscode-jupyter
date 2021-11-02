@@ -25,6 +25,7 @@ import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types'
 import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { DebuggingTelemetry } from '../debugger/constants';
+import { EnvironmentType } from '../pythonEnvironments/info';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -557,6 +558,21 @@ export interface IEventNamePropertyMapping {
         hasWidget: boolean;
         hasJupyter: boolean;
         hasVnd: boolean;
+    };
+
+    /**
+     * Used to capture time taken to get enviornment variables for a python environment.
+     * Also lets us know whether it worked or not.
+     */
+    [Telemetry.GetActivatedEnvironmentVariables]: {
+        /**
+         * Type of the Python environment.
+         */
+        envType?: EnvironmentType;
+        /**
+         * Whether the env variables were fetched successfully or not.
+         */
+        failed: boolean;
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
