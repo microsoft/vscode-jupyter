@@ -346,7 +346,6 @@ export class HostJupyterServer implements INotebookServer {
         this.notebooks.set(document.uri.toString(), notebook);
     }
 
-
     private logRemoteOutput(output: string) {
         if (this.launchInfo && !this.launchInfo.connectionInfo.localLaunch) {
             this.jupyterOutputChannel.appendLine(output);

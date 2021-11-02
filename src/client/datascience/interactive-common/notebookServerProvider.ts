@@ -78,10 +78,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(
-        resource: Resource,
-        token?: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    private async startServer(resource: Resource, token?: CancellationToken): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(resource);
         traceInfo(`Checking for server existence.`);
 

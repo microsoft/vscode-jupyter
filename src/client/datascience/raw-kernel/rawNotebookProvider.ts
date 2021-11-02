@@ -81,13 +81,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         disableUI: boolean,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        return this.createNotebookInstance(
-            resource,
-            document,
-            kernelConnection,
-            disableUI,
-            cancelToken
-        );
+        return this.createNotebookInstance(resource, document, kernelConnection, disableUI, cancelToken);
     }
 
     public async getNotebook(document: NotebookDocument): Promise<INotebook | undefined> {
