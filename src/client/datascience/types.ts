@@ -449,7 +449,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     ): Promise<boolean>;
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;
-    exportCells(): void;
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
     export(cells?: ICell[]): void;

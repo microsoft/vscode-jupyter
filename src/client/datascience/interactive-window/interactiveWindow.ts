@@ -498,10 +498,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         traceInfoIfCI('file in kernel set for IW');
     }
 
-    public async exportCells() {
-        throw new Error('Method not implemented.');
-    }
-
     public async expandAllCells() {
         const notebookEditor = await this._editorReadyPromise;
         const edit = new WorkspaceEdit();

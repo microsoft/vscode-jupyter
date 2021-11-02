@@ -347,7 +347,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     private exportCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
-            interactiveWindow.exportCells();
+            interactiveWindow.export();
         }
     }
 
