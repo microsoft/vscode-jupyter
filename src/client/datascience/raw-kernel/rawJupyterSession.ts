@@ -32,8 +32,14 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    private processExitHandler: IDisposable | undefined;
-    private _disposables: IDisposable[] = [];
+    private processExitHandler = new WeakMap<RawSession, IDisposable>();
+    private terminatingStatus?: KernelMessage.Status;
+    public get status(): KernelMessage.Status {
+        if (this.terminatingStatus && super.status !== 'dead') {
+            return this.terminatingStatus;
+        }
+        return super.status;
+    }
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
@@ -53,10 +59,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             return this.waitForIdleOnSession(this.session, timeout);
         }
         return Promise.resolve();
-    }
-    public async dispose(): Promise<void> {
-        this._disposables.forEach((d) => d.dispose());
-        await super.dispose();
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
@@ -182,16 +184,14 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected shutdownSession(
-        session: ISessionWithSocket | undefined,
+        session: RawSession | undefined,
         statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
         isRequestToShutdownRestartSession: boolean | undefined
     ): Promise<void> {
-        // REmove our process exit handler. Kernel is shutting down on purpose
-        // so we don't need to listen.
-        if (this.processExitHandler) {
-            this.processExitHandler.dispose();
-            this.processExitHandler = undefined;
-        }
+        // Remove our process exit handler. Kernel is shutting down on purpose
+        // so we don't need to listen to shutdown anymore.
+        const disposable = session && this.processExitHandler.get(session);
+        disposable?.dispose();
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
         return super.shutdownSession(session, statusHandler, isRequestToShutdownRestartSession).then(() => {
@@ -200,35 +200,53 @@ export class RawJupyterSession extends BaseJupyterSession {
                 stacktrace
             });
             if (session) {
-                return (session as RawSession).kernelProcess.dispose();
+                return session.kernelProcess.dispose();
             }
         });
     }
 
-    protected setSession(session: RawSession) {
+    protected setSession(session: RawSession | undefined) {
         super.setSession(session);
-
-        // When setting the session clear our current exit handler and hook up to the
-        // new session process
-        if (this.processExitHandler) {
-            this.processExitHandler.dispose();
-            this.processExitHandler = undefined;
+        if (!session) {
+            return;
         }
-        if (session?.kernelProcess) {
-            // Watch to see if our process exits
-            this.processExitHandler = session.kernelProcess.exited(({ exitCode, reason }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                    exitCode,
-                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-                });
-                traceError(`Raw kernel process exited code: ${exitCode}`);
-                this.shutdown().catch((reason) => {
-                    traceError(`Error shutting down jupyter session: ${reason}`);
-                });
-                // Next code the user executes will show a session disposed message
+        this.terminatingStatus = undefined;
+        // Watch to see if our process exits
+        // This is the place to do this, after this session has been setup as the active kernel.
+        const disposable = session.kernelProcess.exited(({ exitCode, reason }) => {
+            // If this session is no longer the active session, then we don't need to do anything
+            // with this exit event (could be we're killing it, or restarting).
+            // In the case of restarting, the old session is disposed & a new one created.
+            // When disposing the old kernel we shouldn't fire events about session getting terminated.
+            if (session !== this.session) {
+                return;
+            }
+            sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+                exitCode,
+                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
             });
-            this._disposables.push(this.processExitHandler);
-        }
+            traceError(`Raw kernel process exited code: ${exitCode}`);
+            // If the raw kernel process dies, then send the terminating event, and shutdown the session.
+            // Afer shutting down the session, the status changes to `dead`
+            this.terminatingStatus = 'terminating';
+            this.onStatusChangedEvent.fire('terminating');
+            // Shutdown the session but not this class.
+            this.setSession(undefined);
+            this.shutdownSession(session, this.statusHandler, false)
+                .catch((reason) => {
+                    traceError(`Error shutting down jupyter session: ${reason}`);
+                })
+                .finally(() => {
+                    // If we're still terminanting this session,
+                    // trigger dead status
+                    if (this.terminatingStatus) {
+                        this.terminatingStatus = 'dead';
+                        this.onStatusChangedEvent.fire('dead');
+                    }
+                });
+        });
+        this.disposables.push(disposable);
+        this.processExitHandler.set(session, disposable);
     }
 
     protected startRestartSession(timeout: number) {
@@ -263,6 +281,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(kernelConnection)}`);
 
+        this.terminatingStatus = undefined;
         const process = await this.kernelLauncher.launch(
             kernelConnection,
             timeout,

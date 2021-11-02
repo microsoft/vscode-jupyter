@@ -8,8 +8,9 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
+import { disposeAllDisposables } from '../common/helpers';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
-import { Resource } from '../common/types';
+import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -40,6 +41,7 @@ export class JupyterSessionStartError extends WrappedError {
 export abstract class BaseJupyterSession implements IJupyterSession {
     private _isDisposed?: boolean;
     private readonly _disposed = new EventEmitter<void>();
+    protected readonly disposables: IDisposable[] = [];
     public get disposed() {
         return this._isDisposed === true;
     }
@@ -122,6 +124,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this._disposed.dispose();
             this.onStatusChangedEvent.dispose();
         }
+        disposeAllDisposables(this.disposables);
         traceInfo('Shutdown session -- complete');
     }
     public async interrupt(): Promise<void> {
