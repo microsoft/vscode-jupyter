@@ -386,7 +386,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // When we re-run the cells, the execution order shouldl start from 1 all over again
         // If its one, then kernel has restarted.
         await Promise.all([
-            runCell(cell1),
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedSuccessfully(cell2),
