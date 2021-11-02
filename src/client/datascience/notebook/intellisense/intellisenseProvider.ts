@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, Uri } from 'vscode';
+import { ConfigurationChangeEvent, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
@@ -34,7 +34,8 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public activate() {
         // Sign up for kernel change events on notebooks
@@ -50,6 +51,9 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         // can compare during intellisense operations.
         this.getActiveInterpreterSync(undefined);
         this.interpreterService.onDidChangeInterpreter(this.handleInterpreterChange, this, this.disposables);
+
+        // If we change the language server type, we need to restart
+        this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
     }
 
     private handleInterpreterChange() {
@@ -157,12 +161,18 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     private async ensureLanguageServer(interpreter: PythonEnvironment | undefined, notebook: NotebookDocument) {
         // We should have one language server per active interpreter.
 
+        // Check the setting to determine if we let pylance handle notebook intellisense or not
+        const middlewareType = this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks
+            ? 'pylance'
+            : 'jupyter';
+
         // See if we already have one for this interpreter or not
         const id = interpreter ? getInterpreterId(interpreter) : undefined;
         if (id && !this.servers.has(id) && interpreter) {
             // We don't already have one. Create a new one for this interpreter.
             // The logic for whether or not
             const languageServerPromise = LanguageServer.createLanguageServer(
+                middlewareType,
                 interpreter,
                 this.shouldAllowIntellisense.bind(this)
             ).then((l) => {
@@ -174,5 +184,19 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         }
 
         return id ? this.servers.get(id) : undefined;
+    }
+
+    private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+        if (
+            event.affectsConfiguration('jupyter.pylanceHandlesNotebooks') ||
+            event.affectsConfiguration('python.languageServer')
+        ) {
+            // Dispose all servers and start over for each open notebook
+            this.servers.forEach((p) => p.then((s) => s?.dispose()));
+            this.servers.clear();
+
+            // For all currently open notebooks, launch their language server
+            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+        }
     }
 }

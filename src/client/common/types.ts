@@ -177,6 +177,7 @@ export interface IJupyterSettings {
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
+    readonly pylanceHandlesNotebooks?: boolean;
 }
 
 export interface IVariableTooltipFields {
