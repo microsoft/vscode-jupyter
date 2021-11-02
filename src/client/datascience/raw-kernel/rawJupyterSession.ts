@@ -241,7 +241,9 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.kernelConnectionMetadata.kind !== 'startUsingKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
         ) {
-            throw new Error(`Unable to start Raw Kernels for Kernel Connection of type ${this.kernelConnectionMetadata.kind}`);
+            throw new Error(
+                `Unable to start Raw Kernels for Kernel Connection of type ${this.kernelConnectionMetadata.kind}`
+            );
         }
 
         traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`);
