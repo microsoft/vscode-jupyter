@@ -3,7 +3,6 @@
 'use strict';
 import '../../../common/extensions';
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -24,22 +23,15 @@ import { noop } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import {
-    getDisplayNameOrNameOfKernelConnection,
-    getLanguageInNotebookMetadata,
-    isPythonKernelConnection
-} from '../../jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
-import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
+import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import { INotebook, INotebookExecutionInfo, IRawNotebookProvider, IRawNotebookSupportedService } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
-import { getResourceType } from '../../common';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -57,7 +49,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
@@ -76,9 +67,8 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
     protected async createNotebookInstance(
         resource: Resource,
         document: vscode.NotebookDocument,
+        kernelConnection: KernelConnectionMetadata,
         disableUI?: boolean,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
@@ -102,10 +92,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 }
             }
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelConnectionMetadata =
-                kernelConnection || (await this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken));
-
-            const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata);
+            const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
 
             progressDisposable = !disableUI
                 ? this.progressReporter.createProgressIndicator(
@@ -129,44 +116,29 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
-            if (
-                !kernelConnectionMetadata ||
-                (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
-            ) {
-                sendTelemetryEvent(Telemetry.KernelSpecNotFoundError, undefined, {
-                    resourceType: getResourceType(resource),
-                    language: getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata)),
-                    kernelConnectionProvided: !!kernelConnection,
-                    notebookMetadataProvided: !!notebookMetadata,
-                    hasKernelSpecInMetadata: !!notebookMetadata?.kernelspec,
-                    kernelConnectionFound: !!kernelConnectionMetadata
-                });
-                notebookPromise.reject(new KernelSpecNotFoundError(notebookMetadata));
+            // If a kernel connection was not provided, then we set it up here.
+            if (!kernelConnectionProvided) {
+                trackKernelResourceInformation(resource, { kernelConnection });
+            }
+            traceVerbose(
+                `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${JSON.stringify(
+                    kernelConnection
+                )}`
+            );
+            await rawSession.connect(resource, kernelConnection, launchTimeout, cancelToken, disableUI);
+
+            // Get the execution info for our notebook
+            const info = await this.getExecutionInfo(kernelConnection);
+
+            if (rawSession.isConnected) {
+                // Create our notebook
+                const notebook = new JupyterNotebook(rawSession, info);
+
+                traceInfo(`Finished connecting ${this.id}`);
+
+                notebookPromise.resolve(notebook);
             } else {
-                // If a kernel connection was not provided, then we set it up here.
-                if (!kernelConnectionProvided) {
-                    trackKernelResourceInformation(resource, { kernelConnection: kernelConnectionMetadata });
-                }
-                traceVerbose(
-                    `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${JSON.stringify(
-                        kernelConnectionMetadata
-                    )}`
-                );
-                await rawSession.connect(resource, kernelConnectionMetadata, launchTimeout, cancelToken, disableUI);
-
-                // Get the execution info for our notebook
-                const info = await this.getExecutionInfo(kernelConnectionMetadata);
-
-                if (rawSession.isConnected) {
-                    // Create our notebook
-                    const notebook = new JupyterNotebook(rawSession, info);
-
-                    traceInfo(`Finished connecting ${this.id}`);
-
-                    notebookPromise.resolve(notebook);
-                } else {
-                    notebookPromise.reject(this.getDisposedError());
-                }
+                notebookPromise.reject(this.getDisposedError());
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

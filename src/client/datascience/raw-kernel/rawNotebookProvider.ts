@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type * as nbformat from '@jupyterlab/nbformat';
 import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
@@ -78,17 +77,15 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     public async createNotebook(
         document: NotebookDocument,
         resource: Resource,
-        disableUI: boolean,
-        notebookMetadata: nbformat.INotebookMetadata,
         kernelConnection: KernelConnectionMetadata,
+        disableUI: boolean,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         return this.createNotebookInstance(
             resource,
             document,
-            disableUI,
-            notebookMetadata,
             kernelConnection,
+            disableUI,
             cancelToken
         );
     }
@@ -149,9 +146,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     protected createNotebookInstance(
         _resource: Resource,
         _document: NotebookDocument,
-        _disableUI?: boolean,
-        _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,
+        _disableUI?: boolean,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
