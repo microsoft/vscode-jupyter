@@ -687,16 +687,18 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'import time\nfor i in range(10):\n    s = str(i) + "%"\n    print("{0}\\r".format(s),end="")\n    time.sleep(0.0001)',
             { index: 4 }
         );
+        await insertCodeCell('\rExecute\rExecute\nExecute 8\rExecute 9\r\r', { index: 5 });
 
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[4])]);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
         assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three');
         assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\\ntwo\\nthree\\n');
         assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
         assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
         assert.equal(cells[4].outputs[0].items[0].data.toString(), '%9');
+        assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
     });
 
     test('Execute all cells and run after error', async () => {
