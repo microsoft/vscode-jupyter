@@ -29,7 +29,6 @@ import { assert } from 'chai';
 import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { sleep } from '../../client/common/utils/async';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 
 suite('VSCode Notebook - Run By Line', function () {
@@ -199,7 +198,7 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Run a second time after interrupt', async function () {
-        await insertCodeCell('print(1)', { index: 0 });
+        await insertCodeCell('print(1)\nprint(2)\nprint(3)', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
 
@@ -215,14 +214,17 @@ suite('VSCode Notebook - Run By Line', function () {
             defaultNotebookTestTimeout,
             'DebugSession should end1'
         );
+        assert.isFalse(getCellOutputs(cell).includes('3'), `Final line did run even with an interrupt`);
 
+        // Start over and make sure we can execute all lines
         void commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
-
         await waitForStoppedEvent(debugAdapter2!);
-        await sleep(500); //
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
-
+        await waitForStoppedEvent(debugAdapter2!);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await waitForStoppedEvent(debugAdapter2!);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
@@ -233,6 +235,6 @@ suite('VSCode Notebook - Run By Line', function () {
             defaultNotebookTestTimeout,
             'Cell should have output'
         );
-        assert.isTrue(getCellOutputs(cell).includes('1'));
+        assert.isTrue(getCellOutputs(cell).includes('3'), `Final line did not run`);
     });
 });
