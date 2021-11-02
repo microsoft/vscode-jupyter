@@ -690,7 +690,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedWithErrors(cells[4])]);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[4])]);
 
         assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three');
         assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\\ntwo\\nthree\\n');
