@@ -32,7 +32,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
-import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import { traceInfo } from '../../../common/logger';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sleep } from '../../../common/utils/async';
@@ -144,6 +144,7 @@ export class LanguageServer implements Disposable {
     }
 
     public static async createLanguageServer(
+        middlewareType: 'pylance' | 'jupyter',
         interpreter: PythonEnvironment,
         shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: string) => boolean
     ): Promise<LanguageServer | undefined> {
@@ -153,15 +154,22 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getInterpreterId(interpreter);
-            const middleware = createNotebookMiddleware(
-                notebookApi,
-                () => languageClient,
-                () => noop, // Don't trace output. Slows things down too much
-                NOTEBOOK_SELECTOR,
-                /.*\.(ipynb|interactive)/m,
-                interpreter.path,
-                (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
-            );
+            const middleware =
+                middlewareType == 'jupyter'
+                    ? createNotebookMiddleware(
+                          notebookApi,
+                          () => languageClient,
+                          () => noop, // Don't trace output. Slows things down too much
+                          NOTEBOOK_SELECTOR,
+                          /.*\.(ipynb|interactive)/m,
+                          interpreter.path,
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
+                      )
+                    : createPylanceMiddleware(
+                          () => languageClient,
+                          interpreter.path,
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
+                      );
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {
