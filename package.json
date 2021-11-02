@@ -1537,7 +1537,7 @@
                 "jupyter.notebookFileRoot": {
                     "type": "string",
                     "default": "${fileDirname}",
-                    "description": "Set the root directory for loading files for the Interactive window.",
+                    "description": "Set the root directory for running notebooks and the Interactive window.",
                     "scope": "resource"
                 },
                 "jupyter.searchForJupyter": {
