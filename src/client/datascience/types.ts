@@ -103,7 +103,6 @@ export interface INotebookExecutionInfo {
 export interface INotebookServerLaunchInfo {
     connectionInfo: IJupyterConnection;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelConnectionMetadata?: KernelConnectionMetadata;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
     disableUI?: boolean; // True if no UI should be brought up during the launch
@@ -126,8 +125,7 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         document: NotebookDocument,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(document: NotebookDocument, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
@@ -149,9 +147,8 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
     createNotebook(
         document: NotebookDocument,
         resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
         disableUI?: boolean,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(document: NotebookDocument, token?: CancellationToken): Promise<INotebook | undefined>;
@@ -178,7 +175,6 @@ export type ConnectNotebookProviderOptions = {
     localOnly?: boolean;
     token?: CancellationToken;
     resource: Resource;
-    metadata?: nbformat.INotebookMetadata;
 };
 
 export interface INotebookServerOptions {
@@ -188,8 +184,6 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    metadata?: nbformat.INotebookMetadata;
-    kernelConnection?: KernelConnectionMetadata;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
@@ -857,8 +851,6 @@ export type GetServerOptions = {
     localOnly?: boolean;
     token?: CancellationToken;
     resource: Resource;
-    metadata?: nbformat.INotebookMetadata;
-    kernelConnection?: KernelConnectionMetadata;
 };
 
 /**
@@ -870,7 +862,7 @@ export type GetNotebookOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
-    kernelConnection?: KernelConnectionMetadata;
+    kernelConnection: KernelConnectionMetadata;
     token?: CancellationToken;
 };
 

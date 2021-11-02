@@ -20,14 +20,15 @@ import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
 import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
-import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion, INotebookProvider } from '../../types';
+import { IKernelProvider } from '../../jupyter/kernels/types';
+import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
 @injectable()
 export class JupyterCompletionProvider implements CompletionItemProvider {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     public async provideCompletionItems(
@@ -50,18 +51,8 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             return [];
         }
 
-        // Change kernel and update metadata (this can return `undefined`).
-        // When calling `kernelProvider.getOrCreate` it will attempt to dispose the current kernel.
-        const notebook = await this.notebookProvider.getOrCreateNotebook({
-            resource: notebookDocument.uri,
-            document: notebookDocument,
-            getOnly: true
-        });
-        if (token.isCancellationRequested) {
-            traceInfoIfCI(`Getting completions cancelled for ${getDisplayPath(notebookDocument.uri)}`);
-            return [];
-        }
-        if (!notebook) {
+        const kernel = this.kernelProvider.get(notebookDocument);
+        if (!kernel || !kernel.session) {
             traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
@@ -71,7 +62,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const result = await Promise.race([
-            this.getJupyterCompletion(notebook.session, document.getText(), document.offsetAt(position), token),
+            this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
                 if (token.isCancellationRequested) {
                     return;

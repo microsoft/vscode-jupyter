@@ -9,6 +9,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IDisposableRegistry, IJupyterSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
+import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {
@@ -69,7 +70,8 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             document: instance(doc),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            kernelConnection: instance(mock<KernelConnectionMetadata>())
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -84,7 +86,8 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             document: instance(doc),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            kernelConnection: instance(mock<KernelConnectionMetadata>())
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -99,13 +102,15 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             document: instance(doc),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            kernelConnection: instance(mock<KernelConnectionMetadata>())
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.getOrCreateNotebook({
             document: instance(doc),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            kernelConnection: instance(mock<KernelConnectionMetadata>())
         });
         expect(notebook2).to.equal(notebook);
     });
