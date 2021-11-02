@@ -382,7 +382,7 @@ export namespace DataScience {
     );
     export const rawKernelStartFailedDueToTimeout = localize(
         'DataScience.rawKernelStartFailedDueToTimeout',
-        'Unable to start Kernel \'{0}\' due to connection timeout.'
+        "Unable to start Kernel '{0}' due to connection timeout."
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
