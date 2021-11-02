@@ -177,7 +177,6 @@ module.exports = {
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/.eslintrc.js',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/typings/python.d.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/serverPicker.ts',
-        'src/test/datascience/common.unit.test.ts',
         'src/test/datascience/mockLanguageServer.ts',
         'src/test/datascience/remoteTestHelpers.ts',
         'src/test/datascience/mockWorkspaceFolder.ts',
