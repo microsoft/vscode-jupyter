@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { NotebookDocument, Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
-import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
 import {
     IJupyterConnection,
     INotebook,
@@ -14,17 +13,13 @@ import { MockJupyterNotebook } from './mockJupyterNotebook';
 export class MockJupyterServer implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private notebookFile: TemporaryFile | undefined;
-    public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
-        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelConnectionMetadata) {
-            this.launchInfo = launchInfo;
+    public async connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
+        this.launchInfo = launchInfo;
 
-            // Validate connection info and kernel spec
-            const name = getNameOfKernelConnection(launchInfo.kernelConnectionMetadata);
-            if (launchInfo.connectionInfo.baseUrl && name && /[a-z,A-Z,0-9,-,.,_]+/.test(name)) {
-                return Promise.resolve();
-            }
+        // Validate connection info and kernel spec
+        if (!launchInfo.connectionInfo.baseUrl) {
+            throw new Error('invalid server startup');
         }
-        return Promise.reject('invalid server startup');
     }
 
     public async createNotebook(_resource: Uri): Promise<INotebook> {

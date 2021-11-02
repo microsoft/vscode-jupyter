@@ -3,13 +3,10 @@
 'use strict';
 import '../../../common/extensions';
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IPythonExtensionChecker } from '../../../api/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+import { IWorkspaceService } from '../../../common/application/types';
+import { traceError, traceInfo } from '../../../common/logger';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -20,8 +17,6 @@ import {
 } from '../../../common/types';
 import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { isResourceNativeNotebook } from '../../notebook/helpers/helpers';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterConnection,
@@ -32,8 +27,7 @@ import {
 } from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
-import { KernelConnectionMetadata } from '../kernels/types';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
+import { DefaultKernelConnectionMetadata, KernelConnectionMetadata } from '../kernels/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
@@ -63,14 +57,8 @@ export class HostJupyterServer implements INotebookServer {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
-        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -93,20 +81,13 @@ export class HostJupyterServer implements INotebookServer {
         resource: Resource,
         document: vscode.NotebookDocument,
         sessionManager: JupyterSessionManager,
-        possibleSession: JupyterSession | undefined,
         configService: IConfigurationService,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
         const existing = await this.getNotebook(document);
         if (existing) {
-            // Dispose the possible session as we don't need it
-            if (possibleSession) {
-                await possibleSession.dispose();
-            }
-
             // Then we can return the existing notebook.
             return existing;
         }
@@ -119,48 +100,20 @@ export class HostJupyterServer implements INotebookServer {
         this.setNotebook(document, notebookPromise.promise);
 
         const getExistingSession = async () => {
-            const { info, changedKernel } = await this.computeLaunchInfo(
-                resource,
-                notebookMetadata,
-                kernelConnection,
-                cancelToken
-            );
+            const info = await this.computeLaunchInfo();
 
             progressDisposable = this.progressReporter.createProgressIndicator(
                 localize.DataScience.connectingToKernel().format(
-                    getDisplayNameOrNameOfKernelConnection(info.kernelConnectionMetadata)
+                    getDisplayNameOrNameOfKernelConnection(kernelConnection)
                 )
             );
-
-            // If we switched kernels, try switching the possible session
-            if (changedKernel && possibleSession && info.kernelConnectionMetadata) {
-                traceInfo(`Changing Kernel to ${JSON.stringify(info.kernelConnectionMetadata.id)}`);
-                await possibleSession.changeKernel(
-                    resource,
-                    info.kernelConnectionMetadata,
-                    this.configService.getSettings(resource).jupyterLaunchTimeout
-                );
-            }
 
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = info.connectionInfo.localLaunch
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
-            const sessionDirectoryMatches =
-                info.connectionInfo.localLaunch && possibleSession
-                    ? this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
-                    : true;
-
             // Start a session (or use the existing one if allowed)
-            const session =
-                possibleSession && sessionDirectoryMatches
-                    ? possibleSession
-                    : await sessionManager.startNew(
-                          resource,
-                          info.kernelConnectionMetadata,
-                          workingDirectory,
-                          cancelToken
-                      );
+            const session = await sessionManager.startNew(resource, kernelConnection, workingDirectory, cancelToken);
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };
@@ -194,92 +147,17 @@ export class HostJupyterServer implements INotebookServer {
         return notebookPromise.promise;
     }
 
-    private async computeLaunchInfo(
-        resource: Resource,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
+    private async computeLaunchInfo(): Promise<INotebookServerLaunchInfo> {
         // First we need our launch information so we can start a new session (that's what our notebook is really)
         let launchInfo = await this.waitForConnect();
         if (!launchInfo) {
             throw this.getDisposedError();
         }
-        traceInfo(`Compute Launch Info uri = ${resource?.fsPath}, kernelConnection id = ${kernelConnection?.id}`);
-        // Create a copy of launch info, cuz we're modifying it here.
-        // This launch info contains the server connection info (that could be shared across other nbs).
-        // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
-        launchInfo = {
-            ...launchInfo
-        };
-
-        // Determine the interpreter for our resource. If different, we need a different kernel. This is unnecessary in remote
-        const resourceInterpreter =
-            this.extensionChecker.isPythonExtensionInstalled && launchInfo.connectionInfo.localLaunch
-                ? await this.interpreterService.getActiveInterpreter(resource)
-                : undefined;
-
-        // Find a kernel that can be used.
-        // Do this only if we don't have any kernel connection information, or the resource's interpreter is different.
-        let changedKernel = false;
-        if (
-            // For local connections this code path is not executed for native notebooks (hence only for remote).
-            (isResourceNativeNotebook(resource, this.vscodeNotebook, this.fs) &&
-                !launchInfo.connectionInfo.localLaunch) ||
-            !kernelConnection ||
-            notebookMetadata?.kernelspec ||
-            resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
-        ) {
-            let kernelInfo: KernelConnectionMetadata | undefined;
-            if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
-                traceInfoIfCI(`kernelConnection?.kind === 'connectToLiveKernel'`);
-                kernelInfo = kernelConnection;
-            } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
-                traceInfoIfCI(`kernelConnection?.kind === 'startUsingKernelSpec'`);
-                kernelInfo = kernelConnection;
-            } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
-                traceInfoIfCI(`launchInfo.connectionInfo.localLaunch && kernelConnection'`);
-                kernelInfo = kernelConnection;
-            } else {
-                kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                    ? this.localKernelFinder.findKernel(resource, notebookMetadata, cancelToken)
-                    : this.remoteKernelFinder.findKernel(
-                          resource,
-                          launchInfo.connectionInfo,
-                          notebookMetadata,
-                          cancelToken
-                      ));
-                traceInfoIfCI(`kernelInfo found ${kernelInfo?.id}`);
-            }
-            if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
-                // Update kernel info if we found a new one.
-                launchInfo.kernelConnectionMetadata = kernelInfo;
-                changedKernel = true;
-            }
-            traceInfo(
-                `Compute Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
-            );
-        }
-        if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
-            // Update kernel info if its different from what was originally provided.
-            traceInfoIfCI(`kernelConnection provided is different from launch info ${kernelConnection.id}`);
-            launchInfo.kernelConnectionMetadata = kernelConnection;
-            changedKernel = true;
-        }
-
-        traceInfo(
-            `Computed Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
-        );
-        return { info: launchInfo, changedKernel };
+        return launchInfo;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        traceInfo(
-            `Connecting server ${this.id} kernelSpec ${getDisplayNameOrNameOfKernelConnection(
-                launchInfo.kernelConnectionMetadata,
-                'unknown'
-            )}`
-        );
+        traceInfo(`Connecting server ${this.id}`);
 
         // Save our launch info
         this.launchInfo = launchInfo;
@@ -308,11 +186,15 @@ export class HostJupyterServer implements INotebookServer {
             launchInfo.connectionInfo
         )) as JupyterSessionManager;
 
+        const defaultKernel: DefaultKernelConnectionMetadata = {
+            kind: 'startUsingDefaultKernel',
+            id: ''
+        };
         // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
         // is running and connectable.
         const session = (await this.sessionManager.startNew(
             undefined,
-            launchInfo.kernelConnectionMetadata,
+            defaultKernel,
             launchInfo.connectionInfo.rootDirectory,
             cancelToken,
             launchInfo.disableUI
@@ -320,29 +202,18 @@ export class HostJupyterServer implements INotebookServer {
         const idleTimeout = this.configService.getSettings().jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);
-
-        // For local we want to save this for the next notebook to use.
-        if (this.launchInfo.connectionInfo.localLaunch) {
-            this.savedSession = session;
-        } else {
-            // Otherwise for remote, just get rid of it.
-            await session.dispose();
-        }
+        await session.dispose();
     }
 
     public async createNotebook(
         resource: Resource,
         document: NotebookDocument,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        kernelConnection?: KernelConnectionMetadata,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        // If we have a saved session send this into the notebook so we don't create a new one
-        const savedSession = this.savedSession;
-        this.savedSession = undefined;
         const stopWatch = new StopWatch();
         // Create a notebook and return it.
         try {
@@ -350,9 +221,7 @@ export class HostJupyterServer implements INotebookServer {
                 resource,
                 document,
                 this.sessionManager,
-                savedSession,
                 this.configService,
-                notebookMetadata,
                 kernelConnection,
                 cancelToken
             );
@@ -385,9 +254,6 @@ export class HostJupyterServer implements INotebookServer {
                 this.connectionInfoDisconnectHandler.dispose();
                 this.connectionInfoDisconnectHandler = undefined;
             }
-
-            // Destroy the kernel spec
-            await this.destroyKernelSpec();
 
             // Remove the saved session if we haven't passed it onto a notebook
             if (this.savedSession) {
@@ -478,12 +344,6 @@ export class HostJupyterServer implements INotebookServer {
 
         // Save the notebook
         this.notebooks.set(document.uri.toString(), notebook);
-    }
-
-    private async destroyKernelSpec() {
-        if (this.launchInfo) {
-            this.launchInfo.kernelConnectionMetadata = undefined;
-        }
     }
 
     private logRemoteOutput(output: string) {

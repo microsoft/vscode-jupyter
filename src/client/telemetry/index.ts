@@ -1443,9 +1443,6 @@ export interface IEventNamePropertyMapping {
         resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
         language: string; // Language defined in notebook metadata.
         kernelConnectionProvided: boolean; // Whether kernelConnection was provided.
-        notebookMetadataProvided: boolean; // Whether notebook metadata was provided.
-        hasKernelSpecInMetadata: boolean; // Whether we have kernelspec info in the notebook metadata.
-        kernelConnectionFound: boolean; // Whether a kernel connection was found or not.
     };
     [DebuggingTelemetry.clickedOnSetup]: never | undefined;
     [DebuggingTelemetry.closedModal]: never | undefined;
