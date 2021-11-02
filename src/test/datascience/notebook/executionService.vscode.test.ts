@@ -687,7 +687,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'import time\nfor i in range(10):\n    s = str(i) + "%"\n    print("{0}\\r".format(s),end="")\n    time.sleep(0.0001)',
             { index: 4 }
         );
-        await insertCodeCell('\rExecute\rExecute\nExecute 8\rExecute 9\r\r', { index: 5 });
+        await insertCodeCell('print("\rExecute\rExecute\nExecute 8\rExecute 9\r\r")', { index: 5 });
 
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
