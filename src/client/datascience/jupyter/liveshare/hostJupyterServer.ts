@@ -123,7 +123,7 @@ export class HostJupyterServer implements INotebookServer {
 
             if (session) {
                 // Create our notebook
-                const notebook = new JupyterNotebook(session, info);
+                const notebook = new JupyterNotebook(session, info.connectionInfo);
 
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);

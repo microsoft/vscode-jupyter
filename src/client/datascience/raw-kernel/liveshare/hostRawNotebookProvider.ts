@@ -9,7 +9,6 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -21,14 +20,13 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
-import { INotebook, INotebookExecutionInfo, IRawNotebookProvider, IRawNotebookSupportedService } from '../../types';
-import { calculateWorkingDirectory } from '../../utils';
+import { INotebook, IRawNotebookProvider, IRawNotebookSupportedService } from '../../types';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
@@ -47,7 +45,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
@@ -128,7 +125,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
             await rawSession.connect(resource, kernelConnection, launchTimeout, cancelToken, disableUI);
 
             // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(kernelConnection);
+            const info = this.getConnection();
 
             if (rawSession.isConnected) {
                 // Create our notebook
@@ -153,18 +150,5 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         }
 
         return notebookPromise.promise;
-    }
-
-    // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(
-        kernelConnectionMetadata: KernelConnectionMetadata
-    ): Promise<INotebookExecutionInfo> {
-        return {
-            connectionInfo: this.getConnection(),
-            uri: Settings.JupyterServerLocalLaunch,
-            kernelConnectionMetadata,
-            workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
-            purpose: Identifiers.RawPurpose
-        };
     }
 }

@@ -86,17 +86,6 @@ export enum InterruptResult {
     Restarted = 'restart'
 }
 
-// Information used to execute a notebook
-export interface INotebookExecutionInfo {
-    // Connection to what has provided our notebook, such as a jupyter
-    // server or a raw ZMQ kernel
-    connectionInfo: INotebookProviderConnection;
-    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelConnectionMetadata?: KernelConnectionMetadata;
-    workingDir: string | undefined;
-    purpose: string | undefined; // Purpose this server is for
-}
-
 // Information used to launch a jupyter notebook server
 
 // Information used to launch a notebook server
@@ -184,7 +173,6 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    skipSearchingForKernel?: boolean;
     allowUI(): boolean;
 }
 

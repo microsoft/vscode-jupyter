@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IJupyterSession, INotebook, INotebookExecutionInfo } from '../types';
+import { IJupyterSession, INotebook, INotebookProviderConnection } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
@@ -9,13 +9,13 @@ import cloneDeep = require('lodash/cloneDeep');
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterNotebook implements INotebook {
-    private _executionInfo: INotebookExecutionInfo;
-    constructor(public readonly session: IJupyterSession, executionInfo: INotebookExecutionInfo) {
+    private __connection: INotebookProviderConnection;
+    constructor(public readonly session: IJupyterSession, connectionInfo: INotebookProviderConnection) {
         // Make a copy of the launch info so we can update it in this class
-        this._executionInfo = cloneDeep(executionInfo);
+        this.__connection = cloneDeep(connectionInfo);
     }
 
     public get connection() {
-        return this._executionInfo.connectionInfo;
+        return this.__connection;
     }
 }
