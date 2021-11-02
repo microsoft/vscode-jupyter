@@ -77,7 +77,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     .showErrorMessage(DataScience.kernelNotInstalled().format(kernelName))
                     .then(noop, noop);
             }
+            this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (err.message) {
+            // Some errors have localized and/or formatted error messages.
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else {
             this.applicationShell.showErrorMessage(err.toString()).then(noop, noop);
