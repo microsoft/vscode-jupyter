@@ -214,7 +214,7 @@ jobs:
           prereq-pattern: './src/client/telemetry/index.ts'
           file-pattern: 'telemetry.md'
           skip-label: 'skip telemetry'
-          failure-message: 'TELEMETRY.md should be changed when adding or removing telemetry'        
+          failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'        
 
   vsc_api_check:
     needs: pick_environment
