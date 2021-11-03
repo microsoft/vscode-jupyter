@@ -68,7 +68,6 @@ import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
-import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
