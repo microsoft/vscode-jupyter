@@ -352,9 +352,6 @@ export class Kernel implements IKernel {
                             this.notebookDocument,
                             placeholderCellPromise
                         );
-                        // if (!process.env.XYZ1234) {
-                        //     throw new Error('dll not found');
-                        // }
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                         // Provide a user friendly message in case `ex` is some error thats not throw by us.
