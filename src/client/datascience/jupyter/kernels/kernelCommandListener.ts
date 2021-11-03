@@ -245,7 +245,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         if (
             kernel?.session &&
             kernel?.session instanceof RawJupyterSession &&
-            kernel.status === 'terminating' &&
+            kernel.status === 'dead' &&
             !kernel.disposed &&
             !kernel.disposing
         ) {

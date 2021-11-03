@@ -137,6 +137,7 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
+    private isPromptingForRestart?: Promise<boolean>;
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly notebookDocument: NotebookDocument,
@@ -435,32 +436,46 @@ export class Kernel implements IKernel {
         }
     }
     private async notifyAndRestartDeadKernel(): Promise<boolean> {
-        const selection = await this.appShell.showErrorMessage(
-            DataScience.cannotRunCellKernelIsDead().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
-            { modal: true },
-            DataScience.showJupyterLogs(),
-            DataScience.restartKernel()
-        );
-        let restartedKernel = false;
-        switch (selection) {
-            case DataScience.restartKernel(): {
-                // Set our status
-                const status = this.statusProvider.set(DataScience.restartingKernelStatus());
-                try {
-                    await this.restart();
-                    restartedKernel = true;
-                } finally {
-                    status.dispose();
-                }
-                break;
-            }
-            case DataScience.showJupyterLogs(): {
-                void this.commandManager.executeCommand(Commands.ViewJupyterOutput);
-            }
+        if (this.isPromptingForRestart) {
+            return this.isPromptingForRestart;
         }
-        return restartedKernel;
+
+        const checkWhetherToRestart = async () => {
+            const selection = await this.appShell.showErrorMessage(
+                DataScience.cannotRunCellKernelIsDead().format(
+                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                ),
+                { modal: true },
+                DataScience.showJupyterLogs(),
+                DataScience.restartKernel()
+            );
+            let restartedKernel = false;
+            switch (selection) {
+                case DataScience.restartKernel(): {
+                    // Set our status
+                    const status = this.statusProvider.set(DataScience.restartingKernelStatus());
+                    try {
+                        await this.restart();
+                        restartedKernel = true;
+                    } finally {
+                        status.dispose();
+                    }
+                    break;
+                }
+                case DataScience.showJupyterLogs(): {
+                    void this.commandManager.executeCommand(Commands.ViewJupyterOutput);
+                }
+            }
+            return restartedKernel;
+        };
+        // Ensure we don't display this prompt multiple times,
+        // if we are running multiple cells together.
+        // Also clear this once the prompt has been dismissed.
+        this.isPromptingForRestart = checkWhetherToRestart();
+        this.isPromptingForRestart.finally(() => {
+            this.isPromptingForRestart = undefined;
+        });
+        return this.isPromptingForRestart;
     }
     private async initializeAfterStart(
         reason: SysInfoReason,
