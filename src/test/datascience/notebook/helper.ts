@@ -196,7 +196,7 @@ export async function canRunNotebookTests() {
 export async function shutdownAllNotebooks() {
     const api = await initialize();
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-    await Promise.all(kernelProvider.kernels.map(k => k.dispose().catch(noop)));
+    await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
 }
 
 export async function ensureNewNotebooksHavePythonCells() {
