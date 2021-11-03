@@ -1439,11 +1439,6 @@ export interface IEventNamePropertyMapping {
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
     };
-    [Telemetry.KernelSpecNotFoundError]: {
-        resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
-        language: string; // Language defined in notebook metadata.
-        kernelConnectionProvided: boolean; // Whether kernelConnection was provided.
-    };
     [DebuggingTelemetry.clickedOnSetup]: never | undefined;
     [DebuggingTelemetry.closedModal]: never | undefined;
     [DebuggingTelemetry.ipykernel6Status]: {
