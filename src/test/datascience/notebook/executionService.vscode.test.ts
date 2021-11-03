@@ -697,7 +697,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\ntwo\nthree\n');
         assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
         assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
-        assert.equal(cells[4].outputs[0].items[0].data.toString(), '%9\r');
+        assert.equal(cells[4].outputs[0].items[0].data.toString(), '9%\r');
         assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
     });
 
