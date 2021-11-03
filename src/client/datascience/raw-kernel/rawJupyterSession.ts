@@ -35,7 +35,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
-        if (this.session && this.session instanceof RawSession){
+        if (this.session && this.session instanceof RawSession) {
             return this.session.atleastOneCellExecutedSuccessfully;
         }
         return false;

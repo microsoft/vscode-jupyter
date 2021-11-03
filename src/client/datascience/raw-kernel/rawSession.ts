@@ -231,7 +231,8 @@ export class RawSession implements ISessionWithSocket {
             !this.cellExecutedSuccessfully &&
             msg.header.msg_type === 'execute_result' &&
             msg.content &&
-            (this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) || this.jupyterLabServices.KernelMessage.isExecuteInputMsg(msg)) &&
+            (this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) ||
+                this.jupyterLabServices.KernelMessage.isExecuteInputMsg(msg)) &&
             msg.content.execution_count
         ) {
             this.cellExecutedSuccessfully = true;

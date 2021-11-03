@@ -400,10 +400,7 @@ export namespace DataScience {
         'DataScience.cannotRunCellKernelIsDead',
         "Cannot run cells, as the kernel '{0}' is dead."
     );
-    export const showJupyterLogs = localize(
-        'jupyter.showJupyterLogs',
-        "Show Jupyter Logs."
-    );
+    export const showJupyterLogs = localize('jupyter.showJupyterLogs', 'Show Jupyter Logs.');
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
