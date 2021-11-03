@@ -171,7 +171,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async startNew(
         resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
+        kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         cancelToken?: CancellationToken,
         disableUI?: boolean
@@ -199,11 +199,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
-            this.configService.getSettings(resource).jupyterInterruptTimeout,
             this.configService.getSettings(resource).jupyterInterruptTimeout
         );
         try {
-            await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);
+            await session.connect(cancelToken, disableUI);
         } finally {
             if (!session.isConnected) {
                 await session.dispose();

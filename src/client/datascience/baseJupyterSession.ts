@@ -51,7 +51,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
-    protected kernelConnectionMetadata?: KernelConnectionMetadata;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -85,10 +84,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     constructor(
         protected resource: Resource,
+        protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         public workingDirectory: string,
-        private readonly interruptTimeout: number,
-        private readonly restartTimeout: number
+        private readonly interruptTimeout: number
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
@@ -166,7 +165,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Start the restart session now in case it wasn't started
         if (!this.restartSessionPromise) {
-            this.startRestartSession(this.restartTimeout);
+            this.startRestartSession();
         }
 
         // Just kill the current session and switch to the other
@@ -282,13 +281,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(timeout: number): void;
-    // Sub classes need to implement their own kernel change specific code
-    protected abstract createNewKernelSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        timeoutMS: number
-    ): Promise<ISessionWithSocket>;
+    protected abstract startRestartSession(): void;
 
     protected async waitForIdleOnSession(
         session: ISessionWithSocket | undefined,

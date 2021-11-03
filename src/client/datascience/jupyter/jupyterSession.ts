@@ -34,7 +34,7 @@ export class JupyterSession extends BaseJupyterSession {
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
-        kernelSpec: KernelConnectionMetadata | undefined,
+        kernelConnectionMetadata: KernelConnectionMetadata,
         private specsManager: KernelSpecManager,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
@@ -44,11 +44,9 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number,
-        restartTimeout: number
+        interruptTimeout: number
     ) {
-        super(resource, restartSessionUsed, workingDirectory, interruptTimeout, restartTimeout);
-        this.kernelConnectionMetadata = kernelSpec;
+        super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -58,21 +56,13 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async connect(timeoutMs: number, cancelToken?: CancellationToken, disableUI?: boolean): Promise<void> {
+    public async connect(cancelToken?: CancellationToken, disableUI?: boolean): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
         // Start a new session
-        this.setSession(
-            await this.createNewKernelSession(
-                this.resource,
-                this.kernelConnectionMetadata,
-                timeoutMs,
-                cancelToken,
-                disableUI
-            )
-        );
+        this.setSession(await this.createNewKernelSession(cancelToken, disableUI));
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -82,40 +72,34 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        timeoutMS: number,
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
-
-        // update resource as we know it now.
-        this.resource = resource;
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (
-                kernelConnection &&
-                kernelConnection.kind === 'connectToLiveKernel' &&
-                kernelConnection.kernelModel.id &&
-                kernelConnection.kernelModel.model
+                this.kernelConnectionMetadata &&
+                this.kernelConnectionMetadata.kind === 'connectToLiveKernel' &&
+                this.kernelConnectionMetadata.kernelModel.id &&
+                this.kernelConnectionMetadata.kernelModel.model
             ) {
                 // Remote case.
                 newSession = this.sessionManager.connectTo({
-                    ...kernelConnection.kernelModel,
-                    model: kernelConnection.kernelModel.model
+                    ...this.kernelConnectionMetadata.kernelModel,
+                    model: this.kernelConnectionMetadata.kernelModel.model
                 }) as ISessionWithSocket;
-                newSession.kernelConnectionMetadata = kernelConnection;
+                newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
                 newSession.isRemoteSession = true;
-                newSession.resource = resource;
+                newSession.resource = this.resource;
             } else {
-                traceInfoIfCI(`createNewKernelSession ${kernelConnection?.id}`);
-                newSession = await this.createSession(resource, kernelConnection, cancelToken, disableUI);
-                newSession.resource = resource;
+                traceInfoIfCI(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
+                newSession = await this.createSession(cancelToken, disableUI);
+                newSession.resource = this.resource;
             }
 
             // Make sure it is idle before we return
-            await this.waitForIdleOnSession(newSession, timeoutMS);
+            await this.waitForIdleOnSession(newSession, this.idleTimeout);
         } catch (exc) {
             // Don't swallow known exceptions.
             if (exc instanceof BaseError) {
@@ -124,7 +108,7 @@ export class JupyterSession extends BaseJupyterSession {
             } else {
                 traceError('Failed to change kernel', exc);
                 // Throw a new exception indicating we cannot change.
-                throw new JupyterInvalidKernelError(kernelConnection);
+                throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
             }
         }
 
@@ -132,10 +116,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     protected async createRestartSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
-        _timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
@@ -148,8 +129,10 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                traceInfoIfCI(`JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
-                result = await this.createSession(resource, kernelConnection, cancelToken, true);
+                traceInfoIfCI(
+                    `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
+                );
+                result = await this.createSession(cancelToken, true);
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 if (result.kernel) {
                     this.restartSessionCreated(result.kernel);
@@ -168,14 +151,9 @@ export class JupyterSession extends BaseJupyterSession {
         throw exception;
     }
 
-    protected startRestartSession(timeout: number) {
+    protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(
-                this.session.resource,
-                this.kernelConnectionMetadata,
-                this.session,
-                timeout
-            );
+            this.restartSessionPromise = this.createRestartSession(this.session);
         }
     }
 
@@ -225,26 +203,27 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ): Promise<ISessionWithSocket> {
+    private async createSession(cancelToken?: CancellationToken, disableUI?: boolean): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
 
         // Make sure the kernel has ipykernel installed if on a local machine.
-        if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
+        if (this.kernelConnectionMetadata?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            traceInfoIfCI(`JupyterSession.createSession ${kernelConnection.id}`);
-            await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
+            traceInfoIfCI(`JupyterSession.createSession ${this.kernelConnectionMetadata.id}`);
+            await this.kernelService.ensureKernelIsUsable(
+                this.resource,
+                this.kernelConnectionMetadata,
+                cancelToken,
+                disableUI
+            );
         }
 
         // If kernelName is empty this can cause problems for servers that don't
         // understand that empty kernel name means the default kernel.
         // See https://github.com/microsoft/vscode-jupyter/issues/5290
-        const kernelName = getNameOfKernelConnection(kernelConnection) ?? this.specsManager?.specs?.default ?? '';
+        const kernelName =
+            getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.ISessionOptions = {
@@ -256,7 +235,7 @@ export class JupyterSession extends BaseJupyterSession {
             type: 'notebook'
         };
 
-        traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${kernelName}`);
+        traceInfo(`Starting a new session for kernel id = ${this.kernelConnectionMetadata?.id}, name = ${kernelName}`);
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options, {
@@ -275,8 +254,8 @@ export class JupyterSession extends BaseJupyterSession {
                             const sessionWithSocket = session as ISessionWithSocket;
 
                             // Add on the kernel metadata & sock information
-                            sessionWithSocket.resource = resource;
-                            sessionWithSocket.kernelConnectionMetadata = kernelConnection;
+                            sessionWithSocket.resource = this.resource;
+                            sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
                             sessionWithSocket.kernelSocketInformation = {
                                 socket: JupyterWebSockets.get(session.kernel.id),
                                 options: {
