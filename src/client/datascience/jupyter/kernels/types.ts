@@ -129,6 +129,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
+    readonly disposing: boolean;
     /**
      * Kernel information, used to save in ipynb in the metadata.
      * Crucial for non-python notebooks, else we save the incorrect information.

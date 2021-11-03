@@ -22,6 +22,7 @@ import { Commands, Telemetry } from '../constants';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
+    getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -37,6 +38,7 @@ import {
     KernelProcessExited,
     PythonKernelDiedError
 } from './types';
+import { BaseError } from '../../common/errors/types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -130,7 +132,7 @@ export class KernelProcess implements IKernelProcess {
                 });
                 exitEventFired = true;
             }
-            deferred.reject(new KernelProcessExited(exitCode || -1));
+            deferred.reject(new KernelProcessExited(exitCode || -1, stderr));
         });
 
         exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
@@ -194,6 +196,7 @@ export class KernelProcess implements IKernelProcess {
         );
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
+        const displayName = getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata);
         try {
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
@@ -202,7 +205,13 @@ export class KernelProcess implements IKernelProcess {
             const portsUsed = Promise.all([
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
-            ]);
+            ]).catch((ex) => {
+                traceError(`waitUntilUsed timed out`, ex);
+                // Throw an error we recognize.
+                return Promise.reject(
+                    new TimedOutError(localize.DataScience.rawKernelStartFailedDueToTimeout().format(displayName))
+                );
+            });
             await Promise.race([
                 portsUsed,
                 deferred.promise,
@@ -214,29 +223,28 @@ export class KernelProcess implements IKernelProcess {
             ]);
         } catch (e) {
             traceError('Disposing kernel process due to an error', e);
-            // Make sure to dispose if we never get a heartbeat
-            this.dispose().ignoreErrors();
+            traceError(stderrProc || stderr);
+            // Make sure to dispose if we never connect.
+            void this.dispose();
 
-            if (
-                cancelToken?.isCancellationRequested ||
-                e instanceof KernelProcessExited ||
-                e instanceof PythonKernelDiedError
-            ) {
-                traceError(stderrProc || stderr);
-                // If we have the python error message, display that.
+            if (!cancelToken?.isCancellationRequested && e instanceof BaseError) {
+                throw e;
+            } else {
+                // Possible this isn't an error we recognize, hence wrap it in a user friendly message.
+                if (cancelToken?.isCancellationRequested) {
+                    traceWarning('User cancelled the kernel launch');
+                }
+                // If we have the python error message in std outputs, display that.
                 const errorMessage =
                     getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
                 throw new KernelDiedError(
-                    localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),
+                    localize.DataScience.kernelDied().format(displayName, Commands.ViewJupyterOutput, errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     e as any
                 );
-            } else {
-                traceError('Timed out waiting to get a heartbeat from kernel process.');
-                throw new TimedOutError(localize.DataScience.kernelTimeout().format(Commands.ViewJupyterOutput));
             }
         }
     }

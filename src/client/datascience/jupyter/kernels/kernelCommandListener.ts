@@ -1,22 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceInfo, traceError } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
+import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { IDataScienceCommandListener, IInteractiveWindowProvider, InterruptResult, IStatusProvider } from '../../types';
+import { JupyterSession } from '../jupyterSession';
+import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
     private kernelInterruptedDontAskToRestart: boolean = false;
+    private kernelsStartedSuccessfully = new WeakSet<IKernel>();
+    private kernelRestartProgress = new WeakMap<IKernel, IDisposable>();
 
     constructor(
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
@@ -65,6 +71,20 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.restartKernel(context?.notebookEditor.notebookUri)
             )
+        );
+        this.disposableRegistry.push(this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this));
+        this.disposableRegistry.push(this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this));
+        this.disposableRegistry.push(
+            this.kernelProvider.onDidDisposeKernel((kernel) => {
+                this.kernelRestartProgress.get(kernel)?.dispose();
+                this.kernelRestartProgress.delete(kernel);
+            }, this)
+        );
+        this.disposableRegistry.push(
+            this.kernelProvider.onDidRestartKernel((kernel) => {
+                this.kernelRestartProgress.get(kernel)?.dispose();
+                this.kernelRestartProgress.delete(kernel);
+            }, this)
         );
     }
 
@@ -208,6 +228,43 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
+        }
+    }
+    private onDidStartKernel(kernel: IKernel) {
+        this.kernelsStartedSuccessfully.add(kernel);
+    }
+    private onKernelStatusChanged({ status, kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
+        // We're only interested in kernels that started successfully.
+        if (!this.kernelsStartedSuccessfully.has(kernel)) {
+            return;
+        }
+
+        // If this kernel is still active & we're using raw kernels,
+        // and the session has died, then notify the user of this dead kernel.
+        // Note: We know this kernel started successfully.
+        if (
+            kernel?.session &&
+            kernel?.session instanceof RawJupyterSession &&
+            status === 'terminating' &&
+            !kernel.disposed &&
+            !kernel.disposing
+        ) {
+            void this.applicationShell.showErrorMessage(
+                DataScience.kernelDiedWithoutError().format(
+                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                )
+            );
+        }
+
+        // If this is a Jupyter kernel (non-raw or remote jupyter), & kernel is restarting
+        // then display a progress message indicating its restarting.
+        if (kernel.session && kernel.session instanceof JupyterSession && status === 'autorestarting') {
+            // Set our status
+            const status = this.statusProvider.set(DataScience.restartingKernelStatus());
+            this.kernelRestartProgress.set(kernel, status);
+        } else if (status !== 'starting' && status !== 'busy' && status !== 'unknown') {
+            this.kernelRestartProgress.get(kernel)?.dispose();
+            this.kernelRestartProgress.delete(kernel);
         }
     }
 }

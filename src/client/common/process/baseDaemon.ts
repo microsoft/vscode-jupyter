@@ -343,10 +343,10 @@ export abstract class BasePythonDaemon {
         const logConnectionStatus = (msg: string, ex?: any) => {
             if (!this.disposed) {
                 this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
-                this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
                 traceWarning(msg);
+                this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
                 if (ex) {
-                    traceError('Connection errored', ex);
+                    traceError('Daemon Connection errored', ex);
                 }
             }
         };

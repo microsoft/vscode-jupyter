@@ -18,14 +18,14 @@ import {
     Range,
     ColorThemeKind
 } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
+import { CodeSnippets, Commands, Identifiers, Telemetry } from '../../constants';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent,
@@ -40,11 +40,17 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
+    IStatusProvider,
     KernelSocketInformation
 } from '../../types';
-import { getSysInfoReasonHeader, isPythonKernelConnection, sendTelemetryForPythonKernelExecutable } from './helpers';
+import {
+    getDisplayNameOrNameOfKernelConnection,
+    getSysInfoReasonHeader,
+    isPythonKernelConnection,
+    sendTelemetryForPythonKernelExecutable
+} from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -61,6 +67,8 @@ import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
+import { WrappedError } from '../../../common/errors/types';
+import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -97,6 +105,9 @@ export class Kernel implements IKernel {
     get disposed(): boolean {
         return this._disposed === true || this.notebook?.session.disposed === true;
     }
+    get disposing(): boolean {
+        return this._disposing === true;
+    }
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
@@ -112,6 +123,7 @@ export class Kernel implements IKernel {
         return this.notebook?.session;
     }
     private _disposed?: boolean;
+    private _disposing?: boolean;
     private _ignoreNotebookDisposedErrors?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
@@ -145,7 +157,9 @@ export class Kernel implements IKernel {
         private readonly workspaceService: IWorkspaceService,
         readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        notebookControllerManager: INotebookControllerManager
+        notebookControllerManager: INotebookControllerManager,
+        private statusProvider: IStatusProvider,
+        private commandManager: ICommandManager
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -171,6 +185,21 @@ export class Kernel implements IKernel {
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
+        // If this kernel is still active & we're using raw kernels,
+        // and the session has died, then notify the user of this dead kernel.
+        if (
+            this.notebook?.session &&
+            this.notebook?.session instanceof RawJupyterSession &&
+            (this.status === 'terminating' || this.status === 'dead') &&
+            !this.disposed &&
+            !this.disposing
+        ) {
+            const restartedKernel = await this.notifyAndRestartDeadKernel();
+            if (!restartedKernel) {
+                return NotebookCellRunState.Error;
+            }
+        }
+
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
@@ -207,6 +236,7 @@ export class Kernel implements IKernel {
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
+        this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
         }
@@ -329,9 +359,17 @@ export class Kernel implements IKernel {
                             this.notebookDocument,
                             placeholderCellPromise
                         );
+                        // if (!process.env.XYZ1234) {
+                        //     throw new Error('dll not found');
+                        // }
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
-                        throw ex;
+                        // Provide a user friendly message in case `ex` is some error thats not throw by us.
+                        const message = DataScience.sessionStartFailedWithKernel().format(
+                            getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata),
+                            Commands.ViewJupyterOutput
+                        );
+                        throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
                     }
                     sendKernelTelemetryEvent(
                         this.resourceUri,
@@ -404,7 +442,34 @@ export class Kernel implements IKernel {
             return notebookDocument.cellAt(notebookDocument.cellCount - 1);
         }
     }
-
+    private async notifyAndRestartDeadKernel(): Promise<boolean> {
+        const selection = await this.appShell.showErrorMessage(
+            DataScience.cannotRunCellKernelIsDead().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            { modal: true },
+            DataScience.showJupyterLogs(),
+            DataScience.restartKernel()
+        );
+        let restartedKernel = false;
+        switch (selection) {
+            case DataScience.restartKernel(): {
+                // Set our status
+                const status = this.statusProvider.set(DataScience.restartingKernelStatus());
+                try {
+                    await this.restart();
+                    restartedKernel = true;
+                } finally {
+                    status.dispose();
+                }
+                break;
+            }
+            case DataScience.showJupyterLogs(): {
+                void this.commandManager.executeCommand(Commands.ViewJupyterOutput);
+            }
+        }
+        return restartedKernel;
+    }
     private async initializeAfterStart(
         reason: SysInfoReason,
         notebookDocument: NotebookDocument,
