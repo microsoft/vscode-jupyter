@@ -258,6 +258,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
         // If this is a Jupyter kernel (non-raw or remote jupyter), & kernel is restarting
         // then display a progress message indicating its restarting.
+        // The user needs to know that its automatically restarting (they didn't explicitly restart the kernel).
         if (kernel.status === 'autorestarting' && kernel.session && kernel.session instanceof JupyterSession) {
             // Set our status
             const status = this.statusProvider.set(DataScience.restartingKernelStatus());
