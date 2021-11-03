@@ -380,6 +380,10 @@ export namespace DataScience {
         'DataScience.sessionStartFailedWithKernel',
         "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
     );
+    export const rawKernelStartFailedDueToTimeout = localize(
+        'DataScience.rawKernelStartFailedDueToTimeout',
+        "Unable to start Kernel '{0}' due to connection timeout."
+    );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
         'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
