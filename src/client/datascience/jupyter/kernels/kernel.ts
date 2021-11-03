@@ -185,15 +185,8 @@ export class Kernel implements IKernel {
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
-        // If this kernel is still active & we're using raw kernels,
-        // and the session has died, then notify the user of this dead kernel.
-        if (
-            this.notebook?.session &&
-            this.notebook?.session instanceof RawJupyterSession &&
-            (this.status === 'terminating' || this.status === 'dead') &&
-            !this.disposed &&
-            !this.disposing
-        ) {
+        // If this kernel is still active & status is dead or dying, then notify the user of this dead kernel.
+        if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
             const restartedKernel = await this.notifyAndRestartDeadKernel();
             if (!restartedKernel) {
                 return NotebookCellRunState.Error;
