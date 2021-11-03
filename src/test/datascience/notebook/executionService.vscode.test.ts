@@ -693,7 +693,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
-        assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three');
+        assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three\\r');
         assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\\ntwo\\nthree\\n');
         assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
         assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
