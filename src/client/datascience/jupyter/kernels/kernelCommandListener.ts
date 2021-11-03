@@ -233,7 +233,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     private onDidStartKernel(kernel: IKernel) {
         this.kernelsStartedSuccessfully.add(kernel);
     }
-    private onKernelStatusChanged({ status, kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
+    private onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
         // We're only interested in kernels that started successfully.
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
             return;
@@ -245,7 +245,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         if (
             kernel?.session &&
             kernel?.session instanceof RawJupyterSession &&
-            status === 'terminating' &&
+            kernel.status === 'terminating' &&
             !kernel.disposed &&
             !kernel.disposing
         ) {
@@ -258,11 +258,11 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
         // If this is a Jupyter kernel (non-raw or remote jupyter), & kernel is restarting
         // then display a progress message indicating its restarting.
-        if (kernel.session && kernel.session instanceof JupyterSession && status === 'autorestarting') {
+        if (kernel.status === 'autorestarting' && kernel.session && kernel.session instanceof JupyterSession) {
             // Set our status
             const status = this.statusProvider.set(DataScience.restartingKernelStatus());
             this.kernelRestartProgress.set(kernel, status);
-        } else if (status !== 'starting' && status !== 'busy' && status !== 'unknown') {
+        } else if (kernel.status !== 'starting' && kernel.status !== 'busy' && kernel.status !== 'unknown') {
             this.kernelRestartProgress.get(kernel)?.dispose();
             this.kernelRestartProgress.delete(kernel);
         }
