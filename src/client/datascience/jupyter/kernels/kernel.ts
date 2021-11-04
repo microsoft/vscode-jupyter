@@ -333,11 +333,10 @@ export class Kernel implements IKernel {
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.isKernelDead = false;
-                        this.notebook = await this.notebookProvider.getOrCreateNotebook({
+                        this.notebook = await this.notebookProvider.createNotebook({
                             document: this.notebookDocument,
                             resource: this.resourceUri,
                             disableUI: options?.disableUI,
-                            getOnly: false,
                             metadata: getNotebookMetadata(this.notebookDocument), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token

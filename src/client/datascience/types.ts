@@ -52,12 +52,11 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
-export interface IRawConnection extends Disposable {
+export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
     readonly valid: boolean;
     readonly displayName: string;
-    disconnected: Event<number>;
 }
 
 export interface IJupyterConnection extends Disposable {
@@ -113,11 +112,9 @@ export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
-        document: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(document: NotebookDocument, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
@@ -140,15 +137,13 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(document: NotebookDocument, token?: CancellationToken): Promise<INotebook | undefined>;
 }
 
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
-    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
-    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
@@ -843,10 +838,9 @@ export type GetServerOptions = {
 /**
  * Options for getting a notebook
  */
-export type GetNotebookOptions = {
+export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
-    getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection: KernelConnectionMetadata;
@@ -856,9 +850,9 @@ export type GetNotebookOptions = {
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     /**
-     * Gets or creates a notebook, and manages the lifetime of notebooks.
+     * Creates a notebook.
      */
-    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
