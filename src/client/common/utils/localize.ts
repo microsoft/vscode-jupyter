@@ -738,7 +738,7 @@ export namespace DataScience {
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
     export const exportFailedGeneralMessage = localize(
         'DataScience.exportFailedGeneralMessage',
-        `Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
+        `Please check the 'Jupyter' [output](command:jupyter.viewOutput) panel for further details.`
     );
     export const exportToPDFDependencyMessage = localize(
         'DataScience.exportToPDFDependencyMessage',
