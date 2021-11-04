@@ -4,32 +4,39 @@
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
-import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-suite('Notebook Controller Manager', () => {
+suite.only('Notebook Controller Manager', () => {
     test('Live kernels should display the name`', () => {
         const name = getDisplayNameOrNameOfKernelConnection({
             id: '',
             kind: 'connectToLiveKernel',
-            kernelModel: instance(mock<LiveKernelModel>())
+            interpreter: undefined,
+            kernelModel: {
+                model: undefined,
+                lastActivityTime: new Date(),
+                name: 'livexyz',
+                numberOfConnections: 1
+            }
         });
 
-        assert.strictEqual(name, 'Current Name');
+        assert.strictEqual(name, 'livexyz');
     });
     suite('Non-python kernels', () => {
         test('Display the name if language is not specified', () => {
-            const kernelSpec = mock<IJupyterKernelSpec>();
-            when(kernelSpec.language).thenReturn();
-
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
                 kind: 'startUsingKernelSpec',
-                kernelSpec: instance(kernelSpec)
+                kernelSpec: {
+                    argv:[],
+                    display_name:'kspecname',
+                    name:'kspec',
+                    path:'path'
+                }
             });
 
-            assert.strictEqual(name, 'Current Name');
+            assert.strictEqual(name, 'livexyz');
         });
         test('Display the name if language is not python', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
