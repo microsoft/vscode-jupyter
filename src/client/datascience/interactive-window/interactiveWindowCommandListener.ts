@@ -395,8 +395,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(
                 async () => {
-                    //const contents = await this.fileSystem.readFile(uris[0]);
-                    //await this.fileConverter.importIpynb(contents, uris[0]);
                     await this.fileConverter.importIpynb(uris[0]);
                 },
                 localize.DataScience.importingFormat(),
@@ -410,8 +408,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         if (file.fsPath && file.fsPath.length > 0) {
             await this.waitForStatus(
                 async () => {
-                    // const contents = await this.fileSystem.readFile(file);
-                    // await this.fileConverter.importIpynb(contents, file);
                     await this.fileConverter.importIpynb(file);
                 },
                 localize.DataScience.importingFormat(),
