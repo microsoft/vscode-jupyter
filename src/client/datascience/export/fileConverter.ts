@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri, workspace } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
@@ -35,16 +35,14 @@ export class FileConverter implements IFileConverter {
     ) {}
 
     // Import a notebook file on disk to a .py file
-    public async importIpynb(contents: string, source: Uri): Promise<void> {
+    public async importIpynb(source: Uri): Promise<void> {
         const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb(), true);
+        let nbDoc;
         try {
-            const target = await this.getTargetFile(ExportFormat.python, source);
-            if (!target) {
-                return;
-            }
-            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(undefined);
-            await this.performNbConvertExport(ExportFormat.python, contents, target, exportInterpreter, reporter.token);
-            await this.exportFileOpener.openFile(ExportFormat.python, target);
+            // Open the source as a NotebookDocument, note that this doesn't actually show an editor, and we don't need
+            // a specific close action as VS Code owns the lifetime
+            nbDoc = await workspace.openNotebookDocument(source);
+            await this.exportImpl(ExportFormat.python, nbDoc, reporter.token);
         } finally {
             reporter.dispose();
         }
@@ -56,13 +54,37 @@ export class FileConverter implements IFileConverter {
         defaultFileName?: string,
         candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
+        const reporter = this.progressReporter.createProgressIndicator(
+            localize.DataScience.exportingToFormat().format(format.toString()),
+            true
+        );
+
+        try {
+            await this.exportImpl(format, sourceDocument, reporter.token, defaultFileName, candidateInterpreter);
+        } finally {
+            reporter.dispose();
+        }
+
+        if (reporter.token.isCancellationRequested) {
+            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, cancelled: true });
+            return;
+        }
+    }
+
+    public async exportImpl(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        token: CancellationToken,
+        defaultFileName?: string,
+        candidateInterpreter?: PythonEnvironment
+    ): Promise<undefined> {
         let target;
         try {
             target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, sourceDocument, target, candidateInterpreter);
+            await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -79,34 +101,22 @@ export class FileConverter implements IFileConverter {
         format: ExportFormat,
         sourceDocument: NotebookDocument,
         target: Uri,
+        token: CancellationToken,
         candidateInterpreter?: PythonEnvironment
     ) {
-        const reporter = this.progressReporter.createProgressIndicator(
-            localize.DataScience.exportingToFormat().format(format.toString()),
-            true
-        );
-
         const pythonNbconvert = this.configuration.getSettings(sourceDocument.uri).pythonExportMethod === 'nbconvert';
 
-        try {
-            if (format === ExportFormat.python && !pythonNbconvert) {
-                // Unless selected by the setting use plain conversion for python script convert
-                await this.performPlainExport(format, sourceDocument, target, reporter.token);
-            } else {
-                // For all others (or if 'nbconvert' set for python export method) use nbconvert path
-                // Get the interpreter to use for the export, checking the candidate interpreter first
-                const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(candidateInterpreter);
-                const contents = this.getContent(sourceDocument);
-                await this.performNbConvertExport(format, contents, target, exportInterpreter, reporter.token);
-            }
-        } finally {
-            reporter.dispose();
+        if (format === ExportFormat.python && !pythonNbconvert) {
+            // Unless selected by the setting use plain conversion for python script convert
+            await this.performPlainExport(format, sourceDocument, target, token);
+        } else {
+            // For all others (or if 'nbconvert' set for python export method) use nbconvert path
+            // Get the interpreter to use for the export, checking the candidate interpreter first
+            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(candidateInterpreter);
+            const contents = this.getContent(sourceDocument);
+            await this.performNbConvertExport(format, contents, target, exportInterpreter, token);
         }
 
-        if (reporter.token.isCancellationRequested) {
-            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, cancelled: true });
-            return;
-        }
         await this.exportFileOpener.openFile(format, target);
     }
 
