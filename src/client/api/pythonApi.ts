@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
