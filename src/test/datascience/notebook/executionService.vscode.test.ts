@@ -676,6 +676,31 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
     });
 
+    test('Handling of carriage returns', async () => {
+        await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
+            index: 0
+        });
+        await insertCodeCell('print("one\\r")\nprint("two\\r")\nprint("three\\r")', { index: 1 });
+        await insertCodeCell('print("1\\r2\\r3")', { index: 2 });
+        await insertCodeCell('print("1\\r2")', { index: 3 });
+        await insertCodeCell(
+            'import time\nfor i in range(10):\n    s = str(i) + "%"\n    print("{0}\\r".format(s),end="")\n    time.sleep(0.0001)',
+            { index: 4 }
+        );
+        await insertCodeCell('print("\\rExecute\\rExecute\\nExecute 8\\rExecute 9\\r\\r")', { index: 5 });
+
+        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
+        const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
+
+        assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three\r');
+        assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\ntwo\nthree\n');
+        assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
+        assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
+        assert.equal(cells[4].outputs[0].items[0].data.toString(), '9%\r');
+        assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
+    });
+
     test('Execute all cells and run after error', async () => {
         await insertCodeCell('raise Error("fail")', { index: 0 });
         await insertCodeCell('print("after fail")', { index: 1 });
