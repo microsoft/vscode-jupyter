@@ -39,7 +39,7 @@ import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { JupyterNotebook } from '../../jupyter/jupyterNotebook';
-import uuid from 'uuid';
+import * as uuid from 'uuid/v4';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
