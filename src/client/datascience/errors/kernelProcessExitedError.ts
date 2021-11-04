@@ -3,10 +3,9 @@
 
 import { BaseError } from '../../common/errors/types';
 import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
 
-export class KernelProcessExited extends BaseError {
+export class KernelProcessExitedError extends BaseError {
     constructor(public readonly exitCode: number = -1, public readonly stdErr: string) {
-        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, stdErr.trim()));
+        super('kerneldied', DataScience.kernelDied().format(stdErr.trim()));
     }
 }

@@ -17,7 +17,7 @@ import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer'
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
-import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/types';
+import { ICodeCssGenerator, IDataScienceErrorHandler, IThemeFinder } from '../../../client/datascience/types';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - DataViewer', () => {
@@ -57,7 +57,8 @@ suite('DataScience - DataViewer', () => {
             instance(themeFinder),
             instance(workspaceService),
             instance(applicationShell),
-            new MockMemento()
+            new MockMemento(),
+            instance(mock<IDataScienceErrorHandler>())
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {

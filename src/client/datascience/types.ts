@@ -375,7 +375,12 @@ export interface IInteractiveWindowProvider {
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
-    handleError(err: Error): Promise<void>;
+    /**
+     * Handles the errors and if necessary displays an error message.
+     * The value of `context` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
+     * Thus based on the context the error message would be different.
+     */
+    handleError(err: Error, context?: 'start' | 'restart' | 'interrupt'): Promise<void>;
 }
 
 /**

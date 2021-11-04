@@ -33,6 +33,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataScienceErrorHandler,
     IInteractiveWindowProvider,
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
@@ -71,7 +72,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -557,7 +559,7 @@ export class CommandRegistry implements IDisposable {
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
-                void this.appShell.showErrorMessage(e.toString());
+                void this.errorHandler.handleError(e);
             }
         }
     }

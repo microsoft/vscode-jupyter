@@ -378,19 +378,24 @@ export namespace DataScience {
     );
     export const sessionStartFailedWithKernel = localize(
         'DataScience.sessionStartFailedWithKernel',
-        "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
+        "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
+    export const failedToInterruptKernel = localize(
+        'DataScience.failedToInterruptKernel',
+        'Failed to interrupt the Kernel.'
     );
     export const rawKernelStartFailedDueToTimeout = localize(
         'DataScience.rawKernelStartFailedDueToTimeout',
         "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
-    export const kernelTimeout = localize(
-        'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
+    export const viewJupyterLogForFurtherInfo = localize(
+        'DataScience.viewJupyterLogForFurtherInfo',
+        'View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDied = localize(
         'DataScience.kernelDied',
-        'The kernel died. View Jupyter [log](command:{0}) for further details. \nError: {1}...'
+        'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDiedWithoutError = localize(
         'DataScience.kernelDiedWithoutError',
