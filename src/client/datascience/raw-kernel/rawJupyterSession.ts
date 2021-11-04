@@ -34,6 +34,12 @@ jupyterlabs interface as well as starting up and connecting to a raw session
 export class RawJupyterSession extends BaseJupyterSession {
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
+    public get atleastOneCellExecutedSuccessfully() {
+        if (this.session && this.session instanceof RawSession) {
+            return this.session.atleastOneCellExecutedSuccessfully;
+        }
+        return false;
+    }
     public get status(): KernelMessage.Status {
         if (this.terminatingStatus && super.status !== 'dead') {
             return this.terminatingStatus;

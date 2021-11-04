@@ -125,7 +125,12 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         // This is because the kernel is a long running process and that will be the only code in the daemon
         // spitting stuff into stdout/stderr.
         this.outputObservable.subscribe(
-            (out) => this.subject.next(out),
+            (out) => {
+                if (out.source === 'stderr') {
+                    stdErr += out.out;
+                }
+                this.subject.next(out);
+            },
             this.subject.error.bind(this.subject),
             this.subject.complete.bind(this.subject)
         );

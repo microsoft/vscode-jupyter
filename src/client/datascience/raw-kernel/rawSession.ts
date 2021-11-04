@@ -43,7 +43,7 @@ export class RawSession implements ISessionWithSocket {
     private readonly signaling: typeof import('@lumino/signaling');
     private _jupyterLabServices?: typeof import('@jupyterlab/services');
     private cellExecutedSuccessfully?: boolean;
-    public get AtleastOneCellExecutedSuccessfully() {
+    public get atleastOneCellExecutedSuccessfully() {
         return this.cellExecutedSuccessfully === true;
     }
     private get jupyterLabServices() {
@@ -231,7 +231,8 @@ export class RawSession implements ISessionWithSocket {
             !this.cellExecutedSuccessfully &&
             msg.header.msg_type === 'execute_result' &&
             msg.content &&
-            this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) &&
+            (this.jupyterLabServices.KernelMessage.isExecuteResultMsg(msg) ||
+                this.jupyterLabServices.KernelMessage.isExecuteInputMsg(msg)) &&
             msg.content.execution_count
         ) {
             this.cellExecutedSuccessfully = true;

@@ -378,11 +378,11 @@ export namespace DataScience {
     );
     export const sessionStartFailedWithKernel = localize(
         'DataScience.sessionStartFailedWithKernel',
-        "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
+        "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
     );
     export const rawKernelStartFailedDueToTimeout = localize(
         'DataScience.rawKernelStartFailedDueToTimeout',
-        "Unable to start Kernel '{0}' due to connection timeout."
+        "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
@@ -392,6 +392,15 @@ export namespace DataScience {
         'DataScience.kernelDied',
         'The kernel died. View Jupyter [log](command:{0}) for further details. \nError: {1}...'
     );
+    export const kernelDiedWithoutError = localize(
+        'DataScience.kernelDiedWithoutError',
+        "The kernel '{0}' died. View Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const cannotRunCellKernelIsDead = localize(
+        'DataScience.cannotRunCellKernelIsDead',
+        "Cannot run cells, as the kernel '{0}' is dead."
+    );
+    export const showJupyterLogs = localize('jupyter.showJupyterLogs', 'Show Jupyter Logs.');
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
@@ -399,6 +408,7 @@ export namespace DataScience {
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
     export const restartServer = localize('DataScience.restartServer', 'Restart Jupyter Kernel');
+    export const restartKernel = localize('DataScience.restartKernel', 'Restart Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const save = localize('DataScience.save', 'Save file');

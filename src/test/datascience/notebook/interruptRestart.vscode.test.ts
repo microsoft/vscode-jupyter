@@ -358,16 +358,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Wait a bit to make sure it cleared & for kernel to die.
         await sleep(500);
 
-        // Try to run cell 1 again, it should fail with errors.
-        await Promise.all([
-            runCell(cell1),
-            waitForCondition(async () => cell1.executionSummary?.success === false, 10_000, 'Cell 1 did not fail')
-        ]);
-        assert.isUndefined(
-            cell1.executionSummary?.executionOrder,
-            'Execution order should be undefined as the cell did not run'
-        );
-
         // Restart the kernel & use event handler to check if it was restarted successfully.
         const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook);
         if (!kernel) {

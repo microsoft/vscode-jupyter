@@ -8,6 +8,8 @@ import { CancellationToken, Event } from 'vscode';
 import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
+import { Commands } from '../constants';
 import {
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
@@ -110,8 +112,8 @@ export class KernelDiedError extends WrappedError {
 }
 
 export class KernelProcessExited extends BaseError {
-    constructor(public readonly exitCode: number = -1) {
-        super('kerneldied', 'Kernel process Exited');
+    constructor(public readonly exitCode: number = -1, public readonly stdErr: string) {
+        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, stdErr.trim()));
     }
 }
 
@@ -123,11 +125,13 @@ export class PythonKernelDiedError extends BaseError {
         // Display that in the error message.
         let reason = ('reason' in options ? options.reason || '' : options.stdErr).trim().split('\n').reverse()[0];
         reason = reason ? `${reason}, \n` : '';
+        // No point displaying exit code if its 1 (thats not useful information).
+        const exitCodeMessage = 'exitCode' in options && options.exitCode > 1 ? ` (code: ${options.exitCode}). ` : '';
         const message =
             'exitCode' in options
-                ? `Kernel died (code: ${options.exitCode}). ${reason}${options.reason}`
-                : `Kernel died ${options.error.message}`;
-        super('kerneldied', message);
+                ? `${exitCodeMessage}${reason}${options.reason === options.stdErr ? '' : options.reason}`
+                : options.error.message;
+        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, message.trim()));
         this.stdErr = options.stdErr;
         if ('exitCode' in options) {
             this.exitCode = options.exitCode;
