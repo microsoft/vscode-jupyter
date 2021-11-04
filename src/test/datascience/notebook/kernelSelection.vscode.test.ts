@@ -5,16 +5,17 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
+import { commands, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';
-import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
+import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
 import { openNotebook } from '../helpers';
@@ -57,6 +58,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     let venvKernelPythonPath: string;
     let venvNoRegPythonPath: string;
     let venvNoKernelDisplayName: string;
+    let kernelProvider: IKernelProvider;
     const venvNoKernelSearchString = '.venvnokernel';
     const venvKernelSearchString = '.venvkernel';
     const venvNoRegSearchString = '.venvnoreg';
@@ -86,6 +88,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -267,8 +270,16 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             assert.equal(outputText.toLowerCase().indexOf(venvKernelSearchString), -1);
         }
 
+        // Very this kernel gets disposed when we switch the notebook kernel.
+        const kernel = kernelProvider.get(window.activeNotebookEditor!.document)!;
+        assert.ok(kernel, 'Kernel is not defined');
+        const eventListener = createEventHandler(kernel, 'onDisposed');
+
         // Change kernel to the interpreter venvkernel
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
+
+        // Verify the old kernel is disposed.
+        await eventListener.assertFired(5_000);
 
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
@@ -279,6 +290,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
             waitForTextOutput(cell, venvKernelSearchString, 0, false)
         ]);
+
+        // Verify the new kernel is not the same as the old.
+        assert.isFalse(
+            kernel === kernelProvider.get(window.activeNotebookEditor!.document),
+            'Kernels should not be the same'
+        );
     });
     test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST) {

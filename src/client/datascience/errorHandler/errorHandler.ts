@@ -22,12 +22,15 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
     ) {}
-
-    public async handleError(err: Error): Promise<void> {
-        // Unwrap the errors.
+    public static getBaseError(err: Error): Error {
         if (err instanceof WrappedError && err.originalException && err.originalException instanceof BaseError) {
             err = err.originalException;
         }
+        return err;
+    }
+    public async handleError(err: Error): Promise<void> {
+        // Unwrap the errors.
+        err = WrappedError.unwrap(err);
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterZMQBinariesNotFoundError) {

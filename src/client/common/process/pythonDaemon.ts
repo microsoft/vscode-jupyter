@@ -8,10 +8,9 @@ import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
-import { BaseError } from '../errors/types';
 import { traceWarning } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { BasePythonDaemon } from './baseDaemon';
+import { BasePythonDaemon, ConnectionClosedError, DaemonError } from './baseDaemon';
 import { PythonEnvInfo } from './internal/scripts';
 import {
     IPythonDaemonExecutionService,
@@ -21,18 +20,6 @@ import {
 } from './types';
 
 type ErrorResponse = { error?: string };
-
-export class ConnectionClosedError extends BaseError {
-    constructor(message: string) {
-        super('daemon', message);
-    }
-}
-
-export class DaemonError extends BaseError {
-    constructor(message: string) {
-        super('daemon', message);
-    }
-}
 export class PythonDaemonExecutionService extends BasePythonDaemon implements IPythonDaemonExecutionService {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
