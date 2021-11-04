@@ -31,6 +31,18 @@ export class WrappedError extends BaseError {
             return new WrappedError(message, err);
         }
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public static unwrap(err: any) {
+        if (!err) {
+            return err;
+        }
+        // Unwrap the errors.
+        if (err instanceof WrappedError && err.originalException && err.originalException instanceof BaseError) {
+            err = err.originalException;
+        }
+        return err;
+    }
 }
 
 export function getErrorCategory(error?: Error): ErrorCategory {

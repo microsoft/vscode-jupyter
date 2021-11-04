@@ -7,6 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import {
     CancellationTokenSource,
+    CancellationError as VscCancellationError,
     Event,
     EventEmitter,
     NotebookCell,
@@ -68,6 +69,7 @@ import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
+import { CancellationError } from '../../../common/cancellation';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -381,6 +383,11 @@ export class Kernel implements IKernel {
                     );
                     if (options?.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+                    } else if (
+                        WrappedError.unwrap(ex) instanceof CancellationError ||
+                        WrappedError.unwrap(ex) instanceof VscCancellationError
+                    ) {
+                        // If user cancelled startup, then no need to disdplay error messages.
                     } else {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         this.errorHandler.handleError(ex as any).ignoreErrors(); // Just a notification, so don't await this
