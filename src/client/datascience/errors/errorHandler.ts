@@ -7,14 +7,15 @@ import { BaseError, WrappedError } from '../../common/errors/types';
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
+import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
+import { JupyterInstallError } from './jupyterInstallError';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from './jupyterZMQBinariesNotFoundError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
-import { IpyKernelNotInstalledError } from '../kernel-launcher/types';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { IDataScienceErrorHandler, IJupyterInterpreterDependencyManager } from '../types';
+
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(

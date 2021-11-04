@@ -14,7 +14,7 @@ import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } fr
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { createDeferred, TimedOutError } from '../../common/utils/async';
+import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -30,15 +30,12 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
-import {
-    IKernelConnection,
-    IKernelProcess,
-    IPythonKernelDaemon,
-    KernelDiedError,
-    KernelProcessExited,
-    PythonKernelDiedError
-} from './types';
+import { IKernelConnection, IKernelProcess, IPythonKernelDaemon } from './types';
 import { BaseError } from '../../common/errors/types';
+import { KernelProcessExited } from '../errors/kernelProcessExitedError';
+import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
+import { KernelDiedError } from '../errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -208,9 +205,7 @@ export class KernelProcess implements IKernelProcess {
             ]).catch((ex) => {
                 traceError(`waitUntilUsed timed out`, ex);
                 // Throw an error we recognize.
-                return Promise.reject(
-                    new TimedOutError(localize.DataScience.rawKernelStartFailedDueToTimeout().format(displayName))
-                );
+                return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
             await Promise.race([
                 portsUsed,

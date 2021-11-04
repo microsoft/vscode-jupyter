@@ -17,12 +17,12 @@ import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { getResourceType } from './common';
 import { Telemetry } from './constants';
-import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
+import { JupyterInvalidKernelError } from './errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from './errors/jupyterWaitForIdleError';
 import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
+import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -133,7 +133,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             await Promise.race([
                 this.session.kernel.interrupt(),
                 sleep(this.interruptTimeout).then(() => {
-                    throw new JupyterKernelPromiseFailedError(localize.DataScience.interruptingKernelFailed());
+                    throw new KernelInterruptTimeoutError(this.kernelConnectionMetadata);
                 })
             ]);
         }

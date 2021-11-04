@@ -707,14 +707,6 @@ export namespace DataScience {
         'DataScience.instructionComments',
         '# To add a new cell, type "{0}"\n# To add a new markdown cell, type "{0} [markdown]"\n'
     );
-    export const invalidNotebookFileError = localize(
-        'DataScience.invalidNotebookFileError',
-        'Notebook is not in the correct format. Check the file for correct json.'
-    );
-    export const invalidNotebookFileErrorFormat = localize(
-        'DataScience.invalidNotebookFileError',
-        '{0} is not a valid notebook file. Check the file for correct json.'
-    );
     export const nativeEditorTitle = localize('DataScience.nativeEditorTitle', 'Notebook Editor');
     export const untitledNotebookFileName = localize('DataScience.untitledNotebookFileName', 'Untitled');
     export const dirtyNotebookMessage1 = localize(

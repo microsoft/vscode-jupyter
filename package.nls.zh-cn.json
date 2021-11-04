@@ -368,7 +368,6 @@
     "DataScience.scrollToCellTitleFormatMessage": "转到 [{0}]",
     "DataScience.remoteDebuggerNotSupported": "目前不支持连接到远程服务器时进行调试。",
     "DataScience.save": "保存笔记本",
-    "DataScience.invalidNotebookFileError": "{0} 不是一个有效的笔记本文件。检查文件是否为正确的 json。",
     "DataScience.nativeEditorTitle": "笔记本编辑器",
     "DataScience.untitledNotebookFileName": "Untitled",
     "DataScience.dirtyNotebookMessage1": "是否保存对 {0} 的修改？",

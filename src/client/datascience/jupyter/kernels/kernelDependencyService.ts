@@ -28,7 +28,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
+import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
 import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 import { selectKernel } from './kernelSelector';
 
@@ -103,12 +103,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             // We pass kernel connection information around, hence if ther'es a change we need to start all over again.
             // Throwing this exception will get the user to start again.
         }
-        throw new IpyKernelNotInstalledError(
-            DataScience.ipykernelNotInstalled().format(
-                `${interpreter.displayName || getDisplayPath(interpreter.path)}:${getDisplayPath(interpreter.path)}`
-            ),
-            response
-        );
+        const message = interpreter.displayName
+            ? `${interpreter.displayName}:${getDisplayPath(interpreter.path)}`
+            : getDisplayPath(interpreter.path);
+        throw new IpyKernelNotInstalledError(DataScience.ipykernelNotInstalled().format(message), response);
     }
     private async runInstaller(
         resource: Resource,

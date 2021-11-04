@@ -14,9 +14,9 @@ import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
+import { JupyterInstallError } from '../errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from '../errors/jupyterZMQBinariesNotFoundError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {

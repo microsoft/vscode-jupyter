@@ -24,7 +24,7 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
-import { JupyterInstallError } from './jupyterInstallError';
+import { JupyterInstallError } from '../errors/jupyterInstallError';
 
 /**
  * Responsible for starting a notebook.

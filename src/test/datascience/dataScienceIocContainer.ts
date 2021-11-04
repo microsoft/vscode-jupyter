@@ -120,7 +120,7 @@ import { CodeLensFactory } from '../../client/datascience/editor-integration/cod
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
-import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
+import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHandler';
 import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';

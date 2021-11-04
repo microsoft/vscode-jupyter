@@ -36,7 +36,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
-import { IpyKernelNotInstalledError } from '../../datascience/kernel-launcher/types';
+import { IpyKernelNotInstalledError } from '../../datascience/errors/ipyKernelNotInstalledError';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

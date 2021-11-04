@@ -387,7 +387,6 @@
     "DataScience.scrollToCellTitleFormatMessage": "Go to [{0}]",
     "DataScience.remoteDebuggerNotSupported": "Debugging while attached to a remote server is not currently supported.",
     "DataScience.save": "Save notebook",
-    "DataScience.invalidNotebookFileError": "{0} is not a valid notebook file. Check the file for correct json.",
     "DataScience.nativeEditorTitle": "Notebook Editor",
     "DataScience.untitledNotebookFileName": "Untitled",
     "DataScience.dirtyNotebookMessage1": "Do you want to save the changes you made to {0}?",

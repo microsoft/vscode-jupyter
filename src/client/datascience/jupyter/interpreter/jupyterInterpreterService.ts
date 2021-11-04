@@ -13,7 +13,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { JupyterInstallError } from '../jupyterInstallError';
+import { JupyterInstallError } from '../../errors/jupyterInstallError';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService

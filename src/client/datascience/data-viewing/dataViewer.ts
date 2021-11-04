@@ -16,7 +16,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
-import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
+import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
 import { ICodeCssGenerator, IJupyterVariableDataProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
