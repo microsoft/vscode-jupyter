@@ -18,8 +18,8 @@ import {
     IJupyterDebugService,
     ISourceMapRequest
 } from '../types';
-import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
+import { JupyterDebuggerNotInstalledError } from '../errors/jupyterDebuggerNotInstalledError';
+import { JupyterDebuggerRemoteNotSupportedError } from '../errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently, executeSilentlySync, getPlainTextOrStreamOutput } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
@@ -304,7 +304,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         _connectionInfo: IJupyterConnection
     ): Promise<{ port: number; host: string }> {
         // We actually need a token. This isn't supported at the moment
-        throw new JupyterDebuggerRemoteNotSupported();
+        throw new JupyterDebuggerRemoteNotSupportedError();
 
         //         let portNumber = this.configService.getSettings().remoteDebuggerPort;
         //         if (!portNumber) {

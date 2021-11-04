@@ -7,7 +7,7 @@ import { assert, use } from 'chai';
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
-import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
+import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/errors/jupyterZMQBinariesNotFoundError';
 import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';

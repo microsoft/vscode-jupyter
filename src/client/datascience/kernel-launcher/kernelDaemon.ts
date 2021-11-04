@@ -10,7 +10,8 @@ import { traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import { IPythonExecutionService, ObservableExecutionResult, Output, SpawnOptions } from '../../common/process/types';
-import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
+import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
+import { IPythonKernelDaemon } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
     private started?: boolean;

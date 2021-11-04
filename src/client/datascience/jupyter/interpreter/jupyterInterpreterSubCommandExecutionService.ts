@@ -24,7 +24,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
-import { JupyterInstallError } from '../jupyterInstallError';
+import { JupyterInstallError } from '../../errors/jupyterInstallError';
 import {
     getMessageForLibrariesNotInstalled,
     JupyterInterpreterDependencyService

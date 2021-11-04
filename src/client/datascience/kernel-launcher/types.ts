@@ -5,18 +5,15 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
-import { BaseError, WrappedError } from '../../common/errors/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
 import {
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import { INotebookProviderConnection, KernelInterpreterDependencyResponse } from '../types';
+import { INotebookProviderConnection } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
@@ -103,50 +100,4 @@ export interface IPythonKernelDaemon extends IDisposable {
     kill(): Promise<void>;
     preWarm(): Promise<void>;
     start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
-}
-
-export class KernelDiedError extends WrappedError {
-    constructor(message: string, public readonly stdErr: string, originalException?: Error) {
-        super(message, originalException);
-    }
-}
-
-export class KernelProcessExited extends BaseError {
-    constructor(public readonly exitCode: number = -1, public readonly stdErr: string) {
-        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, stdErr.trim()));
-    }
-}
-
-export class PythonKernelDiedError extends BaseError {
-    public readonly exitCode: number;
-    public readonly reason?: string;
-    constructor(options: { exitCode: number; reason?: string; stdErr: string } | { error: Error; stdErr: string }) {
-        // Last line in stack traces generally contains the error message.
-        // Display that in the error message.
-        let reason = ('reason' in options ? options.reason || '' : options.stdErr).trim().split('\n').reverse()[0];
-        reason = reason ? `${reason}, \n` : '';
-        // No point displaying exit code if its 1 (thats not useful information).
-        const exitCodeMessage = 'exitCode' in options && options.exitCode > 1 ? ` (code: ${options.exitCode}). ` : '';
-        const message =
-            'exitCode' in options
-                ? `${exitCodeMessage}${reason}${options.reason === options.stdErr ? '' : options.reason}`
-                : options.error.message;
-        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, message.trim()));
-        this.stdErr = options.stdErr;
-        if ('exitCode' in options) {
-            this.exitCode = options.exitCode;
-            this.reason = options.reason;
-        } else {
-            this.exitCode = -1;
-            this.reason = options.error.message;
-            this.stack = options.error.stack;
-            this.name = options.error.name;
-        }
-    }
-}
-
-export class IpyKernelNotInstalledError extends BaseError {
-    constructor(message: string, public reason: KernelInterpreterDependencyResponse) {
-        super('noipykernel', message);
-    }
 }

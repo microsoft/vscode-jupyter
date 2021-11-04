@@ -5,10 +5,10 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import * as localize from '../../client/common/utils/localize';
-import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
+import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHandler';
+import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/errors/jupyterZMQBinariesNotFoundError';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { IJupyterInterpreterDependencyManager } from '../../client/datascience/types';
 

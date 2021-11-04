@@ -4,7 +4,7 @@
 import { BaseError } from './types';
 
 export class ModuleNotInstalledError extends BaseError {
-    constructor(moduleName: string) {
+    constructor(public readonly moduleName: string) {
         super('notinstalled', `Module '${moduleName}' not installed.`);
     }
 }

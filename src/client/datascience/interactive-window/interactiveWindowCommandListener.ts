@@ -34,7 +34,7 @@ import { CommandSource } from '../../testing/common/constants';
 import { generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportDialog, IFileConverter } from '../export/types';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { JupyterInstallError } from '../errors/jupyterInstallError';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,

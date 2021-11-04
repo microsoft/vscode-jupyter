@@ -24,7 +24,7 @@ import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
-import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
+import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
