@@ -544,7 +544,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         kernelConnection,
                         id,
                         viewType,
-                        getControllerDisplayName(kernelConnection, label),
+                        label,
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,

@@ -3,17 +3,18 @@
 
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
 import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import { getControllerDisplayName } from '../../../client/datascience/notebook/notebookControllerManager';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Notebook Controller Manager', () => {
     test('Live kernels should display the name`', () => {
-        const name = getControllerDisplayName(
-            { id: '', kind: 'connectToLiveKernel', kernelModel: instance(mock<LiveKernelModel>()) },
-            'Current Name'
-        );
+        const name = getDisplayNameOrNameOfKernelConnection({
+            id: '',
+            kind: 'connectToLiveKernel',
+            kernelModel: instance(mock<LiveKernelModel>())
+        });
 
         assert.strictEqual(name, 'Current Name');
     });
@@ -22,10 +23,11 @@ suite('Notebook Controller Manager', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             when(kernelSpec.language).thenReturn();
 
-            const name = getControllerDisplayName(
-                { id: '', kind: 'startUsingKernelSpec', kernelSpec: instance(kernelSpec) },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec)
+            });
 
             assert.strictEqual(name, 'Current Name');
         });
@@ -33,10 +35,11 @@ suite('Notebook Controller Manager', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             when(kernelSpec.language).thenReturn('abc');
 
-            const name = getControllerDisplayName(
-                { id: '', kind: 'startUsingKernelSpec', kernelSpec: instance(kernelSpec) },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec)
+            });
 
             assert.strictEqual(name, 'Current Name');
         });
@@ -46,15 +49,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn();
             when(interpreter.envType).thenReturn();
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name even if kernel is inside a global Python environment', () => {
@@ -63,15 +63,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn();
             when(interpreter.envType).thenReturn(EnvironmentType.Global);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is inside a non-global Python environment', () => {
@@ -82,15 +79,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is inside a non-global 64bit Python environment', () => {
@@ -101,15 +95,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global Python environment', () => {
@@ -120,15 +111,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name (.env)');
         });
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
@@ -139,15 +127,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name (.env)');
         });
     });
@@ -156,10 +141,11 @@ suite('Notebook Controller Manager', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             when(kernelSpec.language).thenReturn('python');
 
-            const name = getControllerDisplayName(
-                { id: '', kind: 'startUsingKernelSpec', kernelSpec: instance(kernelSpec) },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec)
+            });
 
             assert.strictEqual(name, 'Current Name');
         });
@@ -169,15 +155,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envType).thenReturn();
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name even if kernel is associated with a global Python environment', () => {
@@ -186,15 +169,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envType).thenReturn(EnvironmentType.Global);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is associated with a non-global Python environment', () => {
@@ -206,15 +186,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is associated with a non-global 64bit Python environment', () => {
@@ -226,15 +203,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
@@ -253,15 +227,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
@@ -280,15 +251,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name (Python 9.8.7)');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
@@ -307,15 +275,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingKernelSpec',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name (Python 9.8.7)');
         });
     });
@@ -326,15 +291,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envType).thenReturn();
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Return current lable if this is a global python environment', () => {
@@ -343,15 +305,12 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envType).thenReturn(EnvironmentType.Global);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Current Name');
         });
         test('Display name if kernel is associated with a non-global Python environment', () => {
@@ -363,15 +322,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Python');
         });
         test('DIsplay name if kernel is associated with a non-global 64bit Python environment', () => {
@@ -383,15 +339,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Python');
         });
         test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
@@ -410,15 +363,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Pipenv);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, 'Python 9.8.7');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
@@ -437,15 +387,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, '.env (Python 9.8.7)');
         });
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
@@ -464,15 +411,12 @@ suite('Notebook Controller Manager', () => {
             when(interpreter.displayName).thenReturn('Something 64-bit');
             when(interpreter.envType).thenReturn(EnvironmentType.Conda);
 
-            const name = getControllerDisplayName(
-                {
-                    id: '',
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: instance(kernelSpec),
-                    interpreter: instance(interpreter)
-                },
-                'Current Name'
-            );
+            const name = getDisplayNameOrNameOfKernelConnection({
+                id: '',
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: instance(kernelSpec),
+                interpreter: instance(interpreter)
+            });
             assert.strictEqual(name, '.env (Python 9.8.7)');
         });
     });

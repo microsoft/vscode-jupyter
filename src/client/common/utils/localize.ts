@@ -381,6 +381,7 @@ export namespace DataScience {
         "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
+    export const failedToRestartKernel = localize('DataScience.failedToRestartKernel', 'Failed to restart the Kernel.');
     export const failedToInterruptKernel = localize(
         'DataScience.failedToInterruptKernel',
         'Failed to interrupt the Kernel.'

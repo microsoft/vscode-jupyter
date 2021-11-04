@@ -77,6 +77,7 @@ function getCombinedErrorMessage(prefix?: string, message?: string) {
 function getErrorMessagePrefix(purpose?: 'start' | 'restart' | 'interrupt') {
     switch (purpose) {
         case 'restart':
+            return DataScience.failedToRestartKernel();
         case 'start':
             return DataScience.failedToStartKernel();
         case 'interrupt':
