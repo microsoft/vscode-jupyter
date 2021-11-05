@@ -81,7 +81,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         kernelProvider.onDidStartKernel(
             (e) => {
                 if (e.notebookDocument === document) {
-                    this.initialize().ignoreErrors();
+                    this.initialize();
                 }
             },
             this,
@@ -110,7 +110,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
-                this.initialize().ignoreErrors();
+                this.initialize();
                 break;
             case IPyWidgetMessages.IPyWidgets_msg:
                 this.sendRawPayloadToKernelSocket(message.payload);
@@ -124,7 +124,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 break;
 
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
-                this.registerCommTarget(message.payload).ignoreErrors();
+                this.registerCommTarget(message.payload);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_RegisterMessageHook:
@@ -151,12 +151,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.pendingMessages.push(payload);
         this.sendPendingMessages();
     }
-    public async registerCommTarget(targetName: string) {
+    public registerCommTarget(targetName: string) {
         this.pendingTargetNames.add(targetName);
-        await this.initialize();
+        this.initialize();
     }
 
-    public async initialize() {
+    public initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -164,7 +164,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
 
         // If we have any pending targets, register them now
-        const notebook = await this.getKernel();
+        const notebook = this.getKernel();
         if (notebook) {
             this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
@@ -384,9 +384,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private async getKernel(): Promise<IKernel | undefined> {
+    private getKernel(): IKernel | undefined {
         if (this.document && !this.kernel?.session) {
-            this.kernel = await this.kernelProvider.get(this.document);
+            this.kernel = this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
         if (this.kernel && !this.kernelRestartHandlerAttached) {

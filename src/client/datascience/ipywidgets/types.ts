@@ -21,7 +21,7 @@ export interface IIPyWidgetMessageDispatcher extends IDisposable {
     postMessage: Event<IPyWidgetMessage>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     receiveMessage(message: IPyWidgetMessage): void;
-    initialize(): Promise<void>;
+    initialize(): void;
 }
 
 /**
