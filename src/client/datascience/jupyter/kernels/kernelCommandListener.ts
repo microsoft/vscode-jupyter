@@ -164,12 +164,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 const yes = DataScience.restartKernelMessageYes();
                 const no = DataScience.restartKernelMessageNo();
 
-                const response = await this.applicationShell.showInformationMessage(
-                    message,
-                    { modal: true },
-                    yes,
-                    no
-                );
+                const response = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                 if (response === yes) {
                     void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
