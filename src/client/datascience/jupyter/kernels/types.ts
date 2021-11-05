@@ -18,7 +18,8 @@ import type {
 } from '../../types';
 import type * as nbformat from '@jupyterlab/nbformat';
 
-export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined };
+export type LiveKernelModel = IJupyterKernel &
+    Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
 
 export enum NotebookCellRunState {
     Running = 1,

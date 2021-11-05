@@ -197,17 +197,17 @@ export function getRemoteKernelSessionInformation(
 export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
-    workspaceService: IWorkspaceService,
-    defaultValue: string = ''
-): string {
+    workspaceService: IWorkspaceService
+) {
+    if (kernelConnection?.kind === 'connectToLiveKernel') {
+        return kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || '';
+    }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
-    const notebookPath =
-        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const cwd =
         workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
-    return `${kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : defaultValue} ${notebookPath}`;
+    return kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
