@@ -30,6 +30,31 @@ import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
 
+const jvscIdentifier = '-jvsc-';
+function getRemoteIPynbSuffix(): string {
+    return `${jvscIdentifier}${uuid()}`;
+}
+
+/**
+ * When creating remote sessions, we generate bogus names for the notebook.
+ * These names are prefixed with the same local file name, and a random suffix.
+ * However the random part does contain an identifier, and we can stip this off
+ * to get the original local ipynb file name.
+ */
+export function removeNotebookSuffixAddedByExtension(notebookPath: string) {
+    if (notebookPath.includes(jvscIdentifier)) {
+        const guidRegEx = /[a-f0-9]$/;
+        if (
+            notebookPath
+                .substring(notebookPath.lastIndexOf(jvscIdentifier) + jvscIdentifier.length)
+                .search(guidRegEx) !== -1
+        ) {
+            return `${notebookPath.substring(0, notebookPath.lastIndexOf(jvscIdentifier))}.ipynb`;
+        }
+    }
+    return notebookPath;
+}
+// function is
 export class JupyterSession extends BaseJupyterSession {
     constructor(
         resource: Resource,
@@ -191,7 +216,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Generate a more descriptive name
         const newName = this.resource
-            ? `${path.basename(this.resource.fsPath, '.ipynb')}-${uuid()}.ipynb`
+            ? `${path.basename(this.resource.fsPath, '.ipynb')}${getRemoteIPynbSuffix()}.ipynb`
             : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
 
         try {
