@@ -14,7 +14,6 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvider';
-import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
@@ -37,10 +36,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookDisposeService
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        IntroduceNativeNotebookStartPage
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
