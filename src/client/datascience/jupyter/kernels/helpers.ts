@@ -44,6 +44,7 @@ import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPython
 import { executeSilently } from './kernel';
 import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
+import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -200,7 +201,9 @@ export function getKernelConnectionPath(
     workspaceService: IWorkspaceService
 ) {
     if (kernelConnection?.kind === 'connectToLiveKernel') {
-        return kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || '';
+        return removeNotebookSuffixAddedByExtension(
+            kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
+        );
     }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
