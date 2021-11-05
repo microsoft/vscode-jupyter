@@ -9,8 +9,9 @@ import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/ty
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import {
-    getKernelConnectionPath,
     getDisplayNameOrNameOfKernelConnection,
+    getLiveKernelConnectionPath,
+    getLocalKernelConnectionPath,
     getRemoteKernelSessionInformation
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -71,7 +72,8 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                             description:
                                 item.kind === 'connectToLiveKernel'
                                     ? getRemoteKernelSessionInformation(item)
-                                    : getKernelConnectionPath(item, this.pathUtils, this.workspace),
+                                    : getLocalKernelConnectionPath(item, this.pathUtils, this.workspace),
+                            detail: getLiveKernelConnectionPath(item),
                             connection: item
                         };
                     });
