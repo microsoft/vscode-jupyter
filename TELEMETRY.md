@@ -4733,6 +4733,37 @@ Event can be removed. Not referenced anywhere
 
 </details>
 <details>
+  <summary>DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES</summary>
+
+## Description
+
+
+
+
+ Used to capture time taken to get enviornment variables for a python environment.
+ Also lets us know whether it worked or not.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/client/api/pythonApi.ts#L306](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/api/pythonApi.ts#L306)
+```typescript
+            .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
+
+        const envType = interpreter?.envType;
+        sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+            envType,
+            failed: Object.keys(env || {}).length === 0
+        });
+```
+
+</details>
+<details>
   <summary>DS_INTERNAL.GET_PASSWORD_FAILURE</summary>
 
 ## Description
