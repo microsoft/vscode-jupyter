@@ -14,7 +14,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
     IKernel,
@@ -124,12 +124,56 @@ export function getSysInfoReasonHeader(
     }
 }
 
-export function getDisplayNameOrNameOfKernelConnection(
-    kernelConnection: KernelConnectionMetadata | undefined,
-    defaultValue: string = ''
-) {
+export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
+    const oldDisplayName = getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection);
+    if (!kernelConnection){
+        return oldDisplayName;
+    }
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel': {
+            return oldDisplayName;
+        }
+        case 'startUsingKernelSpec': {
+            if (
+                kernelConnection.interpreter?.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
+                    const pythonVersion = `Python ${
+                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                    }`.trim();
+                    return kernelConnection.interpreter.envName
+                        ? `${oldDisplayName} (${pythonVersion})`
+                        : oldDisplayName;
+                } else {
+                    // Non-Python kernelspec that launches via python interpreter
+                    return kernelConnection.interpreter.envName
+                        ? `${oldDisplayName} (${kernelConnection.interpreter.envName})`
+                        : oldDisplayName;
+                }
+            } else {
+                return oldDisplayName;
+            }
+        }
+        case 'startUsingPythonInterpreter':
+            if (
+                kernelConnection.interpreter.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                const pythonVersion = `Python ${
+                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                }`.trim();
+                const pythonDisplayName = pythonVersion.trim();
+                return kernelConnection.interpreter.envName
+                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                    : pythonDisplayName;
+            }
+    }
+    return oldDisplayName;
+}
+function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {
-        return defaultValue;
+        return '';
     }
     const displayName =
         kernelConnection.kind === 'connectToLiveKernel'
@@ -144,7 +188,7 @@ export function getDisplayNameOrNameOfKernelConnection(
         kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
 
     const defaultKernelName = kernelConnection.kind === 'startUsingDefaultKernel' ? 'Python 3' : undefined;
-    return displayName || name || interpeterName || defaultKernelName || defaultValue;
+    return displayName || name || interpeterName || defaultKernelName || '';
 }
 
 export function getNameOfKernelConnection(

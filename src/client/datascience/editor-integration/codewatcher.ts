@@ -1012,7 +1012,7 @@ export class CodeWatcher implements ICodeWatcher {
             const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
             try {
                 const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
-                return activeInteractiveWindow.addMessage(message);
+                await activeInteractiveWindow.addMessage(message);
             } catch (err) {
                 await this.dataScienceErrorHandler.handleError(err);
             }
