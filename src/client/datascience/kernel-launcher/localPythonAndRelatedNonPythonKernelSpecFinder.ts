@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
+import * as fs from 'fs-extra';
+import { CancellationToken, Memento } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { Resource } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { createInterpreterKernelSpec, getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
+import { LocalKernelSpecFinderBase, oldKernelsSpecFolderName } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 import { IPythonExtensionChecker } from '../../api/types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
@@ -23,6 +24,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../common/platform/fs-paths';
+import { noop } from '../../common/utils/misc';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
@@ -36,6 +38,23 @@ export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
  */
 @injectable()
 export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase {
+    private _oldKernelSpecsDeleted = false;
+    private _oldKernelSpecsFolder?: string;
+    private get oldKernelSpecsDeleted() {
+        return this._oldKernelSpecsDeleted || this.memento.get<boolean>('OLD_PYTHON_KERNEL_SPECS_DELETED__', false);
+    }
+    private set oldKernelSpecsDeleted(value: boolean) {
+        this._oldKernelSpecsDeleted = value;
+        void this.memento.update('OLD_PYTHON_KERNEL_SPECS_DELETED__', value);
+    }
+    private get oldKernelSpecsFolder() {
+        return this._oldKernelSpecsFolder || this.memento.get<string>('OLD_KERNEL_SPECS_FOLDER__', '');
+    }
+    private set oldKernelSpecsFolder(value: string) {
+        this._oldKernelSpecsFolder = value;
+        void this.memento.update('OLD_KERNEL_SPECS_FOLDER__', value);
+    }
+
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IFileSystem) fs: IFileSystem,
@@ -43,7 +62,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
-        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {
         super(fs, workspaceService, extensionChecker);
     }
@@ -61,6 +81,21 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             () => this.listKernelsImplementation(resource, cancelToken),
             ignoreCache
         );
+    }
+    private async deleteOldKernelSpec(kernelSpecFile: string) {
+        // Just move this folder into a seprate location.
+        const kernelspecFolderName = path.basename(path.dirname(kernelSpecFile));
+        const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), oldKernelsSpecFolderName);
+        if (!fs.pathExistsSync(destinationFolder)) {
+            fs.mkdirSync(destinationFolder);
+        }
+        this.oldKernelSpecsFolder = destinationFolder;
+        await fs
+            .move(path.dirname(kernelSpecFile), path.join(destinationFolder, kernelspecFolderName), {
+                overwrite: true
+            })
+            .catch(noop);
+        traceInfo(`Old kernelspec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
     }
     private async listKernelsImplementation(
         resource: Resource,
@@ -183,6 +218,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                 })
         );
+        const oldDernelSpecsDeleted = this.oldKernelSpecsDeleted;
+        this.oldKernelSpecsDeleted = true; // From now on, don't attempt to delete anything (even for new users).
         await Promise.all(
             [...kernelSpecs, ...globalPythonKernelSpecsRegisteredByUs.map((item) => item.kernelSpec)]
                 .filter((kernelspec) => {
@@ -202,6 +239,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     return true;
                 })
                 .map(async (k) => {
+                    // Never delete on CI (could break tests).
+                    if (k.specFile && !oldDernelSpecsDeleted && isKernelRegisteredByUs(k) && !isCI) {
+                        await this.deleteOldKernelSpec(k.specFile).catch(noop);
+                        return;
+                    }
+
                     // Find the interpreter that matches. If we find one, we want to use
                     // this to start the kernel.
                     const matchingInterpreter = await this.findMatchingInterpreter(k, interpreters);

@@ -41,7 +41,7 @@ import {
 import { OSType } from '../../../client/common/utils/platform';
 
 [false, true].forEach((isWindows) => {
-    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
@@ -356,7 +356,8 @@ import { OSType } from '../../../client/common/utils/platform';
                     instance(workspaceService),
                     jupyterPaths,
                     instance(extensionChecker),
-                    nonPythonKernelSpecFinder
+                    nonPythonKernelSpecFinder,
+                    instance(memento)
                 ),
                 jupyterPaths,
                 instance(memeto),
