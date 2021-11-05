@@ -41,7 +41,7 @@ import {
 import { OSType } from '../../../client/common/utils/platform';
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
