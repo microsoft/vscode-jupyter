@@ -46,7 +46,6 @@ module.exports = {
         'src/test/mocks/vsc/uri.ts',
         'src/test/mocks/vsc/telemetryReporter.ts',
         'src/test/mocks/vsc/range.ts',
-        'src/test/mocks/vsc/index.ts',
         'src/test/mocks/vsc/arrays.ts',
         'src/test/smoke/common.ts',
         'src/test/smoke/runInTerminal.smoke.test.ts',
