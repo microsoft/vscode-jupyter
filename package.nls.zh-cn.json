@@ -338,7 +338,6 @@
     "DataScience.collapseSingle": "折叠",
     "DataScience.expandSingle": "展开",
     "DataScience.editSection": "在这里输入新单元。",
-    "DataScience.restartKernelMessageDontAskAgain": "是，不再询问",
     "DataScience.selectedImageListLabel": "选择的图像",
     "DataScience.imageListLabel": "图像",
     "DataScience.exportImageFailed": "导出图像时出错：{0}",

@@ -162,23 +162,15 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
                 const yes = DataScience.restartKernelMessageYes();
-                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
                 const no = DataScience.restartKernelMessageNo();
 
                 const response = await this.applicationShell.showInformationMessage(
                     message,
                     { modal: true },
                     yes,
-                    dontAskAgain,
                     no
                 );
-                if (response === dontAskAgain) {
-                    await this.disableAskForRestart(document.uri);
-                    void this.applicationShell.withProgress(
-                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => this.restartKernelInternal(kernel)
-                    );
-                } else if (response === yes) {
+                if (response === yes) {
                     void this.applicationShell.withProgress(
                         { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
                         () => this.restartKernelInternal(kernel)

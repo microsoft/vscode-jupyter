@@ -362,10 +362,6 @@ export namespace DataScience {
         'Do you want to restart the Jupter kernel? All variables will be lost.'
     );
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
-    export const restartKernelMessageDontAskAgain = localize(
-        'DataScience.restartKernelMessageDontAskAgain',
-        "Don't Ask Again"
-    );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
     export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
     export const restartingKernelFailed = localize(
