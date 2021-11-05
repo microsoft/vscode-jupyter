@@ -44,7 +44,7 @@ export namespace vscMock {
         public event: vscode.Event<T>;
         public emitter: NodeEventEmitter;
         constructor() {
-            // @ts-ignore
+            // @ts-ignore Ensure events are fired with right scope.
             this.event = this.add.bind(this);
             this.emitter = new NodeEventEmitter();
         }
@@ -80,7 +80,7 @@ export namespace vscMock {
         public onCancellationRequested: vscode.Event<any>;
         constructor() {
             super();
-            // @ts-ignore
+            // @ts-ignore Ensure events are fired with right scope.
             this.onCancellationRequested = this.add.bind(this);
         }
         public cancel() {
