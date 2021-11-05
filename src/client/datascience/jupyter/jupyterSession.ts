@@ -90,6 +90,15 @@ export class JupyterSession extends BaseJupyterSession {
                     model: this.kernelConnectionMetadata.kernelModel.model
                 }) as ISessionWithSocket;
                 newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
+                newSession.kernelSocketInformation = {
+                    socket: JupyterWebSockets.get(this.kernelConnectionMetadata.id),
+                    options: {
+                        clientId: '',
+                        id: this.kernelConnectionMetadata.id,
+                        model: { ...this.kernelConnectionMetadata.kernelModel.model },
+                        userName: ''
+                    }
+                };
                 newSession.isRemoteSession = true;
                 newSession.resource = this.resource;
             } else {

@@ -9,7 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -345,20 +345,15 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
             // If we have a new session, then emit the new kernel connection information.
             if (oldSession !== session && session.kernel) {
-                if (!session.kernelSocketInformation) {
-                    traceError(`Unable to find WebSocket connection associated with kernel ${session.kernel.id}`);
-                    this._kernelSocket.next(undefined);
-                } else {
-                    this._kernelSocket.next({
-                        options: {
-                            clientId: session.kernel.clientId,
-                            id: session.kernel.id,
-                            model: { ...session.kernel.model },
-                            userName: session.kernel.username
-                        },
-                        socket: session.kernelSocketInformation.socket
-                    });
-                }
+                this._kernelSocket.next({
+                    options: {
+                        clientId: session.kernel.clientId,
+                        id: session.kernel.id,
+                        model: { ...session.kernel.model },
+                        userName: session.kernel.username
+                    },
+                    socket: session.kernelSocketInformation.socket
+                });
             }
         }
     }

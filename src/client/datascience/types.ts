@@ -243,13 +243,19 @@ export interface IJupyterSession extends IAsyncDisposable {
 }
 
 export type ISessionWithSocket = Session.ISessionConnection & {
-    // The resource associated with this session.
+    /**
+     * The resource associated with this session.
+     */
     resource: Resource;
-    // Whether this is a remote session that we attached to.
+    /**
+     * Whether this is a remote session that we attached to.
+     */
     isRemoteSession?: boolean;
-    // Socket information used for hooking messages to the kernel
-    kernelSocketInformation?: KernelSocketInformation;
-    kernelConnectionMetadata?: KernelConnectionMetadata;
+    /**
+     * Socket information used for hooking messages to the kernel.
+     */
+    kernelSocketInformation: KernelSocketInformation;
+    kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
