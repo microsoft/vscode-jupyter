@@ -49,7 +49,6 @@ export class HostJupyterServer implements INotebookServer {
     private serverExitCode: number | undefined;
     private notebooks = new Set<Promise<INotebook>>();
     private sessionManager: JupyterSessionManager | undefined;
-    private savedSession: JupyterSession | undefined;
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -242,12 +241,6 @@ export class HostJupyterServer implements INotebookServer {
             if (this.connectionInfoDisconnectHandler) {
                 this.connectionInfoDisconnectHandler.dispose();
                 this.connectionInfoDisconnectHandler = undefined;
-            }
-
-            // Remove the saved session if we haven't passed it onto a notebook
-            if (this.savedSession) {
-                await this.savedSession.dispose();
-                this.savedSession = undefined;
             }
 
             traceInfo(`Shutting down notebooks for ${this.id}`);
