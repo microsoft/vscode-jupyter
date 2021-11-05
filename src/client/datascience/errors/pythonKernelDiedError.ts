@@ -3,7 +3,6 @@
 
 import { BaseError } from '../../common/errors/types';
 import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
 
 export class PythonKernelDiedError extends BaseError {
     public readonly exitCode: number;
@@ -20,7 +19,7 @@ export class PythonKernelDiedError extends BaseError {
             'exitCode' in options
                 ? `${exitCodeMessage}${reason}${options.reason === options.stdErr ? '' : options.reason}`
                 : options.error.message;
-        super('kerneldied', DataScience.kernelDied().format(Commands.ViewJupyterOutput, message.trim()));
+        super('kerneldied', DataScience.kernelDied().format(message.trim()));
         this.errorMessage = message;
         this.stdErr = options.stdErr;
         if ('exitCode' in options) {

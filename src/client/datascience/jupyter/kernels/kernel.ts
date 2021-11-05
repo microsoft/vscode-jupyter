@@ -355,8 +355,7 @@ export class Kernel implements IKernel {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                         // Provide a user friendly message in case `ex` is some error thats not throw by us.
                         const message = DataScience.sessionStartFailedWithKernel().format(
-                            getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata),
-                            Commands.ViewJupyterOutput
+                            getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
                         );
                         throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
                     }
@@ -383,7 +382,7 @@ export class Kernel implements IKernel {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        this.errorHandler.handleError(ex as any).ignoreErrors(); // Just a notification, so don't await this
+                        this.errorHandler.handleError(ex, 'start').ignoreErrors(); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();

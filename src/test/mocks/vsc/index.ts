@@ -44,7 +44,7 @@ export namespace vscMock {
         public event: vscode.Event<T>;
         public emitter: NodeEventEmitter;
         constructor() {
-            // @ts-ignore
+            // @ts-ignore Ensure events are fired with right scope.
             this.event = this.add.bind(this);
             this.emitter = new NodeEventEmitter();
         }
@@ -66,12 +66,21 @@ export namespace vscMock {
         };
     }
 
+    /**
+     * An error type that should be used to signal cancellation of an operation.
+     *
+     * This type can be used in response to a {@link CancellationToken cancellation token}
+     * being cancelled or when an operation is being cancelled by the
+     * executor of that operation.
+     */
+    export class CancellationError extends Error {}
+
     export class CancellationToken extends EventEmitter<any> implements vscode.CancellationToken {
         public isCancellationRequested!: boolean;
         public onCancellationRequested: vscode.Event<any>;
         constructor() {
             super();
-            // @ts-ignore
+            // @ts-ignore Ensure events are fired with right scope.
             this.onCancellationRequested = this.add.bind(this);
         }
         public cancel() {

@@ -3,66 +3,89 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
-import { BaseError, WrappedError } from '../../common/errors/types';
-import { traceError } from '../../common/logger';
+import { WrappedError } from '../../common/errors/types';
+import { traceError, traceWarning } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from './jupyterZMQBinariesNotFoundError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { IDataScienceErrorHandler, IJupyterInterpreterDependencyManager } from '../types';
+import { CancellationError as VscCancellationError } from 'vscode';
+import { CancellationError } from '../../common/cancellation';
+import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
+import { KernelDiedError } from './kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from './kernelProcessExitedError';
+import { PythonKernelDiedError } from './pythonKernelDiedError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager,
-        @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
+        @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager
     ) {}
-    public static getBaseError(err: Error): Error {
-        if (err instanceof WrappedError && err.originalException && err.originalException instanceof BaseError) {
-            err = err.originalException;
-        }
-        return err;
-    }
-    public async handleError(err: Error): Promise<void> {
+    public async handleError(err: Error, purpose?: 'start' | 'restart' | 'interrupt'): Promise<void> {
+        const errorPrefix = getErrorMessagePrefix(purpose);
         // Unwrap the errors.
         err = WrappedError.unwrap(err);
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
-        } else if (err instanceof JupyterZMQBinariesNotFoundError) {
-            await this.showZMQError(err);
         } else if (err instanceof JupyterSelfCertsError) {
             // Don't show the message for self cert errors
             noop();
         } else if (err instanceof IpyKernelNotInstalledError) {
             // Don't show the message, as user decided not to install IPyKernel.
             noop();
-        } else if (err.message) {
-            // Some errors have localized and/or formatted error messages.
+        } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
+            // Don't show the message for cancellation errors
+            traceWarning(`Cancelled by user`, err);
+        } else if (
+            err instanceof KernelConnectionTimeoutError ||
+            err instanceof KernelConnectionTimeoutError ||
+            err instanceof KernelPortNotUsedTimeoutError
+        ) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
+        } else if (err instanceof KernelDiedError || err instanceof KernelProcessExitedError) {
+            this.applicationShell.showErrorMessage(getCombinedErrorMessage(errorPrefix, err.stdErr)).then(noop, noop);
+        } else if (err instanceof PythonKernelDiedError) {
+            this.applicationShell
+                .showErrorMessage(getCombinedErrorMessage(errorPrefix, err.errorMessage))
+                .then(noop, noop);
         } else {
-            this.applicationShell.showErrorMessage(err.toString()).then(noop, noop);
+            // Some errors have localized and/or formatted error messages.
+            this.applicationShell
+                .showErrorMessage(getCombinedErrorMessage(errorPrefix, err.message || err.toString()))
+                .then(noop, noop);
         }
         traceError('DataScience Error', err);
     }
-    private async showZMQError(err: JupyterZMQBinariesNotFoundError) {
-        // Ask the user to always pick remote as this is their only option
-        const selectNewServer = DataScience.selectNewServer();
-        this.applicationShell
-            .showErrorMessage(DataScience.nativeDependencyFail().format(err.toString()), selectNewServer)
-            .then((selection) => {
-                if (selection === selectNewServer) {
-                    this.serverSelector.selectJupyterURI(false).ignoreErrors();
-                }
-            }, noop);
-    }
 }
 
+function getCombinedErrorMessage(prefix?: string, message?: string) {
+    const errorMessage = [prefix || '', message || '']
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .join(' \n');
+    if (errorMessage.length && errorMessage.indexOf('command:jupyter.viewOutput') === -1) {
+        return `${errorMessage}. \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+    }
+    return errorMessage;
+}
+function getErrorMessagePrefix(purpose?: 'start' | 'restart' | 'interrupt') {
+    switch (purpose) {
+        case 'restart':
+            return DataScience.failedToRestartKernel();
+        case 'start':
+            return DataScience.failedToStartKernel();
+        case 'interrupt':
+            return DataScience.failedToInterruptKernel();
+        default:
+            return '';
+    }
+}
 export function getKernelNotInstalledErrorMessage(notebookMetadata?: nbformat.INotebookMetadata) {
     const language = getLanguageInNotebookMetadata(notebookMetadata);
     if (isPythonNotebook(notebookMetadata) || !language) {

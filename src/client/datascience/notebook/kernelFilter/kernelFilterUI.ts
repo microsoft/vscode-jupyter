@@ -14,7 +14,6 @@ import {
     getRemoteKernelSessionInformation
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
-import { getControllerDisplayName } from '../notebookControllerManager';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilterService';
 
@@ -63,10 +62,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                     })
                     .map((item) => {
                         return <QuickPickType>{
-                            label: getControllerDisplayName(item, getDisplayNameOrNameOfKernelConnection(item)).replace(
-                                ' 64-bit',
-                                ''
-                            ),
+                            label: getDisplayNameOrNameOfKernelConnection(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
                             description: getKernelConnectionPath(item, this.pathUtils, this.workspace),
                             detail: item.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(item) : '',
