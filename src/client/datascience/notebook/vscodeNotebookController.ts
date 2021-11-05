@@ -39,8 +39,7 @@ import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
     isPythonKernelConnection,
-    getLocalKernelConnectionPath,
-    getLiveKernelConnectionPath
+    getKernelConnectionPath
 } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
@@ -135,11 +134,9 @@ export class VSCodeNotebookController implements Disposable {
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description =
-            kernelConnection.kind === 'connectToLiveKernel'
-                ? getRemoteKernelSessionInformation(kernelConnection)
-                : getLocalKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
-        this.controller.detail = getLiveKernelConnectionPath(kernelConnection);
+        this.controller.description = getKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
+        this.controller.detail =
+            kernelConnection.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(kernelConnection) : '';
         this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);

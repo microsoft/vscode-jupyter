@@ -194,25 +194,20 @@ export function getRemoteKernelSessionInformation(
     return defaultValue;
 }
 
-export function getLocalKernelConnectionPath(
+export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
-    workspaceService: IWorkspaceService,
-    defaultValue: string = ''
-): string {
+    workspaceService: IWorkspaceService
+) {
+    if (kernelConnection?.kind === 'connectToLiveKernel') {
+        return kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || '';
+    }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const cwd =
         workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
-    return `${kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : defaultValue}`;
-}
-
-export function getLiveKernelConnectionPath(kernelConnection: KernelConnectionMetadata | undefined): string {
-    if (kernelConnection?.kind !== 'connectToLiveKernel') {
-        return '';
-    }
-    return kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || '';
+    return kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(

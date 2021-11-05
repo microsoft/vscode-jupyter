@@ -10,8 +10,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
-    getLiveKernelConnectionPath,
-    getLocalKernelConnectionPath,
+    getKernelConnectionPath,
     getRemoteKernelSessionInformation
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -69,11 +68,8 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                                 ''
                             ),
                             picked: !this.kernelFilter.isKernelHidden(item),
-                            description:
-                                item.kind === 'connectToLiveKernel'
-                                    ? getRemoteKernelSessionInformation(item)
-                                    : getLocalKernelConnectionPath(item, this.pathUtils, this.workspace),
-                            detail: getLiveKernelConnectionPath(item),
+                            description: getKernelConnectionPath(item, this.pathUtils, this.workspace),
+                            detail: item.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(item) : '',
                             connection: item
                         };
                     });
