@@ -113,7 +113,7 @@ export class FileConverter implements IFileConverter {
             // For all others (or if 'nbconvert' set for python export method) use nbconvert path
             // Get the interpreter to use for the export, checking the candidate interpreter first
             const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(candidateInterpreter);
-            const contents = this.getContent(sourceDocument);
+            const contents = await this.getContent(sourceDocument);
             await this.performNbConvertExport(format, contents, target, exportInterpreter, token);
         }
 
@@ -209,7 +209,7 @@ export class FileConverter implements IFileConverter {
                 break;
         }
     }
-    private getContent(document: NotebookDocument): string {
+    private async getContent(document: NotebookDocument): Promise<string> {
         const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
             'vscode.ipynb'
         );
@@ -218,6 +218,11 @@ export class FileConverter implements IFileConverter {
                 'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
             );
         }
+        // Via the interactive window export this might not be activated
+        if (!serializerApi.isActive) {
+            await serializerApi.activate();
+        }
+
         const cells = document.getCells();
         const cellData = cells.map((c) => {
             const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
