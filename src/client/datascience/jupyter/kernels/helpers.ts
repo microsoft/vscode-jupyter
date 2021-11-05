@@ -126,7 +126,7 @@ export function getSysInfoReasonHeader(
 
 export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     const oldDisplayName = getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection);
-    if (!kernelConnection){
+    if (!kernelConnection) {
         return oldDisplayName;
     }
     switch (kernelConnection.kind) {
