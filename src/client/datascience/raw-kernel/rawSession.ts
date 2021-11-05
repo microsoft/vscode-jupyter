@@ -116,7 +116,7 @@ export class RawSession implements ISessionWithSocket {
         return this._kernel;
     }
 
-    get kernelSocketInformation(): KernelSocketInformation | undefined {
+    get kernelSocketInformation(): KernelSocketInformation {
         return {
             socket: this._kernel.socket,
             options: {

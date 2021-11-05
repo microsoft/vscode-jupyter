@@ -35,7 +35,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
             disposable?.dispose(); // NOSONAR
         }
     }
-    public async initialize() {
+    public initialize() {
         return this.baseMulticaster.initialize();
     }
 
