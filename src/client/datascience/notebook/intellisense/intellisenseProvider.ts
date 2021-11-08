@@ -38,7 +38,7 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) { }
+    ) {}
     public activate() {
         // Sign up for kernel change events on notebooks
         this.notebookControllerManager.onNotebookControllerSelected(this.controllerChanged, this, this.disposables);
