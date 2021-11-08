@@ -133,7 +133,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
         const message = messageFormat.format(interpreter.displayName || interpreter.path, products.join(Common.and()));
-        const productNameForTelemetry = products.map(product => ProductNames.get(product)!).join(', ');
+        const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
         const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
