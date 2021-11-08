@@ -5,7 +5,7 @@ import { BaseError } from '../../common/errors/types';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 
-export class JupyterDebuggerRemoteNotSupported extends BaseError {
+export class JupyterDebuggerRemoteNotSupportedError extends BaseError {
     constructor() {
         super('debugger', localize.DataScience.remoteDebuggerNotSupported());
     }

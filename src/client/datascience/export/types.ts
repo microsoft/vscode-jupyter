@@ -11,7 +11,7 @@ export enum ExportFormat {
 export const IFileConverter = Symbol('IFileConverter');
 export interface IFileConverter {
     export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
-    importIpynb(contents: string, source: Uri): Promise<void>;
+    importIpynb(source: Uri): Promise<void>;
 }
 
 export const INbConvertExport = Symbol('INbConvertExport');

@@ -107,15 +107,15 @@ export class CommonMessageCoordinator {
         // Pass onto our two objects that are listening to messages
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
-        this.getIPyWidgetScriptSource()?.onMessage(message, payload);
+        this.getIPyWidgetMessageDispatcher().receiveMessage({ message: message as any, payload }); // NOSONAR
+        this.getIPyWidgetScriptSource().onMessage(message, payload);
     }
 
     private async initialize(): Promise<void> {
         traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
-        const promise = this.getIPyWidgetScriptSource()?.initialize();
-        await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
+        const promise = this.getIPyWidgetScriptSource().initialize();
+        await promise.then(() => this.getIPyWidgetMessageDispatcher().initialize());
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {

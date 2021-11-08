@@ -24,6 +24,13 @@ export class ExportInterpreterFinder {
 
         // If an interpreter was not passed in, work with the main jupyter interperter
         const selectedJupyterInterpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
+
+        // This might be the first time user needs nbconvert if they are using raw kernel, so allow to select a jupyter interpreter
+        // to install nbconvert into
+        if (!selectedJupyterInterpreter) {
+            await this.jupyterInterpreterService.selectInterpreter();
+        }
+
         if (selectedJupyterInterpreter) {
             if (await this.checkNotebookInterpreter(selectedJupyterInterpreter)) {
                 return selectedJupyterInterpreter;

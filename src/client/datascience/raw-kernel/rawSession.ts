@@ -7,12 +7,11 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/er
 import '../../common/extensions';
 import { traceError, traceInfoIfCI } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
-import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
-import { DataScience } from '../../common/utils/localize';
+import { createDeferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
+import { KernelConnectionTimeoutError } from '../errors/kernelConnectionTimeoutError';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
@@ -25,7 +24,7 @@ ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
 export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
-    public readonly kernelConnectionMetadata: KernelConnectionMetadata | undefined;
+    public readonly kernelConnectionMetadata: KernelConnectionMetadata;
     private isDisposing?: boolean;
 
     // Note, ID is the ID of this session
@@ -117,7 +116,7 @@ export class RawSession implements ISessionWithSocket {
         return this._kernel;
     }
 
-    get kernelSocketInformation(): KernelSocketInformation | undefined {
+    get kernelSocketInformation(): KernelSocketInformation {
         return {
             socket: this._kernel.socket,
             options: {
@@ -154,8 +153,7 @@ export class RawSession implements ISessionWithSocket {
         this.connectionStatusChanged.disconnect(handler);
 
         if (result.toString() !== 'connected') {
-            const displayName = getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata);
-            throw new TimedOutError(DataScience.rawKernelStartFailedDueToTimeout().format(displayName));
+            throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
         }
     }
 

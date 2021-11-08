@@ -19,58 +19,91 @@ import {
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { sendTelemetryEvent } from '../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
-import { INotebook, IRawNotebookProvider, IRawNotebookSupportedService } from '../../types';
+import {
+    ConnectNotebookProviderOptions,
+    INotebook,
+    IRawConnection,
+    IRawNotebookProvider,
+    IRawNotebookSupportedService
+} from '../../types';
 import { RawJupyterSession } from '../rawJupyterSession';
-import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { JupyterNotebook } from '../../jupyter/jupyterNotebook';
+import * as uuid from 'uuid/v4';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+class RawConnection implements IRawConnection {
+    public readonly type = 'raw';
+    public readonly localLaunch = true;
+    public readonly valid = true;
+    public readonly displayName = '';
+}
+
 @injectable()
-export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRawNotebookProvider {
+export class HostRawNotebookProvider implements IRawNotebookProvider {
+    public get id(): string {
+        return this._id;
+    }
+    private notebooks = new Set<Promise<INotebook>>();
+    private rawConnection = new RawConnection();
+    private _id = uuid();
     private disposed = false;
     constructor(
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IRawNotebookSupportedService)
+        private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
-        super(asyncRegistry, rawNotebookSupported, disposables);
+        this.asyncRegistry.push(this);
     }
 
     public async dispose(): Promise<void> {
         if (!this.disposed) {
             this.disposed = true;
-            await super.dispose();
+            traceInfo(`Shutting down notebooks for ${this.id}`);
+            const notebooks = await Promise.all([...this.notebooks.values()]);
+            await Promise.all(notebooks.map((n) => n?.session.dispose()));
         }
     }
-    protected async createNotebookInstance(
-        resource: Resource,
+
+    public async connect(_options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
+        return this.rawConnection;
+    }
+
+    // Check to see if we have all that we need for supporting raw kernel launch
+    public get isSupported(): boolean {
+        return this.rawNotebookSupportedService.isSupported;
+    }
+
+    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
+    public async createNotebook(
         document: vscode.NotebookDocument,
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        disableUI?: boolean,
+        disableUI: boolean,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
-        this.setNotebook(document, notebookPromise.promise);
+        this.trackDisposable(notebookPromise.promise);
         let progressDisposable: vscode.Disposable | undefined;
         let rawSession: RawJupyterSession | undefined;
 
@@ -124,18 +157,15 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
             );
             await rawSession.connect(cancelToken, disableUI);
 
-            // Get the execution info for our notebook
-            const info = this.getConnection();
-
             if (rawSession.isConnected) {
                 // Create our notebook
-                const notebook = new JupyterNotebook(rawSession, info);
+                const notebook = new JupyterNotebook(rawSession, this.rawConnection);
 
                 traceInfo(`Finished connecting ${this.id}`);
 
                 notebookPromise.resolve(notebook);
             } else {
-                notebookPromise.reject(this.getDisposedError());
+                notebookPromise.reject(new Error(localize.DataScience.rawConnectionBrokenError()));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
@@ -150,5 +180,20 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         }
 
         return notebookPromise.promise;
+    }
+
+    private trackDisposable(notebook: Promise<INotebook>) {
+        void notebook.then((nb) => {
+            nb.session.onDidDispose(
+                () => {
+                    this.notebooks.delete(notebook);
+                },
+                this,
+                this.disposables
+            );
+        });
+
+        // Save the notebook
+        this.notebooks.add(notebook);
     }
 }

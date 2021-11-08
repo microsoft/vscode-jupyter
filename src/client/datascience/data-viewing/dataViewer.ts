@@ -16,8 +16,14 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
-import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IJupyterVariableDataProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
+import {
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IJupyterVariableDataProvider,
+    IThemeFinder,
+    WebViewViewChangeEventArgs
+} from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -70,7 +76,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
+        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler
     ) {
         super(
             configuration,
@@ -287,17 +294,18 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then((v) => {
-                    // User clicked on the link, open it.
-                    if (v === actionTitle) {
-                        this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
-                    }
-                }, noop);
+                this.applicationShell
+                    .showErrorMessage(localize.DataScience.jupyterDataRateExceeded(), actionTitle)
+                    .then((v) => {
+                        // User clicked on the link, open it.
+                        if (v === actionTitle) {
+                            this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
+                        }
+                    }, noop);
                 this.dispose();
             }
             traceError(e);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.applicationShell.showErrorMessage(e as any).then(noop, noop);
+            void this.errorHandler.handleError(e);
         } finally {
             this.sendElapsedTimeTelemetry();
         }

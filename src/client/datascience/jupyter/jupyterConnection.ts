@@ -17,7 +17,7 @@ import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
 import { IJupyterConnection } from '../types';
-import { JupyterConnectError } from './jupyterConnectError';
+import { JupyterConnectError } from '../errors/jupyterConnectError';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');

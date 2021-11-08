@@ -13,7 +13,13 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
-import { IDataScienceCommandListener, IInteractiveWindowProvider, InterruptResult, IStatusProvider } from '../../types';
+import {
+    IDataScienceCommandListener,
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    InterruptResult,
+    IStatusProvider
+} from '../../types';
 import { JupyterSession } from '../jupyterSession';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
@@ -30,7 +36,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configurationService: IConfigurationService
+        @inject(IConfigurationService) private configurationService: IConfigurationService,
+        @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -109,6 +116,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         trackKernelResourceInformation(kernel.resourceUri, { interruptKernel: true });
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
 
+        let errorContext: 'interrupt' | 'restart' = 'interrupt';
         try {
             traceInfo(`Interrupt requested & sent for ${document.uri} in notebookEditor.`);
             const result = await kernel.interrupt();
@@ -119,12 +127,13 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                 if (v === yes) {
                     this.kernelInterruptedDontAskToRestart = true;
+                    errorContext = 'restart';
                     await this.restartKernel(document.uri);
                 }
             }
         } catch (err) {
             traceError('Failed to interrupt kernel', err);
-            void this.applicationShell.showErrorMessage(err);
+            void this.errorHandler.handleError(err, errorContext);
         } finally {
             this.kernelInterruptedDontAskToRestart = false;
             status.dispose();
@@ -203,13 +212,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 exc
             );
             traceError('Failed to restart the kernel', exc);
-            if (exc) {
-                // Show the error message
-                void this.applicationShell.showErrorMessage(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    exc instanceof Error ? exc.message : (exc as any).toString()
-                );
-            }
+            void this.errorHandler.handleError(exc, 'restart');
         } finally {
             status.dispose();
         }

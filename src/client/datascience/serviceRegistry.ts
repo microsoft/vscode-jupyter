@@ -34,7 +34,7 @@ import { DataScienceCodeLensProvider } from './editor-integration/codelensprovid
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { DataScienceErrorHandler } from './errorHandler/errorHandler';
+import { DataScienceErrorHandler } from './errors/errorHandler';
 import { ExportBase } from './export/exportBase';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';

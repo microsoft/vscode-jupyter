@@ -221,6 +221,44 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
+        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`, 'Exported text does not match');
+
+        // Clean up dispose
+        onDidChangeDispose.dispose();
+    });
+    test('Import a notebook file from disk using nbconvert', async () => {
+        // Prep to see when
+        const deferred = createDeferred<any>();
+        const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
+            if (te) {
+                deferred.resolve();
+            }
+        });
+
+        // Set to nbconvert
+        const settings = workspace.getConfiguration('jupyter', null);
+        await settings.update('pythonExportMethod', 'nbconvert', ConfigurationTarget.Global);
+
+        // Execute our export command
+        const testFilePath = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'test.ipynb'
+        );
+        const importFile = Uri.file(testFilePath);
+        await commands.executeCommand('jupyter.importnotebook', importFile);
+
+        // Wait until our active document changes
+        await deferred;
+
+        assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
+
+        const text = window.activeTextEditor?.document.getText();
+
+        // Verify text content
         expect(text).to.equal(
             `# To add a new cell, type '# %%'${os.EOL}# To add a new markdown cell, type '# %% [markdown]'${os.EOL}# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`,
             'Exported text does not match'

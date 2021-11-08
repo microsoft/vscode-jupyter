@@ -18,7 +18,7 @@ import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterCommandFactory } from '../../types';
-import { JupyterInstallError } from '../jupyterInstallError';
+import { JupyterInstallError } from '../../errors/jupyterInstallError';
 
 export enum JupyterInterpreterDependencyResponse {
     ok,

@@ -7,7 +7,6 @@ import { assert, use } from 'chai';
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
-import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
@@ -200,8 +199,6 @@ suite('DataScience - Kernel Launcher', () => {
             sock.receive().ignoreErrors(); // This will never return unless the kenrel process sends something. Just used for testing the API is available
             await sleep(50);
             sock.close();
-        } catch (e) {
-            throw new JupyterZMQBinariesNotFoundError(e.toString());
         } finally {
             await kernel.dispose();
         }

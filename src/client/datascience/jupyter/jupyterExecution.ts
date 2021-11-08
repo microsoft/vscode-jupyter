@@ -30,9 +30,9 @@ import {
     INotebookServerOptions,
     JupyterServerUriHandle
 } from '../types';
-import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
-import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];

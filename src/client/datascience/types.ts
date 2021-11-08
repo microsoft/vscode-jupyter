@@ -35,7 +35,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
-import { JupyterInstallError } from './jupyter/jupyterInstallError';
+import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,12 +52,11 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
-export interface IRawConnection extends Disposable {
+export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
     readonly valid: boolean;
     readonly displayName: string;
-    disconnected: Event<number>;
 }
 
 export interface IJupyterConnection extends Disposable {
@@ -113,11 +112,9 @@ export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
-        document: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(document: NotebookDocument, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
@@ -140,15 +137,13 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(document: NotebookDocument, token?: CancellationToken): Promise<INotebook | undefined>;
 }
 
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
-    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
-    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
@@ -248,13 +243,19 @@ export interface IJupyterSession extends IAsyncDisposable {
 }
 
 export type ISessionWithSocket = Session.ISessionConnection & {
-    // The resource associated with this session.
+    /**
+     * The resource associated with this session.
+     */
     resource: Resource;
-    // Whether this is a remote session that we attached to.
+    /**
+     * Whether this is a remote session that we attached to.
+     */
     isRemoteSession?: boolean;
-    // Socket information used for hooking messages to the kernel
-    kernelSocketInformation?: KernelSocketInformation;
-    kernelConnectionMetadata?: KernelConnectionMetadata;
+    /**
+     * Socket information used for hooking messages to the kernel.
+     */
+    kernelSocketInformation: KernelSocketInformation;
+    kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -380,7 +381,12 @@ export interface IInteractiveWindowProvider {
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
-    handleError(err: Error): Promise<void>;
+    /**
+     * Handles the errors and if necessary displays an error message.
+     * The value of `context` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
+     * Thus based on the context the error message would be different.
+     */
+    handleError(err: Error, context?: 'start' | 'restart' | 'interrupt'): Promise<void>;
 }
 
 /**
@@ -843,10 +849,9 @@ export type GetServerOptions = {
 /**
  * Options for getting a notebook
  */
-export type GetNotebookOptions = {
+export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
-    getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection: KernelConnectionMetadata;
@@ -856,9 +861,9 @@ export type GetNotebookOptions = {
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     /**
-     * Gets or creates a notebook, and manages the lifetime of notebooks.
+     * Creates a notebook.
      */
-    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */

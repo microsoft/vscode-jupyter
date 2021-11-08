@@ -7,9 +7,8 @@ import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
 import { noop } from '../../client/common/utils/misc';
-import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
+import { JupyterInvalidKernelError } from '../../client/datascience/errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../client/datascience/errors/jupyterWaitForIdleError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { sleep } from '../core';
@@ -17,6 +16,7 @@ import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
+import { KernelInterruptTimeoutError } from '../../client/datascience/errors/kernelInterruptTimeoutError';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -87,7 +87,7 @@ export class MockJupyterSession implements IJupyterSession {
         requests.forEach((r) => r.cancel());
 
         if (this.forceRestartTimeout) {
-            throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
+            throw new KernelInterruptTimeoutError(undefined as any);
         }
 
         return sleep(this.timedelay);

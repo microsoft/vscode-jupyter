@@ -9,7 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -17,12 +17,12 @@ import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { getResourceType } from './common';
 import { Telemetry } from './constants';
-import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
-import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
+import { JupyterInvalidKernelError } from './errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from './errors/jupyterWaitForIdleError';
 import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
+import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -133,7 +133,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             await Promise.race([
                 this.session.kernel.interrupt(),
                 sleep(this.interruptTimeout).then(() => {
-                    throw new JupyterKernelPromiseFailedError(localize.DataScience.interruptingKernelFailed());
+                    throw new KernelInterruptTimeoutError(this.kernelConnectionMetadata);
                 })
             ]);
         }
@@ -345,20 +345,15 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
             // If we have a new session, then emit the new kernel connection information.
             if (oldSession !== session && session.kernel) {
-                if (!session.kernelSocketInformation) {
-                    traceError(`Unable to find WebSocket connection associated with kernel ${session.kernel.id}`);
-                    this._kernelSocket.next(undefined);
-                } else {
-                    this._kernelSocket.next({
-                        options: {
-                            clientId: session.kernel.clientId,
-                            id: session.kernel.id,
-                            model: { ...session.kernel.model },
-                            userName: session.kernel.username
-                        },
-                        socket: session.kernelSocketInformation.socket
-                    });
-                }
+                this._kernelSocket.next({
+                    options: {
+                        clientId: session.kernel.clientId,
+                        id: session.kernel.id,
+                        model: { ...session.kernel.model },
+                        userName: session.kernel.username
+                    },
+                    socket: session.kernelSocketInformation.socket
+                });
             }
         }
     }

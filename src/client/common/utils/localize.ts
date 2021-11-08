@@ -150,10 +150,6 @@ export namespace DataScience {
         'DataScience.pythonExtensionRequiredToRunNotebook',
         'Python Extension required to run Python notebooks.'
     );
-    export const newNotebookUI = localize(
-        'DataScience.newNotebookUI',
-        "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
-    );
     export const customizeLayout = localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
@@ -378,19 +374,25 @@ export namespace DataScience {
     );
     export const sessionStartFailedWithKernel = localize(
         'DataScience.sessionStartFailedWithKernel',
-        "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
+        "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
+    export const failedToRestartKernel = localize('DataScience.failedToRestartKernel', 'Failed to restart the Kernel.');
+    export const failedToInterruptKernel = localize(
+        'DataScience.failedToInterruptKernel',
+        'Failed to interrupt the Kernel.'
     );
     export const rawKernelStartFailedDueToTimeout = localize(
         'DataScience.rawKernelStartFailedDueToTimeout',
         "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
-    export const kernelTimeout = localize(
-        'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
+    export const viewJupyterLogForFurtherInfo = localize(
+        'DataScience.viewJupyterLogForFurtherInfo',
+        'View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDied = localize(
         'DataScience.kernelDied',
-        'The kernel died. View Jupyter [log](command:{0}) for further details. \nError: {1}...'
+        'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDiedWithoutError = localize(
         'DataScience.kernelDiedWithoutError',
@@ -707,14 +709,6 @@ export namespace DataScience {
         'DataScience.instructionComments',
         '# To add a new cell, type "{0}"\n# To add a new markdown cell, type "{0} [markdown]"\n'
     );
-    export const invalidNotebookFileError = localize(
-        'DataScience.invalidNotebookFileError',
-        'Notebook is not in the correct format. Check the file for correct json.'
-    );
-    export const invalidNotebookFileErrorFormat = localize(
-        'DataScience.invalidNotebookFileError',
-        '{0} is not a valid notebook file. Check the file for correct json.'
-    );
     export const nativeEditorTitle = localize('DataScience.nativeEditorTitle', 'Notebook Editor');
     export const untitledNotebookFileName = localize('DataScience.untitledNotebookFileName', 'Untitled');
     export const dirtyNotebookMessage1 = localize(
@@ -746,7 +740,7 @@ export namespace DataScience {
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
     export const exportFailedGeneralMessage = localize(
         'DataScience.exportFailedGeneralMessage',
-        `Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
+        `Please check the 'Jupyter' [output](command:jupyter.viewOutput) panel for further details.`
     );
     export const exportToPDFDependencyMessage = localize(
         'DataScience.exportToPDFDependencyMessage',

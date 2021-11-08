@@ -32,7 +32,6 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
 import * as uuid from 'uuid/v4';
-import { NotebookDocument } from 'vscode';
 import { noop } from '../../../common/utils/misc';
 import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
@@ -48,9 +47,8 @@ export class HostJupyterServer implements INotebookServer {
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
-    private notebooks = new Map<string, Promise<INotebook>>();
+    private notebooks = new Set<Promise<INotebook>>();
     private sessionManager: JupyterSessionManager | undefined;
-    private savedSession: JupyterSession | undefined;
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -79,25 +77,17 @@ export class HostJupyterServer implements INotebookServer {
 
     protected async createNotebookInstance(
         resource: Resource,
-        document: vscode.NotebookDocument,
         sessionManager: JupyterSessionManager,
         configService: IConfigurationService,
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        // See if already exists.
-        const existing = await this.getNotebook(document);
-        if (existing) {
-            // Then we can return the existing notebook.
-            return existing;
-        }
-
         let progressDisposable: vscode.Disposable | undefined;
 
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
-        this.setNotebook(document, notebookPromise.promise);
+        this.trackDisposable(notebookPromise.promise);
 
         const getExistingSession = async () => {
             const info = await this.computeLaunchInfo();
@@ -207,7 +197,6 @@ export class HostJupyterServer implements INotebookServer {
 
     public async createNotebook(
         resource: Resource,
-        document: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
@@ -219,7 +208,6 @@ export class HostJupyterServer implements INotebookServer {
         try {
             const notebook = await this.createNotebookInstance(
                 resource,
-                document,
                 this.sessionManager,
                 this.configService,
                 kernelConnection,
@@ -253,12 +241,6 @@ export class HostJupyterServer implements INotebookServer {
             if (this.connectionInfoDisconnectHandler) {
                 this.connectionInfoDisconnectHandler.dispose();
                 this.connectionInfoDisconnectHandler = undefined;
-            }
-
-            // Remove the saved session if we haven't passed it onto a notebook
-            if (this.savedSession) {
-                await this.savedSession.dispose();
-                this.savedSession = undefined;
             }
 
             traceInfo(`Shutting down notebooks for ${this.id}`);
@@ -312,38 +294,15 @@ export class HostJupyterServer implements INotebookServer {
         // Default is just say session was disposed
         return new Error(localize.DataScience.sessionDisposed());
     }
-
-    public async getNotebook(document: NotebookDocument): Promise<INotebook | undefined> {
-        return this.notebooks.get(document.uri.toString());
-    }
-
-    protected getNotebooks(): Promise<INotebook>[] {
-        return [...this.notebooks.values()];
-    }
-
-    protected setNotebook(document: NotebookDocument, notebook: Promise<INotebook>) {
-        const removeNotebook = () => {
-            if (this.notebooks.get(document.uri.toString()) === notebook) {
-                this.notebooks.delete(document.uri.toString());
-            }
-        };
-
+    protected trackDisposable(notebook: Promise<INotebook>) {
         notebook
             .then((nb) => {
-                nb.session.onDidDispose(
-                    () => {
-                        if (this.notebooks.get(document.uri.toString()) === notebook) {
-                            this.notebooks.delete(document.uri.toString());
-                        }
-                    },
-                    this,
-                    this.disposables
-                );
+                nb.session.onDidDispose(() => this.notebooks.delete(notebook), this, this.disposables);
             })
-            .catch(removeNotebook);
+            .catch(() => this.notebooks.delete(notebook));
 
         // Save the notebook
-        this.notebooks.set(document.uri.toString(), notebook);
+        this.notebooks.add(notebook);
     }
 
     private logRemoteOutput(output: string) {

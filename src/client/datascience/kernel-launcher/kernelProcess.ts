@@ -14,15 +14,14 @@ import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } fr
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { createDeferred, TimedOutError } from '../../common/utils/async';
+import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
-    getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -30,15 +29,12 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
-import {
-    IKernelConnection,
-    IKernelProcess,
-    IPythonKernelDaemon,
-    KernelDiedError,
-    KernelProcessExited,
-    PythonKernelDiedError
-} from './types';
+import { IKernelConnection, IKernelProcess, IPythonKernelDaemon } from './types';
 import { BaseError } from '../../common/errors/types';
+import { KernelProcessExitedError } from '../errors/kernelProcessExitedError';
+import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
+import { KernelDiedError } from '../errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -132,7 +128,7 @@ export class KernelProcess implements IKernelProcess {
                 });
                 exitEventFired = true;
             }
-            deferred.reject(new KernelProcessExited(exitCode || -1, stderr));
+            deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr));
         });
 
         exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
@@ -196,7 +192,6 @@ export class KernelProcess implements IKernelProcess {
         );
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
-        const displayName = getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata);
         try {
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
@@ -208,9 +203,7 @@ export class KernelProcess implements IKernelProcess {
             ]).catch((ex) => {
                 traceError(`waitUntilUsed timed out`, ex);
                 // Throw an error we recognize.
-                return Promise.reject(
-                    new TimedOutError(localize.DataScience.rawKernelStartFailedDueToTimeout().format(displayName))
-                );
+                return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
             await Promise.race([
                 portsUsed,
@@ -239,7 +232,7 @@ export class KernelProcess implements IKernelProcess {
                     getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
                 throw new KernelDiedError(
-                    localize.DataScience.kernelDied().format(displayName, Commands.ViewJupyterOutput, errorMessage),
+                    localize.DataScience.kernelDied().format(errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

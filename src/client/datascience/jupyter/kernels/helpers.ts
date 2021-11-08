@@ -14,7 +14,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
     IKernel,
@@ -44,6 +44,7 @@ import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPython
 import { executeSilently } from './kernel';
 import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
+import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -124,12 +125,56 @@ export function getSysInfoReasonHeader(
     }
 }
 
-export function getDisplayNameOrNameOfKernelConnection(
-    kernelConnection: KernelConnectionMetadata | undefined,
-    defaultValue: string = ''
-) {
+export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
+    const oldDisplayName = getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection);
     if (!kernelConnection) {
-        return defaultValue;
+        return oldDisplayName;
+    }
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel': {
+            return oldDisplayName;
+        }
+        case 'startUsingKernelSpec': {
+            if (
+                kernelConnection.interpreter?.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
+                    const pythonVersion = `Python ${
+                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                    }`.trim();
+                    return kernelConnection.interpreter.envName
+                        ? `${oldDisplayName} (${pythonVersion})`
+                        : oldDisplayName;
+                } else {
+                    // Non-Python kernelspec that launches via python interpreter
+                    return kernelConnection.interpreter.envName
+                        ? `${oldDisplayName} (${kernelConnection.interpreter.envName})`
+                        : oldDisplayName;
+                }
+            } else {
+                return oldDisplayName;
+            }
+        }
+        case 'startUsingPythonInterpreter':
+            if (
+                kernelConnection.interpreter.envType &&
+                kernelConnection.interpreter.envType !== EnvironmentType.Global
+            ) {
+                const pythonVersion = `Python ${
+                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                }`.trim();
+                const pythonDisplayName = pythonVersion.trim();
+                return kernelConnection.interpreter.envName
+                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
+                    : pythonDisplayName;
+            }
+    }
+    return oldDisplayName;
+}
+function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
+    if (!kernelConnection) {
+        return '';
     }
     const displayName =
         kernelConnection.kind === 'connectToLiveKernel'
@@ -144,7 +189,7 @@ export function getDisplayNameOrNameOfKernelConnection(
         kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
 
     const defaultKernelName = kernelConnection.kind === 'startUsingDefaultKernel' ? 'Python 3' : undefined;
-    return displayName || name || interpeterName || defaultKernelName || defaultValue;
+    return displayName || name || interpeterName || defaultKernelName || '';
 }
 
 export function getNameOfKernelConnection(
@@ -197,17 +242,19 @@ export function getRemoteKernelSessionInformation(
 export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
     pathUtils: IPathUtils,
-    workspaceService: IWorkspaceService,
-    defaultValue: string = ''
-): string {
+    workspaceService: IWorkspaceService
+) {
+    if (kernelConnection?.kind === 'connectToLiveKernel') {
+        return removeNotebookSuffixAddedByExtension(
+            kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
+        );
+    }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
-    const notebookPath =
-        kernelConnection?.kind === 'connectToLiveKernel' ? `(${kernelConnection.kernelModel?.model?.path})` : '';
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const cwd =
         workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
-    return `${kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : defaultValue} ${notebookPath}`;
+    return kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(

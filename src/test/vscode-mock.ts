@@ -100,6 +100,7 @@ mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;
 mockedVSCode.ExtensionKind = vscodeMocks.vscMock.ExtensionKind;
 mockedVSCode.CodeAction = vscodeMocks.vscMock.CodeAction;
 mockedVSCode.EventEmitter = vscodeMocks.vscMock.EventEmitter;
+mockedVSCode.CancellationError = vscodeMocks.vscMock.CancellationError;
 mockedVSCode.CancellationTokenSource = vscodeMocks.vscMock.CancellationTokenSource;
 mockedVSCode.CompletionItemKind = vscodeMocks.vscMock.CompletionItemKind;
 mockedVSCode.SymbolKind = vscodeMocks.vscMock.SymbolKind;

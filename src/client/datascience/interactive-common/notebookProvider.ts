@@ -4,16 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
+import { IConfigurationService, Resource } from '../../common/types';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,
-    GetNotebookOptions,
+    NotebookCreationOptions,
     IJupyterNotebookProvider,
     INotebook,
     INotebookProvider,
@@ -23,12 +21,7 @@ import {
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
-    private readonly notebooks = new Map<string, Promise<INotebook>>();
-    public get activeNotebooks() {
-        return [...this.notebooks.values()];
-    }
     constructor(
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -57,27 +50,8 @@ export class NotebookProvider implements INotebookProvider {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
-    public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
+    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
         const rawKernel = this.rawNotebookProvider.isSupported;
-
-        // Check our own promise cache
-        if (this.notebooks.get(options.document.toString())) {
-            return this.notebooks.get(options.document.toString())!!;
-        }
-
-        // Check to see if our provider already has this notebook
-        const notebook = rawKernel
-            ? await this.rawNotebookProvider.getNotebook(options.document, options.token)
-            : await this.jupyterNotebookProvider.getNotebook(options);
-        if (notebook && !notebook.session.disposed) {
-            this.cacheNotebookPromise(options.document, Promise.resolve(notebook));
-            return notebook;
-        }
-
-        // If get only, don't create a notebook
-        if (options.getOnly) {
-            return undefined;
-        }
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
@@ -116,31 +90,6 @@ export class NotebookProvider implements INotebookProvider {
             disableUI: options.disableUI
         });
 
-        this.cacheNotebookPromise(options.document, promise);
-
         return promise;
-    }
-
-    // Cache the promise that will return a notebook
-    private cacheNotebookPromise(document: NotebookDocument, promise: Promise<INotebook>) {
-        this.notebooks.set(document.uri.toString(), promise);
-
-        // Remove promise from cache if the same promise still exists.
-        const removeFromCache = () => {
-            const cachedPromise = this.notebooks.get(document.uri.toString());
-            if (cachedPromise === promise) {
-                this.notebooks.delete(document.uri.toString());
-            }
-        };
-
-        promise
-            .then((nb) => {
-                // If the notebook is disposed, remove from cache.
-                nb.session.onDidDispose(removeFromCache, this, this.disposables);
-            })
-            .catch(noop);
-
-        // If promise fails, then remove the promise from cache.
-        promise.catch(removeFromCache);
     }
 }

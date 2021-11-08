@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
+import { IPythonExtensionChecker } from '../../../api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -34,6 +35,7 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -104,7 +106,7 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
     }
 
     private async openedNotebook(n: NotebookDocument) {
-        if (isJupyterNotebook(n)) {
+        if (isJupyterNotebook(n) && this.extensionChecker.isPythonExtensionInstalled) {
             // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
             const controller = this.notebookControllerManager.getSelectedNotebookController(n);
 

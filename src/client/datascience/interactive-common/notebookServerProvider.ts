@@ -14,9 +14,8 @@ import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
+import { JupyterInstallError } from '../errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -172,9 +171,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 return true;
             }
         } catch (e) {
-            if (e instanceof JupyterZMQBinariesNotFoundError) {
-                throw e;
-            }
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
