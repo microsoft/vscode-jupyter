@@ -23,7 +23,7 @@ import {
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
@@ -119,23 +119,26 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const installerToken = wrapCancellationTokens(token);
-        const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
+        const [isModulePresent, isPipAvailableForNonConda] = await Promise.all([
+            isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter),
+            interpreter.envType === EnvironmentType.Conda
+                ? undefined
+                : await isModulePresentInEnvironment(this.memento, Product.pip, interpreter)
+        ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const messageFormat = isModulePresent
             ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
-        const message = messageFormat.format(
-            interpreter.displayName || interpreter.path,
-            ProductNames.get(Product.ipykernel)!
-        );
-        const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
+        const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
+        const message = messageFormat.format(interpreter.displayName || interpreter.path, products.join(Common.and()));
+        const productNameForTelemetry = products.map(product => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
         const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ipykernelProductName,
+            moduleName: productNameForTelemetry,
             resourceType,
             resourceHash
         });
@@ -153,7 +156,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'prompted',
-                    moduleName: ipykernelProductName,
+                    moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash
                 });
@@ -167,7 +170,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (installerToken.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'dismissed',
-                    moduleName: ipykernelProductName,
+                    moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash
                 });
@@ -177,7 +180,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (selection === selectKernel) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'differentKernel',
-                    moduleName: ipykernelProductName,
+                    moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash
                 });
@@ -185,7 +188,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             } else if (selection === installPrompt) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'install',
-                    moduleName: ipykernelProductName,
+                    moduleName: productNameForTelemetry,
                     resourceType,
                     resourceHash
                 });
@@ -202,7 +205,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 if (response === InstallerResponse.Installed) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'installed',
-                        moduleName: ipykernelProductName,
+                        moduleName: productNameForTelemetry,
                         resourceType,
                         resourceHash
                     });
@@ -210,7 +213,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 } else if (response === InstallerResponse.Ignore) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                         action: 'failed',
-                        moduleName: ipykernelProductName,
+                        moduleName: productNameForTelemetry,
                         resourceType,
                         resourceHash
                     });
@@ -220,7 +223,7 @@ export class KernelDependencyService implements IKernelDependencyService {
 
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'dismissed',
-                moduleName: ipykernelProductName,
+                moduleName: productNameForTelemetry,
                 resourceType,
                 resourceHash
             });
@@ -228,7 +231,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         } catch (ex) {
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'error',
-                moduleName: ipykernelProductName,
+                moduleName: productNameForTelemetry,
                 resourceType,
                 resourceHash
             });

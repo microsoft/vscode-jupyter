@@ -68,7 +68,8 @@ export enum Product {
     notebook = 20,
     kernelspec = 21,
     nbconvert = 22,
-    pandas = 23
+    pandas = 23,
+    pip = 27
 }
 
 export enum ProductInstallStatus {

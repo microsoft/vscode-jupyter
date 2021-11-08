@@ -230,7 +230,8 @@ const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
     [Product.kernelspec]: JupyterProductToInstall.kernelspec,
     [Product.nbconvert]: JupyterProductToInstall.nbconvert,
     [Product.notebook]: JupyterProductToInstall.notebook,
-    [Product.pandas]: JupyterProductToInstall.pandas
+    [Product.pandas]: JupyterProductToInstall.pandas,
+    [Product.pip]: JupyterProductToInstall.pip
 };
 
 /* eslint-disable max-classes-per-file */
