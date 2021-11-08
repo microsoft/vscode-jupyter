@@ -86,11 +86,12 @@ export abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
         return this.serviceContainer
             .get<IPythonInstaller>(IPythonInstaller)
-            .install(product, resource, cancel, reInstallAndUpdate);
+            .install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -165,9 +166,10 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate);
+        return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, resource);

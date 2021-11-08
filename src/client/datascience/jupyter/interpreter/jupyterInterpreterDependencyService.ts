@@ -12,7 +12,7 @@ import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
@@ -128,7 +128,17 @@ export class JupyterInterpreterDependencyService {
         _error?: JupyterInstallError,
         token?: CancellationToken
     ): Promise<JupyterInterpreterDependencyResponse> {
-        const missingProducts = await this.getDependenciesNotInstalled(interpreter, token);
+        // If we're dealing with a non-conda environment & pip isn't installed, we can't install anything.
+        // Hence prompt to install pip as well.
+        const pipInstalledInNonCondaEnvPromise =
+            interpreter.envType === EnvironmentType.Conda
+                ? Promise.resolve(undefined)
+                : this.installer.isInstalled(Product.pip, interpreter);
+
+        const [missingProducts, pipInstalledInNonCondaEnv] = await Promise.all([
+            this.getDependenciesNotInstalled(interpreter, token),
+            pipInstalledInNonCondaEnvPromise
+        ]);
         if (Cancellation.isCanceled(token)) {
             return JupyterInterpreterDependencyResponse.cancel;
         }
@@ -136,7 +146,10 @@ export class JupyterInterpreterDependencyService {
             return JupyterInterpreterDependencyResponse.ok;
         }
 
-        const message = getMessageForLibrariesNotInstalled(missingProducts, interpreter.displayName);
+        const message = getMessageForLibrariesNotInstalled(
+            pipInstalledInNonCondaEnv ? [Product.pip].concat(missingProducts) : missingProducts,
+            interpreter.displayName
+        );
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.jupyter)!
@@ -173,7 +186,13 @@ export class JupyterInterpreterDependencyService {
                 while (productToInstall) {
                     // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                     const response = await Promise.race([
-                        this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)),
+                        this.installer.install(
+                            productToInstall,
+                            interpreter,
+                            wrapCancellationTokens(token),
+                            undefined,
+                            pipInstalledInNonCondaEnv === false
+                        ),
                         cancellatonPromise
                     ]);
                     if (response === InstallerResponse.Installed) {
@@ -234,6 +253,14 @@ export class JupyterInterpreterDependencyService {
         }
 
         const notInstalled: Product[] = [];
+        // If this is a non-conda environment, then we'll need to install pip as well.
+        const pipInstalled =
+            interpreter.envType === EnvironmentType.Conda
+                ? Promise.resolve()
+                : this.installer
+                      .isInstalled(Product.jupyter, interpreter)
+                      .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter)));
+
         await Promise.race([
             Promise.all([
                 this.installer
@@ -241,7 +268,8 @@ export class JupyterInterpreterDependencyService {
                     .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
                 this.installer
                     .isInstalled(Product.notebook, interpreter)
-                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook))),
+                pipInstalled
             ]),
             createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);

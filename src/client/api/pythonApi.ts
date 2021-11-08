@@ -251,7 +251,8 @@ export class PythonInstaller implements IPythonInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
         if (resource && !isResource(resource)) {
             this.interpreterPackages.trackPackages(resource);
@@ -259,7 +260,7 @@ export class PythonInstaller implements IPythonInstaller {
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
             const api = await this.apiProvider.getApi();
-            const result = await api.install(ProductMapping[product], resource, cancel, reInstallAndUpdate);
+            const result = await api.install(ProductMapping[product], resource, cancel, reInstallAndUpdate, installPipIfRequired);
             trackPackageInstalledIntoInterpreter(this.memento, product, resource).catch(noop);
             if (result === InstallerResponse.Installed) {
                 this._onInstalled.fire({ product, resource });

@@ -199,7 +199,13 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                 const response = await Promise.race([
-                    this.installer.install(Product.ipykernel, interpreter, installerToken, isModulePresent === true),
+                    this.installer.install(
+                        Product.ipykernel,
+                        interpreter,
+                        installerToken,
+                        isModulePresent === true,
+                        isPipAvailableForNonConda === false
+                    ),
                     cancellationPromise
                 ]);
                 if (response === InstallerResponse.Installed) {
