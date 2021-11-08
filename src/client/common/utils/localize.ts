@@ -146,6 +146,10 @@ export namespace ExtensionSurveyBanner {
 }
 
 export namespace DataScience {
+    export const wanrWhenSelectingKernelWithUnSupportedPythonVersion = localize(
+        'DataScience.wanrWhenSelectingKernelWithUnSupportedPythonVersion',
+        'The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.'
+    );
     export const pythonExtensionRequiredToRunNotebook = localize(
         'DataScience.pythonExtensionRequiredToRunNotebook',
         'Python Extension required to run Python notebooks.'
