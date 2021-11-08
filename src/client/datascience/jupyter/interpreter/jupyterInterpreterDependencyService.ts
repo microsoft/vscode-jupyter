@@ -253,13 +253,6 @@ export class JupyterInterpreterDependencyService {
         }
 
         const notInstalled: Product[] = [];
-        // If this is a non-conda environment, then we'll need to install pip as well.
-        const pipInstalled =
-            interpreter.envType === EnvironmentType.Conda
-                ? Promise.resolve()
-                : this.installer
-                      .isInstalled(Product.jupyter, interpreter)
-                      .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter)));
 
         await Promise.race([
             Promise.all([
@@ -268,8 +261,7 @@ export class JupyterInterpreterDependencyService {
                     .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
                 this.installer
                     .isInstalled(Product.notebook, interpreter)
-                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook))),
-                pipInstalled
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
             ]),
             createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);
