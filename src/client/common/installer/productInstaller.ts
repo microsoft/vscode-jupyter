@@ -10,7 +10,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IApplicationShell } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceError } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
@@ -131,7 +131,8 @@ export class DataScienceInstaller extends BaseInstaller {
         product: Product,
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -141,8 +142,8 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
-        const result = await installer.install(product, interpreter, cancel, reInstallAndUpdate);
-
+        const result = await installer.install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
+        traceInfo(`Got result from python installer for ${ProductNames.get(product)}, result = ${result}`);
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
             return result;
         }

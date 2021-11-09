@@ -123,7 +123,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter),
             interpreter.envType === EnvironmentType.Conda
                 ? undefined
-                : await isModulePresentInEnvironment(this.memento, Product.pip, interpreter)
+                : await this.installer.isInstalled(Product.pip, interpreter)
         ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
@@ -132,7 +132,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
-        const message = messageFormat.format(interpreter.displayName || interpreter.path, products.join(Common.and()));
+        const message = messageFormat.format(
+            interpreter.displayName || interpreter.path,
+            products.map((product) => ProductNames.get(product)!).join(Common.and())
+        );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
         const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
