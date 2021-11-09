@@ -147,7 +147,7 @@ export class JupyterInterpreterDependencyService {
         }
 
         const message = getMessageForLibrariesNotInstalled(
-            pipInstalledInNonCondaEnv ? [Product.pip].concat(missingProducts) : missingProducts,
+            pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
             interpreter.displayName
         );
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
