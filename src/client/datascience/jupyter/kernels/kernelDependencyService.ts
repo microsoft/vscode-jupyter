@@ -9,7 +9,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../co
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceInfo } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -235,6 +235,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
+            traceError(`Failed to install ${productNameForTelemetry}`, ex);
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'error',
                 moduleName: productNameForTelemetry,
