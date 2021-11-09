@@ -170,6 +170,13 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
+
+        // Stick in our list of associated documents and indicate controller may have changed.
+        if (!this.associatedDocuments.has(notebook)) {
+            this.associatedDocuments.add(notebook);
+            this._onNotebookControllerSelected.fire({ notebook, controller: this });
+            this._onNotebookControllerSelectionChanged.fire();
+        }
     }
 
     // Handle the execution of notebook cell
