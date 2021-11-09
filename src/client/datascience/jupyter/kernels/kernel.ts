@@ -382,7 +382,9 @@ export class Kernel implements IKernel {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        this.errorHandler.handleError(ex, 'start').ignoreErrors(); // Just a notification, so don't await this
+                        this.errorHandler
+                            .handleKernelStartRestartError(ex, 'start', this.kernelConnectionMetadata)
+                            .ignoreErrors(); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();

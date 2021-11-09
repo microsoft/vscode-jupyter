@@ -3,7 +3,7 @@
 'use strict';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHandler';
 import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
@@ -14,12 +14,17 @@ suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
-
+    let worksapceService: IWorkspaceService;
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
+        worksapceService = mock<IWorkspaceService>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
-        dataScienceErrorHandler = new DataScienceErrorHandler(applicationShell.object, instance(dependencyManager));
+        dataScienceErrorHandler = new DataScienceErrorHandler(
+            applicationShell.object,
+            instance(dependencyManager),
+            instance(worksapceService)
+        );
     });
     const message = 'Test error message.';
 

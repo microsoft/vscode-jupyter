@@ -387,6 +387,11 @@ export interface IDataScienceErrorHandler {
      * Thus based on the context the error message would be different.
      */
     handleError(err: Error, context?: 'start' | 'restart' | 'interrupt'): Promise<void>;
+    handleKernelStartRestartError(
+        err: Error,
+        context: 'start' | 'restart',
+        kernelConnection: KernelConnectionMetadata
+    ): Promise<void>;
 }
 
 /**
