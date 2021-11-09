@@ -134,7 +134,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
         const message = messageFormat.format(
             interpreter.displayName || interpreter.path,
-            products.map((product) => ProductNames.get(product)!).join(Common.and())
+            products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
