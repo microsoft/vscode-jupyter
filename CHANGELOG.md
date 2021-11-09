@@ -1,6 +1,16 @@
 # Changelog
 
-## 2021.10.100 (3 November 2021)
+VS Code Stable releases along with the minimum recommended version of the Jupyter Extension.
+
+| Release   | VS Code Stable | Recommended Jupyter Build |
+| --------- | -------------- | --------------------------|
+| October   | 1.62.0         | 2021.10.1001414422        |
+| September | 1.61.2         | 2021.9.1101343141         |
+| August    | 1.60.2         | 2021.8.2041215044         |
+| July      | 1.59.1         | 2021.8.1236758218         |
+| June      | 1.58.2         | 2021.8.1054968649         |
+
+## 2021.10.100 (October Release on 3 November 2021)
 
 ### Enhancements
 
@@ -89,7 +99,7 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-## 2021.9.110 (14 October 2021)
+## 2021.9.110 (September Release on 14 October 2021)
 
 ### Fixes
 
@@ -115,7 +125,7 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-## 2021.9.100 (6 October 2021)
+## 2021.9.100 (September Release on 6 October 2021)
 
 ### Enhancements
 
@@ -204,7 +214,7 @@ make this extension useful:
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
 
-## 2021.8.203 (1 September 2021)
+## 2021.8.203 (August Release on 1 September 2021)
 
 ### Enhancements
 
@@ -285,7 +295,7 @@ make this extension useful:
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
 
-## 2021.8.11 (3 August 2021)
+## 2021.8.11 (July Release on 3 August 2021)
 
 ### Enhancements
 
@@ -343,14 +353,14 @@ make this extension useful:
 ### Code Health
 
 
-## 2021.8.1 (19 July 2021)
+## 2021.8.1 (June Release on 19 July 2021)
 
 ### Fixes
 
 1. Fix for kernel not starting with correct path (causes DLL load and import modules failures).
    ([#5833](https://github.com/Microsoft/vscode-jupyter/issues/5833))
 
-## 2021.8.0 (8 July 2021)
+## 2021.8.0 (June Release on 8 July 2021)
 
 ### Enhancements
 
@@ -417,7 +427,7 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-## 2021.6.999 (16 June 2021)
+## 2021.6.999 (May Release on 16 June 2021)
 
 ### Fixes
 
@@ -439,7 +449,7 @@ make this extension useful:
 1. Fix 'Restarting kernel will cancel cell execution & we can re-run a cell' test.
    ([#6139](https://github.com/Microsoft/vscode-jupyter/issues/6139))
 
-## 2021.6.99 (8 June 2021)
+## 2021.6.99 (May Release on 8 June 2021)
 
 ### Enhancements
 
