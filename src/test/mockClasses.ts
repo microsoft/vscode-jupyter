@@ -28,6 +28,9 @@ export class MockOutputChannel implements vscode.OutputChannel {
     }
     // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
     public dispose() {}
+    public replace(value: string) {
+        this.output = value;
+    }
 }
 
 export class MockStatusBarItem implements vscode.StatusBarItem {
