@@ -14,6 +14,7 @@ import {
 } from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import {
+    IBrowserService,
     IConfigurationService,
     IDisposableRegistry,
     IExtensionContext,
@@ -110,7 +111,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService
+        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
+        @inject(IBrowserService) private readonly browser: IBrowserService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -559,7 +561,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.interpreterPackages,
                         this.configuration,
                         this.widgetCoordinator,
-                        this.docManager
+                        this.docManager,
+                        this.appShell,
+                        this.browser
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
