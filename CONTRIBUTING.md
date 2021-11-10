@@ -35,6 +35,8 @@ npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell, For example, on bash it's ...
 source .venv/bin/activate
+# and in Windows cmd or PowerShell
+.venv\Scripts\activate
 # The Python code in the extension is formatted using Black.
 python -m pip install black
 # The Python code required in the extension
