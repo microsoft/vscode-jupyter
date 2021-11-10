@@ -198,7 +198,9 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Run a second time after interrupt', async function () {
-        await insertCodeCell('print(1)\nprint(2)\nprint(3)', { index: 0 });
+        await insertCodeCell('import time\nfor i in range(0,50):  time.sleep(.1)\n  print(1)\nprint(3)', {
+            index: 0
+        });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
 
@@ -225,16 +227,12 @@ suite('VSCode Notebook - Run By Line', function () {
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter2!);
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        assert.isTrue(getCellOutputs(cell).includes('1'), `Lines not running`);
+        await commandManager.executeCommand(Commands.RunByLineStop);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
             'DebugSession should end2'
         );
-        await waitForCondition(
-            async () => !!cell.outputs.length,
-            defaultNotebookTestTimeout,
-            'Cell should have output'
-        );
-        assert.isTrue(getCellOutputs(cell).includes('3'), `Final line did not run`);
     });
 });
