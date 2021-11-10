@@ -1,5 +1,31 @@
 # Changelog
 
+## 2021.10.110 (11 November 2021)
+
+### Fixes
+
+1. Display notebook paths associated with remote kernels in the kernel picker.
+   ([#8175](https://github.com/Microsoft/vscode-jupyter/issues/8175))
+1. Do not prompt to install Python extension when opening a `.NET` notebook.
+   ([#8204](https://github.com/Microsoft/vscode-jupyter/issues/8204))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2021.10.100 (3 November 2021)
 
 ### Enhancements
