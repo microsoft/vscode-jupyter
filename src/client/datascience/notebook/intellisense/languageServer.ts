@@ -7,14 +7,12 @@ import {
     NotebookDocument,
     workspace,
     window,
-    NotebookConcatTextDocument,
     notebooks,
-    Event,
-    Uri
+    Uri,
+    NotebookCellsChangeEvent
 } from 'vscode';
 import {
     ClientCapabilities,
-    DocumentSelector,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
@@ -89,23 +87,6 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
     }
 }
 
-// TODO: Export this api from the lsp middleware instead of just having the type match
-const notebookApi = new (class {
-    public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
-        return workspace.onDidOpenNotebookDocument;
-    }
-    public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
-        return workspace.onDidCloseNotebookDocument;
-    }
-    public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return workspace.notebookDocuments;
-    }
-    public createConcatTextDocument(doc: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return notebooks.createConcatTextDocument(doc, selector) as any;
-    }
-})();
-
 /**
  * This class wraps an instance of the language server (either Pylance or Jedi LSP) per interpreter.
  *
@@ -121,6 +102,7 @@ export class LanguageServer implements Disposable {
         private disposables: Disposable[]
     ) {
         this._interpreterId = getInterpreterId(interpreter);
+        notebooks.onDidChangeNotebookCells(this.onDidChangeNotebookCells, this, disposables);
     }
 
     public async dispose() {
@@ -157,16 +139,15 @@ export class LanguageServer implements Disposable {
             const middleware =
                 middlewareType == 'jupyter'
                     ? createNotebookMiddleware(
-                          notebookApi,
                           () => languageClient,
                           () => noop, // Don't trace output. Slows things down too much
                           NOTEBOOK_SELECTOR,
-                          /.*\.(ipynb|interactive)/m,
                           interpreter.path,
                           (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
                       )
                     : createPylanceMiddleware(
                           () => languageClient,
+                          NOTEBOOK_SELECTOR,
                           interpreter.path,
                           (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
                       );
@@ -219,6 +200,11 @@ export class LanguageServer implements Disposable {
         }
     }
 
+    private onDidChangeNotebookCells(e: NotebookCellsChangeEvent) {
+        // Tell the middleware to refresh its concat document (pylance or notebook)
+        this.middleware.refresh(e.document);
+    }
+
     private static async createServerOptions(
         interpreter: PythonEnvironment,
         cancellationStrategy: FileBasedCancellationStrategy
@@ -259,7 +245,7 @@ export class LanguageServer implements Disposable {
             const bundlePath = path.join(distPath, 'server.bundle.js');
             const nonBundlePath = path.join(distPath, 'server.js');
             const modulePath = (await fs.pathExists(nonBundlePath)) ? nonBundlePath : bundlePath;
-            const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
+            const debugOptions = { execArgv: ['--nolazy', '--inspect=6617'] };
 
             // If the extension is launched in debug mode, then the debug server options are used.
             const serverOptions: ServerOptions = {
