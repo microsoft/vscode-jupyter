@@ -3,6 +3,7 @@
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
+import { resolveModuleName } from 'typescript';
 import {
     CodeLens,
     commands,
@@ -66,6 +67,10 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
     private closeDocumentDisposable: IDisposable | undefined;
+    private addCodeQueue: Promise<boolean> | undefined;
+    private addCodeQueue2: Promise<boolean>[] = [];
+    private executingAddCode: Promise<boolean> | undefined;
+    // private addCodeQueue: Promise<boolean> = Promise.resolve(true);
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -242,11 +247,12 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                this.queueAddCode(code, this.document.uri, lens.range.start.line);
+                // const success = await this.addCode(code, this.document.uri, lens.range.start.line);
+                // if (!success) {
+                // await this.addErrorMessage(this.document.uri, leftCount);
+                // break;
+                // }
             }
         }
     }
@@ -980,6 +986,47 @@ export class CodeWatcher implements ICodeWatcher {
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR
         }
+    }
+
+    // Queue up our addCode promises so that we run them in order
+    private queueAddCode(code: string, file: Uri, line: number, editor?: TextEditor, debug?: boolean) {
+        // Get our add code promise and tack on a then for getting the next queue item
+        const addCodePromise = this.addCode(code, file, line, editor, debug);
+        const addCodePromiseEdit = addCodePromise.then((result) => {
+            if (result) {
+                // Success. Check queue for next
+                this.executingAddCode = this.addCodeQueue2.shift();
+            } else {
+                this.executingAddCode = undefined;
+                // Resolve all promises here?
+                this.addCodeQueue2 = [];
+            }
+
+            return result;
+        });
+
+        if (this.executingAddCode) {
+            this.addCodeQueue2.push(addCodePromiseEdit);
+        } else {
+            this.executingAddCode = addCodePromiseEdit;
+        }
+
+        // We don't actually want this as one false will cancel the Queue
+        // IANHU: Check on void here...
+        // if (this.addCodeQueue) {
+        // void this.addCodeQueue.then(async (previousResult) => {
+        // if (previousResult) {
+        // const result = await addCodePromise;
+        // return result;
+        // }
+
+        // // Previous was rejected
+        // this.addCodeQueue = undefined;
+        // return false;
+        // });
+        // } else {
+        // this.addCodeQueue = addCodePromise;
+        // }
     }
 
     private async addCode(
