@@ -1547,6 +1547,10 @@ export namespace vscMockExtHostedTypes {
         get id(): string {
             return this._id;
         }
+
+        get isDefault() {
+            return false;
+        }
     }
 
     export class ProcessExecution implements vscode.ProcessExecution {
