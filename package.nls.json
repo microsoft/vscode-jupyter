@@ -26,7 +26,7 @@
     "DataScience.installPythonNonMarkdown": "Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.",
     "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
     "DataScience.customizeLayout": "Customize Layout",
-    "DataScience.wanrWhenSelectingKernelWithUnSupportedPythonVersion": "The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.",
+    "DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion": "The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.",
     "jupyter.kernel.filter.placeholder": "Choose the kernels that are available in the kernel picker.",
     "jupyter.kernel.category.jupyterSession": "Jupyter Session",
     "jupyter.kernel.category.jupyterKernel": "Jupyter Kernel",

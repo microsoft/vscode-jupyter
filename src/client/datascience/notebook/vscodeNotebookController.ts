@@ -211,7 +211,7 @@ export class VSCodeNotebookController implements Disposable {
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
             void this.appShell
                 .showWarningMessage(
-                    DataScience.wanrWhenSelectingKernelWithUnSupportedPythonVersion(),
+                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
                     Common.learnMore()
                 )
                 .then((selection) => {
