@@ -541,7 +541,7 @@ declare module 'vscode' {
 		 * The {@link TextEditorSelectionChangeKind change kind} which has triggered this
 		 * event. Can be `undefined`.
 		 */
-		readonly kind: TextEditorSelectionChangeKind | undefined
+		readonly kind: TextEditorSelectionChangeKind | undefined;
 	}
 
 	/**
@@ -1277,16 +1277,16 @@ declare module 'vscode' {
 		 * `Uri.parse('file://' + path)` because the path might contain characters that are
 		 * interpreted (# and ?). See the following sample:
 		 * ```ts
-		const good = URI.file('/coding/c#/project1');
-		good.scheme === 'file';
-		good.path === '/coding/c#/project1';
-		good.fragment === '';
-
-		const bad = URI.parse('file://' + '/coding/c#/project1');
-		bad.scheme === 'file';
-		bad.path === '/coding/c'; // path is now broken
-		bad.fragment === '/project1';
-		```
+		 * const good = URI.file('/coding/c#/project1');
+		 * good.scheme === 'file';
+		 * good.path === '/coding/c#/project1';
+		 * good.fragment === '';
+		 *
+		 * const bad = URI.parse('file://' + '/coding/c#/project1');
+		 * bad.scheme === 'file';
+		 * bad.path === '/coding/c'; // path is now broken
+		 * bad.fragment === '/project1';
+		 * ```
 		 *
 		 * @param path A file system or UNC path.
 		 * @return A new Uri instance.
@@ -1370,11 +1370,11 @@ declare module 'vscode' {
 		 * The *difference* to the {@linkcode Uri.path path}-property is the use of the platform specific
 		 * path separator and the handling of UNC paths. The sample below outlines the difference:
 		 * ```ts
-		const u = URI.parse('file://server/c$/folder/file.txt')
-		u.authority === 'server'
-		u.path === '/shares/c$/file.txt'
-		u.fsPath === '\\server\c$\folder\file.txt'
-		```
+		 * const u = URI.parse('file://server/c$/folder/file.txt')
+		 * u.authority === 'server'
+		 * u.path === '/shares/c$/file.txt'
+		 * u.fsPath === '\\server\c$\folder\file.txt'
+		 * ```
 		 */
 		readonly fsPath: string;
 
@@ -1672,6 +1672,12 @@ declare module 'vscode' {
 		 * Always show this item.
 		 */
 		alwaysShow?: boolean;
+
+		/**
+		 * Optional buttons that will be rendered on this particular item. These buttons will trigger
+		 * an {@link QuickPickItemButtonEvent} when clicked.
+		 */
+		buttons?: readonly QuickInputButton[];
 	}
 
 	/**
@@ -2567,11 +2573,12 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * The MarkdownString represents human-readable text that supports formatting via the
-	 * markdown syntax. Standard markdown is supported, also tables, but no embedded html.
+	 * Human-readable text that supports formatting via the [markdown syntax](https://commonmark.org).
 	 *
 	 * Rendering of {@link ThemeIcon theme icons} via the `$(<name>)`-syntax is supported
-	 * when the {@linkcode MarkdownString.supportThemeIcons supportThemeIcons} is set to `true`.
+	 * when the {@linkcode supportThemeIcons} is set to `true`.
+	 *
+	 * Rendering of embedded html is supported when {@linkcode supportHtml} is set to `true`.
 	 */
 	export class MarkdownString {
 
@@ -2592,7 +2599,7 @@ declare module 'vscode' {
 		supportThemeIcons?: boolean;
 
 		/**
-		 * Indicates that this markdown string can contain raw html tags. Defaults to false.
+		 * Indicates that this markdown string can contain raw html tags. Defaults to `false`.
 		 *
 		 * When `supportHtml` is false, the markdown renderer will strip out any raw html tags
 		 * that appear in the markdown text. This means you can only use markdown syntax for rendering.
@@ -5130,18 +5137,17 @@ declare module 'vscode' {
 	 * - *Workspace Folder settings* - From one of the {@link workspace.workspaceFolders Workspace Folders} under which requested resource belongs to.
 	 * - *Language settings* - Settings defined under requested language.
 	 *
-	 * The *effective* value (returned by {@linkcode WorkspaceConfiguration.get get}) is computed by overriding or merging the values in the following order.
+	 * The *effective* value (returned by {@linkcode WorkspaceConfiguration.get get}) is computed by overriding or merging the values in the following order:
 	 *
-	 * ```
-	 * `defaultValue` (if defined in `package.json` otherwise derived from the value's type)
-	 * `globalValue` (if defined)
-	 * `workspaceValue` (if defined)
-	 * `workspaceFolderValue` (if defined)
-	 * `defaultLanguageValue` (if defined)
-	 * `globalLanguageValue` (if defined)
-	 * `workspaceLanguageValue` (if defined)
-	 * `workspaceFolderLanguageValue` (if defined)
-	 * ```
+	 * 1. `defaultValue` (if defined in `package.json` otherwise derived from the value's type)
+	 * 1. `globalValue` (if defined)
+	 * 1. `workspaceValue` (if defined)
+	 * 1. `workspaceFolderValue` (if defined)
+	 * 1. `defaultLanguageValue` (if defined)
+	 * 1. `globalLanguageValue` (if defined)
+	 * 1. `workspaceLanguageValue` (if defined)
+	 * 1. `workspaceFolderLanguageValue` (if defined)
+	 *
 	 * **Note:** Only `object` value types are merged and all other value types are overridden.
 	 *
 	 * Example 1: Overriding
@@ -5655,6 +5661,13 @@ declare module 'vscode' {
 		 * @param value A string, falsy values will be printed.
 		 */
 		appendLine(value: string): void;
+
+		/**
+		 * Replaces all output from the channel with the given value.
+		 *
+		 * @param value A string, falsy values will not be printed.
+		 */
+		replace(value: string): void;
 
 		/**
 		 * Removes all output from the channel.
@@ -7689,8 +7702,8 @@ declare module 'vscode' {
 		 *
 		 * This is the origin that should be used in a content security policy rule:
 		 *
-		 * ```
-		 * img-src https: ${webview.cspSource} ...;
+		 * ```ts
+		 * `img-src https: ${webview.cspSource} ...;`
 		 * ```
 		 */
 		readonly cspSource: string;
@@ -7743,7 +7756,7 @@ declare module 'vscode' {
 		/**
 		 * Icon for the panel shown in UI.
 		 */
-		iconPath?: Uri | { light: Uri; dark: Uri };
+		iconPath?: Uri | { readonly light: Uri; readonly dark: Uri };
 
 		/**
 		 * {@linkcode Webview} belonging to the panel.
@@ -8137,14 +8150,14 @@ declare module 'vscode' {
 		 * If this is provided, your extension should restore the editor from the backup instead of reading the file
 		 * from the user's workspace.
 		 */
-		readonly backupId: string | undefined
+		readonly backupId: string | undefined;
 
 		/**
 		 * If the URI is an untitled file, this will be populated with the byte data of that file
 		 *
 		 * If this is provided, your extension should utilize this byte data rather than executing fs APIs on the URI passed in
 		 */
-		readonly untitledDocumentData: Uint8Array | undefined
+		readonly untitledDocumentData: Uint8Array | undefined;
 	}
 
 	/**
@@ -8422,7 +8435,7 @@ declare module 'vscode' {
 
 		/**
 		 * The detected default shell for the extension host, this is overridden by the
-		 * `terminal.integrated.shell` setting for the extension host's platform. Note that in
+		 * `terminal.integrated.defaultProfile` setting for the extension host's platform. Note that in
 		 * environments that do not support a shell the value is the empty string.
 		 */
 		export const shell: string;
@@ -9544,17 +9557,17 @@ declare module 'vscode' {
 		 * Context value of the tree item. This can be used to contribute item specific actions in the tree.
 		 * For example, a tree item is given a context value as `folder`. When contributing actions to `view/item/context`
 		 * using `menus` extension point, you can specify context value for key `viewItem` in `when` expression like `viewItem == folder`.
-		 * ```
-		 *	"contributes": {
-		 *		"menus": {
-		 *			"view/item/context": [
-		 *				{
-		 *					"command": "extension.deleteFolder",
-		 *					"when": "viewItem == folder"
-		 *				}
-		 *			]
-		 *		}
-		 *	}
+		 * ```json
+		 * "contributes": {
+		 *   "menus": {
+		 *     "view/item/context": [
+		 *       {
+		 *         "command": "extension.deleteFolder",
+		 *         "when": "viewItem == folder"
+		 *       }
+		 *     ]
+		 *   }
+		 * }
 		 * ```
 		 * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
 		 */
@@ -9724,6 +9737,8 @@ declare module 'vscode' {
 		 * Note writing `\n` will just move the cursor down 1 row, you need to write `\r` as well
 		 * to move the cursor to the left-most cell.
 		 *
+		 * Events fired before {@link Pseudoterminal.open} is called will be be ignored.
+		 *
 		 * **Example:** Write red text to the terminal
 		 * ```typescript
 		 * const writeEmitter = new vscode.EventEmitter<string>();
@@ -9749,6 +9764,8 @@ declare module 'vscode' {
 		 * bar). Set to `undefined` for the terminal to go back to the regular dimensions (fit to
 		 * the size of the panel).
 		 *
+		 * Events fired before {@link Pseudoterminal.open} is called will be be ignored.
+		 *
 		 * **Example:** Override the dimensions of a terminal to 20 columns and 10 rows
 		 * ```typescript
 		 * const dimensionsEmitter = new vscode.EventEmitter<vscode.TerminalDimensions>();
@@ -9770,6 +9787,8 @@ declare module 'vscode' {
 
 		/**
 		 * An event that when fired will signal that the pty is closed and dispose of the terminal.
+		 *
+		 * Events fired before {@link Pseudoterminal.open} is called will be be ignored.
 		 *
 		 * A number can be used to provide an exit code for the terminal. Exit codes must be
 		 * positive and a non-zero exit codes signals failure which shows a notification for a
@@ -9799,6 +9818,8 @@ declare module 'vscode' {
 
 		/**
 		 * An event that when fired allows changing the name of the terminal.
+		 *
+		 * Events fired before {@link Pseudoterminal.open} is called will be be ignored.
 		 *
 		 * **Example:** Change the terminal name to "My new terminal".
 		 * ```typescript
@@ -10185,6 +10206,12 @@ declare module 'vscode' {
 		readonly onDidTriggerButton: Event<QuickInputButton>;
 
 		/**
+		 * An event signaling when a button in a particular {@link QuickPickItem} was triggered.
+		 * This event does not fire for buttons in the title bar.
+		 */
+		readonly onDidTriggerItemButton: Event<QuickPickItemButtonEvent<T>>;
+
+		/**
 		 * Items to pick from. This can be read and updated by the extension.
 		 */
 		items: readonly T[];
@@ -10203,6 +10230,11 @@ declare module 'vscode' {
 		 * If the filter text should also be matched against the detail of the items. Defaults to false.
 		 */
 		matchOnDetail: boolean;
+
+		/*
+		 * An optional flag to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
+		 */
+		keepScrollPosition?: boolean;
 
 		/**
 		 * Active items. This can be read and updated by the extension.
@@ -10313,6 +10345,21 @@ declare module 'vscode' {
 		 * @hidden
 		 */
 		private constructor();
+	}
+
+	/**
+	 * An event signaling when a button in a particular {@link QuickPickItem} was triggered.
+	 * This event does not fire for buttons in the title bar.
+	 */
+	export interface QuickPickItemButtonEvent<T extends QuickPickItem> {
+		/**
+		 * The button that was clicked.
+		 */
+		readonly button: QuickInputButton;
+		/**
+		 * The item that the button belongs to.
+		 */
+		readonly item: T;
 	}
 
 	/**
@@ -11246,7 +11293,7 @@ declare module 'vscode' {
 		 * 2. A string will be desugared to become the `language`-part of a {@linkcode DocumentFilter}, so `"fooLang"` is like `{ language: "fooLang" }`.
 		 * 3. A {@linkcode DocumentFilter} will be matched against the document by comparing its parts with the document. The following rules apply:
 		 *  1. When the `DocumentFilter` is empty (`{}`) the result is `0`
-		 *  2. When `scheme`, `language`, or `pattern` are defined but one doesn’t match, the result is `0`
+		 *  2. When `scheme`, `language`, or `pattern` are defined but one doesn't match, the result is `0`
 		 *  3. Matching against `*` gives a score of `5`, matching via equality or via a glob-pattern gives a score of `10`
 		 *  4. The result is the maximum value of each match
 		 *
@@ -12653,17 +12700,17 @@ declare module 'vscode' {
 		 * Context value of the resource state. This can be used to contribute resource specific actions.
 		 * For example, if a resource is given a context value as `diffable`. When contributing actions to `scm/resourceState/context`
 		 * using `menus` extension point, you can specify context value for key `scmResourceState` in `when` expressions, like `scmResourceState == diffable`.
-		 * ```
-		 *	"contributes": {
-		 *		"menus": {
-		 *			"scm/resourceState/context": [
-		 *				{
-		 *					"command": "extension.diff",
-		 *					"when": "scmResourceState == diffable"
-		 *				}
-		 *			]
-		 *		}
-		 *	}
+		 * ```json
+		 * "contributes": {
+		 *   "menus": {
+		 *     "scm/resourceState/context": [
+		 *       {
+		 *         "command": "extension.diff",
+		 *         "when": "scmResourceState == diffable"
+		 *       }
+		 *     ]
+		 *   }
+		 * }
 		 * ```
 		 * This will show action `extension.diff` only for resources with `contextValue` is `diffable`.
 		 */
@@ -12734,8 +12781,9 @@ declare module 'vscode' {
 		 * The UI-visible count of {@link SourceControlResourceState resource states} of
 		 * this source control.
 		 *
-		 * Equals to the total number of {@link SourceControlResourceState resource state}
-		 * of this source control, if undefined.
+		 * If undefined, this source control will
+		 * - display its UI-visible count as zero, and
+		 * - contribute the count of its {@link SourceControlResourceState resource states} to the UI-visible aggregated count for all source controls
 		 */
 		count?: number;
 
@@ -12917,7 +12965,7 @@ declare module 'vscode' {
 		/**
 		 * Event specific information.
 		 */
-		readonly body: any | undefined;
+		readonly body: any;
 	}
 
 	/**
@@ -13569,17 +13617,17 @@ declare module 'vscode' {
 		 * Context value of the comment thread. This can be used to contribute thread specific actions.
 		 * For example, a comment thread is given a context value as `editable`. When contributing actions to `comments/commentThread/title`
 		 * using `menus` extension point, you can specify context value for key `commentThread` in `when` expression like `commentThread == editable`.
-		 * ```
-		 *	"contributes": {
-		 *		"menus": {
-		 *			"comments/commentThread/title": [
-		 *				{
-		 *					"command": "extension.deleteCommentThread",
-		 *					"when": "commentThread == editable"
-		 *				}
-		 *			]
-		 *		}
-		 *	}
+		 * ```json
+		 * "contributes": {
+		 *   "menus": {
+		 *     "comments/commentThread/title": [
+		 *       {
+		 *         "command": "extension.deleteCommentThread",
+		 *         "when": "commentThread == editable"
+		 *       }
+		 *     ]
+		 *   }
+		 * }
 		 * ```
 		 * This will show action `extension.deleteCommentThread` only for comment threads with `contextValue` is `editable`.
 		 */
@@ -13840,6 +13888,17 @@ declare module 'vscode' {
 	 */
 	export interface AuthenticationGetSessionOptions {
 		/**
+		 * Whether the existing user session preference should be cleared.
+		 *
+		 * For authentication providers that support being signed into multiple accounts at once, the user will be
+		 * prompted to select an account to use when {@link authentication.getSession getSession} is called. This preference
+		 * is remembered until {@link authentication.getSession getSession} is called with this flag.
+		 *
+		 * Defaults to false.
+		 */
+		clearSessionPreference?: boolean;
+
+		/**
 		 * Whether login should be performed if there is no matching session.
 		 *
 		 * If true, a modal dialog will be shown asking the user to sign in. If false, a numbered badge will be shown
@@ -13850,19 +13909,23 @@ declare module 'vscode' {
 		 * will also result in an immediate modal dialog, and false will add a numbered badge to the accounts icon.
 		 *
 		 * Defaults to false.
+		 *
+		 * Note: you cannot use this option with {@link silent}.
 		 */
 		createIfNone?: boolean;
 
+
 		/**
-		 * Whether the existing user session preference should be cleared.
+		 * Whether we should show the indication to sign in in the Accounts menu.
 		 *
-		 * For authentication providers that support being signed into multiple accounts at once, the user will be
-		 * prompted to select an account to use when {@link authentication.getSession getSession} is called. This preference
-		 * is remembered until {@link authentication.getSession getSession} is called with this flag.
+		 * If false, the user will be shown a badge on the Accounts menu with an option to sign in for the extension.
+		 * If true, no indication will be shown.
 		 *
 		 * Defaults to false.
+		 *
+		 * Note: you cannot use this option with any other options that prompt the user like {@link createIfNone}.
 		 */
-		clearSessionPreference?: boolean;
+		silent?: boolean;
 	}
 
 	/**
@@ -13908,12 +13971,12 @@ declare module 'vscode' {
 		/**
 		 * The {@link AuthenticationSession AuthenticationSessions} of the {@link AuthenticationProvider} that have been added.
 		*/
-		readonly added: readonly AuthenticationSession[] | undefined
+		readonly added: readonly AuthenticationSession[] | undefined;
 
 		/**
 		 * The {@link AuthenticationSession AuthenticationSessions} of the {@link AuthenticationProvider} that have been removed.
 		 */
-		readonly removed: readonly AuthenticationSession[] | undefined
+		readonly removed: readonly AuthenticationSession[] | undefined;
 
 		/**
 		 * The {@link AuthenticationSession AuthenticationSessions} of the {@link AuthenticationProvider} that have been changed.
@@ -14102,7 +14165,7 @@ declare module 'vscode' {
 		 * Associated tag for the profile. If this is set, only {@link TestItem}
 		 * instances with the same tag will be eligible to execute in this profile.
 		 */
-		tag?: TestTag;
+		tag: TestTag | undefined;
 
 		/**
 		 * If this method is present, a configuration gear will be present in the
@@ -14110,7 +14173,7 @@ declare module 'vscode' {
 		 * you can take other editor actions, such as showing a quick pick or
 		 * opening a configuration file.
 		 */
-		configureHandler?: () => void;
+		configureHandler: (() => void) | undefined;
 
 		/**
 		 * Handler called to start a test run. When invoked, the function should call
@@ -14259,7 +14322,7 @@ declare module 'vscode' {
 		 * The process of running tests should resolve the children of any test
 		 * items who have not yet been resolved.
 		 */
-		readonly include?: TestItem[];
+		readonly include: TestItem[] | undefined;
 
 		/**
 		 * An array of tests the user has marked as excluded from the test included
@@ -14268,14 +14331,14 @@ declare module 'vscode' {
 		 * May be omitted if no exclusions were requested. Test controllers should
 		 * not run excluded tests or any children of excluded tests.
 		 */
-		readonly exclude?: TestItem[];
+		readonly exclude: TestItem[] | undefined;
 
 		/**
 		 * The profile used for this request. This will always be defined
 		 * for requests issued from the editor UI, though extensions may
 		 * programmatically create requests not associated with any profile.
 		 */
-		readonly profile?: TestRunProfile;
+		readonly profile: TestRunProfile | undefined;
 
 		/**
 		 * @param tests Array of specific tests to run, or undefined to run all tests
@@ -14294,7 +14357,7 @@ declare module 'vscode' {
 		 * disambiguate multiple sets of results in a test run. It is useful if
 		 * tests are run across multiple platforms, for example.
 		 */
-		readonly name?: string;
+		readonly name: string | undefined;
 
 		/**
 		 * A cancellation token which will be triggered when the test run is
@@ -14434,7 +14497,7 @@ declare module 'vscode' {
 		/**
 		 * URI this `TestItem` is associated with. May be a file or directory.
 		 */
-		readonly uri?: Uri;
+		readonly uri: Uri | undefined;
 
 		/**
 		 * The children of this test item. For a test suite, this may contain the
@@ -14447,7 +14510,7 @@ declare module 'vscode' {
 		 * top-level items in the {@link TestController.items} and for items that
 		 * aren't yet included in another item's {@link children}.
 		 */
-		readonly parent?: TestItem;
+		readonly parent: TestItem | undefined;
 
 		/**
 		 * Tags associated with this test item. May be used in combination with
@@ -14489,7 +14552,7 @@ declare module 'vscode' {
 		 *
 		 * This is only meaningful if the `uri` points to a file.
 		 */
-		range?: Range;
+		range: Range | undefined;
 
 		/**
 		 * Optional error encountered while loading the test.
@@ -14497,7 +14560,7 @@ declare module 'vscode' {
 		 * Note that this is not a test result and should only be used to represent errors in
 		 * test discovery, such as syntax errors.
 		 */
-		error?: string | MarkdownString;
+		error: string | MarkdownString | undefined;
 	}
 
 	/**

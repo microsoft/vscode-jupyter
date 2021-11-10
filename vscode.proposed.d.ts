@@ -184,15 +184,6 @@ declare module 'vscode' {
 		 * Defaults to false.
 		 */
 		forceNewSession?: boolean | { detail: string };
-		/**
-		 * Whether we should show the indication to sign in in the Accounts menu.
-		 *
-		 * If false, the user will be shown a badge on the Accounts menu with an option to sign in for the extension.
-		 * If true, no indication will be shown.
-		 *
-		 * Defaults to false.
-		 */
-		silent?: boolean;
 	}
 
 	export namespace authentication {
@@ -1129,18 +1120,6 @@ declare module 'vscode' {
 
 	//#endregion
 
-	//#region https://github.com/microsoft/vscode/issues/132068
-
-	export interface QuickPick<T extends QuickPickItem> extends QuickInput {
-
-		/*
-		 * An optional flag to maintain the scroll position of the quick pick when the quick pick items are updated. Defaults to false.
-		 */
-		keepScrollPosition?: boolean;
-	}
-
-	//#endregion
-
 	//#region https://github.com/microsoft/vscode/issues/124970, Cell Execution State
 
 	/**
@@ -1575,6 +1554,9 @@ declare module 'vscode' {
 	}
 
 	export interface NotebookController {
+		/**
+		 * The human-readable label used to categorise controllers.
+		 */
 		kind?: string;
 
 		// todo@API allow add, not remove
@@ -1823,6 +1805,7 @@ declare module 'vscode' {
 		/**
 		 * The text of the hint.
 		 */
+		// todo@API label?
 		text: string;
 		/**
 		 * The position of this hint.
@@ -2808,20 +2791,6 @@ declare module 'vscode' {
 
 	//#endregion
 
-	//#region https://github.com/microsoft/vscode/issues/88716
-	export interface QuickPickItem {
-		buttons?: QuickInputButton[];
-	}
-	export interface QuickPick<T extends QuickPickItem> extends QuickInput {
-		readonly onDidTriggerItemButton: Event<QuickPickItemButtonEvent<T>>;
-	}
-	export interface QuickPickItemButtonEvent<T extends QuickPickItem> {
-		button: QuickInputButton;
-		item: T;
-	}
-
-	//#endregion
-
 	//#region @eamodio https://github.com/microsoft/vscode/issues/133935
 
 	export interface SourceControl {
@@ -2829,4 +2798,5 @@ declare module 'vscode' {
 	}
 
 	//#endregion
+
 }
