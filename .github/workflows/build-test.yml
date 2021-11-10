@@ -207,14 +207,14 @@ jobs:
 
       - name: Check dependencies
         run: npm run checkDependencies
-        
+
       - name: 'Check for telemetry edit'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:
           prereq-pattern: './src/client/telemetry/index.ts'
           file-pattern: 'telemetry.md'
           skip-label: 'skip telemetry'
-          failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'        
+          failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
   vsc_api_check:
     needs: pick_environment
@@ -437,7 +437,7 @@ jobs:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{
-            hashFiles('./build/conda-functional-requirements.yml') }}          
+            hashFiles('./build/conda-functional-requirements.yml') }}
 
       - name: Use Conda Python ${{matrix.pythonVersion}}
         uses: conda-incubator/setup-miniconda@v2
@@ -446,7 +446,7 @@ jobs:
           auto-update-conda: true
           activate-environment: functional_test_env
           channels: conda-forge,default
-          environment-file: ./build/conda-functional-requirements.yml          
+          environment-file: ./build/conda-functional-requirements.yml
           python-version: ${{matrix.pythonVersion}}
 
       - name: Set CI Path
@@ -610,21 +610,21 @@ jobs:
             using Pkg
             Pkg.add("IJulia")'
 
-      - name: Install Dot.net
-        uses: actions/setup-dotnet@v1.8.0
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+    #   - name: Install Dot.net
+    #     uses: actions/setup-dotnet@v1.8.0
+    #     with:
+    #       dotnet-version: ${{env.DOTNET_VERSION}}
+    #     if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
-      - name: Install .NET Interactive
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+    #   - name: Install .NET Interactive
+    #     shell: bash -l {0}
+    #     run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+    #     if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
-      - name: Install .NET Kernel
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+    #   - name: Install .NET Kernel
+    #     shell: bash -l {0}
+    #     run: dotnet interactive jupyter install
+    #     if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests

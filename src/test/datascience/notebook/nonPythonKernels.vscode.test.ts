@@ -121,6 +121,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForKernelToGetAutoSelected('julia');
     });
     test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
+        return this.skip();
         // The .NET interactive CLI does not work if you do not have Jupyter installed.
         // We install Jupyter on CI when we have tests with Python extension.
         // Hence if python extension is not installed, then assume jupyter is not installed on CI.
