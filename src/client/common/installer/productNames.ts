@@ -11,3 +11,4 @@ ProductNames.set(Product.ipykernel, 'ipykernel');
 ProductNames.set(Product.nbconvert, 'nbconvert');
 ProductNames.set(Product.kernelspec, 'kernelspec');
 ProductNames.set(Product.pandas, 'pandas');
+ProductNames.set(Product.pip, 'pip');

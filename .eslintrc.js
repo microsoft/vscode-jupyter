@@ -558,7 +558,6 @@ module.exports = {
         'src/client/common/application/debugService.ts',
         'src/client/common/application/commands/reloadCommand.ts',
         'src/client/common/application/terminalManager.ts',
-        'src/client/common/installer/productNames.ts',
         'src/client/common/installer/condaInstaller.ts',
         'src/client/common/installer/channelManager.ts',
         'src/client/common/installer/moduleInstaller.ts',

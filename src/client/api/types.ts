@@ -40,7 +40,8 @@ export enum JupyterProductToInstall {
     notebook = 'notebook',
     kernelspec = 'kernelspec',
     nbconvert = 'nbconvert',
-    pandas = 'pandas'
+    pandas = 'pandas',
+    pip = 'pip'
 }
 
 /**
@@ -90,7 +91,8 @@ export type PythonApi = {
         product: JupyterProductToInstall,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse>;
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
@@ -118,7 +120,8 @@ export interface IPythonInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        reInstallAndUpdate?: boolean,
+        installPipIfRequired?: boolean
     ): Promise<InstallerResponse>;
 }
 

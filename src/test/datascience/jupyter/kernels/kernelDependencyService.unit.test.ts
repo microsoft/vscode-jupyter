@@ -98,7 +98,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             });
             test('Install ipykernel', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenResolve(
+                when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenResolve(
                     InstallerResponse.Installed
                 );
                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
@@ -113,7 +113,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             test('Install ipykernel second time should result in a re-install', async () => {
                 when(memento.get(anything(), anything())).thenReturn(true);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(installer.install(Product.ipykernel, interpreter, anything(), true)).thenResolve(
+                when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
                 when(appShell.showErrorMessage(anything(), anything(), Common.reInstall())).thenResolve(
@@ -127,7 +127,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             });
             test('Bubble installation errors', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenReject(
+                when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenReject(
                     new Error('Install failed - kaboom')
                 );
                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(

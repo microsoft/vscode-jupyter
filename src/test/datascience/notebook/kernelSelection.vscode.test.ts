@@ -178,7 +178,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
                 `Interpreter does not match for ${activeIntepreterSearchString}: expected ${getNormalizedInterpreterPath(
                     activeInterpreterPath
-                )} or ${activeInterpreterPath}`
+                )} or ${activeInterpreterPath}, but go ${output}`
             );
         }
     });
