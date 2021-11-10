@@ -69,6 +69,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private controllersPromise?: Promise<void>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
+    private selectedControllers = new Map<string, VSCodeNotebookController>();
     private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
     public get onNotebookControllerSelectionChanged() {
@@ -135,7 +136,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this._onNotebookControllerSelected.event;
     }
     public getSelectedNotebookController(notebook: NotebookDocument) {
-        return Array.from(this.registeredControllers.values()).find((item) => item.isAssociatedWithDocument(notebook));
+        return this.selectedControllers.get(notebook.uri.toString());
     }
 
     public getPreferredNotebookController(notebook: NotebookDocument) {
@@ -601,6 +602,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }) {
         traceInfoIfCI(`Controller ${event.controller?.id} selected`);
+        this.selectedControllers.set(event.notebook.uri.toString(), event.controller);
         // Now notify out that we have updated a notebooks controller
         this._onNotebookControllerSelected.fire(event);
     }
