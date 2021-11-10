@@ -166,11 +166,6 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                // const success = await this.addCode(code, this.document.uri, range.start.line);
-                // if (!success) {
-                // await this.addErrorMessage(this.document.uri, leftCount);
-                // break;
-                // }
                 this.queueAddCode(code, this.document.uri, range.start.line, leftCount);
             }
         }
@@ -219,11 +214,6 @@ export class CodeWatcher implements ICodeWatcher {
                 leftCount -= 1;
                 const code = this.document.getText(range);
                 this.queueAddCode(code, this.document.uri, lens.range.start.line, leftCount);
-                // const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                // if (!success) {
-                // await this.addErrorMessage(this.document.uri, leftCount);
-                // break;
-                // }
             } else {
                 // If we get a cell past or at the stop point stop
                 break;
@@ -248,11 +238,6 @@ export class CodeWatcher implements ICodeWatcher {
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
                 this.queueAddCode(code, this.document.uri, lens.range.start.line, leftCount);
-                // const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                // if (!success) {
-                // await this.addErrorMessage(this.document.uri, leftCount);
-                // break;
-                // }
             }
         }
     }
@@ -274,7 +259,6 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            // await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
             this.queueAddCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, 0, activeEditor);
         }
     }
@@ -288,7 +272,6 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                // await this.addCode(code, this.document.uri, 0);
                 this.queueAddCode(code, this.document.uri, 0, 0);
             }
         }
@@ -303,7 +286,6 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                // await this.addCode(code, this.document.uri, targetLine);
                 this.queueAddCode(code, this.document.uri, targetLine, 0);
             }
         }
@@ -1012,6 +994,7 @@ export class CodeWatcher implements ICodeWatcher {
                     this.executingAddCode = nextCreationFunction();
                 }
             } else {
+                // Failure. Print our failure message and clear the queue
                 await this.addErrorMessage(file, leftCount);
                 this.addCodeQueue = [];
             }
@@ -1031,27 +1014,10 @@ export class CodeWatcher implements ICodeWatcher {
         editor?: TextEditor,
         debug?: boolean
     ) {
-        // // Get our add code promise and tack on a then for getting the next queue item
-        // const addCodePromise = this.addCode(code, file, line, editor, debug);
-        // const addCodePromiseEdit = addCodePromise.then(async (result) => {
-        // if (result) {
-        // // Success. Check queue for next
-        // this.executingAddCode = this.addCodeQueue.shift();
-        // } else {
-        // await this.addErrorMessage(file, leftCount);
-
-        // this.executingAddCode = undefined;
-        // this.addCodeQueue = [];
-        // }
-
-        // return result;
-        // });
-
         // Either start up this addCode, or queue it for later
         if (this.executingAddCode) {
             const creationFunction = () => this.createAddCodePromise(code, file, line, leftCount, editor, debug);
             this.addCodeQueue.push(creationFunction);
-            // this.addCodeQueue.push(addCodePromiseEdit);
         } else {
             this.executingAddCode = this.createAddCodePromise(code, file, line, leftCount, editor, debug);
         }
@@ -1135,13 +1101,6 @@ export class CodeWatcher implements ICodeWatcher {
                     this.documentManager.activeTextEditor,
                     debug
                 );
-                // await this.addCode(
-                // code,
-                // this.document.uri,
-                // currentRunCellLens.range.start.line,
-                // this.documentManager.activeTextEditor,
-                // debug
-                // );
             }
         }
     }
@@ -1205,7 +1164,6 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            // await this.addCode(code, this.document.uri, 0, undefined, debug);
             this.queueAddCode(code, this.document.uri, 0, 0, undefined, debug);
         }
     }
