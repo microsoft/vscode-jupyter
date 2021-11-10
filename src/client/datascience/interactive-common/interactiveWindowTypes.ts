@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import {
@@ -114,8 +114,10 @@ export interface IShowDataViewer {
 }
 
 export interface IShowDataViewerFromVariablePanel {
-    container: DebugProtocolVariableContainer | undefined;
-    variable: DebugProtocolVariable;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    variable: any;
 }
 
 export interface INotebookIdentity {
