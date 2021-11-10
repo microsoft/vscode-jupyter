@@ -3,7 +3,6 @@
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { resolveModuleName } from 'typescript';
 import {
     CodeLens,
     commands,
@@ -67,10 +66,9 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
     private closeDocumentDisposable: IDisposable | undefined;
-    private addCodeQueue: Promise<boolean> | undefined;
-    private addCodeQueue2: Promise<boolean>[] = [];
+    // private addCodeQueue: Promise<boolean>[] = [];
+    private addCodeQueue: (() => Promise<boolean>)[] = [];
     private executingAddCode: Promise<boolean> | undefined;
-    // private addCodeQueue: Promise<boolean> = Promise.resolve(true);
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -168,11 +166,12 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                const success = await this.addCode(code, this.document.uri, range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                // const success = await this.addCode(code, this.document.uri, range.start.line);
+                // if (!success) {
+                // await this.addErrorMessage(this.document.uri, leftCount);
+                // break;
+                // }
+                this.queueAddCode(code, this.document.uri, range.start.line, leftCount);
             }
         }
 
@@ -219,11 +218,12 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(range);
-                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                this.queueAddCode(code, this.document.uri, lens.range.start.line, leftCount);
+                // const success = await this.addCode(code, this.document.uri, lens.range.start.line);
+                // if (!success) {
+                // await this.addErrorMessage(this.document.uri, leftCount);
+                // break;
+                // }
             } else {
                 // If we get a cell past or at the stop point stop
                 break;
@@ -247,7 +247,7 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                this.queueAddCode(code, this.document.uri, lens.range.start.line);
+                this.queueAddCode(code, this.document.uri, lens.range.start.line, leftCount);
                 // const success = await this.addCode(code, this.document.uri, lens.range.start.line);
                 // if (!success) {
                 // await this.addErrorMessage(this.document.uri, leftCount);
@@ -274,7 +274,8 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
+            // await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
+            this.queueAddCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, 0, activeEditor);
         }
     }
 
@@ -287,7 +288,8 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.document.uri, 0);
+                // await this.addCode(code, this.document.uri, 0);
+                this.queueAddCode(code, this.document.uri, 0, 0);
             }
         }
     }
@@ -301,7 +303,8 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.document.uri, targetLine);
+                // await this.addCode(code, this.document.uri, targetLine);
+                this.queueAddCode(code, this.document.uri, targetLine, 0);
             }
         }
     }
@@ -988,45 +991,70 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    // Queue up our addCode promises so that we run them in order
-    private queueAddCode(code: string, file: Uri, line: number, editor?: TextEditor, debug?: boolean) {
+    private createAddCodePromise(
+        code: string,
+        file: Uri,
+        line: number,
+        leftCount: number,
+        editor?: TextEditor,
+        debug?: boolean
+    ): Promise<boolean> {
         // Get our add code promise and tack on a then for getting the next queue item
         const addCodePromise = this.addCode(code, file, line, editor, debug);
-        const addCodePromiseEdit = addCodePromise.then((result) => {
+        const addCodePromiseEdit = addCodePromise.then(async (result) => {
+            this.executingAddCode = undefined;
+
             if (result) {
                 // Success. Check queue for next
-                this.executingAddCode = this.addCodeQueue2.shift();
+                const nextCreationFunction = this.addCodeQueue.shift();
+
+                if (nextCreationFunction) {
+                    this.executingAddCode = nextCreationFunction();
+                }
             } else {
-                this.executingAddCode = undefined;
-                // Resolve all promises here?
-                this.addCodeQueue2 = [];
+                await this.addErrorMessage(file, leftCount);
+                this.addCodeQueue = [];
             }
 
             return result;
         });
 
-        if (this.executingAddCode) {
-            this.addCodeQueue2.push(addCodePromiseEdit);
-        } else {
-            this.executingAddCode = addCodePromiseEdit;
-        }
+        return addCodePromiseEdit;
+    }
 
-        // We don't actually want this as one false will cancel the Queue
-        // IANHU: Check on void here...
-        // if (this.addCodeQueue) {
-        // void this.addCodeQueue.then(async (previousResult) => {
-        // if (previousResult) {
-        // const result = await addCodePromise;
-        // return result;
-        // }
-
-        // // Previous was rejected
-        // this.addCodeQueue = undefined;
-        // return false;
-        // });
+    // Queue up our addCode promises so that we run them in order
+    private queueAddCode(
+        code: string,
+        file: Uri,
+        line: number,
+        leftCount: number,
+        editor?: TextEditor,
+        debug?: boolean
+    ) {
+        // // Get our add code promise and tack on a then for getting the next queue item
+        // const addCodePromise = this.addCode(code, file, line, editor, debug);
+        // const addCodePromiseEdit = addCodePromise.then(async (result) => {
+        // if (result) {
+        // // Success. Check queue for next
+        // this.executingAddCode = this.addCodeQueue.shift();
         // } else {
-        // this.addCodeQueue = addCodePromise;
+        // await this.addErrorMessage(file, leftCount);
+
+        // this.executingAddCode = undefined;
+        // this.addCodeQueue = [];
         // }
+
+        // return result;
+        // });
+
+        // Either start up this addCode, or queue it for later
+        if (this.executingAddCode) {
+            const creationFunction = () => this.createAddCodePromise(code, file, line, leftCount, editor, debug);
+            this.addCodeQueue.push(creationFunction);
+            // this.addCodeQueue.push(addCodePromiseEdit);
+        } else {
+            this.executingAddCode = this.createAddCodePromise(code, file, line, leftCount, editor, debug);
+        }
     }
 
     private async addCode(
@@ -1099,13 +1127,21 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(
+                this.queueAddCode(
                     code,
                     this.document.uri,
                     currentRunCellLens.range.start.line,
+                    0,
                     this.documentManager.activeTextEditor,
                     debug
                 );
+                // await this.addCode(
+                // code,
+                // this.document.uri,
+                // currentRunCellLens.range.start.line,
+                // this.documentManager.activeTextEditor,
+                // debug
+                // );
             }
         }
     }
@@ -1169,7 +1205,8 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.document.uri, 0, undefined, debug);
+            // await this.addCode(code, this.document.uri, 0, undefined, debug);
+            this.queueAddCode(code, this.document.uri, 0, 0, undefined, debug);
         }
     }
 
