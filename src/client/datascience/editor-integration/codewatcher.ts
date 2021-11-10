@@ -66,7 +66,6 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
     private closeDocumentDisposable: IDisposable | undefined;
-    // private addCodeQueue: Promise<boolean>[] = [];
     private addCodeQueue: (() => Promise<boolean>)[] = [];
     private executingAddCode: Promise<boolean> | undefined;
 
