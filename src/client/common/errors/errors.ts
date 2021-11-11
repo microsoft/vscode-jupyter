@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { analyseKernelErrors } from './errorUtils';
+import { analyzeKernelErrors } from './errorUtils';
 
 const taggers = [tagWithChildProcessExited, tagWithKernelRestarterFailed];
 export function getErrorTags(stdErrOrStackTrace: string | string[]) {
@@ -12,7 +12,7 @@ export function getErrorTags(stdErrOrStackTrace: string | string[]) {
         ? stdErrOrStackTrace[0].toLowerCase()
         : stdErrOrStackTrace.toLowerCase();
     taggers.forEach((tagger) => tagger(stdErrOrStackTraceLowered, tags));
-    const error = analyseKernelErrors(stdErrOrStackTraceLowered);
+    const error = analyzeKernelErrors(stdErrOrStackTraceLowered);
     if (error?.telemetrySafeTags.length) {
         tags.push(...error?.telemetrySafeTags);
     }

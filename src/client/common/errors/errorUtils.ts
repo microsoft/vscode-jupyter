@@ -224,7 +224,7 @@ export type KernelFailure =
     | OldIPyKernelFailure
     | OldIPythonFailure;
 
-export function analyseKernelErrors(
+export function analyzeKernelErrors(
     stdErrOrStackTrace: string,
     workspaceFolders: readonly WorkspaceFolder[] = [],
     pythonSysPrefix: string = ''

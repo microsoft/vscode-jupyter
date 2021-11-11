@@ -21,7 +21,7 @@ import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { PythonKernelDiedError } from './pythonKernelDiedError';
 import {
-    analyseKernelErrors,
+    analyzeKernelErrors,
     getErrorMessageFromPythonTraceback,
     KernelFailureReason
 } from '../../common/errors/errorUtils';
@@ -49,7 +49,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         kernelConnection: KernelConnectionMetadata
     ): Promise<void> {
         await this.handleErrorImplementation(err, purpose, async (error: BaseError, defaultErrorMessage: string) => {
-            const failureInfo = analyseKernelErrors(
+            const failureInfo = analyzeKernelErrors(
                 error.stdErr || '',
                 this.workspace.workspaceFolders,
                 kernelConnection.interpreter?.sysPrefix
