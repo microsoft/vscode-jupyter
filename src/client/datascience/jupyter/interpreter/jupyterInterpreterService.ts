@@ -82,17 +82,15 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
-        const promises = [this.jupyterInterpreterSelector.selectInterpreter()];
-        if (token) {
-            promises.push(
-                createPromiseFromCancellation({
-                    cancelAction: 'resolve',
-                    defaultValue: undefined,
-                    token
-                })
-            );
-        }
-        const interpreter = await Promise.race(promises);
+        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+            cancelAction: 'resolve',
+            defaultValue: undefined,
+            token
+        });
+        const interpreter = await Promise.race([
+            this.jupyterInterpreterSelector.selectInterpreter(),
+            resolveToUndefinedWhenCancelled
+        ]);
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;
@@ -178,18 +176,16 @@ export class JupyterInterpreterService {
         token?: CancellationToken
     ): Promise<PythonEnvironment | undefined> {
         try {
-            const promises = [this.interpreterService.getInterpreterDetails(pythonPath, undefined)];
-            if (token) {
-                promises.push(
-                    createPromiseFromCancellation({
-                        cancelAction: 'resolve',
-                        defaultValue: undefined,
-                        token
-                    })
-                );
-            }
+            const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+                cancelAction: 'resolve',
+                defaultValue: undefined,
+                token
+            });
             // First see if we can get interpreter details
-            const interpreter = await Promise.race(promises);
+            const interpreter = await Promise.race([
+                this.interpreterService.getInterpreterDetails(pythonPath, undefined),
+                resolveToUndefinedWhenCancelled
+            ]);
             if (interpreter) {
                 // Then check that dependencies are installed
                 if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter, token)) {
