@@ -12,6 +12,7 @@ import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     IOutputChannel,
     Resource
@@ -40,6 +41,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { JupyterNotebook } from '../../jupyter/jupyterNotebook';
 import * as uuid from 'uuid/v4';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -104,7 +106,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
         this.trackDisposable(notebookPromise.promise);
-        let progressDisposable: vscode.Disposable | undefined;
+        const disposables: IDisposable[] = [];
         let rawSession: RawJupyterSession | undefined;
 
         traceInfo(`Getting preferred kernel for ${getDisplayPath(document.uri)}`);
@@ -124,12 +126,15 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
 
-            progressDisposable = !disableUI
+            const progressDisposable = !disableUI
                 ? this.progressReporter.createProgressIndicator(
                       localize.DataScience.connectingToKernel().format(displayName)
                   )
                 : undefined;
-
+            if (progressDisposable) {
+                disposables.push(progressDisposable);
+                cancelToken?.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
+            }
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -176,7 +181,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
         } finally {
-            progressDisposable?.dispose(); // NOSONAR
+            disposeAllDisposables(disposables);
         }
 
         return notebookPromise.promise;

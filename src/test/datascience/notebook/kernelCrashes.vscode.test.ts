@@ -4,12 +4,14 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+import * as path from 'path';
+import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { DataScience } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
@@ -23,14 +25,18 @@ import {
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages,
     waitForExecutionCompletedSuccessfully,
-    runAllCellsInActiveNotebook
+    runAllCellsInActiveNotebook,
+    waitForKernelToGetAutoSelected
 } from './helper';
-import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { Uri, workspace } from 'vscode';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -44,6 +50,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
+    let config: IConfigurationService;
 
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -55,6 +62,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 return this.skip();
             }
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
@@ -85,9 +93,12 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
+        const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
+        settings.disablePythonDaemon = false;
         // Added temporarily to identify why tests are failing.
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -247,5 +258,55 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
 
             assert.strictEqual(restartPrompt.getDisplayCount(), 1, 'Should only have one restart prompt');
         });
+        async function createAndOpenTemporaryNotebookForKernelCrash(nbFileName: string) {
+            const { serviceContainer } = await initialize();
+            const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+            const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            const nbFile = path.join(
+                EXTENSION_ROOT_DIR_FOR_TESTS,
+                `src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/${nbFileName}`
+            );
+            fs.ensureDirSync(path.dirname(nbFile));
+            fs.writeFileSync(nbFile, '');
+            disposables.push({ dispose: () => fs.unlinkSync(nbFile) });
+            // Open a python notebook and use this for all tests in this test suite.
+            await editorProvider.open(Uri.file(nbFile));
+            assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            await waitForKernelToGetAutoSelected();
+        }
+        async function displayErrorAboutOverriddenBuiltInModules(disablePythonDaemon: boolean) {
+            await closeNotebooksAndCleanUpAfterTests(disposables);
+
+            const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
+            settings.disablePythonDaemon = disablePythonDaemon;
+
+            const randomFile = path.join(
+                EXTENSION_ROOT_DIR_FOR_TESTS,
+                'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
+            );
+            const expectedErrorMessage = `${DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+                getDisplayPath(randomFile, workspace.workspaceFolders || [])
+            )} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+
+            const prompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { dismissPrompt: true },
+                disposables
+            );
+
+            await createAndOpenTemporaryNotebookForKernelCrash(`nb${disablePythonDaemon}.ipynb`);
+            await insertCodeCell('print("123412341234")');
+            await runAllCellsInActiveNotebook();
+            // Wait for a max of 1s for error message to be dispalyed.
+            await Promise.race([prompt.displayed, sleep(5_000).then(() => Promise.reject('Prompt not displayed'))]);
+            prompt.dispose();
+        }
+        test('Display error about overriding builtin modules (with Python daemon', () =>
+            displayErrorAboutOverriddenBuiltInModules(false));
+        test('Display error about overriding builtin modules (without Python daemon', () =>
+            displayErrorAboutOverriddenBuiltInModules(true));
     });
 });

@@ -29,6 +29,7 @@ import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
+import { SessionDisposedError } from '../errors/sessionDisposedError';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -82,10 +83,6 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async connect(cancelToken?: CancellationToken, disableUI?: boolean): Promise<void> {
-        if (!this.connInfo) {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-
         // Start a new session
         this.setSession(await this.createNewKernelSession(cancelToken, disableUI));
 
@@ -155,7 +152,7 @@ export class JupyterSession extends BaseJupyterSession {
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
         if (!session || !this.contentsManager || !this.sessionManager) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;

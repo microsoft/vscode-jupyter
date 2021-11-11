@@ -23,7 +23,7 @@ import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
-import { CancellationError } from '../../common/cancellation';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
@@ -110,6 +110,9 @@ export class KernelLauncher implements IKernelLauncher {
                     cancelToken,
                     disableUI
                 );
+                if (cancelToken?.isCancellationRequested) {
+                    throw new CancellationError();
+                }
             }
 
             // Should be available now, wait with a timeout
@@ -127,6 +130,9 @@ export class KernelLauncher implements IKernelLauncher {
         cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection(kernelConnectionMetadata);
+        if (cancelToken?.isCancellationRequested) {
+            throw new CancellationError();
+        }
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             this.daemonPool,
@@ -138,9 +144,21 @@ export class KernelLauncher implements IKernelLauncher {
             this.kernelEnvVarsService,
             this.pythonExecFactory
         );
-        await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
-        kernelProcess.exited(
+        try {
+            await Promise.race([
+                kernelProcess.launch(workingDirectory, timeout, cancelToken),
+                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
+            ]);
+        } catch (ex) {
+            void kernelProcess.dispose();
+            if (ex instanceof CancellationError || cancelToken?.isCancellationRequested) {
+                throw new CancellationError();
+            }
+            throw ex;
+        }
+
+        const disposable = kernelProcess.exited(
             ({ exitCode, reason }) => {
                 sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
                     exitCode,
@@ -151,6 +169,7 @@ export class KernelLauncher implements IKernelLauncher {
                 KernelLauncher._usedPorts.delete(connection.iopub_port);
                 KernelLauncher._usedPorts.delete(connection.shell_port);
                 KernelLauncher._usedPorts.delete(connection.stdin_port);
+                disposable.dispose();
             },
             this,
             this.disposables

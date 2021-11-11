@@ -130,15 +130,14 @@ export class NotebookStarter implements Disposable {
             }
             const connection = await Promise.race([
                 starter.waitForConnection(),
-                createPromiseFromCancellation({
+                createPromiseFromCancellation<void>({
                     cancelAction: 'reject',
-                    defaultValue: new CancellationError(),
                     token: cancelToken
                 })
             ]);
 
-            if (connection instanceof CancellationError) {
-                throw connection;
+            if (!connection) {
+                throw new CancellationError();
             }
 
             // Fire off telemetry for the process being talkable

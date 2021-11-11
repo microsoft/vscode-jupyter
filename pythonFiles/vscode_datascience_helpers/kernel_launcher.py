@@ -11,9 +11,6 @@ import sys
 # See comment at the point of our use of Popen
 from subprocess import Popen, PIPE  # nosec
 
-from ipython_genutils.encoding import getdefaultencoding
-from ipython_genutils.py3compat import cast_bytes_py2
-
 
 def launch_kernel(
     cmd,
@@ -79,7 +76,6 @@ def launch_kernel(
 
     env = env if (env is not None) else os.environ.copy()
 
-    encoding = getdefaultencoding(prefer_stream=False)
     kwargs = kw.copy()
     main_args = dict(
         stdin=_stdin,
@@ -92,10 +88,7 @@ def launch_kernel(
 
     # Spawn a kernel.
     if sys.platform == "win32":
-        # Popen on Python 2 on Windows cannot handle unicode args or cwd
-        cmd = [cast_bytes_py2(c, encoding) for c in cmd]
         if cwd:
-            cwd = cast_bytes_py2(cwd, sys.getfilesystemencoding() or "ascii")
             kwargs["cwd"] = cwd
 
         from .win_interrupt import create_interrupt_event

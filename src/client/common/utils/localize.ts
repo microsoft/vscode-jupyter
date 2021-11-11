@@ -981,6 +981,11 @@ export namespace DataScience {
     export const kernelCategoryForPyEnv = localize('jupyter.kernel.category.pyenv', 'PyEnv Env');
     export const kernelCategoryForGlobal = localize('jupyter.kernel.category.global', 'Global Env');
     export const kernelCategoryForVirtual = localize('jupyter.kernel.category.virtual', 'Virtual Env');
+
+    export const fileSeemsToBeInterferingWithKernelStartup = localize(
+        'DataScience.fileSeemsToBeInterferingWithKernelStartup',
+        "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.."
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

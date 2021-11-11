@@ -386,7 +386,15 @@ export interface IDataScienceErrorHandler {
      * The value of `context` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
      * Thus based on the context the error message would be different.
      */
-    handleError(err: Error, context?: 'start' | 'restart' | 'interrupt'): Promise<void>;
+    handleError(err: Error): Promise<void>;
+    /**
+     * Handles errors specific to kernels.
+     */
+    handleKernelError(
+        err: Error,
+        context: 'start' | 'restart' | 'interrupt' | 'execution',
+        kernelConnection: KernelConnectionMetadata
+    ): Promise<void>;
 }
 
 /**

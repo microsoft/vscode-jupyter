@@ -9,7 +9,10 @@ import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import {
+    getErrorMessageFromPythonTraceback,
+    getTelemetrySafeErrorMessageFromPythonTraceback
+} from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
@@ -210,8 +213,7 @@ export class KernelProcess implements IKernelProcess {
                 deferred.promise,
                 createPromiseFromCancellation({
                     token: cancelToken,
-                    cancelAction: 'reject',
-                    defaultValue: undefined
+                    cancelAction: 'reject'
                 })
             ]);
         } catch (e) {
@@ -229,7 +231,7 @@ export class KernelProcess implements IKernelProcess {
                 }
                 // If we have the python error message in std outputs, display that.
                 const errorMessage =
-                    getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc || stderr) ||
+                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
                 throw new KernelDiedError(
                     localize.DataScience.kernelDied().format(errorMessage),

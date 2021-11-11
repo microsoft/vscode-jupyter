@@ -234,6 +234,7 @@ export class Kernel implements IKernel {
             return this.disposingPromise;
         }
         this._ignoreNotebookDisposedErrors = true;
+        this.startCancellation.cancel();
         const disposeImpl = async () => {
             traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             this.restarting = undefined;
@@ -380,9 +381,14 @@ export class Kernel implements IKernel {
                     );
                     if (options?.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+                    } else if (this._disposing) {
+                        // If the kernel was killed for any reason, then no point displaying
+                        // errors about startup failures.
+                        traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
                     } else {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        this.errorHandler.handleError(ex, 'start').ignoreErrors(); // Just a notification, so don't await this
+                        void this.errorHandler
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            .handleKernelError(ex as any, 'start', this.kernelConnectionMetadata); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();

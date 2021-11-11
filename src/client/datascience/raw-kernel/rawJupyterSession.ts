@@ -4,7 +4,7 @@
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { CancellationError } from '../../common/cancellation';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
@@ -82,7 +82,9 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession(cancelToken, disableUI);
-
+            if (cancelToken?.isCancellationRequested) {
+                return;
+            }
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
@@ -268,8 +270,20 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process, this.resource);
 
-        // Wait for it to be ready
-        await result.waitForReady();
+        try {
+            // Wait for it to be ready
+            await Promise.race([
+                result.waitForReady(),
+                createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+            ]);
+        } catch (ex) {
+            void process.dispose();
+            void result.dispose();
+            if (ex instanceof CancellationError || cancelToken?.isCancellationRequested) {
+                throw new CancellationError();
+            }
+            throw ex;
+        }
 
         // Attempt to get kernel to respond to requests (this is what jupyter does today).
         // Kinda warms up the kernel communiocation & ensure things are in the right state.
@@ -286,10 +300,17 @@ export class RawJupyterSession extends BaseJupyterSession {
             gotIoPubMessage = createDeferred<boolean>();
             const iopubHandler = () => gotIoPubMessage.resolve(true);
             result.iopubMessage.connect(iopubHandler);
-            await Promise.race([
-                Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                sleep(Math.min(this.launchTimeout, 10))
-            ]);
+            try {
+                await Promise.race([
+                    Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
+                    sleep(Math.min(this.launchTimeout, 10)),
+                    createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+                ]);
+            } catch (ex) {
+                void process.dispose();
+                void result.dispose();
+                throw ex;
+            }
 
             result.iopubMessage.disconnect(iopubHandler);
             if (gotIoPubMessage.completed) {

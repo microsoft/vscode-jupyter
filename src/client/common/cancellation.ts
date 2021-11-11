@@ -24,11 +24,18 @@ export class CancellationError extends BaseError {
  * @param {({ defaultValue: T; token: CancellationToken; cancelAction: 'reject' | 'resolve' })} options
  * @returns {Promise<T>}
  */
-export function createPromiseFromCancellation<T>(options: {
-    defaultValue: T;
-    token?: CancellationToken;
-    cancelAction: 'reject' | 'resolve';
-}): Promise<T> {
+export function createPromiseFromCancellation<T>(
+    options:
+        | {
+              defaultValue: T;
+              token?: CancellationToken;
+              cancelAction: 'resolve';
+          }
+        | {
+              token?: CancellationToken;
+              cancelAction: 'reject';
+          }
+): Promise<T> {
     return new Promise<T>((resolve, reject) => {
         // Never resolve.
         if (!options.token) {
