@@ -46,10 +46,6 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         if (!isJupyterNotebook(document)) {
             return;
         }
-        // If connecting to a default kernel of Jupyter server, then we don't know the language of the kernel.
-        if (connection.kind === 'startUsingDefaultKernel') {
-            return;
-        }
         const editor = this.notebook.notebookEditors.find((item) => item.document === document);
         if (!editor) {
             return;
