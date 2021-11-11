@@ -12,7 +12,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
 import { IInteractiveWindowProvider } from '../../types';
 import { findAssociatedNotebookDocument, isJupyterNotebook } from '../helpers/helpers';
-import { INotebookControllerManager } from '../types';
+import { INotebookControllerManager, INotebookLanguageClientProvider } from '../types';
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
 
@@ -20,7 +20,7 @@ import { LanguageServer } from './languageServer';
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
  */
 @injectable()
-export class IntellisenseProvider implements IExtensionSyncActivationService {
+export class IntellisenseProvider implements INotebookLanguageClientProvider, IExtensionSyncActivationService {
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
     private interpreterIdCache: Map<string, string> = new Map<string, string>();
@@ -56,6 +56,16 @@ export class IntellisenseProvider implements IExtensionSyncActivationService {
 
         // If we change the language server type, we need to restart
         this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
+    }
+
+    public async getLanguageClient(notebook: NotebookDocument) {
+        const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
+        const interpreter = controller
+            ? controller.connection.interpreter
+            : await this.interpreterService.getActiveInterpreter(notebook.uri);
+        const interpreterId = interpreter ? this.getInterpreterIdFromCache(interpreter) : undefined;
+        const server = interpreterId ? await this.servers.get(interpreterId) : undefined;
+        return server?.client;
     }
 
     private handleInterpreterChange() {

@@ -1865,6 +1865,12 @@
                     "default": false,
                     "description": "Determines if pylance's experimental notebook support is used or not",
                     "scope": "machine"
+                },
+                "jupyter.pythonCompletionTriggerCharacters": {
+                    "type": "string",
+                    "default": ".%",
+                    "description": "Characters which trigger auto completion on a python jupyter kernel (requires reload of VS code)",
+                    "scope": "machine"
                 }
             }
         },

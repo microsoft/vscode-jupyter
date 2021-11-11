@@ -8,7 +8,7 @@ import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Posi
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { JupyterCompletionProvider } from '../../../../client/datascience/notebook/intellisense/jupyterCompletionProvider';
+import { PythonKernelCompletionProvider } from '../../../../client/datascience/notebook/intellisense/pythonKernelCompletionProvider';
 import { IExtensionTestApi, sleep } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
@@ -29,7 +29,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    let completionProvider: JupyterCompletionProvider;
+    let completionProvider: PythonKernelCompletionProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
@@ -46,7 +46,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        completionProvider = api.serviceContainer.get<JupyterCompletionProvider>(JupyterCompletionProvider);
+        completionProvider = api.serviceContainer.get<PythonKernelCompletionProvider>(PythonKernelCompletionProvider);
         traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -112,7 +112,10 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(
+        assert.ok(items.find((item) => (typeof item === 'string' ? item.includes('Age') : item.label.includes('Age'))));
+
+        // Make sure it is skipping items that are already provided by pylance (no dupes)
+        assert.notOk(
             items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         );
     });
