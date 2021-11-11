@@ -27,7 +27,7 @@ import {
 } from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
-import { DefaultKernelConnectionMetadata, KernelConnectionMetadata } from '../kernels/types';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
@@ -36,7 +36,6 @@ import { noop } from '../../../common/utils/misc';
 import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
-import { JupyterSession } from '../jupyterSession';
 import { JupyterSessionManager } from '../jupyterSessionManager';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -146,7 +145,7 @@ export class HostJupyterServer implements INotebookServer {
         return launchInfo;
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
+    public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {
         traceInfo(`Connecting server ${this.id}`);
 
         // Save our launch info
