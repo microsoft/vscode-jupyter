@@ -1868,7 +1868,7 @@
                 },
                 "jupyter.completionTriggerCharacters": {
                     "type": "string",
-                    "default": ",.%",
+                    "default": ".%",
                     "description": "Characters which trigger auto completion on a jupyter kernel (requires reload of VS code)",
                     "scope": "machine"
                 }

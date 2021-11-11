@@ -112,7 +112,10 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(
+        assert.ok(items.find((item) => (typeof item === 'string' ? item.includes('Age') : item.label.includes('Age'))));
+
+        // Make sure it is skipping items that are already provided by pylance (no dupes)
+        assert.notOk(
             items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         );
     });

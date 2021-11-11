@@ -26,7 +26,8 @@ import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 import { INotebookLanguageClientProvider } from '../types';
 
-type JupyterCompletionItem = CompletionItem & {
+// Type that holds extra string (makes it quicker to filter). Exported for testing
+export type JupyterCompletionItem = CompletionItem & {
     itemText: string;
 };
 
@@ -79,7 +80,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
                     return emptyResult;
                 })
             ]),
-            this.getRealCompletions(document, position, context, token)
+            this.getPylanceCompletions(document, position, context, token)
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);
@@ -131,7 +132,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
         }
 
         // Filter the list based on where we are in a cell (and the type of cell)
-        return this.filterCompletions(context.triggerCharacter, completions, pylanceResults, document, position);
+        return filterCompletions(context.triggerCharacter, completions, pylanceResults, document, position);
     }
     public async getJupyterCompletion(
         session: IJupyterSession,
@@ -178,81 +179,7 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
         };
     }
 
-    private filterCompletions(
-        triggerCharacter: string | undefined,
-        completions: JupyterCompletionItem[],
-        pylanceResults: CompletionItem[] | null | undefined,
-        cell: TextDocument,
-        position: Position
-    ) {
-        let result = completions;
-        const wordRange = cell.getWordRangeAtPosition(position);
-        const word = wordRange ? cell.getText(wordRange) : cell.lineAt(position.line).text;
-        const wordDot = word.endsWith('.');
-        const insideString = triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position);
-
-        // If inside of a string, filter out everything except file names
-        if (insideString) {
-            result = result.filter((r) => r.itemText.includes('.') || r.itemText.endsWith('/'));
-        }
-
-        // Update magics to have a much lower sort order than other strings.
-        // Also change things that start with our current word to eliminate the
-        // extra long label.
-        result = result.map((r, i) => {
-            if (r.itemText.startsWith('%%') || r.itemText.startsWith('!')) {
-                return {
-                    ...r,
-                    sortText: `ZZZ${r.sortText}`
-                };
-            }
-            if (word && wordDot && r.itemText.startsWith(word)) {
-                const newText = r.itemText.substring(word.length);
-                const newRange =
-                    r.range && 'start' in r.range
-                        ? new Range(
-                              new Position(r.range.start.line, r.range.start.character + word.length),
-                              r.range.end
-                          )
-                        : r.range;
-                return {
-                    ...r,
-                    sortText: generateSortString(i),
-                    label: newText,
-                    itemText: newText,
-                    range: newRange
-                };
-            }
-            return r;
-        });
-
-        // If not inside of a string, filter out file names (things with a '.' in them or end with '/')
-        if (!insideString) {
-            result = result.filter((r) => !r.itemText.includes('.') && !r.itemText.endsWith('/'));
-        }
-
-        // Remove any duplicates (picking pylance over jupyter)
-        if (pylanceResults) {
-            const set = new Set(pylanceResults.map((p) => p.label.toString()));
-            result = result.filter((r) => !set.has(r.itemText));
-        }
-
-        traceInfo(
-            `Jupyter completions for ${word} at pos ${position.line}:${
-                position.character
-            } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
-        );
-
-        traceInfo(
-            `Jupyter results for ${word} at pos ${position.line}:${
-                position.character
-            } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`
-        );
-
-        return result;
-    }
-
-    private async getRealCompletions(
+    private async getPylanceCompletions(
         document: TextDocument,
         position: Position,
         context: CompletionContext,
@@ -287,7 +214,7 @@ function positionInsideString(word: string, position: Position) {
     return index >= 0 && position.character > index && position.character <= lastIndex;
 }
 
-function generateSortString(index: number) {
+export function generateSortString(index: number) {
     // If its 0, then use AA, if 25, then use ZZ
     // This will give us the ability to sort first 700 items (thats more than enough).
     // To keep things fast we'll only sort the first 300.
@@ -300,4 +227,76 @@ function generateSortString(index: number) {
     const firstChar = String.fromCharCode(65 + Math.ceil(index / 25));
     const secondChar = String.fromCharCode(65 + (index % 25));
     return `${firstChar}${secondChar}`;
+}
+
+// Exported for unit testing
+export function filterCompletions(
+    triggerCharacter: string | undefined,
+    completions: JupyterCompletionItem[],
+    pylanceResults: CompletionItem[] | null | undefined,
+    cell: TextDocument,
+    position: Position
+) {
+    let result = completions;
+    const wordRange = cell.getWordRangeAtPosition(position);
+    const word = wordRange ? cell.getText(wordRange) : cell.lineAt(position.line).text;
+    const wordDot = word.endsWith('.');
+    const insideString = triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position);
+
+    // If inside of a string, filter out everything except file names
+    if (insideString) {
+        result = result.filter((r) => r.itemText.includes('.') || r.itemText.endsWith('/'));
+    }
+
+    // Update magics to have a much lower sort order than other strings.
+    // Also change things that start with our current word to eliminate the
+    // extra long label.
+    result = result.map((r, i) => {
+        if (r.itemText.startsWith('%') || r.itemText.startsWith('!')) {
+            return {
+                ...r,
+                sortText: `ZZZ${r.sortText}`
+            };
+        }
+        if (word && wordDot && r.itemText.startsWith(word)) {
+            const newText = r.itemText.substring(word.length);
+            const newRange =
+                r.range && 'start' in r.range
+                    ? new Range(new Position(r.range.start.line, r.range.start.character + word.length), r.range.end)
+                    : r.range;
+            return {
+                ...r,
+                sortText: generateSortString(i),
+                label: newText,
+                itemText: newText,
+                range: newRange
+            };
+        }
+        return r;
+    });
+
+    // If not inside of a string, filter out file names (things with a '.' in them or end with '/')
+    if (!insideString) {
+        result = result.filter((r) => !r.itemText.includes('.') && !r.itemText.endsWith('/'));
+    }
+
+    // Remove any duplicates (picking pylance over jupyter)
+    if (pylanceResults) {
+        const set = new Set(pylanceResults.map((p) => p.label.toString()));
+        result = result.filter((r) => !set.has(r.itemText));
+    }
+
+    traceInfo(
+        `Jupyter completions for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
+    );
+
+    traceInfo(
+        `Jupyter results for ${word} at pos ${position.line}:${
+            position.character
+        } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`
+    );
+
+    return result;
 }
