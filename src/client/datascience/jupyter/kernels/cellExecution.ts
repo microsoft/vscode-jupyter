@@ -312,7 +312,7 @@ export class CellExecution implements IDisposable {
         traceCellMessage(this.cell, 'Update with error state & output');
         // No need to append errors related to failures in Kernel execution in output.
         // We will display messages for those.
-        if (!error || !(error instanceof BaseError)) {
+        if (!(error instanceof BaseError)) {
             this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
         }
 
