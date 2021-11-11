@@ -91,6 +91,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             (interpreter?.version && interpreter.version.major < 3) ||
             this.config.getSettings().disablePythonDaemon
         ) {
+            traceInfo(`Not using daemon support for ${pythonPath}`);
             return activatedProcPromise;
         }
 

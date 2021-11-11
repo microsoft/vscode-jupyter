@@ -58,17 +58,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 case KernelFailureReason.overridingBuiltinModules: {
                     await this.applicationShell
                         .showErrorMessage(
-                            DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+                            `${DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
                                 getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
-                            ),
-                            DataScience.showJupyterLogs(),
+                            )} \n${DataScience.viewJupyterLogForFurtherInfo()}`,
                             Common.learnMore()
                         )
                         .then((selection) => {
                             if (selection === Common.learnMore()) {
                                 this.browser.launch('https://aka.ms/kernelFailuresOverridingBuiltInModules');
-                            } else if (selection === DataScience.showJupyterLogs()) {
-                                void this.commandManager.executeCommand('jupyter.viewOutput');
                             }
                         });
                     break;
