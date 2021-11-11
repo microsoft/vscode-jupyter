@@ -60,6 +60,7 @@ import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { InteractiveWindowView } from '../notebook/constants';
+import { chainPromise } from '../../common/utils/decorators';
 
 type InteractiveCellMetadata = {
     inputCollapsed: boolean;
@@ -115,7 +116,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
     private _notebookDocument: NotebookDocument | undefined;
-    private executionPromise: Promise<boolean> | undefined;
     private _notebookEditor: NotebookEditor | undefined;
     private _inputUri: Uri | undefined;
 
@@ -292,7 +292,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
                     this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
                     this._kernelReadyPromise = undefined;
-                    this.executionPromise = undefined;
                     controllerChangeListener.dispose();
                 }
             },
@@ -403,29 +402,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
 
+    @chainPromise()
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        traceInfoIfCI('InteractiveWindow.ts.submitCodeImpl.start');
         // Do not execute or render empty cells
         if (this.cellMatcher.stripFirstMarker(code).trim().length === 0) {
             return true;
         }
-        // Chain execution promises so that cells are executed in the right order
-        if (this.executionPromise) {
-            this.executionPromise = this.executionPromise.then(() =>
-                this.createExecutionPromise(code, fileUri, line, isDebug)
-            );
-        } else {
-            this.executionPromise = this.createExecutionPromise(code, fileUri, line, isDebug);
-        }
-        try {
-            return await this.executionPromise;
-        } catch (exc) {
-            // Rethrow, but clear execution promise so we can execute again
-            this.executionPromise = undefined;
-            throw exc;
-        }
-    }
-    private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         const [notebookEditor, kernel] = await Promise.all([
             this._editorReadyPromise,
             this._kernelReadyPromise,
@@ -438,9 +421,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const isLastCellVisible = notebookEditor?.visibleRanges.find((r) => {
             return r.end === notebookEditor.document.cellCount - 1;
         });
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.before.AddNotebookCell');
+        traceInfoIfCI('InteractiveWindow.ts.submitCodeImpl.before.AddNotebookCell');
         const notebookCell = await this.addNotebookCell(notebookEditor.document, code, fileUri, line, id);
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.after.AddNotebookCell');
+        traceInfoIfCI('InteractiveWindow.ts.submitCodeImpl.after.AddNotebookCell');
         const settings = this.configuration.getSettings(this.owningResource);
         // The default behavior is to scroll to the last cell if the user is already at the bottom
         // of the history, but not to scroll if the user has scrolled somewhere in the middle
@@ -473,7 +456,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     }
                 });
             }
-            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
+            traceInfoIfCI('InteractiveWindow.ts.submitCodeImpl.kernel.executeCell');
             result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
 
             traceInfo(`Finished execution for ${id}`);

@@ -261,3 +261,36 @@ export function testOnlyMethod() {
         return descriptor;
     };
 }
+
+// Turn a method that returns a promise into something that uses a chain of promises
+export function chainPromise() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return function (_target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+        const originalMethod = descriptor.value;
+        const chainedKey = `chained${propertyKey}`;
+
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+        descriptor.value = function (...args: any[]) {
+            // Check for promise in the object.
+            let currentValue = (this as any)[chainedKey] as Promise<any>;
+            if (currentValue) {
+                currentValue = currentValue.then(() => originalMethod.apply(this, args));
+            } else {
+                currentValue = originalMethod.apply(this, args);
+            }
+
+            // Save promise in object
+            (this as any)[chainedKey] = currentValue;
+
+            // If promise fails, clear it.
+            return currentValue
+                .then((r) => r)
+                .catch((e) => {
+                    (this as any)[chainedKey] = undefined;
+                    throw e;
+                });
+        };
+
+        return descriptor;
+    };
+}
