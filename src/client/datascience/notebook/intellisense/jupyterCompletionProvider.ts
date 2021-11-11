@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
@@ -128,17 +127,13 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
                 metadata: {}
             };
         }
-        const promises: Promise<KernelMessage.ICompleteReplyMsg | undefined>[] = cancelToken
-            ? [createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })]
-            : [];
-        const result = await Promise.race(
-            promises.concat(
-                session.requestComplete({
-                    code: cellCode,
-                    cursor_pos: offsetInCode
-                })
-            )
-        );
+        const result = await Promise.race([
+            session.requestComplete({
+                code: cellCode,
+                cursor_pos: offsetInCode
+            }),
+            createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
+        ]);
         traceInfoIfCI(
             `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
                 result ? JSON.stringify(result) : 'empty'
