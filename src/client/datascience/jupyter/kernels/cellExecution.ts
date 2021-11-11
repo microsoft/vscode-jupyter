@@ -53,6 +53,7 @@ import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
+import { BaseError } from '../../../common/errors/types';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -147,6 +148,7 @@ export class CellExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
+    private session?: IJupyterSession;
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -220,6 +222,7 @@ export class CellExecution implements IDisposable {
         );
     }
     public async start(session: IJupyterSession) {
+        this.session = session;
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -302,15 +305,32 @@ export class CellExecution implements IDisposable {
         this.lastUsedStreamOutput = undefined;
     }
     private completedWithErrors(error: Partial<Error>) {
+        traceWarning(`Cell completed with errors`, error);
         traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
-        this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
+        // No need to append errors related to failures in Kernel execution in output.
+        // We will display messages for those.
+        if (!error || !(error instanceof BaseError)) {
+            this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
+        }
 
         this.endCellTask('failed');
         this._completed = true;
-        this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
+
+        // If the kernel is dead, then no point handling errors.
+        // We have other code that deals with kernels dying.
+        // We're only concerned with failures in execution while kernel is still running.
+        let handleError = true;
+        if (this.session?.disposed || this.session?.status === 'terminating' || this.session?.status === 'dead') {
+            handleError = false;
+        }
+        if (handleError) {
+            this.errorHandler
+                .handleKernelError((error as unknown) as Error, 'execution', this.kernelConnection)
+                .ignoreErrors();
+        }
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(NotebookCellRunState.Error);
     }
@@ -488,7 +508,7 @@ export class CellExecution implements IDisposable {
             );
         } catch (ex) {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
-            return this.completedWithErrors(new Error('Session cannot generate requests'));
+            return this.completedWithErrors(ex);
         }
         // Listen to messages and update our cell execution state appropriately
         // Keep track of our clear state
@@ -525,6 +545,7 @@ export class CellExecution implements IDisposable {
             this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
+            traceError('Error in waiting for cell to complete', ex);
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (ex && ex instanceof Error && ex.message.includes('Canceled')) {

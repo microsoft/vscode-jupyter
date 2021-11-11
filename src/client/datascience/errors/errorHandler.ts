@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
 import { traceError, traceWarning } from '../../common/logger';
-import { DataScience } from '../../common/utils/localize';
+import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
 import { JupyterInstallError } from './jupyterInstallError';
@@ -20,90 +20,68 @@ import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { PythonKernelDiedError } from './pythonKernelDiedError';
-import { analyseKernelErrors, getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import {
+    analyseKernelErrors,
+    getErrorMessageFromPythonTraceback,
+    KernelFailureReason
+} from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getDisplayPath } from '../../common/platform/fs-paths';
+import { IBrowserService } from '../../common/types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager,
-        @inject(IWorkspaceService) protected workspace: IWorkspaceService
+        @inject(IWorkspaceService) protected workspace: IWorkspaceService,
+        @inject(IBrowserService) protected browser: IBrowserService,
+        @inject(ICommandManager) protected commandManager: ICommandManager
     ) {}
-    public async handleError(err: Error, purpose?: 'start' | 'restart' | 'interrupt'): Promise<void> {
-        const errorPrefix = getErrorMessagePrefix(purpose);
-        // Unwrap the errors.
-        err = WrappedError.unwrap(err);
-        if (err instanceof JupyterInstallError) {
-            await this.dependencyManager.installMissingDependencies(err);
-        } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
-        } else if (err instanceof IpyKernelNotInstalledError) {
-            // Don't show the message, as user decided not to install IPyKernel.
-            noop();
-        } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
-            // Don't show the message for cancellation errors
-            traceWarning(`Cancelled by user`, err);
-        } else if (
-            err instanceof KernelConnectionTimeoutError ||
-            err instanceof KernelConnectionTimeoutError ||
-            err instanceof KernelPortNotUsedTimeoutError
-        ) {
-            this.applicationShell.showErrorMessage(err.message).then(noop, noop);
-        } else if (err instanceof KernelDiedError || err instanceof KernelProcessExitedError) {
-            if (purpose === 'restart' || purpose === 'start') {
-                const analysis = analyseKernelErrors(err.stdErr);
-                console.error(analysis);
-            }
-            this.applicationShell
-                .showErrorMessage(
-                    getCombinedErrorMessage(errorPrefix, getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr)
-                )
-                .then(noop, noop);
-        } else if (err instanceof PythonKernelDiedError) {
-            this.applicationShell
-                .showErrorMessage(getCombinedErrorMessage(errorPrefix, err.errorMessage))
-                .then(noop, noop);
-        } else {
-            // Some errors have localized and/or formatted error messages.
-            this.applicationShell
-                .showErrorMessage(getCombinedErrorMessage(errorPrefix, err.message || err.toString()))
-                .then(noop, noop);
-        }
+    public async handleError(err: Error): Promise<void> {
+        await this.handleErrorImplementation(err);
         traceError('DataScience Error', err);
     }
 
-    public async handleKernelStartRestartError(
+    public async handleKernelError(
         err: Error,
-        purpose: 'start' | 'restart',
+        purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata
     ): Promise<void> {
-        await this.handleErrorImplementation(err, purpose, (error: BaseError) => {
-            const analysis = analyseKernelErrors(
+        await this.handleErrorImplementation(err, purpose, async (error: BaseError, defaultErrorMessage: string) => {
+            const failureInfo = analyseKernelErrors(
                 error.stdErr || '',
                 this.workspace.workspaceFolders,
                 kernelConnection.interpreter?.sysPrefix
             );
-            if (analysis) {
-                console.log(analysis);
-            } else {
-                const errorPrefix = getErrorMessagePrefix(purpose);
-                void this.applicationShell
-                    .showErrorMessage(
-                        getCombinedErrorMessage(
-                            errorPrefix,
-                            getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr
+            switch (failureInfo?.reason) {
+                case KernelFailureReason.overridingBuiltinModules: {
+                    await this.applicationShell
+                        .showErrorMessage(
+                            DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+                                getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
+                            ),
+                            DataScience.showJupyterLogs(),
+                            Common.learnMore()
                         )
-                    )
-                    .then(noop, noop);
+                        .then((selection) => {
+                            if (selection === Common.learnMore()) {
+                                this.browser.launch('https://aka.ms/kernelFailuresOverridingBuiltInModules');
+                            } else if (selection === DataScience.showJupyterLogs()) {
+                                void this.commandManager.executeCommand('jupyter.viewOutput');
+                            }
+                        });
+                    break;
+                }
+                default:
+                    await this.applicationShell.showErrorMessage(defaultErrorMessage);
             }
         });
     }
     private async handleErrorImplementation(
         err: Error,
-        purpose?: 'start' | 'restart' | 'interrupt',
-        handler?: (error: BaseError) => void
+        purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
+        handler?: (error: BaseError, defaultErrorMessage: string) => Promise<void>
     ): Promise<void> {
         const errorPrefix = getErrorMessagePrefix(purpose);
         // Unwrap the errors.
@@ -119,29 +97,23 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);
-        } else if (
-            err instanceof KernelConnectionTimeoutError ||
-            err instanceof KernelConnectionTimeoutError ||
-            err instanceof KernelPortNotUsedTimeoutError
-        ) {
+        } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
-        } else if (err instanceof KernelDiedError || err instanceof KernelProcessExitedError) {
+        } else if (
+            err instanceof KernelDiedError ||
+            err instanceof KernelProcessExitedError ||
+            err instanceof PythonKernelDiedError
+        ) {
+            const defaultErrorMessage = getCombinedErrorMessage(
+                errorPrefix,
+                // PythonKernelDiedError has an `errorMessage` property, use that over `err.stdErr` for user facing error messages.
+                'errorMessage' in err ? err.errorMessage : getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr
+            );
             if ((purpose === 'restart' || purpose === 'start') && handler) {
-                handler(err);
+                await handler(err, defaultErrorMessage);
             } else {
-                this.applicationShell
-                    .showErrorMessage(
-                        getCombinedErrorMessage(
-                            errorPrefix,
-                            getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr
-                        )
-                    )
-                    .then(noop, noop);
+                this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
             }
-        } else if (err instanceof PythonKernelDiedError) {
-            this.applicationShell
-                .showErrorMessage(getCombinedErrorMessage(errorPrefix, err.errorMessage))
-                .then(noop, noop);
         } else {
             // Some errors have localized and/or formatted error messages.
             this.applicationShell
@@ -161,7 +133,7 @@ function getCombinedErrorMessage(prefix?: string, message?: string) {
     }
     return errorMessage;
 }
-function getErrorMessagePrefix(purpose?: 'start' | 'restart' | 'interrupt') {
+function getErrorMessagePrefix(purpose?: 'start' | 'restart' | 'interrupt' | 'execution') {
     switch (purpose) {
         case 'restart':
             return DataScience.failedToRestartKernel();

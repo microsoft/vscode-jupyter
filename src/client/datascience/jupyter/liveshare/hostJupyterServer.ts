@@ -38,6 +38,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSession } from '../jupyterSession';
 import { JupyterSessionManager } from '../jupyterSessionManager';
+import { SessionDisposedError } from '../../errors/sessionDisposedError';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -201,7 +202,7 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         const stopWatch = new StopWatch();
         // Create a notebook and return it.
@@ -292,7 +293,7 @@ export class HostJupyterServer implements INotebookServer {
         }
 
         // Default is just say session was disposed
-        return new Error(localize.DataScience.sessionDisposed());
+        return new SessionDisposedError();
     }
     protected trackDisposable(notebook: Promise<INotebook>) {
         notebook

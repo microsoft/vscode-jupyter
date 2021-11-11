@@ -114,19 +114,19 @@ export enum KernelFailureReason {
     /**
      * Errors specific to importing of `win32api` module.
      */
-    importWin32apiError = 'importWin32apiError',
+    importWin32apiFailure = 'importWin32apiFailure',
     /**
      * Errors specific to the zmq module.
      */
-    zmqModuleError = 'zmqModuleError',
+    zmqModuleFailure = 'zmqModuleFailure',
     /**
      * Errors specific to older versions of IPython.
      */
-    oldIPythonError = 'oldIPythonError',
+    oldIPythonFailure = 'oldIPythonFailure',
     /**
      * Errors specific to older versions of IPyKernel.
      */
-    oldIPyKernelError = 'oldIPyKernelError',
+    oldIPyKernelFailure = 'oldIPyKernelFailure',
     /**
      * Creating files such as os.py and having this in the root directory or some place where Python would load it,
      * would result in the `os` module being overwritten with the users `os.py` file.
@@ -145,12 +145,12 @@ export enum KernelFailureReason {
      *      ImportError: No module named 'win32api'
      * 2.   ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\Users\<user>\AppData\Roaming\Python\Python38\site-packages\zmq\backend\cython\__init__.py)
      */
-    importError = 'importError',
+    importFailure = 'importFailure',
     /**
      * Some missing dependency is not installed.
      * Error messages are of the form `ModuleNotFoundError: No module named 'zmq'`
      */
-    moduleNotFoundError = 'moduleNotFound',
+    moduleNotFoundFailure = 'moduleNotFound',
     /**
      * Failure to load some dll.
      * Error messages are of the following form
@@ -159,66 +159,70 @@ export enum KernelFailureReason {
      */
     dllLoadFailure = 'dllLoadFailure'
 }
-export type KernelFailure = {
+type BaseFailure<Reason extends KernelFailureReason, MoreInfo = {}> = {
+    reason: Reason;
     /**
      * Classifications of the errors that is safe for telemetry (no pii).
      */
     telemetrySafeTags: string[];
-} & (
-    | {
-          reason: KernelFailureReason.overridingBuiltinModules;
-          /**
-           * The module that has been overwritten.
-           */
-          moduleName: string;
-          /**
-           * Fully qualified path to the module.
-           */
-          fileName: string;
-      }
-    | {
-          reason: KernelFailureReason.importError;
-          /**
-           * What is being imported from the module.
-           */
-          name?: string;
-          moduleName: string;
-          fileName?: string;
-      }
-    | {
-          reason: KernelFailureReason.moduleNotFoundError;
-          /**
-           * Name of the missing module.
-           */
-          moduleName: string;
-      }
-    | {
-          reason: KernelFailureReason.dllLoadFailure;
-          /**
-           * Name of the module that couldn't be loaded.
-           */
-          moduleName?: string;
-      }
-    | {
-          reason: KernelFailureReason.dllLoadFailure;
-          /**
-           * Name of the module that couldn't be loaded.
-           */
-          moduleName?: string;
-      }
-    | {
-          reason: KernelFailureReason.importWin32apiError;
-      }
-    | {
-          reason: KernelFailureReason.zmqModuleError;
-      }
-    | {
-          reason: KernelFailureReason.oldIPyKernelError;
-      }
-    | {
-          reason: KernelFailureReason.oldIPythonError;
-      }
-);
+} & MoreInfo;
+export type OverridingBuiltInModulesFailure = BaseFailure<
+    KernelFailureReason.overridingBuiltinModules,
+    {
+        /**
+         * The module that has been overwritten.
+         */
+        moduleName: string;
+        /**
+         * Fully qualified path to the module.
+         */
+        fileName: string;
+    }
+>;
+export type ImportErrorFailure = BaseFailure<
+    KernelFailureReason.importFailure,
+    {
+        /**
+         * What is being imported from the module.
+         */
+        name?: string;
+        moduleName: string;
+        fileName?: string;
+    }
+>;
+export type ModuleNotFoundFailure = BaseFailure<
+    KernelFailureReason.moduleNotFoundFailure,
+    {
+        /**
+         * Name of the missing module.
+         */
+        moduleName: string;
+    }
+>;
+export type DllLoadFailure = BaseFailure<
+    KernelFailureReason.dllLoadFailure,
+    {
+        /**
+         * Name of the module that couldn't be loaded.
+         */
+        moduleName?: string;
+    }
+>;
+export type ImportWin32ApiFailure = BaseFailure<KernelFailureReason.importWin32apiFailure>;
+export type ZmqModuleFailure = BaseFailure<KernelFailureReason.zmqModuleFailure>;
+export type OldIPyKernelFailure = BaseFailure<KernelFailureReason.oldIPyKernelFailure>;
+export type OldIPythonFailure = BaseFailure<KernelFailureReason.oldIPythonFailure>;
+
+export type KernelFailure =
+    | OverridingBuiltInModulesFailure
+    | ImportErrorFailure
+    | ModuleNotFoundFailure
+    | DllLoadFailure
+    | ImportWin32ApiFailure
+    | ImportWin32ApiFailure
+    | ZmqModuleFailure
+    | OldIPyKernelFailure
+    | OldIPythonFailure;
 
 export function analyseKernelErrors(
     stdErrOrStackTrace: string,
@@ -240,7 +244,7 @@ export function analyseKernelErrors(
             ImportError: No module named 'win32api'
         */
         return {
-            reason: KernelFailureReason.importWin32apiError,
+            reason: KernelFailureReason.importWin32apiFailure,
             telemetrySafeTags: ['win32api']
         };
     }
@@ -252,7 +256,7 @@ export function analyseKernelErrors(
         ImportError: DLL load failed: 找不到指定的程序。
         */
         return {
-            reason: KernelFailureReason.importWin32apiError,
+            reason: KernelFailureReason.importWin32apiFailure,
             telemetrySafeTags: ['dll.load.failed', 'win32api']
         };
     }
@@ -286,7 +290,7 @@ export function analyseKernelErrors(
             AssertionError: Couldn't find Class NSProcessInfo
         */
         return {
-            reason: KernelFailureReason.oldIPythonError,
+            reason: KernelFailureReason.oldIPythonFailure,
             telemetrySafeTags: ['oldipython']
         };
     }
@@ -307,7 +311,7 @@ export function analyseKernelErrors(
         Info 2020-08-10 12:14:11: Python Daemon (pid: 16976): write to stderr: NotImplementedError
         */
         return {
-            reason: KernelFailureReason.oldIPyKernelError,
+            reason: KernelFailureReason.oldIPyKernelFailure,
             telemetrySafeTags: ['oldipykernel']
         };
     }
@@ -343,7 +347,7 @@ export function analyseKernelErrors(
 
         if (tags.length) {
             return {
-                reason: KernelFailureReason.zmqModuleError,
+                reason: KernelFailureReason.zmqModuleFailure,
                 telemetrySafeTags: tags
             };
         }
@@ -359,7 +363,7 @@ export function analyseKernelErrors(
             }
 
             return {
-                reason: KernelFailureReason.importError,
+                reason: KernelFailureReason.importFailure,
                 moduleName: info.moduleName,
                 fileName: info.fileName,
                 telemetrySafeTags: ['import.error']
@@ -370,7 +374,7 @@ export function analyseKernelErrors(
         const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
         if (info) {
             return {
-                reason: KernelFailureReason.moduleNotFoundError,
+                reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName: info.moduleName,
                 telemetrySafeTags: ['module.notfound.error']
             };

@@ -213,8 +213,7 @@ export class KernelProcess implements IKernelProcess {
                 deferred.promise,
                 createPromiseFromCancellation({
                     token: cancelToken,
-                    cancelAction: 'reject',
-                    defaultValue: undefined
+                    cancelAction: 'reject'
                 })
             ]);
         } catch (e) {

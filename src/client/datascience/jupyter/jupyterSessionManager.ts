@@ -27,6 +27,7 @@ import {
 } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { SessionDisposedError } from '../errors/sessionDisposedError';
 import {
     IJupyterConnection,
     IJupyterKernel,
@@ -183,7 +184,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             !this.serverSettings ||
             !this.specsManager
         ) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(
@@ -213,7 +214,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         try {
             // Fetch the list the session manager already knows about. Refreshing may not work.

@@ -23,6 +23,7 @@ import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
+import { SessionDisposedError } from './errors/sessionDisposedError';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -198,7 +199,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             }
             this.shutdownSession(oldSession, undefined, false).ignoreErrors();
         } else {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
     }
 
@@ -208,7 +209,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         if (!this.session?.kernel) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         return this.session.kernel.requestExecute(content, disposeOnDone, metadata);
     }
@@ -218,7 +219,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
         if (!this.session?.kernel) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         return this.session.kernel.requestDebug(content, disposeOnDone);
     }
@@ -227,7 +228,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg> {
         if (!this.session?.kernel) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         return this.session.kernel.requestInspect(content);
     }
@@ -236,7 +237,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg> {
         if (!this.session?.kernel) {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
         return this.session.kernel.requestComplete(content);
     }
@@ -255,7 +256,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (this.session && this.session.kernel) {
             this.session.kernel.registerCommTarget(targetName, callback);
         } else {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
     }
 
@@ -266,7 +267,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (this.session?.kernel) {
             return this.session.kernel.registerMessageHook(msgId, hook);
         } else {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
     }
     public removeMessageHook(
@@ -276,7 +277,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (this.session?.kernel) {
             return this.session.kernel.removeMessageHook(msgId, hook);
         } else {
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw new SessionDisposedError();
         }
     }
 

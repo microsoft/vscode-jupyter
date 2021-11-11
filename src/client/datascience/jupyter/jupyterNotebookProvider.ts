@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as localize from '../../common/utils/localize';
+import { SessionDisposedError } from '../errors/sessionDisposedError';
 import {
     ConnectNotebookProviderOptions,
     NotebookCreationOptions,
@@ -44,6 +44,6 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         }
         // We want createNotebook to always return a notebook promise, so if we don't have a server
         // here throw our generic server disposed message that we use in server creatio n
-        throw new Error(localize.DataScience.sessionDisposed());
+        throw new SessionDisposedError();
     }
 }

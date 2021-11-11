@@ -63,6 +63,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (await this.areDependenciesInstalled(interpreter, token)) {
             return;
         }
+        if (token?.isCancellationRequested) {
+            return;
+        }
 
         // Cache the install run
         let promise = this.installPromises.get(interpreter.path);
@@ -74,14 +77,20 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
+            if (token?.isCancellationRequested) {
+                return;
+            }
             await this.handleKernelDependencyResponse(result, interpreter, resource);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
         }
     }
-    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
+    public areDependenciesInstalled(interpreter: PythonEnvironment, token?: CancellationToken): Promise<boolean> {
+        return Promise.race([
+            this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true),
+            createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })
+        ]);
     }
 
     private async handleKernelDependencyResponse(
