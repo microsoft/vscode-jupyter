@@ -29,7 +29,7 @@ export class KernelFilterService implements IDisposable {
     }
     public isKernelHidden(kernelConnection: KernelConnectionMetadata): boolean {
         const hiddenList = this.getFilters();
-        if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind == 'startUsingDefaultKernel') {
+        if (kernelConnection.kind === 'connectToLiveKernel') {
             return false;
         }
         return hiddenList.some((item) => {
@@ -93,7 +93,7 @@ export class KernelFilterService implements IDisposable {
         this._onDidChange.fire();
     }
     private translateConnectionToFilter(connection: KernelConnectionMetadata): KernelFilter | undefined {
-        if (connection.kind === 'connectToLiveKernel' || connection.kind === 'startUsingDefaultKernel') {
+        if (connection.kind === 'connectToLiveKernel') {
             traceError('Hiding default or live kernels via filter is not supported');
             return;
         }

@@ -198,7 +198,12 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Run a second time after interrupt', async function () {
-        await insertCodeCell('print(1)\nprint(2)\nprint(3)', { index: 0 });
+        await insertCodeCell(
+            'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final output")',
+            {
+                index: 0
+            }
+        );
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
 
@@ -214,27 +219,26 @@ suite('VSCode Notebook - Run By Line', function () {
             defaultNotebookTestTimeout,
             'DebugSession should end1'
         );
-        assert.isFalse(getCellOutputs(cell).includes('3'), `Final line did run even with an interrupt`);
+        assert.isFalse(getCellOutputs(cell).includes('final output'), `Final line did run even with an interrupt`);
 
         // Start over and make sure we can execute all lines
         void commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
         await waitForStoppedEvent(debugAdapter2!);
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
-        await waitForStoppedEvent(debugAdapter2!);
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
-        await waitForStoppedEvent(debugAdapter2!);
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await waitForCondition(
+            async () => {
+                await commandManager.executeCommand(Commands.RunByLineNext, cell);
+                await waitForStoppedEvent(debugAdapter2!);
+                return getCellOutputs(cell).includes('sleepy');
+            },
+            defaultNotebookTestTimeout,
+            'Print during time loop is not working'
+        );
+        await commandManager.executeCommand(Commands.RunByLineStop);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
             'DebugSession should end2'
         );
-        await waitForCondition(
-            async () => !!cell.outputs.length,
-            defaultNotebookTestTimeout,
-            'Cell should have output'
-        );
-        assert.isTrue(getCellOutputs(cell).includes('3'), `Final line did not run`);
     });
 });

@@ -15,19 +15,26 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import {
+    IBrowserService,
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
+import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
 import { EnvironmentType } from '../../pythonEnvironments/info';
@@ -116,7 +123,9 @@ export class VSCodeNotebookController implements Disposable {
         private readonly interpreterPackages: InterpreterPackages,
         private readonly configuration: IConfigurationService,
         private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
-        private readonly documentManager: IDocumentManager
+        private readonly documentManager: IDocumentManager,
+        private readonly appShell: IApplicationShell,
+        private readonly browser: IBrowserService
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -188,6 +197,31 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
+    private warnWhenUsingOutdatedPython() {
+        const pyVersion = this.kernelConnection.interpreter?.version;
+        if (
+            !pyVersion ||
+            pyVersion.major >= 4 ||
+            (this.kernelConnection.kind !== 'startUsingKernelSpec' &&
+                this.kernelConnection.kind !== 'startUsingPythonInterpreter')
+        ) {
+            return;
+        }
+
+        if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
+            void this.appShell
+                .showWarningMessage(
+                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
+                    Common.learnMore()
+                )
+                .then((selection) => {
+                    if (selection !== Common.learnMore()) {
+                        return;
+                    }
+                    return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
+                });
+        }
+    }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         traceInfoIfCI(
             `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
@@ -216,7 +250,7 @@ export class VSCodeNotebookController implements Disposable {
         if (!this.workspace.isTrusted) {
             return;
         }
-
+        this.warnWhenUsingOutdatedPython();
         traceInfoIfCI(`Notebook Controller set ${getDisplayPath(event.notebook.uri)}, ${this.id}`);
         this.associatedDocuments.add(event.notebook);
 

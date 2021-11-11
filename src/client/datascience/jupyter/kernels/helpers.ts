@@ -16,7 +16,6 @@ import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
-    DefaultKernelConnectionMetadata,
     IKernel,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
@@ -56,10 +55,7 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
     return kernelSpec.argv.findIndex((arg) => arg.includes(connectionFilePlaceholder));
 }
 
-type ConnectionWithKernelSpec =
-    | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata
-    | DefaultKernelConnectionMetadata;
+type ConnectionWithKernelSpec = KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
@@ -188,8 +184,7 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
     const interpeterName =
         kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
 
-    const defaultKernelName = kernelConnection.kind === 'startUsingDefaultKernel' ? 'Python 3' : undefined;
-    return displayName || name || interpeterName || defaultKernelName || '';
+    return displayName || name || interpeterName || '';
 }
 
 export function getNameOfKernelConnection(
