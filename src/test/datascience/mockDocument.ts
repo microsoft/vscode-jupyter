@@ -144,7 +144,7 @@ export class MockDocument implements TextDocument {
         } else {
             const startOffset = this.convertToOffset(range.start);
             const endOffset = this.convertToOffset(range.end);
-            return this._contents.substring(startOffset, endOffset - startOffset);
+            return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
     public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {

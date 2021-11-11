@@ -154,7 +154,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 0, 'Hash should be gone');
 
         // Undo the last change
-        addSingleChange('foo.py', new Range(new Position(3, 0), new Position(4, 0)), '\r\n');
+        addSingleChange('foo.py', new Range(new Position(3, 0), new Position(4, 0)), '');
 
         // Hash should reappear
         hashes = hashProvider.getHashes();
