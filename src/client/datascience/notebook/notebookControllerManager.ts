@@ -529,10 +529,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 .filter(([id]) => !this.registeredControllers.has(id))
                 .forEach(([id, viewType]) => {
                     let hideController = false;
-                    if (
-                        kernelConnection.kind === 'connectToLiveKernel' ||
-                        kernelConnection.kind === 'startUsingDefaultKernel'
-                    ) {
+                    if (kernelConnection.kind === 'connectToLiveKernel') {
                         if (viewType === InteractiveWindowView && doNotHideInteractiveKernel) {
                             hideController = false;
                         } else {

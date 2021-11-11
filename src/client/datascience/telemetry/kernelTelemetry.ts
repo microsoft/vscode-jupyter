@@ -25,7 +25,6 @@ export function sendKernelListTelemetry(
             case 'connectToLiveKernel':
                 counters.kernelLiveCount += 1;
                 break;
-            case 'startUsingDefaultKernel':
             case 'startUsingKernelSpec':
                 counters.kernelSpecCount += 1;
                 break;
