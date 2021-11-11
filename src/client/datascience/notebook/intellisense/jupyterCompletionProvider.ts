@@ -17,6 +17,7 @@ import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
+import { IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { Settings } from '../../constants';
@@ -33,13 +34,19 @@ export type JupyterCompletionItem = CompletionItem & {
 
 @injectable()
 export class JupyterCompletionProvider implements CompletionItemProvider {
+    private allowStringFilter = false;
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookLanguageClientProvider)
-        private readonly languageClientProvider: INotebookLanguageClientProvider
-    ) {}
+        private readonly languageClientProvider: INotebookLanguageClientProvider,
+        @inject(IConfigurationService) config: IConfigurationService
+    ) {
+        const triggerChars = config.getSettings().completionTriggerCharacters;
+        this.allowStringFilter =
+            triggerChars != undefined && (triggerChars.includes("'") || triggerChars.includes('"'));
+    }
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
@@ -132,7 +139,14 @@ export class JupyterCompletionProvider implements CompletionItemProvider {
         }
 
         // Filter the list based on where we are in a cell (and the type of cell)
-        return filterCompletions(context.triggerCharacter, completions, pylanceResults, document, position);
+        return filterCompletions(
+            context.triggerCharacter,
+            this.allowStringFilter,
+            completions,
+            pylanceResults,
+            document,
+            position
+        );
     }
     public async getJupyterCompletion(
         session: IJupyterSession,
@@ -232,6 +246,7 @@ export function generateSortString(index: number) {
 // Exported for unit testing
 export function filterCompletions(
     triggerCharacter: string | undefined,
+    allowStringFilter: boolean,
     completions: JupyterCompletionItem[],
     pylanceResults: CompletionItem[] | null | undefined,
     cell: TextDocument,
@@ -241,7 +256,9 @@ export function filterCompletions(
     const wordRange = cell.getWordRangeAtPosition(position);
     const word = wordRange ? cell.getText(wordRange) : cell.lineAt(position.line).text;
     const wordDot = word.endsWith('.');
-    const insideString = triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position);
+    const insideString =
+        allowStringFilter &&
+        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position));
 
     // If inside of a string, filter out everything except file names
     if (insideString) {

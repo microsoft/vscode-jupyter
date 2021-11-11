@@ -41,6 +41,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         const pylanceCompletions: JupyterCompletionItem[] = [];
         const filtered = filterCompletions(
             undefined,
+            false,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
@@ -64,6 +65,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         const pylanceCompletions: JupyterCompletionItem[] = [];
         const filtered = filterCompletions(
             undefined,
+            false,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
@@ -85,6 +87,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         const pylanceCompletions: JupyterCompletionItem[] = [];
         const filtered = filterCompletions(
             '"',
+            true,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
@@ -108,13 +111,14 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         const pylanceCompletions: JupyterCompletionItem[] = [];
         const filtered = filterCompletions(
             undefined,
+            true,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
             new vscode.Position(1, 7)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
-        assert.equal(filtered.length, 1, 'Wrong number of filtered results');
+        assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
             filtered.find((f) => f.label == 'test.ipynb'),
             'Inside string didnt work'
@@ -138,6 +142,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         ];
         const filtered = filterCompletions(
             undefined,
+            false,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
@@ -156,6 +161,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
         const pylanceCompletions: JupyterCompletionItem[] = [];
         const filtered = filterCompletions(
             undefined,
+            true,
             jupyterCompletions,
             pylanceCompletions,
             mockDocument,
