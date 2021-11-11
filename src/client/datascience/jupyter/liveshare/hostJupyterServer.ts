@@ -175,24 +175,6 @@ export class HostJupyterServer implements INotebookServer {
         this.sessionManager = (await this.sessionManagerFactory.create(
             launchInfo.connectionInfo
         )) as JupyterSessionManager;
-
-        const defaultKernel: DefaultKernelConnectionMetadata = {
-            kind: 'startUsingDefaultKernel',
-            id: ''
-        };
-        // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
-        // is running and connectable.
-        const session = (await this.sessionManager.startNew(
-            undefined,
-            defaultKernel,
-            launchInfo.connectionInfo.rootDirectory,
-            cancelToken,
-            launchInfo.disableUI
-        )) as JupyterSession;
-        const idleTimeout = this.configService.getSettings().jupyterLaunchTimeout;
-        // The wait for idle should throw if we can't connect.
-        await session.waitForIdle(idleTimeout);
-        await session.dispose();
     }
 
     public async createNotebook(
