@@ -96,7 +96,7 @@ def launch_kernel(
         # Create a Win32 event for interrupting the kernel
         # and store it in an environment variable.
         interrupt_event = create_interrupt_event()
-        env["   "] = str(interrupt_event)
+        env["JPY_INTERRUPT_EVENT"] = str(interrupt_event)
         # deprecated old env name:
         env["IPY_INTERRUPT_EVENT"] = env["JPY_INTERRUPT_EVENT"]
 
