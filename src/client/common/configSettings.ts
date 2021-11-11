@@ -98,7 +98,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
     public pylanceHandlesNotebooks: boolean = false;
-    public completionTriggerCharacters: string = '.%';
+    public pythonCompletionTriggerCharacters: string | undefined;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {

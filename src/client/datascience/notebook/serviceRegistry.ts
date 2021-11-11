@@ -13,7 +13,7 @@ import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
-import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvider';
+import { PythonKernelCompletionProvider } from './intellisense/pythonKernelCompletionProvider';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
@@ -52,7 +52,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookCellLanguageService
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addSingleton<JupyterCompletionProvider>(JupyterCompletionProvider, JupyterCompletionProvider);
+    serviceManager.addSingleton<PythonKernelCompletionProvider>(
+        PythonKernelCompletionProvider,
+        PythonKernelCompletionProvider
+    );
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
