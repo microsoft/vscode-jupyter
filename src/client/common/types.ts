@@ -180,6 +180,7 @@ export interface IJupyterSettings {
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
     readonly pylanceHandlesNotebooks?: boolean;
+    readonly completionTriggerCharacters?: string;
 }
 
 export interface IVariableTooltipFields {

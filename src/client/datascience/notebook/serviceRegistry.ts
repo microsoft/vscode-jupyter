@@ -17,7 +17,7 @@ import { JupyterCompletionProvider } from './intellisense/jupyterCompletionProvi
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookControllerManager } from './types';
+import { INotebookControllerManager, INotebookLanguageClientProvider } from './types';
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
@@ -53,7 +53,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addSingleton<JupyterCompletionProvider>(JupyterCompletionProvider, JupyterCompletionProvider);
-    serviceManager.addSingleton<IntellisenseProvider>(IExtensionSingleActivationService, IntellisenseProvider);
+    serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
+    serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);

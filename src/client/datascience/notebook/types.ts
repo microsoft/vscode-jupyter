@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import type * as vsc from 'vscode-languageclient/node';
 import { Resource } from '../../common/types';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
@@ -39,4 +40,9 @@ export interface INotebookCommunication {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     postMessage(message: any): Thenable<boolean>;
     asWebviewUri(localResource: Uri): Uri;
+}
+
+export const INotebookLanguageClientProvider = Symbol('INotebookLanguageClientProvider');
+export interface INotebookLanguageClientProvider {
+    getLanguageClient(notebook: NotebookDocument): Promise<vsc.LanguageClient | undefined>;
 }
