@@ -39,8 +39,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(ICommandManager) protected commandManager: ICommandManager
     ) {}
     public async handleError(err: Error): Promise<void> {
-        await this.handleErrorImplementation(err);
         traceError('DataScience Error', err);
+        await this.handleErrorImplementation(err);
     }
 
     public async handleKernelError(
