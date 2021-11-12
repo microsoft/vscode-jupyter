@@ -24,7 +24,6 @@ import { IKernel } from './kernels/types';
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
     private refreshEventEmitter = new EventEmitter<void>();
-
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
@@ -43,11 +42,11 @@ export class JupyterVariables implements IJupyterVariables {
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
-        return (await this.getVariableHandler()).getVariables(request, kernel);
+        return this.variableHandler.getVariables(request, kernel);
     }
 
     public async getFullVariable(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler()).getFullVariable(variable, kernel);
+        return this.variableHandler.getFullVariable(variable, kernel);
     }
 
     public async getMatchingVariable(
@@ -55,7 +54,7 @@ export class JupyterVariables implements IJupyterVariables {
         kernel?: IKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
-        return (await this.getVariableHandler()).getMatchingVariable(name, kernel, cancelToken);
+        return this.variableHandler.getMatchingVariable(name, kernel, cancelToken);
     }
 
     public async getDataFrameInfo(
@@ -64,7 +63,7 @@ export class JupyterVariables implements IJupyterVariables {
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler()).getDataFrameInfo(targetVariable, kernel, sliceExpression, isRefresh);
+        return this.variableHandler.getDataFrameInfo(targetVariable, kernel, sliceExpression, isRefresh);
     }
 
     public async getDataFrameRows(
@@ -74,10 +73,10 @@ export class JupyterVariables implements IJupyterVariables {
         kernel?: IKernel,
         sliceExpression?: string
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler()).getDataFrameRows(targetVariable, start, end, kernel, sliceExpression);
+        return this.variableHandler.getDataFrameRows(targetVariable, start, end, kernel, sliceExpression);
     }
 
-    private async getVariableHandler(): Promise<IJupyterVariables> {
+    private get variableHandler(): IJupyterVariables {
         if (this.debuggerVariables.active) {
             return this.debuggerVariables;
         }

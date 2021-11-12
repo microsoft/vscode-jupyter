@@ -84,18 +84,6 @@ export enum InterruptResult {
     TimedOut = 'timeout',
     Restarted = 'restart'
 }
-
-// Information used to launch a jupyter notebook server
-
-// Information used to launch a notebook server
-export interface INotebookServerLaunchInfo {
-    connectionInfo: IJupyterConnection;
-    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    workingDir: string | undefined;
-    purpose: string | undefined; // Purpose this server is for
-    disableUI?: boolean; // True if no UI should be brought up during the launch
-}
-
 export interface INotebookCompletion {
     matches: ReadonlyArray<string>;
     cursor: {
@@ -115,7 +103,7 @@ export interface INotebookServer extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
+    connect(connection: IJupyterConnection, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
 
@@ -153,7 +141,7 @@ export interface INotebook {
 }
 
 // Options for connecting to a notebook provider
-export type ConnectNotebookProviderOptions = {
+export interface ConnectNotebookProviderOptions {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
@@ -162,12 +150,13 @@ export type ConnectNotebookProviderOptions = {
 };
 
 export interface INotebookServerOptions {
+    /**
+     * Undefined when connecting to local Jupyter (in case Raw kernels aren't supported)
+     */
     uri?: string;
     resource: Resource;
-    usingDarkTheme?: boolean;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
-    purpose: string;
     allowUI(): boolean;
 }
 
@@ -846,14 +835,6 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export type GetServerOptions = {
-    getOnly?: boolean;
-    disableUI?: boolean;
-    localOnly?: boolean;
-    token?: CancellationToken;
-    resource: Resource;
-};
-
 /**
  * Options for getting a notebook
  */
@@ -861,7 +842,6 @@ export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata;
     kernelConnection: KernelConnectionMetadata;
     token?: CancellationToken;
 };
@@ -883,7 +863,7 @@ export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */
-    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: ConnectNotebookProviderOptions): Promise<INotebookServer | undefined>;
 }
 
 export interface IKernelSocket {

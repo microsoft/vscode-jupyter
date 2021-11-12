@@ -13,13 +13,13 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Settings, Telemetry } from '../constants';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
-    GetServerOptions,
+    ConnectNotebookProviderOptions,
     IJupyterExecution,
     IJupyterServerProvider,
     IJupyterServerUriStorage,
@@ -41,7 +41,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
     ) {}
     public async getOrCreateServer(
-        options: GetServerOptions,
+        options: ConnectNotebookProviderOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(options.resource);
@@ -56,7 +56,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async createServer(
-        options: GetServerOptions,
+        options: ConnectNotebookProviderOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
@@ -204,7 +204,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             resource,
             skipUsingDefaultConfig: !useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose,
             allowUI: this.allowUI.bind(this)
         };
     }

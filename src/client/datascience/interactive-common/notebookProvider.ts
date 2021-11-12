@@ -5,9 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, Resource } from '../../common/types';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { IConfigurationService } from '../../common/types';
+import { Settings, Telemetry } from '../constants';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,
@@ -24,7 +23,6 @@ export class NotebookProvider implements INotebookProvider {
     constructor(
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -62,31 +60,18 @@ export class NotebookProvider implements INotebookProvider {
             }
         }
 
-        // Finally create if needed
-        let resource: Resource = options.resource;
-        // TODO: This is a bug, this will never be true, `options.document.uri.scheme will never be Identifiers.HistoryPurpose`
-        if (options.document.uri.scheme === Identifiers.HistoryPurpose && !resource) {
-            // If we have any workspaces, then use the first available workspace.
-            // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
-            // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
-            // Ideally we need to pick the resource of the corresponding Python file.
-            resource = this.workspaceService.hasWorkspaceFolders
-                ? this.workspaceService.workspaceFolders![0]!.uri
-                : undefined;
-        }
-
-        trackKernelResourceInformation(resource, { kernelConnection: options.kernelConnection });
+        trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(
                   options.document,
-                  resource,
+                  options.resource,
                   options.kernelConnection,
                   options.disableUI,
                   options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);
 
-        sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, promise, undefined, {
+        sendKernelTelemetryWhenDone(options.resource, Telemetry.NotebookStart, promise, undefined, {
             disableUI: options.disableUI
         });
 

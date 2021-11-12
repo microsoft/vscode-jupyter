@@ -26,7 +26,6 @@ import {
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     INotebookServer,
-    INotebookServerLaunchInfo,
     INotebookServerOptions,
     JupyterServerUriHandle
 } from '../types';
@@ -119,7 +118,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
+            traceInfo(`Connecting to server`);
             const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
             if (cancelToken) {
@@ -144,18 +143,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // Populate the launch info that we are starting our server with
-                    const launchInfo: INotebookServerLaunchInfo = {
-                        connectionInfo: connection!,
-                        workingDir: options ? options.workingDir : undefined,
-                        uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid(),
-                        disableUI: !allowUI
-                    };
                     // eslint-disable-next-line no-constant-condition
-                    traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
-                    await result.connect(launchInfo, cancelToken);
-                    traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
+                    traceInfo(`Connecting to process server`);
+                    await result.connect(connection, cancelToken);
+                    traceInfo(`Connection complete server`);
 
                     sendTelemetryEvent(
                         isLocalConnection ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
@@ -245,7 +236,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
             // If that works, then attempt to start the server
-            traceInfo(`Launching ${options.purpose} server`);
+            traceInfo(`Launching server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
 
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)

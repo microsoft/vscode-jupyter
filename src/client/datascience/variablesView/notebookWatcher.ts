@@ -26,7 +26,6 @@ type KernelStateEventArgs = {
     notebook: NotebookDocument;
     state: KernelState;
     cell?: NotebookCell;
-    silent?: boolean;
 };
 
 enum KernelState {
@@ -126,8 +125,7 @@ export class NotebookWatcher implements INotebookWatcher {
             this.handleExecute({
                 notebook: cellStateChange.cell.notebook,
                 state: KernelState.executed,
-                cell: cellStateChange.cell,
-                silent: false
+                cell: cellStateChange.cell
             });
         }
     }
@@ -189,8 +187,7 @@ export class NotebookWatcher implements INotebookWatcher {
         if (
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
-            kernelStateEvent.cell.executionSummary?.executionOrder &&
-            !kernelStateEvent.silent
+            kernelStateEvent.cell.executionSummary?.executionOrder
         ) {
             return true;
         }

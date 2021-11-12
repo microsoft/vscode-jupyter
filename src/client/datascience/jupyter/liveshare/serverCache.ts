@@ -128,8 +128,6 @@ export class ServerCache implements IAsyncDisposable {
             uri: options ? options.uri : undefined,
             resource: options?.resource,
             skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
-            usingDarkTheme: options ? options.usingDarkTheme : undefined,
-            purpose: options ? options.purpose : uuid(),
             workingDir:
                 options && options.workingDir
                     ? options.workingDir
@@ -145,7 +143,7 @@ export class ServerCache implements IAsyncDisposable {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
             const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
+            return `${uri}${useFlag}${options.workingDir}`;
         }
     }
 }

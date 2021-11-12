@@ -2,22 +2,17 @@
 // Licensed under the MIT License.
 import { NotebookDocument, Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
-import {
-    IJupyterConnection,
-    INotebook,
-    INotebookServer,
-    INotebookServerLaunchInfo
-} from '../../client/datascience/types';
+import { IJupyterConnection, INotebook, INotebookServer } from '../../client/datascience/types';
 import { MockJupyterNotebook } from './mockJupyterNotebook';
 
 export class MockJupyterServer implements INotebookServer {
-    private launchInfo: INotebookServerLaunchInfo | undefined;
+    private connection: IJupyterConnection | undefined;
     private notebookFile: TemporaryFile | undefined;
-    public async connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
-        this.launchInfo = launchInfo;
+    public async connect(connection: IJupyterConnection): Promise<void> {
+        this.connection = connection;
 
         // Validate connection info and kernel spec
-        if (!launchInfo.connectionInfo.baseUrl) {
+        if (!connection.baseUrl) {
             throw new Error('invalid server startup');
         }
     }
@@ -30,15 +25,12 @@ export class MockJupyterServer implements INotebookServer {
         return new MockJupyterNotebook(this.getConnectionInfo());
     }
     public getConnectionInfo(): IJupyterConnection | undefined {
-        return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
-    }
-    public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
-        throw new Error('Method not implemented');
+        return this.connection;
     }
     public async dispose(): Promise<void> {
-        if (this.launchInfo) {
-            this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
-            this.launchInfo = undefined;
+        if (this.connection) {
+            this.connection.dispose(); // This should kill the process that's running
+            this.connection = undefined;
         }
         if (this.notebookFile) {
             this.notebookFile.dispose(); // This destroy any unwanted kernel specs if necessary
