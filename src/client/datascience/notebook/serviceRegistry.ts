@@ -25,6 +25,7 @@ import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTrac
 import { IntellisenseProvider } from './intellisense/intellisenseProvider';
 import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
+import { NotebookCellBangInstallDiagnosticsProvider } from './bangInstallDiagnostics/diagnosticsProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -50,6 +51,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookCellLanguageService
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        NotebookCellBangInstallDiagnosticsProvider
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
