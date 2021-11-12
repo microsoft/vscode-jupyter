@@ -164,11 +164,11 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
+    getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
@@ -941,7 +941,8 @@ export enum KernelInterpreterDependencyResponse {
     ok = 0, // Used in telemetry.
     cancel = 1, // Used in telemetry.
     failed = 2, // Used in telemetry.
-    selectDifferentKernel = 3 // Used in telemetry.
+    selectDifferentKernel = 3, // Used in telemetry.
+    uiHidden = 4 // Used in telemetry.
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');

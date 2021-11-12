@@ -1009,7 +1009,10 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
+        await assert.isFulfilled(
+            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            'Should be able to start a server'
+        );
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
@@ -1023,13 +1026,19 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
+        await assert.isFulfilled(
+            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            'Should be able to start a server'
+        );
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires jupyter.');
+        await assert.isRejected(
+            execution.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            'Running cells requires jupyter.'
+        );
     }).timeout(10000);
 
     test('Missing kernel python still finds interpreter', async () => {

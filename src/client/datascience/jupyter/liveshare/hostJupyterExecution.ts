@@ -75,7 +75,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
     }
 
     public async hostConnectToNotebookServer(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
@@ -84,14 +84,14 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
     }
 
     public async connectToNotebookServer(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
             return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
     }
-    public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
             // See if we have this server or not.
             return this.serverCache.get(options);
