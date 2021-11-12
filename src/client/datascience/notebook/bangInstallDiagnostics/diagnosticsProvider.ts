@@ -33,8 +33,8 @@ import { JupyterNotebookView } from '../constants';
 type CellUri = string;
 type CellVersion = number;
 
-const pipMessage = "Install packages with '%pip install' instead of '!pip install'.";
-const condaMessage = "Install packages with '%conda install' instead of '!conda install'";
+const pipMessage = "Use '%pip install' instead of '!pip install'";
+const condaMessage = "Use '%conda install' instead of '!conda install'";
 const diagnosticSource = 'Jupyter';
 
 @injectable()
