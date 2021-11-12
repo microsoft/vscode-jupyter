@@ -835,6 +835,8 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
+export type GetServerOptions = ConnectNotebookProviderOptions;
+
 /**
  * Options for getting a notebook
  */
@@ -845,8 +847,6 @@ export type NotebookCreationOptions = {
     kernelConnection: KernelConnectionMetadata;
     token?: CancellationToken;
 };
-
-export type GetServerOptions = ConnectNotebookProviderOptions;
 
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
