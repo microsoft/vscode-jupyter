@@ -52,7 +52,6 @@ suite('DataScience - NotebookProvider', () => {
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(workspaceService),
             instance(extensionChecker),
             instance(configService)
         );

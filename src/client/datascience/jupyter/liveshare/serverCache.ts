@@ -3,7 +3,6 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
@@ -24,7 +23,6 @@ interface IServerData {
 
 export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
-    private emptyKey = uuid();
     private disposed = false;
 
     constructor(
@@ -35,10 +33,10 @@ export class ServerCache implements IAsyncDisposable {
 
     public async getOrCreate(
         createFunction: (
-            options?: INotebookServerOptions,
+            options: INotebookServerOptions,
             cancelToken?: CancellationToken
         ) => Promise<INotebookServer | undefined>,
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         const cancelSource = new CancellationTokenSource();
@@ -91,7 +89,7 @@ export class ServerCache implements IAsyncDisposable {
             });
     }
 
-    public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public async get(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         if (this.cache.has(key)) {
@@ -123,29 +121,23 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
+    public async generateDefaultOptions(options: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
             uri: options ? options.uri : undefined,
             resource: options?.resource,
             skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
-            usingDarkTheme: options ? options.usingDarkTheme : undefined,
-            purpose: options ? options.purpose : uuid(),
             workingDir:
                 options && options.workingDir
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
-            allowUI: options?.allowUI ? options.allowUI : () => false
+            allowUI: options.allowUI
         };
     }
 
-    private generateKey(options?: INotebookServerOptions): string {
-        if (!options) {
-            return this.emptyKey;
-        } else {
-            // combine all the values together to make a unique key
-            const uri = options.uri ? options.uri : '';
-            const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
-        }
+    private generateKey(options: INotebookServerOptions): string {
+        // combine all the values together to make a unique key
+        const uri = options.uri ? options.uri : '';
+        const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
+        return `${uri}${useFlag}${options.workingDir}`;
     }
 }

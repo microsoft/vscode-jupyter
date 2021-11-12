@@ -18,20 +18,13 @@ import {
 import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { ProgressReporter } from '../../progress/progressReporter';
-import {
-    IJupyterConnection,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookServer,
-    INotebookServerLaunchInfo
-} from '../../types';
+import { IJupyterConnection, IJupyterSessionManagerFactory, INotebook, INotebookServer } from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
-import * as uuid from 'uuid/v4';
 import { noop } from '../../../common/utils/misc';
 import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
@@ -42,9 +35,8 @@ import { SessionDisposedError } from '../../errors/sessionDisposedError';
 
 @injectable()
 export class HostJupyterServer implements INotebookServer {
-    private launchInfo: INotebookServerLaunchInfo | undefined;
-    protected readonly id = uuid();
-    private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
+    private connection: IJupyterConnection | undefined;
+    private connectPromise: Deferred<IJupyterConnection> = createDeferred<IJupyterConnection>();
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
     private notebooks = new Set<Promise<INotebook>>();
@@ -71,11 +63,11 @@ export class HostJupyterServer implements INotebookServer {
         }
     }
 
-    protected get isDisposed() {
+    private get isDisposed() {
         return this.disposed;
     }
 
-    protected async createNotebookInstance(
+    private async createNotebookInstance(
         resource: Resource,
         sessionManager: JupyterSessionManager,
         configService: IConfigurationService,
@@ -90,7 +82,7 @@ export class HostJupyterServer implements INotebookServer {
         this.trackDisposable(notebookPromise.promise);
 
         const getExistingSession = async () => {
-            const info = await this.computeLaunchInfo();
+            const connection = await this.computeLaunchInfo();
 
             progressDisposable = this.progressReporter.createProgressIndicator(
                 localize.DataScience.connectingToKernel().format(
@@ -99,28 +91,28 @@ export class HostJupyterServer implements INotebookServer {
             );
 
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
-            const workingDirectory = info.connectionInfo.localLaunch
+            const workingDirectory = connection.localLaunch
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
             // Start a session (or use the existing one if allowed)
             const session = await sessionManager.startNew(resource, kernelConnection, workingDirectory, cancelToken);
-            traceInfo(`Started session ${this.id}`);
-            return { info, session };
+            traceInfo(`Started session for kernel ${kernelConnection.id}`);
+            return { connection, session };
         };
 
         try {
-            const { info, session } = await getExistingSession();
+            const { connection, session } = await getExistingSession();
 
             if (session) {
                 // Create our notebook
-                const notebook = new JupyterNotebook(session, info.connectionInfo);
+                const notebook = new JupyterNotebook(session, connection);
 
                 // Wait for it to be ready
-                traceInfo(`Waiting for idle (session) ${this.id}`);
+                traceInfo(`Waiting for idle (session) kernel ${kernelConnection.id}`);
                 const idleTimeout = configService.getSettings().jupyterLaunchTimeout;
                 await notebook.session.waitForIdle(idleTimeout);
 
-                traceInfo(`Finished connecting ${this.id}`);
+                traceInfo(`Finished connecting kernel ${kernelConnection.id}`);
 
                 notebookPromise.resolve(notebook);
             } else {
@@ -137,7 +129,7 @@ export class HostJupyterServer implements INotebookServer {
         return notebookPromise.promise;
     }
 
-    private async computeLaunchInfo(): Promise<INotebookServerLaunchInfo> {
+    private async computeLaunchInfo(): Promise<IJupyterConnection> {
         // First we need our launch information so we can start a new session (that's what our notebook is really)
         let launchInfo = await this.waitForConnect();
         if (!launchInfo) {
@@ -146,35 +138,30 @@ export class HostJupyterServer implements INotebookServer {
         return launchInfo;
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {
-        traceInfo(`Connecting server ${this.id}`);
+    public async connect(connection: IJupyterConnection, _cancelToken?: CancellationToken): Promise<void> {
+        traceInfo(`Connecting server kernel ${connection.baseUrl}`);
 
         // Save our launch info
-        this.launchInfo = launchInfo;
+        this.connection = connection;
 
         // Indicate connect started
-        this.connectPromise.resolve(launchInfo);
+        this.connectPromise.resolve(connection);
 
-        // Listen to the process going down
-        if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
-                try {
-                    this.serverExitCode = c;
-                    traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
-                    this.shutdown().ignoreErrors();
-                } catch {
-                    noop();
-                }
-            });
-        }
+        this.connectionInfoDisconnectHandler = this.connection.disconnected((c) => {
+            try {
+                this.serverExitCode = c;
+                traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
+                this.shutdown().ignoreErrors();
+            } catch {
+                noop();
+            }
+        });
 
         // Indicate we have a new session on the output channel
-        this.logRemoteOutput(localize.DataScience.connectingToJupyterUri().format(launchInfo.connectionInfo.baseUrl));
+        this.logRemoteOutput(localize.DataScience.connectingToJupyterUri().format(connection.baseUrl));
 
         // Create our session manager
-        this.sessionManager = (await this.sessionManagerFactory.create(
-            launchInfo.connectionInfo
-        )) as JupyterSessionManager;
+        this.sessionManager = (await this.sessionManagerFactory.create(connection)) as JupyterSessionManager;
     }
 
     public async createNotebook(
@@ -195,7 +182,7 @@ export class HostJupyterServer implements INotebookServer {
                 kernelConnection,
                 cancelToken
             );
-            const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
+            const baseUrl = this.connection?.baseUrl || '';
             this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
             return notebook;
@@ -212,7 +199,7 @@ export class HostJupyterServer implements INotebookServer {
         }
     }
 
-    protected async shutdown(): Promise<void> {
+    private async shutdown(): Promise<void> {
         try {
             // Order should be
             // 1) connectionInfoDisconnectHandler - listens to process close
@@ -225,7 +212,7 @@ export class HostJupyterServer implements INotebookServer {
                 this.connectionInfoDisconnectHandler = undefined;
             }
 
-            traceInfo(`Shutting down notebooks for ${this.id}`);
+            traceInfo('Shutting down notebooks');
             const notebooks = await Promise.all([...this.notebooks.values()]);
             await Promise.all(notebooks.map((n) => n?.session.dispose()));
             traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
@@ -240,29 +227,29 @@ export class HostJupyterServer implements INotebookServer {
             }
 
             // After shutting down notebooks and session manager, kill the main process.
-            if (this.launchInfo && this.launchInfo.connectionInfo) {
+            if (this.connection && this.connection) {
                 traceInfo('Shutdown server - dispose conn info');
-                this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
-                this.launchInfo = undefined;
+                this.connection.dispose(); // This should kill the process that's running
+                this.connection = undefined;
             }
         } catch (e) {
             traceError(`Error during shutdown: `, e);
         }
     }
 
-    protected waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
+    private waitForConnect(): Promise<IJupyterConnection | undefined> {
         return this.connectPromise.promise;
     }
 
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IJupyterConnection | undefined {
-        if (!this.launchInfo) {
+        if (!this.connection) {
             return undefined;
         }
 
         // Return a copy with a no-op for dispose
         return {
-            ...this.launchInfo.connectionInfo,
+            ...this.connection,
             dispose: noop
         };
     }
@@ -276,7 +263,7 @@ export class HostJupyterServer implements INotebookServer {
         // Default is just say session was disposed
         return new SessionDisposedError();
     }
-    protected trackDisposable(notebook: Promise<INotebook>) {
+    private trackDisposable(notebook: Promise<INotebook>) {
         notebook
             .then((nb) => {
                 nb.session.onDidDispose(() => this.notebooks.delete(notebook), this, this.disposables);
@@ -288,7 +275,7 @@ export class HostJupyterServer implements INotebookServer {
     }
 
     private logRemoteOutput(output: string) {
-        if (this.launchInfo && !this.launchInfo.connectionInfo.localLaunch) {
+        if (!this.connection?.localLaunch) {
             this.jupyterOutputChannel.appendLine(output);
         }
     }

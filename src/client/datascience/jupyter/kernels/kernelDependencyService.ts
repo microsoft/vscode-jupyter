@@ -125,7 +125,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
         if (disableUI) {
-            return KernelInterpreterDependencyResponse.cancel;
+            return KernelInterpreterDependencyResponse.uiHidden;
         }
         const installerToken = wrapCancellationTokens(token);
         const [isModulePresent, isPipAvailableForNonConda] = await Promise.all([

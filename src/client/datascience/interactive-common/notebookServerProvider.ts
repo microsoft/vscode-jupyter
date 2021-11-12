@@ -13,7 +13,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Settings, Telemetry } from '../constants';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
@@ -204,7 +204,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             resource,
             skipUsingDefaultConfig: !useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose,
             allowUI: this.allowUI.bind(this)
         };
     }

@@ -84,18 +84,6 @@ export enum InterruptResult {
     TimedOut = 'timeout',
     Restarted = 'restart'
 }
-
-// Information used to launch a jupyter notebook server
-
-// Information used to launch a notebook server
-export interface INotebookServerLaunchInfo {
-    connectionInfo: IJupyterConnection;
-    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    workingDir: string | undefined;
-    purpose: string | undefined; // Purpose this server is for
-    disableUI?: boolean; // True if no UI should be brought up during the launch
-}
-
 export interface INotebookCompletion {
     matches: ReadonlyArray<string>;
     cursor: {
@@ -115,7 +103,7 @@ export interface INotebookServer extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
+    connect(connection: IJupyterConnection, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
 
@@ -162,12 +150,13 @@ export type ConnectNotebookProviderOptions = {
 };
 
 export interface INotebookServerOptions {
+    /**
+     * Undefined when connecting to local Jupyter (in case Raw kernels aren't supported)
+     */
     uri?: string;
     resource: Resource;
-    usingDarkTheme?: boolean;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
-    purpose: string;
     allowUI(): boolean;
 }
 
@@ -175,11 +164,11 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
+    getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
@@ -846,13 +835,7 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export type GetServerOptions = {
-    getOnly?: boolean;
-    disableUI?: boolean;
-    localOnly?: boolean;
-    token?: CancellationToken;
-    resource: Resource;
-};
+export type GetServerOptions = ConnectNotebookProviderOptions;
 
 /**
  * Options for getting a notebook
@@ -861,7 +844,6 @@ export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata;
     kernelConnection: KernelConnectionMetadata;
     token?: CancellationToken;
 };
@@ -961,7 +943,8 @@ export enum KernelInterpreterDependencyResponse {
     ok = 0, // Used in telemetry.
     cancel = 1, // Used in telemetry.
     failed = 2, // Used in telemetry.
-    selectDifferentKernel = 3 // Used in telemetry.
+    selectDifferentKernel = 3, // Used in telemetry.
+    uiHidden = 4 // Used in telemetry.
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');

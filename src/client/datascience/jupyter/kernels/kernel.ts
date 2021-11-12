@@ -31,7 +31,6 @@ import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation
 } from '../../telemetry/telemetry';
-import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -338,7 +337,6 @@ export class Kernel implements IKernel {
                             document: this.notebookDocument,
                             resource: this.resourceUri,
                             disableUI: options?.disableUI,
-                            metadata: getNotebookMetadata(this.notebookDocument), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token
                         });
