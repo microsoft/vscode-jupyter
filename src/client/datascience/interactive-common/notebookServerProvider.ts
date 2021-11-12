@@ -19,7 +19,6 @@ import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
-    ConnectNotebookProviderOptions,
     IJupyterExecution,
     IJupyterServerProvider,
     IJupyterServerUriStorage,
@@ -41,7 +40,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
     ) {}
     public async getOrCreateServer(
-        options: ConnectNotebookProviderOptions,
+        options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(options.resource);
@@ -56,7 +55,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async createServer(
-        options: ConnectNotebookProviderOptions,
+        options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This

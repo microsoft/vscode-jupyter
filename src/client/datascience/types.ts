@@ -846,6 +846,8 @@ export type NotebookCreationOptions = {
     token?: CancellationToken;
 };
 
+export type GetServerOptions = ConnectNotebookProviderOptions;
+
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     /**
@@ -863,7 +865,7 @@ export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */
-    getOrCreateServer(options: ConnectNotebookProviderOptions): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }
 
 export interface IKernelSocket {
