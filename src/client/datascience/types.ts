@@ -147,7 +147,7 @@ export interface ConnectNotebookProviderOptions {
     localOnly?: boolean;
     token?: CancellationToken;
     resource: Resource;
-};
+}
 
 export interface INotebookServerOptions {
     /**
