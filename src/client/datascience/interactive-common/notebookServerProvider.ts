@@ -19,6 +19,7 @@ import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
+    GetServerOptions,
     IJupyterExecution,
     IJupyterServerProvider,
     IJupyterServerUriStorage,
