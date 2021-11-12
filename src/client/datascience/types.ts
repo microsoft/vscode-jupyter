@@ -141,13 +141,13 @@ export interface INotebook {
 }
 
 // Options for connecting to a notebook provider
-export interface ConnectNotebookProviderOptions {
+export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
     resource: Resource;
-}
+};
 
 export interface INotebookServerOptions {
     /**
