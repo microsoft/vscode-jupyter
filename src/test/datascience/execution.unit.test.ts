@@ -39,6 +39,7 @@ import {
     Product
 } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
@@ -1009,10 +1010,12 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
+        const ui = new DisplayOptions(true);
         await assert.isFulfilled(
-            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined }),
             'Should be able to start a server'
         );
+        ui.dispose();
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
@@ -1026,19 +1029,23 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
+        const ui = new DisplayOptions(true);
         await assert.isFulfilled(
-            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined }),
             'Should be able to start a server'
         );
+        ui.dispose();
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
+        const ui = new DisplayOptions(true);
         await assert.isRejected(
-            execution.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
+            execution.connectToNotebookServer({ ui, resource: undefined }),
             'Running cells requires jupyter.'
         );
+        ui.dispose();
     }).timeout(10000);
 
     test('Missing kernel python still finds interpreter', async () => {

@@ -15,6 +15,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
+import { DisplayOptions } from '../displayOptions';
 import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -23,7 +24,7 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { ISessionWithSocket } from '../types';
+import { IDisplayOptions, ISessionWithSocket } from '../types';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -70,10 +71,10 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
-    public async connect(
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ): Promise<KernelConnectionMetadata | undefined> {
+    public async connect(options: {
+        token?: CancellationToken;
+        ui: IDisplayOptions;
+    }): Promise<KernelConnectionMetadata | undefined> {
         // Save the resource that we connect with
         let newSession: RawSession;
         trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
@@ -81,8 +82,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            newSession = await this.startRawSession(cancelToken, disableUI);
-            if (cancelToken?.isCancellationRequested) {
+            newSession = await this.startRawSession(options);
+            if (options.token?.isCancellationRequested) {
                 return;
             }
             // Only connect our session if we didn't cancel or timeout
@@ -241,11 +242,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession(cancelToken);
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(true) });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(cancelToken?: CancellationToken, disableUI?: boolean): Promise<RawSession> {
+    private async startRawSession(options: { token?: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -263,8 +264,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.launchTimeout,
             this.resource,
             this.workingDirectory,
-            cancelToken,
-            disableUI
+            options.ui,
+            options.token
         );
 
         // Create our raw session, it will own the process lifetime
@@ -274,12 +275,12 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Wait for it to be ready
             await Promise.race([
                 result.waitForReady(),
-                createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+                createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
             ]);
         } catch (ex) {
             void process.dispose();
             void result.dispose();
-            if (ex instanceof CancellationError || cancelToken?.isCancellationRequested) {
+            if (ex instanceof CancellationError || options.token?.isCancellationRequested) {
                 throw new CancellationError();
             }
             throw ex;
@@ -304,7 +305,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 await Promise.race([
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
                     sleep(Math.min(this.launchTimeout, 10)),
-                    createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+                    createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
                 ]);
             } catch (ex) {
                 void process.dispose();

@@ -14,6 +14,7 @@ import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Settings, Telemetry } from '../constants';
+import { DisplayOptions } from '../displayOptions';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
@@ -30,7 +31,7 @@ import {
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
-    private allowingUI = false;
+    private ui = new DisplayOptions(true);
     constructor(
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -61,7 +62,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     ): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
-        this.allowingUI = options.disableUI ? this.allowingUI : true;
+        this.ui.disableUI = options.ui.disableUI;
+        options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI));
 
         if (!this.serverPromise) {
             // Start a server
@@ -89,11 +91,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
 
         // Status depends upon if we're about to connect to existing server or not.
-        const progressReporter = this.allowingUI
-            ? (await this.jupyterExecution.getServer(serverOptions))
-                ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-                : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
-            : undefined;
+        const progressReporter =
+            this.ui.disableUI === false
+                ? (await this.jupyterExecution.getServer(serverOptions))
+                    ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
+                    : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
+                : undefined;
 
         // Check to see if we support ipykernel or not
         try {
@@ -204,11 +207,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             resource,
             skipUsingDefaultConfig: !useDefaultConfig,
-            allowUI: this.allowUI.bind(this)
+            ui: this.ui
         };
-    }
-
-    private allowUI(): boolean {
-        return this.allowingUI;
     }
 }

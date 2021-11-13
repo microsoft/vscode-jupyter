@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { DisplayOptions } from '../displayOptions';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import {
     ConnectNotebookProviderOptions,
@@ -20,21 +21,40 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        const server = await this.serverProvider.getOrCreateServer(options);
-
-        return server?.dispose();
+        const ui = new DisplayOptions(options.disableUI === true);
+        try {
+            const server = await this.serverProvider.getOrCreateServer({
+                getOnly: false,
+                ui,
+                resource: options.resource,
+                token: options.token
+            });
+            return server?.dispose();
+        } finally {
+            ui.dispose();
+        }
     }
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
-        const server = await this.serverProvider.getOrCreateServer(options);
-        return server?.getConnectionInfo();
+        const ui = new DisplayOptions(options.disableUI === true);
+        try {
+            const server = await this.serverProvider.getOrCreateServer({
+                getOnly: false,
+                ui: new DisplayOptions(options.disableUI === true),
+                resource: options.resource,
+                token: options.token
+            });
+            return server?.getConnectionInfo();
+        } finally {
+            ui.dispose();
+        }
     }
 
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
         // Make sure we have a server
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: false,
-            disableUI: options.disableUI,
+            ui: options.ui,
             resource: options.resource,
             token: options.token
         });

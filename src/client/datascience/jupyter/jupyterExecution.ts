@@ -119,7 +119,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
             traceInfo(`Connecting to server`);
-            const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
             if (cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -212,7 +211,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, {
                 timeout: stopWatch.elapsedTime
             });
-            if (allowUI) {
+            if (!options.ui.disableUI) {
                 this.appShell
                     .showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel())
                     .then((selection) => {

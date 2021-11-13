@@ -130,7 +130,7 @@ export class ServerCache implements IAsyncDisposable {
                 options && options.workingDir
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
-            allowUI: options.allowUI
+            ui: options.ui
         };
     }
 

@@ -19,6 +19,7 @@ import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import * as path from 'path';
 import { arePathsSame } from '../../../common';
+import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
@@ -302,7 +303,7 @@ suite('DataScience - JupyterKernelService', () => {
     test('Dependencies checked on all kernels with interpreters', async () => {
         await Promise.all(
             kernels.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
             })
         );
         verify(
@@ -321,7 +322,12 @@ suite('DataScience - JupyterKernelService', () => {
             'kernel.json'
         );
         when(fs.localFileExists(anything())).thenResolve(false);
-        await kernelService.ensureKernelIsUsable(undefined, kernelsWithInvalidName[0], undefined, true);
+        await kernelService.ensureKernelIsUsable(
+            undefined,
+            kernelsWithInvalidName[0],
+            new DisplayOptions(true),
+            undefined
+        );
         verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });
 
@@ -341,7 +347,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         await Promise.all(
             kernelsWithInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
             })
         );
         assert.equal(updateCount, kernelsWithInterpreters.length, 'Updates to spec files did not occur');
@@ -362,7 +368,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         await Promise.all(
             kernelsWithoutInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
             })
         );
         assert.equal(updateCount, 0, 'Should not have updated spec files when no interpreter metadata');

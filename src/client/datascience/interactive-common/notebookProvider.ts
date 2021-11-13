@@ -66,13 +66,13 @@ export class NotebookProvider implements INotebookProvider {
                   options.document,
                   options.resource,
                   options.kernelConnection,
-                  options.disableUI,
+                  options.ui,
                   options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);
 
         sendKernelTelemetryWhenDone(options.resource, Telemetry.NotebookStart, promise, undefined, {
-            disableUI: options.disableUI
+            disableUI: options.ui.disableUI === true
         });
 
         return promise;

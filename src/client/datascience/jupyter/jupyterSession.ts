@@ -23,13 +23,14 @@ import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSess
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, ISessionWithSocket } from '../types';
+import { IDisplayOptions, IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
+import { DisplayOptions } from '../displayOptions';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -82,9 +83,9 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async connect(cancelToken?: CancellationToken, disableUI?: boolean): Promise<void> {
+    public async connect(options: { token?: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
-        this.setSession(await this.createNewKernelSession(cancelToken, disableUI));
+        this.setSession(await this.createNewKernelSession(options));
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -93,10 +94,10 @@ export class JupyterSession extends BaseJupyterSession {
         this.connected = true;
     }
 
-    public async createNewKernelSession(
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ): Promise<ISessionWithSocket> {
+    public async createNewKernelSession(options: {
+        token?: CancellationToken;
+        ui: IDisplayOptions;
+    }): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
@@ -125,7 +126,7 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.resource = this.resource;
             } else {
                 traceInfoIfCI(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
-                newSession = await this.createSession(cancelToken, disableUI);
+                newSession = await this.createSession(options);
                 newSession.resource = this.resource;
             }
 
@@ -159,11 +160,12 @@ export class JupyterSession extends BaseJupyterSession {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let exception: any;
         while (tryCount < 3) {
+            const ui = new DisplayOptions(true);
             try {
                 traceInfoIfCI(
                     `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
                 );
-                result = await this.createSession(cancelToken, true);
+                result = await this.createSession({ token: cancelToken, ui });
                 await this.waitForIdleOnSession(result, this.idleTimeout);
                 if (result.kernel) {
                     this.restartSessionCreated(result.kernel);
@@ -177,6 +179,8 @@ export class JupyterSession extends BaseJupyterSession {
                 }
                 result = undefined;
                 exception = exc;
+            } finally {
+                ui.dispose();
             }
         }
         throw exception;
@@ -234,7 +238,10 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createSession(cancelToken?: CancellationToken, disableUI?: boolean): Promise<ISessionWithSocket> {
+    private async createSession(options: {
+        token?: CancellationToken;
+        ui: IDisplayOptions;
+    }): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
 
@@ -245,8 +252,8 @@ export class JupyterSession extends BaseJupyterSession {
             await this.kernelService.ensureKernelIsUsable(
                 this.resource,
                 this.kernelConnectionMetadata,
-                cancelToken,
-                disableUI
+                options.ui,
+                options.token
             );
         }
 
@@ -257,7 +264,7 @@ export class JupyterSession extends BaseJupyterSession {
             getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
 
         // Create our session options using this temporary notebook and our connection info
-        const options: Session.ISessionOptions = {
+        const sessionOptions: Session.ISessionOptions = {
             path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
@@ -269,7 +276,7 @@ export class JupyterSession extends BaseJupyterSession {
         traceInfo(`Starting a new session for kernel id = ${this.kernelConnectionMetadata?.id}, name = ${kernelName}`);
         return Cancellation.race(
             () =>
-                this.sessionManager!.startNew(options, {
+                this.sessionManager!.startNew(sessionOptions, {
                     kernelConnectionOptions: {
                         handleComms: true // This has to be true for ipywidgets to work
                     }
@@ -309,7 +316,7 @@ export class JupyterSession extends BaseJupyterSession {
                             this.contentsManager.delete(backingFile.path).ignoreErrors();
                         }
                     }),
-            cancelToken
+            options.token
         );
     }
 
