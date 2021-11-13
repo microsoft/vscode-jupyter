@@ -91,7 +91,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
                 await assert.isRejected(
-                    dependencyService.installMissingDependencies(Uri.file('one.ipynb'), interpreter, new DisplayOptions(false)),
+                    dependencyService.installMissingDependencies(
+                        Uri.file('one.ipynb'),
+                        interpreter,
+                        new DisplayOptions(false)
+                    ),
                     'IPyKernel not installed into interpreter'
                 );
 
@@ -138,7 +142,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                     Common.install() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter, new DisplayOptions(false));
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    interpreter,
+                    new DisplayOptions(false)
+                );
 
                 await assert.isRejected(promise, 'Install failed - kaboom');
             });
@@ -153,7 +161,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                     DataScience.selectKernel() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter, new DisplayOptions(false));
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    interpreter,
+                    new DisplayOptions(false)
+                );
 
                 await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
 
@@ -170,7 +182,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter, new DisplayOptions(false));
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    interpreter,
+                    new DisplayOptions(false)
+                );
 
                 await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
                 verify(cmdManager.executeCommand('notebook.selectKernel', anything())).never();
