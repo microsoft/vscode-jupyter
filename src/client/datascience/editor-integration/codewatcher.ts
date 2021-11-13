@@ -1035,7 +1035,7 @@ export class CodeWatcher implements ICodeWatcher {
             // Move the next cell if allowed.
             if (advance) {
                 const editor = this.documentManager.activeTextEditor;
-                const { newCellOnRunLast } = this.configService.getSettings(editor.document.uri);
+                const { newCellOnRunLast } = this.configService.getSettings(editor?.document.uri);
                 if (nextRunCellLens) {
                     this.advanceToRange(nextRunCellLens.range);
                 } else if (newCellOnRunLast && editor) {
