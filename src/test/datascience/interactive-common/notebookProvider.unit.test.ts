@@ -8,6 +8,7 @@ import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IJupyterSettings } from '../../../client/common/types';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
@@ -67,7 +68,8 @@ suite('DataScience - NotebookProvider', () => {
         const notebook = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false)
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -82,14 +84,16 @@ suite('DataScience - NotebookProvider', () => {
         const notebook = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false)
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false)
         });
         expect(notebook2).to.equal(notebook);
     });

@@ -22,6 +22,7 @@ import { ReadWrite, Resource } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
 import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
@@ -151,7 +152,7 @@ suite('DataScience - JupyterSession', () => {
         (mockKernelSpec as any).kernelSpec = specOrModel;
         mockKernelSpec.kind = kind;
 
-        await jupyterSession.connect();
+        await jupyterSession.connect({ ui: new DisplayOptions(false) });
     }
     teardown(async () => jupyterSession.dispose().catch(noop));
 

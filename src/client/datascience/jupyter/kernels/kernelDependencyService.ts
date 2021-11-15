@@ -29,7 +29,12 @@ import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
-import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import {
+    IDisplayOptions,
+    IInteractiveWindowProvider,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { selectKernel } from './kernelSelector';
 
 /**
@@ -56,8 +61,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     public async installMissingDependencies(
         resource: Resource,
         interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        token?: CancellationToken
     ): Promise<void> {
         traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
@@ -70,7 +75,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Cache the install run
         let promise = this.installPromises.get(interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(resource, interpreter, token, disableUI);
+            promise = this.runInstaller(resource, interpreter, ui, token);
             this.installPromises.set(interpreter.path, promise);
         }
 
@@ -120,11 +125,11 @@ export class KernelDependencyService implements IKernelDependencyService {
     private async runInstaller(
         resource: Resource,
         interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
-        if (disableUI) {
+        if (ui.disableUI) {
             return KernelInterpreterDependencyResponse.uiHidden;
         }
         const installerToken = wrapCancellationTokens(token);

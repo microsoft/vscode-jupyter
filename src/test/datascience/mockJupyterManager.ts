@@ -31,6 +31,7 @@ import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
+    IDisplayOptions,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -423,6 +424,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         _resource: Resource,
         _kernelConnection: KernelConnectionMetadata,
         _workingDirectory: string,
+        _ui: IDisplayOptions,
         cancelToken?: CancellationToken
     ): Promise<JupyterSession> {
         if (this.sessionTimeout && cancelToken) {

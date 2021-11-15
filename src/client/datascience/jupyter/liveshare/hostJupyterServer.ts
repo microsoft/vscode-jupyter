@@ -31,6 +31,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionManager } from '../jupyterSessionManager';
 import { SessionDisposedError } from '../../errors/sessionDisposedError';
+import { DisplayOptions } from '../../displayOptions';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -95,9 +96,20 @@ export class HostJupyterServer implements INotebookServer {
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
             // Start a session (or use the existing one if allowed)
-            const session = await sessionManager.startNew(resource, kernelConnection, workingDirectory, cancelToken);
-            traceInfo(`Started session for kernel ${kernelConnection.id}`);
-            return { connection, session };
+            const ui = new DisplayOptions(false);
+            try {
+                const session = await sessionManager.startNew(
+                    resource,
+                    kernelConnection,
+                    workingDirectory,
+                    ui,
+                    cancelToken
+                );
+                traceInfo(`Started session for kernel ${kernelConnection.id}`);
+                return { connection, session };
+            } finally {
+                ui.dispose();
+            }
         };
 
         try {

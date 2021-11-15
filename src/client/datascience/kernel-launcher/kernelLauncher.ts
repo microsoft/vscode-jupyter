@@ -18,7 +18,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/pr
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelDependencyService } from '../types';
+import { IDisplayOptions, IKernelDependencyService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
@@ -98,8 +98,8 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
         const promise = (async () => {
             // If this is a python interpreter, make sure it has ipykernel
@@ -107,8 +107,8 @@ export class KernelLauncher implements IKernelLauncher {
                 await this.kernelDependencyService.installMissingDependencies(
                     resource,
                     kernelConnectionMetadata.interpreter,
-                    cancelToken,
-                    disableUI
+                    ui,
+                    cancelToken
                 );
                 if (cancelToken?.isCancellationRequested) {
                     throw new CancellationError();

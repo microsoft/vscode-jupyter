@@ -60,17 +60,10 @@ export class ServerPreload implements IExtensionSingleActivationService {
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
-            // Check if we are already connected
-            let providerConnection = await this.notebookProvider.connect({
-                getOnly: true,
-                disableUI: true,
-                resource: undefined
-            });
-
             // If it didn't start, attempt for local and if allowed.
-            if (!providerConnection && !this.configService.getSettings(undefined).disableJupyterAutoStart) {
+            if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
-                providerConnection = await this.notebookProvider.connect({
+                await this.notebookProvider.connect({
                     getOnly: false,
                     resource: undefined,
                     disableUI: true,

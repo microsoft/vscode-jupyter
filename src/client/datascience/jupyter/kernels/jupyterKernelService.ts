@@ -22,7 +22,7 @@ import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IKernelDependencyService } from '../../types';
+import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
 import { cleanEnvironment } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
@@ -52,8 +52,8 @@ export class JupyterKernelService {
     public async ensureKernelIsUsable(
         resource: Resource,
         kernel: KernelConnectionMetadata,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken?: CancellationToken
     ): Promise<void> {
         // If we wish to wait for installation to complete, we must provide a cancel token.
         const tokenSource = new CancellationTokenSource();
@@ -61,12 +61,7 @@ export class JupyterKernelService {
 
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(
-                resource,
-                kernel.interpreter,
-                token,
-                disableUI
-            );
+            await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, ui, token);
         }
 
         var specFile: string | undefined = undefined;

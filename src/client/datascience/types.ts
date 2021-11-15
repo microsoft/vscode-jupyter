@@ -52,6 +52,11 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
+export interface IDisplayOptions {
+    disableUI: boolean;
+    onDidChangeDisableUI: Event<void>;
+}
+
 export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
@@ -122,7 +127,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         document: NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        disableUI?: boolean,
+        ui: IDisplayOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
 }
@@ -157,7 +162,7 @@ export interface INotebookServerOptions {
     resource: Resource;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
-    allowUI(): boolean;
+    ui: IDisplayOptions;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -261,8 +266,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken?: CancellationToken
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
@@ -835,7 +840,13 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export type GetServerOptions = ConnectNotebookProviderOptions;
+export type GetServerOptions = {
+    getOnly?: boolean;
+    ui: IDisplayOptions;
+    localOnly?: boolean;
+    token?: CancellationToken;
+    resource: Resource;
+};
 
 /**
  * Options for getting a notebook
@@ -843,7 +854,7 @@ export type GetServerOptions = ConnectNotebookProviderOptions;
 export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
-    disableUI?: boolean;
+    ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token?: CancellationToken;
 };
@@ -952,8 +963,8 @@ export interface IKernelDependencyService {
     installMissingDependencies(
         resource: Resource,
         interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        token?: CancellationToken
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }

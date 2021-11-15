@@ -22,6 +22,7 @@ import { PortAttributesProviders } from '../../client/common/net/portAttributePr
 import { IDisposable } from '../../client/common/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -63,7 +64,8 @@ suite('DataScience - Kernel Launcher', () => {
             { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
             -1,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false)
         );
         kernel.exited(() => {
             if (exitExpected) {
@@ -104,7 +106,8 @@ suite('DataScience - Kernel Launcher', () => {
             { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
             30_000,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false)
         );
 
         assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -137,7 +140,8 @@ suite('DataScience - Kernel Launcher', () => {
             { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
             30_000,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false)
         );
 
         // Confirm the ports used by this kernel are ignored.
@@ -188,7 +192,8 @@ suite('DataScience - Kernel Launcher', () => {
             { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
             -1,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false)
         );
 
         try {

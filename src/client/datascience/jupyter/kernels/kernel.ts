@@ -67,6 +67,7 @@ import { getResourceType } from '../../common';
 import { Deferred } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
+import { DisplayOptions } from '../../displayOptions';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -138,6 +139,7 @@ export class Kernel implements IKernel {
     private disposingPromise?: Promise<void>;
     private isPromptingForRestart?: Promise<boolean>;
     private startCancellation = new CancellationTokenSource();
+    private startupUI = new DisplayOptions(true);
     constructor(
         public readonly notebookDocument: NotebookDocument,
         public readonly resourceUri: Resource,
@@ -206,7 +208,7 @@ export class Kernel implements IKernel {
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
-    public async start(options: { disableUI?: boolean } = {}): Promise<void> {
+    public async start(options?: { disableUI?: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<InterruptResult> {
@@ -312,8 +314,12 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async startNotebook(options?: { disableUI?: boolean }): Promise<INotebook> {
-        if (!options?.disableUI) {
+    private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
+        if (!options.disableUI) {
+            this.startupUI.disableUI = false;
+        }
+
+        if (!this.startupUI.disableUI) {
             // This means the user is actually running something against the kernel (deliberately).
             initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
         }
@@ -336,7 +342,7 @@ export class Kernel implements IKernel {
                         this.notebook = await this.notebookProvider.createNotebook({
                             document: this.notebookDocument,
                             resource: this.resourceUri,
-                            disableUI: options?.disableUI,
+                            ui: this.startupUI,
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token
                         });
@@ -351,7 +357,10 @@ export class Kernel implements IKernel {
                             placeholderCellPromise
                         );
                     } catch (ex) {
-                        traceError(`failed to create INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
+                        traceError(
+                            `failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`,
+                            ex
+                        );
                         // Provide a user friendly message in case `ex` is some error thats not throw by us.
                         const message = DataScience.sessionStartFailedWithKernel().format(
                             getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
@@ -377,7 +386,7 @@ export class Kernel implements IKernel {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         ex as any
                     );
-                    if (options?.disableUI) {
+                    if (this.startupUI.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else if (this._disposing) {
                         // If the kernel was killed for any reason, then no point displaying
@@ -388,7 +397,7 @@ export class Kernel implements IKernel {
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             .handleKernelError(ex as any, 'start', this.kernelConnectionMetadata); // Just a notification, so don't await this
                     }
-                    traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
+                    traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
                     this.startCancellation.cancel();
                     this._notebookPromise = undefined;
                     reject(ex);

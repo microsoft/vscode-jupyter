@@ -29,6 +29,7 @@ import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
+    IDisplayOptions,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -100,7 +101,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         document: vscode.NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        disableUI: boolean,
+        ui: IDisplayOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
@@ -126,7 +127,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
 
-            const progressDisposable = !disableUI
+            const progressDisposable = !ui.disableUI
                 ? this.progressReporter.createProgressIndicator(
                       localize.DataScience.connectingToKernel().format(displayName)
                   )
@@ -160,7 +161,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                     kernelConnection
                 )}`
             );
-            await rawSession.connect(cancelToken, disableUI);
+            await rawSession.connect({ token: cancelToken, ui });
 
             if (rawSession.isConnected) {
                 // Create our notebook
