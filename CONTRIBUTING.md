@@ -4,9 +4,7 @@
 
 | `main` branch                                                                                                                                                                                                |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [![Insiders VSIX](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main)](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main) |
-
-[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)]
+| [![Insiders VSIX](https://github.com/microsoft/vscode-jupyter/workflows/build-test/badge.svg?branch=main)](https://github.com/microsoft/vscode-jupyter/workflows/build-test/badge.svg?branch=main) |
 
 ---
 
