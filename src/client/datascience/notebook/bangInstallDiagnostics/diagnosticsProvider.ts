@@ -120,7 +120,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         }
         const installer = diagnostic.message === pipMessage ? 'pip' : 'conda';
         return new Hover(
-            `'!${installer} install' could install packages into the wrong environment. [More info](https://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/).`,
+            `'!${installer} install' could install packages into the wrong environment. [More info](https://github.com/microsoft/vscode-jupyter/wiki/Installing-Python-packages-in-Jupyter-Notebooks).`,
             diagnostic.range
         );
     }
