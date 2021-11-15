@@ -82,10 +82,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     const message = failureInfo.moduleName
                         ? DataScience.failedToStartKernelDueToDllLoadFailure().format(failureInfo.moduleName)
                         : DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
-                    await this.showMessageWithMoreInfo(
-                        message,
-                        'https://aka.ms/kernelFailuresDllLoad'
-                    );
+                    await this.showMessageWithMoreInfo(message, 'https://aka.ms/kernelFailuresDllLoad');
                     break;
                 }
                 case KernelFailureReason.importWin32apiFailure: {
