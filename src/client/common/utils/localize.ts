@@ -998,6 +998,38 @@ export namespace DataScience {
         'jupyter.kernel.replacePipCondaInstallCodeAction',
         "Replace with '%{0} install'"
     );
+    export const failedToStartKernelDueToMissingModule = localize(
+        'DataScience.failedToStartKernelDueToMissingModule',
+        "The kernel failed to start due to the missing module '{0}'. Consider installing this module."
+    );
+    export const failedToStartKernelDueToImportFailure = localize(
+        'DataScience.failedToStartKernelDueToImportFailure',
+        "The kernel failed to start as the module '{0}' could not be imported."
+    );
+    export const failedToStartKernelDueToUnknowDllLoadFailure = localize(
+        'DataScience.failedToStartKernelDueToUnknowDllLoadFailure',
+        'The kernel failed to start as a dll could not be loaded.'
+    );
+    export const failedToStartKernelDueToDllLoadFailure = localize(
+        'DataScience.failedToStartKernelDueToDllLoadFailure',
+        "The kernel failed to start as the dll '{0}' could not be loaded."
+    );
+    export const failedToStartKernelDueToWin32APIFailure = localize(
+        'DataScience.failedToStartKernelDueToWin32APIFailure',
+        'The kernel failed to start due to an error with the Win32api module. Consider (re) installing this module.'
+    );
+    export const failedToStartKernelDueToPyZmqFailure = localize(
+        'DataScience.failedToStartKernelDueToPyZmqFailure',
+        "The kernel failed to start due to an error with the 'pyzmq' module. Consider re-installing this module."
+    );
+    export const failedToStartKernelDueToOldIPython = localize(
+        'DataScience.failedToStartKernelDueToOldIPython',
+        'The kernel failed to start due to an outdated version of IPython. Consider updating this module to the latest version.'
+    );
+    export const failedToStartKernelDueToOldIPyKernel = localize(
+        'DataScience.failedToStartKernelDueToOldIPyKernel',
+        'The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

@@ -56,24 +56,79 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             );
             switch (failureInfo?.reason) {
                 case KernelFailureReason.overridingBuiltinModules: {
-                    await this.applicationShell
-                        .showErrorMessage(
-                            `${DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
-                                getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
-                            )} \n${DataScience.viewJupyterLogForFurtherInfo()}`,
-                            Common.learnMore()
-                        )
-                        .then((selection) => {
-                            if (selection === Common.learnMore()) {
-                                this.browser.launch('https://aka.ms/kernelFailuresOverridingBuiltInModules');
-                            }
-                        });
+                    await this.showMessageWithMoreInfo(
+                        DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+                            getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
+                        ),
+                        'https://aka.ms/kernelFailuresOverridingBuiltInModules'
+                    );
+                    break;
+                }
+                case KernelFailureReason.moduleNotFoundFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
+                        'https://aka.ms/kernelFailuresMissingModule'
+                    );
+                    break;
+                }
+                case KernelFailureReason.importFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
+                        'https://aka.ms/kernelFailuresModuleImportErr'
+                    );
+                    break;
+                }
+                case KernelFailureReason.dllLoadFailure: {
+                    const message = failureInfo.moduleName
+                        ? DataScience.failedToStartKernelDueToDllLoadFailure().format(failureInfo.moduleName)
+                        : DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
+                    await this.showMessageWithMoreInfo(
+                        message,
+                        'https://aka.ms/kernelFailuresDllLoad'
+                    );
+                    break;
+                }
+                case KernelFailureReason.importWin32apiFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToWin32APIFailure(),
+                        'https://aka.ms/kernelFailuresWin32Api'
+                    );
+                    break;
+                }
+                case KernelFailureReason.zmqModuleFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToPyZmqFailure(),
+                        'https://aka.ms/kernelFailuresPyzmq'
+                    );
+                    break;
+                }
+                case KernelFailureReason.oldIPythonFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToOldIPython(),
+                        'https://aka.ms/kernelFailuresOldIPython'
+                    );
+                    break;
+                }
+                case KernelFailureReason.oldIPyKernelFailure: {
+                    await this.showMessageWithMoreInfo(
+                        DataScience.failedToStartKernelDueToOldIPyKernel(),
+                        'https://aka.ms/kernelFailuresOldIPyKernel'
+                    );
                     break;
                 }
                 default:
                     await this.applicationShell.showErrorMessage(defaultErrorMessage);
             }
         });
+    }
+    private async showMessageWithMoreInfo(message: string, moreInfoLink: string) {
+        await this.applicationShell
+            .showErrorMessage(`${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`, Common.learnMore())
+            .then((selection) => {
+                if (selection === Common.learnMore()) {
+                    this.browser.launch(moreInfoLink);
+                }
+            });
     }
     private async handleErrorImplementation(
         err: Error,
