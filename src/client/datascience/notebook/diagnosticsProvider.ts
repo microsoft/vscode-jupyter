@@ -44,7 +44,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
     public readonly problems: DiagnosticCollection;
     private readonly disposables: IDisposable[] = [];
     private readonly notebooksProcessed = new WeakMap<NotebookDocument, Map<CellUri, CellVersion>>();
-    private readonly cellsToProces = new Set<NotebookCell>();
+    private readonly cellsToProcess = new Set<NotebookCell>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -168,15 +168,15 @@ export class NotebookCellBangInstallDiagnosticsProvider
     }
 
     private queueCellForProcessing(cell: NotebookCell): void {
-        this.cellsToProces.add(cell);
+        this.cellsToProcess.add(cell);
         this.analyzeNotebookCells();
     }
     private analyzeNotebookCells() {
-        if (this.cellsToProces.size === 0) {
+        if (this.cellsToProcess.size === 0) {
             return;
         }
-        const cell = this.cellsToProces.values().next().value;
-        this.cellsToProces.delete(cell);
+        const cell = this.cellsToProcess.values().next().value;
+        this.cellsToProcess.delete(cell);
         this.analyzeNotebookCell(cell);
         // Schedule processing of next cell (this way we dont chew CPU and block the UI).
         setTimeout(() => this.analyzeNotebookCells(), 0);
