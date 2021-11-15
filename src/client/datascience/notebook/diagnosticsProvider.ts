@@ -23,24 +23,25 @@ import {
     Hover,
     HoverProvider
 } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../activation/types';
-import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { disposeAllDisposables } from '../../../common/helpers';
-import { IDisposable, IDisposableRegistry } from '../../../common/types';
-import { JupyterNotebookView } from '../constants';
+import { IExtensionSyncActivationService } from '../../activation/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { disposeAllDisposables } from '../../common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
+import { JupyterNotebookView } from './constants';
 
 type CellUri = string;
 type CellVersion = number;
 
-const pipMessage = "Use '%pip install' instead of '!pip install'";
-const condaMessage = "Use '%conda install' instead of '!conda install'";
+const pipMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('pip');
+const condaMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('conda');
 const diagnosticSource = 'Jupyter';
 
 @injectable()
 export class NotebookCellBangInstallDiagnosticsProvider
     implements IExtensionSyncActivationService, CodeActionProvider, HoverProvider {
-    private readonly problems: DiagnosticCollection;
+    public readonly problems: DiagnosticCollection;
     private readonly disposables: IDisposable[] = [];
     private readonly notebooksProcessed = new WeakMap<NotebookDocument, Map<CellUri, CellVersion>>();
     private readonly cellsToProces = new Set<NotebookCell>();
@@ -120,7 +121,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         }
         const installer = diagnostic.message === pipMessage ? 'pip' : 'conda';
         return new Hover(
-            `'!${installer} install' could install packages into the wrong environment. [More info](https://github.com/microsoft/vscode-jupyter/wiki/Installing-Python-packages-in-Jupyter-Notebooks).`,
+            DataScience.pipCondaInstallHoverWarning().format(installer, 'https://aka.ms/jupyterCellMagicBangInstall'),
             diagnostic.range
         );
     }
@@ -141,7 +142,10 @@ export class NotebookCellBangInstallDiagnosticsProvider
             }
             const isPip = d.message === pipMessage;
             const installer = isPip ? 'pip' : 'conda';
-            const codeAction = new CodeAction(`Replace with \'%${installer} install\'`, CodeActionKind.QuickFix);
+            const codeAction = new CodeAction(
+                DataScience.replacePipCondaInstallCodeAction().format(installer),
+                CodeActionKind.QuickFix
+            );
             codeAction.isPreferred = true;
             codeAction.diagnostics = [d];
             const edit = new WorkspaceEdit();
