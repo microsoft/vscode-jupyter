@@ -127,7 +127,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### VSCode Repo Notebook issues"
+    "value": "### VSCode Repo Notebook issues\r\nAny and all open issues related to notebooks in the VS Code core repos."
   },
   {
     "kind": 2,
@@ -147,7 +147,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Feature-requests in VS Code repo that were closed as *extension-candidate\r\nDue to the algorithm VS Code uses for closing feature requests, it's possible that some requests were auto-closed, but have seen much interest in the Jupyter repo. They should be transferred to the vscode-repo."
+    "value": "### Feature-requests in VS Code repo that were closed as *extension-candidate\r\nDue to the algorithm VS Code uses for closing feature requests, it's possible that some requests were auto-closed, but have seen much interest in the Jupyter repo."
   },
   {
     "kind": 2,
@@ -167,7 +167,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Non Blocking Golden Scenario Issues"
+    "value": "### Non Blocking Golden Scenario Issues\r\nIssues marked with ```nb-golden``` or ```iw-golden``` were found during a golden scenario test run OR are considered something that somebody might very likely run into during a golden scenario run, but isn't quite important enough to warrant considering it blocking."
   },
   {
     "kind": 2,
