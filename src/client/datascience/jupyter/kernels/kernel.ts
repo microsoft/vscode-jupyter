@@ -190,6 +190,7 @@ export class Kernel implements IKernel {
         if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
             const restartedKernel = await this.notifyAndRestartDeadKernel();
             if (!restartedKernel) {
+                traceInfo(`Cell ${cell.index} executed with state ${NotebookCellRunState.Error} due to kernel state.`);
                 return NotebookCellRunState.Error;
             }
         }
@@ -199,6 +200,7 @@ export class Kernel implements IKernel {
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
         const promise = this.kernelExecution.executeCell(sessionPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
