@@ -15,7 +15,12 @@ import {
 } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -411,15 +416,20 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
-                this.processExecutionFactory.create(this.resource),
+                Promise.race([
+                    this.processExecutionFactory.create(this.resource),
+                    promiseCancellation as Promise<IProcessService>
+                ]),
                 // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
+                Promise.race([
+                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
+                ])
             ]);
-
             // Add quotations to arguments if they have a blank space in them.
             // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.

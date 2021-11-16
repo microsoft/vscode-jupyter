@@ -54,12 +54,19 @@ suite('DataScience Error Handler Unit Tests', () => {
     });
 
     test('Jupyter Self Certificates Error', async () => {
-        when(applicationShell.showErrorMessage(anything())).thenResolve(message as any);
+        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve(message as any);
 
         const err = new JupyterSelfCertsError(message);
         await dataScienceErrorHandler.handleError(err);
 
         verify(applicationShell.showErrorMessage(anything())).never();
+        verify(
+            applicationShell.showErrorMessage(
+                err.message,
+                DataScience.jupyterSelfCertEnable(),
+                DataScience.jupyterSelfCertClose()
+            )
+        ).never();
     });
 
     test('Jupyter Install Error', async () => {
