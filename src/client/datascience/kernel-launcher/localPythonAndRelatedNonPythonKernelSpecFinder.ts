@@ -7,7 +7,7 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -167,7 +167,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     // Its something special, hence ignore if we cannot find a matching interpreter.
                     const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
                     if (!matchingInterpreter) {
-                        traceInfo(
+                        traceVerbose(
                             `Kernel Spec for ${
                                 item.kernelSpec.display_name
                             } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
@@ -192,7 +192,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
                             kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
                     ) {
-                        traceInfo(
+                        traceVerbose(
                             `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
                                 kernelspec.argv[0]
                             )}`
@@ -321,7 +321,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 kernelSpec.metadata?.interpreter?.path &&
                 areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, this.fs)
             ) {
-                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
+                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
             }
             return false;
@@ -335,7 +335,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
                 if (areInterpreterPathsSame(pathInArgv, i.path, undefined, this.fs)) {
-                    traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
                 return false;
@@ -357,7 +357,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         if (kernelSpec.interpreterPath) {
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
-                    traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;
                 }
                 return false;
@@ -370,7 +370,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         return interpreters.find((i) => {
             // 4. Check display name
             if (kernelSpec.display_name === i.displayName) {
-                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
+                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
                 return true;
             }
 

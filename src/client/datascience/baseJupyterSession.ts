@@ -9,7 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -106,12 +106,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this._isDisposed = true;
         if (this.session) {
             try {
-                traceInfo('Shutdown session - current session');
+                traceVerbose('Shutdown session - current session');
                 await this.shutdownSession(this.session, this.statusHandler, false);
-                traceInfo('Shutdown session - get restart session');
+                traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
                     const restartSession = await this.restartSessionPromise;
-                    traceInfo('Shutdown session - shutdown restart session');
+                    traceVerbose('Shutdown session - shutdown restart session');
                     await this.shutdownSession(restartSession, undefined, true);
                 }
             } catch {
@@ -125,7 +125,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.onStatusChangedEvent.dispose();
         }
         disposeAllDisposables(this.disposables);
-        traceInfo('Shutdown session -- complete');
+        traceVerbose('Shutdown session -- complete');
     }
     public async interrupt(): Promise<void> {
         if (this.session && this.session.kernel) {
@@ -365,18 +365,18 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     ): Promise<void> {
         if (session && session.kernel) {
             const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
-            traceInfo(`shutdownSession ${kernelIdForLogging} - start`);
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession)) {
-                    traceInfo(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
                 }
                 try {
-                    traceInfo(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
@@ -392,7 +392,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // Ignore, just trace.
                 traceWarning(e);
             }
-            traceInfo(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         }
     }
     private canShutdownSession(session: ISessionWithSocket, isRequestToShutDownRestartSession: boolean | undefined) {

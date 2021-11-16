@@ -315,12 +315,14 @@ export class RawJupyterSession extends BaseJupyterSession {
 
             result.iopubMessage.disconnect(iopubHandler);
             if (gotIoPubMessage.completed) {
-                traceInfoIfCI(`Get response for requestKernelInfo`);
+                traceInfoIfCI(`Got response for requestKernelInfo`);
                 break;
             } else {
-                traceWarning(`Didn't get response for requestKernelInfo`);
                 continue;
             }
+        }
+        if (!gotIoPubMessage.completed) {
+            traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
         sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
             attempts,
@@ -359,8 +361,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     except Empty:
                         break
         */
-
-        traceWarning(`Didn't get response for requestKernelInfo`);
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.

@@ -194,7 +194,7 @@ export class VSCodeNotebookController implements Disposable {
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
-        traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
+        traceInfo(`Execute Cells request ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private warnWhenUsingOutdatedPython() {
@@ -352,7 +352,7 @@ export class VSCodeNotebookController implements Disposable {
         );
         const saveKernelInfo = () => {
             const kernelId = kernelSocket?.options.id;
-            if (!kernelId) {
+            if (!kernelId || this.localOrRemoteKernel === 'local') {
                 return;
             }
             traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);

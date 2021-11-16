@@ -28,7 +28,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
 import {
     areInterpreterPathsSame,
     getInterpreterHash,
@@ -668,7 +668,7 @@ export function findPreferredKernel(
 
                 // Find a kernel spec that matches the language in the notebook metadata.
                 if (score <= 0 && nbMetadataLanguage && speclanguage === (nbMetadataLanguage || '')) {
-                    traceInfo(
+                    traceVerbose(
                         `findPreferredKernel score for speclanguage=${nbMetadataLanguage}, ${getDisplayNameOrNameOfKernelConnection(
                             metadata
                         )} is ${score}`
@@ -714,7 +714,7 @@ export function findPreferredKernel(
                     traceInfoIfCI('Increased score by +1 for matching major version 3');
                     score += 1;
                     subScore += 1;
-                    traceInfo(
+                    traceVerbose(
                         `findPreferredKernel score for Python3, ${getDisplayNameOrNameOfKernelConnection(
                             metadata
                         )} is ${score}`
@@ -763,7 +763,9 @@ export function findPreferredKernel(
             }
 
             // Trace score for kernel
-            traceInfo(`findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`);
+            traceVerbose(
+                `findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`
+            );
 
             // If we have a score of 5, this can only happen if we match against language and find a Python 3 kernel.
             // In such cases, use our preferred interpreter kernel if we have one.
