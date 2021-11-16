@@ -148,7 +148,7 @@ export interface INotebook {
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
-    disableUI?: boolean;
+    ui: IDisplayOptions;
     localOnly?: boolean;
     token: CancellationToken;
     resource: Resource;

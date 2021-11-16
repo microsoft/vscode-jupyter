@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DisplayOptions } from '../displayOptions';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import {
     ConnectNotebookProviderOptions,
@@ -21,33 +20,23 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        const ui = new DisplayOptions(options.disableUI === true);
-        try {
-            const server = await this.serverProvider.getOrCreateServer({
-                getOnly: false,
-                ui,
-                resource: options.resource,
-                token: options.token
-            });
-            return server?.dispose();
-        } finally {
-            ui.dispose();
-        }
+        const server = await this.serverProvider.getOrCreateServer({
+            getOnly: false,
+            ui: options.ui,
+            resource: options.resource,
+            token: options.token
+        });
+        return server?.dispose();
     }
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
-        const ui = new DisplayOptions(options.disableUI === true);
-        try {
-            const server = await this.serverProvider.getOrCreateServer({
-                getOnly: false,
-                ui: new DisplayOptions(options.disableUI === true),
-                resource: options.resource,
-                token: options.token
-            });
-            return server?.getConnectionInfo();
-        } finally {
-            ui.dispose();
-        }
+        const server = await this.serverProvider.getOrCreateServer({
+            getOnly: false,
+            ui: options.ui,
+            resource: options.resource,
+            token: options.token
+        });
+        return server?.getConnectionInfo();
     }
 
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
