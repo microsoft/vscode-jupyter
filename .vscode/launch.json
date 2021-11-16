@@ -44,7 +44,7 @@
             "skipFiles": ["<node_internals>/**"],
             "env": {
                 // Disable this to turoff on redux & console logging during debugging
-                "xVSC_JUPYTER_FORCE_LOGGING": "1",
+                "VSC_JUPYTER_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
