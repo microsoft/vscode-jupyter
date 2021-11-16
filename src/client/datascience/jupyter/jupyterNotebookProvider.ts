@@ -49,7 +49,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         });
 
         if (server) {
-            return server.createNotebook(options.resource, options.kernelConnection, options.token);
+            return server.createNotebook(options.resource, options.kernelConnection, options.token, options.ui);
         }
         // We want createNotebook to always return a notebook promise, so if we don't have a server
         // here throw our generic server disposed message that we use in server creatio n

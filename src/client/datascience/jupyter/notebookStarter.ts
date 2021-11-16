@@ -25,6 +25,7 @@ import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
+import { disposeAllDisposables } from '../../common/helpers';
 
 /**
  * Responsible for starting a notebook.
@@ -72,6 +73,7 @@ export class NotebookStarter implements Disposable {
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
+        const disposables: IDisposable[] = [];
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
@@ -108,10 +110,14 @@ export class NotebookStarter implements Disposable {
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
-            if (launchResult && cancelToken) {
-                cancelToken.onCancellationRequested(() => {
-                    launchResult.dispose();
-                });
+            if (launchResult) {
+                cancelToken.onCancellationRequested(
+                    () => {
+                        launchResult.dispose();
+                    },
+                    this,
+                    disposables
+                );
             }
 
             // Wait for the connection information on this result
@@ -154,8 +160,10 @@ export class NotebookStarter implements Disposable {
             } catch (ex) {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
+            disposeAllDisposables(disposables);
             return connection;
         } catch (err) {
+            disposeAllDisposables(disposables);
             if (err instanceof CancellationError) {
                 throw err;
             }

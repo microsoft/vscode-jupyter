@@ -3,7 +3,6 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
@@ -18,7 +17,13 @@ import {
 import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { ProgressReporter } from '../../progress/progressReporter';
-import { IJupyterConnection, IJupyterSessionManagerFactory, INotebook, INotebookServer } from '../../types';
+import {
+    IDisplayOptions,
+    IJupyterConnection,
+    IJupyterSessionManagerFactory,
+    INotebook,
+    INotebookServer
+} from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
@@ -31,7 +36,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionManager } from '../jupyterSessionManager';
 import { SessionDisposedError } from '../../errors/sessionDisposedError';
-import { DisplayOptions } from '../../displayOptions';
+import { disposeAllDisposables } from '../../../common/helpers';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -73,9 +78,10 @@ export class HostJupyterServer implements INotebookServer {
         sessionManager: JupyterSessionManager,
         configService: IConfigurationService,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        ui: IDisplayOptions
     ): Promise<INotebook> {
-        let progressDisposable: vscode.Disposable | undefined;
+        const disposables: IDisposable[] = [];
 
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
@@ -85,31 +91,46 @@ export class HostJupyterServer implements INotebookServer {
         const getExistingSession = async () => {
             const connection = await this.computeLaunchInfo();
 
-            progressDisposable = this.progressReporter.createProgressIndicator(
-                localize.DataScience.connectingToKernel().format(
-                    getDisplayNameOrNameOfKernelConnection(kernelConnection)
-                )
-            );
+            let progressDisposable = ui.disableUI
+                ? undefined
+                : this.progressReporter.createProgressIndicator(
+                      localize.DataScience.connectingToKernel().format(
+                          getDisplayNameOrNameOfKernelConnection(kernelConnection)
+                      )
+                  );
+            cancelToken.onCancellationRequested(() => disposeAllDisposables(disposables), this, disposables);
+            if (progressDisposable) {
+                disposables.push(progressDisposable);
+            } else {
+                ui.onDidChangeDisableUI(
+                    () => {
+                        if (!ui.disableUI && progressDisposable) {
+                            progressDisposable = this.progressReporter.createProgressIndicator(
+                                localize.DataScience.connectingToKernel().format(
+                                    getDisplayNameOrNameOfKernelConnection(kernelConnection)
+                                )
+                            );
+                        }
+                    },
+                    this,
+                    disposables
+                );
+            }
 
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = connection.localLaunch
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
             // Start a session (or use the existing one if allowed)
-            const ui = new DisplayOptions(false);
-            try {
-                const session = await sessionManager.startNew(
-                    resource,
-                    kernelConnection,
-                    workingDirectory,
-                    ui,
-                    cancelToken
-                );
-                traceInfo(`Started session for kernel ${kernelConnection.id}`);
-                return { connection, session };
-            } finally {
-                ui.dispose();
-            }
+            const session = await sessionManager.startNew(
+                resource,
+                kernelConnection,
+                workingDirectory,
+                ui,
+                cancelToken
+            );
+            traceInfo(`Started session for kernel ${kernelConnection.id}`);
+            return { connection, session };
         };
 
         try {
@@ -135,7 +156,7 @@ export class HostJupyterServer implements INotebookServer {
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
         } finally {
-            progressDisposable?.dispose();
+            disposeAllDisposables(disposables);
         }
 
         return notebookPromise.promise;
@@ -179,7 +200,8 @@ export class HostJupyterServer implements INotebookServer {
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        ui: IDisplayOptions
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
             throw new SessionDisposedError();
@@ -192,7 +214,8 @@ export class HostJupyterServer implements INotebookServer {
                 this.sessionManager,
                 this.configService,
                 kernelConnection,
-                cancelToken
+                cancelToken,
+                ui
             );
             const baseUrl = this.connection?.baseUrl || '';
             this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));

@@ -132,9 +132,9 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                       localize.DataScience.connectingToKernel().format(displayName)
                   )
                 : undefined;
+            cancelToken.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
             if (progressDisposable) {
                 disposables.push(progressDisposable);
-                cancelToken.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
             } else {
                 ui.onDidChangeDisableUI(() => {
                     if (progressDisposable || notebookPromise.completed || ui.disableUI) {
@@ -145,7 +145,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                         this.progressReporter.createProgressIndicator(
                             localize.DataScience.connectingToKernel().format(displayName)
                         );
-                    cancelToken.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
                     disposables.push(progressDisposable);
                 }, disposables);
             }

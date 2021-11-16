@@ -106,7 +106,8 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        ui: IDisplayOptions
     ): Promise<INotebook>;
     connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;

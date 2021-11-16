@@ -17,7 +17,6 @@ import { calculateWorkingDirectory } from '../../utils';
 interface IServerData {
     options: INotebookServerOptions;
     promise: Promise<INotebookServer | undefined>;
-    cancelSource: CancellationTokenSource;
     resolved: boolean;
 }
 
@@ -39,8 +38,6 @@ export class ServerCache implements IAsyncDisposable {
         options: INotebookServerOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        const cancelSource = new CancellationTokenSource();
-        cancelToken.onCancellationRequested(() => cancelSource.cancel());
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let data: IServerData | undefined;
@@ -51,9 +48,8 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelSource.token),
+                promise: createFunction(options, cancelToken),
                 options: fixedOptions,
-                cancelSource,
                 resolved: false
             };
             this.cache.set(key, data);

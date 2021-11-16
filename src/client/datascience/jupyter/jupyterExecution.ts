@@ -115,12 +115,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
             traceInfo(`Connecting to server`);
-            const kernelSpecCancelSource = new CancellationTokenSource();
-            if (cancelToken) {
-                cancelToken.onCancellationRequested(() => {
-                    kernelSpecCancelSource.cancel();
-                });
-            }
             const isLocalConnection = !options || !options.uri;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -163,7 +157,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connection?.dispose();
                         tryCount += 1;
                     } else if (connection) {
-                        kernelSpecCancelSource.cancel();
 
                         // If this is occurring during shutdown, don't worry about it.
                         if (this.disposed) {
@@ -195,7 +188,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             );
                         }
                     } else {
-                        kernelSpecCancelSource.cancel();
                         throw err;
                     }
                 }
