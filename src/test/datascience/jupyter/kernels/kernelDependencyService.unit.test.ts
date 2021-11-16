@@ -121,11 +121,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.reInstall())).thenResolve(
-                    Common.reInstall() as any
+                when(appShell.showErrorMessage(anything(), anything(), Common.install())).thenResolve(
+                    Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.reInstall(), anything())).thenResolve(
-                    Common.reInstall() as any
+                when(appShell.showErrorMessage(anything(), anything(), Common.install(), anything())).thenResolve(
+                    Common.install() as any
                 );
 
                 await dependencyService.installMissingDependencies(resource, interpreter, new DisplayOptions(false));
