@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IConfigurationService } from '../../common/types';
 import { Settings, Telemetry } from '../constants';
+import { DisplayOptions } from '../displayOptions';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,
@@ -20,6 +21,7 @@ import {
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
+    private readonly startupUi = new DisplayOptions(true);
     constructor(
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
@@ -31,20 +33,25 @@ export class NotebookProvider implements INotebookProvider {
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         const settings = this.configService.getSettings(undefined);
         const serverType: string | undefined = settings.jupyterServerType;
-
+        if (!options.ui.disableUI) {
+            this.startupUi.disableUI = false;
+        }
+        const handler = options.ui.onDidChangeDisableUI(() => {
+            if (!options.ui.disableUI) {
+                this.startupUi.disableUI = false;
+                handler.dispose();
+            }
+        });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (this.rawNotebookProvider.isSupported) {
-            return this.rawNotebookProvider.connect({
-                ...options
-            });
+            return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
-            return this.jupyterNotebookProvider.connect({
-                ...options
-            });
+            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (!options.getOnly) {
+            handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }

@@ -8,14 +8,19 @@ import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import {
     getErrorMessageFromPythonTraceback,
     getTelemetrySafeErrorMessageFromPythonTraceback
 } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -101,7 +106,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(workingDirectory: string, timeout: number, cancelToken?: CancellationToken): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -109,8 +114,13 @@ export class KernelProcess implements IKernelProcess {
 
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
-
-        const exeObs = await this.launchAsObservable(workingDirectory);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
 
         let stdout = '';
         let stderr = '';
@@ -374,7 +384,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
-    private async launchAsObservable(workingDirectory: string) {
+    private async launchAsObservable(workingDirectory: string, cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
@@ -390,7 +400,13 @@ export class KernelProcess implements IKernelProcess {
                 this.launchKernelSpec,
                 this._kernelConnectionMetadata.interpreter
             );
-
+            if (this.disposed || cancelToken.isCancellationRequested) {
+                kernelDaemonLaunch.daemon?.dispose();
+                kernelDaemonLaunch.observableOutput.dispose();
+            }
+            if (cancelToken.isCancellationRequested) {
+                throw new CancellationError();
+            }
             this.pythonDaemon = kernelDaemonLaunch.daemon;
             exeObs = kernelDaemonLaunch.observableOutput;
         }
@@ -400,14 +416,20 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
-                this.processExecutionFactory.create(this.resource),
+                Promise.race([
+                    this.processExecutionFactory.create(this.resource),
+                    promiseCancellation as Promise<IProcessService>
+                ]),
                 // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
+                Promise.race([
+                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
+                ])
             ]);
-
             // Add quotations to arguments if they have a blank space in them.
             // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.

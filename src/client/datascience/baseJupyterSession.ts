@@ -6,7 +6,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Event, EventEmitter } from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
@@ -76,7 +76,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected statusHandler: Slot<ISessionWithSocket, KernelMessage.Status>;
     protected connected: boolean = false;
-    protected restartSessionPromise: Promise<ISessionWithSocket> | undefined;
+    protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<ISessionWithSocket> };
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
@@ -110,7 +110,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 await this.shutdownSession(this.session, this.statusHandler, false);
                 traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
-                    const restartSession = await this.restartSessionPromise;
+                    this.restartSessionPromise.token.cancel();
+                    const restartSession = await this.restartSessionPromise.promise;
+                    this.restartSessionPromise.token.dispose();
                     traceVerbose('Shutdown session - shutdown restart session');
                     await this.shutdownSession(restartSession, undefined, true);
                 }
@@ -182,7 +184,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             // keep the old session (user could be restarting for a number of reasons).
 
             // Just switch to the other session. It should already be ready
-            const newSession = await this.restartSessionPromise;
+            const newSession = await this.restartSessionPromise.promise;
             this.setSession(newSession);
 
             if (newSession.kernel) {
@@ -192,6 +194,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // Rewire our status changed event.
                 newSession.statusChanged.connect(this.statusHandler);
             }
+            this.restartSessionPromise.token.dispose();
             this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
             if (oldStatusHandler && oldSession) {

@@ -27,11 +27,13 @@ import { PythonKernelLauncherDaemon } from '../../client/datascience/kernel-laun
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo } from '../../client/common/logger';
+import { CancellationTokenSource } from 'vscode';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;
     let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];
+    let token: CancellationTokenSource;
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
         if (IS_REMOTE_NATIVE_TEST) {
@@ -43,6 +45,10 @@ suite('DataScience - Kernel Process', () => {
     suiteTeardown(async function () {
         rewiremock.disable();
         sinon.restore();
+    });
+    setup(() => {
+        token = new CancellationTokenSource();
+        disposables.push(token);
     });
 
     // setup(async function () {
@@ -121,7 +127,7 @@ suite('DataScience - Kernel Process', () => {
             kind: 'startUsingKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'wow/connection_config.json');
-        await kernelProcess.launch('', 10_000);
+        await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
 
         assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
@@ -158,7 +164,7 @@ suite('DataScience - Kernel Process', () => {
             kind: 'startUsingKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
-        await kernelProcess.launch('', 10_000);
+        await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
 
         assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
@@ -193,7 +199,7 @@ suite('DataScience - Kernel Process', () => {
             kind: 'startUsingKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'connection_config.json');
-        await kernelProcess.launch('', 10_000);
+        await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
 
         assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
@@ -228,7 +234,7 @@ suite('DataScience - Kernel Process', () => {
             kind: 'startUsingKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
-        await kernelProcess.launch('', 10_000);
+        await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
 
         assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);

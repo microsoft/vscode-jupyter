@@ -328,7 +328,12 @@ export class CellExecution implements IDisposable {
         }
         if (handleError) {
             this.errorHandler
-                .handleKernelError((error as unknown) as Error, 'execution', this.kernelConnection)
+                .handleKernelError(
+                    (error as unknown) as Error,
+                    'execution',
+                    this.kernelConnection,
+                    this.cell.document.uri
+                )
                 .ignoreErrors();
         }
         traceCellMessage(this.cell, 'Completed with errors, & resolving');

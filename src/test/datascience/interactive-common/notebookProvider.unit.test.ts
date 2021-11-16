@@ -33,13 +33,13 @@ suite('DataScience - NotebookProvider', () => {
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
     let dataScienceSettings: IJupyterSettings;
-
+    let cancelToken: vscode.CancellationTokenSource;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
         const workspaceService = mock<IWorkspaceService>();
         const configService = mock<ConfigurationService>();
-
+        cancelToken = new vscode.CancellationTokenSource();
         // Set up our settings
         dataScienceSettings = mock<IJupyterSettings>();
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -57,7 +57,7 @@ suite('DataScience - NotebookProvider', () => {
             instance(configService)
         );
     });
-
+    teardown(() => cancelToken.dispose());
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
@@ -69,7 +69,8 @@ suite('DataScience - NotebookProvider', () => {
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
-            ui: new DisplayOptions(false)
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -85,7 +86,8 @@ suite('DataScience - NotebookProvider', () => {
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
-            ui: new DisplayOptions(false)
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
@@ -93,7 +95,8 @@ suite('DataScience - NotebookProvider', () => {
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
-            ui: new DisplayOptions(false)
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook2).to.equal(notebook);
     });

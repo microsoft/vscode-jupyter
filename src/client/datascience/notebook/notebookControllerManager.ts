@@ -53,6 +53,7 @@ import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { getDisplayPath } from '../../common/platform/fs-paths';
+import { DisplayOptions } from '../displayOptions';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -417,18 +418,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 } else {
                     // For a remote connection check for new live kernel models before we find preferred
                     await this.updateRemoteConnections(preferredSearchToken.token);
-                    const connection = await this.notebookProvider.connect({
-                        getOnly: false,
-                        resource: document.uri,
-                        disableUI: false,
-                        localOnly: false
-                    });
-                    preferredConnection = await this.remoteKernelFinder.findKernel(
-                        document.uri,
-                        connection,
-                        getNotebookMetadata(document),
-                        preferredSearchToken.token
-                    );
+                    const ui = new DisplayOptions(false);
+                    try {
+                        const connection = await this.notebookProvider.connect({
+                            getOnly: false,
+                            resource: document.uri,
+                            ui,
+                            localOnly: false,
+                            token: preferredSearchToken.token
+                        });
+                        preferredConnection = await this.remoteKernelFinder.findKernel(
+                            document.uri,
+                            connection,
+                            getNotebookMetadata(document),
+                            preferredSearchToken.token
+                        );
+                    } finally {
+                        ui.dispose();
+                    }
                 }
 
                 // If we found a preferred kernel, set the association on the NotebookController
@@ -621,14 +628,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (listLocalNonPythonKernels) {
                 return [];
             }
-            const connection = await this.notebookProvider.connect({
-                getOnly: false,
-                resource: undefined,
-                disableUI: false,
-                localOnly: false
-            });
+            const ui = new DisplayOptions(false);
+            try {
+                const connection = await this.notebookProvider.connect({
+                    getOnly: false,
+                    resource: undefined,
+                    ui,
+                    localOnly: false,
+                    token
+                });
 
-            return this.remoteKernelFinder.listKernels(undefined, connection, token);
+                return this.remoteKernelFinder.listKernels(undefined, connection, token);
+            } finally {
+                ui.dispose();
+            }
         }
     }
 

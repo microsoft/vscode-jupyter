@@ -20,6 +20,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import * as path from 'path';
 import { arePathsSame } from '../../../common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
+import { CancellationTokenSource } from 'vscode';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
@@ -301,11 +302,13 @@ suite('DataScience - JupyterKernelService', () => {
         );
     });
     test('Dependencies checked on all kernels with interpreters', async () => {
+        const token = new CancellationTokenSource();
         await Promise.all(
             kernels.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
             })
         );
+        token.dispose();
         verify(
             kernelDependencyService.installMissingDependencies(anything(), anything(), anything(), anything())
         ).times(kernels.filter((k) => k.interpreter).length);
@@ -322,12 +325,14 @@ suite('DataScience - JupyterKernelService', () => {
             'kernel.json'
         );
         when(fs.localFileExists(anything())).thenResolve(false);
+        const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(
             undefined,
             kernelsWithInvalidName[0],
             new DisplayOptions(true),
-            undefined
+            token.token
         );
+        token.dispose();
         verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });
 
@@ -345,11 +350,13 @@ suite('DataScience - JupyterKernelService', () => {
             }
             return Promise.resolve();
         });
+        const token = new CancellationTokenSource();
         await Promise.all(
             kernelsWithInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
             })
         );
+        token.dispose();
         assert.equal(updateCount, kernelsWithInterpreters.length, 'Updates to spec files did not occur');
     });
     test('Kernel environment not updated when not custom interpreter', async () => {
@@ -366,11 +373,13 @@ suite('DataScience - JupyterKernelService', () => {
             }
             return Promise.resolve();
         });
+        const token = new CancellationTokenSource();
         await Promise.all(
             kernelsWithoutInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), undefined);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
             })
         );
+        token.dispose();
         assert.equal(updateCount, 0, 'Should not have updated spec files when no interpreter metadata');
     });
 });

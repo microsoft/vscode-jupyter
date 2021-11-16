@@ -318,7 +318,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         });
         // We must get actiavted env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).
-        if (envType === EnvironmentType.Conda) {
+        if (!env && envType === EnvironmentType.Conda) {
             traceError(`Failed to get activated conda env variables for ${interpreter?.envName}: ${interpreter?.path}`);
         }
         return env;

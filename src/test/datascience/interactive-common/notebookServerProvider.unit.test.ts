@@ -4,7 +4,8 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { CancellationTokenSource, Disposable } from 'vscode';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
@@ -31,7 +32,6 @@ suite('DataScience - NotebookServerProvider', () => {
     let progressReporter: ProgressReporter;
     let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
-    let applicationShell: IApplicationShell;
     let interpreterService: IInterpreterService;
     let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
@@ -40,12 +40,12 @@ suite('DataScience - NotebookServerProvider', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'
     };
-
+    const disposables: Disposable[] = [];
+    let source: CancellationTokenSource;
     setup(() => {
         progressReporter = mock(ProgressReporter);
         configurationService = mock<IConfigurationService>();
         jupyterExecution = mock<IJupyterExecution>();
-        applicationShell = mock<IApplicationShell>();
         interpreterService = mock<IInterpreterService>();
 
         // Set up our settings
@@ -64,20 +64,23 @@ suite('DataScience - NotebookServerProvider', () => {
             instance(progressReporter),
             instance(configurationService),
             instance(jupyterExecution),
-            instance(applicationShell),
             instance(interpreterService),
             instance(serverStorage),
-            instance(serverSelector)
+            instance(serverSelector),
+            disposables
         );
+        source = new CancellationTokenSource();
+        disposables.push(source);
     });
-
+    teardown(() => disposeAllDisposables(disposables));
     test('NotebookServerProvider - Get Only - no server', async () => {
         when(jupyterExecution.getServer(anything())).thenResolve(undefined);
 
         const server = await serverProvider.getOrCreateServer({
             getOnly: true,
             resource: undefined,
-            ui: new DisplayOptions(false)
+            ui: new DisplayOptions(false),
+            token: source.token
         });
         expect(server).to.equal(undefined, 'Server expected to be undefined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -91,7 +94,8 @@ suite('DataScience - NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             getOnly: true,
             resource: undefined,
-            ui: new DisplayOptions(false)
+            ui: new DisplayOptions(false),
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -106,7 +110,8 @@ suite('DataScience - NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             getOnly: false,
             ui: new DisplayOptions(true),
-            resource: undefined
+            resource: undefined,
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });

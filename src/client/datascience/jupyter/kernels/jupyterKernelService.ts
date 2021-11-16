@@ -53,7 +53,7 @@ export class JupyterKernelService {
         resource: Resource,
         kernel: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<void> {
         // If we wish to wait for installation to complete, we must provide a cancel token.
         const tokenSource = new CancellationTokenSource();
@@ -119,13 +119,13 @@ export class JupyterKernelService {
     // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<string | undefined> {
         // Get the global kernel location
         const root = await this.kernelFinder.getKernelSpecRootPath();
 
         // If that didn't work, we can't continue
-        if (!root || !kernel.kernelSpec || cancelToken?.isCancellationRequested || !kernel.kernelSpec.name) {
+        if (!root || !kernel.kernelSpec || cancelToken.isCancellationRequested || !kernel.kernelSpec.name) {
             return;
         }
 
@@ -165,7 +165,7 @@ export class JupyterKernelService {
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
             throw ex;
         }
-        if (cancelToken?.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested) {
             return;
         }
 

@@ -102,7 +102,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
@@ -127,14 +127,26 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
 
-            const progressDisposable = !ui.disableUI
+            let progressDisposable = !ui.disableUI
                 ? this.progressReporter.createProgressIndicator(
                       localize.DataScience.connectingToKernel().format(displayName)
                   )
                 : undefined;
+            cancelToken.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
             if (progressDisposable) {
                 disposables.push(progressDisposable);
-                cancelToken?.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
+            } else {
+                ui.onDidChangeDisableUI(() => {
+                    if (progressDisposable || notebookPromise.completed || ui.disableUI) {
+                        return;
+                    }
+                    progressDisposable =
+                        progressDisposable ||
+                        this.progressReporter.createProgressIndicator(
+                            localize.DataScience.connectingToKernel().format(displayName)
+                        );
+                    disposables.push(progressDisposable);
+                }, disposables);
             }
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);

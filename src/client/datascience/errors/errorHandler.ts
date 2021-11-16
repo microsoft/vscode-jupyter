@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
 import { traceError, traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
@@ -12,8 +12,13 @@ import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
-import { IDataScienceErrorHandler, IJupyterInterpreterDependencyManager } from '../types';
-import { CancellationError as VscCancellationError } from 'vscode';
+import {
+    IDataScienceErrorHandler,
+    IJupyterInterpreterDependencyManager,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../types';
+import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -27,16 +32,21 @@ import {
 } from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IBrowserService } from '../../common/types';
+import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
+import { Telemetry } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DisplayOptions } from '../displayOptions';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager,
-        @inject(IWorkspaceService) protected workspace: IWorkspaceService,
-        @inject(IBrowserService) protected browser: IBrowserService,
-        @inject(ICommandManager) protected commandManager: ICommandManager
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IJupyterInterpreterDependencyManager)
+        private readonly dependencyManager: IJupyterInterpreterDependencyManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IBrowserService) private readonly browser: IBrowserService,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceError('DataScience Error', err);
@@ -46,9 +56,30 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     public async handleKernelError(
         err: Error,
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
-        kernelConnection: KernelConnectionMetadata
+        kernelConnection: KernelConnectionMetadata,
+        resource: Resource
     ): Promise<void> {
-        await this.handleErrorImplementation(err, purpose, async (error: BaseError, defaultErrorMessage: string) => {
+        await this.handleErrorImplementation(err, purpose, async (error: BaseError, defaultErrorMessage?: string) => {
+            if (
+                err instanceof IpyKernelNotInstalledError &&
+                err.reason === KernelInterpreterDependencyResponse.uiHidden &&
+                (purpose === 'start' || purpose === 'restart') &&
+                kernelConnection.interpreter
+            ) {
+                // Its possible auto start ran and UI was disabled, but subsequently
+                // user attempted to run a cell, & the prompt wasn't displayed to the user.
+                const token = new CancellationTokenSource();
+                await this.kernelDependency
+                    .installMissingDependencies(
+                        resource,
+                        kernelConnection.interpreter,
+                        new DisplayOptions(false),
+                        token.token
+                    )
+                    .finally(() => token.dispose());
+                return;
+            }
+
             const failureInfo = analyzeKernelErrors(
                 error.stdErr || '',
                 this.workspace.workspaceFolders,
@@ -127,7 +158,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     break;
                 }
                 default:
-                    await this.applicationShell.showErrorMessage(defaultErrorMessage);
+                    if (defaultErrorMessage) {
+                        await this.applicationShell.showErrorMessage(defaultErrorMessage);
+                    }
             }
         });
     }
@@ -143,7 +176,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     private async handleErrorImplementation(
         err: Error,
         purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
-        handler?: (error: BaseError, defaultErrorMessage: string) => Promise<void>
+        handler?: (error: BaseError, defaultErrorMessage?: string) => Promise<void>
     ): Promise<void> {
         const errorPrefix = getErrorMessagePrefix(purpose);
         // Unwrap the errors.
@@ -151,10 +184,35 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
+            // On a self cert error, warn the user and ask if they want to change the setting
+            const enableOption: string = DataScience.jupyterSelfCertEnable();
+            const closeOption: string = DataScience.jupyterSelfCertClose();
+            await this.applicationShell
+                .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
+                .then((value) => {
+                    if (value === enableOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                        void this.configuration.updateSetting(
+                            'allowUnauthorizedRemoteConnection',
+                            true,
+                            undefined,
+                            ConfigurationTarget.Workspace
+                        );
+                    } else if (value === closeOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                    }
+                });
         } else if (err instanceof IpyKernelNotInstalledError) {
             // Don't show the message, as user decided not to install IPyKernel.
+            // However its possible auto start ran and UI was disabled, but subsequently
+            // user attempted to run a cell, & the prompt wasn't displayed to the user.
+            if (
+                err.reason === KernelInterpreterDependencyResponse.uiHidden &&
+                (purpose === 'start' || purpose === 'restart') &&
+                handler
+            ) {
+                await handler(err);
+            }
             noop();
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors

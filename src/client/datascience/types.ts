@@ -106,9 +106,10 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken,
+        ui: IDisplayOptions
     ): Promise<INotebook>;
-    connect(connection: IJupyterConnection, cancelToken?: CancellationToken): Promise<void>;
+    connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
 
@@ -128,7 +129,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebook>;
 }
 
@@ -148,9 +149,9 @@ export interface INotebook {
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
-    disableUI?: boolean;
+    ui: IDisplayOptions;
     localOnly?: boolean;
-    token?: CancellationToken;
+    token: CancellationToken;
     resource: Resource;
 };
 
@@ -170,7 +171,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
@@ -267,7 +268,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
@@ -387,7 +388,8 @@ export interface IDataScienceErrorHandler {
     handleKernelError(
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
-        kernelConnection: KernelConnectionMetadata
+        kernelConnection: KernelConnectionMetadata,
+        resource: Resource
     ): Promise<void>;
 }
 
@@ -844,7 +846,7 @@ export type GetServerOptions = {
     getOnly?: boolean;
     ui: IDisplayOptions;
     localOnly?: boolean;
-    token?: CancellationToken;
+    token: CancellationToken;
     resource: Resource;
 };
 
@@ -856,7 +858,7 @@ export type NotebookCreationOptions = {
     document: NotebookDocument;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
-    token?: CancellationToken;
+    token: CancellationToken;
 };
 
 export const INotebookProvider = Symbol('INotebookProvider');
@@ -964,7 +966,7 @@ export interface IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }

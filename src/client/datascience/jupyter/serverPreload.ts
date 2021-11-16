@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
+import { CancellationTokenSource, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { DisplayOptions } from '../displayOptions';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookCreationTracker, INotebookProvider } from '../types';
 
@@ -57,6 +58,8 @@ export class ServerPreload implements IExtensionSingleActivationService {
         if (!this.workspace.isTrusted) {
             return;
         }
+        const source = new CancellationTokenSource();
+        const ui = new DisplayOptions(true);
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
@@ -66,12 +69,16 @@ export class ServerPreload implements IExtensionSingleActivationService {
                 await this.notebookProvider.connect({
                     getOnly: false,
                     resource: undefined,
-                    disableUI: true,
-                    localOnly: true
+                    ui,
+                    localOnly: true,
+                    token: source.token
                 });
             }
         } catch (exc) {
             traceError(`Error starting server in serverPreload: `, exc);
+        } finally {
+            ui.dispose();
+            source.dispose();
         }
     }
 
