@@ -100,6 +100,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                         progressReporter = (await this.jupyterExecution.getServer(serverOptions))
                             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
                             : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
+                        disposables.push(progressReporter);
                     }
                 },
                 this,
