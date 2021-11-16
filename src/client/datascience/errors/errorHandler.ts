@@ -72,10 +72,23 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     break;
                 }
                 case KernelFailureReason.importFailure: {
-                    await this.showMessageWithMoreInfo(
-                        DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
-                        'https://aka.ms/kernelFailuresModuleImportErr'
-                    );
+                    const fileName = failureInfo.fileName
+                        ? getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
+                        : '';
+                    if (fileName) {
+                        await this.showMessageWithMoreInfo(
+                            DataScience.failedToStartKernelDueToImportFailureFromFile().format(
+                                failureInfo.moduleName,
+                                fileName
+                            ),
+                            'https://aka.ms/kernelFailuresModuleImportErrFromFile'
+                        );
+                    } else {
+                        await this.showMessageWithMoreInfo(
+                            DataScience.failedToStartKernelDueToImportFailure().format(failureInfo.moduleName),
+                            'https://aka.ms/kernelFailuresModuleImportErr'
+                        );
+                    }
                     break;
                 }
                 case KernelFailureReason.dllLoadFailure: {

@@ -147,10 +147,12 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
 const homePath = untildify('~');
 export function getDisplayPath(
     filename?: string | Uri,
-    workspaceFolder: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
+    workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
 ) {
     const relativeToHome = getDisplayPathImpl(filename);
-    const relativeToWorkspaceFolders = workspaceFolder.map((folder) => getDisplayPathImpl(filename, folder.uri.fsPath));
+    const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
+        getDisplayPathImpl(filename, folder.uri.fsPath)
+    );
     // Pick the shortest path for display purposes.
     // As those are most likely relative to some workspace folder.
     let bestDisplayPath = relativeToHome;
@@ -177,7 +179,12 @@ function getDisplayPathImpl(filename?: string | Uri, cwd?: string): string {
     if (!file) {
         return '';
     } else if (cwd && file.startsWith(cwd)) {
-        return `.${nodepath.sep}${nodepath.relative(cwd, file)}`;
+        const relativePath = `.${nodepath.sep}${nodepath.relative(cwd, file)}`;
+        // On CI the relative path might not work as expected as when testing we might have windows paths
+        // and the code is running on a unix machine.
+        return relativePath === file || relativePath.includes(cwd)
+            ? `.${nodepath.sep}${file.substring(file.indexOf(cwd) + cwd.length)}`
+            : relativePath;
     } else if (file.startsWith(homePath)) {
         return `~${nodepath.sep}${nodepath.relative(homePath, file)}`;
     } else {

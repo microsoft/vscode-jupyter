@@ -447,6 +447,7 @@
     "DataScience.fileSeemsToBeInterferingWithKernelStartup": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
     "DataScience.failedToStartKernelDueToMissingModule": "The kernel failed to start due to the missing module '{0}'. Consider installing this module.",
     "DataScience.failedToStartKernelDueToImportFailure": "The kernel failed to start as the module '{0}' could not be imported.",
+    "DataScience.failedToStartKernelDueToImportFromFileFailure": "The kernel failed to start as '{0}' could not be imported from '{1}'.",
     "DataScience.failedToStartKernelDueToUnknowDllLoadFailure": "The kernel failed to start as a dll could not be loaded.",
     "DataScience.failedToStartKernelDueToDllLoadFailure": "The kernel failed to start as the dll '{0}' could not be loaded.",
     "DataScience.failedToStartKernelDueToWin32APIFailure": "The kernel failed to start due to an error with the Win32api module. Consider (re) installing this module.",

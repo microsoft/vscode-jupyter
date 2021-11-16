@@ -1006,6 +1006,10 @@ export namespace DataScience {
         'DataScience.failedToStartKernelDueToImportFailure',
         "The kernel failed to start as the module '{0}' could not be imported."
     );
+    export const failedToStartKernelDueToImportFailureFromFile = localize(
+        'DataScience.failedToStartKernelDueToImportFromFileFailure',
+        "The kernel failed to start as '{0}' could not be imported from '{1}'."
+    );
     export const failedToStartKernelDueToUnknowDllLoadFailure = localize(
         'DataScience.failedToStartKernelDueToUnknowDllLoadFailure',
         'The kernel failed to start as a dll could not be loaded.'
