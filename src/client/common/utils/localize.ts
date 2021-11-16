@@ -986,6 +986,18 @@ export namespace DataScience {
         'DataScience.fileSeemsToBeInterferingWithKernelStartup',
         "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.."
     );
+    export const pipCondaInstallHoverWarning = localize(
+        'jupyter.kernel.pipCondaInstallHoverWarning',
+        "'!{0} install' could install packages into the wrong environment. [More info]({1})"
+    );
+    export const percentPipCondaInstallInsteadOfBang = localize(
+        'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
+        "Use '%{0} install' instead of '!{0} install'"
+    );
+    export const replacePipCondaInstallCodeAction = localize(
+        'jupyter.kernel.replacePipCondaInstallCodeAction',
+        "Replace with '%{0} install'"
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
