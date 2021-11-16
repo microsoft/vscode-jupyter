@@ -110,6 +110,7 @@ export class HostJupyterServer implements INotebookServer {
                                     getDisplayNameOrNameOfKernelConnection(kernelConnection)
                                 )
                             );
+                            disposables.push(progressDisposable);
                         }
                     },
                     this,
