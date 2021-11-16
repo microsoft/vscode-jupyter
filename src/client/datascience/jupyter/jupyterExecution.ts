@@ -157,7 +157,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connection?.dispose();
                         tryCount += 1;
                     } else if (connection) {
-
                         // If this is occurring during shutdown, don't worry about it.
                         if (this.disposed) {
                             return undefined;
