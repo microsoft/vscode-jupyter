@@ -73,7 +73,7 @@ export class HostJupyterServer implements INotebookServer {
         sessionManager: JupyterSessionManager,
         configService: IConfigurationService,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebook> {
         let progressDisposable: vscode.Disposable | undefined;
 
@@ -150,7 +150,7 @@ export class HostJupyterServer implements INotebookServer {
         return launchInfo;
     }
 
-    public async connect(connection: IJupyterConnection, _cancelToken?: CancellationToken): Promise<void> {
+    public async connect(connection: IJupyterConnection, _cancelToken: CancellationToken): Promise<void> {
         traceInfo(`Connecting server kernel ${connection.baseUrl}`);
 
         // Save our launch info
@@ -179,7 +179,7 @@ export class HostJupyterServer implements INotebookServer {
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
             throw new SessionDisposedError();

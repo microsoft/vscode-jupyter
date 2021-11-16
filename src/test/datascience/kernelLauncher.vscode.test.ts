@@ -29,6 +29,7 @@ const test_Timeout = 30_000;
 
 suite('DataScience - Kernel Launcher', () => {
     let kernelLauncher: IKernelLauncher;
+    let token: CancellationTokenSource;
     const kernelSpec = {
         name: 'python3',
         language: 'python',
@@ -50,9 +51,11 @@ suite('DataScience - Kernel Launcher', () => {
     });
 
     setup(async function () {
+        token = new CancellationTokenSource();
         traceInfo(`Start Test ${this.currentTest?.title}`);
     });
     teardown(function () {
+        token.dispose();
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
         disposeAllDisposables(disposables);
     });
@@ -65,7 +68,8 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false)
+            new DisplayOptions(false),
+            token.token
         );
         kernel.exited(() => {
             if (exitExpected) {
@@ -107,7 +111,8 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false)
+            new DisplayOptions(false),
+            token.token
         );
 
         assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -141,7 +146,8 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false)
+            new DisplayOptions(false),
+            token.token
         );
 
         // Confirm the ports used by this kernel are ignored.
@@ -193,7 +199,8 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false)
+            new DisplayOptions(false),
+            token.token
         );
 
         try {

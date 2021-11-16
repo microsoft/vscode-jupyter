@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
+import { CancellationTokenSource, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -57,6 +57,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
         if (!this.workspace.isTrusted) {
             return;
         }
+        const source = new CancellationTokenSource();
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
@@ -67,11 +68,14 @@ export class ServerPreload implements IExtensionSingleActivationService {
                     getOnly: false,
                     resource: undefined,
                     disableUI: true,
-                    localOnly: true
+                    localOnly: true,
+                    token: source.token
                 });
             }
         } catch (exc) {
             traceError(`Error starting server in serverPreload: `, exc);
+        } finally {
+            source.dispose();
         }
     }
 

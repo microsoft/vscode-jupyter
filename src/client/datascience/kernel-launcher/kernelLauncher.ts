@@ -99,7 +99,7 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const promise = (async () => {
             // If this is a python interpreter, make sure it has ipykernel
@@ -110,7 +110,7 @@ export class KernelLauncher implements IKernelLauncher {
                     ui,
                     cancelToken
                 );
-                if (cancelToken?.isCancellationRequested) {
+                if (cancelToken.isCancellationRequested) {
                     throw new CancellationError();
                 }
             }
@@ -127,10 +127,13 @@ export class KernelLauncher implements IKernelLauncher {
         resource: Resource,
         workingDirectory: string,
         timeout: number,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
-        const connection = await this.getKernelConnection(kernelConnectionMetadata);
-        if (cancelToken?.isCancellationRequested) {
+        const connection = await Promise.race([
+            this.getKernelConnection(kernelConnectionMetadata),
+            createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token: cancelToken })
+        ]);
+        if (!connection || cancelToken?.isCancellationRequested) {
             throw new CancellationError();
         }
         const kernelProcess = new KernelProcess(

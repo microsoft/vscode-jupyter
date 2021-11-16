@@ -324,6 +324,21 @@ export class Kernel implements IKernel {
         if (!this.startupUI.disableUI) {
             // This means the user is actually running something against the kernel (deliberately).
             initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
+        } else {
+            this.startupUI.onDidChangeDisableUI(
+                () => {
+                    if (this.disposing || this.disposed || this.startupUI.disableUI) {
+                        return;
+                    }
+                    // This means the user is actually running something against the kernel (deliberately).
+                    initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+                        this.resourceUri,
+                        this.kernelConnectionMetadata
+                    );
+                },
+                this,
+                this.disposables
+            );
         }
         if (this.restarting) {
             await this.restarting.promise;

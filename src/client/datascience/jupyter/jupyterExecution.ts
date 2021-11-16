@@ -6,14 +6,12 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -50,8 +48,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly notebookStarter: NotebookStarter,
-        private readonly appShell: IApplicationShell,
-        private readonly jupyterOutputChannel: IOutputChannel,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
@@ -111,7 +107,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     /* eslint-disable complexity,  */
     public connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         // eslint-disable-next-line
@@ -129,8 +125,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;
-            const maxTries = this.configuration.getSettings(undefined).jupyterLaunchRetries;
-            const stopWatch = new StopWatch();
+            const maxTries = Math.max(1, this.configuration.getSettings(undefined).jupyterLaunchRetries);
+            let lastTryError: Error;
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
@@ -152,6 +148,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     );
                     return result;
                 } catch (err) {
+                    lastTryError = err;
                     // Cleanup after ourselves. server may be running partially.
                     if (result) {
                         traceInfo(`Killing server because of error ${err}`);
@@ -202,23 +199,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         throw err;
                     }
                 }
-            }
-
-            // Note: This is unlikely, so far only 1 telemetry captured for this.
-            // If we're here, then starting jupyter timeout.
-            // Kill any existing connections.
-            connection?.dispose();
-            sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, {
-                timeout: stopWatch.elapsedTime
-            });
-            if (!options.ui.disableUI) {
-                this.appShell
-                    .showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel())
-                    .then((selection) => {
-                        if (selection === localize.Common.openOutputPanel()) {
-                            this.jupyterOutputChannel.show();
-                        }
-                    }, noop);
+                throw lastTryError;
             }
         }, cancelToken);
     }
@@ -230,7 +211,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private async startOrConnect(
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
@@ -275,7 +256,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         return this.notebookStarter.start(useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
     }

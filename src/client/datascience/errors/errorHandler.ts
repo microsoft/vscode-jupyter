@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
 import { traceError, traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
@@ -13,7 +13,7 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { IDataScienceErrorHandler, IJupyterInterpreterDependencyManager } from '../types';
-import { CancellationError as VscCancellationError } from 'vscode';
+import { CancellationError as VscCancellationError, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -27,16 +27,19 @@ import {
 } from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IBrowserService } from '../../common/types';
+import { IBrowserService, IConfigurationService } from '../../common/types';
+import { Telemetry } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IJupyterInterpreterDependencyManager) protected dependencyManager: IJupyterInterpreterDependencyManager,
-        @inject(IWorkspaceService) protected workspace: IWorkspaceService,
-        @inject(IBrowserService) protected browser: IBrowserService,
-        @inject(ICommandManager) protected commandManager: ICommandManager
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IJupyterInterpreterDependencyManager)
+        private readonly dependencyManager: IJupyterInterpreterDependencyManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IBrowserService) private readonly browser: IBrowserService,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceError('DataScience Error', err);
@@ -151,8 +154,24 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
+            // On a self cert error, warn the user and ask if they want to change the setting
+            const enableOption: string = DataScience.jupyterSelfCertEnable();
+            const closeOption: string = DataScience.jupyterSelfCertClose();
+            await this.applicationShell
+                .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
+                .then((value) => {
+                    if (value === enableOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                        void this.configuration.updateSetting(
+                            'allowUnauthorizedRemoteConnection',
+                            true,
+                            undefined,
+                            ConfigurationTarget.Workspace
+                        );
+                    } else if (value === closeOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                    }
+                });
         } else if (err instanceof IpyKernelNotInstalledError) {
             // Don't show the message, as user decided not to install IPyKernel.
             noop();

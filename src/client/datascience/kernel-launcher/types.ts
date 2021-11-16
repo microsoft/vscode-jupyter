@@ -23,7 +23,7 @@ export interface IKernelLauncher {
         resource: Resource,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess>;
 }
 

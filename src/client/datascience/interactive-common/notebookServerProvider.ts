@@ -4,19 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { CancellationError, wrapCancellationTokens } from '../../common/cancellation';
+import { CancellationToken } from 'vscode';
+import { CancellationError } from '../../common/cancellation';
+import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Settings, Telemetry } from '../constants';
+import { Settings } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
-import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -36,15 +33,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector
+        @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
-    public async getOrCreateServer(
-        options: GetServerOptions,
-        token?: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(options.resource);
 
         // If we are just fetching or only want to create for local, see if exists
@@ -52,22 +46,21 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
-            return this.createServer(options, token);
+            return this.createServer(options);
         }
     }
 
-    private async createServer(
-        options: GetServerOptions,
-        token?: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
-        this.ui.disableUI = options.ui.disableUI;
-        options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI));
+        if (!options.ui.disableUI) {
+            this.ui.disableUI = false;
+        }
+        options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
 
         if (!this.serverPromise) {
             // Start a server
-            this.serverPromise = this.startServer(options.resource, token);
+            this.serverPromise = this.startServer(options.resource, options.token);
         }
         try {
             const value = await this.serverPromise;
@@ -79,7 +72,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(resource: Resource, token?: CancellationToken): Promise<INotebookServer | undefined> {
+    private async startServer(resource: Resource, token: CancellationToken): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(resource);
         traceInfo(`Checking for server existence.`);
 
@@ -90,14 +83,29 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             serverOptions.uri = await this.serverUriStorage.getUri();
         }
 
+        const disposables: IDisposable[] = [];
         // Status depends upon if we're about to connect to existing server or not.
-        const progressReporter =
+        let progressReporter =
             this.ui.disableUI === false
                 ? (await this.jupyterExecution.getServer(serverOptions))
                     ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
                     : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
                 : undefined;
-
+        if (progressReporter) {
+            disposables.push(progressReporter);
+        } else {
+            this.ui.onDidChangeDisableUI(
+                async () => {
+                    if (!progressReporter && !this.ui.disableUI) {
+                        progressReporter = (await this.jupyterExecution.getServer(serverOptions))
+                            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
+                            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
+                    }
+                },
+                this,
+                disposables
+            );
+        }
         // Check to see if we support ipykernel or not
         try {
             traceInfo(`Checking for server usability.`);
@@ -113,10 +121,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceInfo(`Starting notebook server.`);
-            const result = await this.jupyterExecution.connectToNotebookServer(
-                serverOptions,
-                wrapCancellationTokens(progressReporter?.token, token)
-            );
+            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, token);
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
@@ -130,38 +135,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             // the failure there
             await this.jupyterExecution.refreshCommands();
 
-            if (e instanceof JupyterSelfCertsError) {
-                // On a self cert error, warn the user and ask if they want to change the setting
-                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
-                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
-                this.applicationShell
-                    .showErrorMessage(
-                        localize.DataScience.jupyterSelfCertFail().format(e.message),
-                        enableOption,
-                        closeOption
-                    )
-                    .then((value) => {
-                        if (value === enableOption) {
-                            sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                            this.configuration
-                                .updateSetting(
-                                    'allowUnauthorizedRemoteConnection',
-                                    true,
-                                    undefined,
-                                    ConfigurationTarget.Workspace
-                                )
-                                .ignoreErrors();
-                        } else if (value === closeOption) {
-                            sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
-                        }
-                    })
-                    .then(noop, noop);
-                throw e;
-            } else {
-                throw e;
-            }
+            throw e;
         } finally {
-            progressReporter?.dispose(); // NOSONAR
+            disposeAllDisposables(disposables);
         }
     }
 

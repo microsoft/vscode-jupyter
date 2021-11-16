@@ -15,7 +15,7 @@ import { SessionConnection } from '@jupyterlab/services/lib/session/default';
 import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
 import { ReadWrite, Resource } from '../../../client/common/types';
@@ -109,7 +109,7 @@ suite('DataScience - JupyterSession', () => {
         when(connection.rootDirectory).thenReturn('');
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
-        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything())).thenResolve();
+        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
@@ -152,7 +152,12 @@ suite('DataScience - JupyterSession', () => {
         (mockKernelSpec as any).kernelSpec = specOrModel;
         mockKernelSpec.kind = kind;
 
-        await jupyterSession.connect({ ui: new DisplayOptions(false) });
+        const token = new CancellationTokenSource();
+        try {
+            await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+        } finally {
+            token.dispose();
+        }
     }
     teardown(async () => jupyterSession.dispose().catch(noop));
 

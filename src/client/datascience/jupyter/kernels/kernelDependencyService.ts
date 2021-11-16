@@ -62,7 +62,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token?: CancellationToken
+        token: CancellationToken
     ): Promise<void> {
         traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {

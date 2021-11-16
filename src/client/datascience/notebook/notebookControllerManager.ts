@@ -421,7 +421,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         getOnly: false,
                         resource: document.uri,
                         disableUI: false,
-                        localOnly: false
+                        localOnly: false,
+                        token: preferredSearchToken.token
                     });
                     preferredConnection = await this.remoteKernelFinder.findKernel(
                         document.uri,
@@ -625,7 +626,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 getOnly: false,
                 resource: undefined,
                 disableUI: false,
-                localOnly: false
+                localOnly: false,
+                token
             });
 
             return this.remoteKernelFinder.listKernels(undefined, connection, token);

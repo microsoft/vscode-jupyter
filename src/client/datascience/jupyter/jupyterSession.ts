@@ -31,6 +31,7 @@ import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
+import { CancellationTokenSource } from 'vscode';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -83,7 +84,7 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async connect(options: { token?: CancellationToken; ui: IDisplayOptions }): Promise<void> {
+    public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
 
@@ -95,7 +96,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(options: {
-        token?: CancellationToken;
+        token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
@@ -149,7 +150,7 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected async createRestartSession(
         session: ISessionWithSocket,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
         if (!session || !this.contentsManager || !this.sessionManager) {
@@ -188,7 +189,9 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.session);
+            const token = new CancellationTokenSource();
+            const promise = this.createRestartSession(this.session, token.token);
+            this.restartSessionPromise = { token, promise };
         }
     }
 
@@ -239,7 +242,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private async createSession(options: {
-        token?: CancellationToken;
+        token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook

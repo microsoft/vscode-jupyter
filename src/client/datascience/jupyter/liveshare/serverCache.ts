@@ -34,15 +34,13 @@ export class ServerCache implements IAsyncDisposable {
     public async getOrCreate(
         createFunction: (
             options: INotebookServerOptions,
-            cancelToken?: CancellationToken
+            cancelToken: CancellationToken
         ) => Promise<INotebookServer | undefined>,
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
         const cancelSource = new CancellationTokenSource();
-        if (cancelToken) {
-            cancelToken.onCancellationRequested(() => cancelSource.cancel());
-        }
+        cancelToken.onCancellationRequested(() => cancelSource.cancel());
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let data: IServerData | undefined;

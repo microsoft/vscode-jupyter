@@ -66,7 +66,7 @@ export class NotebookStarter implements Disposable {
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it
@@ -85,7 +85,7 @@ export class NotebookStarter implements Disposable {
             );
 
             // Make sure we haven't canceled already.
-            if (cancelToken && cancelToken.isCancellationRequested) {
+            if (cancelToken.isCancellationRequested) {
                 throw new CancellationError();
             }
 

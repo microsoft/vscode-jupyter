@@ -10,7 +10,11 @@ export class DisplayOptions implements IDisplayOptions {
         return this._disableUI;
     }
     public set disableUI(value: boolean) {
+        const fireEvent = this._disableUI !== value;
         this._disableUI = value;
+        if (fireEvent) {
+            this._event.fire();
+        }
     }
     private _event = new EventEmitter<void>();
     public get onDidChangeDisableUI(): Event<void> {

@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import {
     getErrorMessageFromPythonTraceback,
     getTelemetrySafeErrorMessageFromPythonTraceback
@@ -101,7 +101,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(workingDirectory: string, timeout: number, cancelToken?: CancellationToken): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -109,8 +109,13 @@ export class KernelProcess implements IKernelProcess {
 
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
-
-        const exeObs = await this.launchAsObservable(workingDirectory);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
 
         let stdout = '';
         let stderr = '';
@@ -374,7 +379,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
-    private async launchAsObservable(workingDirectory: string) {
+    private async launchAsObservable(workingDirectory: string, cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
@@ -390,7 +395,13 @@ export class KernelProcess implements IKernelProcess {
                 this.launchKernelSpec,
                 this._kernelConnectionMetadata.interpreter
             );
-
+            if (this.disposed || cancelToken.isCancellationRequested) {
+                kernelDaemonLaunch.daemon?.dispose();
+                kernelDaemonLaunch.observableOutput.dispose();
+            }
+            if (cancelToken.isCancellationRequested) {
+                throw new CancellationError();
+            }
             this.pythonDaemon = kernelDaemonLaunch.daemon;
             exeObs = kernelDaemonLaunch.observableOutput;
         }
@@ -405,7 +416,8 @@ export class KernelProcess implements IKernelProcess {
                 // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
+                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
             ]);
 
             // Add quotations to arguments if they have a blank space in them.

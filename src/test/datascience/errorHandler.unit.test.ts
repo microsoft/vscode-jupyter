@@ -5,10 +5,10 @@
 import * as dedent from 'dedent';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IBrowserService } from '../../client/common/types';
 import { Common, DataScience } from '../../client/common/utils/localize';
+import { IBrowserService, IConfigurationService } from '../../client/common/types';
 import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHandler';
 import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
@@ -22,13 +22,13 @@ suite('DataScience Error Handler Unit Tests', () => {
     let dependencyManager: IJupyterInterpreterDependencyManager;
     let worksapceService: IWorkspaceService;
     let browser: IBrowserService;
-    let commandManager: ICommandManager;
+    let configuration: IConfigurationService;
     setup(() => {
         applicationShell = mock<IApplicationShell>();
         worksapceService = mock<IWorkspaceService>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
+        configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
-        commandManager = mock<ICommandManager>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(worksapceService.workspaceFolders).thenReturn([]);
         dataScienceErrorHandler = new DataScienceErrorHandler(
@@ -36,7 +36,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(dependencyManager),
             instance(worksapceService),
             instance(browser),
-            instance(commandManager)
+            instance(configuration)
         );
     });
     const message = 'Test error message.';

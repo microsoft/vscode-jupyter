@@ -176,7 +176,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
