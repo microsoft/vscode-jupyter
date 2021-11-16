@@ -14,7 +14,6 @@ import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../../tel
 
 const interestedPackages = new Set(
     [
-        'pip',
         'ipykernel',
         'ipython-genutils',
         'jupyter',
