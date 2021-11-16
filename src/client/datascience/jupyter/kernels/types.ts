@@ -22,10 +22,9 @@ export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
 
 export enum NotebookCellRunState {
-    Running = 1,
-    Idle = 2,
-    Success = 3,
-    Error = 4
+    Idle = 'Idle',
+    Success = 'Success',
+    Error = 'Error'
 }
 /**
  * Connection metadata for Live Kernels.

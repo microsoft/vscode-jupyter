@@ -190,6 +190,7 @@ export class Kernel implements IKernel {
         if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
             const restartedKernel = await this.notifyAndRestartDeadKernel();
             if (!restartedKernel) {
+                traceInfo(`Cell ${cell.index} executed with state ${NotebookCellRunState.Error} due to kernel state.`);
                 return NotebookCellRunState.Error;
             }
         }
@@ -199,6 +200,7 @@ export class Kernel implements IKernel {
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
         const promise = this.kernelExecution.executeCell(sessionPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
@@ -500,14 +502,18 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(notebook);
             notebook.session.kernelSocket.subscribe(this._kernelSocket);
             notebook.session.onDidDispose(() => {
-                traceInfo(
+                traceInfoIfCI(
                     `Kernel got disposed as a result of notebook.onDisposed ${(
                         this.resourceUri || this.notebookDocument.uri
                     ).toString()}`
                 );
-                // this.kernelExecution.cancel();
                 // Ignore when notebook is disposed as a result of failed restarts.
                 if (!this._ignoreNotebookDisposedErrors) {
+                    traceInfo(
+                        `Kernel got disposed as a result of notebook.onDisposed ${(
+                            this.resourceUri || this.notebookDocument.uri
+                        ).toString()} & _ignoreNotebookDisposedErrors = false.`
+                    );
                     const isActiveNotebookDead = this.notebook === notebook;
 
                     this._notebookPromise = undefined;

@@ -120,7 +120,7 @@ export class KernelProcess implements IKernelProcess {
         const deferred = createDeferred();
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
-            traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
+            traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
                 return;
             }
@@ -245,10 +245,10 @@ export class KernelProcess implements IKernelProcess {
     }
 
     public async dispose(): Promise<void> {
-        traceInfo('Dispose Kernel process');
         if (this.disposed) {
             return;
         }
+        traceInfo('Dispose Kernel process');
         this.disposed = true;
         if (this.pythonDaemon) {
             await this.pythonDaemon.kill().catch(noop);
