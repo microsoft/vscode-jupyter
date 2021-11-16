@@ -251,13 +251,21 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (this.kernelConnectionMetadata?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            traceInfoIfCI(`JupyterSession.createSession ${this.kernelConnectionMetadata.id}`);
-            await this.kernelService.ensureKernelIsUsable(
-                this.resource,
-                this.kernelConnectionMetadata,
-                options.ui,
-                options.token
-            );
+            try {
+                traceInfoIfCI(`JupyterSession.createSession ${this.kernelConnectionMetadata.id}`);
+                await this.kernelService.ensureKernelIsUsable(
+                    this.resource,
+                    this.kernelConnectionMetadata,
+                    options.ui,
+                    options.token
+                );
+            } catch (ex) {
+                // If we failed to create the kernel, we need to clean up the file.
+                if (this.connInfo && backingFile) {
+                    this.contentsManager.delete(backingFile.path).ignoreErrors();
+                }
+                throw ex;
+            }
         }
 
         // If kernelName is empty this can cause problems for servers that don't
