@@ -388,12 +388,12 @@ function extractModuleAndFileFromImportError(errorLine: string) {
     const fileMatches = errorLine.match(/\((.*?)\)/g);
     let moduleName: string | undefined;
     let fileName: string | undefined;
-    if (matches && matches[matches.length - 1].length > 2) {
-        moduleName = matches[matches.length - 1];
+    if (matches && matches[0].length > 2) {
+        moduleName = matches[0];
         moduleName = moduleName.substring(1, moduleName.length - 1);
     }
-    if (fileMatches && fileMatches[fileMatches.length - 1].length > 2) {
-        fileName = fileMatches[fileMatches.length - 1];
+    if (fileMatches && fileMatches[0].length > 2) {
+        fileName = fileMatches[0];
         fileName = fileName.substring(1, fileName.length - 1);
     }
 
