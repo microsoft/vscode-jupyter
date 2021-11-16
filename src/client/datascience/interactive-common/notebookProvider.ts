@@ -44,20 +44,12 @@ export class NotebookProvider implements INotebookProvider {
         });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (this.rawNotebookProvider.isSupported) {
-            return this.rawNotebookProvider
-                .connect({
-                    ...options
-                })
-                .finally(() => handler.dispose());
+            return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
-            return this.jupyterNotebookProvider
-                .connect({
-                    ...options
-                })
-                .finally(() => handler.dispose());
+            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (!options.getOnly) {
             handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
