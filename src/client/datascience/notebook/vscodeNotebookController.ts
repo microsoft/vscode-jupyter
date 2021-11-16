@@ -238,11 +238,9 @@ export class VSCodeNotebookController implements Disposable {
             const kernel = this.kernelProvider.get(event.notebook);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
                 traceInfo(
-                    `Disposing kernel for notebook ${getDisplayPath(
+                    `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
                         event.notebook.uri
-                    )} due to selection of another kernel, old kernel ${
-                        kernel.kernelConnectionMetadata.id
-                    }, new kernel connection ${this.kernelConnection.id}`
+                    )} due to selection of another kernel or closing of the notebook`
                 );
                 void kernel.dispose();
             }

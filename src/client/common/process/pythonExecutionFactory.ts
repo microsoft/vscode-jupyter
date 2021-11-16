@@ -59,7 +59,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
-        processService.on('exec', this.logger.logProcess.bind(this.logger));
 
         return createPythonService(
             pythonPath,

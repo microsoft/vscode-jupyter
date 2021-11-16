@@ -502,14 +502,18 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(notebook);
             notebook.session.kernelSocket.subscribe(this._kernelSocket);
             notebook.session.onDidDispose(() => {
-                traceInfo(
+                traceInfoIfCI(
                     `Kernel got disposed as a result of notebook.onDisposed ${(
                         this.resourceUri || this.notebookDocument.uri
                     ).toString()}`
                 );
-                // this.kernelExecution.cancel();
                 // Ignore when notebook is disposed as a result of failed restarts.
                 if (!this._ignoreNotebookDisposedErrors) {
+                    traceInfo(
+                        `Kernel got disposed as a result of notebook.onDisposed ${(
+                            this.resourceUri || this.notebookDocument.uri
+                        ).toString()} & _ignoreNotebookDisposedErrors = false.`
+                    );
                     const isActiveNotebookDead = this.notebook === notebook;
 
                     this._notebookPromise = undefined;

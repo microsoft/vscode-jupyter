@@ -11,7 +11,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../common/application/types';
-import { traceInfo, traceWarning } from '../../../common/logger';
+import { traceVerbose, traceWarning } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -149,7 +149,7 @@ export class KernelProvider implements IKernelProvider {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.kernelsByNotebook.get(notebook)?.kernel === kernel) {
                     this.kernelsByNotebook.delete(notebook);
-                    traceInfo(
+                    traceVerbose(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
                             notebook.uri
                         )}`,
