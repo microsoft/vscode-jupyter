@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
