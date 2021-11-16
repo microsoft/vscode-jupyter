@@ -164,11 +164,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             defaultValue: undefined,
             token
         });
-        const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selectKernel = DataScience.selectKernel();
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
-        const options = resource ? [installPrompt, selectKernel] : [installPrompt];
+        const options = resource ? [Common.install(), selectKernel] : [Common.install()];
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
@@ -179,7 +178,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
             }
             const selection = this.isCodeSpace
-                ? installPrompt
+                ? Common.install()
                 : await Promise.race([
                       this.appShell.showErrorMessage(message, { modal: true }, ...options),
                       promptCancellationPromise
@@ -202,7 +201,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     resourceHash
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
-            } else if (selection === installPrompt) {
+            } else if (selection === Common.install()) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,

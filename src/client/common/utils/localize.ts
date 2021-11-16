@@ -19,7 +19,6 @@ export namespace Common {
     export const download = localize('Common.download', 'Download');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
-    export const reInstall = localize('Common.reInstall', 'Re-Install');
     export const loadingExtension = localize('Common.loadingExtension', 'Jupyter extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
