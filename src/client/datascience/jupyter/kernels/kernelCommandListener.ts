@@ -133,7 +133,12 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             }
         } catch (err) {
             traceError('Failed to interrupt kernel', err);
-            void this.errorHandler.handleKernelError(err, errorContext, kernel.kernelConnectionMetadata);
+            void this.errorHandler.handleKernelError(
+                err,
+                errorContext,
+                kernel.kernelConnectionMetadata,
+                kernel.resourceUri
+            );
         } finally {
             this.kernelInterruptedDontAskToRestart = false;
             status.dispose();
@@ -212,7 +217,12 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 exc
             );
             traceError('Failed to restart the kernel', exc);
-            void this.errorHandler.handleKernelError(exc, 'restart', kernel.kernelConnectionMetadata);
+            void this.errorHandler.handleKernelError(
+                exc,
+                'restart',
+                kernel.kernelConnectionMetadata,
+                kernel.resourceUri
+            );
         } finally {
             status.dispose();
         }

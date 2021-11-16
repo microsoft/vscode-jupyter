@@ -387,7 +387,8 @@ export interface IDataScienceErrorHandler {
     handleKernelError(
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
-        kernelConnection: KernelConnectionMetadata
+        kernelConnection: KernelConnectionMetadata,
+        resource: Resource
     ): Promise<void>;
 }
 
