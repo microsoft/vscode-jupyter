@@ -66,7 +66,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 (purpose === 'start' || purpose === 'restart') &&
                 kernelConnection.interpreter
             ) {
-                // Don't show the message, as user decided not to install IPyKernel.
                 // Its possible auto start ran and UI was disabled, but subsequently
                 // user attempted to run a cell, & the prompt wasn't displayed to the user.
                 const token = new CancellationTokenSource();
