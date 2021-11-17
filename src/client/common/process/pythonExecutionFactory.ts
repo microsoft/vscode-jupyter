@@ -6,10 +6,11 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
+import { TraceOptions } from '../../logging/trace';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
-import { traceError, traceInfo } from '../logger';
+import { traceDecorators, traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ProcessService } from './proc';
@@ -69,6 +70,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         );
     }
 
+    @traceDecorators.verbose('Create daemon', TraceOptions.BeforeCall)
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {

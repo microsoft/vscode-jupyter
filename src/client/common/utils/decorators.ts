@@ -2,6 +2,7 @@
 
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
+import { LogInfo } from '../../logging/trace';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { createDeferred, Deferred } from './async';
@@ -220,7 +221,7 @@ export type CallInfo = {
 };
 
 // Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
+export function trace(log: (c: CallInfo, t: TraceInfo) => void, logInfo: LogInfo) {
     // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -237,7 +238,8 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
                 // "log()"
                 (t) => log(call, t),
                 // "run()"
-                () => originalMethod.apply(scope, args)
+                () => originalMethod.apply(scope, args),
+                logInfo
             );
         };
 

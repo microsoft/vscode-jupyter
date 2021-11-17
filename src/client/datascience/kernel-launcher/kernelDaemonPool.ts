@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -14,6 +14,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { TraceOptions } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
@@ -71,6 +72,7 @@ export class KernelDaemonPool implements IDisposable {
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
+    @traceDecorators.verbose('Get kernel daemon', TraceOptions.BeforeCall)
     public async get(
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
