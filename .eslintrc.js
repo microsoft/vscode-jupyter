@@ -153,7 +153,6 @@ module.exports = {
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
         'src/test/datascience/mockPythonService.ts',
         'src/test/datascience/testHelpersCore.ts',
-        'src/test/datascience/shiftEnterBanner.unit.test.ts',
         'src/test/datascience/executionServiceMock.ts',
         'src/test/datascience/mockCommandManager.ts',
         'src/test/datascience/mockInputBox.ts',
