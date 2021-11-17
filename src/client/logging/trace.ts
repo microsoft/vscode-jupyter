@@ -77,7 +77,9 @@ function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): stri
 function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: CallInfo) {
     const formatted = formatMessages(info, traced, call);
     if (!traced) {
-        logToAll(loggers, LogLevel.Trace, [formatted]);
+        if (info.level) {
+            logToAll(loggers, info.level, [formatted]);
+        }
     } else if (traced.err === undefined) {
         // The call did not fail.
         if (info.level && info.level === LogLevel.Error) {
