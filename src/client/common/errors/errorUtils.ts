@@ -380,6 +380,24 @@ export function analyzeKernelErrors(
             };
         }
     }
+    // This happens when ipykernel is not installed and we attempt to run without checking for ipykernel.
+    // '/home/don/samples/pySamples/crap/.venv/bin/python: No module named ipykernel_launcher\n'
+    const noModule = 'No module named'.toLowerCase();
+    if (stdErr.includes(noModule)) {
+        const line = stdErrOrStackTrace
+            .splitLines()
+            .map((line) => line.trim())
+            .filter((line) => line.length)
+            .find((line) => line.toLowerCase().includes(noModule));
+        const moduleName = line ? line.substring(line.toLowerCase().indexOf(noModule) + noModule.length).trim() : '';
+        if (line) {
+            return {
+                reason: KernelFailureReason.moduleNotFoundFailure,
+                moduleName,
+                telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    }
 }
 
 function extractModuleAndFileFromImportError(errorLine: string) {
