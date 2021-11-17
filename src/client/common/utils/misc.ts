@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
-import { LogInfo, TraceOptions } from '../../logging/trace';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../types';
@@ -68,7 +67,7 @@ export type TraceInfo =
     | undefined;
 
 // Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logInfo: LogInfo): T {
+export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: boolean): T {
     const timer = new StopWatch();
     try {
         // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
@@ -76,7 +75,7 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logInfo: L
 
         // If method being wrapped returns a promise then wait for it.
         if (isPromise(result)) {
-            if (logInfo.opts & TraceOptions.BeforeCall) {
+            if (logBeforeCall) {
                 log(undefined);
             }
             // eslint-disable-next-line

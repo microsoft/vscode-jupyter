@@ -22,12 +22,19 @@ export enum TraceOptions {
 }
 
 export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo) {
-    return traceDecorator((call, traced) => logResult(loggers, logInfo, traced, call), logInfo);
+    return traceDecorator(
+        (call, traced) => logResult(loggers, logInfo, traced, call),
+        (logInfo.opts & TraceOptions.BeforeCall) > 0
+    );
 }
 
 // This is like a "context manager" that logs tracing info.
 export function tracing<T>(loggers: ILogger[], logInfo: LogInfo, run: () => T, call?: CallInfo): T {
-    return _tracing((traced) => logResult(loggers, logInfo, traced, call), run, logInfo);
+    return _tracing(
+        (traced) => logResult(loggers, logInfo, traced, call),
+        run,
+        (logInfo.opts & TraceOptions.BeforeCall) > 0
+    );
 }
 
 export type LogInfo = {
