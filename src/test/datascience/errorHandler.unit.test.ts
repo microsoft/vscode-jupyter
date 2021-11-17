@@ -15,6 +15,7 @@ import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSe
 import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
+import { getOSType, OSType } from '../common';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -226,7 +227,11 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
         });
-        test('Unable to import <name> from user overriding module in workspace folder (unix)', async () => {
+        test('Unable to import <name> from user overriding module in workspace folder (unix)', async function () {
+            if (getOSType() == OSType.Windows) {
+                // Patsh get converted to `\` when using `Uri.file` as values for Workspace folder.
+                return this.skip();
+            }
             const workspaceFolders: WorkspaceFolder[] = [
                 {
                     index: 0,
