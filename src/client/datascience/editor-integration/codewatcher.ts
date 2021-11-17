@@ -148,6 +148,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
+        let finished = Promise.resolve(true);
         for (const lens of runCellCommands) {
             // Make sure that we have the correct command (RunCell) lenses
             let range: Range = new Range(
@@ -156,7 +157,6 @@ export class CodeWatcher implements ICodeWatcher {
                 lens.command!.arguments![3],
                 lens.command!.arguments![4]
             );
-            let finished = Promise.resolve(true);
             if (this.document) {
                 // Special case, if this is the first, expand our range to always include the top.
                 if (leftCount === runCellCommands.length) {
@@ -170,9 +170,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
                 finished = this.addCode(code, this.document.uri, range.start.line, leftCount);
             }
-
-            await finished;
         }
+
+        await finished;
 
         // If there are no codelenses, just run all of the code as a single cell
         if (runCellCommands.length === 0) {
