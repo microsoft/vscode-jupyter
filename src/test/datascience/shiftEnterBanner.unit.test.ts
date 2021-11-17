@@ -15,14 +15,12 @@ import {
 } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
-import { IJupyterExecution } from '../../client/datascience/types';
 import { clearTelemetryReporter } from '../../client/telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let jupyterExecution: typemoq.IMock<IJupyterExecution>;
     let config: typemoq.IMock<IConfigurationService>;
 
     class Reporter {
@@ -41,7 +39,6 @@ suite('Interactive Shift Enter Banner', () => {
         process.env.VSC_JUPYTER_UNIT_TEST = undefined;
         process.env.VSC_JUPYTER_CI_TEST = undefined;
         appShell = typemoq.Mock.ofType<IApplicationShell>();
-        jupyterExecution = typemoq.Mock.ofType<IJupyterExecution>();
         config = typemoq.Mock.ofType<IConfigurationService>();
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
@@ -58,11 +55,10 @@ suite('Interactive Shift Enter Banner', () => {
     });
 
     test('Shift Enter Banner with Jupyter available', async () => {
-        const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, true, true, true, true, 'Yes');
+        const shiftBanner = loadBanner(appShell, config, true, true, true, 'Yes');
         await shiftBanner.showBanner();
 
         appShell.verifyAll();
-        jupyterExecution.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -71,43 +67,29 @@ suite('Interactive Shift Enter Banner', () => {
         ]);
     });
 
-    test('Shift Enter Banner without Jupyter available', async () => {
-        const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, false, false, true, false, 'Yes');
-        await shiftBanner.showBanner();
-
-        appShell.verifyAll();
-        jupyterExecution.verifyAll();
-        config.verifyAll();
-
-        expect(Reporter.eventNames).to.deep.equal([]);
-    });
-
     test("Shift Enter Banner don't check Jupyter when disabled", async () => {
-        const shiftBanner = loadBanner(appShell, jupyterExecution, config, false, false, false, false, false, 'Yes');
+        const shiftBanner = loadBanner(appShell, config, false, false, false, 'Yes');
         await shiftBanner.showBanner();
 
         appShell.verifyAll();
-        jupyterExecution.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([]);
     });
 
     test('Shift Enter Banner changes setting', async () => {
-        const shiftBanner = loadBanner(appShell, jupyterExecution, config, false, false, false, false, true, 'Yes');
+        const shiftBanner = loadBanner(appShell, config, false, false, true, 'Yes');
         await shiftBanner.enableInteractiveShiftEnter();
 
         appShell.verifyAll();
-        jupyterExecution.verifyAll();
         config.verifyAll();
     });
 
     test('Shift Enter Banner say no', async () => {
-        const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, true, true, true, true, 'No');
+        const shiftBanner = loadBanner(appShell, config, true, true, true, 'No');
         await shiftBanner.showBanner();
 
         appShell.verifyAll();
-        jupyterExecution.verifyAll();
         config.verifyAll();
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -120,12 +102,9 @@ suite('Interactive Shift Enter Banner', () => {
 // Create a test banner with the given settings
 function loadBanner(
     appShell: typemoq.IMock<IApplicationShell>,
-    jupyterExecution: typemoq.IMock<IJupyterExecution>,
     config: typemoq.IMock<IConfigurationService>,
     stateEnabled: boolean,
-    jupyterFound: boolean,
     bannerShown: boolean,
-    executionCalled: boolean,
     configCalled: boolean,
     questionResponse: string
 ): InteractiveShiftEnterBanner {
@@ -159,14 +138,6 @@ function loadBanner(
     dataScienceSettings.setup((d) => d.sendSelectionToInteractiveWindow).returns(() => false);
     config.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => dataScienceSettings.object);
 
-    // Config Jupyter
-    jupyterExecution
-        .setup((j) => j.isNotebookSupported())
-        .returns(() => {
-            return Promise.resolve(jupyterFound);
-        })
-        .verifiable(executionCalled ? typemoq.Times.once() : typemoq.Times.never());
-
     const yes = 'Yes';
     const no = 'No';
 
@@ -189,10 +160,5 @@ function loadBanner(
         .returns(() => Promise.resolve())
         .verifiable(configCalled ? typemoq.Times.once() : typemoq.Times.never());
 
-    return new InteractiveShiftEnterBanner(
-        appShell.object,
-        persistService.object,
-        jupyterExecution.object,
-        config.object
-    );
+    return new InteractiveShiftEnterBanner(appShell.object, persistService.object, config.object);
 }

@@ -108,9 +108,14 @@ export class InterpreterPackages {
         const promise = this.getPackageInformation(interpreter);
         promise.finally(() => {
             // If this promise was resolved, then remove it from the pending list.
-            if (InterpreterPackages.pendingInterpreterInformation.get(key) === promise) {
-                InterpreterPackages.pendingInterpreterInformation.delete(key);
-            }
+            // But cache for at least 5m (this is used only to diagnose failures in kernels).
+            const timer = setTimeout(() => {
+                if (InterpreterPackages.pendingInterpreterInformation.get(key) === promise) {
+                    InterpreterPackages.pendingInterpreterInformation.delete(key);
+                }
+            }, 300_000);
+            const disposable = { dispose: () => clearTimeout(timer) };
+            this.disposables.push(disposable);
         });
         InterpreterPackages.pendingInterpreterInformation.set(key, promise);
     }

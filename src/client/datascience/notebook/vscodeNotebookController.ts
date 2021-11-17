@@ -50,11 +50,9 @@ import {
 } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
-    sendKernelTelemetryEvent,
-    trackKernelResourceInformation
+    sendKernelTelemetryEvent
 } from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -120,7 +118,6 @@ export class VSCodeNotebookController implements Disposable {
         private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
         private readonly localOrRemoteKernel: 'local' | 'remote',
-        private readonly interpreterPackages: InterpreterPackages,
         private readonly configuration: IConfigurationService,
         private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         private readonly documentManager: IDocumentManager,
@@ -421,7 +418,6 @@ export class VSCodeNotebookController implements Disposable {
             default:
             // We don't know as its the default kernel on Jupyter server.
         }
-        trackKernelResourceInformation(document.uri, { kernelConnection: this.connection });
         sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
         // If we have an existing kernel, then we know for a fact the user is changing the kernel.
         // Else VSC is just setting a kernel for a notebook after it has opened.
@@ -439,9 +435,6 @@ export class VSCodeNotebookController implements Disposable {
                         editor
                     )
                 );
-        }
-        if (selectedKernelConnectionMetadata.interpreter) {
-            this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
