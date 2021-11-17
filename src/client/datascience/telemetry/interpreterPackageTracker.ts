@@ -13,6 +13,7 @@ import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
+import { trackKernelResourceInformation } from './telemetry';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -50,6 +51,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         if (!event.controller.connection.interpreter) {
             return;
         }
+        trackKernelResourceInformation(event.notebook.uri, { kernelConnection: event.controller.connection });
         await this.packages.trackPackages(event.controller.connection.interpreter);
     }
     private async trackUponActivation() {
