@@ -47,7 +47,6 @@ import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { CellHashProviderFactory } from '../../../client/datascience/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { createDeferred } from '../../../client/common/utils/async';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -527,8 +526,6 @@ testing2`;
 
         codeWatcher.setDocument(document.object);
 
-        const deferred = createDeferred();
-
         // Set up our expected calls to add code
         activeInteractiveWindow
             .setup((h) =>
@@ -553,14 +550,10 @@ testing2`;
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(true);
-            })
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCells();
-        await deferred.promise;
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();
@@ -622,7 +615,6 @@ testing3`;
         const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
-        const deferred = createDeferred();
 
         // Set up our expected calls to add code
         activeInteractiveWindow
@@ -648,14 +640,10 @@ testing3`;
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(true);
-            })
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runCellAndAllBelow(2, 0);
-        await deferred.promise;
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();
@@ -682,7 +670,6 @@ testing2`;
         const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
-        const deferred = createDeferred();
 
         // Set up our expected calls to add code
         activeInteractiveWindow
@@ -708,14 +695,10 @@ testing2`;
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(true);
-            })
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCellsAbove(4, 0);
-        await deferred.promise;
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();
