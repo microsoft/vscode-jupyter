@@ -962,13 +962,24 @@ export enum KernelInterpreterDependencyResponse {
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
     installMissingDependencies(
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token: CancellationToken
+        token: CancellationToken,
+        ignoreCache?: boolean
     ): Promise<void>;
-    areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
+    areDependenciesInstalled(
+        interpreter: PythonEnvironment,
+        token?: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<boolean>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');

@@ -74,7 +74,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         resource,
                         kernelConnection.interpreter,
                         new DisplayOptions(false),
-                        token.token
+                        token.token,
+                        true
                     )
                     .finally(() => token.dispose());
                 return;
@@ -96,10 +97,33 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     break;
                 }
                 case KernelFailureReason.moduleNotFoundFailure: {
-                    await this.showMessageWithMoreInfo(
-                        DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
-                        'https://aka.ms/kernelFailuresMissingModule'
-                    );
+                    // if ipykernel or ipykernle_launcher is missing, then install it
+                    // Provided we know for a fact that it is missing, else we could end up spamming the user unnecessarily.
+                    if (
+                        failureInfo.moduleName.toLowerCase().includes('ipykernel') &&
+                        kernelConnection.interpreter &&
+                        !(await this.kernelDependency.areDependenciesInstalled(
+                            kernelConnection.interpreter,
+                            undefined,
+                            true
+                        ))
+                    ) {
+                        const token = new CancellationTokenSource();
+                        await this.kernelDependency
+                            .installMissingDependencies(
+                                resource,
+                                kernelConnection.interpreter,
+                                new DisplayOptions(false),
+                                token.token,
+                                true
+                            )
+                            .finally(() => token.dispose());
+                    } else {
+                        await this.showMessageWithMoreInfo(
+                            DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
+                            'https://aka.ms/kernelFailuresMissingModule'
+                        );
+                    }
                     break;
                 }
                 case KernelFailureReason.importFailure: {

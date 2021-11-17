@@ -7,7 +7,11 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
+import {
+    isModulePresentInEnvironment,
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter
+} from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -62,10 +66,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token: CancellationToken
+        token: CancellationToken,
+        ignoreCache?: boolean
     ): Promise<void> {
         traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
-        if (await this.areDependenciesInstalled(interpreter, token)) {
+        if (await this.areDependenciesInstalled(interpreter, token, ignoreCache)) {
             return;
         }
         if (token?.isCancellationRequested) {
@@ -91,9 +96,27 @@ export class KernelDependencyService implements IKernelDependencyService {
             this.installPromises.delete(interpreter.path);
         }
     }
-    public areDependenciesInstalled(interpreter: PythonEnvironment, token?: CancellationToken): Promise<boolean> {
+    public async areDependenciesInstalled(
+        interpreter: PythonEnvironment,
+        token?: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<boolean> {
+        // Check cache, faster than spawning process every single time.
+        // Makes a big difference with conda on windows.
+        if (!ignoreCache && isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, interpreter)) {
+            traceInfo(`IPykernel found previously in this enviornment ${getDisplayPath(interpreter.path)}`);
+            return true;
+        }
+        const installedPromise = this.installer
+            .isInstalled(Product.ipykernel, interpreter)
+            .then((installed) => installed === true);
+        void installedPromise.then((installed) => {
+            if (installed) {
+                void trackPackageInstalledIntoInterpreter(this.memento, Product.ipykernel, interpreter);
+            }
+        });
         return Promise.race([
-            this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true),
+            installedPromise,
             createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })
         ]);
     }
