@@ -68,6 +68,9 @@ export class Activation implements IExtensionSingleActivationService {
     @debounceAsync(500)
     @swallowExceptions('Failed to pre-warm daemon pool')
     private async PreWarmDaemonPool() {
+        // Note: we're pre-warming the daemon pool for the interpreter we're using to start jupyter.
+        // Thus if we're using raw kernels, then there's no point in pre-warming a daemon that will use
+        // the interpreter for jupyter.
         if (!this.extensionChecker.isPythonExtensionActive || this.rawSupported.isSupported) {
             // Skip prewarm if no python extension
             return;
@@ -76,6 +79,7 @@ export class Activation implements IExtensionSingleActivationService {
         if (!interpreter) {
             return;
         }
+        // Warm the daemon pool just for the interpreter used to start Jupyter.
         await this.factory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
