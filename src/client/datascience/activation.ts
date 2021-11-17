@@ -72,7 +72,7 @@ export class Activation implements IExtensionSingleActivationService {
         // Thus if we're using raw kernels, then there's no point in pre-warming a daemon that will use
         // the interpreter for jupyter.
         if (!this.extensionChecker.isPythonExtensionActive || this.rawSupported.isSupported) {
-            // Skip prewarm if no python extension
+            // Skip prewarm if no python extension or if we're using raw kernels.
             return;
         }
         const interpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
