@@ -38,8 +38,8 @@ export class Activation implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
-        this.contextService.activate().ignoreErrors();
-        this.daemonPoolPrewarmer.activate(undefined).ignoreErrors();
+        void this.contextService.activate();
+        void this.daemonPoolPrewarmer.activate(undefined);
         this.tracker.startTracking();
     }
 
@@ -48,27 +48,27 @@ export class Activation implements IExtensionSingleActivationService {
             return;
         }
         this.notebookOpened = true;
-        this.PreWarmDaemonPool().ignoreErrors();
+        void this.PreWarmDaemonPool();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+            void this.jupyterInterpreterService.setInitialInterpreter();
         }
     }
 
     private onDidChangeInterpreter() {
-        if (this.notebookOpened) {
+        if (this.notebookOpened && !this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
-            this.PreWarmDaemonPool().ignoreErrors();
+            void this.jupyterInterpreterService.setInitialInterpreter();
+            void this.PreWarmDaemonPool();
         }
     }
 
     @debounceAsync(500)
     @swallowExceptions('Failed to pre-warm daemon pool')
     private async PreWarmDaemonPool() {
-        if (!this.extensionChecker.isPythonExtensionActive) {
+        if (!this.extensionChecker.isPythonExtensionActive || this.rawSupported.isSupported) {
             // Skip prewarm if no python extension
             return;
         }
