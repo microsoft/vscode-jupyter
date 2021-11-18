@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IPathUtils } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { traceDecorators } from '../../logging';
 import { tryGetRealPath } from '../common';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
@@ -42,6 +43,7 @@ export class JupyterPaths {
      * This list comes from the docs here:
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
+    @traceDecorators.verbose('Get Kernelspec root path')
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<string[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths: string[] = await this.getJupyterPathPaths(cancelToken);

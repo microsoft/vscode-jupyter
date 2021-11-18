@@ -29,6 +29,7 @@ import { JupyterPaths } from './jupyterPaths';
 import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
+import { ignoreLogging, TraceOptions } from '../../logging/trace';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
 // This class searches for a kernel that matches the given kernel name.
@@ -48,12 +49,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    @traceDecorators.verbose('Find kernel spec')
+    @traceDecorators.verbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        @ignoreLogging() cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         const resourceType = getResourceType(resource);
         const telemetrySafeLanguage =
@@ -117,7 +118,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @traceDecorators.error('List kernels failed')
     public async listKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        @ignoreLogging() cancelToken?: CancellationToken,
         useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
     ): Promise<LocalKernelConnectionMetadata[]> {
         const kernelsFromCachePromise =

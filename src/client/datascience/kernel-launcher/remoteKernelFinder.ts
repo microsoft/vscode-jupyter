@@ -29,6 +29,7 @@ import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import { ignoreLogging } from '../../logging/trace';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -59,7 +60,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
         notebookMetadata?: nbformat.INotebookMetadata,
-        _cancelToken?: CancellationToken
+        @ignoreLogging() _cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const resourceType = getResourceType(resource);
         const telemetrySafeLanguage =

@@ -13,6 +13,7 @@ import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -57,7 +58,7 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        @ignoreLogging() finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
         ignoreCache?: boolean
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.

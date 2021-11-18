@@ -139,7 +139,7 @@ export class KernelDaemonPool implements IDisposable {
         });
     }
     private async preWarmKernelDaemon(resource: Resource) {
-        traceInfo(`Pre-warming kernel daemon for ${resource?.toString()}`);
+        traceInfo(`Pre-warming kernel daemon for ${getDisplayPath(resource)}`);
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
             return;

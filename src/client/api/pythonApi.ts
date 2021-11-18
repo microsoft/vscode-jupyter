@@ -39,6 +39,7 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
+import { logValue, TraceOptions } from '../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -53,7 +54,6 @@ import {
     PythonApi
 } from './types';
 import { traceDecorators } from '../logging';
-import { TraceOptions } from '../logging/trace';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -303,10 +303,10 @@ export class PythonInstaller implements IPythonInstaller {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonEnvironment
+        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         const env = await this.apiProvider
