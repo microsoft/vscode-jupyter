@@ -18,14 +18,7 @@ import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../types';
-import {
-    CancellationError as VscCancellationError,
-    CancellationTokenSource,
-    ConfigurationTarget,
-    NotebookCell,
-    NotebookCellOutput,
-    NotebookCellOutputItem
-} from 'vscode';
+import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget, NotebookCell, NotebookCellOutput, NotebookCellOutputItem } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -59,7 +52,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
-    ) {}
+    ) { }
     public async handleError(err: Error): Promise<void> {
         traceError('DataScience Error', err);
         await this.handleErrorImplementation(err);

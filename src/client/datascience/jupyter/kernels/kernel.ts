@@ -180,7 +180,7 @@ export class Kernel implements IKernel {
         const isPreferredKernel =
             getResourceType(resourceUri) === 'notebook'
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
-                  controller
+                controller
                 : undefined;
         trackKernelResourceInformation(resourceUri, {
             kernelConnection: kernelConnectionMetadata,
@@ -247,8 +247,8 @@ export class Kernel implements IKernel {
             this.notebook = this.notebook
                 ? this.notebook
                 : this._notebookPromise
-                ? await this._notebookPromise
-                : undefined;
+                    ? await this._notebookPromise
+                    : undefined;
             this._notebookPromise = undefined;
             const promises: Promise<void>[] = [];
             if (this.notebook) {
@@ -841,8 +841,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
             traceInfoIfCI(
-                `Got io pub message (error), ${msg.content.ename},${
-                    msg.content.evalue
+                `Got io pub message (error), ${msg.content.ename},${msg.content.evalue
                 }, ${msg.content.traceback.join().substring(0, 100)}}`
             );
             const output: nbformat.IError = {
