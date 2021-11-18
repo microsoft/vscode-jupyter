@@ -34,7 +34,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
-    @traceDecorators.verbose('Launching kernel daemon', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Launching kernel daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
         resource: Resource,
         workingDirectory: string,
