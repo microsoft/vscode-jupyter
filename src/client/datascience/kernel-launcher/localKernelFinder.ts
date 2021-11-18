@@ -15,6 +15,7 @@ import { Telemetry } from '../constants';
 import {
     findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
+    getInterpreterHashInMetdata,
     getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -30,6 +31,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
 // This class searches for a kernel that matches the given kernel name.
@@ -62,6 +64,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
+            const interpreterHash = getInterpreterHashInMetdata(notebookMetadata);
+            if (interpreterHash && this.globalState.get('XYZ' + interpreterHash)) {
+                return this.globalState.get('XYZ' + interpreterHash);
+            }
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, cancelToken, 'useCache');
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
@@ -87,6 +93,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 hasActiveInterpreter: !!preferredInterpreter
             });
             if (preferred) {
+                if (preferred.kind === 'startUsingPythonInterpreter') {
+                    void this.globalState.update('XYZ' + getInterpreterHash(preferred.interpreter), preferred);
+                }
                 traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
                 return preferred as LocalKernelConnectionMetadata;
             }
