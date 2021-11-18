@@ -215,21 +215,25 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
 export type CallInfo = {
     kind: string; // "Class", etc.
     name: string;
+    methodName: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: any[];
+    target: Object;
 };
 
 // Return a decorator that traces the decorated function.
 export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: boolean) {
     // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (target: Object, methodName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         descriptor.value = function (...args: any[]) {
             const call = {
                 kind: 'Class',
-                name: _ && _.constructor ? _.constructor.name : '',
-                args
+                name: target && target.constructor ? target.constructor.name : '',
+                args,
+                methodName,
+                target
             };
             // eslint-disable-next-line @typescript-eslint/no-this-alias, no-invalid-this
             const scope = this;

@@ -26,7 +26,7 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { TraceOptions } from '../../../logging/trace';
+import { ignoreLogging, TraceOptions } from '../../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
@@ -66,7 +66,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token: CancellationToken,
+        @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
     ): Promise<void> {
         traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);

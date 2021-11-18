@@ -13,6 +13,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { traceDecorators } from '../../logging';
 import { TraceOptions } from '../../logging/trace';
+import { logValue } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -37,8 +38,8 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     public async launch(
         resource: Resource,
         workingDirectory: string,
-        kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonEnvironment
+        @logValue<IJupyterKernelSpec>('name') kernelSpec: IJupyterKernelSpec,
+        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
         // Check to see if we this is a python kernel that we can start using our daemon.
         const args = kernelSpec.argv.slice();

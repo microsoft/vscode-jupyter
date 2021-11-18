@@ -450,7 +450,7 @@ export function findPreferredKernel(
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${JSON.stringify(preferredInterpreter || {})}`
+        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.path)}`
     );
     let index = -1;
 

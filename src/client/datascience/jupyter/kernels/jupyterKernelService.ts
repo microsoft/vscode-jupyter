@@ -16,6 +16,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
+import { ignoreLogging, logValue } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -51,9 +52,9 @@ export class JupyterKernelService {
     @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
         resource: Resource,
-        kernel: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
+        @ignoreLogging() ui: IDisplayOptions,
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
         // If we wish to wait for installation to complete, we must provide a cancel token.
         const tokenSource = new CancellationTokenSource();

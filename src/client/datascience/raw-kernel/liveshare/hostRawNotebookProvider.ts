@@ -169,9 +169,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 trackKernelResourceInformation(resource, { kernelConnection });
             }
             traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${JSON.stringify(
-                    kernelConnection
-                )}`
+                `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
             );
             await rawSession.connect({ token: cancelToken, ui });
 
