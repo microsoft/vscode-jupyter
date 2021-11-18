@@ -157,7 +157,15 @@ export enum KernelFailureReason {
      *      import win32api
      *      ImportError: DLL load failed: The specified procedure could not be found.
      */
-    dllLoadFailure = 'dllLoadFailure'
+    dllLoadFailure = 'dllLoadFailure',
+    /**
+     * Failure to start Jupyter due to some unknown reason.
+     */
+    jupyterStartFailure = 'jupyterStartFailure',
+    /**
+     * Failure to start Jupyter due to outdated traitlets.
+     */
+    jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets'
 }
 type BaseFailure<Reason extends KernelFailureReason, MoreInfo = {}> = {
     reason: Reason;
@@ -208,6 +216,15 @@ export type DllLoadFailure = BaseFailure<
         moduleName?: string;
     }
 >;
+export type JupyterStartFailure = BaseFailure<
+    KernelFailureReason.jupyterStartFailure | KernelFailureReason.jupyterStartFailureOutdatedTraitlets,
+    {
+        /**
+         * Python error message displayed.
+         */
+        errorMessage?: string;
+    }
+>;
 export type ImportWin32ApiFailure = BaseFailure<KernelFailureReason.importWin32apiFailure>;
 export type ZmqModuleFailure = BaseFailure<KernelFailureReason.zmqModuleFailure>;
 export type OldIPyKernelFailure = BaseFailure<KernelFailureReason.oldIPyKernelFailure>;
@@ -222,12 +239,14 @@ export type KernelFailure =
     | ImportWin32ApiFailure
     | ZmqModuleFailure
     | OldIPyKernelFailure
+    | JupyterStartFailure
     | OldIPythonFailure;
 
 export function analyzeKernelErrors(
     stdErrOrStackTrace: string,
     workspaceFolders: readonly WorkspaceFolder[] = [],
-    pythonSysPrefix: string = ''
+    pythonSysPrefix: string = '',
+    isJupyterStartupError?: boolean
 ): KernelFailure | undefined {
     const lastTwolinesOfError = getLastTwoLinesFromPythonTracebackWithErrorMessage(stdErrOrStackTrace);
     const stdErr = stdErrOrStackTrace.toLowerCase();
@@ -395,6 +414,30 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
                 telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    }
+    if (isJupyterStartupError) {
+        // Get the last error message in the stack trace.
+        let errorMessage = stdErrOrStackTrace
+            .splitLines()
+            .map((line) => line.trim())
+            .reverse()
+            .find((line) => line.toLowerCase().includes('Error: '.toLowerCase()));
+        // https://github.com/microsoft/vscode-jupyter/issues/8295
+        const errorMessageDueToOutdatedTraitlets = "AttributeError: 'Namespace' object has no attribute '_flags'";
+        const telemetrySafeTags = ['jupyter.startup.failure'];
+        let reason = KernelFailureReason.jupyterStartFailure;
+        if (stdErr.includes(errorMessageDueToOutdatedTraitlets.toLowerCase())) {
+            reason = KernelFailureReason.jupyterStartFailureOutdatedTraitlets;
+            errorMessage = errorMessageDueToOutdatedTraitlets;
+            telemetrySafeTags.push('outdated.traitlets');
+        }
+        if (errorMessage) {
+            return {
+                reason,
+                errorMessage,
+                telemetrySafeTags
             };
         }
     }

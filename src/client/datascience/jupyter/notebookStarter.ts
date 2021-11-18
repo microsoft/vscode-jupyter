@@ -26,6 +26,7 @@ import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { disposeAllDisposables } from '../../common/helpers';
+import { JupyterConnectError } from '../errors/jupyterConnectError';
 
 /**
  * Responsible for starting a notebook.
@@ -164,7 +165,7 @@ export class NotebookStarter implements Disposable {
             return connection;
         } catch (err) {
             disposeAllDisposables(disposables);
-            if (err instanceof CancellationError) {
+            if (err instanceof CancellationError || err instanceof JupyterConnectError) {
                 throw err;
             }
 

@@ -17,6 +17,7 @@ import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kerne
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -27,6 +28,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let svcContainer: IServiceContainer;
+    let jupyterInterpreterService: JupyterInterpreterService;
     setup(() => {
         applicationShell = mock<IApplicationShell>();
         worksapceService = mock<IWorkspaceService>();
@@ -34,6 +36,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
         svcContainer = mock<IServiceContainer>();
+        jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(worksapceService.workspaceFolders).thenReturn([]);
@@ -44,6 +47,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
+            instance(jupyterInterpreterService),
             instance(svcContainer)
         );
     });
