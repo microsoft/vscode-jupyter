@@ -14,10 +14,11 @@
 ### Prerequisites
 
 1. [Node.js](https://nodejs.org/) 14.16.0
-1. [Python](https://www.python.org/) 3.6 or later
-1. Windows, macOS, or Linux
-1. [Visual Studio Code](https://code.visualstudio.com/)
-1. The following VS Code extensions:
+2. [npm](https://www.npmjs.com/) Something less than v7 (we still use package-locks version 1)
+3. [Python](https://www.python.org/) 3.6 or later
+4. Windows, macOS, or Linux
+5. [Visual Studio Code](https://code.visualstudio.com/)
+6. The following VS Code extensions:
     - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
