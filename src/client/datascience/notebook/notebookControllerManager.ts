@@ -391,7 +391,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Prep so that we can track the selected controller for this document
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
-        const loadControllersPromise = this.loadNotebookControllers();
+        void this.loadNotebookControllers();
 
         if (
             isPythonNotebook(getNotebookMetadata(document)) &&

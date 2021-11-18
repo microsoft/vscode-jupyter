@@ -6,7 +6,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
-import { TraceOptions } from '../../logging/trace';
+import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
@@ -158,8 +158,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return (activatedProcPromise as unknown) as T;
         });
     }
+    @traceDecorators.verbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
-        options: ExecutionFactoryCreateWithEnvironmentOptions
+        @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {
