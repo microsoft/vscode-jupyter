@@ -416,15 +416,14 @@ export class Kernel implements IKernel {
                         const cellForErrorDisplay = this.kernelExecution.queue.length
                             ? this.kernelExecution.queue[0]
                             : undefined;
-                        void this.errorHandler
+                        void this.errorHandler.handleKernelError(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            .handleKernelError(
-                                ex as any,
-                                'start',
-                                this.kernelConnectionMetadata,
-                                this.resourceUri,
-                                cellForErrorDisplay
-                            ); // Just a notification, so don't await this
+                            ex as any,
+                            'start',
+                            this.kernelConnectionMetadata,
+                            this.resourceUri,
+                            cellForErrorDisplay
+                        ); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
                     this.startCancellation.cancel();
