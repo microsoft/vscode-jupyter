@@ -57,6 +57,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+    @traceDecorators.verbose('Creating execution process', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
@@ -160,7 +161,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     @traceDecorators.verbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
-        @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
+        options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {

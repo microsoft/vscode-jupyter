@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../application/types';
+import { traceDecorators } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';
@@ -20,6 +21,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
+    @traceDecorators.verbose('Create ProcessService')
     public async create(resource?: Uri): Promise<IProcessService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {
