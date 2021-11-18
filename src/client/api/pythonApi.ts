@@ -52,6 +52,8 @@ import {
     JupyterProductToInstall,
     PythonApi
 } from './types';
+import { traceDecorators } from '../logging';
+import { TraceOptions } from '../logging/trace';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -301,7 +303,7 @@ export class PythonInstaller implements IPythonInstaller {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-
+    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment

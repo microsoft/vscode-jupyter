@@ -43,6 +43,7 @@ import { KernelProcessExitedError } from '../errors/kernelProcessExitedError';
 import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { KernelDiedError } from '../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
+import { TraceOptions } from '../../logging/trace';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -383,7 +384,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts', TraceOptions.BeforeCall)
     private async launchAsObservable(workingDirectory: string, cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 

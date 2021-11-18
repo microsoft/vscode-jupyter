@@ -13,16 +13,28 @@ import { argsToLogString, returnValueToLogString } from './util';
 export enum TraceOptions {
     None = 0,
     Arguments = 1,
-    ReturnValue = 2
+    ReturnValue = 2,
+    /**
+     * Default is to log after a method call.
+     * This allows logging of the method call before it is done.
+     */
+    BeforeCall = 4
 }
 
 export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo) {
-    return traceDecorator((call, traced) => logResult(loggers, logInfo, traced, call));
+    return traceDecorator(
+        (call, traced) => logResult(loggers, logInfo, traced, call),
+        (logInfo.opts & TraceOptions.BeforeCall) > 0
+    );
 }
 
 // This is like a "context manager" that logs tracing info.
 export function tracing<T>(loggers: ILogger[], logInfo: LogInfo, run: () => T, call?: CallInfo): T {
-    return _tracing((traced) => logResult(loggers, logInfo, traced, call), run);
+    return _tracing(
+        (traced) => logResult(loggers, logInfo, traced, call),
+        run,
+        (logInfo.opts & TraceOptions.BeforeCall) > 0
+    );
 }
 
 export type LogInfo = {
@@ -48,15 +60,15 @@ function normalizeCall(call: CallInfo): CallInfo {
 function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): string {
     call = normalizeCall(call!);
     const messages = [info.message];
-    messages.push(
-        `${call.kind} name = ${call.name}`.trim(),
-        `completed in ${traced.elapsed}ms`,
-        `has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`
-    );
+    messages.push(`${call.kind} name = ${call.name}`.trim());
+    if (traced) {
+        messages.push(`completed in ${traced.elapsed}ms`);
+        messages.push(`has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`);
+    }
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
         messages.push(argsToLogString(call.args));
     }
-    if ((info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
+    if (traced && (info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
         messages.push(returnValueToLogString(traced.returnValue));
     }
     return messages.join(', ');
@@ -64,7 +76,11 @@ function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): stri
 
 function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: CallInfo) {
     const formatted = formatMessages(info, traced, call);
-    if (traced.err === undefined) {
+    if (!traced) {
+        if (info.level) {
+            logToAll(loggers, info.level, [formatted]);
+        }
+    } else if (traced.err === undefined) {
         // The call did not fail.
         if (info.level && info.level === LogLevel.Error) {
             // No errors, hence nothing to log.

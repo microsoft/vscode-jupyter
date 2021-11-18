@@ -220,7 +220,7 @@ export type CallInfo = {
 };
 
 // Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
+export function trace(log: (c: CallInfo, t: TraceInfo) => void, logBeforeCall?: boolean) {
     // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -237,7 +237,8 @@ export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
                 // "log()"
                 (t) => log(call, t),
                 // "run()"
-                () => originalMethod.apply(scope, args)
+                () => originalMethod.apply(scope, args),
+                logBeforeCall
             );
         };
 
