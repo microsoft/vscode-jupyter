@@ -454,9 +454,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     )}`
                 );
             }
-            // Wait for our controllers to be loaded before we try to set a preferred on
-            // can happen if a document is opened quick and we have not yet loaded our controllers
-            await loadControllersPromise;
             const targetController = Array.from(this.registeredControllers.values()).find(
                 (value) => preferredConnection?.id === value.connection.id
             );
@@ -470,11 +467,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
             } else {
-                traceInfoIfCI(
-                    `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
-                        document.uri
-                    )}`
-                );
+                // Possible the kernel discovery hasn't completed yet.
+                if (preferredConnection) {
+                    this.createNotebookControllers([preferredConnection]);
+                    traceInfoIfCI(
+                        `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
+                            document.uri
+                        )}`
+                    );
+                }
             }
         } catch (ex) {
             traceError('Failed to find & set preferred controllers', ex);
