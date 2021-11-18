@@ -41,7 +41,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { logValue, TraceOptions } from '../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
     ILanguageServer,
@@ -348,7 +348,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -380,6 +381,23 @@ export class InterpreterService implements IInterpreterService {
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
         if (!this.interpreterListCachePromise) {
             this.interpreterListCachePromise = this.getInterpretersImpl(resource);
+            void this.interpreterListCachePromise.then((interpreters) => {
+                const mapping = this.globalState.get<Map<string, string>>(
+                    'INTERPRETER_HASH_MAPPING',
+                    new Map<string, string>()
+                );
+                let newValueAdded = false;
+                interpreters.forEach((interpreter) => {
+                    const hash = getInterpreterHash(interpreter);
+                    if (!mapping.has(hash)) {
+                        mapping.set(hash, interpreter.path);
+                        newValueAdded = true;
+                    }
+                });
+                if (newValueAdded) {
+                    void this.globalState.update('INTERPRETER_HASH_MAPPING', mapping);
+                }
+            });
         }
         return this.interpreterListCachePromise;
     }
