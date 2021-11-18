@@ -302,16 +302,35 @@ export class PythonInstaller implements IPythonInstaller {
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    private readonly cached = new Map<string, NodeJS.ProcessEnv | undefined>();
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
+    ) {}
     @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        const key = interpreter ? `ENV_VARS_${getInterpreterHash(interpreter)}` : undefined;
+        if (key) {
+            const cached = this.cached.get(key) || this.globalState.get<NodeJS.ProcessEnv | undefined>(key);
+            if (cached) {
+                return cached;
+            }
+        }
         const stopWatch = new StopWatch();
-        const env = await this.apiProvider
+        const promise = this.apiProvider
             .getApi()
             .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
+
+        void promise.then((result) => {
+            if (key && !this.cached.has(key)) {
+                this.cached.set(key, result);
+                void this.globalState.update(key, result);
+            }
+        });
+        const env = await promise;
 
         const envType = interpreter?.envType;
         sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
