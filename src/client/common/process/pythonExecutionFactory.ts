@@ -6,7 +6,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { TraceOptions } from '../../logging/trace';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
