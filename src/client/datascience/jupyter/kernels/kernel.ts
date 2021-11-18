@@ -121,6 +121,9 @@ export class Kernel implements IKernel {
     public get session(): IJupyterSession | undefined {
         return this.notebook?.session;
     }
+    public get hasPendingCells() {
+        return this.kernelExecution.queue.length > 0;
+    }
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreNotebookDisposedErrors?: boolean;
@@ -177,7 +180,7 @@ export class Kernel implements IKernel {
         const isPreferredKernel =
             getResourceType(resourceUri) === 'notebook'
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
-                  controller
+                controller
                 : undefined;
         trackKernelResourceInformation(resourceUri, {
             kernelConnection: kernelConnectionMetadata,
@@ -244,8 +247,8 @@ export class Kernel implements IKernel {
             this.notebook = this.notebook
                 ? this.notebook
                 : this._notebookPromise
-                ? await this._notebookPromise
-                : undefined;
+                    ? await this._notebookPromise
+                    : undefined;
             this._notebookPromise = undefined;
             const promises: Promise<void>[] = [];
             if (this.notebook) {
@@ -410,9 +413,10 @@ export class Kernel implements IKernel {
                         // errors about startup failures.
                         traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
                     } else {
+                        const cellForErrorDisplay = this.kernelExecution.queue.length ? this.kernelExecution.queue[0] : undefined;
                         void this.errorHandler
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            .handleKernelError(ex as any, 'start', this.kernelConnectionMetadata, this.resourceUri); // Just a notification, so don't await this
+                            .handleKernelError(ex as any, 'start', this.kernelConnectionMetadata, this.resourceUri, cellForErrorDisplay); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
                     this.startCancellation.cancel();
@@ -830,8 +834,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
             traceInfoIfCI(
-                `Got io pub message (error), ${msg.content.ename},${
-                    msg.content.evalue
+                `Got io pub message (error), ${msg.content.ename},${msg.content.evalue
                 }, ${msg.content.traceback.join().substring(0, 100)}}`
             );
             const output: nbformat.IError = {

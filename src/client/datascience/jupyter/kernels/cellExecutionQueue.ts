@@ -33,6 +33,9 @@ export class CellExecutionQueue implements Disposable {
     public get failed(): boolean {
         return this.cancelledOrCompletedWithErrors;
     }
+    public get queue(): Readonly<NotebookCell[]> {
+        return this.queueOfCellsToExecute.map(cell => cell.cell);
+    }
     constructor(
         private readonly session: Promise<IJupyterSession>,
         private readonly executionFactory: CellExecutionFactory,
