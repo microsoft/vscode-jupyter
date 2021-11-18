@@ -384,7 +384,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecorators.verbose('Launching kernel in kernelProcess.ts', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
