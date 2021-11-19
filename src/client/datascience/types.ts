@@ -389,7 +389,8 @@ export interface IDataScienceErrorHandler {
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource
+        resource: Resource,
+        cellToDisplayErrors?: NotebookCell
     ): Promise<void>;
 }
 

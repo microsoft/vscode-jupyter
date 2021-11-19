@@ -9,5 +9,7 @@ export const LineQueryRegex = /line=(\d+)/;
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
 export const linkCommandAllowList = [
     'jupyter.latestExtension',
+    'jupyter.viewOutput',
+    'workbench.action.openSettings',
     'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'
 ];

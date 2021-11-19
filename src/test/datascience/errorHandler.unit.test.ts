@@ -16,6 +16,7 @@ import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
+import { IServiceContainer } from '../../client/ioc/types';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -25,12 +26,14 @@ suite('DataScience Error Handler Unit Tests', () => {
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
+    let svcContainer: IServiceContainer;
     setup(() => {
         applicationShell = mock<IApplicationShell>();
         worksapceService = mock<IWorkspaceService>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
+        svcContainer = mock<IServiceContainer>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(worksapceService.workspaceFolders).thenReturn([]);
@@ -40,7 +43,8 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(worksapceService),
             instance(browser),
             instance(configuration),
-            instance(kernelDependencyInstaller)
+            instance(kernelDependencyInstaller),
+            instance(svcContainer)
         );
     });
     const message = 'Test error message.';

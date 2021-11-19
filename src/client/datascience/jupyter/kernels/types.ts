@@ -108,6 +108,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly onWillInterrupt: Event<void>;
     readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
+    readonly hasPendingCells: boolean;
     readonly disposed: boolean;
     readonly disposing: boolean;
     /**

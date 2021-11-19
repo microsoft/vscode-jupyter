@@ -120,7 +120,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new InteractiveWindow(
-            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
@@ -133,7 +132,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IExportDialog>(IExportDialog),
             this.notebookControllerManager,
             this.kernelProvider,
-            this.disposables,
             this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger)
         );
         this._windows.push(result);

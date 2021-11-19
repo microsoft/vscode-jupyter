@@ -121,6 +121,9 @@ export class Kernel implements IKernel {
     public get session(): IJupyterSession | undefined {
         return this.notebook?.session;
     }
+    public get hasPendingCells() {
+        return this.kernelExecution.queue.length > 0;
+    }
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreNotebookDisposedErrors?: boolean;
@@ -410,9 +413,17 @@ export class Kernel implements IKernel {
                         // errors about startup failures.
                         traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
                     } else {
-                        void this.errorHandler
+                        const cellForErrorDisplay = this.kernelExecution.queue.length
+                            ? this.kernelExecution.queue[0]
+                            : undefined;
+                        void this.errorHandler.handleKernelError(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            .handleKernelError(ex as any, 'start', this.kernelConnectionMetadata, this.resourceUri); // Just a notification, so don't await this
+                            ex as any,
+                            'start',
+                            this.kernelConnectionMetadata,
+                            this.resourceUri,
+                            cellForErrorDisplay
+                        ); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
                     this.startCancellation.cancel();

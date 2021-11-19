@@ -15,8 +15,15 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
 
     for (const pathElement of event.composedPath()) {
         const node: any = pathElement;
-        if (node.tagName && node.tagName.toLowerCase() === 'a' && node.href && node.href.indexOf('file') === 0) {
-            if (context.postMessage) {
+        if (node.tagName && node.tagName.toLowerCase() === 'a' && node.href && context.postMessage) {
+            if (node.href.indexOf('file') === 0) {
+                context.postMessage({
+                    message: 'open_link',
+                    payload: node.href
+                });
+                event.preventDefault();
+                return;
+            } else if (node.href.indexOf('command') === 0) {
                 context.postMessage({
                     message: 'open_link',
                     payload: node.href
@@ -72,15 +79,21 @@ export const activate: ActivationFunction = (_context) => {
             // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
             // When we escape, the links would be escaped as well.
             // We need to unescape them.
-            const regExp = new RegExp(/&lt;a href=&#39;file:(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/);
+            const fileLinkRegExp = new RegExp(/&lt;a href=&#39;file:(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/);
+            const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             traceback = traceback.map((line) => {
                 let matches: RegExpExecArray | undefined | null;
-                while ((matches = regExp.exec(line)) !== null) {
+                while ((matches = fileLinkRegExp.exec(line)) !== null) {
                     if (matches.length === 4) {
                         line = line.replace(
                             matches[0],
                             `<a href='file:${matches[1]}?line=${matches[2]}'>${matches[3]}<a>`
                         );
+                    }
+                }
+                while ((matches = commandRegEx.exec(line)) !== null) {
+                    if (matches.length === 3) {
+                        line = line.replace(matches[0], `<a href='command:${matches[1]}'>${matches[2]}</a>`);
                     }
                 }
                 return line;
