@@ -705,7 +705,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.NotebookRunCount]: { count: number };
-    [Telemetry.NotebookWorkspaceCount]: { count: number };
     [Telemetry.NotebookOpenCount]: { count: number };
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
