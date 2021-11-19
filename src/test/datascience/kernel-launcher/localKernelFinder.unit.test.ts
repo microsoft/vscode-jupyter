@@ -335,16 +335,16 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
                 return arePathsSame(a, b);
             });
             when(fs.localDirectoryExists(anything())).thenResolve(true);
-
+            const memento = mock<Memento>();
+            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.update(anything(), anything())).thenResolve();
             const jupyterPaths = new JupyterPaths(
                 instance(platformService),
                 pathUtils,
                 instance(envVarsProvider),
-                disposables
+                disposables,
+                instance(memento)
             );
-            const memento = mock<Memento>();
-            when(memento.get(anything(), anything())).thenReturn(false);
-            when(memento.update(anything(), anything())).thenResolve();
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),

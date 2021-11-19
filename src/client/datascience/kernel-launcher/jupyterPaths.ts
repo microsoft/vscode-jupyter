@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Memento } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
-import { IDisposableRegistry, IPathUtils } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IPathUtils } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { traceDecorators } from '../../logging';
 import { TraceOptions } from '../../logging/trace';
@@ -25,7 +25,8 @@ export class JupyterPaths {
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
@@ -54,6 +55,14 @@ export class JupyterPaths {
                     return path.join(this.pathUtils.home, linuxJupyterPath);
                 }
             })();
+        void this.cachedKernelSpecRootPath.then((value) => {
+            if (value) {
+                void this.globalState.update('JupyterPaths.KERNEL_SPEC_ROOT_PATH_KEY', value);
+            }
+        });
+        if (this.globalState.get('JupyterPaths.KERNEL_SPEC_ROOT_PATH_KEY')) {
+            return this.globalState.get('JupyterPaths.KERNEL_SPEC_ROOT_PATH_KEY');
+        }
         return this.cachedKernelSpecRootPath;
     }
     /**
@@ -120,6 +129,14 @@ export class JupyterPaths {
 
                 return paths;
             })();
+        void this.cachedJupyterPaths.then((value) => {
+            if (value.length > 0) {
+                void this.globalState.update('JupyterPaths.JUPYTER_PATHS', value);
+            }
+        });
+        if (this.globalState.get<string[]>('JupyterPaths.JUPYTER_PATHS', []).length > 0) {
+            return this.globalState.get<string[]>('JupyterPaths.JUPYTER_PATHS', []);
+        }
         return this.cachedJupyterPaths;
     }
 }
