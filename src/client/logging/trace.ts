@@ -118,11 +118,11 @@ function normalizeCall(call: CallInfo): CallInfo {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isUri(resource?: Uri | any): resource is Uri {
-    if (!resource || typeof resource !== 'object' || resource == null || resource === undefined) {
+    if (!resource) {
         return false;
     }
     const uri = resource as Uri;
-    return 'path' in uri && 'scheme' in uri && typeof uri.path === 'string' && typeof uri.scheme === 'string';
+    return typeof uri.path === 'string' && typeof uri.scheme === 'string';
 }
 
 function removeUserPaths(value: string) {
@@ -135,6 +135,9 @@ function formatArgument(target: Object, method: MethodName, arg: any, parameterI
     if (isUri(arg)) {
         // Where possible strip user names from paths, then users will be more likely to provide the logs.
         return removeUserPaths(arg.fsPath);
+    }
+    if (!arg) {
+        return arg;
     }
     const parameterInfos = formattedParameters.get(target)?.get(method);
     const info = parameterInfos?.find((info) => info.parameterIndex === parameterIndex);
