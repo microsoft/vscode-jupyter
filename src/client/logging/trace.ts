@@ -118,11 +118,11 @@ function normalizeCall(call: CallInfo): CallInfo {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isUri(resource?: Uri | any): resource is Uri {
-    if (!resource) {
+    if (!resource || typeof resource !== 'object' || resource == null || resource === undefined) {
         return false;
     }
     const uri = resource as Uri;
-    return typeof uri.path === 'string' && typeof uri.scheme === 'string';
+    return 'path' in uri && 'scheme' in uri && typeof uri.path === 'string' && typeof uri.scheme === 'string';
 }
 
 function removeUserPaths(value: string) {
