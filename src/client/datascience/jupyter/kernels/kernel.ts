@@ -68,6 +68,7 @@ import { Deferred } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
+import { JupyterConnectError } from '../../errors/jupyterConnectError';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -381,6 +382,9 @@ export class Kernel implements IKernel {
                             `failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`,
                             ex
                         );
+                        if (ex instanceof JupyterConnectError) {
+                            throw ex;
+                        }
                         // Provide a user friendly message in case `ex` is some error thats not throw by us.
                         const message = DataScience.sessionStartFailedWithKernel().format(
                             getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)

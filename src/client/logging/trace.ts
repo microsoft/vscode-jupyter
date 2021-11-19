@@ -136,6 +136,9 @@ function formatArgument(target: Object, method: MethodName, arg: any, parameterI
         // Where possible strip user names from paths, then users will be more likely to provide the logs.
         return removeUserPaths(arg.fsPath);
     }
+    if (!arg) {
+        return arg;
+    }
     const parameterInfos = formattedParameters.get(target)?.get(method);
     const info = parameterInfos?.find((info) => info.parameterIndex === parameterIndex);
     if (!info) {

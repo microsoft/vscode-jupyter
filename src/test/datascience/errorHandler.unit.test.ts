@@ -17,6 +17,9 @@ import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kerne
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -27,6 +30,13 @@ suite('DataScience Error Handler Unit Tests', () => {
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let svcContainer: IServiceContainer;
+    let jupyterInterpreterService: JupyterInterpreterService;
+    const jupyterInterpreter: PythonEnvironment = {
+        displayName: 'Hello',
+        path: 'Some Path',
+        sysPrefix: ''
+    };
+
     setup(() => {
         applicationShell = mock<IApplicationShell>();
         worksapceService = mock<IWorkspaceService>();
@@ -34,6 +44,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
         svcContainer = mock<IServiceContainer>();
+        jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(worksapceService.workspaceFolders).thenReturn([]);
@@ -44,8 +55,11 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
+            instance(jupyterInterpreterService),
             instance(svcContainer)
         );
+        when(applicationShell.showErrorMessage(anything())).thenResolve();
+        when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
     });
     const message = 'Test error message.';
 
@@ -174,7 +188,27 @@ suite('DataScience Error Handler Unit Tests', () => {
                     File "C:\\Python39\\lib\\tempfile.py", line 45, in <module>
                     from random import Random as _Random
                 ImportError: cannot import name 'Random' from 'random' (c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py)
-                `
+                `,
+            failureToStartJupyter: `namespace, args = self._parse_known_args(args, namespace)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 2062, in _parse_known_args
+                    start_index = consume_optional(start_index)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 2002, in consume_optional
+                    take_action(action, args, option_string)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 1930, in take_action
+                    action(self, namespace, argument_values, option_string)
+                File "/home/don/samples/pySamples/crap/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
+                    raise NotImplementedError("subclasses must implement __call__")
+                NotImplementedError: subclasses must implement __call__`,
+            failureToStartJupyterDueToOutdatedTraitlets: `namespace, args = self._parse_known_args(args, namespace)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 2062, in _parse_known_args
+                    start_index = consume_optional(start_index)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 2002, in consume_optional
+                    take_action(action, args, option_string)
+                File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 1930, in take_action
+                    action(self, namespace, argument_values, option_string)
+                File "/home/don/samples/pySamples/crap/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
+                    raise NotImplementedError("subclasses must implement __call__")
+                AttributeError: 'Namespace' object has no attribute '_flags'`
         };
         test('Unable to import <name> from user overriding module (windows)', async () => {
             await dataScienceErrorHandler.handleKernelError(
@@ -334,14 +368,86 @@ ImportError: No module named 'xyz'
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresDllLoad');
         });
 
-        function verifyErrorMessage(message: string, linkInfo: string) {
-            verify(
-                applicationShell.showErrorMessage(
-                    `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`,
-                    Common.learnMore()
-                )
-            ).once();
-            verify(browser.launch(linkInfo)).once();
+        async function verifyJupyterErrors(stdError: string, expectedMessage: string, expectedLink?: string) {
+            when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(jupyterInterpreter);
+            when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(jupyterInterpreter);
+            await dataScienceErrorHandler.handleKernelError(
+                new JupyterConnectError(stdError, `xyz`),
+                'start',
+                kernelConnection,
+                undefined
+            );
+
+            verifyErrorMessage(expectedMessage, expectedLink);
+        }
+        test('Failure to start Jupyter Server (unable to extract python error message)', async () => {
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
+            await verifyJupyterErrors('Kaboom', expectedMessage);
+        });
+        test('Failure to start Jupyter Server (unable to extract python error message), (without failure about jupyter error, without daemon)', async () => {
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
+            await verifyJupyterErrors('kaboom', expectedMessage);
+        });
+        test('Failure to start Jupyter Server', async () => {
+            const stdError = `${stdErrorMessages.failureToStartJupyter}
+
+Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const pythonError = 'NotImplementedError: subclasses must implement __call__';
+            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
+            await verifyJupyterErrors(stdError, expectedMessage);
+        });
+        test('Failure to start Jupyter Server (without failure about jupyter error, without daemon)', async () => {
+            const stdError = stdErrorMessages.failureToStartJupyter;
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const pythonError = 'NotImplementedError: subclasses must implement __call__';
+            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
+            await verifyJupyterErrors(stdError, expectedMessage);
+        });
+        test('Failure to start Jupyter Server due to outdated traitlets', async () => {
+            const stdError = `${stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets}
+
+Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
+            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
+                envDisplayName,
+                pythonError
+            );
+
+            await verifyJupyterErrors(
+                stdError,
+                expectedMessage,
+                'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated'
+            );
+        });
+        test('Failure to start Jupyter Server due to outdated traitlets (without failure about jupyter error, without daemon)', async () => {
+            const stdError = stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets;
+            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
+            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
+                envDisplayName,
+                pythonError
+            );
+            await verifyJupyterErrors(
+                stdError,
+                expectedMessage,
+                'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated'
+            );
+        });
+
+        function verifyErrorMessage(message: string, linkInfo?: string) {
+            message = message.includes('command:jupyter.viewOutput')
+                ? message
+                : `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+            if (linkInfo) {
+                verify(applicationShell.showErrorMessage(message, Common.learnMore())).once();
+                verify(browser.launch(linkInfo)).once();
+            } else {
+                verify(applicationShell.showErrorMessage(message)).once();
+            }
         }
     });
 });
