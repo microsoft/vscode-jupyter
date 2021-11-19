@@ -693,11 +693,17 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
+        assert.ok(cells[0].outputs[0], 'cell 0 output empty');
         assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three\r');
+        assert.ok(cells[1].outputs[0], 'cell 1 output empty');
         assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\ntwo\nthree\n');
+        assert.ok(cells[2].outputs[0], 'cell 2 output empty');
         assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
+        assert.ok(cells[3].outputs[0], 'cell 3 output empty');
         assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
+        assert.ok(cells[4].outputs[0], 'cell 4 output empty');
         assert.equal(cells[4].outputs[0].items[0].data.toString(), '9%\r');
+        assert.ok(cells[5].outputs[0], 'cell 5 output empty');
         assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
     });
 
