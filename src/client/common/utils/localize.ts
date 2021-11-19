@@ -389,7 +389,7 @@ export namespace DataScience {
     );
     export const failedToStartJupyterDueToOutdatedTraitlets = localize(
         'DataScience.failedToStartJupyterDueToOutdatedTraitlets',
-        "Failed to start Jupyter in the environment '{0}' due to an outdated version of 'traitlets'. Consider updating this module to the latest version."
+        "Failed to start Jupyter in the environment '{0}' possibly due to an outdated version of 'traitlets'. \n{1} \nConsider updating the 'traitlets' module to '5.1.1' or later. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
     export const failedToRestartKernel = localize('DataScience.failedToRestartKernel', 'Failed to restart the Kernel.');

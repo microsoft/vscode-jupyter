@@ -227,13 +227,18 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             }
         );
     }
-    private async showMessageWithMoreInfo(message: string, moreInfoLink: string, cellToDisplayErrors?: NotebookCell) {
+    private async showMessageWithMoreInfo(
+        message: string,
+        moreInfoLink: string | undefined,
+        cellToDisplayErrors?: NotebookCell
+    ) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
             message = `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
         }
-        void this.displayErrorsInCell(message, cellToDisplayErrors);
-        await this.applicationShell.showErrorMessage(message, Common.learnMore()).then((selection) => {
-            if (selection === Common.learnMore()) {
+        void this.displayErrorsInCell(message, cellToDisplayErrors, moreInfoLink);
+        const buttons = moreInfoLink ? [Common.learnMore()] : [];
+        await this.applicationShell.showErrorMessage(message, ...buttons).then((selection) => {
+            if (selection === Common.learnMore() && moreInfoLink) {
                 this.browser.launch(moreInfoLink);
             }
         });
@@ -283,19 +288,15 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             failureInfoFromMessage?.reason === KernelFailureReason.jupyterStartFailureOutdatedTraitlets
         ) {
             void this.showMessageWithMoreInfo(
-                DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(envDisplayName),
-                'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+                DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(envDisplayName, pythonError || ''),
+                'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated',
                 cellToDisplayErrors
             );
         } else {
             const message = pythonError
                 ? DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError)
                 : DataScience.failedToStartJupyter().format(envDisplayName);
-            void this.showMessageWithMoreInfo(
-                message,
-                'https://aka.ms/kernelFailuresOverridingBuiltInModules',
-                cellToDisplayErrors
-            );
+            void this.showMessageWithMoreInfo(message, undefined, cellToDisplayErrors);
         }
     }
     private async handleErrorImplementation(
@@ -371,7 +372,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         }
         traceError('DataScience Error', err);
     }
-    private async displayErrorsInCell(errorMessage: string, cellToDisplayErrors?: NotebookCell) {
+    private async displayErrorsInCell(errorMessage: string, cellToDisplayErrors?: NotebookCell, moreInfoLink?: string) {
         if (!cellToDisplayErrors || !errorMessage) {
             return;
         }
@@ -396,12 +397,16 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!controller || controller.connection !== associatedkernel.kernelConnectionMetadata) {
             return;
         }
+        // If we have markdown links to run a command, turn that into a link.
         const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
         let matches: RegExpExecArray | undefined | null;
         while ((matches = regex.exec(errorMessage)) !== null) {
             if (matches.length === 3) {
                 errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
             }
+        }
+        if (moreInfoLink) {
+            errorMessage += `\n<a href='${moreInfoLink}'>${Common.learnMore()}</a>`;
         }
         const execution = controller.controller.createNotebookCellExecution(cellToDisplayErrors);
         execution.start();

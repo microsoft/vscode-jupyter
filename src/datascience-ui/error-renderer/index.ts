@@ -81,6 +81,7 @@ export const activate: ActivationFunction = (_context) => {
             // We need to unescape them.
             const fileLinkRegExp = new RegExp(/&lt;a href=&#39;file:(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/);
             const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
+            const akaMsLinks = new RegExp(/&lt;a href=&#39;https:\/\/aka.ms\/(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             traceback = traceback.map((line) => {
                 let matches: RegExpExecArray | undefined | null;
                 while ((matches = fileLinkRegExp.exec(line)) !== null) {
@@ -94,6 +95,11 @@ export const activate: ActivationFunction = (_context) => {
                 while ((matches = commandRegEx.exec(line)) !== null) {
                     if (matches.length === 3) {
                         line = line.replace(matches[0], `<a href='command:${matches[1]}'>${matches[2]}</a>`);
+                    }
+                }
+                while ((matches = akaMsLinks.exec(line)) !== null) {
+                    if (matches.length === 3) {
+                        line = line.replace(matches[0], `<a href='https://aka.ms/${matches[1]}'>${matches[2]}</a>`);
                     }
                 }
                 return line;
