@@ -96,7 +96,10 @@ export abstract class BaseInstaller {
             .install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
     }
     @traceDecorators.verbose('Checking if product is installed')
-    public async isInstalled(product: Product, @logValue('path') resource?: InterpreterUri): Promise<boolean | undefined> {
+    public async isInstalled(
+        product: Product,
+        @logValue('path') resource?: InterpreterUri
+    ): Promise<boolean | undefined> {
         // User may have customized the module name or provided the fully qualified path.
         const interpreter = isResource(resource) ? undefined : resource;
         const uri = isResource(resource) ? resource : undefined;
