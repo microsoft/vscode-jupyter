@@ -182,7 +182,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
 
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-            return setting.replace(/\\n/g, '\n');
+            return setting.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
         }
         return '';
     }
