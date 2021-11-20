@@ -439,6 +439,21 @@ export function isLocalLaunch(configuration: IConfigurationService) {
     return false;
 }
 
+export function getInterpreterHashInMetdata(
+    notebookMetadata: nbformat.INotebookMetadata | undefined
+): string | undefined {
+    // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
+    // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
+    if (
+        typeof notebookMetadata === 'object' &&
+        'interpreter' in notebookMetadata &&
+        (notebookMetadata as any).interpreter &&
+        typeof (notebookMetadata as any).interpreter === 'object' &&
+        'hash' in (notebookMetadata as any).interpreter
+    ) {
+        return (notebookMetadata as any).interpreter.hash;
+    }
+}
 export function findPreferredKernel(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
@@ -604,15 +619,11 @@ export function findPreferredKernel(
 
                 // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
                 // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
+                const interpreterHashInMetadata = getInterpreterHashInMetdata(notebookMetadata);
                 if (
-                    typeof notebookMetadata === 'object' &&
-                    'interpreter' in notebookMetadata &&
-                    (notebookMetadata as any).interpreter &&
-                    typeof (notebookMetadata as any).interpreter === 'object' &&
-                    'hash' in (notebookMetadata as any).interpreter &&
                     (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === (notebookMetadata as any).interpreter.hash
+                    getInterpreterHash(metadata.interpreter) === interpreterHashInMetadata
                 ) {
                     // This is a perfect match.
                     traceInfoIfCI('Increased score by +100 for matching interpreter in notbeook metadata');

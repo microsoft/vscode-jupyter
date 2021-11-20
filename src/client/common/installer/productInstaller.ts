@@ -6,11 +6,12 @@ import { IPythonInstaller } from '../../api/types';
 import '../../common/extensions';
 import { InterpreterPackages } from '../../datascience/telemetry/interpreterPackages';
 import { IServiceContainer } from '../../ioc/types';
+import { logValue } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IApplicationShell } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceError, traceInfo } from '../logger';
+import { traceDecorators, traceError, traceInfo } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
@@ -94,8 +95,11 @@ export abstract class BaseInstaller {
             .get<IPythonInstaller>(IPythonInstaller)
             .install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
     }
-
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+    @traceDecorators.verbose('Checking if product is installed')
+    public async isInstalled(
+        product: Product,
+        @logValue('path') resource?: InterpreterUri
+    ): Promise<boolean | undefined> {
         // User may have customized the module name or provided the fully qualified path.
         const interpreter = isResource(resource) ? undefined : resource;
         const uri = isResource(resource) ? resource : undefined;

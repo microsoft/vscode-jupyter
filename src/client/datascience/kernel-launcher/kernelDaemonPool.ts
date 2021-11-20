@@ -14,7 +14,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { TraceOptions } from '../../logging/trace';
+import { logValue, TraceOptions } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
@@ -72,11 +72,11 @@ export class KernelDaemonPool implements IDisposable {
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
-    @traceDecorators.verbose('Get kernel daemon', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Get kernel daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async get(
         resource: Resource,
-        kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonEnvironment
+        @logValue<IJupyterKernelSpec>('id') kernelSpec: IJupyterKernelSpec,
+        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
     ): Promise<IPythonKernelDaemon | IPythonExecutionService> {
         const pythonPath = interpreter?.path || kernelSpec.argv[0];
         // If we have environment variables in the kernel.json, then its not we support.
