@@ -20,7 +20,7 @@
     "DataScience.installPython": "Python 未安装。\n请[下载](https://www.python.org/downloads)并安装 Python 以运行本笔记本中的单元。",
     "DataScience.installPythonNonMarkdown": "Python 未安装。\n请从 https://www.python.org/downloads 下载并安装 Python 以运行本笔记本中的单元。",
     "DataScience.installKernel": "需要安装 Jupyter 内核 '{0}' 以运行本笔记本中的单元。",
-\   "DataScience.customizeLayout": "自定义布局",
+   "DataScience.customizeLayout": "自定义布局",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "显示语言服务器输出",
     "jupyter.command.jupyter.selectAndRunTestMethod.title": "运行测试方法...",
     "jupyter.command.jupyter.selectAndDebugTestMethod.title": "调试测试方法...",
