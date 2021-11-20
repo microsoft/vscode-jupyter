@@ -170,6 +170,23 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         return interpreterId == notebookId;
     }
 
+    private getNotebookHeader(uri: Uri) {
+        const settings = this.configService.getSettings(uri);
+        // Run any startup commands that we specified. Support the old form too
+        let setting = settings.runStartupCommands || settings.runMagicCommands;
+
+        // Convert to string in case we get an array of startup commands.
+        if (Array.isArray(setting)) {
+            setting = setting.join(`\n`);
+        }
+
+        if (setting) {
+            // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+            return setting.replace(/\\n/g, '\n');
+        }
+        return '';
+    }
+
     private async ensureLanguageServer(interpreter: PythonEnvironment | undefined, notebook: NotebookDocument) {
         // We should have one language server per active interpreter.
 
@@ -186,7 +203,8 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
             const languageServerPromise = LanguageServer.createLanguageServer(
                 middlewareType,
                 interpreter,
-                this.shouldAllowIntellisense.bind(this)
+                this.shouldAllowIntellisense.bind(this),
+                this.getNotebookHeader.bind(this)
             ).then((l) => {
                 // If we just created it, indicate to the language server to start watching this notebook
                 l?.startWatching(notebook);

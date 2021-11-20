@@ -128,7 +128,8 @@ export class LanguageServer implements Disposable {
     public static async createLanguageServer(
         middlewareType: 'pylance' | 'jupyter',
         interpreter: PythonEnvironment,
-        shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: string) => boolean
+        shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: string) => boolean,
+        getNotebookHeader: (uri: Uri) => string
     ): Promise<LanguageServer | undefined> {
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
@@ -143,13 +144,15 @@ export class LanguageServer implements Disposable {
                           () => noop, // Don't trace output. Slows things down too much
                           NOTEBOOK_SELECTOR,
                           interpreter.path,
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path),
+                          getNotebookHeader
                       )
                     : createPylanceMiddleware(
                           () => languageClient,
                           NOTEBOOK_SELECTOR,
                           interpreter.path,
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path)
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path),
+                          getNotebookHeader
                       );
 
             // Client options should be the same for all servers we support.
