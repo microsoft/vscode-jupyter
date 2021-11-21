@@ -70,14 +70,14 @@ export type TraceInfo =
 export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: boolean): T {
     const timer = new StopWatch();
     try {
+        if (logBeforeCall) {
+            log(undefined);
+        }
         // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
         const result = run();
 
         // If method being wrapped returns a promise then wait for it.
         if (isPromise(result)) {
-            if (logBeforeCall) {
-                log(undefined);
-            }
             // eslint-disable-next-line
             (result as Promise<void>)
                 .then((data) => {

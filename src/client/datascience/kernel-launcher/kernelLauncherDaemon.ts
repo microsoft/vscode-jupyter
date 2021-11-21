@@ -12,7 +12,6 @@ import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { traceDecorators } from '../../logging';
-import { TraceOptions } from '../../logging/trace';
 import { logValue } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
@@ -34,7 +33,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
-    @traceDecorators.verbose('Launching kernel daemon', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Launching kernel daemon')
     public async launch(
         resource: Resource,
         workingDirectory: string,

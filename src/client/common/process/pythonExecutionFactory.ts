@@ -57,6 +57,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+    @traceDecorators.verbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
@@ -70,7 +71,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         );
     }
 
-    @traceDecorators.verbose('Create daemon', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('Create daemon')
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
