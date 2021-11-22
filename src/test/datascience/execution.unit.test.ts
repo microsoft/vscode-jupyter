@@ -1053,7 +1053,7 @@ suite('Jupyter Execution', async () => {
         try {
             await assert.isRejected(
                 execution.connectToNotebookServer({ ui, resource: undefined }, token.token),
-                'Running cells requires jupyter.'
+                'Running cells requires jupyter package.'
             );
         } finally {
             ui.dispose();
