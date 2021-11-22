@@ -37,6 +37,7 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
+import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -818,7 +819,7 @@ export interface IJupyterInterpreterDependencyManager {
      * @returns {Promise<void>}
      * @memberof IJupyterInterpreterDependencyManager
      */
-    installMissingDependencies(err?: JupyterInstallError): Promise<void>;
+    installMissingDependencies(err?: JupyterInstallError): Promise<JupyterInterpreterDependencyResponse>;
 }
 
 export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');

@@ -189,7 +189,7 @@ export class ProductInstaller implements IInstaller {
 }
 
 // eslint-disable-next-line complexity
-function translateProductToModule(product: Product): string {
+export function translateProductToModule(product: Product): string {
     switch (product) {
         case Product.jupyter:
             return 'jupyter';
