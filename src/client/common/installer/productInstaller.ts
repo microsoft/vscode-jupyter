@@ -136,11 +136,11 @@ export abstract class BaseInstaller {
 
 export class DataScienceInstaller extends BaseInstaller {
     private readonly backupPipInstaller: BackupPipInstaller;
-    private readonly workspaceService: IWorkspaceService
+    private readonly workspaceService: IWorkspaceService;
     private readonly isWindows: boolean;
     constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
         super(serviceContainer, outputChannel);
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.backupPipInstaller = new BackupPipInstaller(
             serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.workspaceService,
@@ -222,7 +222,10 @@ export class DataScienceInstaller extends BaseInstaller {
         });
     }
     public get isUsingKnownDefaultTerminalProfileOnWindows() {
-        const value = this.workspaceService.getConfiguration('terminal').get<string>('integrated.defaultProfile.windows', '').toLowerCase();
+        const value = (
+            this.workspaceService.getConfiguration('terminal').get<string>('integrated.defaultProfile.windows', '') ||
+            ''
+        ).toLowerCase();
         return value.length === 0 || value.includes('powershell') || value.includes('command');
     }
 
