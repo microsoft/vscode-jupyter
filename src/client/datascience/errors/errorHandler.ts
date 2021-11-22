@@ -411,7 +411,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         const ipyKernelName = ProductNames.get(Product.ipykernel)!;
         const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName}`;
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} --user`;
         if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
             if (kernelConnection.interpreter?.envName) {
                 installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName}`;
@@ -425,7 +425,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         );
         const installationInstructions = DataScience.installPackageInstructions().format(
             ipyKernelName,
-            displayNameOfKernel,
             installerCommand
         );
         await this.displayErrorsInCell(message + '\n' + installationInstructions, cellToDisplayErrors);

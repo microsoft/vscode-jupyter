@@ -56,7 +56,7 @@ export async function clearInstalledIntoInterpreterMemento(
 }
 export function isModulePresentInEnvironmentCache(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
-    return memento.get<boolean>(key, false);
+    return false && memento.get<boolean>(key, false);
 }
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
@@ -163,7 +163,32 @@ export class DataScienceInstaller extends BaseInstaller {
         const interpreter = interpreterUri as PythonEnvironment;
         const result = await installer.install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
         traceInfo(`Got result from python installer for ${ProductNames.get(product)}, result = ${result}`);
+        if (cancel?.isCancellationRequested) {
+            return InstallerResponse.Ignore;
+        }
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
+            const disposables: IDisposable[] = [];
+            // Try installing this ourselves if Python extension fails to instll it.
+            if (!cancel) {
+                const token = new CancellationTokenSource();
+                disposables.push(token);
+                cancel = token.token;
+            }
+            try {
+                const result = await this.backupPipInstaller.install(
+                    product,
+                    interpreter,
+                    undefined,
+                    reInstallAndUpdate === true,
+                    cancel!
+                );
+                if (result) {
+                    return InstallerResponse.Installed;
+                }
+            } finally {
+                disposeAllDisposables(disposables);
+            }
+
             return result;
         }
         if (cancel?.isCancellationRequested) {
@@ -171,30 +196,6 @@ export class DataScienceInstaller extends BaseInstaller {
         }
 
         return this.isInstalled(product, interpreter).then(async (isInstalled) => {
-            if (isInstalled === false) {
-                const disposables: IDisposable[] = [];
-                // Try installing this ourselves if Python extension fails to instll it.
-                if (!cancel) {
-                    const token = new CancellationTokenSource();
-                    disposables.push(token);
-                    cancel = token.token;
-                }
-                try {
-                    const result = await this.backupPipInstaller.install(
-                        product,
-                        interpreter,
-                        undefined,
-                        reInstallAndUpdate === true,
-                        cancel!
-                    );
-                    if (result) {
-                        return InstallerResponse.Installed;
-                    }
-                } finally {
-                    disposeAllDisposables(disposables);
-                }
-            }
-
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
     }

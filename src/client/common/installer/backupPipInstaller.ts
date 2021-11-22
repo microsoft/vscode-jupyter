@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Disposable, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationToken, Disposable, OutputChannel, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { Telemetry } from '../../datascience/constants';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IApplicationShell, IWorkspaceService } from '../application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
@@ -67,8 +67,9 @@ export class BackupPipInstaller {
             };
 
             let installationResult = false;
-            await this.appShell.withProgress(options, async (_, progressToken: CancellationToken) => {
+            await this.appShell.withProgress(options, async (progress, progressToken: CancellationToken) => {
                 installationResult = await this.installImplmentation(
+                    progress,
                     product,
                     interpreter,
                     resource,
@@ -102,6 +103,7 @@ export class BackupPipInstaller {
         }
     }
     private async installImplmentation(
+        progress: Progress<{ message?: string; increment?: number }>,
         product: Product,
         interpreter: PythonEnvironment,
         resource: Resource,
@@ -123,20 +125,31 @@ export class BackupPipInstaller {
         this.outputChannel.appendLine('>>>>>>>>>>>>>');
         const disposables: IDisposable[] = [];
         try {
+            // Ensure user sees the output.
+            this.outputChannel.show(true);
             const result = await service.execModuleObservable('pip', args, { cwd });
             token.onCancellationRequested(() => result.proc?.kill(), this, disposables);
             const subscription = result.out.subscribe((output) => {
                 if (token.isCancellationRequested) {
                     return;
                 }
-                this.outputChannel.appendLine(output.out);
+                const lines = output.out.splitLines({ removeEmptyEntries: true, trim: true });
+                progress.report({ message: lines.length ? lines[lines.length - 1] : '' });
+                this.outputChannel.append(output.out);
             });
             disposables.push(new Disposable(() => subscription.unsubscribe()));
+            if (result.proc) {
+                await new Promise<void>((resolve) => {
+                    result.proc?.on('close', () => resolve());
+                    result.proc?.on('exit', () => resolve());
+                });
+            }
+            // Assume we ran this successfully (we don't check errors, just dump to output).
             traceVerbose(`Successfully ran pip installer for ${productName}`);
             return true;
         } finally {
             disposeAllDisposables(disposables);
-            this.outputChannel.appendLine('<<<<<<<<<<<<<<');
+            this.outputChannel.appendLine('\n<<<<<<<<<<<<<<');
         }
     }
     private getInstallerArgs(options: { reinstall: boolean; product: Product }): string[] {
@@ -150,6 +163,7 @@ export class BackupPipInstaller {
         if (options.reinstall) {
             args.push('--force-reinstall');
         }
+        args.push('--user');
         const moduleName = translateProductToModule(options.product);
         return [...args, moduleName];
     }
