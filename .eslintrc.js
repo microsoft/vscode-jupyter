@@ -565,7 +565,6 @@ module.exports = {
         'src/client/common/installer/productService.ts',
         'src/client/common/installer/pipInstaller.ts',
         'src/client/common/process/currentProcess.ts',
-        'src/client/common/process/serviceRegistry.ts',
         'src/client/common/process/pythonToolService.ts',
         'src/client/common/process/internal/scripts/testing_tools.ts',
         'src/client/common/process/pythonDaemonPool.ts',

@@ -7,6 +7,8 @@ import { InterpreterUri } from '../common/installer/types';
 import { InstallerResponse, Product, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import type { SemVer } from 'semver';
+
 export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
@@ -111,6 +113,15 @@ export type PythonApi = {
      * Registers a visibility filter for the interpreter status bar.
      */
     registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
+    getCondaVersion?(): Promise<SemVer | undefined>;
+    /**
+     * Returns the conda executable.
+     */
+    getCondaFile?(): Promise<string | undefined>;
+    getEnvironmentActivationShellCommands?(
+        resource: Resource,
+        interpreter?: PythonEnvironment
+    ): Promise<string[] | undefined>;
 };
 
 export const IPythonInstaller = Symbol('IPythonInstaller');

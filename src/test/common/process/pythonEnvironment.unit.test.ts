@@ -231,7 +231,7 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', () => {
-        const condaInfo = { name: 'foo', path: 'bar' };
+        const condaInfo = { name: 'foo', path: 'bar', version: undefined };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
         const result = env.getExecutionInfo(args);
@@ -245,7 +245,7 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionInfo with a non-named environment should return execution info using the environment path', () => {
-        const condaInfo = { name: '', path: 'bar' };
+        const condaInfo = { name: '', path: 'bar', version: undefined };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
         const result = env.getExecutionInfo(args);
@@ -260,7 +260,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionObservableInfo with a named environment should return execution info using pythonPath only', () => {
         const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
-        const condaInfo = { name: 'foo', path: 'bar' };
+        const condaInfo = { name: 'foo', path: 'bar', version: undefined };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
         const result = env.getExecutionObservableInfo(args);
@@ -270,7 +270,7 @@ suite('CondaEnvironment', () => {
 
     test('getExecutionObservableInfo with a non-named environment should return execution info using pythonPath only', () => {
         const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
-        const condaInfo = { name: '', path: 'bar' };
+        const condaInfo = { name: '', path: 'bar', version: undefined };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
         const result = env.getExecutionObservableInfo(args);
