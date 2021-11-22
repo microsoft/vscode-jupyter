@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Memento, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento, OutputChannel, Uri } from 'vscode';
 import { IPythonInstaller } from '../../api/types';
 import '../../common/extensions';
 import { InterpreterPackages } from '../../datascience/telemetry/interpreterPackages';
@@ -9,12 +9,14 @@ import { IServiceContainer } from '../../ioc/types';
 import { logValue } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { IApplicationShell } from '../application/types';
+import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { disposeAllDisposables } from '../helpers';
 import { traceDecorators, traceError, traceInfo } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
     IConfigurationService,
+    IDisposable,
     IInstaller,
     InstallerResponse,
     IOutputChannel,
@@ -23,6 +25,7 @@ import {
 } from '../types';
 import { sleep } from '../utils/async';
 import { isResource } from '../utils/misc';
+import { BackupPipInstaller } from './backupPipInstaller';
 import { ProductNames } from './productNames';
 import { InterpreterUri, IProductPathService } from './types';
 
@@ -131,6 +134,17 @@ export abstract class BaseInstaller {
 }
 
 export class DataScienceInstaller extends BaseInstaller {
+    private readonly backupPipInstaller: BackupPipInstaller;
+    constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
+        super(serviceContainer, outputChannel);
+        this.backupPipInstaller = new BackupPipInstaller(
+            serviceContainer.get<IApplicationShell>(IApplicationShell),
+            serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            outputChannel,
+            serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory),
+            this.isInstalled.bind(this)
+        );
+    }
     // Override base installer to support a more DS-friendly streamlined installation.
     public async install(
         product: Product,
@@ -152,10 +166,37 @@ export class DataScienceInstaller extends BaseInstaller {
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
             return result;
         }
+        if (cancel?.isCancellationRequested) {
+            return InstallerResponse.Ignore;
+        }
 
-        return this.isInstalled(product, interpreter).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
-        );
+        return this.isInstalled(product, interpreter).then(async (isInstalled) => {
+            if (isInstalled === false) {
+                const disposables: IDisposable[] = [];
+                // Try installing this ourselves if Python extension fails to instll it.
+                if (!cancel) {
+                    const token = new CancellationTokenSource();
+                    disposables.push(token);
+                    cancel = token.token;
+                }
+                try {
+                    const result = await this.backupPipInstaller.install(
+                        product,
+                        interpreter,
+                        undefined,
+                        reInstallAndUpdate === true,
+                        cancel!
+                    );
+                    if (result) {
+                        return InstallerResponse.Installed;
+                    }
+                } finally {
+                    disposeAllDisposables(disposables);
+                }
+            }
+
+            return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
+        });
     }
 }
 

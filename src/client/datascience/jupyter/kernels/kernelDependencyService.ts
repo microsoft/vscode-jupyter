@@ -180,7 +180,8 @@ export class KernelDependencyService implements IKernelDependencyService {
             action: 'displayed',
             moduleName: productNameForTelemetry,
             resourceType,
-            resourceHash
+            resourceHash,
+            pythonEnvType: interpreter.envType
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
@@ -197,7 +198,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
             }
             const selection = this.isCodeSpace
@@ -211,7 +213,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -221,7 +224,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === Common.install()) {
@@ -229,7 +233,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'install',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
@@ -252,7 +257,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                         action: 'installed',
                         moduleName: productNameForTelemetry,
                         resourceType,
-                        resourceHash
+                        resourceHash,
+                        pythonEnvType: interpreter.envType
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
@@ -260,7 +266,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                         action: 'failed',
                         moduleName: productNameForTelemetry,
                         resourceType,
-                        resourceHash
+                        resourceHash,
+                        pythonEnvType: interpreter.envType
                     });
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
@@ -270,7 +277,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,
                 resourceType,
-                resourceHash
+                resourceHash,
+                pythonEnvType: interpreter.envType
             });
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
@@ -279,7 +287,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
-                resourceHash
+                resourceHash,
+                pythonEnvType: interpreter.envType
             });
             throw ex;
         }
