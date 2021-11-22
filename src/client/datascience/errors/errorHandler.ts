@@ -143,15 +143,27 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             ))
                         ) {
                             const token = new CancellationTokenSource();
-                            await this.kernelDependency
-                                .installMissingDependencies(
-                                    resource,
-                                    kernelConnection.interpreter,
-                                    new DisplayOptions(false),
-                                    token.token,
-                                    true
-                                )
-                                .finally(() => token.dispose());
+                            try {
+                                await this.kernelDependency
+                                    .installMissingDependencies(
+                                        resource,
+                                        kernelConnection.interpreter,
+                                        new DisplayOptions(false),
+                                        token.token,
+                                        true
+                                    )
+                                    .finally(() => token.dispose());
+                            } catch (ex) {
+                                // Handle instances where installation failed or or cancelled it.
+                                if (ex instanceof IpyKernelNotInstalledError) {
+                                    await this.displayIPyKernelMissingErrorInCell(
+                                        kernelConnection,
+                                        cellToDisplayErrors
+                                    );
+                                } else {
+                                    throw ex;
+                                }
+                            }
                         } else {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
