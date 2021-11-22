@@ -71,7 +71,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         );
     }
 
-    @traceDecorators.verbose('Create daemon')
+    @traceDecorators.verbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
