@@ -67,17 +67,15 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
-            const preferredKernelFromCachePromise = createDeferredFromPromise(
-                this.findPreferredLocalKernelConnectionFromCache(notebookMetadata)
-            );
+            const preferredKernelFromCache = this.findPreferredLocalKernelConnectionFromCache(notebookMetadata);
             // Get list of all of the specs
             const kernelsPromise = this.listKernels(resource, cancelToken, 'useCache');
-            await Promise.race([preferredKernelFromCachePromise, KernelProcess]);
 
             // If we have a value from cache, return that.
-            if (preferredKernelFromCachePromise.resolved && preferredKernelFromCachePromise.value) {
-                traceInfo(`Freferred kernel connection found in cache ${preferredKernelFromCachePromise.value.id}`);
-                return preferredKernelFromCachePromise.value;
+            // Check if this is still valid (i.e. the interpreter is still installed).
+            if (preferredKernelFromCache && preferredKernelFromCache.interpreter && await this.fs.localFileExists(preferredKernelFromCache.interpreter.path) {
+                traceInfo(`Freferred kernel connection found in cache ${preferredKernelFromCache.id}`);
+                return preferredKernelFromCache;
             }
 
             const kernels = await kernelsPromise;
@@ -176,9 +174,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         kernels.forEach((item) => uniqueItems.set(item.id, item));
         await this.globalState.update(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
     }
-    private async findPreferredLocalKernelConnectionFromCache(
+    private findPreferredLocalKernelConnectionFromCache(
         notebookMetadata?: nbformat.INotebookMetadata
-    ): Promise<LocalKernelConnectionMetadata | undefined> {
+    ): LocalKernelConnectionMetadata | undefined {
         if (!notebookMetadata) {
             return;
         }
@@ -193,11 +191,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         if (!preferredKernel?.interpreter) {
             return;
         }
-
-        // Check if this is still valid (i.e. the interpreter is still installed).
-        if (await this.fs.localFileExists(preferredKernel.interpreter.path)) {
-            return preferredKernel;
-        }
+        return preferredKernel;
     }
 
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
