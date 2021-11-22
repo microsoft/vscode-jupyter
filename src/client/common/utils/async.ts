@@ -89,7 +89,7 @@ class DeferredImpl<T> implements Deferred<T> {
         });
     }
     public resolve(value?: T | PromiseLike<T>) {
-        this._value = value as (T | undefined);
+        this._value = value as T | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;
