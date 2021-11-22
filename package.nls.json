@@ -456,6 +456,7 @@
     "DataScience.failedToStartJupyter": "Failed to start Jupyter in the environment '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
     "DataScience.failedToStartJupyterWithErrorInfo": "Failed to start Jupyter in the environment '{0}'. \n{1} \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
     "DataScience.failedToStartJupyterDueToOutdatedTraitlets": "Failed to start Jupyter in the environment '{0}' possibly due to an outdated version of 'traitlets'. \n{1} \nConsider updating the 'traitlets' module to '5.1.1' or later. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
+    "DataScience.installPackageInstructions": "Run the following command to install '{0}' into the Python environmet. \nCommand: '{1}'",
     "DataScience.cannotRunCellKernelIsDead": "Cannot run cells, as the kernel '{0}' is dead.",
     "DataScience.waitingForJupyterSessionToBeIdle": "Waiting for Jupyter Session to be idle",
     "DataScience.gettingListOfKernelsForLocalConnection": "Fetching Kernels",

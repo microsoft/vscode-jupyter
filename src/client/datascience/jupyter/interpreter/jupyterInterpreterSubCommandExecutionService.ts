@@ -27,6 +27,7 @@ import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../../errors/jupyterInstallError';
 import {
     getMessageForLibrariesNotInstalled,
+    JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
@@ -137,8 +138,8 @@ export class JupyterInterpreterSubCommandExecutionService
         return serverInfos;
     }
 
-    public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
-        await this.jupyterInterpreter.installMissingDependencies(err);
+    public async installMissingDependencies(err?: JupyterInstallError): Promise<JupyterInterpreterDependencyResponse> {
+        return this.jupyterInterpreter.installMissingDependencies(err);
     }
 
     private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonEnvironment> {

@@ -289,6 +289,10 @@ export namespace DataScience {
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
         "Running cells with '{0}' requires {1} package."
     );
+    export const installPackageInstructions = localize(
+        'DataScience.installPackageInstructions',
+        "Run the following command to install '{0}' into the Python environmet. \nCommand: '{1}'"
+    );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
         'Select an Interpreter to start Jupyter'

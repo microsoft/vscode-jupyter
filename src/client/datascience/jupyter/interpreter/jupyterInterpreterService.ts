@@ -113,7 +113,7 @@ export class JupyterInterpreterService {
     // Install jupyter dependencies in the current jupyter selected interpreter
     // If there is no jupyter selected interpreter, prompt for install into the
     // current active interpreter and set as active if successful
-    public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
+    public async installMissingDependencies(err?: JupyterInstallError): Promise<JupyterInterpreterDependencyResponse> {
         const jupyterInterpreter = await this.getSelectedInterpreter();
         let interpreter = jupyterInterpreter;
         if (!interpreter) {
@@ -123,7 +123,7 @@ export class JupyterInterpreterService {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
                 await this.selectInterpreter();
-                return;
+                return JupyterInterpreterDependencyResponse.selectAnotherInterpreter;
             }
         }
 
@@ -138,6 +138,7 @@ export class JupyterInterpreterService {
                 await this.setAsSelectedInterpreter(interpreter);
             }
         }
+        return response;
     }
 
     // Set the specified interpreter as our current selected interpreter. Public so can

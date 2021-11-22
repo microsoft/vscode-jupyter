@@ -40,7 +40,7 @@ import {
 } from '../../common/errors/errorUtils';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
+import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
@@ -50,6 +50,10 @@ import { sleep } from '../../common/utils/async';
 import { INotebookControllerManager } from '../notebook/types';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
+import { ProductNames } from '../../common/installer/productNames';
+import { EnvironmentType } from '../../pythonEnvironments/info';
+import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
+import { translateProductToModule } from '../../common/installer/productInstaller';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -106,6 +110,15 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         )
                         .finally(() => token.dispose());
                     return;
+                } else if (
+                    err instanceof IpyKernelNotInstalledError &&
+                    (purpose === 'start' || purpose === 'restart')
+                ) {
+                    void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
+                    return;
+                } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
+                    void this.displayJupyterMissingErrorInCell(err, kernelConnection, cellToDisplayErrors);
+                    return;
                 } else if (err instanceof JupyterConnectError) {
                     void this.handleJupyterStartupError(failureInfo, err, kernelConnection, cellToDisplayErrors);
                     return;
@@ -135,15 +148,27 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             ))
                         ) {
                             const token = new CancellationTokenSource();
-                            await this.kernelDependency
-                                .installMissingDependencies(
-                                    resource,
-                                    kernelConnection.interpreter,
-                                    new DisplayOptions(false),
-                                    token.token,
-                                    true
-                                )
-                                .finally(() => token.dispose());
+                            try {
+                                await this.kernelDependency
+                                    .installMissingDependencies(
+                                        resource,
+                                        kernelConnection.interpreter,
+                                        new DisplayOptions(false),
+                                        token.token,
+                                        true
+                                    )
+                                    .finally(() => token.dispose());
+                            } catch (ex) {
+                                // Handle instances where installation failed or or cancelled it.
+                                if (ex instanceof IpyKernelNotInstalledError) {
+                                    await this.displayIPyKernelMissingErrorInCell(
+                                        kernelConnection,
+                                        cellToDisplayErrors
+                                    );
+                                } else {
+                                    throw ex;
+                                }
+                            }
                         } else {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
@@ -309,7 +334,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         // Unwrap the errors.
         err = WrappedError.unwrap(err);
         if (err instanceof JupyterInstallError) {
-            await this.dependencyManager.installMissingDependencies(err);
+            const result = await this.dependencyManager.installMissingDependencies(err);
+            if (
+                result === JupyterInterpreterDependencyResponse.cancel &&
+                (purpose === 'start' || purpose === 'restart') &&
+                handler
+            ) {
+                await handler(err);
+            }
         } else if (err instanceof JupyterSelfCertsError) {
             // On a self cert error, warn the user and ask if they want to change the setting
             const enableOption: string = DataScience.jupyterSelfCertEnable();
@@ -330,14 +362,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     }
                 });
         } else if (err instanceof IpyKernelNotInstalledError) {
-            // Don't show the message, as user decided not to install IPyKernel.
-            // However its possible auto start ran and UI was disabled, but subsequently
-            // user attempted to run a cell, & the prompt wasn't displayed to the user.
-            if (
-                err.reason === KernelInterpreterDependencyResponse.uiHidden &&
-                (purpose === 'start' || purpose === 'restart') &&
-                handler
-            ) {
+            if ((purpose === 'start' || purpose === 'restart') && handler) {
                 await handler(err);
             }
             noop();
@@ -371,6 +396,69 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
         traceError('DataScience Error', err);
+    }
+    private async displayIPyKernelMissingErrorInCell(
+        kernelConnection: KernelConnectionMetadata,
+        cellToDisplayErrors?: NotebookCell
+    ) {
+        if (!cellToDisplayErrors) {
+            return;
+        }
+        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+            return;
+        }
+        const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
+        const ipyKernelName = ProductNames.get(Product.ipykernel)!;
+        const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
+
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName}`;
+        if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
+            if (kernelConnection.interpreter?.envName) {
+                installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName}`;
+            } else if (kernelConnection.interpreter?.envPath) {
+                installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${ipyKernelModuleName}`;
+            }
+        }
+        const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
+            displayNameOfKernel,
+            ProductNames.get(Product.ipykernel)!
+        );
+        const installationInstructions = DataScience.installPackageInstructions().format(
+            ipyKernelName,
+            displayNameOfKernel,
+            installerCommand
+        );
+        await this.displayErrorsInCell(message + '\n' + installationInstructions, cellToDisplayErrors);
+    }
+    private async displayJupyterMissingErrorInCell(
+        err: JupyterInstallError,
+        kernelConnection: KernelConnectionMetadata,
+        cellToDisplayErrors?: NotebookCell
+    ) {
+        if (!cellToDisplayErrors) {
+            return;
+        }
+        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+            return;
+        }
+        const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and()} ${ProductNames.get(
+            Product.notebook
+        )}`;
+        const moduleNames = [Product.jupyter, Product.notebook].map(translateProductToModule).join(' ');
+
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${moduleNames}`;
+        if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
+            if (kernelConnection.interpreter?.envName) {
+                installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${moduleNames}`;
+            } else if (kernelConnection.interpreter?.envPath) {
+                installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${moduleNames}`;
+            }
+        }
+        const installationInstructions = DataScience.installPackageInstructions().format(
+            productNames,
+            installerCommand
+        );
+        await this.displayErrorsInCell(err.message + '\n' + installationInstructions, cellToDisplayErrors);
     }
     private async displayErrorsInCell(errorMessage: string, cellToDisplayErrors?: NotebookCell, moreInfoLink?: string) {
         if (!cellToDisplayErrors || !errorMessage) {
