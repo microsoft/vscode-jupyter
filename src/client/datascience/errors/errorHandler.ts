@@ -386,7 +386,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
         const ipyKernelName = ProductNames.get(Product.ipykernel)!;
 
-        let installerCommand = `${kernelConnection.interpreter?.path} -m pip install ${ipyKernelName}`;
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelName}`;
         if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
             if (kernelConnection.interpreter?.envName) {
                 installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelName}`;
