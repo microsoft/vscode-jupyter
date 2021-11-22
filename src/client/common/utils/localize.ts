@@ -291,7 +291,7 @@ export namespace DataScience {
     );
     export const installPackageInstructions = localize(
         'DataScience.installPackageInstructions',
-        "Run the following command to install '{0}' into the Python environmet '{1}'. Command: \n'{2}'"
+        "Run the following command to install '{0}' into the Python environmet '{1}'. \nCommand: '{2}'"
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
