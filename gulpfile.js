@@ -9,6 +9,7 @@
 'use strict';
 
 const gulp = require('gulp');
+const glob = require('glob');
 const spawn = require('cross-spawn');
 const path = require('path');
 const del = require('del');
@@ -42,6 +43,18 @@ gulp.task('createNycFolder', async (done) => {
     } catch (e) {
         //
     }
+    done();
+});
+
+gulp.task('validateTranslationFiles', (done) => {
+    glob.sync('package.nls.*.json', { sync: true }).forEach((file) => {
+        // Verify we can open and parse as JSON.
+        try {
+            JSON.parse(fs.readFileSync(file));
+        } catch (ex) {
+            throw new Error(`Error parsing Translation File ${file}`);
+        }
+    });
     done();
 });
 
@@ -86,7 +99,8 @@ gulp.task('checkNpmDependencies', (done) => {
             }
             if (!version.includes(expectedVersion.version)) {
                 errors.push(
-                    `${expectedVersion.name} version needs to be at least ${expectedVersion.version
+                    `${expectedVersion.name} version needs to be at least ${
+                        expectedVersion.version
                     }, current ${version}, ${parent ? `(parent package ${parent})` : ''}`
                 );
             }
@@ -116,8 +130,10 @@ gulp.task('checkNpmDependencies', (done) => {
 });
 
 gulp.task('installPythonLibs', async () => {
-    const output = spawnSync('python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt');
-    if (output.error){
+    const output = spawnSync(
+        'python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt'
+    );
+    if (output.error) {
         console.error(output.stderr);
         throw output.error;
     }
@@ -142,10 +158,7 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task(
-    'compile-webviews',
-    gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers'))
-);
+gulp.task('compile-webviews', gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers')));
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -193,9 +206,9 @@ async function updateBuildNumber(args) {
         const newVersion =
             versionParts.length > 1
                 ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2].substring(
-                    0,
-                    3
-                )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
+                      0,
+                      3
+                  )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
                 : packageJson.version;
         packageJson.version = newVersion;
 
@@ -300,10 +313,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
 
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
-gulp.task(
-    'prePublishNonBundle',
-    gulp.parallel('compile', gulp.series('compile-webviews'))
-);
+gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
@@ -358,4 +368,4 @@ function hasNativeDependencies() {
 gulp.task('generateTelemetryMd', async () => {
     const generator = require('./out/tools/telemetryGenerator');
     return generator.default();
-})
+});
