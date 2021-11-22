@@ -263,31 +263,31 @@ export namespace DataScience {
     );
     export const couldNotInstallLibrary = localize(
         'DataScience.couldNotInstallLibrary',
-        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+        'Could not install {0} package. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
-        'Running cells requires {0}.'
+        'Running cells requires {0} package.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
-        'Running cells requires {0}.'
+        'Running cells requires {0} package.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
-        "Running cells with '{0}' requires {1} installed or requires an update."
+        "Running cells with '{0}' requires {1} package installed or requires an update."
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
