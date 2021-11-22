@@ -46,7 +46,11 @@ export class BackupPipInstaller {
             return false;
         }
         // We can only run this installer against global & windows store enviorments.
-        if (interpreter.envType !== EnvironmentType.Global && interpreter.envType !== EnvironmentType.WindowsStore) {
+        if (
+            interpreter.envType !== EnvironmentType.Global &&
+            interpreter.envType !== EnvironmentType.WindowsStore &&
+            interpreter.envType !== EnvironmentType.System
+        ) {
             traceWarning(`We cannot pip install packages into non-Global Python environments.`);
             return false;
         }
