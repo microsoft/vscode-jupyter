@@ -6,7 +6,7 @@ import { CancellationToken, Disposable, OutputChannel, Progress, ProgressLocatio
 import { Telemetry } from '../../datascience/constants';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
+import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
