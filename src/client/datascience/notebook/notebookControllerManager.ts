@@ -453,10 +453,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         document.uri
                     )}`
                 );
+                const targetController = Array.from(this.registeredControllers.values()).find(
+                    (value) => preferredConnection?.id === value.connection.id
+                );
+                // If the controller doesn't exist, then it means we're still loading them.
+                // However we can create this one as we have all of the necessary info.
+                if (!targetController) {
+                    traceInfo(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
+                    this.createNotebookControllers([preferredConnection]);
+                }
+            } else {
+                // Wait for our controllers to be loaded before we try to set a preferred on
+                // can happen if a document is opened quick and we have not yet loaded our controllers
+                await loadControllersPromise;
             }
-            // Wait for our controllers to be loaded before we try to set a preferred on
-            // can happen if a document is opened quick and we have not yet loaded our controllers
-            await loadControllersPromise;
             const targetController = Array.from(this.registeredControllers.values()).find(
                 (value) => preferredConnection?.id === value.connection.id
             );
