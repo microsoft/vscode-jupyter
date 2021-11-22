@@ -54,4 +54,5 @@ export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
+    envPath?: string;
 };

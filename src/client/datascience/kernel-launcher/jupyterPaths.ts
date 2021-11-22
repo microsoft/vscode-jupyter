@@ -16,7 +16,7 @@ const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH';
-const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS';
+const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_';
 
 @injectable()
 export class JupyterPaths {
@@ -74,29 +74,27 @@ export class JupyterPaths {
     @traceDecorators.verbose('Get Kernelspec root path')
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<string[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths: string[] = await this.getJupyterPathPaths(cancelToken);
+        const paths = new Set<string>(await this.getJupyterPathPaths(cancelToken));
 
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
             if (winPath) {
-                paths.push(winPath);
+                paths.add(winPath);
             }
 
             if (process.env.ALLUSERSPROFILE) {
-                paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
+                paths.add(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
             }
         } else {
             // Unix based
             const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
-            paths.push(
-                path.join('/', 'usr', 'share', 'jupyter', 'kernels'),
-                path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels'),
-                path.join(this.pathUtils.home, secondPart)
-            );
+            paths.add(path.join('/', 'usr', 'share', 'jupyter', 'kernels'));
+            paths.add(path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels'));
+            paths.add(path.join(this.pathUtils.home, secondPart));
         }
 
-        return paths;
+        return Array.from(paths);
     }
 
     /**
@@ -109,7 +107,7 @@ export class JupyterPaths {
         this.cachedJupyterPaths =
             this.cachedJupyterPaths ||
             (async () => {
-                const paths: string[] = [];
+                const paths = new Set<string>();
                 const vars = await this.envVarsProvider.getEnvironmentVariables();
                 if (cancelToken?.isCancellationRequested) {
                     return [];
@@ -124,12 +122,12 @@ export class JupyterPaths {
                     jupyterPathVars.forEach(async (jupyterPath) => {
                         const realPath = await tryGetRealPath(jupyterPath);
                         if (realPath) {
-                            paths.push(realPath);
+                            paths.add(realPath);
                         }
                     });
                 }
 
-                return paths;
+                return Array.from(paths);
             })();
         void this.cachedJupyterPaths.then((value) => {
             if (value.length > 0) {
