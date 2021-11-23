@@ -22,7 +22,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceVerbose } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { IJupyterSession } from '../../datascience/types';
@@ -36,7 +36,7 @@ import {
     IKernelDebugAdapterConfig,
     KernelDebugMode
 } from '../types';
-import { assertIsDebugConfig, getMessageSourceAndHookIt } from './helper';
+import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
@@ -59,7 +59,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
         private fs: IFileSystem,
-        private readonly kernel: IKernel | undefined
+        private readonly kernel: IKernel | undefined,
+        private readonly platformService: IPlatformService
     ) {
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
@@ -256,6 +257,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
+    private lookupCellByLongName(sourcePath: string): NotebookCell | undefined {
+        if (!this.platformService.isWindows) {
+            return undefined;
+        }
+
+        sourcePath = path.normalize(sourcePath);
+        for (let [file, cell] of this.fileToCell.entries()) {
+            if (isShortNamePath(file) && shortNameMatchesLongName(file, sourcePath)) {
+                return cell;
+            }
+        }
+
+        return undefined;
+    }
+
     private sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         // map Source paths from VS Code to Ipykernel temp files
         getMessageSourceAndHookIt(message, (source) => {
@@ -281,7 +297,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 const message = msg.content as DebugProtocol.ProtocolMessage;
                 getMessageSourceAndHookIt(message, (source) => {
                     if (source && source.path) {
-                        const cell = this.fileToCell.get(source.path);
+                        const cell = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
                         if (cell) {
                             source.name = path.basename(cell.document.uri.path);
                             if (cell.index >= 0) {

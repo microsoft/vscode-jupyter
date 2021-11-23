@@ -113,3 +113,12 @@ export function getMessageSourceAndHookIt(
             break;
     }
 }
+
+export function isShortNamePath(path: string): boolean {
+    return /~\d+\\/.test(path);
+}
+
+export function shortNameMatchesLongName(shortNamePath: string, longNamePath: string): boolean {
+    const r = new RegExp(shortNamePath.replace(/\\/g, '\\\\').replace(/~\d+\\\\/g, '[^\\\\]+\\\\'), 'i');
+    return r.test(longNamePath);
+}
