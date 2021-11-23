@@ -26,7 +26,7 @@ export class NbConvertExportToPythonService {
     ): Promise<string> {
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
         // Wait for the nbconvert to finish
         const args = template

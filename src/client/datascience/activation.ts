@@ -82,7 +82,7 @@ export class Activation implements IExtensionSingleActivationService {
         // Warm the daemon pool just for the interpreter used to start Jupyter.
         await this.factory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
     }
 }

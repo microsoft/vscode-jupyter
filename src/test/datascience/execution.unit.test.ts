@@ -784,33 +784,39 @@ suite('Jupyter Execution', async () => {
         setupWorkingProcessService(processService, notebookStdErr);
         setupMissingKernelProcessService(processService, notebookStdErr);
         setupPathProcessService(jupyterOnPath, processService, notebookStdErr);
-        when(executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))).thenResolve(
-            workingService.object
-        );
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === workingPython.path))
+        ).thenResolve(workingService.object);
+        when(
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingKernelPython.path))
         ).thenResolve(missingKernelService.object);
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython.path))
         ).thenResolve(missingNotebookService.object);
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython2.path))
         ).thenResolve(missingNotebookService2.object);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))
+            executionFactory.createDaemon(argThat((o) => o.interpreter && o.interpreter.path === workingPython.path))
         ).thenResolve((workingService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingKernelPython.path)
+            )
         ).thenResolve((missingKernelService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython.path)
+            )
         ).thenResolve((missingNotebookService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython2.path)
+            )
         ).thenResolve((missingNotebookService2.object as unknown) as IPythonDaemonExecutionService);
 
         let activeService = workingService;

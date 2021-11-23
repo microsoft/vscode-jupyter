@@ -104,21 +104,24 @@ export abstract class BaseInstaller {
     @traceDecorators.verbose('Checking if product is installed')
     public async isInstalled(
         product: Product,
-        @logValue('path') resource?: InterpreterUri
+        @logValue('path') interpreter: PythonEnvironment
     ): Promise<boolean | undefined> {
-        // User may have customized the module name or provided the fully qualified path.
-        const interpreter = isResource(resource) ? undefined : resource;
-        const uri = isResource(resource) ? resource : undefined;
-        const executableName = this.getExecutableNameFromSettings(product, uri);
+        const executableName = this.getExecutableNameFromSettings(product, undefined);
 
-        const isModule = this.isExecutableAModule(product, uri);
+        const isModule = this.isExecutableAModule(product, undefined);
         if (isModule) {
             const pythonProcess = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
+                .createActivatedEnvironment({
+                    resource: undefined,
+                    interpreter,
+                    allowEnvironmentFetchExceptions: true
+                });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
-            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
+            const process = await this.serviceContainer
+                .get<IProcessServiceFactory>(IProcessServiceFactory)
+                .create(undefined);
             return process
                 .exec(executableName, ['--version'], { mergeStdOutErr: true })
                 .then(() => true)
@@ -275,8 +278,8 @@ export class ProductInstaller implements IInstaller {
     ): Promise<InstallerResponse> {
         return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
     }
-    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
-        return this.createInstaller().isInstalled(product, resource);
+    public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean | undefined> {
+        return this.createInstaller().isInstalled(product, interpreter);
     }
     public translateProductToModuleName(product: Product, _purpose: ModuleNamePurpose): string {
         return translateProductToModule(product);

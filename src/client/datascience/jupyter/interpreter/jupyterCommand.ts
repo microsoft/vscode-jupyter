@@ -17,7 +17,7 @@ import { JupyterCommands, JupyterDaemonModule } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 
 class InterpreterJupyterCommand implements IJupyterCommand {
-    protected interpreterPromise: Promise<PythonEnvironment | undefined>;
+    protected interpreterPromise: Promise<PythonEnvironment>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
     constructor(
@@ -34,7 +34,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             if (isActiveInterpreter) {
                 const svc = await pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
                     daemonModule: JupyterDaemonModule,
-                    pythonPath: interpreter!.path
+                    interpreter
                 });
 
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.

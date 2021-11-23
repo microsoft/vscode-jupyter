@@ -39,7 +39,7 @@ export class DataViewerDependencyService {
     ) {}
 
     public async checkAndInstallMissingDependencies(
-        interpreter?: PythonEnvironment,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<void> {
         const pandasVersion = await this.getVersionOfPandas(interpreter, token);
@@ -112,7 +112,7 @@ export class DataViewerDependencyService {
     }
 
     private async getVersionOfPandas(
-        interpreter?: PythonEnvironment,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<SemVer | undefined> {
         const launcher = await this.pythonFactory.createActivatedEnvironment({

@@ -38,7 +38,6 @@ import { InterpreterPackages } from '../datascience/telemetry/interpreterPackage
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { logValue, TraceOptions } from '../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
@@ -205,15 +204,6 @@ export class LanguageServerProvider implements ILanguageServerProvider {
 
     public getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined> {
         return this.apiProvider.getApi().then((api) => api.getLanguageServer(resource));
-    }
-}
-
-@injectable()
-export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-
-    public isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        return this.apiProvider.getApi().then((api) => api.isWindowsStoreInterpreter(pythonPath));
     }
 }
 

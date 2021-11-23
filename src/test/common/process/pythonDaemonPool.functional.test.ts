@@ -30,7 +30,7 @@ import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { JupyterDaemonModule } from '../../../client/datascience/constants';
-import { PythonVersionInfo } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment, PythonVersionInfo } from '../../../client/pythonEnvironments/info';
 import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
@@ -95,7 +95,7 @@ suite('Daemon - Python Daemon Pool', () => {
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = {
-            pythonPath: fullyQualifiedPythonPath,
+            interpreter: { path: fullyQualifiedPythonPath } as PythonEnvironment,
             daemonModule: JupyterDaemonModule,
             daemonCount: 2,
             observableDaemonCount: 1

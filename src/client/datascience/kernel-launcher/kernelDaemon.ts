@@ -10,6 +10,7 @@ import { traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import { IPythonExecutionService, ObservableExecutionResult, Output, SpawnOptions } from '../../common/process/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { IPythonKernelDaemon } from './types';
 
@@ -23,11 +24,11 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
-        pythonPath: string,
+        interpreter: PythonEnvironment,
         proc: ChildProcess,
         connection: MessageConnection
     ) {
-        super(pythonExecutionService, platformService, pythonPath, proc, connection);
+        super(pythonExecutionService, platformService, interpreter, proc, connection);
     }
     public async interrupt() {
         const request = new RequestType0<void, void>('interrupt_kernel');

@@ -81,7 +81,6 @@ export type PythonApi = {
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
     /**
      * IWindowsStoreInterpreter
      */

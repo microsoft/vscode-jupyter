@@ -153,9 +153,11 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
             this.initialized = true;
-            await this.dependencyService.checkAndInstallMissingDependencies(
-                this._kernel?.kernelConnectionMetadata.interpreter
-            );
+            if (this._kernel?.kernelConnectionMetadata.interpreter) {
+                await this.dependencyService.checkAndInstallMissingDependencies(
+                    this._kernel?.kernelConnectionMetadata.interpreter
+                );
+            }
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this._kernel);
         }
     }

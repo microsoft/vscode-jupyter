@@ -110,7 +110,7 @@ export class JupyterInterpreterSubCommandExecutionService
         );
         const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
         // We should never set token for long running processes.
         // We don't want the process to die when the token is cancelled.
@@ -123,7 +123,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances

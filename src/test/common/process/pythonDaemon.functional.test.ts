@@ -23,7 +23,7 @@ import { PythonDaemonExecutionService } from '../../../client/common/process/pyt
 import { IPythonExecutionService } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { PythonVersionInfo } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment, PythonVersionInfo } from '../../../client/pythonEnvironments/info';
 import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
@@ -72,7 +72,7 @@ suite('Daemon', () => {
         pythonDaemon = new PythonDaemonExecutionService(
             instance(pythonExecutionService),
             instance(platformService),
-            fullyQualifiedPythonPath,
+            { path: fullyQualifiedPythonPath } as PythonEnvironment,
             pythonProc,
             connection
         );
