@@ -134,14 +134,15 @@ export function createCondaEnv(
     } else {
         runArgs.push('-n', condaInfo.name);
     }
-    const liveStreamArgs = condaVersionSupportsLiveStreaming(condaInfo.version)
-        ? ['--no-capture-output', '--live-stream']
-        : [];
-    const pythonArgv = [condaFile, ...runArgs, ...liveStreamArgs, 'python'];
+    const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
         async (filename) => fs.localFileExists(filename),
         pythonArgv,
-        pythonArgv,
+        // eslint-disable-next-line
+        // TODO: Use pythonArgv here once 'conda run' can be
+        // run without buffering output.
+        // See https://github.com/microsoft/vscode-python/issues/8473.
+        undefined,
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)
     );
