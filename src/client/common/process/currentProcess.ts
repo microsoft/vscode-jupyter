@@ -8,6 +8,6 @@ import { EnvironmentVariables } from '../variables/types';
 @injectable()
 export class CurrentProcess {
     public get env(): EnvironmentVariables {
-        return (process.env as any) as EnvironmentVariables;
+        return (process.env as unknown) as EnvironmentVariables;
     }
 }
