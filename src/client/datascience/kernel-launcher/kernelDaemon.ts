@@ -109,7 +109,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         // Message from daemon when kernel dies.
         const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }>('kernel_died');
         let stdErr = '';
-        let stdOut = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
             // If we have requested for kernel to be killed, don't raise kernel died error.
             if (this.killed) {
@@ -132,9 +131,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                 if (out.source === 'stderr') {
                     stdErr += out.out;
                 }
-                if (out.source === 'stdout') {
-                    stdOut += out.out;
-                }
                 this.subject.next(out);
             },
             this.subject.error.bind(this.subject),
@@ -147,7 +143,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             if (this.killed) {
                 return;
             }
-            traceWarning(`stdout = ${stdOut}`);
             this.subject.error(new PythonKernelDiedError({ error, stdErr }));
         });
     }
