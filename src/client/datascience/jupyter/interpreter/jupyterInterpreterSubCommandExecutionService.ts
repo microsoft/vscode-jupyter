@@ -112,7 +112,11 @@ export class JupyterInterpreterSubCommandExecutionService
             daemonModule: JupyterDaemonModule,
             interpreter: interpreter
         });
-        return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
+        // We should never set token for long running processes.
+        // We don't want the process to die when the token is cancelled.
+        const spawnOptions = { ...options };
+        spawnOptions.token = undefined;
+        return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
