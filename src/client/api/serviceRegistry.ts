@@ -4,13 +4,13 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../activation/types';
+import { EnvironmentActivationService } from '../common/process/interpreterActivation';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
 import { IServiceManager } from '../ioc/types';
 import {
-    EnvironmentActivationService,
     InterpreterSelector,
     InterpreterService,
     LanguageServerProvider,

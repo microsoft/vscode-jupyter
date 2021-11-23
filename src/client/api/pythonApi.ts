@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -32,14 +32,11 @@ import {
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { isResource, noop } from '../common/utils/misc';
-import { StopWatch } from '../common/utils/stopWatch';
 import { PythonExtension, Telemetry } from '../datascience/constants';
 import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
-import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { logValue, TraceOptions } from '../logging/trace';
-import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
@@ -52,7 +49,6 @@ import {
     JupyterProductToInstall,
     PythonApi
 } from './types';
-import { traceDecorators } from '../logging';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -286,34 +282,6 @@ export class PythonInstaller implements IPythonInstaller {
                 moduleName: ProductNames.get(product)!
             });
         }
-    }
-}
-
-// eslint-disable-next-line max-classes-per-file
-@injectable()
-export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public async getActivatedEnvironmentVariables(
-        resource: Resource,
-        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
-    ): Promise<NodeJS.ProcessEnv | undefined> {
-        const stopWatch = new StopWatch();
-        const env = await this.apiProvider
-            .getApi()
-            .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
-
-        const envType = interpreter?.envType;
-        sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-            envType,
-            failed: Object.keys(env || {}).length === 0
-        });
-        // We must get actiavted env variables for Conda env, if not running stuff against conda will not work.
-        // Hence we must log these as errors (so we can see them in jupyter logs).
-        if (!env && envType === EnvironmentType.Conda) {
-            traceError(`Failed to get activated conda env variables for ${interpreter?.envName}: ${interpreter?.path}`);
-        }
-        return env;
     }
 }
 

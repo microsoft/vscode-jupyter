@@ -14,7 +14,6 @@ import { LocalKernelFinder } from '../../../../client/datascience/kernel-launche
 import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IKernelDependencyService } from '../../../../client/datascience/types';
-import { EnvironmentActivationService } from '../../../../client/api/pythonApi';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import * as path from 'path';
@@ -289,7 +288,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => arePathsSame(a, b));
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
-        appEnv = mock(EnvironmentActivationService);
+        appEnv = mock<IEnvironmentActivationService>();
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
         kernelFinder = mock(LocalKernelFinder);
         testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
