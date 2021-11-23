@@ -121,7 +121,11 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         try {
             // When using the daemon, log the message ourselves.
             if (daemon instanceof PythonDaemonExecutionService) {
-                this.logger.logProcess(`${getDisplayPath(this.interpreter.path)} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+                this.logger.logProcess(
+                    `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                    daemonLogMessage.args,
+                    daemonLogMessage.options
+                );
             }
             return await cb(daemon);
         } finally {
@@ -148,7 +152,11 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
 
         // When using the daemon, log the message ourselves.
         if (daemonProc) {
-            this.logger.logProcess(`${this.interpreter} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+            this.logger.logProcess(
+                `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                daemonLogMessage.args,
+                daemonLogMessage.options
+            );
         }
         const result = cb(execService);
         let completed = false;
