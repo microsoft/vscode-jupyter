@@ -52,6 +52,25 @@ const condaRetryMessages = [
 
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
 
+/**
+ * Assumption reader is aware of why we need `getActivatedEnvironmentVariables`.
+ * When calling the Python API to get this information it takes a while 1-3s.
+ * However, when you think of this, all we do to get the activated env variables is as follows:
+ * 1. Get the CLI used to activate a Python environment
+ * 2. Activate the Python environment using the CLI
+ * 3. In the same process, now run `python -c "import os; print(os.environ)"` to print all of the env variables.
+ *
+ * Solution:
+ * 1. Get the commands from Python extensoin to activate a Python environment.
+ * 2. Activate & generate the env variables ourselves.
+ * 3. In parallel get the activated env variables from Python extension.
+ * 4. Return the results from which ever completes first.
+ *
+ * We've found that doing this in jupyter yields much better results.// Copyright (c) Microsoft Corporation. All rights reserved.
+ * Stats: In Jupyter activation takes 800ms & the same in Python would take 2.6s, or with a complex Conda (5s vs 9s).
+ * Note: We cache the activate commands, as this is not something that changes day to day. Its almost a constant.
+ * Either way, we always fetch the latest from Python extension & update the cache.
+ */
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     private readonly disposables: IDisposable[] = [];
