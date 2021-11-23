@@ -35,6 +35,10 @@ class PythonProcessService {
         const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
         const executable = this.deps.getExecutionObservableInfo(args);
+        // We should never set token for long running processes.
+        // We don't want the process to die when the token is cancelled.
+        const spawnOptions = { ...options };
+        spawnOptions.token = undefined;
         return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
