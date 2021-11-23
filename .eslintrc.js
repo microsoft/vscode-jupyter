@@ -566,7 +566,6 @@ module.exports = {
         'src/client/common/process/currentProcess.ts',
         'src/client/common/process/pythonToolService.ts',
         'src/client/common/process/internal/scripts/testing_tools.ts',
-        'src/client/common/process/pythonDaemonPool.ts',
         'src/client/common/process/logger.ts',
         'src/client/common/process/constants.ts',
         'src/client/common/process/pythonProcess.ts',
