@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { logValue } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { IApplicationShell, IWorkspaceService } from '../application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
 import { traceDecorators, traceError, traceInfo } from '../logger';
@@ -82,10 +82,12 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
 export abstract class BaseInstaller {
     protected readonly appShell: IApplicationShell;
     protected readonly configService: IConfigurationService;
+    protected readonly appEnv: IApplicationEnvironment;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.appEnv = serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
     }
 
     public async install(
@@ -170,12 +172,11 @@ export class DataScienceInstaller extends BaseInstaller {
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
 
-        // If we're on windows and user is using a non default terminal profile, then Python installer will fail to install
-        // the packages in the terminal (such terminals profiles are not supported by Python extension).
-        // Hence if we can detect such cases we'll install this ourselves the terminal.
+        // If we're on windows and user is using a shell other than cmd or powershell, then Python installer will fail to install
+        // the packages in the terminal (gitbash, wsh are not supported by Python extension).
         let result = InstallerResponse.Ignore;
         let attemptedToInstallUsingOurInstaller = false;
-        if (this.isWindows && !this.isUsingKnownDefaultTerminalProfileOnWindows) {
+        if (this.isWindows && !this.isUsingWindowsTerminalSupportedByPythonExtension) {
             attemptedToInstallUsingOurInstaller = true;
             const installedInternally = await this.installWithPipWithoutTerminal(
                 product,
@@ -224,12 +225,9 @@ export class DataScienceInstaller extends BaseInstaller {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
     }
-    public get isUsingKnownDefaultTerminalProfileOnWindows() {
-        const value = (
-            this.workspaceService.getConfiguration('terminal').get<string>('integrated.defaultProfile.windows', '') ||
-            ''
-        ).toLowerCase();
-        return value.length === 0 || value.includes('powershell') || value.includes('command');
+    public get isUsingWindowsTerminalSupportedByPythonExtension() {
+        const shell = this.appEnv.shell.toLowerCase();
+        return shell.endsWith('powershell.exe') || shell.endsWith('cmd.exe') || !shell.endsWith('pwsh.exe');
     }
 
     private async installWithPipWithoutTerminal(

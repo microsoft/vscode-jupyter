@@ -568,7 +568,6 @@ module.exports = {
         'src/client/common/process/internal/scripts/testing_tools.ts',
         'src/client/common/process/logger.ts',
         'src/client/common/process/constants.ts',
-        'src/client/common/process/pythonProcess.ts',
         'src/client/common/process/decoder.ts',
         'src/client/debugger/extension/configuration/providers/moduleLaunch.ts',
         'src/client/debugger/extension/configuration/providers/flaskLaunch.ts',
