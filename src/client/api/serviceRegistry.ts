@@ -17,7 +17,7 @@ import {
     PythonApiProvider,
     PythonDebuggerPathProvider,
     PythonExtensionChecker,
-    PythonInstaller,
+    PythonInstaller
 } from './pythonApi';
 import {
     ILanguageServerProvider,

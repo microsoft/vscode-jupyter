@@ -110,10 +110,16 @@ export abstract class BaseInstaller {
         if (isModule) {
             const pythonProcess = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                .createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+                .createActivatedEnvironment({
+                    resource: undefined,
+                    interpreter,
+                    allowEnvironmentFetchExceptions: true
+                });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
-            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(undefined);
+            const process = await this.serviceContainer
+                .get<IProcessServiceFactory>(IProcessServiceFactory)
+                .create(undefined);
             return process
                 .exec(executableName, ['--version'], { mergeStdOutErr: true })
                 .then(() => true)
