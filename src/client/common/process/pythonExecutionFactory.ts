@@ -3,7 +3,6 @@
 import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
@@ -13,7 +12,7 @@ import { IWorkspaceService } from '../application/types';
 import { traceDecorators, traceError, traceInfo } from '../logger';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
@@ -48,7 +47,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) private readonly config: IConfigurationService
     ) {
@@ -59,15 +57,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     @traceDecorators.verbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const interpreter = options.interpreter || (await this.getPythonPath(options.resource));
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
         return createPythonService(
-            interpreter,
+            options.interpreter,
             processService,
             this.fileSystem,
             undefined,
-            interpreter.envType === EnvironmentType.WindowsStore
+            options.interpreter.envType === EnvironmentType.WindowsStore
         );
     }
 
@@ -76,7 +73,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
         const daemonPoolKey = `${options.interpreter.path}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-        const interpreterService = this.serviceContainer.tryGet<IInterpreterService>(IInterpreterService);
         const interpreter = options.interpreter;
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
@@ -85,11 +81,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             bypassCondaExecution: true
         });
         // No daemon support in Python 2.7 or during shutdown
-        if (
-            !interpreterService ||
-            (interpreter?.version && interpreter.version.major < 3) ||
-            this.config.getSettings().disablePythonDaemon
-        ) {
+        if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
             traceInfo(`Not using daemon support for ${getDisplayPath(options.interpreter.path)}`);
             return activatedProcPromise;
         }
@@ -182,11 +174,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.disposables.push(processService);
 
         return createPythonService(options.interpreter, processService, this.fileSystem);
-    }
-
-    private async getPythonPath(resource: Resource): Promise<string> {
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        return interpreter?.path ?? 'python';
     }
 }
 
