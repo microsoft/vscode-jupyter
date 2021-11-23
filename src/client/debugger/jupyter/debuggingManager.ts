@@ -29,7 +29,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -59,7 +59,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IConfigurationService) private settings: IConfigurationService
+        @inject(IConfigurationService) private settings: IConfigurationService,
+        @inject(IPlatformService) private platform: IPlatformService,
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -366,7 +367,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             if (debug) {
                 if (kernel?.session) {
                     debug.resolve(session);
-                    const adapter = new KernelDebugAdapter(session, debug.document, kernel.session, this.fs, kernel);
+                    const adapter = new KernelDebugAdapter(session, debug.document, kernel.session, this.fs, kernel, this.platform);
 
                     if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
                         const cell = activeDoc.cellAt(config.__cellIndex);
