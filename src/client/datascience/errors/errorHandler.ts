@@ -411,13 +411,19 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         const ipyKernelName = ProductNames.get(Product.ipykernel)!;
         const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName}`;
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
         if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
             if (kernelConnection.interpreter?.envName) {
-                installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName}`;
+                installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
             } else if (kernelConnection.interpreter?.envPath) {
-                installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${ipyKernelModuleName}`;
+                installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${ipyKernelModuleName} --update-deps --force-reinstall`;
             }
+        } else if (
+            kernelConnection.interpreter?.envType === EnvironmentType.Global ||
+            kernelConnection.interpreter?.envType === EnvironmentType.WindowsStore ||
+            kernelConnection.interpreter?.envType === EnvironmentType.System
+        ) {
+            installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
         }
         const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
             displayNameOfKernel,
@@ -425,7 +431,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         );
         const installationInstructions = DataScience.installPackageInstructions().format(
             ipyKernelName,
-            displayNameOfKernel,
             installerCommand
         );
         await this.displayErrorsInCell(message + '\n' + installationInstructions, cellToDisplayErrors);
@@ -446,7 +451,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         )}`;
         const moduleNames = [Product.jupyter, Product.notebook].map(translateProductToModule).join(' ');
 
-        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${moduleNames}`;
+        let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${moduleNames} -U`;
         if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
             if (kernelConnection.interpreter?.envName) {
                 installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${moduleNames}`;

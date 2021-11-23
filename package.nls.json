@@ -1,4 +1,5 @@
 {
+    "products.installingModule": "Installing {0}",
     "jupyter.command.jupyter.exportAsPythonScript.title": "Export to Python Script",
     "jupyter.command.jupyter.exportToHTML.title": "Export to HTML",
     "jupyter.command.jupyter.exportToPDF.title": "Export to PDF",

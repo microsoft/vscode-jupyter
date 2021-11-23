@@ -828,6 +828,8 @@ export interface IEventNamePropertyMapping {
             | 'donotinstall' // User chose not to install from prompt.
             | 'differentKernel' // User chose to select a different kernel.
             | 'error' // Some other error.
+            | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
+            | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
             | 'dismissed'; // User chose to dismiss the prompt.
         resourceType?: 'notebook' | 'interactive';
         /**
@@ -835,6 +837,7 @@ export interface IEventNamePropertyMapping {
          * If we run the same notebook tomorrow, the hash will be the same.
          */
         resourceHash?: string;
+        pythonEnvType?: EnvironmentType;
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.

@@ -152,7 +152,8 @@ export class JupyterInterpreterDependencyService {
         );
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ProductNames.get(Product.jupyter)!
+            moduleName: ProductNames.get(Product.jupyter)!,
+            pythonEnvType: interpreter.envType
         });
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(

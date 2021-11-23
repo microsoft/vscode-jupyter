@@ -67,7 +67,8 @@ export class DataViewerDependencyService {
     ): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!
+            moduleName: ProductNames.get(Product.pandas)!,
+            pythonEnvType: interpreter?.envType
         });
         const selection = this.isCodeSpace
             ? Common.install()

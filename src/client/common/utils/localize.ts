@@ -145,6 +145,7 @@ export namespace ExtensionSurveyBanner {
 }
 
 export namespace DataScience {
+    export const installingModule = localize('products.installingModule', 'Installing {0}');
     export const warnWhenSelectingKernelWithUnSupportedPythonVersion = localize(
         'DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion',
         'The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.'
