@@ -417,6 +417,7 @@
     "src/test/debugger/extension/hooks/childProcessAttachService.unit.test.ts",
     "src/test/debugger/extension/hooks/processTerminationHandler.unit.test.ts",
     "src/test/debugger/extension/hooks/processTerminationService.test.ts",
+    "src/test/debugger/jupyter/helpers.unit.test.ts",
     "src/test/debugger/launcherScriptProvider.unit.test.ts",
     "src/test/debugger/misc.test.ts",
     "src/test/debugger/portAndHost.test.ts",
