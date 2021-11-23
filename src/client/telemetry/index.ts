@@ -588,7 +588,7 @@ export interface IEventNamePropertyMapping {
         /**
          * Reason for not being able to get the env variables.
          */
-         reason?: 'noActivationCommands' | 'unknownOS' | 'emptyVariables' | 'unhandledError';
+        reason?: 'noActivationCommands' | 'unknownOS' | 'emptyVariables' | 'unhandledError';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
