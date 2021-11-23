@@ -298,7 +298,6 @@ module.exports = {
         'src/client/interpreter/activation/terminalEnvironmentActivationService.ts',
         'src/client/interpreter/activation/types.ts',
         'src/client/interpreter/activation/service.ts',
-        'src/client/interpreter/locators/types.ts',
         'src/client/interpreter/display/shebangCodeLensProvider.ts',
         'src/client/interpreter/display/index.ts',
         'src/client/interpreter/display/progressDisplay.ts',
