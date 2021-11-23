@@ -60,7 +60,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private settings: IConfigurationService,
-        @inject(IPlatformService) private platform: IPlatformService,
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -367,7 +367,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             if (debug) {
                 if (kernel?.session) {
                     debug.resolve(session);
-                    const adapter = new KernelDebugAdapter(session, debug.document, kernel.session, this.fs, kernel, this.platform);
+                    const adapter = new KernelDebugAdapter(
+                        session,
+                        debug.document,
+                        kernel.session,
+                        this.fs,
+                        kernel,
+                        this.platform
+                    );
 
                     if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
                         const cell = activeDoc.cellAt(config.__cellIndex);
