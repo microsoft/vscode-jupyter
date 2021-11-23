@@ -392,7 +392,7 @@ export class KernelProcess implements IKernelProcess {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
-        if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled) {
+        if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled && this._kernelConnectionMetadata.interpreter) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(
                 this.daemonPool,
                 this.pythonExecFactory,

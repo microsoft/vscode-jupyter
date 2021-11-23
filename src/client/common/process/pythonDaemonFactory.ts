@@ -11,7 +11,8 @@ import {
 } from 'vscode-jsonrpc/node';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { traceDecorators, traceError } from '../logger';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { traceDecorators, traceError, traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
 import { createDeferred } from '../utils/async';
@@ -21,7 +22,7 @@ import { DaemonExecutionFactoryCreationOptions, IPythonDaemonExecutionService, I
 
 export class PythonDaemonFactory {
     protected readonly envVariables: NodeJS.ProcessEnv;
-    protected readonly pythonPath: string;
+    protected readonly interpreter: PythonEnvironment;
     constructor(
         protected readonly disposables: IDisposableRegistry,
         protected readonly options: DaemonExecutionFactoryCreationOptions,
@@ -29,10 +30,10 @@ export class PythonDaemonFactory {
         protected readonly platformService: IPlatformService,
         protected readonly activatedEnvVariables?: NodeJS.ProcessEnv
     ) {
-        if (!options.pythonPath) {
-            throw new Error('options.pythonPath is empty when it shoud not be');
+        if (!options.interpreter) {
+            throw new Error('options.interpreter is empty when it shoud not be');
         }
-        this.pythonPath = options.pythonPath;
+        this.interpreter = options.interpreter;
         // Setup environment variables for the daemon.
         // The daemon must have access to the Python Module that'll run the daemon
         // & also access to a Python package used for the JSON rpc comms.
@@ -83,7 +84,7 @@ export class PythonDaemonFactory {
             const instance = new cls(
                 this.pythonExecutionService,
                 this.platformService,
-                this.pythonPath,
+                this.interpreter,
                 daemonProc.proc,
                 connection
             );
@@ -118,7 +119,7 @@ export class PythonDaemonFactory {
         // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{ pong: string }>();
-        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
+        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 20_000);
         const request = new RequestType<{ data: string }, { pong: string }, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.
         const result = await Promise.race([fail.promise, connection.sendRequest(request, { data: 'hello' })]);
@@ -126,5 +127,6 @@ export class PythonDaemonFactory {
         if (result.pong !== 'hello') {
             throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
         }
+        traceVerbose('Daemon is alive');
     }
 }

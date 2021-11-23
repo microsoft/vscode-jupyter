@@ -8,6 +8,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
 
 use(chaiAsPromised);
@@ -35,7 +36,11 @@ suite('PythonProcessService', () => {
             }
         };
         processService.setup((p) => p.execObservable(pythonPath, args, options)).returns(() => observable);
-        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { path: pythonPath } as PythonEnvironment,
+            processService.object,
+            fileSystem.object
+        );
         const procs = createPythonProcessService(processService.object, env);
 
         const result = procs.execObservable(args, options);
@@ -58,7 +63,11 @@ suite('PythonProcessService', () => {
             }
         };
         processService.setup((p) => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
-        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { path: pythonPath } as PythonEnvironment,
+            processService.object,
+            fileSystem.object
+        );
         const procs = createPythonProcessService(processService.object, env);
 
         const result = procs.execModuleObservable(moduleName, args, options);
@@ -72,7 +81,11 @@ suite('PythonProcessService', () => {
         const options = {};
         const stdout = 'foo';
         processService.setup((p) => p.exec(pythonPath, args, options)).returns(() => Promise.resolve({ stdout }));
-        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { path: pythonPath } as PythonEnvironment,
+            processService.object,
+            fileSystem.object
+        );
         const procs = createPythonProcessService(processService.object, env);
 
         const result = await procs.exec(args, options);
@@ -90,7 +103,11 @@ suite('PythonProcessService', () => {
         processService
             .setup((p) => p.exec(pythonPath, expectedArgs, options))
             .returns(() => Promise.resolve({ stdout }));
-        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { path: pythonPath } as PythonEnvironment,
+            processService.object,
+            fileSystem.object
+        );
         const procs = createPythonProcessService(processService.object, env);
 
         const result = await procs.execModule(moduleName, args, options);
@@ -110,7 +127,11 @@ suite('PythonProcessService', () => {
         processService
             .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('not installed')));
-        const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { path: pythonPath } as PythonEnvironment,
+            processService.object,
+            fileSystem.object
+        );
         const procs = createPythonProcessService(processService.object, env);
 
         const result = procs.execModule(moduleName, args, options);

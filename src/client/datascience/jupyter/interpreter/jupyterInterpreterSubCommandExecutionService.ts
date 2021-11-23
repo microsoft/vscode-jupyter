@@ -110,7 +110,7 @@ export class JupyterInterpreterSubCommandExecutionService
         );
         const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }
@@ -119,7 +119,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances

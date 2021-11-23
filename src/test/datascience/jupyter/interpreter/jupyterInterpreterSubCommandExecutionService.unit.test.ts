@@ -53,7 +53,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         execService = mock<IPythonDaemonExecutionService>();
         when(
             execFactory.createDaemon(
-                deepEqual({ daemonModule: JupyterDaemonModule, pythonPath: selectedJupyterInterpreter.path })
+                deepEqual({ daemonModule: JupyterDaemonModule, interpreter: selectedJupyterInterpreter })
             )
         ).thenResolve(instance(execService));
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));

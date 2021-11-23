@@ -26,6 +26,7 @@ import {
 } from '../helper';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { IPythonExecutionFactory } from '../../../../client/common/process/types';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
@@ -80,7 +81,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
 
         // Make sure to remove pandas from the venvnokernel. This test relies on it.
         const factory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const process = await factory.create({ pythonPath: venvNoKernelPythonPath });
+        const process = await factory.create({ interpreter: { path: venvNoKernelPythonPath } as PythonEnvironment });
         await process.execModule('pip', ['uninstall', 'pandas'], { throwOnStdErr: false });
 
         await startJupyterServer();

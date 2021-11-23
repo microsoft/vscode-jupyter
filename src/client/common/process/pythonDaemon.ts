@@ -6,7 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceWarning } from '../logger';
 import { IPlatformService } from '../platform/types';
@@ -25,11 +25,11 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
-        pythonPath: string,
+        interpreter: PythonEnvironment,
         proc: ChildProcess,
         connection: MessageConnection
     ) {
-        super(pythonExecutionService, platformService, pythonPath, proc, connection);
+        super(pythonExecutionService, platformService, interpreter, proc, connection);
     }
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
@@ -39,7 +39,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             if (response.error) {
                 throw Error(response.error);
             }
-            return extractInterpreterInfo(this.pythonPath, response);
+            return extractInterpreterInfo(this.interpreter.path, response);
         } catch (ex) {
             traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.getInterpreterInformation();

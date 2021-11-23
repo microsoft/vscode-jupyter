@@ -258,7 +258,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             .setup((f) =>
                 f.create(
                     TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
+                        return o && o.interpreter ? o.interpreter.path === interpreter.path : false;
                     })
                 )
             )
@@ -267,7 +267,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             .setup((f) =>
                 f.createDaemon(
                     TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
+                        return o && o.interpreter ? o.interpreter.path === interpreter.path : false;
                     })
                 )
             )

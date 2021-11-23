@@ -38,7 +38,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         resource: Resource,
         workingDirectory: string,
         @logValue<IJupyterKernelSpec>('name') kernelSpec: IJupyterKernelSpec,
-        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
         // Check to see if we this is a python kernel that we can start using our daemon.
         const args = kernelSpec.argv.slice();

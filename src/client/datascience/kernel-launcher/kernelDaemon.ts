@@ -6,10 +6,11 @@
 import { ChildProcess } from 'child_process';
 import { Subject } from 'rxjs/Subject';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import { IPythonExecutionService, ObservableExecutionResult, Output, SpawnOptions } from '../../common/process/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { IPythonKernelDaemon } from './types';
 
@@ -23,11 +24,11 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     constructor(
         pythonExecutionService: IPythonExecutionService,
         platformService: IPlatformService,
-        pythonPath: string,
+        interpreter: PythonEnvironment,
         proc: ChildProcess,
         connection: MessageConnection
     ) {
-        super(pythonExecutionService, platformService, pythonPath, proc, connection);
+        super(pythonExecutionService, platformService, interpreter, proc, connection);
     }
     public async interrupt() {
         const request = new RequestType0<void, void>('interrupt_kernel');
@@ -108,6 +109,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         // Message from daemon when kernel dies.
         const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }>('kernel_died');
         let stdErr = '';
+        let stdOut = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
             // If we have requested for kernel to be killed, don't raise kernel died error.
             if (this.killed) {
@@ -130,6 +132,9 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                 if (out.source === 'stderr') {
                     stdErr += out.out;
                 }
+                if (out.source === 'stdout') {
+                    stdOut += out.out;
+                }
                 this.subject.next(out);
             },
             this.subject.error.bind(this.subject),
@@ -142,6 +147,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             if (this.killed) {
                 return;
             }
+            traceWarning(`stdout = ${stdOut}`);
             this.subject.error(new PythonKernelDiedError({ error, stdErr }));
         });
     }

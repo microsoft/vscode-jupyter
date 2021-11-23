@@ -64,7 +64,7 @@ export interface IProcessServiceFactory {
 export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
-    pythonPath?: string;
+    interpreter: PythonEnvironment;
 };
 export function isDaemonPoolCreationOption(
     options: PooledDaemonExecutionFactoryCreationOptions | DedicatedDaemonExecutionFactoryCreationOptions
@@ -130,7 +130,7 @@ export type DaemonExecutionFactoryCreationOptions =
     | DedicatedDaemonExecutionFactoryCreationOptions;
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
-    interpreter?: PythonEnvironment;
+    interpreter: PythonEnvironment;
     allowEnvironmentFetchExceptions?: boolean;
     /**
      * Ignore running `conda run` when running code.

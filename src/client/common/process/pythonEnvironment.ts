@@ -9,12 +9,14 @@ import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
-
+import { compare, SemVer } from 'semver';
+import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
+import { getDisplayPath } from '../platform/fs-paths';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
     constructor(
-        protected readonly pythonPath: string,
+        protected readonly interpreter: PyEnv,
         // "deps" is the externally defined functionality used by the class.
         protected readonly deps: {
             getPythonArgv(python: string): string[];
@@ -27,11 +29,11 @@ class PythonEnvironment {
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getPythonArgv(this.pythonPath);
+        const python = this.deps.getPythonArgv(this.interpreter.path);
         return buildPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getObservablePythonArgv(this.pythonPath);
+        const python = this.deps.getObservablePythonArgv(this.interpreter.path);
         return buildPythonExecInfo(python, pythonArgs);
     }
 
@@ -45,8 +47,8 @@ class PythonEnvironment {
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.deps.isValidExecutable(this.pythonPath)) {
-            return this.pythonPath;
+        if (await this.deps.isValidExecutable(this.interpreter.path)) {
+            return this.interpreter.path;
         }
         const python = this.getExecutionInfo();
         return getExecutablePath(python, this.deps.exec);
@@ -69,7 +71,7 @@ class PythonEnvironment {
             const python = this.getExecutionInfo();
             return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
-            traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
+            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.path)}'`, ex);
         }
     }
 }
@@ -92,7 +94,7 @@ function createDeps(
 }
 
 export function createPythonEnv(
-    pythonPath: string,
+    interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
@@ -105,16 +107,23 @@ export function createPythonEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonEnvironment(interpreter, deps);
 }
 
+export function condaVersionSupportsLiveStreaming(version?: SemVer): boolean {
+    if (!version) {
+        return false;
+    }
+    return compare(version.raw, '4.9.0') >= 0;
+}
 export function createCondaEnv(
     condaFile: string,
     condaInfo: {
         name: string;
         path: string;
+        version?: SemVer;
     },
-    pythonPath: string,
+    interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
@@ -125,23 +134,22 @@ export function createCondaEnv(
     } else {
         runArgs.push('-n', condaInfo.name);
     }
-    const pythonArgv = [condaFile, ...runArgs, 'python'];
+    const liveStreamArgs = condaVersionSupportsLiveStreaming(condaInfo.version)
+        ? ['--no-capture-output', '--live-stream']
+        : [];
+    const pythonArgv = [condaFile, ...runArgs, ...liveStreamArgs, 'python'];
     const deps = createDeps(
         async (filename) => fs.localFileExists(filename),
         pythonArgv,
-        // eslint-disable-next-line
-        // TODO: Use pythonArgv here once 'conda run' can be
-        // run without buffering output.
-        // See https://github.com/microsoft/vscode-python/issues/8473.
-        undefined,
+        pythonArgv,
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonEnvironment(interpreter, deps);
 }
 
 export function createWindowsStoreEnv(
-    pythonPath: string,
+    interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService
 ): PythonEnvironment {
@@ -161,5 +169,5 @@ export function createWindowsStoreEnv(
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)
     );
-    return new PythonEnvironment(pythonPath, deps);
+    return new PythonEnvironment(interpreter, deps);
 }

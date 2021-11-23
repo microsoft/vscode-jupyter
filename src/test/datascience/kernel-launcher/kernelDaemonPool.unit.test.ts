@@ -77,14 +77,14 @@ suite('DataScience - Kernel Daemon Pool', () => {
             async (options: DaemonExecutionFactoryCreationOptions) => {
                 // Don't re-use daemons, just return a new one (else it stuffs up tests).
                 // I.e. we created a daemon once, then next time return a new daemon object.
-                if (daemonsCreatedForEachInterpreter.has(options.pythonPath!)) {
+                if (daemonsCreatedForEachInterpreter.has(options.interpreter?.path!)) {
                     const newDaemon = mock<IPythonKernelDaemon>();
                     (instance(newDaemon) as any).then = undefined;
                     return instance(newDaemon);
                 }
 
-                daemonsCreatedForEachInterpreter.add(options.pythonPath!);
-                switch (options.pythonPath) {
+                daemonsCreatedForEachInterpreter.add(options.interpreter?.path!);
+                switch (options.interpreter?.path) {
                     case interpreter1.path:
                         return instance(daemon1);
                     case interpreter2.path:

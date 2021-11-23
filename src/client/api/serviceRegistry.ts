@@ -8,7 +8,6 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
-import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
 import {
     EnvironmentActivationService,
@@ -19,7 +18,6 @@ import {
     PythonDebuggerPathProvider,
     PythonExtensionChecker,
     PythonInstaller,
-    WindowsStoreInterpreter
 } from './pythonApi';
 import {
     ILanguageServerProvider,
@@ -38,7 +36,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         InterpreterStatusBarVisibility
     );
-    serviceManager.addSingleton<IWindowsStoreInterpreter>(IWindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<IPythonDebuggerPathProvider>(IPythonDebuggerPathProvider, PythonDebuggerPathProvider);
     serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, LanguageServerProvider);
     serviceManager.addSingleton<IEnvironmentActivationService>(

@@ -9,6 +9,7 @@ import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH, sleep } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
@@ -68,7 +69,9 @@ export class JupyterServer implements IAsyncDisposable {
             try {
                 const api = await initialize();
                 const pythonExecFactory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-                const pythonExecutionService = await pythonExecFactory.create({ pythonPath: PYTHON_PATH });
+                const pythonExecutionService = await pythonExecFactory.create({
+                    interpreter: { path: PYTHON_PATH } as PythonEnvironment
+                });
                 const result = pythonExecutionService.execModuleObservable(
                     'jupyter',
                     ['notebook', '--no-browser', `--NotebookApp.port=${port}`, `--NotebookApp.token=${token}`],
