@@ -352,9 +352,9 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
                 instance(extensionChecker),
                 instance(memento)
             );
-            const memeto = mock<Memento>();
-            when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
-            when(memeto.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
+            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY', anything())).thenReturn([]);
+            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
+            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
@@ -369,7 +369,7 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
                     nonPythonKernelSpecFinder
                 ),
                 jupyterPaths,
-                instance(memeto),
+                instance(memento),
                 instance(fs)
             );
         });
