@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceDecorators, traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -36,6 +36,7 @@ import { PythonExtension, Telemetry } from '../datascience/constants';
 import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
+import { TraceOptions } from '../logging/trace';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -235,6 +236,7 @@ export class PythonInstaller implements IPythonInstaller {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
 
+    @traceDecorators.verbose('Installing Product', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async install(
         product: Product,
         resource?: InterpreterUri,
@@ -333,6 +335,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
+    @traceDecorators.verbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
@@ -344,6 +347,7 @@ export class InterpreterService implements IInterpreterService {
 
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
+    @traceDecorators.verbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
@@ -375,6 +379,7 @@ export class InterpreterService implements IInterpreterService {
         return promise;
     }
 
+    @traceDecorators.verbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {

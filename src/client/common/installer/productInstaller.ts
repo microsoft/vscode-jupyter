@@ -92,14 +92,14 @@ export abstract class BaseInstaller {
 
     public async install(
         product: Product,
-        resource?: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
         return this.serviceContainer
             .get<IPythonInstaller>(IPythonInstaller)
-            .install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
+            .install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
     }
     @traceDecorators.verbose('Checking if product is installed')
     public async isInstalled(
@@ -158,19 +158,12 @@ export class DataScienceInstaller extends BaseInstaller {
     // Override base installer to support a more DS-friendly streamlined installation.
     public async install(
         product: Product,
-        interpreterUri?: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        // Precondition
-        if (isResource(interpreterUri)) {
-            throw new Error('All data science packages require an interpreter be passed in');
-        }
         const installer = this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
-
-        // At this point we know that `interpreterUri` is of type PythonInterpreter
-        const interpreter = interpreterUri as PythonEnvironment;
 
         // If we're on windows and user is using a shell other than cmd or powershell, then Python installer will fail to install
         // the packages in the terminal (gitbash, wsh are not supported by Python extension).
@@ -271,12 +264,12 @@ export class ProductInstaller implements IInstaller {
     public dispose() {}
     public async install(
         product: Product,
-        resource: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate, installPipIfRequired);
+        return this.createInstaller().install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
     }
     public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, interpreter);
