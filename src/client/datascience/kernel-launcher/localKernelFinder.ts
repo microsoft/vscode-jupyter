@@ -32,8 +32,6 @@ import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { createDeferredFromPromise } from '../../common/utils/async';
-import { KernelProcess } from './kernelProcess';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY';
