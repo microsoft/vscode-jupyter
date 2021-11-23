@@ -8,7 +8,9 @@ import { EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
 import { IPythonApiProvider } from '../../client/api/types';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
 import { IRawNotebookSupportedService } from '../../client/datascience/types';
@@ -40,6 +42,10 @@ suite('DataScience - PreWarm Env Vars', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
+        const envVarsProvider = mock<IEnvironmentVariablesProvider>();
+        when(envVarsProvider.getEnvironmentVariables(anything())).thenResolve();
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.workspaceFolders).thenResolve();
         when(zmqSupported.isSupported).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
@@ -47,7 +53,9 @@ suite('DataScience - PreWarm Env Vars', () => {
             [],
             instance(extensionChecker),
             instance(apiProvider),
-            instance(zmqSupported)
+            instance(zmqSupported),
+            instance(envVarsProvider),
+            instance(workspace)
         );
     });
     test('Should not pre-warm env variables if there is no jupyter interpreter', async () => {
