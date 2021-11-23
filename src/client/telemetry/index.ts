@@ -570,9 +570,25 @@ export interface IEventNamePropertyMapping {
          */
         envType?: EnvironmentType;
         /**
+         * Duplicate of `envType`, the property `envType` doesn't seem to be coming through.
+         * If we can get `envType`, then we'll deprecate this new property.
+         * Else we just deprecate & remote the old property.
+         */
+        pythonEnvType?: EnvironmentType;
+        /**
          * Whether the env variables were fetched successfully or not.
          */
         failed: boolean;
+        /**
+         * Source where the env variables were fetched from.
+         * If `python`, then env variables were fetched from Python extension.
+         * If `jupyter`, then env variables were fetched from Jupyter extension.
+         */
+        source: 'python' | 'jupyter';
+        /**
+         * Reason for not being able to get the env variables.
+         */
+         reason?: 'noActivationCommands' | 'unknownOS' | 'emptyVariables' | 'unhandledError';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**

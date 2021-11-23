@@ -86,7 +86,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         const envVariablesOurSelves = createDeferredFromPromise(
@@ -123,17 +123,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     )
     private async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
-        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         const env = await this.apiProvider
             .getApi()
             .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
 
-        const envType = interpreter?.envType;
+        const envType = interpreter.envType;
         sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
             envType,
-            failed: Object.keys(env || {}).length === 0
+            pythonEnvType: envType,
+            source: 'python',
+            failed: Object.keys(env || {}).length === 0,
+            reason: 'emptyVariables'
         });
         // We must get actiavted env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).
@@ -148,12 +151,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     )
     private async getActivatedEnvironmentVariablesOurselves(
         resource: Resource,
-        @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
         const shellInfo = defaultShells[this.platform.osType];
+        const envType = interpreter?.envType;
         if (!shellInfo) {
+            sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, 0, {
+                envType,
+                pythonEnvType: envType,
+                source: 'jupyter',
+                failed: true,
+                reason: 'unknownOS'
+            });
             return;
         }
 
@@ -162,6 +173,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         const promise = (async () => {
+            const stopWatch = new StopWatch();
             try {
                 let isPossiblyCondaEnv = false;
                 const [activationCommands, processService] = await Promise.all([
@@ -169,6 +181,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     this.processServiceFactory.create(resource)
                 ]);
                 if (!activationCommands || activationCommands.length === 0) {
+                    sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+                        envType,
+                        pythonEnvType: envType,
+                        source: 'jupyter',
+                        failed: true,
+                        reason: 'noActivationCommands'
+                    });
                     return;
                 }
                 traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
@@ -252,8 +271,23 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 } else if (returnedEnv) {
                     delete returnedEnv[PYTHON_WARNINGS];
                 }
+                sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+                    envType,
+                    pythonEnvType: envType,
+                    source: 'jupyter',
+                    failed: Object.keys(env || {}).length === 0,
+                    reason: 'noActivationCommands'
+                });
+
                 return returnedEnv;
             } catch (e) {
+                sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+                    envType,
+                    pythonEnvType: envType,
+                    source: 'jupyter',
+                    failed: true,
+                    reason: 'unhandledError'
+                });
                 traceError('Failed to get activated enviornment variables ourselves', e);
                 return;
             }
