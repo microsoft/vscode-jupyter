@@ -78,7 +78,7 @@ export type PythonApi = {
      */
     getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonEnvironment,
+        interpreter: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
     /**
