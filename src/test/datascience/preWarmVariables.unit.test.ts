@@ -45,7 +45,7 @@ suite('DataScience - PreWarm Env Vars', () => {
         const envVarsProvider = mock<IEnvironmentVariablesProvider>();
         when(envVarsProvider.getEnvironmentVariables(anything())).thenResolve();
         const workspace = mock<IWorkspaceService>();
-        when(workspace.workspaceFolders).thenResolve();
+        when(workspace.workspaceFolders).thenReturn();
         when(zmqSupported.isSupported).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
