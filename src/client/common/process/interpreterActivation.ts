@@ -74,9 +74,12 @@ const MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS = 500;
  * Solution:
  * 1. Get the commands from Python extensoin to activate a Python environment.
  * 2. Activate & generate the env variables ourselves.
+ * 3. In parallel get the activated env variables from cache.
  * 3. In parallel get the activated env variables from Python extension.
  * 4. Return the results from which ever completes first.
  *
+ * Once env variables have been generated, we cache them.
+ * 
  * We've found that doing this in jupyter yields much better results.// Copyright (c) Microsoft Corporation. All rights reserved.
  * Stats: In Jupyter activation takes 800ms & the same in Python would take 2.6s, or with a complex Conda (5s vs 9s).
  * Note: We cache the activate commands, as this is not something that changes day to day. Its almost a constant.
