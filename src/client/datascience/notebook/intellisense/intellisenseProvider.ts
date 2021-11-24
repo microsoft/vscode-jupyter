@@ -75,6 +75,9 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private getActiveInterpreterSync(fsPath: string | undefined): PythonEnvironment | undefined {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const folder =
             this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
