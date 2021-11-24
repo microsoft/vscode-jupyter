@@ -58,12 +58,15 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        if (!workspaceFolderUri) {
+            return;
+        }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
 
         // eslint-disable-next-line
         // TODO: This should be added to the python API (or this entire service should move there)
         // https://github.com/microsoft/vscode-jupyter/issues/51
-        const envFile = workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri.fsPath, '.env') : '.env';
+        const envFile = path.join(workspaceFolderUri.fsPath, '.env');
         this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, process.env);
     }

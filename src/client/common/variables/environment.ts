@@ -5,6 +5,8 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { traceError } from '../logger';
+import { isFileNotFoundError } from '../platform/errors';
 import { IFileSystem } from '../platform/types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
@@ -16,10 +18,16 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         filePath?: string,
         baseVars?: EnvironmentVariables
     ): Promise<EnvironmentVariables | undefined> {
-        if (!filePath || !(await this.fs.localFileExists(filePath))) {
+        if (!filePath) {
             return;
         }
-        return parseEnvFile(await this.fs.readLocalFile(filePath), baseVars);
+        try {
+            return parseEnvFile(await this.fs.readLocalFile(filePath), baseVars);
+        } catch (ex) {
+            if (!isFileNotFoundError(ex)) {
+                traceError(`Failed to parse env file ${filePath}`, ex);
+            }
+        }
     }
 
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
