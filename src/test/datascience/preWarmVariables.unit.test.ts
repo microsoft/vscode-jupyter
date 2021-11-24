@@ -7,8 +7,9 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
-import { IPythonApiProvider } from '../../client/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../client/api/types';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { CondaService } from '../../client/common/process/condaService';
 import { createDeferred } from '../../client/common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
@@ -47,6 +48,8 @@ suite('DataScience - PreWarm Env Vars', () => {
         const workspace = mock<IWorkspaceService>();
         when(workspace.workspaceFolders).thenReturn();
         when(zmqSupported.isSupported).thenReturn(false);
+        const pythonChecker = mock<IPythonExtensionChecker>();
+        when(pythonChecker.isPythonExtensionInstalled).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
             instance(jupyterInterpreter),
@@ -55,7 +58,9 @@ suite('DataScience - PreWarm Env Vars', () => {
             instance(apiProvider),
             instance(zmqSupported),
             instance(envVarsProvider),
-            instance(workspace)
+            instance(workspace),
+            instance(mock(CondaService)),
+            instance(pythonChecker)
         );
     });
     test('Should not pre-warm env variables if there is no jupyter interpreter', async () => {

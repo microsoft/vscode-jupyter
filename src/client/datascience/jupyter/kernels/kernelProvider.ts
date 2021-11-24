@@ -5,6 +5,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { IPythonExtensionChecker } from '../../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -66,7 +67,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
     ) {
         this.asyncDisposables.push(this);
     }
@@ -125,7 +127,8 @@ export class KernelProvider implements IKernelProvider {
             this.pythonExecutionFactory,
             this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
             this.statusProvider,
-            this.commandManager
+            this.commandManager,
+            this.pythonChecker
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

@@ -69,6 +69,7 @@ import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnectError } from '../../errors/jupyterConnectError';
+import { IPythonExtensionChecker } from '../../../api/types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -164,7 +165,8 @@ export class Kernel implements IKernel {
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         notebookControllerManager: INotebookControllerManager,
         private statusProvider: IStatusProvider,
-        private commandManager: ICommandManager
+        private commandManager: ICommandManager,
+        pythonChecker: IPythonExtensionChecker
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -183,10 +185,12 @@ export class Kernel implements IKernel {
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
                   controller
                 : undefined;
-        trackKernelResourceInformation(resourceUri, {
-            kernelConnection: kernelConnectionMetadata,
-            isPreferredKernel
-        });
+        if (pythonChecker.isPythonExtensionInstalled) {
+            trackKernelResourceInformation(resourceUri, {
+                kernelConnection: kernelConnectionMetadata,
+                isPreferredKernel
+            });
+        }
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {

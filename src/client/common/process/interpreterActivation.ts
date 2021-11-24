@@ -263,8 +263,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                             }
                         }
                         if (result.stderr) {
-                            if (returnedEnv) {
-                                traceWarning('Got env variables but with errors', result.stderr);
+                            if (returnedEnv && !condaRetryMessages.find((m) => result!.stderr!.includes(m))) {
+                                traceWarning(
+                                    `Got env variables but with errors, stdErr:${result.stderr}, stdOut: ${result.stdout}`
+                                );
                             } else {
                                 throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                             }
