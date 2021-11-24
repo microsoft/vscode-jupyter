@@ -79,7 +79,7 @@ const MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS = 500;
  * 4. Return the results from which ever completes first.
  *
  * Once env variables have been generated, we cache them.
- * 
+ *
  * We've found that doing this in jupyter yields much better results.// Copyright (c) Microsoft Corporation. All rights reserved.
  * Stats: In Jupyter activation takes 800ms & the same in Python would take 2.6s, or with a complex Conda (5s vs 9s).
  * Note: We cache the activate commands, as this is not something that changes day to day. Its almost a constant.
