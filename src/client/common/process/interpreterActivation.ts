@@ -12,7 +12,7 @@ import { ExecutionResult, IProcessServiceFactory } from '../../common/process/ty
 import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../../common/types';
 import { createDeferredFromPromise, sleep } from '../../common/utils/async';
 import { OSType } from '../../common/utils/platform';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { logValue, TraceOptions } from '../../logging/trace';
@@ -26,6 +26,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IInterpreterService } from '../../interpreter/contracts';
 import { CurrentProcess } from './currentProcess';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;
@@ -51,6 +52,16 @@ const condaRetryMessages = [
 ];
 
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
+const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_{0}';
+
+type EnvironmentVariablesCacheInformation = {
+    activatedEnvVaraibles: EnvironmentVariables | undefined;
+    originalProcEnvVariablesHash: string;
+    activationCommands: string[];
+    intepreterVersion: string;
+};
+
+const MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS = 500;
 
 /**
  * Assumption reader is aware of why we need `getActivatedEnvironmentVariables`.
@@ -195,10 +206,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const stopWatch = new StopWatch();
             try {
                 let isPossiblyCondaEnv = false;
-                const [activationCommands, processService] = await Promise.all([
-                    this.getActivationCommands(resource, interpreter),
-                    this.processServiceFactory.create(resource)
-                ]);
+                const processServicePromise = this.processServiceFactory.create(resource);
+                const activationCommands = await this.getActivationCommands(resource, interpreter);
+
+                // Check cache.
+                const cachedVariables = this.getActivatedEnvVariablesFromCache(
+                    resource,
+                    interpreter,
+                    activationCommands
+                );
+                if (cachedVariables) {
+                    traceVerbose(`Got activation Env Vars from cache`);
+                    return cachedVariables;
+                }
+                const processService = await processServicePromise;
                 if (!activationCommands || activationCommands.length === 0) {
                     sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
                         envType,
@@ -300,6 +321,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     reason: 'noActivationCommands'
                 });
 
+                // Store in cache if we have env vars (lets not cache if it takes <=500ms (see const)  to activate an environment).
+                if (returnedEnv && stopWatch.elapsedTime > MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS) {
+                    void this.storeActivatedEnvVariablesInCache(resource, interpreter, activationCommands, returnedEnv);
+                }
+
                 return returnedEnv;
             } catch (e) {
                 sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
@@ -323,6 +349,86 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         return promise;
     }
+    /**
+     * We cache activated environment variables.
+     * When activating environments, all activation scripts update environment variables, nothing else (after all they don't start a process).
+     * The env variables can change based on the activation script, current env variables on the machine & python interpreter information.
+     * If any of these change, then the env variables are invalidated.
+     */
+    private getActivatedEnvVariablesFromCache(
+        resource: Resource,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment,
+        activationCommands: string[] = []
+    ) {
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
+            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+        );
+        const intepreterVersion = `${interpreter.sysVersion || ''}#${interpreter.version?.raw || ''}`;
+        const cachedData = this.memento.get<EnvironmentVariablesCacheInformation>(key);
+        if (!cachedData || !cachedData.activatedEnvVaraibles) {
+            return;
+        }
+        if (cachedData.intepreterVersion !== intepreterVersion) {
+            return;
+        }
+        if (
+            cachedData.activationCommands.join(',').toLowerCase() !== (activationCommands || []).join(',').toLowerCase()
+        ) {
+            return;
+        }
+        if (
+            cachedData.originalProcEnvVariablesHash !==
+            getTelemetrySafeHashedString(JSON.stringify(this.sanitizedCurrentProcessEnvVars))
+        ) {
+            return;
+        }
+        this.updateWithLatestVSCodeVariables(cachedData.activatedEnvVaraibles);
+        return cachedData.activatedEnvVaraibles;
+    }
+    private async storeActivatedEnvVariablesInCache(
+        resource: Resource,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment,
+        activationCommands: string[] = [],
+        activatedEnvVaraibles: NodeJS.ProcessEnv
+    ) {
+        const cachedData: EnvironmentVariablesCacheInformation = {
+            activationCommands,
+            originalProcEnvVariablesHash: getTelemetrySafeHashedString(
+                JSON.stringify(this.sanitizedCurrentProcessEnvVars)
+            ),
+            activatedEnvVaraibles,
+            intepreterVersion: `${interpreter.sysVersion || ''}#${interpreter.version?.raw || ''}`
+        };
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
+            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+        );
+        await this.memento.update(key, cachedData);
+    }
+    private get sanitizedCurrentProcessEnvVars() {
+        // When debugging VS Code Env vars messes with the hash used for storage.
+        // Even in real world we can ignore these, these should not impact the Env Variables of Conda.
+        // So for the purpose of checking if env variables have changed, we'll ignore these,
+        // However when returning the cached env variables we'll restore these to the latest values (so things work well when debugging VSC).
+        const vars = JSON.parse(JSON.stringify(this.currentProcess.env));
+        Object.keys(vars).forEach((key) => {
+            if (key.startsWith('VSCODE_')) {
+                delete vars[key];
+            }
+        });
+        return vars;
+    }
+    private updateWithLatestVSCodeVariables(envVars: EnvironmentVariables) {
+        // Restore the env vars we removed.
+        const vars = JSON.parse(JSON.stringify(this.currentProcess.env));
+        Object.keys(vars).forEach((key) => {
+            if (key.startsWith('VSCODE_')) {
+                envVars[key] = vars[key];
+            }
+        });
+    }
+
     @traceDecorators.verbose('Getting env activation commands', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivationCommands(
         resource: Resource,
