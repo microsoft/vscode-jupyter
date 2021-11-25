@@ -176,6 +176,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!env && envType === EnvironmentType.Conda) {
             traceError(`Failed to get activated conda env variables for ${getDisplayPath(interpreter?.path)}`);
         }
+
+        // Store in cache if we have env vars (lets not cache if it takes <=500ms (see const) to activate an environment).
+        if (env && stopWatch.elapsedTime > MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS) {
+            void this.storeActivatedEnvVariablesInCache(resource, interpreter, env);
+        }
         return env;
     }
     @traceDecorators.verbose(
@@ -324,11 +329,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     reason: 'noActivationCommands'
                 });
 
-                // Store in cache if we have env vars (lets not cache if it takes <=500ms (see const)  to activate an environment).
-                if (returnedEnv && stopWatch.elapsedTime > MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS) {
-                    void this.storeActivatedEnvVariablesInCache(resource, interpreter, activationCommands, returnedEnv);
-                }
-
                 return returnedEnv;
             } catch (e) {
                 sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
@@ -392,9 +392,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     private async storeActivatedEnvVariablesInCache(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment,
-        activationCommands: string[] = [],
         activatedEnvVaraibles: NodeJS.ProcessEnv
     ) {
+        const activationCommands = await this.getActivationCommands(resource, interpreter);
+        if (!activationCommands || activationCommands.length === 0) {
+            return;
+        }
         const cachedData: EnvironmentVariablesCacheInformation = {
             activationCommands,
             originalProcEnvVariablesHash: getTelemetrySafeHashedString(
