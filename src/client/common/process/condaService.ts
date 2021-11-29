@@ -29,7 +29,7 @@ export class CondaService {
             .then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
         void latestInfo.then((version) => {
             this._version = version;
-            void this.udpateCache();
+            void this.updateCache();
         });
         const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
         await Promise.race([cachedInfo, latestInfo]);
@@ -45,7 +45,7 @@ export class CondaService {
         const latestInfo = this.pythonApi.getApi().then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
         void latestInfo.then((file) => {
             this._file = file;
-            void this.udpateCache();
+            void this.updateCache();
         });
         const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
         await Promise.race([cachedInfo, latestInfo]);
@@ -54,7 +54,7 @@ export class CondaService {
         }
         return latestInfo;
     }
-    private async udpateCache() {
+    private async updateCache() {
         if (!this._file || !this._version) {
             return;
         }
