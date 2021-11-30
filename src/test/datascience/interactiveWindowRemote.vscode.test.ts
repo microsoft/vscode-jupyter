@@ -10,10 +10,10 @@ import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile } from './helpers';
 import {
-    assertHasTextOutputInVSCode,
     closeNotebooksAndCleanUpAfterTests,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './notebook/helper';
 
 suite('Interactive window (remote)', async () => {
@@ -54,6 +54,6 @@ suite('Interactive window (remote)', async () => {
 
         const secondCell = notebookDocument?.cellAt(1);
         await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, 'Hello World');
+        await waitForTextOutput(secondCell!, 'Hello World');
     });
 });

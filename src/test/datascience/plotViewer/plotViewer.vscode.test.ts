@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
+import { createJupyterCellFromVSCNotebookCell } from '../../../client/datascience/notebook/helpers/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
@@ -69,7 +70,12 @@ plt.show()`,
         await waitForExecutionCompletedSuccessfully(plotCell);
 
         await waitForCondition(async () => plotCell?.outputs.length >= 1, 10000, 'Plot output not generated');
-        assert(plotCell.outputs.length === 1, 'Plot cell output incorrect count');
+        // Sometimes on CI we end up with >1 output, and the test fails, but we're expecting just one.
+        if (plotCell.outputs.length !== 1) {
+            const jupyterCell = createJupyterCellFromVSCNotebookCell(plotCell);
+            traceInfo(`Plot cell has ${plotCell.outputs.length} outputs, Cell JSON = ${JSON.stringify(jupyterCell)}`);
+        }
+        assert.strictEqual(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
 
         // Check if our metadata has __displayOpenPlotIcon
         assert(plotCell.outputs[0]!.metadata!.__displayOpenPlotIcon == true, 'Open Plot Icon missing from metadata');

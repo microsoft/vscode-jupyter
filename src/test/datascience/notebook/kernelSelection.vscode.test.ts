@@ -20,7 +20,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../const
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -217,7 +216,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedSuccessfully(cell2)
         ]);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
+        await waitForTextOutput(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -244,7 +243,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        assertHasTextOutputInVSCode(cell, venvKernelSearchString, 0, false);
+        await waitForTextOutput(cell, venvKernelSearchString, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
