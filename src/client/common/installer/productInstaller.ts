@@ -12,7 +12,7 @@ import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
-import { traceDecorators, traceError, traceInfo } from '../logger';
+import { traceDecorators, traceError, traceInfo, traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
@@ -219,8 +219,9 @@ export class DataScienceInstaller extends BaseInstaller {
         });
     }
     public get isUsingWindowsTerminalSupportedByPythonExtension() {
+        traceVerbose(`Windows shell is ${this.appEnv.shell}`);
         const shell = this.appEnv.shell.toLowerCase();
-        return shell.endsWith('powershell.exe') || shell.endsWith('cmd.exe') || !shell.endsWith('pwsh.exe');
+        return shell.endsWith('powershell.exe') || shell.endsWith('cmd.exe') || shell.endsWith('pwsh.exe');
     }
 
     private async installWithPipWithoutTerminal(
