@@ -69,7 +69,7 @@ plt.show()`,
         await waitForExecutionCompletedSuccessfully(plotCell);
 
         await waitForCondition(async () => plotCell?.outputs.length >= 1, 10000, 'Plot output not generated');
-        assert(plotCell.outputs.length === 1, 'Plot cell output incorrect count');
+        assert.strictEqual(plotCell.outputs.length, 1, 'Plot cell output incorrect count');
 
         // Check if our metadata has __displayOpenPlotIcon
         assert(plotCell.outputs[0]!.metadata!.__displayOpenPlotIcon == true, 'Open Plot Icon missing from metadata');
