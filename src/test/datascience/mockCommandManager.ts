@@ -37,7 +37,7 @@ export class MockCommandManager implements ICommandManager {
         T,
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    >(command: E, ...rest: U): Thenable<T | undefined> {
+    >(command: E, ...rest: U): Thenable<T> {
         const func = this.commands.get(command);
         if (func) {
             const result = func(...rest);
@@ -47,7 +47,7 @@ export class MockCommandManager implements ICommandManager {
             }
             return Promise.resolve(result);
         }
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined as any);
     }
 
     public getCommands(_filterInternal?: boolean): Thenable<string[]> {

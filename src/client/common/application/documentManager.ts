@@ -31,7 +31,7 @@ export class DocumentManager implements IDocumentManager {
     public get activeTextEditor(): TextEditor | undefined {
         return window.activeTextEditor;
     }
-    public get visibleTextEditors(): TextEditor[] {
+    public get visibleTextEditors(): readonly TextEditor[] {
         return window.visibleTextEditors;
     }
     public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
@@ -40,7 +40,7 @@ export class DocumentManager implements IDocumentManager {
     public get onDidChangeTextDocument(): Event<TextDocumentChangeEvent> {
         return workspace.onDidChangeTextDocument;
     }
-    public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
+    public get onDidChangeVisibleTextEditors(): Event<readonly TextEditor[]> {
         return window.onDidChangeVisibleTextEditors;
     }
     public get onDidChangeTextEditorSelection(): Event<TextEditorSelectionChangeEvent> {

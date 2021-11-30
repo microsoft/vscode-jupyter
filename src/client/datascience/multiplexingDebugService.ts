@@ -59,7 +59,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     public get activeDebugConsole(): DebugConsole {
         return this.activeService.activeDebugConsole;
     }
-    public get breakpoints(): Breakpoint[] {
+    public get breakpoints(): readonly Breakpoint[] {
         return this.activeService.breakpoints;
     }
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
