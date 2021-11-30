@@ -663,7 +663,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
     });
 
-    test.only('Handling of carriage returns', async () => {
+    test('Handling of carriage returns', async () => {
         await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
             index: 0
         });
