@@ -43,6 +43,7 @@ export class BackupPipInstaller {
         token: CancellationToken
     ): Promise<boolean> {
         if (product === Product.pip) {
+            traceVerbose(`We cannot pip install pip.`);
             return false;
         }
         // We can only run this installer against global & windows store enviorments.
@@ -51,7 +52,9 @@ export class BackupPipInstaller {
             interpreter.envType !== EnvironmentType.WindowsStore &&
             interpreter.envType !== EnvironmentType.System
         ) {
-            traceWarning(`We cannot pip install packages into non-Global Python environments.`);
+            traceWarning(
+                `We cannot pip install packages into non-Global Python environments '${interpreter.envType}'.`
+            );
             return false;
         }
         // Check if pip is installed.
