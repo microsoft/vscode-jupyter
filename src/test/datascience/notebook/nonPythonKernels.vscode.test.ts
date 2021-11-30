@@ -18,7 +18,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
@@ -206,10 +205,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // First output can contain `text/html` with some Jupyter UI specific stuff.
         try {
             traceInfo(`Cell output length ${cell.outputs.length}`);
-            assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
+            await waitForTextOutput(cell, 'Hello', 0, false);
         } catch (ex) {
             if (cell.outputs.length > 1) {
-                assertHasTextOutputInVSCode(cell, 'Hello', 1, false);
+                await waitForTextOutput(cell, 'Hello', 1, false);
             } else {
                 throw ex;
             }

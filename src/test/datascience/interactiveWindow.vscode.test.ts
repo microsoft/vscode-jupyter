@@ -22,12 +22,12 @@ import {
     waitForLastCellToComplete
 } from './helpers';
 import {
-    assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './notebook/helper';
 
 suite('Interactive window', async function () {
@@ -87,7 +87,7 @@ suite('Interactive window', async function () {
         const actualSource = secondCell?.document.getText();
         assert.equal(actualSource, source, `Executed cell has unexpected source code`);
         await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, '42');
+        await waitForTextOutput(secondCell!, '42');
     });
     test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
@@ -174,7 +174,7 @@ suite('Interactive window', async function () {
         assert.ok(notebook !== undefined, 'No interactive window found');
         const index = notebook!.cellCount - 1;
         const cell = notebook!.cellAt(index);
-        await waitForCondition(async () => assertHasTextOutputInVSCode(cell, 'foo'), 15_000, 'Incorrect output');
+        await waitForTextOutput(cell, 'foo');
     });
 
     test('Clear output', async function () {
@@ -189,7 +189,7 @@ for i in range(10):
 `;
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, text, disposables);
         const cell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assertHasTextOutputInVSCode(cell!, 'Hello World 9!');
+        await waitForTextOutput(cell!, 'Hello World 9!');
     });
 
     test('Clear input box', async () => {
@@ -307,7 +307,7 @@ for i in range(10):
         await insertIntoInputEditor('dh.display("Hello")');
         await vscode.commands.executeCommand('interactive.execute');
         const secondCell = await waitForLastCellToComplete(interactiveWindow);
-        assertHasTextOutputInVSCode(secondCell!, "'Hello'");
+        await waitForTextOutput(secondCell!, "'Hello'");
 
         // Create cell 3
         await insertIntoInputEditor('dh.update("Goodbye")');
@@ -316,7 +316,7 @@ for i in range(10):
         const thirdCell = await waitForLastCellToComplete(interactiveWindow);
         assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
         // Second cell output is updated
-        assertHasTextOutputInVSCode(secondCell!, "'Goodbye'");
+        await waitForTextOutput(secondCell!, "'Goodbye'");
     });
 
     test('Multiple interactive windows', async () => {
@@ -377,13 +377,13 @@ ${actualCode}
 print('hi')`;
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, code, disposables);
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assertHasTextOutputInVSCode(lastCell, 'hi', undefined, false);
+        await waitForTextOutput(lastCell, 'hi', undefined, false);
         return lastCell;
     }
 
     test('jupyter.magicCommandsAsComments: `true`', async () => {
         const lastCell = await runMagicCommandsTest(true);
-        assertHasTextOutputInVSCode(lastCell, 'Wall time:', undefined, false);
+        await waitForTextOutput(lastCell, 'Wall time:', undefined, false);
     });
 
     test('jupyter.magicCommandsAsComments: `false`', async () => {

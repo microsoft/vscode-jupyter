@@ -17,7 +17,6 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -152,7 +151,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Confirm we have execution order and output.
         const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
         assert.equal(cells[0].executionSummary?.executionOrder, 1);
-        assertHasTextOutputInVSCode(cells[0], 'Hello World');
+        await waitForTextOutput(cells[0], 'Hello World');
 
         await Promise.all([
             runAllCellsInActiveNotebook(),
@@ -315,22 +314,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await runAllCellsInActiveNotebook();
 
         // Wait for foo to be printed
-        await waitForCondition(
-            async () =>
-                assertHasTextOutputInVSCode(cell, 'foo', 0, false) &&
-                assertHasTextOutputInVSCode(cell, 'foo', 1, false),
-            15_000,
-            'Incorrect output'
-        );
+        await Promise.all([waitForTextOutput(cell, 'foo', 0, false), waitForTextOutput(cell, 'foo', 1, false)]);
 
         // Wait for bar to be printed
-        await waitForCondition(
-            async () =>
-                assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
-                assertHasTextOutputInVSCode(cell, 'bar', 1, false),
-            15_000,
-            'Incorrect output'
-        );
+        await Promise.all([waitForTextOutput(cell, 'bar', 0, false), waitForTextOutput(cell, 'bar', 1, false)]);
 
         await waitForExecutionCompletedSuccessfully(cell);
     });
@@ -676,7 +663,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
     });
 
-    test('Handling of carriage returns', async () => {
+    test.only('Handling of carriage returns', async () => {
         await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
             index: 0
         });
@@ -693,18 +680,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
-        assert.ok(cells[0].outputs[0], 'cell 0 output empty');
-        assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three\r');
-        assert.ok(cells[1].outputs[0], 'cell 1 output empty');
-        assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\ntwo\nthree\n');
-        assert.ok(cells[2].outputs[0], 'cell 2 output empty');
-        assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
-        assert.ok(cells[3].outputs[0], 'cell 3 output empty');
-        assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
-        assert.ok(cells[4].outputs[0], 'cell 4 output empty');
-        assert.equal(cells[4].outputs[0].items[0].data.toString(), '9%\r');
-        assert.ok(cells[5].outputs[0], 'cell 5 output empty');
-        assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
+        // Wait for the outputs.
+        await Promise.all([
+            waitForTextOutput(cells[0], 'three\r', 0, true),
+            waitForTextOutput(cells[1], 'one\ntwo\nthree\n', 0, true),
+            waitForTextOutput(cells[2], '3\n', 0, true),
+            waitForTextOutput(cells[3], '2\n', 0, true),
+            waitForTextOutput(cells[4], '9%\r', 0, true),
+            waitForTextOutput(cells[5], 'Execute\nExecute 9\n', 0, true)
+        ]);
     });
 
     test('Execute all cells and run after error', async () => {
