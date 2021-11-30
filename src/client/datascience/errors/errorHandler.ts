@@ -521,7 +521,9 @@ function getCombinedErrorMessage(prefix?: string, message?: string) {
         .filter((line) => line.length > 0)
         .join(' \n');
     if (errorMessage.length && errorMessage.indexOf('command:jupyter.viewOutput') === -1) {
-        return `${errorMessage}. \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+        return `${
+            errorMessage.endsWith('.') ? errorMessage : errorMessage + '.'
+        } \n${DataScience.viewJupyterLogForFurtherInfo()}`;
     }
     return errorMessage;
 }

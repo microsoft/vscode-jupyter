@@ -12,7 +12,9 @@ export class PythonKernelDiedError extends BaseError {
         // Last line in stack traces generally contains the error message.
         // Display that in the error message.
         let reason = ('reason' in options ? options.reason || '' : options.stdErr).trim().split('\n').reverse()[0];
-        reason = reason ? `${reason}, \n` : '';
+        reason = reason ? reason.trim() : '';
+        reason = reason.endsWith('.') ? reason : `${reason}.`;
+        reason = reason ? `${reason} \n` : '';
         // No point displaying exit code if its 1 (thats not useful information).
         const exitCodeMessage = 'exitCode' in options && options.exitCode > 1 ? ` (code: ${options.exitCode}). ` : '';
         const message =
