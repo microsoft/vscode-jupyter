@@ -12,7 +12,8 @@ import { submitFromPythonFile } from './helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './notebook/helper';
 
 suite('Interactive window (remote)', async () => {
