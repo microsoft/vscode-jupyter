@@ -52,7 +52,9 @@ export class BackupPipInstaller {
             interpreter.envType !== EnvironmentType.WindowsStore &&
             interpreter.envType !== EnvironmentType.System
         ) {
-            traceWarning(`We cannot pip install packages into non-Global Python environments '${interpreter.envType}'.`);
+            traceWarning(
+                `We cannot pip install packages into non-Global Python environments '${interpreter.envType}'.`
+            );
             return false;
         }
         // Check if pip is installed.
