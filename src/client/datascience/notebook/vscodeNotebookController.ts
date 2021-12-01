@@ -58,12 +58,7 @@ import {
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView } from './constants';
-import {
-    isJupyterNotebook,
-    isPythonNotebook,
-    traceCellMessage,
-    updateNotebookDocumentMetadata
-} from './helpers/helpers';
+import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
