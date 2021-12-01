@@ -15,6 +15,7 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -122,7 +123,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
-        private readonly browser: IBrowserService
+        private readonly browser: IBrowserService,
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -456,6 +458,10 @@ export class VSCodeNotebookController implements Disposable {
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
+        // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
+        if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         // Auto start the local kernels.
         if (
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&

@@ -574,7 +574,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.widgetCoordinator,
                         this.docManager,
                         this.appShell,
-                        this.browser
+                        this.browser,
+                        this.extensionChecker
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
