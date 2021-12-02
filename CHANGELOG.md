@@ -77,6 +77,8 @@
    ([#8374](https://github.com/Microsoft/vscode-jupyter/issues/8374))
 1. Ensure interactive widgets work when connecting to remote Jupyter (or when falling back to starting Jupyter locally).
    ([#8378](https://github.com/Microsoft/vscode-jupyter/issues/8378))
+1. Fix semantic colorization in the first cell of a notebook.
+   ([#8437](https://github.com/Microsoft/vscode-jupyter/issues/8437))
 
 ### Code Health
 
