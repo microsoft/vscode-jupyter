@@ -1,5 +1,109 @@
 # Changelog
 
+## 2021.11.100 (8 December 2021)
+
+### Enhancements
+
+1. Performance improvements related to startup of Kernels.
+   * Support pre-warming Kernels to improve startup experience of Notebooks. ([#7903](https://github.com/microsoft/vscode-jupyter/issues/7903))
+   * Faster activation of Python environments such as Conda. ([#8342](https://github.com/microsoft/vscode-jupyter/pull/8342))
+   * Avoid starting default kernel when starting jupyter. ([#8185](https://github.com/microsoft/vscode-jupyter/issues/8185))
+   * Avoid looking for IPyKernel when we've found it once before. ([#8196](https://github.com/microsoft/vscode-jupyter/issues/8196))
+   * Avoid unnecessarily searching for `Jupyter` packages when `Jupyter` runtime isnt' rqeuired to start Kernels. ([#8350](https://github.com/microsoft/vscode-jupyter/issues/8350))
+   ([#8352](https://github.com/Microsoft/vscode-jupyter/issues/8352))
+1. Add diagnostics messages recommending the usage of `%pip install` & `%conda install` over `!pip install`.
+   ([#6864](https://github.com/Microsoft/vscode-jupyter/issues/6864))
+1. Prompt and install `pip` if `pip` is not available when installing missing dependencies such as `ipykernel`.
+   ([#7739](https://github.com/Microsoft/vscode-jupyter/issues/7739))
+1. Warn when using outdated versions of Python.
+   ([#7960](https://github.com/Microsoft/vscode-jupyter/issues/7960))
+1. Add support for interrupting non-python kernels.
+   ([#8107](https://github.com/Microsoft/vscode-jupyter/issues/8107))
+1. Support iPyWidgets when connecting to an existing (already running) remote kernel.
+   ([#8179](https://github.com/Microsoft/vscode-jupyter/issues/8179))
+1. Identify and recommend renaming user created python files that overwrite builtins and cause Kernels to crash (or not start at all).
+   ([#8195](https://github.com/Microsoft/vscode-jupyter/issues/8195))
+1. Display warning message when attempting to use outdated versions of Python (Python 2.7 & the like) when running a notebook.
+   ([#8214](https://github.com/Microsoft/vscode-jupyter/issues/8214))
+1. Recommend updating `traitlets` to `5.1.1` if `jupyter` fails to start.
+   ([#8295](https://github.com/Microsoft/vscode-jupyter/issues/8295))
+1. Attempt to pip install Data Science packages such as `ipykernel` outside a terminal when dealing with Global Python Environments.
+   ([#8325](https://github.com/Microsoft/vscode-jupyter/issues/8325))
+1. Display kernel startup failure messages in cell outputs for improved visibility.
+   ([#8351](https://github.com/Microsoft/vscode-jupyter/issues/8351))
+1. Improvements to error messages displayed when Kernel startup fails.
+   ([#8354](https://github.com/Microsoft/vscode-jupyter/issues/8354))
+
+### Fixes
+
+1. Top level awaits in a notebook cell should not cause an error to be shown.
+   ([#1510](https://github.com/Microsoft/vscode-jupyter/issues/1510))
+1. Cancel active kernel startup when switching to another kernel.
+   ([#5896](https://github.com/Microsoft/vscode-jupyter/issues/5896))
+1. Fix highlighting of elements in a cell.
+   ([#5932](https://github.com/Microsoft/vscode-jupyter/issues/5932))
+1. For interactive window commands (run all, run above, run below) add them to a queue instead of just trying to execute one by one.
+   ([#6982](https://github.com/Microsoft/vscode-jupyter/issues/6982))
+1. Fix completions to skip file names when not inside of a string.
+   ([#7136](https://github.com/Microsoft/vscode-jupyter/issues/7136))
+1. Fix regression to show "Show in Data Viewer" option from nested variables in the debug variables view.
+   ([#7295](https://github.com/Microsoft/vscode-jupyter/issues/7295))
+1. Eliminate duplicate content in jupyter completions.
+   ([#7772](https://github.com/Microsoft/vscode-jupyter/issues/7772))
+1. Make jupyter kernel autocomplete less aggressive and customizable. The new 'jupyter.completionTriggerCharacters' can be used to determine what causes a kernel to return completions.
+   ([#7880](https://github.com/Microsoft/vscode-jupyter/issues/7880))
+1. Make 'Jupyter: Export interactive as Jupyter notebook' command work.
+   ([#7947](https://github.com/Microsoft/vscode-jupyter/issues/7947))
+1. Let code in 'jupyter.runStartupCommands' work with intellisense.
+   For example, if your startup commands were 'import pandas as pd', auto completion would now work automatically for 'pd.' without having to type the import first.
+   ([#7993](https://github.com/Microsoft/vscode-jupyter/issues/7993))
+1. Allow for nbconvert export when a global jupyter interpreter has not been set before.
+   ([#8050](https://github.com/Microsoft/vscode-jupyter/issues/8050))
+1. Eliminate extra long labels in jupyter completions.
+   ([#8080](https://github.com/Microsoft/vscode-jupyter/issues/8080))
+1. Fixes related to handling of carriage returns in outputs.
+   ([#8112](https://github.com/Microsoft/vscode-jupyter/issues/8112))
+1. Make the import ipynb commands use the currently selected pythonExportMethod setting.
+   ([#8158](https://github.com/Microsoft/vscode-jupyter/issues/8158))
+1. Display notebook paths associated with remote kernels in the kernel picker.
+   ([#8175](https://github.com/Microsoft/vscode-jupyter/issues/8175))
+1. Do not prompt to install Python extension when opening a `.NET` notebook.
+   ([#8204](https://github.com/Microsoft/vscode-jupyter/issues/8204))
+1. Turn off telemetry for tracking the number of notebooks in a workspace.
+   ([#8293](https://github.com/Microsoft/vscode-jupyter/issues/8293))
+1. Recommend installing `traitlets` version `5.1.1` if Jupyter fails to start and the version of `traitlets` is older.
+   ([#8295](https://github.com/Microsoft/vscode-jupyter/issues/8295))
+1. Fix interactive window intellisense to work after new concat changes for notebook intellisense.
+   ([#8353](https://github.com/Microsoft/vscode-jupyter/issues/8353))
+1. Fix intellisense problems after editing notebook cells.
+   ([#8374](https://github.com/Microsoft/vscode-jupyter/issues/8374))
+1. Ensure interactive widgets work when connecting to remote Jupyter (or when falling back to starting Jupyter locally).
+   ([#8378](https://github.com/Microsoft/vscode-jupyter/issues/8378))
+
+### Code Health
+
+1. Make sure interrupt during run by line is tested.
+   ([#8002](https://github.com/Microsoft/vscode-jupyter/issues/8002))
+1. Add setting to allow usage of experimental pylance intellisense in notebooks.
+   ([#8096](https://github.com/Microsoft/vscode-jupyter/issues/8096))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 VS Code Stable releases along with the minimum recommended version of the Jupyter Extension.
 
 | Release   | VS Code Stable | Recommended Jupyter Build |
