@@ -211,6 +211,12 @@
         ],
         "commands": [
             {
+                "command": "dataScience.ClearCache",
+                "title": "Clear Cache",
+                "category": "Jupyter (Dev)",
+                "enablement": "jupyter.development"
+            },
+            {
                 "command": "jupyter.debugNotebook",
                 "title": "%jupyter.command.jupyter.debug.title%",
                 "icon": "$(bug)",
