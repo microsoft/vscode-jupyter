@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.11.100 (8 December 2021)
+## 2021.11.100 (November Release on 8 December 2021)
 
 ### Enhancements
 
