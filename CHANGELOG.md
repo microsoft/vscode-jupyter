@@ -15,16 +15,12 @@
    ([#6864](https://github.com/Microsoft/vscode-jupyter/issues/6864))
 1. Prompt and install `pip` if `pip` is not available when installing missing dependencies such as `ipykernel`.
    ([#7739](https://github.com/Microsoft/vscode-jupyter/issues/7739))
-1. Warn when using outdated versions of Python.
-   ([#7960](https://github.com/Microsoft/vscode-jupyter/issues/7960))
 1. Add support for interrupting non-python kernels.
    ([#8107](https://github.com/Microsoft/vscode-jupyter/issues/8107))
 1. Support iPyWidgets when connecting to an existing (already running) remote kernel.
    ([#8179](https://github.com/Microsoft/vscode-jupyter/issues/8179))
 1. Identify and recommend renaming user created python files that overwrite builtins and cause Kernels to crash (or not start at all).
    ([#8195](https://github.com/Microsoft/vscode-jupyter/issues/8195))
-1. Display warning message when attempting to use outdated versions of Python (Python 2.7 & the like) when running a notebook.
-   ([#8214](https://github.com/Microsoft/vscode-jupyter/issues/8214))
 1. Recommend updating `traitlets` to `5.1.1` if `jupyter` fails to start.
    ([#8295](https://github.com/Microsoft/vscode-jupyter/issues/8295))
 1. Attempt to pip install Data Science packages such as `ipykernel` outside a terminal when dealing with Global Python Environments.
@@ -33,6 +29,8 @@
    ([#8351](https://github.com/Microsoft/vscode-jupyter/issues/8351))
 1. Improvements to error messages displayed when Kernel startup fails.
    ([#8354](https://github.com/Microsoft/vscode-jupyter/issues/8354))
+1. Warn when using outdated versions of Python (Python 2.7 & the like).
+   ([#7960](https://github.com/Microsoft/vscode-jupyter/issues/7960))
 
 ### Fixes
 
