@@ -21,8 +21,6 @@ import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import { IDisplayOptions, IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
@@ -77,7 +75,6 @@ export class JupyterSession extends BaseJupyterSession {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
-    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
     public waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session

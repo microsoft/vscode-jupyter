@@ -15,7 +15,7 @@ import { Settings } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
-import { ProgressReporter } from '../progress/progressReporter';
+import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import {
     GetServerOptions,
     IJupyterExecution,
@@ -30,7 +30,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
     private ui = new DisplayOptions(true);
     constructor(
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -84,31 +83,23 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
 
         const disposables: IDisposable[] = [];
-        // Status depends upon if we're about to connect to existing server or not.
-        let progressReporter =
-            this.ui.disableUI === false
-                ? (await this.jupyterExecution.getServer(serverOptions))
-                    ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-                    : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
-                : undefined;
-        if (progressReporter) {
+        let progressReporter: IDisposable | undefined;
+        const createProgressReporter = async () => {
+            if (this.ui.disableUI || progressReporter) {
+                return;
+            }
+            // Status depends upon if we're about to connect to existing server or not.
+            progressReporter = (await this.jupyterExecution.getServer(serverOptions))
+                ? KernelProgressReporter.createProgressReporter(resource, localize.DataScience.connectingToJupyter())
+                : KernelProgressReporter.createProgressReporter(resource, localize.DataScience.startingJupyter());
             disposables.push(progressReporter);
-        } else {
-            this.ui.onDidChangeDisableUI(
-                async () => {
-                    if (!progressReporter && !this.ui.disableUI) {
-                        progressReporter = (await this.jupyterExecution.getServer(serverOptions))
-                            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-                            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
-                        disposables.push(progressReporter);
-                    }
-                },
-                this,
-                disposables
-            );
+        };
+        if (this.ui.disableUI) {
+            this.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
         }
         // Check to see if we support ipykernel or not
         try {
+            await createProgressReporter();
             traceInfo(`Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
@@ -126,9 +117,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
-            progressReporter?.dispose(); // NOSONAR
+            disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
-            if (progressReporter && progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
+            if (token.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
 

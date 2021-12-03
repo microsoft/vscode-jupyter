@@ -21,7 +21,7 @@
     "Common.gotIt": "懂了！",
     "downloading.file": "正在下載 {0}...",
     "downloading.file.progress": "目前 {0}{1}，總共 {2} KB ({3}%)",
-    "DataScience.restartingKernelStatus": "正在重新啟動 Jupyter 核心",
+    "DataScience.restartingKernelStatus": "正在重新啟動 核心 {0}",
     "DataScience.collapseVariableExplorerLabel": "變數",
     "DataScience.notebookExport": "匯出",
     "DataScience.notebookExportAs.shorttitle": "匯出",

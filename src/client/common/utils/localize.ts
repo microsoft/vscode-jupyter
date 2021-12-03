@@ -371,7 +371,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'

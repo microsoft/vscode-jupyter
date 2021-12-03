@@ -219,7 +219,7 @@
     "DataScienceSurveyBanner.bannerLabelYes": "是，现在就接受调查",
     "DataScienceSurveyBanner.bannerLabelNo": "不，谢谢",
     "InteractiveShiftEnterBanner.bannerMessage": "是否在按下 'shift-enter' 时在'交互式'窗口（IPython 控制台）中运行代码？选择 'No' 继续在 Python 终端中运行代码。这可以之后在设置中更改。",
-    "DataScience.restartingKernelStatus": "正在重新启动 Jupyter 内核",
+    "DataScience.restartingKernelStatus": "正在重新启动 内核 {0}",
     "DataScience.executingCode": "正在执行单元",
     "DataScience.collapseAll": "折叠所有单元输入",
     "DataScience.expandAll": "展开所有单元输入",

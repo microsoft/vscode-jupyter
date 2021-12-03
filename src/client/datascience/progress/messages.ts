@@ -8,18 +8,14 @@ import { ReportableAction } from './types';
 
 const progressMessages = {
     [ReportableAction.JupyterSessionWaitForIdleSession]: DataScience.waitingForJupyterSessionToBeIdle(),
-    [ReportableAction.KernelsGetKernelForLocalConnection]: DataScience.gettingListOfKernelsForLocalConnection(),
     [ReportableAction.KernelsGetKernelForRemoteConnection]: DataScience.gettingListOfKernelsForRemoteConnection(),
     [ReportableAction.KernelsGetKernelSpecs]: DataScience.gettingListOfKernelSpecs(),
     [ReportableAction.KernelsRegisterKernel]: DataScience.registeringKernel(),
     [ReportableAction.NotebookConnect]: DataScience.connectingToJupyter(),
     [ReportableAction.NotebookStart]: DataScience.startingJupyterNotebook(),
-    [ReportableAction.RawKernelConnecting]: DataScience.rawKernelConnectingSession(),
-    [ReportableAction.CheckingIfImportIsSupported]: DataScience.checkingIfImportIsSupported(), // Localize these later
     [ReportableAction.InstallingMissingDependencies]: DataScience.installingMissingDependencies(),
     [ReportableAction.ExportNotebookToPython]: DataScience.exportNotebookToPython(),
-    [ReportableAction.PerformingExport]: DataScience.performingExport(),
-    [ReportableAction.ConvertingToPDF]: DataScience.convertingToPDF()
+    [ReportableAction.PerformingExport]: DataScience.performingExport()
 };
 
 /**

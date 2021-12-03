@@ -20,8 +20,6 @@ import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IDisplayOptions, ISessionWithSocket } from '../types';
@@ -61,7 +59,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         super(resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
-    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait until status says idle.
         if (this.session) {

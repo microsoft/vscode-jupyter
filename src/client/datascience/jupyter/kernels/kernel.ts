@@ -21,7 +21,7 @@ import {
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -70,6 +70,8 @@ import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnectError } from '../../errors/jupyterConnectError';
 import { IPythonExtensionChecker } from '../../../api/types';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -355,6 +357,8 @@ export class Kernel implements IKernel {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
                 const stopWatch = new StopWatch();
+                const disposables: IDisposable[] = [];
+                this.createProgressIndicator(disposables);
                 try {
                     try {
                         // No need to block kernel startup on UI updates.
@@ -405,7 +409,9 @@ export class Kernel implements IKernel {
                     }
                     resolve(this.notebook);
                     this._onStarted.fire();
+                    disposeAllDisposables(disposables);
                 } catch (ex) {
+                    disposeAllDisposables(disposables);
                     sendKernelTelemetryEvent(
                         this.resourceUri,
                         Telemetry.NotebookStart,
@@ -442,6 +448,37 @@ export class Kernel implements IKernel {
         }
         return this._notebookPromise;
     }
+    private createProgressIndicator(disposables: IDisposable[]) {
+        if (this.startupUI.disableUI) {
+            this.startupUI.onDidChangeDisableUI(
+                () => {
+                    if (this.disposing || this.disposed || this.startupUI.disableUI) {
+                        return;
+                    }
+                    disposables.push(
+                        KernelProgressReporter.createProgressReporter(
+                            this.resourceUri,
+                            DataScience.connectingToKernel().format(
+                                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                            )
+                        )
+                    );
+                },
+                this,
+                disposables
+            );
+        } else {
+            disposables.push(
+                KernelProgressReporter.createProgressReporter(
+                    this.resourceUri,
+                    DataScience.connectingToKernel().format(
+                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                    )
+                )
+            );
+        }
+    }
+
     private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
         if (serverConnection.localLaunch) {
             return;

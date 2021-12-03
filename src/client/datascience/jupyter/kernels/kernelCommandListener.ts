@@ -3,7 +3,7 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { ProgressLocation, ConfigurationTarget, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceInfo, traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
@@ -11,6 +11,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import {
@@ -163,6 +164,15 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
         if (kernel) {
             trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
+            const restartKernelWithProgress = () =>
+                KernelProgressReporter.wrapWithProgressReporter(
+                    kernel.resourceUri,
+                    DataScience.restartingKernelStatus().format(
+                        `: ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
+                    ),
+                    () => this.restartKernelInternal(kernel)
+                );
+
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -179,28 +189,19 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void this.applicationShell.withProgress(
-                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => this.restartKernelInternal(kernel)
-                    );
+                    void restartKernelWithProgress();
                 } else if (response === yes) {
-                    void this.applicationShell.withProgress(
-                        { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                        () => this.restartKernelInternal(kernel)
-                    );
+                    void restartKernelWithProgress();
                 }
             } else {
-                void this.applicationShell.withProgress(
-                    { location: ProgressLocation.Notification, title: DataScience.restartingKernelStatus() },
-                    () => this.restartKernelInternal(kernel)
-                );
+                void restartKernelWithProgress();
             }
         }
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
         // Set our status
-        const status = this.statusProvider.set(DataScience.restartingKernelStatus());
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
 
         const stopWatch = new StopWatch();
         try {
@@ -274,7 +275,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         // The user needs to know that its automatically restarting (they didn't explicitly restart the kernel).
         if (kernel.status === 'autorestarting' && kernel.session && kernel.session instanceof JupyterSession) {
             // Set our status
-            const status = this.statusProvider.set(DataScience.restartingKernelStatus());
+            const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
             this.kernelRestartProgress.set(kernel, status);
         } else if (kernel.status !== 'starting' && kernel.status !== 'busy' && kernel.status !== 'unknown') {
             this.kernelRestartProgress.get(kernel)?.dispose();
