@@ -11,11 +11,10 @@ import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
-import { Identifiers, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -359,10 +358,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     except Empty:
                         break
         */
-
-        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-        // Restart sessions and retries might make this hard to do correctly otherwise.
-        result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
         return result;
     }

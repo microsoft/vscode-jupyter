@@ -568,6 +568,10 @@ export class Kernel implements IKernel {
         }
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+            // Restart sessions and retries might make this hard to do correctly otherwise.
+            notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             traceInfoIfCI('After updating working directory');
