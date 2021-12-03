@@ -148,7 +148,13 @@ export class NotebookCellBangInstallDiagnosticsProvider
                     break;
 
                 case matplotlibMessage:
-                    codeActions.push(this.createGotoWikiAction(document, Uri.parse('https://aka.ms/vscodejupytermatplotlibwidget'), d));
+                    codeActions.push(
+                        this.createGotoWikiAction(
+                            document,
+                            Uri.parse('https://aka.ms/vscodejupytermatplotlibwidget'),
+                            d
+                        )
+                    );
                     break;
 
                 default:
@@ -174,17 +180,14 @@ export class NotebookCellBangInstallDiagnosticsProvider
         return codeAction;
     }
     private createGotoWikiAction(_document: TextDocument, uri: Uri, d: Diagnostic) {
-        const codeAction = new CodeAction(
-            DataScience.matplotlibWidgetCodeActionTitle(),
-            CodeActionKind.QuickFix
-        );
+        const codeAction = new CodeAction(DataScience.matplotlibWidgetCodeActionTitle(), CodeActionKind.QuickFix);
         codeAction.isPreferred = true;
         codeAction.diagnostics = [d];
         codeAction.command = {
             title: DataScience.matplotlibWidgetCodeActionTitle(),
             command: 'vscode.open',
             arguments: [uri]
-        }
+        };
         return codeAction;
     }
     private analyzeNotebook(notebook: NotebookDocument): void {

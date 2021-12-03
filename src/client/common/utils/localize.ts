@@ -1052,12 +1052,9 @@ export namespace DataScience {
     );
     export const matplotlibWidgetInsteadOfOther = localize(
         'DataScience.matplotlibWidgetInsteadOfOther',
-        '\'%matplotlib\' widget works best inside of VS code'
+        "'%matplotlib' widget works best inside of VS code"
     );
-    export const matplotlibWidgetCodeActionTitle = localize(
-        'DataScience.matplotlibWidgetCodeActionTitle',
-        'More info'
-    );
+    export const matplotlibWidgetCodeActionTitle = localize('DataScience.matplotlibWidgetCodeActionTitle', 'More info');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
