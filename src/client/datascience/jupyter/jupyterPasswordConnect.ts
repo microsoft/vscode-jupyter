@@ -25,7 +25,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) { }
+    ) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(
@@ -230,8 +230,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
-                } else { // get xsrf cookie with session cookie
-                    sessionCookieName = "authservice_session";
+                } else {
+                    // get xsrf cookie with session cookie
+                    sessionCookieName = 'authservice_session';
                     sessionCookieValue = userPassword;
 
                     xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
@@ -336,7 +337,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const response = await this.makeRequest(tokenUrl, {
             method: 'get',
             redirect: 'manual',
-            headers,
+            headers
         });
 
         if (response.ok) {
