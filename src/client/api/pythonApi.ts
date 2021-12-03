@@ -137,6 +137,10 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private waitingOnInstallPrompt?: Promise<void>;
+    /**
+     * Used only for testsing
+     */
+    public static promptDisplayed?: boolean;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -164,6 +168,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
+        PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
