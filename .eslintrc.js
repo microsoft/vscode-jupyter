@@ -655,7 +655,6 @@ module.exports = {
         'src/client/application/misc/joinMailingListPrompt.ts',
         'src/client/datascience/data-viewing/dataViewerMessageListener.ts',
         'src/client/datascience/progress/progressReporter.ts',
-        'src/client/datascience/progress/types.ts',
         'src/client/datascience/progress/decorator.ts',
         'src/client/datascience/ipywidgets/rceProvider.ts',
         'src/client/datascience/ipywidgets/remoteWidgetScriptSourceProvider.ts',
