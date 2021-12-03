@@ -101,7 +101,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     });
     function verifyPromptWasNotDisplayed() {
         assert.strictEqual(
-            PythonExtensionChecker.promptDispalyed,
+            PythonExtensionChecker.promptDisplayed,
             undefined,
             'Prompt for requireing Python extension should not have been displayed'
         );
