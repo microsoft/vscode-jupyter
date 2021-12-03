@@ -184,7 +184,7 @@ export async function run(): Promise<void> {
 
     /* eslint-disable no-console */
     console.time('Time taken to activate the extension');
-    console.log('Starting & waiting for Python extension to activate');
+    console.log('Starting & waiting for Jupyter extension to activate');
     await activateExtensionScript();
     console.timeEnd('Time taken to activate the extension');
 

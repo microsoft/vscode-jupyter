@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as assert from 'assert';
 import { Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
@@ -32,6 +33,7 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput
 } from './helper';
+import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
@@ -81,6 +83,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
+        verifyPromptWasNotDisplayed();
         if (
             !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
             !(await canRunNotebookTests()) ||
@@ -91,10 +94,18 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         }
         sinon.restore();
         await workAroundVSCodeNotebookStartPages();
+        verifyPromptWasNotDisplayed();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
+    function verifyPromptWasNotDisplayed() {
+        assert.strictEqual(
+            PythonExtensionChecker.promptDispalyed,
+            undefined,
+            'Prompt for requireing Python extension should not have been displayed'
+        );
+    }
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
@@ -107,7 +118,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async () => {
+        verifyPromptWasNotDisplayed();
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
