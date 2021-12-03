@@ -21,7 +21,8 @@ import {
     Uri,
     WorkspaceEdit,
     Hover,
-    HoverProvider
+    HoverProvider,
+    Diagnostic
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
@@ -36,6 +37,7 @@ type CellVersion = number;
 
 const pipMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('pip');
 const condaMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('conda');
+const matplotlibMessage = DataScience.matplotlibWidgetInsteadOfOther();
 const diagnosticSource = 'Jupyter';
 
 @injectable()
@@ -137,27 +139,53 @@ export class NotebookCellBangInstallDiagnosticsProvider
         }
         const codeActions: CodeAction[] = [];
         context.diagnostics.forEach((d) => {
-            if (d.message !== pipMessage && d.message !== condaMessage) {
-                return;
+            switch (d.message) {
+                case pipMessage:
+                    codeActions.push(this.createReplaceCodeAction(document, 'pip', d));
+                    break;
+                case condaMessage:
+                    codeActions.push(this.createReplaceCodeAction(document, 'conda', d));
+                    break;
+
+                case matplotlibMessage:
+                    codeActions.push(this.createGotoWikiAction(document, Uri.parse('https://aka.ms/vscodejupytermatplotlibwidget'), d));
+                    break;
+
+                default:
+                    break;
             }
-            const isPip = d.message === pipMessage;
-            const installer = isPip ? 'pip' : 'conda';
-            const codeAction = new CodeAction(
-                DataScience.replacePipCondaInstallCodeAction().format(installer),
-                CodeActionKind.QuickFix
-            );
-            codeAction.isPreferred = true;
-            codeAction.diagnostics = [d];
-            const edit = new WorkspaceEdit();
-            edit.replace(
-                document.uri,
-                new Range(d.range.start, new Position(d.range.start.line, d.range.start.character + 1)),
-                '%'
-            );
-            codeAction.edit = edit;
-            codeActions.push(codeAction);
         });
         return codeActions;
+    }
+    private createReplaceCodeAction(document: TextDocument, type: string, d: Diagnostic) {
+        const codeAction = new CodeAction(
+            DataScience.replacePipCondaInstallCodeAction().format(type),
+            CodeActionKind.QuickFix
+        );
+        codeAction.isPreferred = true;
+        codeAction.diagnostics = [d];
+        const edit = new WorkspaceEdit();
+        edit.replace(
+            document.uri,
+            new Range(d.range.start, new Position(d.range.start.line, d.range.start.character + 1)),
+            '%'
+        );
+        codeAction.edit = edit;
+        return codeAction;
+    }
+    private createGotoWikiAction(_document: TextDocument, uri: Uri, d: Diagnostic) {
+        const codeAction = new CodeAction(
+            DataScience.matplotlibWidgetCodeActionTitle(),
+            CodeActionKind.QuickFix
+        );
+        codeAction.isPreferred = true;
+        codeAction.diagnostics = [d];
+        codeAction.command = {
+            title: DataScience.matplotlibWidgetCodeActionTitle(),
+            command: 'vscode.open',
+            arguments: [uri]
+        }
+        return codeAction;
     }
     private analyzeNotebook(notebook: NotebookDocument): void {
         if (notebook.notebookType !== JupyterNotebookView) {
@@ -225,6 +253,18 @@ export class NotebookCellBangInstallDiagnosticsProvider
                         message: condaMessage,
                         range,
                         severity: DiagnosticSeverity.Error,
+                        source: diagnosticSource
+                    }
+                ]);
+            } else if (text.trim().startsWith('%matplotlib') && !text.trim().endsWith('widget')) {
+                const startPos = text.indexOf('%');
+                const endPos = text.length;
+                const range = new Range(line.lineNumber, startPos, line.lineNumber, endPos);
+                this.problems.set(cell.document.uri, [
+                    {
+                        message: matplotlibMessage,
+                        range,
+                        severity: DiagnosticSeverity.Warning,
                         source: diagnosticSource
                     }
                 ]);
