@@ -129,9 +129,8 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                         progressInfo.reporter.report({
                             message: progressInfo.progressList[progressInfo.progressList.length - 1]
                         });
-                    }
-                    // If we have no more messages, then remove the reporter.
-                    if (progressInfo.progressList.length === 0) {
+                    } else {
+                        // If we have no more messages, then remove the reporter.
                         KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
                         progressInfo.dispose();
                     }
