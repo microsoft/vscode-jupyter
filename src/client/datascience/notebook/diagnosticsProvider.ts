@@ -259,7 +259,11 @@ export class NotebookCellBangInstallDiagnosticsProvider
                         source: diagnosticSource
                     }
                 ]);
-            } else if (text.trim().startsWith('%matplotlib') && !text.trim().endsWith('widget')) {
+            } else if (
+                text.trim().startsWith('%matplotlib') &&
+                !text.trim().endsWith('widget') &&
+                !text.trim().endsWith('inline')
+            ) {
                 const startPos = text.indexOf('%');
                 const endPos = text.length;
                 const range = new Range(line.lineNumber, startPos, line.lineNumber, endPos);
