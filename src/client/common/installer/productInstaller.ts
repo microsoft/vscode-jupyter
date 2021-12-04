@@ -12,7 +12,7 @@ import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
-import { traceDecorators, traceError, traceInfo, traceVerbose } from '../logger';
+import { traceDecorators, traceError, traceInfo } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
@@ -169,7 +169,7 @@ export class DataScienceInstaller extends BaseInstaller {
         // the packages in the terminal (gitbash, wsh are not supported by Python extension).
         let result = InstallerResponse.Ignore;
         let attemptedToInstallUsingOurInstaller = false;
-        if (this.isWindows && !this.isUsingWindowsTerminalSupportedByPythonExtension) {
+        if (this.isWindows) {
             attemptedToInstallUsingOurInstaller = true;
             const installedInternally = await this.installWithPipWithoutTerminal(
                 product,
@@ -218,12 +218,6 @@ export class DataScienceInstaller extends BaseInstaller {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
     }
-    public get isUsingWindowsTerminalSupportedByPythonExtension() {
-        traceVerbose(`Windows shell is ${this.appEnv.shell}`);
-        const shell = this.appEnv.shell.toLowerCase();
-        return shell.endsWith('powershell.exe') || shell.endsWith('cmd.exe') || shell.endsWith('pwsh.exe');
-    }
-
     private async installWithPipWithoutTerminal(
         product: Product,
         interpreter: PythonEnvironment,
