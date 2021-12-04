@@ -51,7 +51,9 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
-    public get kernelConnectionMetadata(): Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
+    public get kernelConnectionMetadata(): Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    > {
         return this._kernelConnectionMetadata;
     }
     public get connection(): Readonly<IKernelConnection> {
@@ -77,7 +79,9 @@ export class KernelProcess implements IKernelProcess {
     private pythonDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
-    private readonly _kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    private readonly _kernelConnectionMetadata: Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
