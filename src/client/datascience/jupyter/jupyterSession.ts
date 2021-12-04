@@ -20,7 +20,7 @@ import * as localize from '../../common/utils/localize';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
-import { Identifiers, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IDisplayOptions, IJupyterConnection, ISessionWithSocket } from '../types';
@@ -32,7 +32,6 @@ import { KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
 import { CancellationTokenSource } from 'vscode';
-import { noop } from '../../common/utils/misc';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -134,9 +133,6 @@ export class JupyterSession extends BaseJupyterSession {
 
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, this.idleTimeout);
-
-            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-            newSession.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
         } catch (exc) {
             // Don't swallow known exceptions.
             if (exc instanceof BaseError) {
