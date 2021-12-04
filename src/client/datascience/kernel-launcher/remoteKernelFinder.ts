@@ -14,7 +14,7 @@ import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from 
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
-    KernelSpecConnectionMetadata
+    RemoteKernelSpecConnectionMetadata
 } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
@@ -121,8 +121,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
                 // Turn them both into a combined list
                 const mappedSpecs = specs.map((s) => {
-                    const kernel: KernelSpecConnectionMetadata = {
-                        kind: 'startUsingKernelSpec',
+                    const kernel: RemoteKernelSpecConnectionMetadata = {
+                        kind: 'startUsingRemoteKernelSpec',
                         kernelSpec: s,
                         id: getKernelId(s, undefined)
                     };

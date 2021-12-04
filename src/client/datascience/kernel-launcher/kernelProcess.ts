@@ -32,7 +32,7 @@ import {
     findIndexOfConnectionFile,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
@@ -51,7 +51,9 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
-    public get kernelConnectionMetadata(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
+    public get kernelConnectionMetadata(): Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    > {
         return this._kernelConnectionMetadata;
     }
     public get connection(): Readonly<IKernelConnection> {
@@ -77,12 +79,14 @@ export class KernelProcess implements IKernelProcess {
     private pythonDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
-    private readonly _kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    private readonly _kernelConnectionMetadata: Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker,

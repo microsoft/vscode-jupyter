@@ -126,7 +126,7 @@ export class RawKernel implements Kernel.IKernelConnection {
         this.socket.dispose();
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
-        if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingKernelSpec') {
+        if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec') {
             const kernelSpec = cloneDeep(this.kernelProcess.kernelConnectionMetadata.kernelSpec) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
             return {

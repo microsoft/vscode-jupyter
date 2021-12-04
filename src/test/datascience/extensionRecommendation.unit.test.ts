@@ -92,7 +92,7 @@ suite('DataScience Extension Recommendation', () => {
                     const kernelSpec: IJupyterKernelSpec = {
                         language
                     } as any;
-                    when(controller.connection).thenReturn({ kind: 'startUsingKernelSpec', kernelSpec, id: '' });
+                    when(controller.connection).thenReturn({ kind: 'startUsingLocalKernelSpec', kernelSpec, id: '' });
                     return instance(controller);
                 }
                 test('No recommendations for python Notebooks', async () => {

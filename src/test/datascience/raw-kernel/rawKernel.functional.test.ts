@@ -87,7 +87,7 @@ suite('Dummy13', () => {
 //             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
 //             ioc.get<KernelDaemonPool>(KernelDaemonPool),
 //             connectionInfo as any,
-//             { kernelSpec, interpreter, kind: 'startUsingKernelSpec', id: '1' },
+//             { kernelSpec, interpreter, kind: 'startUsingLocalKernelSpec', id: '1' },
 //             ioc.get<IFileSystem>(IFileSystem),
 //             undefined,
 //             ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker),

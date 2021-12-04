@@ -986,7 +986,7 @@ suite('Jupyter Execution', async () => {
             display_name: 'somename'
         };
         const kernelMetadata: LocalKernelConnectionMetadata = {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec,
             id: getKernelId(kernelSpec)
         };

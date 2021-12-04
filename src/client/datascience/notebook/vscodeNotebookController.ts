@@ -201,7 +201,7 @@ export class VSCodeNotebookController implements Disposable {
         if (
             !pyVersion ||
             pyVersion.major >= 4 ||
-            (this.kernelConnection.kind !== 'startUsingKernelSpec' &&
+            (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
                 this.kernelConnection.kind !== 'startUsingPythonInterpreter')
         ) {
             return;
@@ -376,7 +376,10 @@ export class VSCodeNotebookController implements Disposable {
                 kernel.kernelConnectionMetadata,
                 kernel.info
             );
-            if (this.kernelConnection.kind === 'startUsingKernelSpec') {
+            if (
+                this.kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                this.kernelConnection.kind === 'startUsingRemoteKernelSpec'
+            ) {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
                 } else {
@@ -411,7 +414,8 @@ export class VSCodeNotebookController implements Disposable {
                     this.connection.kernelModel.language
                 );
                 break;
-            case 'startUsingKernelSpec':
+            case 'startUsingLocalKernelSpec':
+            case 'startUsingRemoteKernelSpec':
                 sendNotebookOrKernelLanguageTelemetry(
                     Telemetry.SwitchToExistingKernel,
                     this.connection.kernelSpec.language
@@ -476,7 +480,8 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel':
             return DataScience.kernelCategoryForJupyterSession();
-        case 'startUsingKernelSpec':
+        case 'startUsingRemoteKernelSpec':
+        case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
             switch (kernelConnection.interpreter.envType) {

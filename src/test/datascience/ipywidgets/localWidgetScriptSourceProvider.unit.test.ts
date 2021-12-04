@@ -56,7 +56,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
@@ -80,7 +80,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
@@ -100,7 +100,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: { name: '', display_name: '', argv: [], path: kernelPath, language: PYTHON_LANGUAGE },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
@@ -121,7 +121,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
@@ -147,7 +147,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
@@ -182,7 +182,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
@@ -215,7 +215,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here

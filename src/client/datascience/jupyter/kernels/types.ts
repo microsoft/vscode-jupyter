@@ -44,7 +44,7 @@ export type LiveKernelConnectionMetadata = Readonly<{
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type KernelSpecConnectionMetadata = Readonly<{
+export type LocalKernelSpecConnectionMetadata = Readonly<{
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
     /**
@@ -53,7 +53,19 @@ export type KernelSpecConnectionMetadata = Readonly<{
      * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
      */
     interpreter?: PythonEnvironment;
-    kind: 'startUsingKernelSpec';
+    kind: 'startUsingLocalKernelSpec';
+    id: string;
+}>;
+/**
+ * Connection metadata for Remote Kernels started using kernelspec (JSON).
+ * This could be a raw kernel (spec might have path to executable for .NET or the like).
+ * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
+ */
+export type RemoteKernelSpecConnectionMetadata = Readonly<{
+    kernelModel?: undefined;
+    interpreter?: undefined;
+    kernelSpec: IJupyterKernelSpec;
+    kind: 'startUsingRemoteKernelSpec';
     id: string;
 }>;
 /**
@@ -75,14 +87,15 @@ export type PythonKernelConnectionMetadata = Readonly<{
  */
 export type KernelConnectionMetadata =
     | Readonly<LiveKernelConnectionMetadata>
-    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<LocalKernelSpecConnectionMetadata>
+    | Readonly<RemoteKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
 /**
  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
  */
 export type LocalKernelConnectionMetadata =
-    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<LocalKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
