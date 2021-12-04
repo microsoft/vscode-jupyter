@@ -790,8 +790,8 @@ export function findPreferredKernel(
                 subScore === 5 && // This is a bit flakey. Number isn't consistent. Should probably just make the order of kernelspecs have the preferred one first
                 score === 5 &&
                 (metadata.kind === 'startUsingPythonInterpreter' ||
-                    metadata.kind === 'startUsingRemoteKernelSpec' ||
-                    (metadata.kind === 'startUsingLocalKernelSpec' &&
+                    ((metadata.kind === 'startUsingLocalKernelSpec' ||
+                        metadata.kind === 'startUsingRemoteKernelSpec') &&
                         metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
                 preferredInterpreterKernelSpecIndex >= 0 &&
                 bestScore <= 2
