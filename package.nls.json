@@ -243,7 +243,7 @@
     "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "DataScienceSurveyBanner.bannerLabelNo": "No, thanks",
     "InteractiveShiftEnterBanner.bannerMessage": "Would you like to run code in the 'Interactive' window (an IPython console) for 'shift-enter'? Select 'No' to continue to run code in the Python Terminal. This can be changed later in settings.",
-    "DataScience.restartingKernelStatus": "Restarting Jupyter Kernel",
+    "DataScience.restartingKernelStatus": "Restarting Kernel {0}",
     "DataScience.executingCode": "Executing Cell",
     "DataScience.collapseAll": "Collapse all cell inputs",
     "DataScience.expandAll": "Expand all cell inputs",

@@ -46,7 +46,7 @@
     "DataScienceSurveyBanner.bannerMessage": "Zou je alsjeblieft 2 minuten kunnen nemen om ons te vertellen hoe de Python-data-science-functionaliteiten voor jou werkt?",
     "DataScienceSurveyBanner.bannerLabelYes": "Ja, neem nu deel aan het onderzoek",
     "DataScienceSurveyBanner.bannerLabelNo": "Nee, bedankt",
-    "DataScience.restartingKernelStatus": "IPython-Kernel herstarten",
+    "DataScience.restartingKernelStatus": "IPython-Kernel herstarten {0}",
     "DataScience.executingCode": "Cel aan het uitvoeren",
     "DataScience.collapseAll": "Alle cel-invoeren sluiten",
     "DataScience.expandAll": "Alle cel-invoeren openen",

@@ -11,7 +11,6 @@ import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -29,7 +28,6 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 /* eslint-disable  */
 suite('DataScience - NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
-    let progressReporter: ProgressReporter;
     let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
@@ -43,7 +41,6 @@ suite('DataScience - NotebookServerProvider', () => {
     const disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
-        progressReporter = mock(ProgressReporter);
         configurationService = mock<IConfigurationService>();
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
@@ -61,7 +58,6 @@ suite('DataScience - NotebookServerProvider', () => {
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
-            instance(progressReporter),
             instance(configurationService),
             instance(jupyterExecution),
             instance(interpreterService),

@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -218,6 +218,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             );
 
             const connection = await this.startNotebookServer(
+                options.resource,
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
                 workingDirectory,
@@ -244,12 +245,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // eslint-disable-next-line
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
+        resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
-        return this.notebookStarter.start(useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
+        return this.notebookStarter.start(resource, useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

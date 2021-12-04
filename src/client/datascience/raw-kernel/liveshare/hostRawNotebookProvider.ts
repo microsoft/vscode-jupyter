@@ -12,7 +12,6 @@ import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposable,
     IDisposableRegistry,
     IOutputChannel,
     Resource
@@ -23,10 +22,9 @@ import { noop } from '../../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
+import { isPythonKernelConnection } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { IKernelLauncher } from '../../kernel-launcher/types';
-import { ProgressReporter } from '../../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
     IDisplayOptions,
@@ -42,7 +40,6 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { JupyterNotebook } from '../../jupyter/jupyterNotebook';
 import * as uuid from 'uuid/v4';
-import { disposeAllDisposables } from '../../../common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -68,7 +65,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
@@ -107,7 +103,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
         this.trackDisposable(notebookPromise.promise);
-        const disposables: IDisposable[] = [];
         let rawSession: RawJupyterSession | undefined;
 
         traceInfo(`Getting preferred kernel for ${getDisplayPath(document.uri)}`);
@@ -123,30 +118,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                         pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
                     });
                 }
-            }
-            // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
-
-            let progressDisposable = !ui.disableUI
-                ? this.progressReporter.createProgressIndicator(
-                      localize.DataScience.connectingToKernel().format(displayName)
-                  )
-                : undefined;
-            cancelToken.onCancellationRequested(() => progressDisposable?.dispose(), this, disposables);
-            if (progressDisposable) {
-                disposables.push(progressDisposable);
-            } else {
-                ui.onDidChangeDisableUI(() => {
-                    if (progressDisposable || notebookPromise.completed || ui.disableUI) {
-                        return;
-                    }
-                    progressDisposable =
-                        progressDisposable ||
-                        this.progressReporter.createProgressIndicator(
-                            localize.DataScience.connectingToKernel().format(displayName)
-                        );
-                    disposables.push(progressDisposable);
-                }, disposables);
             }
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
@@ -191,8 +162,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
-        } finally {
-            disposeAllDisposables(disposables);
         }
 
         return notebookPromise.promise;
