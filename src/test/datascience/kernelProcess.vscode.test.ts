@@ -17,7 +17,7 @@ import {
 } from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
-import { KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';
@@ -61,7 +61,7 @@ suite('DataScience - Kernel Process', () => {
         disposeAllDisposables(disposables);
     });
 
-    function launchKernel(metadata: KernelSpecConnectionMetadata, connectionFile: string) {
+    function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {
         const processExecutionFactory = mock<IProcessServiceFactory>();
         const daemonPool = mock<KernelDaemonPool>();
         const connection = mock<IKernelConnection>();
@@ -103,7 +103,7 @@ suite('DataScience - Kernel Process', () => {
         );
     }
     test('Launch from kernelspec (linux)', async function () {
-        const metadata: KernelSpecConnectionMetadata = {
+        const metadata: LocalKernelSpecConnectionMetadata = {
             id: '1',
             kernelSpec: {
                 argv: [
@@ -124,7 +124,7 @@ suite('DataScience - Kernel Process', () => {
                 name: '',
                 path: ''
             },
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'wow/connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
@@ -140,7 +140,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (linux with space in file name)', async function () {
-        const metadata: KernelSpecConnectionMetadata = {
+        const metadata: LocalKernelSpecConnectionMetadata = {
             id: '1',
             kernelSpec: {
                 argv: [
@@ -161,7 +161,7 @@ suite('DataScience - Kernel Process', () => {
                 name: '',
                 path: ''
             },
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
         await kernelProcess.launch('', 10_000, token.token);
@@ -177,7 +177,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows)', async function () {
-        const metadata: KernelSpecConnectionMetadata = {
+        const metadata: LocalKernelSpecConnectionMetadata = {
             id: '1',
             kernelSpec: {
                 argv: [
@@ -196,7 +196,7 @@ suite('DataScience - Kernel Process', () => {
                 name: '',
                 path: ''
             },
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
@@ -212,7 +212,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows with space in file name)', async function () {
-        const metadata: KernelSpecConnectionMetadata = {
+        const metadata: LocalKernelSpecConnectionMetadata = {
             id: '1',
             kernelSpec: {
                 argv: [
@@ -231,7 +231,7 @@ suite('DataScience - Kernel Process', () => {
                 name: '',
                 path: ''
             },
-            kind: 'startUsingKernelSpec'
+            kind: 'startUsingLocalKernelSpec'
         };
         const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
         await kernelProcess.launch('', 10_000, token.token);

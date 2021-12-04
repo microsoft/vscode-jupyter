@@ -83,7 +83,10 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     }
 
     private onNotebookControllerSelected({ controller }: { controller: VSCodeNotebookController }) {
-        if (controller.connection.kind !== 'startUsingKernelSpec') {
+        if (
+            controller.connection.kind !== 'startUsingLocalKernelSpec' &&
+            controller.connection.kind !== 'startUsingRemoteKernelSpec'
+        ) {
             return;
         }
         if (isPythonKernelConnection(controller.connection)) {

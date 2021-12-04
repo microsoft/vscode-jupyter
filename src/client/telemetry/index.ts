@@ -487,7 +487,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.PythonKerneExecutableMatches]: {
         match: 'true' | 'false';
-        kernelConnectionType: 'startUsingKernelSpec' | 'startUsingPythonInterpreter';
+        kernelConnectionType:
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingPythonInterpreter'
+            | 'startUsingRemoteKernelSpec';
     };
     /**
      * Sent when a jupyter session fails to start and we ask the user for a new kernel
@@ -1453,7 +1456,8 @@ export interface IEventNamePropertyMapping {
         kind:
             | 'startUsingPythonInterpreter'
             | 'startUsingDefaultKernel'
-            | 'startUsingKernelSpec'
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingRemoteKernelSpec'
             | 'connectToLiveKernel';
     } & Partial<TelemetryErrorProperties>;
     /*

@@ -18,7 +18,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/
 import {
     IKernel,
     KernelConnectionMetadata,
-    KernelSpecConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from './types';
@@ -55,7 +55,7 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
     return kernelSpec.argv.findIndex((arg) => arg.includes(connectionFilePlaceholder));
 }
 
-type ConnectionWithKernelSpec = KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
+type ConnectionWithKernelSpec = LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
@@ -130,7 +130,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'connectToLiveKernel': {
             return oldDisplayName;
         }
-        case 'startUsingKernelSpec': {
+        case 'startUsingRemoteKernelSpec':
+        case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
@@ -209,7 +210,9 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
         : undefined;
     if (
         kernelConnection.kind === 'startUsingPythonInterpreter' ||
-        (kernelConnection.kind === 'startUsingKernelSpec' && kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
+        ((kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            kernelConnection.kind === 'startUsingLocalKernelSpec') &&
+            kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
         return kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
     } else {
@@ -439,7 +442,7 @@ export function isLocalLaunch(configuration: IConfigurationService) {
     return false;
 }
 
-export function getInterpreterHashInMetdata(
+export function getInterpreterHashInMetadata(
     notebookMetadata: nbformat.INotebookMetadata | undefined
 ): string | undefined {
     // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
@@ -557,7 +560,7 @@ export function findPreferredKernel(
             //     hasInterpreterInfo &&
             //     definedValuesForKernelSpec.size === 0 &&
             //     !kernels.find((item) => {
-            //         if (item.kind === 'startUsingKernelSpec') {
+            //         if (item.kind === 'startUsingLocalKernelSpec') {
             //             return (
             //                 item.kernelSpec.display_name === kernelSpec.display_name ||
             //                 item.kernelSpec.name === kernelSpec.name
@@ -619,9 +622,11 @@ export function findPreferredKernel(
 
                 // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
                 // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
-                const interpreterHashInMetadata = getInterpreterHashInMetdata(notebookMetadata);
+                const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
                 if (
-                    (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
+                    (metadata.kind === 'startUsingLocalKernelSpec' ||
+                        metadata.kind === 'startUsingRemoteKernelSpec' ||
+                        metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
                     getInterpreterHash(metadata.interpreter) === interpreterHashInMetadata
                 ) {
@@ -785,7 +790,9 @@ export function findPreferredKernel(
                 subScore === 5 && // This is a bit flakey. Number isn't consistent. Should probably just make the order of kernelspecs have the preferred one first
                 score === 5 &&
                 (metadata.kind === 'startUsingPythonInterpreter' ||
-                    (metadata.kind === 'startUsingKernelSpec' && metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
+                    metadata.kind === 'startUsingRemoteKernelSpec' ||
+                    (metadata.kind === 'startUsingLocalKernelSpec' &&
+                        metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
                 preferredInterpreterKernelSpecIndex >= 0 &&
                 bestScore <= 2
             ) {
@@ -800,7 +807,10 @@ export function findPreferredKernel(
     // If still not found, try languages
     if (index < 0) {
         index = kernels.findIndex((kernelSpecConnection) => {
-            if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
+            if (
+                kernelSpecConnection.kind === 'startUsingLocalKernelSpec' ||
+                kernelSpecConnection.kind === 'startUsingRemoteKernelSpec'
+            ) {
                 return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
             } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {
                 return languages.find((l) => l === kernelSpecConnection.kernelModel.language);
@@ -825,7 +835,10 @@ export async function sendTelemetryForPythonKernelExecutable(
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
     }
-    if (kernelConnection.kind !== 'startUsingKernelSpec' && kernelConnection.kind !== 'startUsingPythonInterpreter') {
+    if (
+        kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
+        kernelConnection.kind !== 'startUsingPythonInterpreter'
+    ) {
         return;
     }
     try {

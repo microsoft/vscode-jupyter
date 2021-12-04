@@ -278,15 +278,21 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
-            if (item.connection.kind === 'startUsingKernelSpec' && item.connection.kernelSpec.name === 'python') {
+            if (
+                (item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
+                item.connection.kernelSpec.name === 'python'
+            ) {
                 defaultPythonKernel = item;
             } else if (
-                item.connection.kind === 'startUsingKernelSpec' &&
+                (item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
                 item.connection.kernelSpec.name === 'python3'
             ) {
                 defaultPython3Kernel = item;
             } else if (
-                item.connection.kind === 'startUsingKernelSpec' &&
+                (item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
                 item.connection.kernelSpec.language === PYTHON_LANGUAGE
             ) {
                 defaultPythonLanguageKernel = item;
@@ -705,7 +711,8 @@ export function getControllerDisplayName(kernelConnection: KernelConnectionMetad
         case 'connectToLiveKernel': {
             return currentDisplayName;
         }
-        case 'startUsingKernelSpec': {
+        case 'startUsingRemoteKernelSpec':
+        case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global

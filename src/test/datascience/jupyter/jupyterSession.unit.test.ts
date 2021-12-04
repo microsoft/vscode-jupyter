@@ -83,7 +83,7 @@ suite('DataScience - JupyterSession', () => {
         connection = mock<IJupyterConnection>();
         mockKernelSpec = {
             id: 'xyz',
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
                 argv: [],
                 display_name: '',
@@ -139,7 +139,7 @@ suite('DataScience - JupyterSession', () => {
         );
     }
     setup(() => createJupyterSession());
-    async function connect(kind: 'startUsingKernelSpec' | 'connectToLiveKernel' = 'startUsingKernelSpec') {
+    async function connect(kind: 'startUsingLocalKernelSpec' | 'connectToLiveKernel' = 'startUsingLocalKernelSpec') {
         const nbFile = 'file path';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.newUntitled(anything())).thenResolve({ path: nbFile } as any);
@@ -189,7 +189,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
-                    kind: 'startUsingKernelSpec',
+                    kind: 'startUsingLocalKernelSpec',
                     kernelSpec: {} as any
                 });
                 when(session.shutdown()).thenResolve();
@@ -237,7 +237,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
-                    kind: 'startUsingKernelSpec',
+                    kind: 'startUsingLocalKernelSpec',
                     kernelSpec: {} as any
                 });
                 when(session.shutdown()).thenResolve();

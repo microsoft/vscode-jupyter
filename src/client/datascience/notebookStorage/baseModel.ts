@@ -38,7 +38,8 @@ export function updateNotebookMetadata(
         case 'connectToLiveKernel':
             language = kernelConnection.kernelModel.language;
             break;
-        case 'startUsingKernelSpec':
+        case 'startUsingRemoteKernelSpec':
+        case 'startUsingLocalKernelSpec':
             language = kernelConnection.kernelSpec.language;
             break;
         case 'startUsingPythonInterpreter':

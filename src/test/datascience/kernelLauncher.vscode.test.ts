@@ -64,7 +64,7 @@ suite('DataScience - Kernel Launcher', () => {
         let exitExpected = false;
         const deferred = createDeferred<boolean>();
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec, kind: 'startUsingLocalKernelSpec', id: '1' },
             -1,
             undefined,
             process.cwd(),
@@ -107,7 +107,7 @@ suite('DataScience - Kernel Launcher', () => {
         };
 
         const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec: spec, kind: 'startUsingLocalKernelSpec', id: '1' },
             30_000,
             undefined,
             process.cwd(),
@@ -142,7 +142,7 @@ suite('DataScience - Kernel Launcher', () => {
         };
 
         const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec: spec, kind: 'startUsingLocalKernelSpec', id: '1' },
             30_000,
             undefined,
             process.cwd(),
@@ -195,7 +195,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Bind with ZMQ', async function () {
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec, kind: 'startUsingLocalKernelSpec', id: '1' },
             -1,
             undefined,
             process.cwd(),

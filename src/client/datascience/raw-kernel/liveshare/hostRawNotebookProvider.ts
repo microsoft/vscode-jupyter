@@ -116,7 +116,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             if (
                 kernelConnection &&
                 isPythonKernelConnection(kernelConnection) &&
-                kernelConnection.kind === 'startUsingKernelSpec'
+                kernelConnection.kind === 'startUsingLocalKernelSpec'
             ) {
                 if (!kernelConnection.interpreter) {
                     sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {

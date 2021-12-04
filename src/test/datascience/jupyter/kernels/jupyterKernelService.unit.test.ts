@@ -98,7 +98,7 @@ suite('DataScience - JupyterKernelService', () => {
             id: '2'
         },
         {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
                 specFile: '\\usr\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',
@@ -154,7 +154,7 @@ suite('DataScience - JupyterKernelService', () => {
             id: '5'
         },
         {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
                 specFile: '\\usr\\local\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',
@@ -210,7 +210,7 @@ suite('DataScience - JupyterKernelService', () => {
             id: '8'
         },
         {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
                 specFile: 'C:\\Users\\Rich\\.local\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',

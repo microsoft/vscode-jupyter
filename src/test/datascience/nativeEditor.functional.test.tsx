@@ -407,7 +407,7 @@ suite('Dummy8', () => {
 //                             env: undefined
 //                         };
 //                         const invalidMetadata: KernelSpecConnectionMetadata = {
-//                             kind: 'startUsingKernelSpec',
+//                             kind: 'startUsingLocalKernelSpec',
 //                             kernelSpec: invalidKernel,
 //                             id: '1'
 //                         };
@@ -429,7 +429,7 @@ suite('Dummy8', () => {
 //                         const editor = (ne.editor as any) as NativeEditorWebView;
 //                         await editor.updateNotebookOptions({
 //                             kernelSpec: invalidKernel,
-//                             kind: 'startUsingKernelSpec',
+//                             kind: 'startUsingLocalKernelSpec',
 //                             id: '1'
 //                         });
 
