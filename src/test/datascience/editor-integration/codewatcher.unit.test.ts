@@ -1021,7 +1021,9 @@ testing2`;
 
         // Revert setting
         jupyterSettings.newCellOnRunLast = true;
-        expect(advanceToRangeCalled).is.false('advanceToRange should not have been called with newCellOnRunLast set to false');
+        expect(advanceToRangeCalled).is.false(
+            'advanceToRange should not have been called with newCellOnRunLast set to false'
+        );
 
         // Verify function calls
         textEditor.verifyAll();
