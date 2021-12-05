@@ -918,7 +918,7 @@ testing2`;
         document.verifyAll();
     });
 
-    test('Test the RunCellAndAdvance command with next cell', async () => {
+    test('Test runCurrentCellAndAdvance command with next cell', async () => {
         const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
@@ -974,7 +974,7 @@ testing2`;
         document.verifyAll();
     });
 
-    test('Test the RunCellAndAdvance command does not advance when newCellOnRunLast is false', async () => {
+    test('Test runCurrentCellAndAdvance command does not advance when newCellOnRunLast is false', async () => {
         const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
@@ -1012,8 +1012,7 @@ testing2`;
         // Override the advanceToRange function called from within runCurrentCellAndAdvance to
         // modify local variable advanceToRangeCalled, by testing that no modification happened,
         // we ensure advanceToRange was never called
-
-        (codeWatcher as any).advanceToRange = () => {
+        (codeWatcher as any).insertCell = () => {
             advanceToRangeCalled = true;
         };
 

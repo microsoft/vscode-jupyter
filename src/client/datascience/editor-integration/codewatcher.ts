@@ -942,10 +942,7 @@ export class CodeWatcher implements ICodeWatcher {
         // ```
         //
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
-        let newCell = `${cellDelineator}\n\n`;
-        if (line >= editor.document.lineCount) {
-            newCell = `\n${cellDelineator}\n`;
-        }
+        const newCell = line >= editor.document.lineCount ? `\n${cellDelineator}\n` : `${cellDelineator}\n\n`;
 
         const cellStartPosition = new Position(line, 0);
         const newCursorPosition = new Position(line + 1, 0);
