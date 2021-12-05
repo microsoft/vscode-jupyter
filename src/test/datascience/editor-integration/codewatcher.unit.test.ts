@@ -126,12 +126,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
             generateSVGPlots: false,
-            runStartupCommands: '',
+            runStartupCommands: [],
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgetScriptSources: [],
-            interactiveWindowMode: 'single'
+            interactiveWindowMode: 'single',
+            newCellOnRunLast: true
         });
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
 
@@ -966,6 +967,61 @@ testing2`;
         };
 
         await codeWatcher.runCurrentCellAndAdvance();
+
+        // Verify function calls
+        textEditor.verifyAll();
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunCellAndAdvance command does not advance when newCellOnRunLast is false', async () => {
+        const fileName = Uri.file('test.py');
+        const version = 1;
+        const inputText = `#%%
+testing1
+#%%
+testing2`;
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        // For this test we need to set up a document selection point
+        const selection = new Selection(0, 0, 0, 0);
+        textEditor.setup((te) => te.selection).returns(() => selection);
+
+        // Apply setting we want to test
+        jupyterSettings.newCellOnRunLast = false;
+        let advanceToRangeCalled = false;
+
+        // Override the advanceToRange function called from within runCurrentCellAndAdvance to
+        // modify local variable advanceToRangeCalled, by testing that no modification happened,
+        // we ensure advanceToRange was never called
+
+        (codeWatcher as any).advanceToRange = () => {
+            advanceToRangeCalled = true;
+        };
+
+        await codeWatcher.runCurrentCellAndAdvance();
+
+        // Revert setting
+        jupyterSettings.newCellOnRunLast = true;
+        expect(advanceToRangeCalled).is.false('advanceToRange should not have been called with newCellOnRunLast set to false');
 
         // Verify function calls
         textEditor.verifyAll();
