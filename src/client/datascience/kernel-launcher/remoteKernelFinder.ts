@@ -124,7 +124,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     const kernel: RemoteKernelSpecConnectionMetadata = {
                         kind: 'startUsingRemoteKernelSpec',
                         kernelSpec: s,
-                        id: getKernelId(s, undefined)
+                        id: getKernelId(s, undefined),
+                        baseUrl: connInfo.baseUrl
                     };
                     return kernel;
                 });
@@ -152,6 +153,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             numberOfConnections,
                             model: s
                         },
+                        baseUrl: connInfo.baseUrl,
                         id: s.kernel?.id || ''
                     };
                     return kernel;

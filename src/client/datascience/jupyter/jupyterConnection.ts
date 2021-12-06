@@ -227,8 +227,6 @@ export class JupyterConnectionWaiter implements IDisposable {
 class JupyterConnection implements IJupyterConnection {
     public readonly localLaunch: boolean = true;
     public readonly type = 'jupyter';
-    public valid: boolean = true;
-    public localProcExitCode: number | undefined;
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
         public readonly baseUrl: string,
@@ -243,8 +241,6 @@ class JupyterConnection implements IJupyterConnection {
             childProc.on('exit', (c) => {
                 // Our code expects the exit code to be of type `number` or `undefined`.
                 const code = typeof c === 'number' ? c : 0;
-                this.valid = false;
-                this.localProcExitCode = code;
                 this.eventEmitter.fire(code);
             });
         }

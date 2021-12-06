@@ -36,6 +36,7 @@ export type LiveKernelConnectionMetadata = Readonly<{
      * Python interpreter will be used for intellisense & the like.
      */
     interpreter?: PythonEnvironment;
+    baseUrl: string;
     kind: 'connectToLiveKernel';
     id: string;
 }>;
@@ -66,6 +67,7 @@ export type RemoteKernelSpecConnectionMetadata = Readonly<{
     interpreter?: undefined;
     kernelSpec: IJupyterKernelSpec;
     kind: 'startUsingRemoteKernelSpec';
+    baseUrl: string;
     id: string;
 }>;
 /**
@@ -101,6 +103,14 @@ export type LocalKernelConnectionMetadata =
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {
     selection: T;
+}
+
+export function isLocalConnection(
+    kernelConnection: KernelConnectionMetadata
+): kernelConnection is LocalKernelConnectionMetadata {
+    return (
+        kernelConnection.kind === 'startUsingLocalKernelSpec' || kernelConnection.kind === 'startUsingPythonInterpreter'
+    );
 }
 
 export interface IKernel extends IAsyncDisposable {

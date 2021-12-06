@@ -47,7 +47,6 @@ import * as uuid from 'uuid/v4';
 class RawConnection implements IRawConnection {
     public readonly type = 'raw';
     public readonly localLaunch = true;
-    public readonly valid = true;
     public readonly displayName = '';
 }
 
