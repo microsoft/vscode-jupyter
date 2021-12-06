@@ -656,7 +656,6 @@ module.exports = {
         'src/client/datascience/progress/progressReporter.ts',
         'src/client/datascience/progress/decorator.ts',
         'src/client/datascience/ipywidgets/rceProvider.ts',
-        'src/client/datascience/ipywidgets/remoteWidgetScriptSourceProvider.ts',
         'src/client/datascience/ipywidgets/constants.ts',
         'src/client/datascience/ipywidgets/ipywidgetHandler.ts',
         'src/client/datascience/crossProcessLock.ts',
