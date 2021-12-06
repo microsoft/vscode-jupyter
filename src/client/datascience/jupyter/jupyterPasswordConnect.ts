@@ -341,7 +341,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const response = await this.makeRequest(tokenUrl, {
             method: 'get',
             redirect: 'manual',
-            headers,
+            headers
         });
 
         if (response !== undefined && response.ok) {
