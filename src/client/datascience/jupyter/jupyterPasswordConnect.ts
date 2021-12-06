@@ -322,15 +322,19 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
     private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
-        let headers = {
-            Connection: 'keep-alive',
-            Cookie: ''
-        };
+        let headers;
         let tokenUrl = `${url}login?`;
 
         if (sessionCookie != '') {
             tokenUrl = `${url}tree`;
-            headers.Cookie = sessionCookie;
+            headers = {
+                Connection: 'keep-alive',
+                Cookie: sessionCookie,
+            };
+        } else {
+            headers = {
+                Connection: 'keep-alive',
+            };
         }
 
         const response = await this.makeRequest(tokenUrl, {
