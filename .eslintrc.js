@@ -680,7 +680,6 @@ module.exports = {
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterSelector.ts',
         'src/client/datascience/jupyter/commandLineSelector.ts',
-        'src/client/datascience/jupyter/jupyterPasswordConnect.ts',
         'src/client/datascience/jupyter/jupyterWebSocket.ts',
         'src/client/datascience/jupyter/variableScriptLoader.ts',
         'src/client/datascience/jupyter/jupyterImporter.ts',
