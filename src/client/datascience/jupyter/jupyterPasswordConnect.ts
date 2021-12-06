@@ -230,8 +230,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
-                } else { // get xsrf cookie with session cookie
-                    sessionCookieName = "authservice_session";
+                } else {
+                    // get xsrf cookie with session cookie
+                    sessionCookieName = 'authservice_session';
                     sessionCookieValue = userPassword;
 
                     xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
