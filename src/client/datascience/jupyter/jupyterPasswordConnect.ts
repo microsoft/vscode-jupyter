@@ -330,7 +330,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             tokenUrl = `${url}tree`;
             headers = {
                 Connection: 'keep-alive',
-                Cookie: sessionCookie,
+                Cookie: sessionCookie
             };
         } else {
             headers = {
