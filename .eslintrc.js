@@ -205,7 +205,6 @@ module.exports = {
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelector.unit.test.ts',
         'src/test/datascience/jupyter/serverSelector.unit.test.ts',
-        'src/test/datascience/jupyter/jupyterConnection.unit.test.ts',
         'src/test/datascience/jupyter/serverCache.unit.test.ts',
         'src/test/datascience/mockWorkspaceConfig.ts',
         'src/test/datascience/mockProcessService.ts',
