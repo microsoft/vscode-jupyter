@@ -61,14 +61,12 @@ export interface IDisplayOptions {
 export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
-    readonly valid: boolean;
     readonly displayName: string;
 }
 
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
-    readonly valid: boolean;
     readonly displayName: string;
     disconnected: Event<number>;
 
@@ -76,7 +74,6 @@ export interface IJupyterConnection extends Disposable {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    localProcExitCode: number | undefined;
     readonly rootDirectory: string; // Directory where the notebook server was started.
     readonly url?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

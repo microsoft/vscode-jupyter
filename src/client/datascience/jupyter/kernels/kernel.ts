@@ -33,6 +33,7 @@ import {
 } from '../../telemetry/telemetry';
 import {
     IDataScienceErrorHandler,
+    IJupyterConnection,
     IJupyterServerUriStorage,
     IJupyterSession,
     INotebook,
@@ -49,7 +50,7 @@ import {
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import { IKernel, isLocalConnection, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -480,12 +481,13 @@ export class Kernel implements IKernel {
     }
 
     private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
-        if (serverConnection.localLaunch) {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
             return;
         }
+        const remoteConnection = serverConnection as IJupyterConnection;
         // Log this remote URI into our MRU list
         await this.serverStorage.addToUriList(
-            serverConnection.url || serverConnection.displayName,
+            remoteConnection.url || serverConnection.displayName,
             Date.now(),
             serverConnection.displayName
         );
@@ -619,7 +621,7 @@ export class Kernel implements IKernel {
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
 
-            if (this.connection?.localLaunch) {
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this.resourceUri,
@@ -785,7 +787,7 @@ export class Kernel implements IKernel {
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
-        if (this.connection && this.connection.localLaunch) {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
@@ -802,7 +804,10 @@ export class Kernel implements IKernel {
 
     // Update both current working directory and sys.path with the desired directory
     private async changeDirectoryIfPossible(directory: string): Promise<void> {
-        if (this.connection && this.connection.localLaunch && isPythonKernelConnection(this.kernelConnectionMetadata)) {
+        if (
+            isLocalConnection(this.kernelConnectionMetadata) &&
+            isPythonKernelConnection(this.kernelConnectionMetadata)
+        ) {
             traceInfo('changeDirectoryIfPossible');
             await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
         }

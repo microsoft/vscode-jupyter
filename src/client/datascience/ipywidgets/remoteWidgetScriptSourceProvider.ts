@@ -5,7 +5,6 @@
 
 import { traceWarning } from '../../common/logger';
 import { IHttpClient } from '../../common/types';
-import { IJupyterConnection } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
@@ -14,12 +13,12 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
  */
 export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     public static validUrls = new Map<string, boolean>();
-    constructor(private readonly connection: IJupyterConnection, private readonly httpClient: IHttpClient) {}
+    constructor(private readonly baseUrl: string, private readonly httpClient: IHttpClient) {}
     public dispose() {
         // Noop.
     }
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
-        const scriptUri = `${this.connection.baseUrl}nbextensions/${moduleName}/index.js`;
+        const scriptUri = `${this.baseUrl}nbextensions/${moduleName}/index.js`;
         const exists = await this.getUrlForWidget(scriptUri);
         if (exists) {
             return { moduleName, scriptUri, source: 'cdn' };

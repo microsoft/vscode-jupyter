@@ -24,7 +24,7 @@ import {
     INotebookServer
 } from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
-import { KernelConnectionMetadata } from '../kernels/types';
+import { isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
@@ -85,7 +85,7 @@ export class HostJupyterServer implements INotebookServer {
             const connection = await this.computeLaunchInfo();
 
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
-            const workingDirectory = connection.localLaunch
+            const workingDirectory = isLocalConnection(kernelConnection)
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
             // Start a session (or use the existing one if allowed)

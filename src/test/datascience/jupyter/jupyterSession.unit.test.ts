@@ -214,7 +214,8 @@ suite('DataScience - JupyterSession', () => {
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'connectToLiveKernel',
-                    kernelModel: {} as any
+                    kernelModel: {} as any,
+                    baseUrl: ''
                 });
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
@@ -262,7 +263,8 @@ suite('DataScience - JupyterSession', () => {
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
                     kind: 'connectToLiveKernel',
-                    kernelModel: {} as any
+                    kernelModel: {} as any,
+                    baseUrl: ''
                 });
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();

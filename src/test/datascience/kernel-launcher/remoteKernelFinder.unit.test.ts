@@ -36,8 +36,6 @@ suite(`Remote Kernel Finder`, () => {
     const connInfo: IJupyterConnection = {
         type: 'jupyter',
         localLaunch: false,
-        localProcExitCode: -1,
-        valid: true,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
         disconnected: dummyEvent.event,

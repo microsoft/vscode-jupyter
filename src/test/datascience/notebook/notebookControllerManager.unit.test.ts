@@ -18,7 +18,8 @@ suite('Notebook Controller Manager', () => {
                 lastActivityTime: new Date(),
                 name: 'livexyz',
                 numberOfConnections: 1
-            }
+            },
+            baseUrl: ''
         });
 
         assert.strictEqual(name, 'livexyz');
