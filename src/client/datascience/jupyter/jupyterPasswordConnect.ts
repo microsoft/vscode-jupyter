@@ -334,7 +334,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             };
         } else {
             headers = {
-                Connection: 'keep-alive',
+                Connection: 'keep-alive'
             };
         }
 
