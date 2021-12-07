@@ -69,19 +69,6 @@ suite('DataScience - NotebookServerProvider', () => {
         disposables.push(source);
     });
     teardown(() => disposeAllDisposables(disposables));
-    test('NotebookServerProvider - Get Only - no server', async () => {
-        when(jupyterExecution.getServer(anything())).thenResolve(undefined);
-
-        const server = await serverProvider.getOrCreateServer({
-            resource: undefined,
-            ui: new DisplayOptions(false),
-            token: source.token,
-            localJupyter: true
-        });
-        expect(server).to.equal(undefined, 'Server expected to be undefined');
-        verify(jupyterExecution.getServer(anything())).once();
-    });
-
     test('NotebookServerProvider - Get Only - server', async () => {
         const notebookServer = mock<INotebookServer>();
         when((notebookServer as any).then).thenReturn(undefined);
