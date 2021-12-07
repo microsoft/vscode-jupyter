@@ -1018,7 +1018,10 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token.token),
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
                 'Should be able to start a server'
             );
         } finally {
@@ -1042,7 +1045,10 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token.token),
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
                 'Should be able to start a server'
             );
         } finally {
