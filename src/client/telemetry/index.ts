@@ -870,7 +870,13 @@ export interface IEventNamePropertyMapping {
          * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
          * nativeNotebookToolbar - Invoked from Native notebook toolbar.
          */
-        commandSource: 'nonUser' | 'commandPalette' | 'toolbar' | 'nativeNotebookStatusBar' | 'nativeNotebookToolbar';
+        commandSource:
+            | 'nonUser'
+            | 'commandPalette'
+            | 'toolbar'
+            | 'nativeNotebookStatusBar'
+            | 'nativeNotebookToolbar'
+            | 'prompt';
     };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: {

@@ -57,6 +57,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { DisplayOptions } from '../displayOptions';
+import { JupyterServerSelector } from '../jupyter/serverSelector';
+import { DataScience } from '../../common/utils/localize';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -77,6 +79,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private selectedControllers = new Map<string, VSCodeNotebookController>();
     private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
+    private failedToFetchRemoteKernels?: boolean;
     public get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
@@ -119,6 +122,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IBrowserService) private readonly browser: IBrowserService,
+        @inject(JupyterServerSelector) private readonly jupyterServerSelector: JupyterServerSelector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -453,7 +457,32 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Prep so that we can track the selected controller for this document
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         const loadControllersPromise = this.loadNotebookControllers();
-
+        if (!this.isLocalLaunch) {
+            void loadControllersPromise.finally(() => {
+                if (this.isLocalLaunch) {
+                    return;
+                }
+                if (this.failedToFetchRemoteKernels) {
+                    void this.appShell
+                        .showErrorMessage(
+                            DataScience.jupyterRemoteConnectFailedModalMessage(),
+                            { modal: true },
+                            DataScience.changeJupyterRemoteConnection(),
+                            DataScience.showJupyterLogs()
+                        )
+                        .then((selection) => {
+                            switch (selection) {
+                                case DataScience.changeJupyterRemoteConnection():
+                                    void this.jupyterServerSelector.selectJupyterURI(true, 'prompt');
+                                    break;
+                                case DataScience.showJupyterLogs():
+                                    void this.commandManager.executeCommand('jupyter.viewOutput');
+                                    break;
+                            }
+                        });
+                }
+            });
+        }
         if (
             isPythonNotebook(getNotebookMetadata(document)) &&
             this.extensionChecker.isPythonExtensionInstalled &&
@@ -724,11 +753,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 token
             });
 
-            return this.remoteKernelFinder.listKernels(undefined, connection, token).catch((ex) => {
-                traceError('Failed to get remote kernel connections', ex);
-                return [] as KernelConnectionMetadata[];
-            });
+            const kernels = await this.remoteKernelFinder.listKernels(undefined, connection, token);
+            this.failedToFetchRemoteKernels = false;
+            return kernels;
         } catch (ex) {
+            this.failedToFetchRemoteKernels = true;
             traceError('Failed to get remote kernel connections', ex);
             return [] as KernelConnectionMetadata[];
         } finally {
