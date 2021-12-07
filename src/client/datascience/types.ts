@@ -148,7 +148,7 @@ export interface INotebook {
 export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    localOnly: boolean;
     token: CancellationToken;
     resource: Resource;
 };
@@ -162,6 +162,7 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     ui: IDisplayOptions;
+    local: boolean;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -844,7 +845,7 @@ export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: 
 export type GetServerOptions = {
     getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    localOnly: boolean;
     token: CancellationToken;
     resource: Resource;
 };

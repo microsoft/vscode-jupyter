@@ -76,7 +76,8 @@ suite('DataScience - NotebookServerProvider', () => {
             getOnly: true,
             resource: undefined,
             ui: new DisplayOptions(false),
-            token: source.token
+            token: source.token,
+            localOnly: true
         });
         expect(server).to.equal(undefined, 'Server expected to be undefined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -91,7 +92,8 @@ suite('DataScience - NotebookServerProvider', () => {
             getOnly: true,
             resource: undefined,
             ui: new DisplayOptions(false),
-            token: source.token
+            token: source.token,
+            localOnly: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -107,7 +109,8 @@ suite('DataScience - NotebookServerProvider', () => {
             getOnly: false,
             ui: new DisplayOptions(true),
             resource: undefined,
-            token: source.token
+            token: source.token,
+            localOnly: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });

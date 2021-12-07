@@ -66,6 +66,9 @@ export interface ILocalKernelFinder {
         option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
+    findPreferredLocalKernelConnectionFromCache(
+        notebookMetadata?: nbformat.INotebookMetadata
+    ): LocalKernelConnectionMetadata | undefined;
     listNonPythonKernels(
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'

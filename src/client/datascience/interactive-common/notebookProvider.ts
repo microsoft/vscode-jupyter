@@ -8,6 +8,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { IConfigurationService } from '../../common/types';
 import { Settings, Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
+import { isLocalConnection } from '../jupyter/kernels/types';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,
@@ -43,7 +44,7 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (this.rawNotebookProvider.isSupported) {
+        if (this.rawNotebookProvider.isSupported && !options.localOnly) {
             return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
@@ -56,13 +57,14 @@ export class NotebookProvider implements INotebookProvider {
         }
     }
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
-        const rawKernel = this.rawNotebookProvider.isSupported;
+        const isLocal = isLocalConnection(options.kernelConnection);
+        const rawKernel = this.rawNotebookProvider.isSupported && isLocal;
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect(options))) {
+            if (!(await this.jupyterNotebookProvider.connect({ ...options, localOnly: isLocal }))) {
                 return undefined;
             }
         }

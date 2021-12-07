@@ -176,7 +176,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         kernels.forEach((item) => uniqueItems.set(item.id, item));
         await this.globalState.update(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
     }
-    private findPreferredLocalKernelConnectionFromCache(
+    public findPreferredLocalKernelConnectionFromCache(
         notebookMetadata?: nbformat.INotebookMetadata
     ): LocalKernelConnectionMetadata | undefined {
         if (!notebookMetadata) {

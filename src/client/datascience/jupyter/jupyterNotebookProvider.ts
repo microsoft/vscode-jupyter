@@ -13,6 +13,7 @@ import {
     IJupyterServerProvider,
     INotebook
 } from '../types';
+import { isLocalConnection } from './kernels/types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()
@@ -24,7 +25,8 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             getOnly: false,
             ui: options.ui,
             resource: options.resource,
-            token: options.token
+            token: options.token,
+            localOnly: false
         });
         return server?.dispose();
     }
@@ -34,7 +36,8 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             getOnly: false,
             ui: options.ui,
             resource: options.resource,
-            token: options.token
+            token: options.token,
+            localOnly: options.localOnly
         });
         return server?.getConnectionInfo();
     }
@@ -45,7 +48,8 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             getOnly: false,
             ui: options.ui,
             resource: options.resource,
-            token: options.token
+            token: options.token,
+            localOnly: isLocalConnection(options.kernelConnection)
         });
 
         if (server) {
