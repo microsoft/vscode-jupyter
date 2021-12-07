@@ -979,8 +979,7 @@ testing2`;
         const version = 1;
         const inputText = `#%%
 testing1
-#%%
-testing2`;
+`;
         const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
@@ -989,7 +988,7 @@ testing2`;
         activeInteractiveWindow
             .setup((h) =>
                 h.addCode(
-                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.isValue('#%%\ntesting1\n'),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.is((ed: TextEditor) => {
@@ -1012,6 +1011,9 @@ testing2`;
         // Override the advanceToRange function called from within runCurrentCellAndAdvance to
         // modify local variable advanceToRangeCalled, by testing that no modification happened,
         // we ensure advanceToRange was never called
+        (codeWatcher as any).advanceToRange = (_targetRange: Range) => {
+            advanceToRangeCalled = true;
+        };
         (codeWatcher as any).insertCell = () => {
             advanceToRangeCalled = true;
         };
@@ -1020,9 +1022,7 @@ testing2`;
 
         // Revert setting
         jupyterSettings.newCellOnRunLast = true;
-        expect(advanceToRangeCalled).is.false(
-            'advanceToRange should not have been called with newCellOnRunLast set to false'
-        );
+        expect(advanceToRangeCalled).to.be.equal(false, 'advanceToRange should not have been set');
 
         // Verify function calls
         textEditor.verifyAll();
