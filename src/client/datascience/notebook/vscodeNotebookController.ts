@@ -479,7 +479,6 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
         case 'connectToLiveKernel':
             return DataScience.kernelCategoryForJupyterSession();
         case 'startUsingRemoteKernelSpec':
-            return `Remote ${DataScience.kernelCategoryForJupyterKernel()}`;
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
