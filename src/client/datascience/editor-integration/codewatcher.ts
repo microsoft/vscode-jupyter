@@ -362,7 +362,6 @@ export class CodeWatcher implements ICodeWatcher {
         const cellMatcher = new CellMatcher();
         let index = 0;
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
-        const { newCellOnRunLast } = this.configService.getSettings(this.documentManager.activeTextEditor.document.uri);
 
         if (editor) {
             void editor.edit((editBuilder) => {
@@ -379,9 +378,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 if (lastCell) {
                     index = editor.document.lineCount;
-                    if (newCellOnRunLast) {
-                        editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
-                    }
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
                 }
             });
         }
@@ -946,10 +943,7 @@ export class CodeWatcher implements ICodeWatcher {
         // ```
         //
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
-        let newCell = `${cellDelineator}\n\n`;
-        if (line >= editor.document.lineCount) {
-            newCell = `\n${cellDelineator}\n`;
-        }
+        const newCell = line >= editor.document.lineCount ? `\n${cellDelineator}\n` : `${cellDelineator}\n\n`;
 
         const cellStartPosition = new Position(line, 0);
         const newCursorPosition = new Position(line + 1, 0);
@@ -1075,14 +1069,13 @@ export class CodeWatcher implements ICodeWatcher {
         if (currentRunCellLens) {
             // Move the next cell if allowed.
             if (advance) {
+                const editor = this.documentManager.activeTextEditor;
+                const { newCellOnRunLast } = this.configService.getSettings(editor?.document.uri);
                 if (nextRunCellLens) {
                     this.advanceToRange(nextRunCellLens.range);
-                } else {
+                } else if (newCellOnRunLast && editor) {
                     // insert new cell at bottom after current
-                    const editor = this.documentManager.activeTextEditor;
-                    if (editor) {
-                        this.insertCell(editor, currentRunCellLens.range.end.line + 1);
-                    }
+                    this.insertCell(editor, currentRunCellLens.range.end.line + 1);
                 }
             }
 
