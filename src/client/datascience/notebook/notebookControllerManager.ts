@@ -486,7 +486,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         const connection = await this.notebookProvider.connect({
                             resource: document.uri,
                             ui,
-                            local: false,
+                            localJupyter: false,
                             token: preferredSearchToken.token
                         });
                         preferredConnection = await this.remoteKernelFinder.findKernel(
@@ -720,7 +720,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const connection = await this.notebookProvider.connect({
                 resource: undefined,
                 ui,
-                local: false,
+                localJupyter: false,
                 token
             });
 

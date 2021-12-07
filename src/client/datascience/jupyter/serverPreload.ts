@@ -69,7 +69,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
                 await this.notebookProvider.connect({
                     resource: undefined,
                     ui,
-                    local: true,
+                    localJupyter: true,
                     token: source.token
                 });
             }

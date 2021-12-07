@@ -125,7 +125,7 @@ export class ServerCache implements IAsyncDisposable {
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
             ui: options.ui,
-            local: options.local
+            localJupyter: options.localJupyter
         };
     }
 
@@ -133,6 +133,6 @@ export class ServerCache implements IAsyncDisposable {
         // combine all the values together to make a unique key
         const uri = options.uri ? options.uri.toString() : '';
         const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `uri=${uri};useFlag=${useFlag};local=${options.local};workingDir=${options.workingDir}`;
+        return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
     }
 }

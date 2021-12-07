@@ -25,7 +25,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             ui: options.ui,
             resource: options.resource,
             token: options.token,
-            local: options.local
+            localJupyter: options.localJupyter
         });
         return server?.getConnectionInfo();
     }
@@ -36,7 +36,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             ui: options.ui,
             resource: options.resource,
             token: options.token,
-            local: isLocalConnection(options.kernelConnection)
+            localJupyter: isLocalConnection(options.kernelConnection)
         });
 
         if (server) {

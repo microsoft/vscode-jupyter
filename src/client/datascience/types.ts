@@ -149,7 +149,7 @@ export type ConnectNotebookProviderOptions = {
     /**
      * Whether we're only interested in local Jupyter Servers.
      */
-    local: boolean;
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };
@@ -166,7 +166,7 @@ export interface INotebookServerOptions {
     /**
      * Whether we're only interested in local Jupyter Servers.
      */
-    local: boolean;
+    localJupyter: boolean;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -851,7 +851,7 @@ export type GetServerOptions = {
     /**
      * Whether we're only interested in local Jupyter Servers.
      */
-    local: boolean;
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };

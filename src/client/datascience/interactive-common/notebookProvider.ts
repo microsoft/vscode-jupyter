@@ -44,7 +44,7 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (this.rawNotebookProvider.isSupported && !options.local) {
+        if (this.rawNotebookProvider.isSupported && !options.localJupyter) {
             return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
@@ -64,7 +64,7 @@ export class NotebookProvider implements INotebookProvider {
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect({ ...options, local: isLocal }))) {
+            if (!(await this.jupyterNotebookProvider.connect({ ...options, localJupyter: isLocal }))) {
                 return undefined;
             }
         }
