@@ -31,7 +31,12 @@ import {
     isLocalLaunch,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    IKernelProvider,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage, INotebookProvider } from '../types';
@@ -88,7 +93,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
-    private notbeookNoPythonController?: NoPythonKernelsNotebookController;
+    private notebookNoPythonController?: NoPythonKernelsNotebookController;
+    private handlerAddedForChangesToRemoteKernelUri?: boolean;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -338,17 +344,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
     private removeNoPythonControllers() {
-        this.notbeookNoPythonController?.dispose();
+        this.notebookNoPythonController?.dispose();
         this.interactiveNoPythonController?.dispose();
 
-        this.notbeookNoPythonController = undefined;
+        this.notebookNoPythonController = undefined;
         this.interactiveNoPythonController = undefined;
     }
     private registerNoPythonControllers() {
-        if (this.notbeookNoPythonController) {
+        if (this.notebookNoPythonController) {
             return;
         }
-        this.notbeookNoPythonController = new NoPythonKernelsNotebookController(
+        this.notebookNoPythonController = new NoPythonKernelsNotebookController(
             JupyterNotebookView,
             this.notebook,
             this.commandManager,
@@ -365,7 +371,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.appShell
         );
         this.disposables.push(this.interactiveNoPythonController);
-        this.disposables.push(this.notbeookNoPythonController);
+        this.disposables.push(this.notebookNoPythonController);
     }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
@@ -377,17 +383,44 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             await this.loadNotebookControllers();
         }
     }
-
-    private handlerAddedForRemoteKernels?: boolean;
+    private removeLocalKernelControllers() {
+        const localControllers = Array.from(this.registeredControllers.values()).filter((item) =>
+            isLocalConnection(item.connection)
+        );
+        localControllers.forEach((item) => {
+            this.registeredControllers.delete(item.connection.id);
+            item.dispose();
+        });
+    }
+    private removeRemoteKernelControllers() {
+        const remoteControllers = Array.from(this.registeredControllers.values()).filter(
+            (item) => !isLocalConnection(item.connection)
+        );
+        remoteControllers.forEach((item) => {
+            this.registeredControllers.delete(item.connection.id);
+            item.dispose();
+        });
+    }
     private reloadControllersAfterChangingRemote() {
-        if (this.handlerAddedForRemoteKernels) {
+        if (this.handlerAddedForChangesToRemoteKernelUri) {
             return;
         }
-        this.handlerAddedForRemoteKernels = true;
+        this.handlerAddedForChangesToRemoteKernelUri = true;
+        let wasLocal = this.isLocalLaunch;
         const refreshRemoteKernels = async () => {
             if (this.isLocalLaunch) {
+                this.removeRemoteKernelControllers();
+                // Possible we started a new kernel or shutdown a kernel.
+                // Hence no need to fetch kernels again.
+                if (!wasLocal) {
+                    void this.loadNotebookControllersImpl(true, 'useCache');
+                    void this.loadNotebookControllersImpl(false, 'useCache');
+                }
+                wasLocal = true;
                 return;
             }
+            wasLocal = false;
+            this.removeLocalKernelControllers();
             let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
 
             connections.forEach((item) => this.allKernelConnections.add(item));
@@ -399,7 +432,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
         this.kernelProvider.onDidDisposeKernel(refreshRemoteKernels, this, this.disposables);
     }
-    // When a document is opened we need to look for a perferred kernel for it
+    // When a document is opened we need to look for a preferred kernel for it
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
         if (
@@ -658,22 +691,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         token: CancellationToken,
         useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        const localKernelConnectionsPromise = this.getLocalKernelConnectionMetadata(
-            listLocalNonPythonKernels,
-            token,
-            useCache
-        );
         if (this.isLocalLaunch) {
-            return localKernelConnectionsPromise;
+            return this.getLocalKernelConnectionMetadata(listLocalNonPythonKernels, token, useCache);
         }
         if (listLocalNonPythonKernels) {
             return [];
         }
-        const [local, remote] = await Promise.all([
-            localKernelConnectionsPromise,
-            this.getRemoteKernelConnectionMetadata(token)
-        ]);
-        return local.concat(remote);
+        return this.getRemoteKernelConnectionMetadata(token);
     }
 
     private async getLocalKernelConnectionMetadata(

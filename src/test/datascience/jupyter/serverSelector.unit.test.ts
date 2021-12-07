@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, when } from 'ts-mockito';
 
 import * as sinon from 'sinon';
 import * as os from 'os';
 import { QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { ClipboardService } from '../../../client/common/application/clipboard';
-import { CommandManager } from '../../../client/common/application/commandManager';
-import { IClipboard, ICommandManager } from '../../../client/common/application/types';
+import { IClipboard } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
@@ -29,7 +28,6 @@ import { MockEncryptedStorage } from '../mockEncryptedStorage';
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
-    let cmdManager: ICommandManager;
     let dsSettings: IJupyterSettings;
     let clipboard: IClipboard;
     let setting: string;
@@ -51,10 +49,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const picker = mock(JupyterUriProviderRegistration);
         const crypto = mock(CryptoUtils);
         when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
-        cmdManager = mock(CommandManager);
         quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
-        when(cmdManager.executeCommand(anything(), anything())).thenResolve();
         when(applicationShell.createQuickPick()).thenReturn(quickPick!);
         when(applicationShell.createInputBox()).thenReturn(input);
         when(applicationEnv.machineId).thenReturn(os.hostname());
@@ -77,13 +73,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(applicationEnv),
             new MockMemento()
         );
-        const selector = new JupyterServerSelector(
-            instance(clipboard),
-            multiStepFactory,
-            instance(cmdManager),
-            instance(picker),
-            storage
-        );
+        const selector = new JupyterServerSelector(instance(clipboard), multiStepFactory, instance(picker), storage);
         return { selector, storage };
     }
 
@@ -203,7 +193,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
-        verify(cmdManager.executeCommand(anything(), anything())).once();
     });
 
     test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
@@ -213,7 +202,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
-        verify(cmdManager.executeCommand(anything(), anything())).never();
     });
 
     test('Invalid server uri', async () => {
