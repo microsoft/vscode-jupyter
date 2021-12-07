@@ -333,7 +333,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (connections.some((item) => isPythonKernelConnection(item))) {
                 this.removeNoPythonControllers();
             } else {
-                this.regsiterNoPythonControllers();
+                this.registerNoPythonControllers();
             }
         }
     }
@@ -344,7 +344,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.notbeookNoPythonController = undefined;
         this.interactiveNoPythonController = undefined;
     }
-    private regsiterNoPythonControllers() {
+    private registerNoPythonControllers() {
         if (this.notbeookNoPythonController) {
             return;
         }
@@ -371,7 +371,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;
         }
-        // If we just installed the Pytohn extnsion and we fetched the controllers, then fetch it again.
+        // If we just installed the Python extension and we fetched the controllers, then fetch it again.
         if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
             this.controllersPromise = undefined;
             await this.loadNotebookControllers();
@@ -384,7 +384,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
         this.handlerAddedForRemoteKernels = true;
-        this.serverUriStorage.onDidChangeUri(async () => {
+        const refreshRemoteKernels = async () => {
             if (this.isLocalLaunch) {
                 return;
             }
@@ -394,7 +394,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // Now create the actual controllers from our connections
             this.createNotebookControllers(connections);
-        });
+        };
+        this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
+        this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
+        this.kernelProvider.onDidDisposeKernel(refreshRemoteKernels, this, this.disposables);
     }
     // When a document is opened we need to look for a perferred kernel for it
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
@@ -448,10 +451,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     const ui = new DisplayOptions(false);
                     try {
                         const connection = await this.notebookProvider.connect({
-                            getOnly: false,
                             resource: document.uri,
                             ui,
-                            localOnly: false,
+                            local: false,
                             token: preferredSearchToken.token
                         });
                         preferredConnection = await this.remoteKernelFinder.findKernel(
@@ -692,10 +694,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const ui = new DisplayOptions(false);
         try {
             const connection = await this.notebookProvider.connect({
-                getOnly: false,
                 resource: undefined,
                 ui,
-                localOnly: false,
+                local: false,
                 token
             });
 
@@ -717,7 +718,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Don't update until initial load is done
         await this.loadNotebookControllers();
 
-        // We've connected and done the intial fetch, so this is speedy
+        // We've connected and done the initial fetch, so this is speedy
         const connections = await this.getKernelConnectionMetadata(false, cancelToken);
 
         if (cancelToken.isCancellationRequested) {

@@ -44,14 +44,14 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (this.rawNotebookProvider.isSupported && !options.localOnly) {
+        if (this.rawNotebookProvider.isSupported && !options.local) {
             return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
-        } else if (!options.getOnly) {
+        } else {
             handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
@@ -64,7 +64,7 @@ export class NotebookProvider implements INotebookProvider {
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect({ ...options, localOnly: isLocal }))) {
+            if (!(await this.jupyterNotebookProvider.connect({ ...options, local: isLocal }))) {
                 return undefined;
             }
         }

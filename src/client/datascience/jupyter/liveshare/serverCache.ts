@@ -131,8 +131,8 @@ export class ServerCache implements IAsyncDisposable {
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.uri ? options.uri : '';
+        const uri = options.uri ? options.uri.toString() : '';
         const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `${uri}${useFlag}${options.local}${options.workingDir}`;
+        return `uri=${uri};useFlag=${useFlag};local=${options.local};workingDir=${options.workingDir}`;
     }
 }

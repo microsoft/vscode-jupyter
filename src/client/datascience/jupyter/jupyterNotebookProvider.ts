@@ -20,24 +20,12 @@ import { isLocalConnection } from './kernels/types';
 export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
-    public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token,
-            localOnly: false
-        });
-        return server?.dispose();
-    }
-
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
         const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
             ui: options.ui,
             resource: options.resource,
             token: options.token,
-            localOnly: options.localOnly
+            local: options.local
         });
         return server?.getConnectionInfo();
     }
@@ -45,11 +33,10 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
         // Make sure we have a server
         const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
             ui: options.ui,
             resource: options.resource,
             token: options.token,
-            localOnly: isLocalConnection(options.kernelConnection)
+            local: isLocalConnection(options.kernelConnection)
         });
 
         if (server) {

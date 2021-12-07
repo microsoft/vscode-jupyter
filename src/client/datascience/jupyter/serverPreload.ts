@@ -67,10 +67,9 @@ export class ServerPreload implements IExtensionSingleActivationService {
             if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
                 await this.notebookProvider.connect({
-                    getOnly: false,
                     resource: undefined,
                     ui,
-                    localOnly: true,
+                    local: true,
                     token: source.token
                 });
             }

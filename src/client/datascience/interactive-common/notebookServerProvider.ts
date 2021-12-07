@@ -41,15 +41,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions(options.resource, options.localOnly === true);
-
-        // If we are just fetching
-        if (options.getOnly) {
-            return this.jupyterExecution.getServer(serverOptions);
-        }
+        const serverOptions = await this.getNotebookServerOptions(options.resource, options.local === true);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.localOnly && !serverOptions.uri) {
+        if (options.local && !serverOptions.uri) {
             const server = await this.jupyterExecution.getServer(serverOptions);
             // Possible it wasn't created, hence create it.
             if (server) {
@@ -68,10 +63,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.ui.disableUI = false;
         }
         options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
-        const property = options.localOnly ? 'local' : 'remote';
+        const property = options.local ? 'local' : 'remote';
         if (!this.serverPromise[property]) {
             // Start a server
-            this.serverPromise[property] = this.startServer(options.resource, options.token, options.localOnly);
+            this.serverPromise[property] = this.startServer(options.resource, options.token, options.local);
         }
         try {
             const value = await this.serverPromise[property];
