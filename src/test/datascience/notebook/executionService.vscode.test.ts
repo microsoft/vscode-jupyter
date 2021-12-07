@@ -989,8 +989,23 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             import IPython
             IPython.get_ipython().set_next_input("print('INSERT')")`
         );
-        expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
-        expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
+        // Wait for UI to get updated, sometimes VSC can be slow, even after execution has completed.
+        await waitForCondition(
+            async () => {
+                expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
+                return true;
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell not replaced, it is ${cellsPostExecute[1].document.getText()}`
+        );
+        await waitForCondition(
+            async () => {
+                expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
+                return true;
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell not replaced, it is ${cellsPostExecute[2].document.getText()}`
+        );
     });
 
     /**

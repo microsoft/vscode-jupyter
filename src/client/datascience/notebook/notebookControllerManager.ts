@@ -31,10 +31,15 @@ import {
     isLocalLaunch,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    IKernelProvider,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { INotebookProvider } from '../types';
+import { IJupyterServerUriStorage, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -45,10 +50,9 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
-import { getTelemetrySafeVersion } from '../../telemetry/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { getDisplayPath } from '../../common/platform/fs-paths';
@@ -84,10 +88,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
-    private readonly isLocalLaunch: boolean;
+    private get isLocalLaunch(): boolean {
+        return isLocalLaunch(this.configuration);
+    }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
-    private notbeookNoPythonController?: NoPythonKernelsNotebookController;
+    private notebookNoPythonController?: NoPythonKernelsNotebookController;
+    private handlerAddedForChangesToRemoteKernelUri?: boolean;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -111,7 +118,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
-        @inject(IBrowserService) private readonly browser: IBrowserService
+        @inject(IBrowserService) private readonly browser: IBrowserService,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -119,7 +127,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.disposables.push(this._onNotebookControllerSelectionChanged);
-        this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
     }
     public async getActiveInterpreterOrDefaultController(
@@ -332,22 +339,22 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (connections.some((item) => isPythonKernelConnection(item))) {
                 this.removeNoPythonControllers();
             } else {
-                this.regsiterNoPythonControllers();
+                this.registerNoPythonControllers();
             }
         }
     }
     private removeNoPythonControllers() {
-        this.notbeookNoPythonController?.dispose();
+        this.notebookNoPythonController?.dispose();
         this.interactiveNoPythonController?.dispose();
 
-        this.notbeookNoPythonController = undefined;
+        this.notebookNoPythonController = undefined;
         this.interactiveNoPythonController = undefined;
     }
-    private regsiterNoPythonControllers() {
-        if (this.notbeookNoPythonController) {
+    private registerNoPythonControllers() {
+        if (this.notebookNoPythonController) {
             return;
         }
-        this.notbeookNoPythonController = new NoPythonKernelsNotebookController(
+        this.notebookNoPythonController = new NoPythonKernelsNotebookController(
             JupyterNotebookView,
             this.notebook,
             this.commandManager,
@@ -364,20 +371,68 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.appShell
         );
         this.disposables.push(this.interactiveNoPythonController);
-        this.disposables.push(this.notbeookNoPythonController);
+        this.disposables.push(this.notebookNoPythonController);
     }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;
         }
-        // If we just installed the Pytohn extnsion and we fetched the controllers, then fetch it again.
+        // If we just installed the Python extension and we fetched the controllers, then fetch it again.
         if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
             this.controllersPromise = undefined;
             await this.loadNotebookControllers();
         }
     }
+    private removeLocalKernelControllers() {
+        const localControllers = Array.from(this.registeredControllers.values()).filter((item) =>
+            isLocalConnection(item.connection)
+        );
+        localControllers.forEach((item) => {
+            this.registeredControllers.delete(item.connection.id);
+            item.dispose();
+        });
+    }
+    private removeRemoteKernelControllers() {
+        const remoteControllers = Array.from(this.registeredControllers.values()).filter(
+            (item) => !isLocalConnection(item.connection)
+        );
+        remoteControllers.forEach((item) => {
+            this.registeredControllers.delete(item.connection.id);
+            item.dispose();
+        });
+    }
+    private reloadControllersAfterChangingRemote() {
+        if (this.handlerAddedForChangesToRemoteKernelUri) {
+            return;
+        }
+        this.handlerAddedForChangesToRemoteKernelUri = true;
+        let wasLocal = this.isLocalLaunch;
+        const refreshRemoteKernels = async () => {
+            if (this.isLocalLaunch) {
+                this.removeRemoteKernelControllers();
+                // Possible we started a new kernel or shutdown a kernel.
+                // Hence no need to fetch kernels again.
+                if (!wasLocal) {
+                    void this.loadNotebookControllersImpl(true, 'useCache');
+                    void this.loadNotebookControllersImpl(false, 'useCache');
+                }
+                wasLocal = true;
+                return;
+            }
+            wasLocal = false;
+            this.removeLocalKernelControllers();
+            let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
 
-    // When a document is opened we need to look for a perferred kernel for it
+            connections.forEach((item) => this.allKernelConnections.add(item));
+
+            // Now create the actual controllers from our connections
+            this.createNotebookControllers(connections);
+        };
+        this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
+        this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
+        this.kernelProvider.onDidDisposeKernel(refreshRemoteKernels, this, this.disposables);
+    }
+    // When a document is opened we need to look for a preferred kernel for it
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
         if (
@@ -413,7 +468,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
             if (document.notebookType === JupyterNotebookView) {
-                if (this.isLocalLaunch) {
+                this.reloadControllersAfterChangingRemote();
+                if (
+                    this.isLocalLaunch ||
+                    this.localKernelFinder.findPreferredLocalKernelConnectionFromCache(getNotebookMetadata(document))
+                ) {
                     preferredConnection = await this.localKernelFinder.findKernel(
                         document.uri,
                         getNotebookMetadata(document),
@@ -425,10 +484,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     const ui = new DisplayOptions(false);
                     try {
                         const connection = await this.notebookProvider.connect({
-                            getOnly: false,
                             resource: document.uri,
                             ui,
-                            localOnly: false,
+                            localJupyter: false,
                             token: preferredSearchToken.token
                         });
                         preferredConnection = await this.remoteKernelFinder.findKernel(
@@ -575,7 +633,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.disposables,
                         this.languageService,
                         this.workspace,
-                        this.isLocalLaunch ? 'local' : 'remote',
                         this.configuration,
                         this.widgetCoordinator,
                         this.docManager,
@@ -635,27 +692,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
         if (this.isLocalLaunch) {
-            return listLocalNonPythonKernels
-                ? this.localKernelFinder.listNonPythonKernels(token, useCache)
-                : this.localKernelFinder.listKernels(undefined, token, useCache);
-        } else {
-            if (listLocalNonPythonKernels) {
-                return [];
-            }
-            const ui = new DisplayOptions(false);
-            try {
-                const connection = await this.notebookProvider.connect({
-                    getOnly: false,
-                    resource: undefined,
-                    ui,
-                    localOnly: false,
-                    token
-                });
+            return this.getLocalKernelConnectionMetadata(listLocalNonPythonKernels, token, useCache);
+        }
+        if (listLocalNonPythonKernels) {
+            return [];
+        }
+        return this.getRemoteKernelConnectionMetadata(token);
+    }
 
-                return this.remoteKernelFinder.listKernels(undefined, connection, token);
-            } finally {
-                ui.dispose();
-            }
+    private async getLocalKernelConnectionMetadata(
+        listLocalNonPythonKernels: boolean,
+        token: CancellationToken,
+        useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
+    ): Promise<KernelConnectionMetadata[]> {
+        return (listLocalNonPythonKernels
+            ? this.localKernelFinder.listNonPythonKernels(token, useCache)
+            : this.localKernelFinder.listKernels(undefined, token, useCache)
+        ).catch((ex) => {
+            traceError('Failed to get local kernel connections', ex);
+            return [] as KernelConnectionMetadata[];
+        });
+    }
+
+    private async getRemoteKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
+        const ui = new DisplayOptions(false);
+        try {
+            const connection = await this.notebookProvider.connect({
+                resource: undefined,
+                ui,
+                localJupyter: false,
+                token
+            });
+
+            return this.remoteKernelFinder.listKernels(undefined, connection, token).catch((ex) => {
+                traceError('Failed to get remote kernel connections', ex);
+                return [] as KernelConnectionMetadata[];
+            });
+        } catch (ex) {
+            traceError('Failed to get remote kernel connections', ex);
+            return [] as KernelConnectionMetadata[];
+        } finally {
+            ui.dispose();
         }
     }
 
@@ -665,7 +742,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Don't update until initial load is done
         await this.loadNotebookControllers();
 
-        // We've connected and done the intial fetch, so this is speedy
+        // We've connected and done the initial fetch, so this is speedy
         const connections = await this.getKernelConnectionMetadata(false, cancelToken);
 
         if (cancelToken.isCancellationRequested) {
@@ -704,49 +781,4 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             controller.dispose();
         });
     }
-}
-
-export function getControllerDisplayName(kernelConnection: KernelConnectionMetadata, currentDisplayName: string) {
-    switch (kernelConnection.kind) {
-        case 'connectToLiveKernel': {
-            return currentDisplayName;
-        }
-        case 'startUsingRemoteKernelSpec':
-        case 'startUsingLocalKernelSpec': {
-            if (
-                kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
-            ) {
-                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const pythonVersion = `Python ${
-                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                    }`.trim();
-                    return kernelConnection.interpreter.envName
-                        ? `${currentDisplayName} (${pythonVersion})`
-                        : currentDisplayName;
-                } else {
-                    // Non-Python kernelspec that launches via python interpreter
-                    return kernelConnection.interpreter.envName
-                        ? `${currentDisplayName} (${kernelConnection.interpreter.envName})`
-                        : currentDisplayName;
-                }
-            } else {
-                return currentDisplayName;
-            }
-        }
-        case 'startUsingPythonInterpreter':
-            if (
-                kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
-            ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
-                const pythonDisplayName = pythonVersion.trim();
-                return kernelConnection.interpreter.envName
-                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
-                    : pythonDisplayName;
-            }
-    }
-    return currentDisplayName;
 }

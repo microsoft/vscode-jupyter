@@ -6,9 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { QuickPickItem, Uri } from 'vscode';
-import { IClipboard, ICommandManager } from '../../common/application/types';
+import { IClipboard } from '../../common/application/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -47,7 +46,6 @@ export class JupyterServerSelector {
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(ICommandManager) private cmdManager: ICommandManager,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
@@ -67,32 +65,16 @@ export class JupyterServerSelector {
     }
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
         await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
-
-        // Reload if there's a change
-        if (previousValue !== Settings.JupyterServerLocalLaunch) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
     }
 
     public async setJupyterURIToRemote(userURI: string): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
         await this.serverUriStorage.setUri(userURI);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
             azure: userURI.toLowerCase().includes('azure')
         });
-
-        // Reload if there's a change
-        if (previousValue !== userURI) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
     }
 
     private async startSelectingURI(

@@ -27,7 +27,10 @@ import {
 
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
-    private serverPromise: Promise<INotebookServer | undefined> | undefined;
+    private serverPromise: {
+        local?: Promise<INotebookServer | undefined> | undefined;
+        remote?: Promise<INotebookServer | undefined> | undefined;
+    } = {};
     private ui = new DisplayOptions(true);
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -38,15 +41,19 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions(options.resource);
+        const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
-            return this.jupyterExecution.getServer(serverOptions);
-        } else {
-            // Otherwise create a new server
-            return this.createServer(options);
+        if (options.localJupyter && !serverOptions.uri) {
+            const server = await this.jupyterExecution.getServer(serverOptions);
+            // Possible it wasn't created, hence create it.
+            if (server) {
+                return server;
+            }
         }
+
+        // Otherwise create a new server
+        return this.createServer(options);
     }
 
     private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
@@ -56,23 +63,27 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.ui.disableUI = false;
         }
         options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
-
-        if (!this.serverPromise) {
+        const property = options.localJupyter ? 'local' : 'remote';
+        if (!this.serverPromise[property]) {
             // Start a server
-            this.serverPromise = this.startServer(options.resource, options.token);
+            this.serverPromise[property] = this.startServer(options.resource, options.token, options.localJupyter);
         }
         try {
-            const value = await this.serverPromise;
+            const value = await this.serverPromise[property];
             return value;
         } catch (e) {
             // Don't cache the error
-            this.serverPromise = undefined;
+            this.serverPromise[property] = undefined;
             throw e;
         }
     }
 
-    private async startServer(resource: Resource, token: CancellationToken): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions(resource);
+    private async startServer(
+        resource: Resource,
+        token: CancellationToken,
+        forLocal: boolean
+    ): Promise<INotebookServer | undefined> {
+        const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
         traceInfo(`Checking for server existence.`);
 
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
@@ -160,14 +171,14 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async getNotebookServerOptions(resource: Resource): Promise<INotebookServerOptions> {
+    private async getNotebookServerOptions(resource: Resource, forLocal: boolean): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
         const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
             .useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        if (forLocal || (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch)) {
             serverURI = undefined;
         }
 
@@ -175,7 +186,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             resource,
             skipUsingDefaultConfig: !useDefaultConfig,
-            ui: this.ui
+            ui: this.ui,
+            localJupyter: forLocal
         };
     }
 }

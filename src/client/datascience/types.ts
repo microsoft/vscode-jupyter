@@ -136,7 +136,6 @@ export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
     createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
-    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
 export interface INotebook {
@@ -146,9 +145,11 @@ export interface INotebook {
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
-    getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };
@@ -162,6 +163,10 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -842,9 +847,11 @@ type WebViewViewState = {
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
 export type GetServerOptions = {
-    getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };
