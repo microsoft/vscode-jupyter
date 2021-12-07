@@ -39,7 +39,16 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) {
+        serverUriStorage.onDidChangeUri(
+            () => {
+                // Possible user selected another Server.
+                this.serverPromise.remote = undefined;
+            },
+            this,
+            this.disposables
+        );
+    }
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
