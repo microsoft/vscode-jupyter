@@ -121,7 +121,9 @@ suite('DataScience - VSCode semantic token tests', function () {
             cell2.document.uri
         )) as any;
         assert.ok(tokens, 'No tokens found on second cell');
-        assert.equal(tokens.data[0], 1, 'Tokens not correctly offset');
+        const expectedTokens = [1, 4, 4, 11, 1, 1, 2, 5, 11, 512, 1, 0, 4, 11, 0];
+        const actualTokens = [...tokens.data];
+        assert.deepStrictEqual(actualTokens, expectedTokens, 'Tokens not correct after edit');
     });
 
     test('Special token check', async function () {
