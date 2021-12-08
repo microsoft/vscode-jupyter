@@ -771,7 +771,7 @@ export class Kernel implements IKernel {
     private async runStartupCommands() {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
-        let setting = settings.runStartupCommands || settings.runMagicCommands;
+        let setting = settings.runStartupCommands;
 
         // Convert to string in case we get an array of startup commands.
         if (Array.isArray(setting)) {
