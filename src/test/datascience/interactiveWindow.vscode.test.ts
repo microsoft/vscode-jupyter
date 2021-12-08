@@ -214,9 +214,12 @@ for i in range(10):
         );
     });
 
-    test('Collapse / expand cell', async () => {
+    test('Collapse / expand cell', async function () {
+        // Entered issue to track this: https://github.com/microsoft/vscode-jupyter/issues/8492
+        this.skip();
+
         // Cell should initially be collapsed
-        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+        /*        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
             'a=1\na',
             disposables
@@ -266,7 +269,7 @@ for i in range(10):
             codeCell?.metadata.inputCollapsed === true,
             'Code cell input not collapsed after collapsing all cells'
         );
-        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells');
+        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells'); */
     });
 
     test('LiveLossPlot', async () => {
