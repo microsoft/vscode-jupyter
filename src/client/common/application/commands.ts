@@ -119,6 +119,12 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['interactive.execute']: [string];
     ['outline.focus']: [];
     ['vscode.executeCompletionItemProvider']: [Uri, Position];
+    ['notebook.cell.collapseCellInput']: [
+        { ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }
+    ];
+    ['notebook.cell.expandCellInput']: [
+        { ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }
+    ];
     [DSCommands.NotebookEditorInterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
