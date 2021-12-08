@@ -173,7 +173,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const answer = await this.appShell.showErrorMessage(
+        const answer = await this.appShell.showInformationMessage(
             localize.DataScience.pythonExtensionRequired(),
             { modal: true },
             yes,

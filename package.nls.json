@@ -233,7 +233,6 @@
     "ExtensionSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "ExtensionSurveyBanner.bannerLabelNo": "No, thanks",
     "ExtensionSurveyBanner.maybeLater": "Maybe later",
-    "DataScience.reloadAfterChangingJupyterServerConnection": "Please reload VS Code when changing the Jupyter Server connection.",
     "DataScience.restartKernelMessage": "Do you want to restart the Jupyter kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Yes",
     "DataScience.restartKernelMessageNo": "No",
