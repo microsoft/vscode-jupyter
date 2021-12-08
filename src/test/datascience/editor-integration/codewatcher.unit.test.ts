@@ -484,23 +484,30 @@ fourth line
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
-
-        document
-            .setup((doc) => doc.getText())
-            .returns(() => inputText)
-            .verifiable(TypeMoq.Times.exactly(1));
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
-        // Set up our expected calls to add code
-        // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
+        // Set up our expected calls to add code. It should split cells
         activeInteractiveWindow
             .setup((h) =>
                 h.addCode(
-                    TypeMoq.It.isValue(inputText),
+                    TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.isValue(fileName),
                     TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
                 )
