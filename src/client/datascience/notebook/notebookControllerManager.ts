@@ -290,23 +290,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
-            if (
-                (item.connection.kind === 'startUsingLocalKernelSpec' ||
-                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
-                item.connection.kernelSpec.name === 'python'
-            ) {
+            if (item.connection.kind !== 'startUsingRemoteKernelSpec') {
+                return;
+            }
+            if (item.connection.kernelSpec.name === 'python') {
                 defaultPythonKernel = item;
-            } else if (
-                (item.connection.kind === 'startUsingLocalKernelSpec' ||
-                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
-                item.connection.kernelSpec.name === 'python3'
-            ) {
+            } else if (item.connection.kernelSpec.name === 'python3') {
                 defaultPython3Kernel = item;
-            } else if (
-                (item.connection.kind === 'startUsingLocalKernelSpec' ||
-                    item.connection.kind === 'startUsingRemoteKernelSpec') &&
-                item.connection.kernelSpec.language === PYTHON_LANGUAGE
-            ) {
+            } else if (item.connection.kernelSpec.language === PYTHON_LANGUAGE) {
                 defaultPythonLanguageKernel = item;
             }
         });
