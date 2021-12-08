@@ -8,12 +8,11 @@ import { IApplicationShell, ICommandManager } from '../../../common/application/
 import { traceInfo, traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
-import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
@@ -114,36 +113,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
         }
-        trackKernelResourceInformation(kernel.resourceUri, { interruptKernel: true });
-        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
-
-        let errorContext: 'interrupt' | 'restart' = 'interrupt';
-        try {
-            traceInfo(`Interrupt requested & sent for ${document.uri} in notebookEditor.`);
-            const result = await kernel.interrupt();
-            if (result === InterruptResult.TimedOut) {
-                const message = DataScience.restartKernelAfterInterruptMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
-                if (v === yes) {
-                    this.kernelInterruptedDontAskToRestart = true;
-                    errorContext = 'restart';
-                    await this.restartKernel(document.uri);
-                }
-            }
-        } catch (err) {
-            traceError('Failed to interrupt kernel', err);
-            void this.errorHandler.handleKernelError(
-                err,
-                errorContext,
-                kernel.kernelConnectionMetadata,
-                kernel.resourceUri
-            );
-        } finally {
-            this.kernelInterruptedDontAskToRestart = false;
-            status.dispose();
-        }
+        await kernel.interrupt();
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
@@ -164,15 +134,6 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
         if (kernel) {
             trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
-            const restartKernelWithProgress = () =>
-                KernelProgressReporter.wrapWithProgressReporter(
-                    kernel.resourceUri,
-                    DataScience.restartingKernelStatus().format(
-                        `: ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
-                    ),
-                    () => this.restartKernelInternal(kernel)
-                );
-
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -189,45 +150,16 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void restartKernelWithProgress();
+                    void kernel.restart();
                 } else if (response === yes) {
-                    void restartKernelWithProgress();
+                    void kernel.restart();
                 }
             } else {
-                void restartKernelWithProgress();
+                void kernel.restart();
             }
         }
     }
 
-    private async restartKernelInternal(kernel: IKernel): Promise<void> {
-        // Set our status
-        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
-
-        const stopWatch = new StopWatch();
-        try {
-            await kernel.restart();
-            sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
-        } catch (exc) {
-            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
-            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
-            sendKernelTelemetryEvent(
-                kernel.resourceUri,
-                Telemetry.NotebookRestart,
-                stopWatch.elapsedTime,
-                undefined,
-                exc
-            );
-            traceError('Failed to restart the kernel', exc);
-            void this.errorHandler.handleKernelError(
-                exc,
-                'restart',
-                kernel.kernelConnectionMetadata,
-                kernel.resourceUri
-            );
-        } finally {
-            status.dispose();
-        }
-    }
     private async shouldAskForRestart(notebookUri: Uri): Promise<boolean> {
         if (this.kernelInterruptedDontAskToRestart) {
             return false;
