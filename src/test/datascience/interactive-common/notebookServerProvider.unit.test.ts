@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, Disposable } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
@@ -52,6 +52,9 @@ suite('DataScience - NotebookServerProvider', () => {
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
         const serverSelector = mock(JupyterServerSelector);
+        const eventEmitter = new EventEmitter<void>();
+        disposables.push(eventEmitter);
+        when(serverStorage.onDidChangeUri).thenReturn(eventEmitter.event);
         when((jupyterExecution as any).then).thenReturn(undefined);
         when((serverSelector as any).then).thenReturn(undefined);
         when((serverStorage as any).then).thenReturn(undefined);

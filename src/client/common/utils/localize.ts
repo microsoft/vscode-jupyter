@@ -521,6 +521,14 @@ export namespace DataScience {
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
     );
+    export const jupyterRemoteConnectFailedModalMessage = localize(
+        'DataScience.jupyterRemoteConnectFailedModalMessage',
+        'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
+    );
+    export const changeJupyterRemoteConnection = localize(
+        'DataScience.changeJupyterRemoteConnection',
+        'Change Jupyter Server connection.'
+    );
     export const jupyterNotebookRemoteConnectSelfCertsFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectSelfCertsFailed',
         'Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}'

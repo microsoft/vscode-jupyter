@@ -37,7 +37,8 @@ export type SelectJupyterUriCommandSource =
     | 'toolbar'
     | 'commandPalette'
     | 'nativeNotebookStatusBar'
-    | 'nativeNotebookToolbar';
+    | 'nativeNotebookToolbar'
+    | 'prompt';
 @injectable()
 export class JupyterServerSelector {
     private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
