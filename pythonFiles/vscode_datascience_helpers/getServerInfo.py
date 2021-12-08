@@ -4,6 +4,7 @@
 try:
     from notebook.notebookapp import list_running_servers
     import json
+    import builtins
 
     server_list = list_running_servers()
 
@@ -22,7 +23,7 @@ try:
         server_info_object["url"] = si["url"]
         server_info_list.append(server_info_object)
 
-    print(json.dumps(server_info_list))
+    builtins.print(json.dumps(server_info_list))
 except Exception:
     """Usage of subprocess is safe here as we are using run and are in control of all the arguments passed to it
     flagging for execution of partial path is also not correct as it is a command, not a path"""
@@ -34,4 +35,4 @@ except Exception:
         ["jupyter", "notebook", "list", "--jsonlist"], stdout=PIPE, stderr=PIPE
     )
     encoding = os.getenv("PYTHONIOENCODING", "utf-8")
-    print(result.stdout.decode(encoding))
+    _VSCODE_sys.stdout.write(result.stdout.decode(encoding))

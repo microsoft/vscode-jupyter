@@ -2,6 +2,7 @@
 # Tested on 2.7 and 3.6
 from sys import getsizeof as _VSCODE_getsizeof
 import json as _VSCODE_json
+import builtins
 from IPython import get_ipython as _VSCODE_get_ipython
 
 # _VSCode_supportsDataExplorer will contain our list of data explorer supported types
@@ -37,7 +38,7 @@ for _VSCode_var in _VSCode_JupyterVars:
     except:
         pass
 
-print(_VSCODE_json.dumps(_VSCode_output))
+builtins.print(_VSCODE_json.dumps(_VSCode_output))
 
 del _VSCODE_get_ipython
 del _VSCode_output
