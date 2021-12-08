@@ -40,7 +40,6 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
-    InterruptResult,
     IStatusProvider,
     KernelSocketInformation
 } from '../../types';

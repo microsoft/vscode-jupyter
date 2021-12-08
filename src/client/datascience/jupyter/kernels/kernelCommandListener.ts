@@ -5,21 +5,14 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
-import { traceInfo, traceError } from '../../../common/logger';
+import { traceInfo } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import {
-    IDataScienceCommandListener,
-    IDataScienceErrorHandler,
-    IInteractiveWindowProvider,
-    InterruptResult,
-    IStatusProvider
-} from '../../types';
+import { IDataScienceCommandListener, IInteractiveWindowProvider, IStatusProvider } from '../../types';
 import { JupyterSession } from '../jupyterSession';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
@@ -36,8 +29,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configurationService: IConfigurationService,
-        @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler
+        @inject(IConfigurationService) private configurationService: IConfigurationService
     ) {}
 
     public register(commandManager: ICommandManager): void {

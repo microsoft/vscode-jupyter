@@ -13,7 +13,6 @@ import type {
     IJupyterKernelSpec,
     IJupyterSession,
     INotebookProviderConnection,
-    InterruptResult,
     KernelSocketInformation
 } from '../../types';
 import type * as nbformat from '@jupyterlab/nbformat';
