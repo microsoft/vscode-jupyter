@@ -7,6 +7,7 @@ import { noop } from 'lodash';
 import * as vscode from 'vscode';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
+import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
@@ -113,6 +114,22 @@ export async function submitFromPythonFile(
         untitledPythonFile.uri
     )) as InteractiveWindow;
     await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+    return { activeInteractiveWindow, untitledPythonFile };
+}
+
+export async function runCurrentFile(
+    interactiveWindowProvider: IInteractiveWindowProvider,
+    source: string,
+    disposables: vscode.Disposable[]
+) {
+    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
+    disposables.push(tempFile);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+    await vscode.window.showTextDocument(untitledPythonFile);
+    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
+        untitledPythonFile.uri
+    )) as InteractiveWindow;
+    await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, untitledPythonFile.uri);
     return { activeInteractiveWindow, untitledPythonFile };
 }
 

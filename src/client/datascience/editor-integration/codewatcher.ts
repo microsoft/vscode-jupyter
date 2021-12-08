@@ -1154,7 +1154,26 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.document.uri, 0, 0, undefined, debug);
+
+            // Split code into cells
+            const ranges = this.cells;
+            if (ranges && ranges.length) {
+                // Adds should get started in order with the map call, so just await
+                // all of them
+                const adds = ranges.map((r) =>
+                    this.addCode(
+                        this.document!.getText(r.range),
+                        this.document!.uri,
+                        r.range.start.line,
+                        0,
+                        undefined,
+                        debug
+                    )
+                );
+                await Promise.all(adds);
+            } else {
+                await this.addCode(code, this.document.uri, 0, 0, undefined, debug);
+            }
         }
     }
 
