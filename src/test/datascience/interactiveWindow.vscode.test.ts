@@ -18,10 +18,12 @@ import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
+    runCurrentFile,
     submitFromPythonFile,
     waitForLastCellToComplete
 } from './helpers';
 import {
+    assertHasTextOutputInVSCode,
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
@@ -369,6 +371,54 @@ ${actualCode}
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
         assert.equal(actualCellText, actualCode);
+    });
+
+    test('Run current file in interactive window (with cells)', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
+            disposables
+        );
+
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        // Should have two cells in the interactive window
+        assert.equal(notebookDocument?.cellCount, 3, `Running a whole file did not split cells`);
+
+        // Make sure it output something
+        notebookDocument?.getCells().forEach((c, i) => {
+            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
+                assertHasTextOutputInVSCode(c, `${i}`);
+            }
+        });
+    });
+
+    test('Run current file in interactive window (without cells)', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            'a=1\nprint(a)\nb=2\nprint(b)\n',
+            disposables
+        );
+
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        // Should have two cells in the interactive window
+        assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
+
+        // Make sure it output something
+        notebookDocument?.getCells().forEach((c) => {
+            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
+                assertHasTextOutputInVSCode(c, `1\n2`);
+            }
+        });
     });
 
     // todo@joyceerhl
