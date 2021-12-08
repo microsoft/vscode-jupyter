@@ -209,7 +209,6 @@
     "ExtensionSurveyBanner.bannerLabelYes": "是，现在就接受调查",
     "ExtensionSurveyBanner.bannerLabelNo": "不，谢谢",
     "ExtensionSurveyBanner.maybeLater": "以后再说",
-    "DataScience.reloadAfterChangingJupyterServerConnection": "更改 Jupyter 服务器连接时，请重新加载 VS Code。",
     "DataScience.restartKernelMessage": "是否重新启动 Jupyter 内核？所有的变量都会丢失。",
     "DataScience.restartKernelMessageYes": "是",
     "DataScience.restartKernelMessageNo": "否",

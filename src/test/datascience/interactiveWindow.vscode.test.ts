@@ -24,7 +24,6 @@ import {
 } from './helpers';
 import {
     assertHasTextOutputInVSCode,
-    assertNotHasTextOutputInVSCode,
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
@@ -369,32 +368,6 @@ ${actualCode}
         const lastCell = await waitForLastCellToComplete(interactiveWindow);
         const actualCellText = lastCell.document.getText();
         assert.equal(actualCellText, actualCode);
-    });
-
-    async function runMagicCommandsTest(settingValue: boolean) {
-        const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('magicCommandsAsComments', settingValue);
-        const code = `# %%
-#!%%time
-print('hi')`;
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, code, disposables);
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
-        await waitForTextOutput(lastCell, 'hi', undefined, false);
-        return lastCell;
-    }
-
-    test('jupyter.magicCommandsAsComments: `true`', async () => {
-        const lastCell = await runMagicCommandsTest(true);
-        await waitForTextOutput(lastCell, 'Wall time:', undefined, false);
-    });
-
-    test('jupyter.magicCommandsAsComments: `false`', async () => {
-        const lastCell = await runMagicCommandsTest(false);
-
-        // Magic should have remained commented
-        for (let outputIndex = 0; outputIndex < lastCell.outputs.length; outputIndex++) {
-            assertNotHasTextOutputInVSCode(lastCell, 'Wall time:', outputIndex, false);
-        }
     });
 
     test('Run current file in interactive window (with cells)', async () => {

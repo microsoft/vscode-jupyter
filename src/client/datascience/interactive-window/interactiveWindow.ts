@@ -424,29 +424,29 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async expandAllCells() {
         const notebookEditor = await this._editorReadyPromise;
-        const edit = new WorkspaceEdit();
-        notebookEditor.document.getCells().forEach((cell, index) => {
-            const metadata = {
-                ...(cell.metadata || {}),
-                inputCollapsed: false,
-                outputCollapsed: false
-            };
-            edit.replaceNotebookCellMetadata(notebookEditor.document.uri, index, metadata);
-        });
-        await workspace.applyEdit(edit);
+        await Promise.all(
+            notebookEditor.document.getCells().map(async (_cell, index) => {
+                await this.commandManager.executeCommand('notebook.cell.expandCellInput', {
+                    ranges: [{ start: index, end: index + 1 }],
+                    document: notebookEditor.document.uri
+                });
+            })
+        );
     }
 
     public async collapseAllCells() {
         const notebookEditor = await this._editorReadyPromise;
-        const edit = new WorkspaceEdit();
-        notebookEditor.document.getCells().forEach((cell, index) => {
-            if (cell.kind !== NotebookCellKind.Code) {
-                return;
-            }
-            const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
-            edit.replaceNotebookCellMetadata(notebookEditor.document.uri, index, metadata);
-        });
-        await workspace.applyEdit(edit);
+        await Promise.all(
+            notebookEditor.document.getCells().map(async (cell, index) => {
+                if (cell.kind !== NotebookCellKind.Code) {
+                    return;
+                }
+                await this.commandManager.executeCommand('notebook.cell.collapseCellInput', {
+                    ranges: [{ start: index, end: index + 1 }],
+                    document: notebookEditor.document.uri
+                });
+            })
+        );
     }
 
     public async scrollToCell(id: string): Promise<void> {
