@@ -61,7 +61,6 @@ suite('Migrate data science settings', () => {
     "python.dataScience.remoteDebuggerPort": 0,
     "python.dataScience.colorizeInputBox": true,
     "python.dataScience.addGotoCodeLenses": true,
-    "python.dataScience.runMagicCommands": "foo",
     "python.dataScience.runStartupCommands": ["foo", "bar"],
     "python.dataScience.debugJustMyCode": true,
     "python.dataScience.defaultCellMarker": "foo",
@@ -125,7 +124,6 @@ suite('Migrate data science settings', () => {
     "jupyter.remoteDebuggerPort": 0,
     "jupyter.colorizeInputBox": true,
     "jupyter.addGotoCodeLenses": true,
-    "jupyter.runMagicCommands": "foo",
     "jupyter.runStartupCommands": [
         "foo",
         "bar"
