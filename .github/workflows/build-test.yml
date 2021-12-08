@@ -471,6 +471,14 @@ jobs:
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
+      - name: where is conda
+        run: which conda
+        if: matrix.python == 'conda'
+
+      - name: where is python
+        run: which python
+        if: matrix.python == 'conda'
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.4.1
         with:
