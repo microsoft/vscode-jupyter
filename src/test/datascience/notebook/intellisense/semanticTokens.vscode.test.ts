@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
+import { commands, Position, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
@@ -62,8 +62,6 @@ suite('DataScience - VSCode semantic token tests', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Open a notebook and add a bunch of cells', async function () {
-        // Skip for now. Need to wait for changes to VS code
-        this.skip();
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -90,5 +88,81 @@ suite('DataScience - VSCode semantic token tests', function () {
         )) as any;
         assert.ok(tokens, 'No tokens found on second cell');
         assert.equal(tokens.data[0], 1, 'Tokens not correctly offset');
+    });
+
+    test('Edit cells in a notebook', async function () {
+        await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
+        await insertCodeCell('\ndef test():\n  print("test")\ntest()');
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+
+        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell1.document.uri);
+        await editor?.edit((b) => {
+            b.insert(new Position(2, 0), 'up');
+        });
+
+        // Wait for tokens on the first cell (it works with just plain pylance)
+        await waitForCondition(
+            async () => {
+                const promise = commands.executeCommand('vscode.provideDocumentSemanticTokens', cell1.document.uri);
+                const result = (await promise) as any;
+                return result && result.data.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            `Tokens never appear for first cell`,
+            100,
+            true
+        );
+
+        // Then get tokens on second cell. They should start on line 1. If not this
+        // means there's a bug
+        const tokens = (await commands.executeCommand(
+            'vscode.provideDocumentSemanticTokens',
+            cell2.document.uri
+        )) as any;
+        assert.ok(tokens, 'No tokens found on second cell');
+        const expectedTokens = [1, 4, 4, 11, 1, 1, 2, 5, 11, 512, 1, 0, 4, 11, 0];
+        const actualTokens = [...tokens.data];
+        assert.deepStrictEqual(actualTokens, expectedTokens, 'Tokens not correct after edit');
+    });
+
+    test('Special token check', async function () {
+        await insertCodeCell(
+            'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
+        );
+        await insertCodeCell('\n');
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+
+        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell2.document.uri);
+        await editor?.edit((b) => {
+            b.insert(
+                new Position(1, 0),
+                'data = [\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n]'
+            );
+        });
+
+        // Wait for tokens on the first cell (it works with just plain pylance)
+        await waitForCondition(
+            async () => {
+                const promise = commands.executeCommand('vscode.provideDocumentSemanticTokens', cell1.document.uri);
+                const result = (await promise) as any;
+                return result && result.data.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            `Tokens never appear for first cell`,
+            100,
+            true
+        );
+
+        // Then get tokens on second cell.
+        const tokens = (await commands.executeCommand(
+            'vscode.provideDocumentSemanticTokens',
+            cell2.document.uri
+        )) as any;
+        assert.ok(tokens, 'No tokens found on second cell');
+        const expectedTokens: number[] = [1, 0, 4, 14, 1];
+        const actualTokens: number[] = [...tokens.data];
+        assert.deepStrictEqual(actualTokens, expectedTokens, 'Expected tokens not returned');
     });
 });
