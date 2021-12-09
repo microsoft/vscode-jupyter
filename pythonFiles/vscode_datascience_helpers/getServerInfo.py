@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import builtins
 
 try:
     from notebook.notebookapp import list_running_servers
     import json
-    import builtins
 
     server_list = list_running_servers()
 
@@ -35,4 +35,4 @@ except Exception:
         ["jupyter", "notebook", "list", "--jsonlist"], stdout=PIPE, stderr=PIPE
     )
     encoding = os.getenv("PYTHONIOENCODING", "utf-8")
-    _VSCODE_sys.stdout.write(result.stdout.decode(encoding))
+    builtins.print.write(result.stdout.decode(encoding))
