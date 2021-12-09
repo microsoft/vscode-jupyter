@@ -284,7 +284,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);
     });
 
-    test('Can run against a remotoe kernelspec', async function () {
+    test('Can run against a remote kernelspec', async function () {
         await controllerManager.loadNotebookControllers();
         const controllers = controllerManager.registeredNotebookControllers();
 
