@@ -238,16 +238,19 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
                 )}`
         );
 
+        traceInfoIfCI(`Base Url is ${Array.from(baseUrls).join(', ')}`);
+
         // Start another jupyter server with a new port.
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
-        traceInfo(`Jupyter started and listening at ${uriString}`);
+        traceInfo(`Another Jupyter started and listening at ${uriString}`);
         await jupyterServerSelector.setJupyterURIToLocal();
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
         nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
         await openNotebook(nbUri.fsPath);
+        traceInfo(`Waiting for kernels to get refreshed for Jupyter Remotenp ${uriString}`);
 
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
@@ -259,7 +262,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
                 );
             },
             defaultNotebookTestTimeout,
-            'Should have at least one remote kernelspec with different baseUrls'
+            () =>
+                `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
         );
     });
 
