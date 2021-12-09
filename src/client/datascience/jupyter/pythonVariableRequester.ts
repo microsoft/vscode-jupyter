@@ -31,7 +31,10 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
         // Then execute a call to get the info and turn it into JSON
         const results = kernel.session
-            ? await executeSilently(kernel.session, `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`)
+            ? await executeSilently(
+                  kernel.session,
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`
+              )
             : [];
 
         const fileName = path.basename(kernel.notebookDocument.uri.path);
@@ -51,7 +54,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
               )
             : [];
 
@@ -79,7 +82,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributes = kernel.session
                     ? await executeSilently(
                           kernel.session,
-                          `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
+                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
                       )
                     : [];
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
@@ -102,7 +105,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             const results = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `_rwho_ls = %who_ls\nprint(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
+                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
                   )
                 : [];
 
@@ -140,7 +143,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
+                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
               )
             : [];
 

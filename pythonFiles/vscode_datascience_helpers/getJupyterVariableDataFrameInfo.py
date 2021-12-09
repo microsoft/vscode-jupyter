@@ -1,6 +1,7 @@
 # Query Jupyter server for the info about a dataframe
 import json as _VSCODE_json
 import pandas as _VSCODE_pd
+import builtins
 import pandas.io.json as _VSCODE_pd_json
 import builtins as _VSCODE_builtins
 
@@ -33,7 +34,7 @@ def _VSCODE_getRowCount(var):
 # and also keeps our types in sync with what the variable explorer says that we support
 if _VSCODE_targetVariable["type"] not in _VSCode_supportsDataExplorer:
     del _VSCode_supportsDataExplorer
-    print(_VSCODE_json.dumps(_VSCODE_targetVariable))
+    builtins.print(_VSCODE_json.dumps(_VSCODE_targetVariable))
     del _VSCODE_targetVariable
 else:
     del _VSCode_supportsDataExplorer
@@ -118,7 +119,7 @@ else:
     del _VSCODE_indexColumn
 
     # Transform this back into a string
-    print(_VSCODE_json.dumps(_VSCODE_targetVariable))
+    builtins.print(_VSCODE_json.dumps(_VSCODE_targetVariable))
     del _VSCODE_targetVariable
 
     # Cleanup imports

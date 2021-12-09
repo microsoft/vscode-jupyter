@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import builtins
 import json
 
-print(json.dumps(dict(os.environ)))
+builtins.print(json.dumps(dict(os.environ)))

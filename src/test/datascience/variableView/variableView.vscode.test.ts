@@ -96,6 +96,31 @@ suite('DataScience - VariableView', function () {
         await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
+    test('Can show variables even when print is overridden', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add cell that overrides print
+        await insertCodeCell('def print():\n  x = 1', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Send a second cell
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        await runCell(cell2);
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }];
+        await waitForVariablesToMatch(expectedVariables, variableView);
+    });
+
     // Test variables switching between documents
     test('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
