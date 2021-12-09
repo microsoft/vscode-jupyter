@@ -229,6 +229,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         traceInfo(`Jupyter started and listening at ${uriString}`);
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
+        // Opening a notebook will trigger the refresh of the kernel list.
+        await createTemporaryNotebook(templatePythonNb, disposables);
+
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
             async () => {
@@ -261,7 +264,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await insertCodeCell('a = "123412341234"', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
         await runCell(cell1);
 
         // Now that we don't have any remote kernels, connect to a remote jupyter server.
@@ -281,7 +284,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);
     });
 
-    test('Can run against a remtoe kernelspec', async function () {
+    test('Can run against a remotoe kernelspec', async function () {
         await controllerManager.loadNotebookControllers();
         const controllers = controllerManager.registeredNotebookControllers();
 
@@ -304,7 +307,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             'startUsingRemoteKernelSpec',
             'Not a remote kernelspec'
         );
-        await this.commandManager.executeCommand('notebook.selectKernel', {
+        await commands.executeCommand('notebook.selectKernel', {
             id: defaultPythonKernel!.controller.id,
             extension: JVSC_EXTENSION_ID_FOR_TESTS
         });
