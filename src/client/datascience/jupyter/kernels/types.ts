@@ -13,7 +13,6 @@ import type {
     IJupyterKernelSpec,
     IJupyterSession,
     INotebookProviderConnection,
-    InterruptResult,
     KernelSocketInformation
 } from '../../types';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -142,7 +141,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly session?: IJupyterSession;
     start(options?: { disableUI?: boolean }): Promise<void>;
-    interrupt(): Promise<InterruptResult>;
+    interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
     executeHidden(code: string): Promise<nbformat.IOutput[]>;

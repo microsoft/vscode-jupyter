@@ -224,15 +224,15 @@ export class Kernel implements IKernel {
     public async start(options?: { disableUI?: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
-    public async interrupt(): Promise<InterruptResult> {
+    public async interrupt(): Promise<void> {
         this._onWillInterrupt.fire();
+        trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
                 `Interrupt requested & currently restarting ${(
                     this.resourceUri || this.notebookDocument.uri
                 ).toString()}`
             );
-            trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
             await this.restarting.promise;
         }
         traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
@@ -240,7 +240,39 @@ export class Kernel implements IKernel {
         const interruptResultPromise = this.kernelExecution.interrupt(
             this._notebookPromise?.then((item) => item.session)
         );
-        return interruptResultPromise;
+
+        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
+
+        let errorContext: 'interrupt' | 'restart' = 'interrupt';
+        let result: InterruptResult | undefined;
+        try {
+            try {
+                traceInfo(
+                    `Interrupt requested & sent for ${getDisplayPath(this.notebookDocument.uri)} in notebookEditor.`
+                );
+                result = await interruptResultPromise;
+            } catch (err) {
+                traceError('Failed to interrupt kernel', err);
+                void this.errorHandler.handleKernelError(
+                    err,
+                    errorContext,
+                    this.kernelConnectionMetadata,
+                    this.resourceUri
+                );
+            }
+            if (result === InterruptResult.TimedOut) {
+                const message = DataScience.restartKernelAfterInterruptMessage();
+                const yes = DataScience.restartKernelMessageYes();
+                const no = DataScience.restartKernelMessageNo();
+                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes, no);
+                if (v === yes) {
+                    errorContext = 'restart';
+                    await this.restart();
+                }
+            }
+        } finally {
+            status.dispose();
+        }
     }
     public async dispose(): Promise<void> {
         this._disposing = true;
@@ -273,18 +305,29 @@ export class Kernel implements IKernel {
         await this.disposingPromise;
     }
     public async restart(): Promise<void> {
-        this._onWillRestart.fire();
         if (this.restarting) {
             return this.restarting.promise;
         }
+        this._onWillRestart.fire();
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
+        // Set our status
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
+        const progress = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.restartingKernelStatus().format(
+                `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+            )
+        );
+
+        const stopWatch = new StopWatch();
         try {
             // If the notebook died, then start a new notebook.
             await (this._notebookPromise
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start({ disableUI: false }));
             traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.notebookDocument.uri)}`, ex);
             this._ignoreNotebookDisposedErrors = true;
@@ -293,9 +336,16 @@ export class Kernel implements IKernel {
             this.notebook = undefined;
             this._notebookPromise = undefined;
             this.restarting = undefined;
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
             await notebook?.session.dispose().catch(noop);
             this._ignoreNotebookDisposedErrors = false;
+            void this.errorHandler.handleKernelError(ex, 'restart', this.kernelConnectionMetadata, this.resourceUri);
             throw ex;
+        } finally {
+            status.dispose();
+            progress.dispose();
         }
 
         // Interactive window needs a restart sys info
