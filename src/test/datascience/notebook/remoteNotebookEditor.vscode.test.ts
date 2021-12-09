@@ -215,13 +215,24 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
     test('Old Remote kernels are removed when switching to new Remote Server', async function () {
         await controllerManager.loadNotebookControllers();
+
+        // Opening a notebook will trigger the refresh of the kernel list.
+        await createTemporaryNotebook(templatePythonNb, disposables);
+
         const baseUrls = new Set<string>();
-        const controllers = controllerManager.registeredNotebookControllers();
-        const remoteKernelSpecs = controllers
-            .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
-            .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
-        remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
-        assert.isOk(remoteKernelSpecs.length > 0, 'Should have at least one remote kernelspec');
+        // Wait til we get new controllers with a different base url.
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                const remoteKernelSpecs = controllers
+                    .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
+                    .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
+                remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
+                return remoteKernelSpecs.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            'Should have at least one remote kernelspec'
+        );
 
         // Start another jupyter server with a new port.
         const uri = await JupyterServer.instance.startJupyterWithToken();
