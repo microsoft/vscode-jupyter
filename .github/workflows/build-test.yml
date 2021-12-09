@@ -379,7 +379,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        pythonVersion: [3.8]
+        pythonVersion: [3.9]
         python: [nonConda, conda]
         jupyter: [raw, local, remote]
         # integration: Tests with VS Code, Python extension & real Jupyter
@@ -391,18 +391,18 @@ jobs:
         # & with include, you can include additional items to the result matrix.
         exclude:
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            # With this, we're saying from the result matrix, remove the combination that has python 3.8, remote, integration on ubuntu.
-            pythonVersion: '3.8'
+            # With this, we're saying from the result matrix, remove the combination that has python 3.9, remote, integration on ubuntu.
+            pythonVersion: '3.9'
             jupyter: remote
             test-suite: integration
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            pythonVersion: '3.8'
+            pythonVersion: '3.9'
             python: conda
             jupyter: remote
             test-suite: notebook
         include:
           - os: ubuntu-latest
-            pythonVersion: '3.8'
+            pythonVersion: '3.9'
             python: nonConda
             jupyter: raw
             test-suite: notebookAndWebview # Test webview only with raw & non-conda.
@@ -412,11 +412,11 @@ jobs:
             test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
         #   - test-suite: integration
         #     jupyter: raw
-        #     pythonVersion: '3.8'
+        #     pythonVersion: '3.9'
         #     python: nonConda
         #     os: windows-latest
         #   - test-suite: notebook
-        #     pythonVersion: '3.8'
+        #     pythonVersion: '3.9'
         #     python: nonConda
         #     jupyter: raw
         #     os: windows-latest
@@ -778,7 +778,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.8]
+        python: [3.9]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
