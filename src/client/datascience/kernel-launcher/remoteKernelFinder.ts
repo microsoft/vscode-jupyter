@@ -124,7 +124,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     const kernel: RemoteKernelSpecConnectionMetadata = {
                         kind: 'startUsingRemoteKernelSpec',
                         kernelSpec: s,
-                        id: getKernelId(s, undefined),
+                        id: getKernelId(s, undefined, connInfo.baseUrl),
                         baseUrl: connInfo.baseUrl
                     };
                     return kernel;

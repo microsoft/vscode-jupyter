@@ -138,6 +138,7 @@ mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
 mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
 mockedVSCode.UIKind = vscodeMocks.vscMock.UIKind;
+mockedVSCode.ThemeIcon = vscodeMocks.vscMockExtHostedTypes.ThemeIcon;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).NotebookRunState = vscodeMocks.vscMockExtHostedTypes.NotebookRunState;

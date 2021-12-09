@@ -49,7 +49,13 @@ import {
     isPythonKernelConnection,
     getKernelConnectionPath
 } from '../jupyter/kernels/helpers';
-import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    LiveKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
@@ -150,7 +156,9 @@ export class VSCodeNotebookController implements Disposable {
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
-
+    public updateRemoteKernelDetails(kernelConnection: LiveKernelConnectionMetadata) {
+        this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
+    }
     public asWebviewUri(localResource: Uri): Uri {
         return this.controller.asWebviewUri(localResource);
     }
@@ -489,6 +497,7 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
         case 'connectToLiveKernel':
             return DataScience.kernelCategoryForJupyterSession();
         case 'startUsingRemoteKernelSpec':
+            return DataScience.kernelCategoryForRemoteJupyterKernel();
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
