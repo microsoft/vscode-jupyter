@@ -7,7 +7,7 @@ import { ICommandManager, IVSCodeNotebook } from '../../../client/common/applica
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -192,7 +192,12 @@ myClass = MyClass()
             { name: 'mySet', type: 'set', length: '3', value: ' {1, 2, 3}' },
             { name: 'myTuple', type: 'tuple', length: '3', value: ' (1, 2, 3)' }
         ];
-        await waitForVariablesToMatch(expectedVariables, variableView);
+        try {
+            await waitForVariablesToMatch(expectedVariables, variableView);
+        } catch (error) {
+            await captureScreenShot('TypesTest');
+            throw error;
+        }
     });
 
     // Test opening data viewers while another dataviewer is open
