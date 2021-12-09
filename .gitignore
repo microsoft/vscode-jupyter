@@ -40,6 +40,8 @@ build/ci/performance/performance-results.json
 debug*.log
 debugpy*.log
 pydevd*.log
+vscode.d.ts
+vscode.proposed.*.d.ts
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 src/test/datascience/.venv*
