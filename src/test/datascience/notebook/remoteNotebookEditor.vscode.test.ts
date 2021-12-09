@@ -241,7 +241,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         traceInfoIfCI(`Base Url is ${Array.from(baseUrls).join(', ')}`);
 
         // Start another jupyter server with a new port.
-        const uri = await JupyterServer.instance.startJupyterWithToken();
+        const uri = await JupyterServer.instance.startSecondJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Another Jupyter started and listening at ${uriString}`);
         await jupyterServerSelector.setJupyterURIToLocal();
