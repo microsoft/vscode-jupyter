@@ -478,7 +478,7 @@ export namespace DataScience {
     );
     export const jupyterSelectURIRunningDetailFormat = localize(
         'DataScience.jupyterSelectURIRunningDetailFormat',
-        'Last activity {0}. {1} existing connections.'
+        'Last connection {0}. {1} existing connections.'
     );
     export const jupyterSelectURINotRunningDetail = localize(
         'DataScience.jupyterSelectURINotRunningDetail',
@@ -886,6 +886,10 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
     );
+    export const removeRemoteJupyterServerEntryInQuickPick = localize(
+        'DataScience.removeRemoteJupyterServerEntryInQuickPick',
+        'Remove'
+    );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
         'Specify local or remote Jupyter server for connections'
@@ -992,9 +996,13 @@ export namespace DataScience {
     export const exportingToFormat = localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = localize(
         'jupyter.kernel.category.jupyterSession',
-        'Jupyter Session'
+        '(Remote) Jupyter Session'
     );
     export const kernelCategoryForJupyterKernel = localize('jupyter.kernel.category.jupyterKernel', 'Jupyter Kernel');
+    export const kernelCategoryForRemoteJupyterKernel = localize(
+        'jupyter.kernel.category.jupyterRemoteKernel',
+        '(Remote) Jupyter Kernel'
+    );
     export const kernelCategoryForConda = localize('jupyter.kernel.category.conda', 'Conda Env');
     export const kernelCategoryForPoetry = localize('jupyter.kernel.category.poetry', 'Poetry Env');
     export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');

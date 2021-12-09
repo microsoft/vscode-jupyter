@@ -66,7 +66,7 @@ export function kernelConnectionMetadataHasKernelModel(
 ): connectionMetadata is LiveKernelConnectionMetadata {
     return connectionMetadata.kind === 'connectToLiveKernel';
 }
-export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment) {
+export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment, remoteBaseUrl?: string) {
     // Non-Python kernels cannot contain an interpreter (even in their id).
     interpreter = isPythonKernelSpec(spec) ? interpreter : undefined;
     // Do not include things like display names, as they aren't unique & can change over time.
@@ -95,9 +95,10 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         // Lets not assume that non-python kernels cannot have such issues
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
-    return `${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(spec.interpreterPath || spec.path)}.${
-        getNormalizedInterpreterPath(interpreter?.path) || ''
-    }.${argsForGenerationOfId}`;
+    const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
+    return `${prefixForRemoteKernels}${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(
+        spec.interpreterPath || spec.path
+    )}.${getNormalizedInterpreterPath(interpreter?.path) || ''}.${argsForGenerationOfId}`;
 }
 
 export function getSysInfoReasonHeader(
