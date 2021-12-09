@@ -1939,6 +1939,20 @@
             }
         ]
     },
+    "enabledApiProposals": [
+        "notebookControllerKind",
+        "notebookDebugOptions",
+        "notebookDeprecated",
+        "notebookEditor",
+        "notebookEditorDecorationType",
+        "notebookEditorEdit",
+        "notebookMessaging",
+        "notebookMime",
+        "notebookCellExecutionState",
+        "portsAttributes",
+        "textDocumentNotebook",
+        "quickPickSortByLabel"
+    ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "compile": "tsc -watch -p ./",
@@ -2230,7 +2244,7 @@
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
         "vsce": "^1.99.0",
-        "vscode-dts": "^0.3.1",
+        "vscode-dts": "^0.3.2",
         "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",
