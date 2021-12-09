@@ -2026,7 +2026,7 @@ export namespace vscMockExtHostedTypes {
 
         readonly id: string;
 
-        private constructor(id: string) {
+        public constructor(id: string) {
             this.id = id;
         }
     }
