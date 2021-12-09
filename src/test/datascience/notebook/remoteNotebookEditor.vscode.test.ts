@@ -217,7 +217,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await controllerManager.loadNotebookControllers();
 
         // Opening a notebook will trigger the refresh of the kernel list.
-        await createTemporaryNotebook(templatePythonNb, disposables);
+        let nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        await openNotebook(nbUri.fsPath);
 
         const baseUrls = new Set<string>();
         // Wait til we get new controllers with a different base url.
@@ -241,7 +242,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
-        await createTemporaryNotebook(templatePythonNb, disposables);
+        nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        await openNotebook(nbUri.fsPath);
 
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
