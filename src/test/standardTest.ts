@@ -90,8 +90,9 @@ async function createSettings(): Promise<string> {
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
-        'jupyter.logging.level': 'debug',
-        'python.logging.level': 'debug',
+        'jupyter.logging.level': 'verbose',
+        'python.logging.level': 'verbose',
+        'python.condaPath': '/usr/share/miniconda/condabin/conda',
         'python.experiments.enabled': true,
         'python.experiments.optOutFrom': [],
         'security.workspace.trust.enabled': false, // Disable trusted workspaces.
