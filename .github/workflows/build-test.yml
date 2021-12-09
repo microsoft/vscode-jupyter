@@ -396,7 +396,7 @@ jobs:
             jupyter: remote
             test-suite: integration
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            pythonVersion: ${{matrix.pythonVersion}}
+            pythonVersion: '3.9'
             python: conda
             jupyter: remote
             test-suite: notebook
