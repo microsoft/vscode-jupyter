@@ -138,8 +138,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         resource: Resource
     ): Promise<VSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
+            traceInfoIfCI('CreateActiveInterpreterController');
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
+            traceInfoIfCI('CreateDefaultRemoteController');
             return this.createDefaultRemoteController();
         }
     }
@@ -177,8 +179,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Fetch the list of kernels ignoring the cache.
             Promise.all([
                 this.loadNotebookControllersImpl(true, false, 'ignoreCache'),
-                this.loadNotebookControllersImpl(false, false, 'ignoreCache'),
-                this.loadNotebookControllersImpl(false, true, 'ignoreCache')
+                this.loadNotebookControllersImpl(false, false, 'ignoreCache')
             ])
                 .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
                 .finally(() => {
@@ -208,10 +209,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     );
                 });
 
+            // Fetch kernel the fastest possible way (local kernels from cache but remote fetch latest).
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
+            // Fetching remote kernels cannot be done from cache.
             this.controllersPromise = Promise.all([
                 this.loadNotebookControllersImpl(true, false, 'useCache'),
-                this.loadNotebookControllersImpl(false, false, 'useCache')
+                this.loadNotebookControllersImpl(false, false, 'useCache'),
+                this.loadNotebookControllersImpl(false, true, 'ignoreCache')
             ])
                 .then(() => noop())
                 .catch((error) => {

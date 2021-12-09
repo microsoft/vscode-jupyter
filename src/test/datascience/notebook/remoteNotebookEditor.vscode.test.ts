@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import * as path from 'path';
 import { commands, Memento, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
@@ -196,6 +196,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // After resetting connection to local only, then remove all remote connections.
         await jupyterServerSelector.setJupyterURIToLocal();
+        traceInfoIfCI('Waiting for remote kernels to be removed');
 
         await waitForCondition(
             async () => {
