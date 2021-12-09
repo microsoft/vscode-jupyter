@@ -392,7 +392,7 @@ jobs:
         exclude:
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
             # With this, we're saying from the result matrix, remove the combination that has python 3.9, remote, integration on ubuntu.
-            pythonVersion: ${{matrix.pythonVersion}}
+            pythonVersion: '3.9'
             jupyter: remote
             test-suite: integration
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
@@ -402,7 +402,7 @@ jobs:
             test-suite: notebook
         include:
           - os: ubuntu-latest
-            pythonVersion: ${{matrix.pythonVersion}}
+            pythonVersion: '3.9'
             python: nonConda
             jupyter: raw
             test-suite: notebookAndWebview # Test webview only with raw & non-conda.
