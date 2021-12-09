@@ -6,7 +6,15 @@
 /* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-extraneous-class */
 
 import { inject, injectable } from 'inversify';
-import { Disposable, QuickInput, QuickInputButton, QuickInputButtons, QuickPickItem } from 'vscode';
+import {
+    Disposable,
+    Event,
+    QuickInput,
+    QuickInputButton,
+    QuickInputButtons,
+    QuickPickItem,
+    QuickPickItemButtonEvent
+} from 'vscode';
 import { IApplicationShell } from '../application/types';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
@@ -34,6 +42,8 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
     shouldResume?(): Promise<boolean>;
+    onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
+    onDidChangeItems?: Event<T[]>;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -94,7 +104,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         shouldResume,
         matchOnDescription,
         matchOnDetail,
-        acceptFilterBoxTextAsSelection
+        acceptFilterBoxTextAsSelection,
+        onDidTriggerItemButton,
+        onDidChangeItems
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -106,6 +118,19 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
                 input.items = items;
+                if (onDidChangeItems) {
+                    input.keepScrollPosition = true;
+                    onDidChangeItems(
+                        (newItems) => {
+                            input.items = newItems;
+                        },
+                        this,
+                        disposables
+                    );
+                }
+                if (onDidTriggerItemButton) {
+                    input.onDidTriggerItemButton((e) => onDidTriggerItemButton(e), undefined, disposables);
+                }
                 input.matchOnDescription = matchOnDescription || false;
                 input.matchOnDetail = matchOnDetail || false;
                 if (activeItem) {

@@ -478,7 +478,7 @@ export namespace DataScience {
     );
     export const jupyterSelectURIRunningDetailFormat = localize(
         'DataScience.jupyterSelectURIRunningDetailFormat',
-        'Last activity {0}. {1} existing connections.'
+        'Last connection {0}. {1} existing connections.'
     );
     export const jupyterSelectURINotRunningDetail = localize(
         'DataScience.jupyterSelectURINotRunningDetail',
@@ -885,6 +885,10 @@ export namespace DataScience {
     export const jupyterSelectURIRemoteDetail = localize(
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
+    );
+    export const removeRemoteJupyterServerEntryInQuickPick = localize(
+        'DataScience.removeRemoteJupyterServerEntryInQuickPick',
+        'Remove'
     );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
