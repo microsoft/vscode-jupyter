@@ -239,6 +239,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
+        await jupyterServerSelector.setJupyterURIToLocal();
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
