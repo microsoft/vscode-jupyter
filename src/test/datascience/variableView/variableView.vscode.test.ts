@@ -7,7 +7,7 @@ import { ICommandManager, IVSCodeNotebook } from '../../../client/common/applica
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -140,7 +140,7 @@ suite('DataScience - VariableView', function () {
     });
 
     // Test that we are working will a larger set of basic types
-    test('VariableView basic types (webview-test)', async function () {
+    test('VariableView basic types A (webview-test)', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -152,17 +152,9 @@ suite('DataScience - VariableView', function () {
         // Add some basic types
         const code = `import numpy as np
 import pandas as pd
-myComplex = complex(1, 1)
-myInt = 99999999
-myFloat = 9999.9999
 mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
-myList = [1, 2, 3]
-myTuple = 1, 2, 3
-myDict = {'a': 1}
-mySet = {1, 2, 3}
-
 class MyClass:
     x = 5
 myClass = MyClass()
@@ -176,28 +168,55 @@ myClass = MyClass()
         // If the value can change (ordering or python version), then omit the value to not check it
         const expectedVariables = [
             { name: 'myClass', type: 'MyClass', length: '' },
-            { name: 'myComplex', type: 'complex', length: '', value: ' (1+1j)' },
             { name: 'myDataframe', type: 'DataFrame', length: '(3, 1)', value: '\n     0\n0  1.0\n1  2.0\n2  3.0' },
-            { name: 'myDict', type: 'dict', length: '1', value: " {'a': 1}" },
-            { name: 'myFloat', type: 'float', length: '', value: ' 9999.9999' },
-            { name: 'myInt', type: 'int', length: '', value: ' 99999999' },
-            { name: 'myList', type: 'list', length: '3', value: ' [1, 2, 3]' },
             { name: 'mynpArray', type: 'ndarray', length: '(3,)' },
             {
                 name: 'mySeries',
                 type: 'Series',
                 length: '(3,)',
                 value: '\n0    1.0\n1    2.0\n2    3.0\nName: 0, dtype: float64'
-            },
+            }
+        ];
+
+        await waitForVariablesToMatch(expectedVariables, variableView);
+    });
+
+    test('VariableView basic types B (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add some basic types
+        const code = `myComplex = complex(1, 1)
+myInt = 99999999
+myFloat = 9999.9999
+myList = [1, 2, 3]
+myTuple = 1, 2, 3
+myDict = {'a': 1}
+mySet = {1, 2, 3}
+`;
+        await insertCodeCell(code, { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Parse the HTML for our expected variables
+        // If the value can change (ordering or python version), then omit the value to not check it
+        const expectedVariables = [
+            { name: 'myComplex', type: 'complex', length: '', value: ' (1+1j)' },
+            { name: 'myDict', type: 'dict', length: '1', value: " {'a': 1}" },
+            { name: 'myFloat', type: 'float', length: '', value: ' 9999.9999' },
+            { name: 'myInt', type: 'int', length: '', value: ' 99999999' },
+            { name: 'myList', type: 'list', length: '3', value: ' [1, 2, 3]' },
             { name: 'mySet', type: 'set', length: '3', value: ' {1, 2, 3}' },
             { name: 'myTuple', type: 'tuple', length: '3', value: ' (1, 2, 3)' }
         ];
-        try {
-            await waitForVariablesToMatch(expectedVariables, variableView);
-        } catch (error) {
-            await captureScreenShot('TypesTest');
-            throw error;
-        }
+
+        await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
     // Test opening data viewers while another dataviewer is open
