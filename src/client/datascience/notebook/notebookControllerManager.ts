@@ -78,7 +78,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private selectedControllers = new Map<string, VSCodeNotebookController>();
-    private allKernelConnections = new Set<KernelConnectionMetadata>();
+    private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
     private failedToFetchRemoteKernels?: boolean;
     public get onNotebookControllerSelectionChanged() {
@@ -435,12 +435,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return;
             }
             wasLocal = false;
-
-            // Filter out the current list of live connections
-            this.allKernelConnections = new Set(
-                [...this.allKernelConnections].filter((k) => k.kind !== 'connectToLiveKernel')
-            );
-
             const cancellation = new CancellationTokenSource();
             let connections = await this.getRemoteKernelConnectionMetadata(cancellation.token);
             void this.updateRemoteConnections(cancellation.token, connections).finally(() => cancellation.dispose());
@@ -642,7 +636,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         label: string,
         doNotHideInteractiveKernel?: boolean
     ) {
-        this.allKernelConnections.add(kernelConnection);
         try {
             // Create notebook selector
             [
@@ -705,6 +698,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
+                    this.allKernelConnections.add(kernelConnection);
                 });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
