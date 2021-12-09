@@ -175,14 +175,16 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     });
     test('Local and Remote kernels are listed', async function () {
         await controllerManager.loadNotebookControllers();
-        const controllers = await controllerManager.kernelConnections;
+        const controllers = controllerManager.registeredNotebookControllers();
         assert.ok(
-            controllers.some((item) => item.kind === 'startUsingRemoteKernelSpec'),
+            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote kernelspec'
         );
         assert.ok(
             controllers.some(
-                (item) => item.kind === 'startUsingLocalKernelSpec' || item.kind === 'startUsingPythonInterpreter'
+                (item) =>
+                    item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingPythonInterpreter'
             ),
             'Should have at least one local kernel'
         );
@@ -190,8 +192,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     test('Remote kernels are removed when switching to local', async function () {
         await controllerManager.loadNotebookControllers();
         assert.ok(async () => {
-            const controllers = await controllerManager.kernelConnections;
-            return controllers.filter((item) => item.kind === 'startUsingRemoteKernelSpec').length === 0;
+            const controllers = controllerManager.registeredNotebookControllers();
+            return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
         }, 'Should have at least one remote kernelspec');
 
         // After resetting connection to local only, then remove all remote connections.
@@ -200,21 +202,24 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         await waitForCondition(
             async () => {
-                const controllers = await controllerManager.kernelConnections;
-                return controllers.filter((item) => item.kind === 'startUsingRemoteKernelSpec').length === 0;
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
             },
             defaultNotebookTestTimeout,
-            'Should not have any remote controllers'
+            () =>
+                `Should not have any remote controllers, existing ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
         );
     });
 
     test('Old Remote kernels are removed when switching to new Remote Server', async function () {
         await controllerManager.loadNotebookControllers();
         const baseUrls = new Set<string>();
-        const controllers = await controllerManager.kernelConnections;
+        const controllers = controllerManager.registeredNotebookControllers();
         const remoteKernelSpecs = controllers
-            .filter((item) => item.kind === 'startUsingRemoteKernelSpec')
-            .map((item) => item as RemoteKernelSpecConnectionMetadata);
+            .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
+            .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
         remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
         assert.isOk(remoteKernelSpecs.length > 0, 'Should have at least one remote kernelspec');
 
@@ -227,9 +232,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
             async () => {
-                const controllers = await controllerManager.kernelConnections;
+                const controllers = controllerManager.registeredNotebookControllers();
                 return controllers.some(
-                    (item) => item.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.baseUrl)
+                    (item) =>
+                        item.connection.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.connection.baseUrl)
                 );
             },
             defaultNotebookTestTimeout,
@@ -244,8 +250,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await jupyterServerSelector.setJupyterURIToLocal();
         await waitForCondition(
             async () => {
-                const controllers = await controllerManager.kernelConnections;
-                return controllers.filter((item) => item.kind === 'startUsingRemoteKernelSpec').length === 0;
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
             },
             defaultNotebookTestTimeout,
             'Should not have any remote controllers'
@@ -264,8 +270,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Verify we have a remote kernel spec.
         await waitForCondition(
             async () => {
-                const controllers = await controllerManager.kernelConnections;
-                return controllers.some((item) => item.kind === 'startUsingRemoteKernelSpec');
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
             defaultNotebookTestTimeout,
             'Should have at least one remote controller'
@@ -277,11 +283,11 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
     test('Can run against a remtoe kernelspec', async function () {
         await controllerManager.loadNotebookControllers();
-        const controllers = await controllerManager.kernelConnections;
+        const controllers = controllerManager.registeredNotebookControllers();
 
         // Verify we have a remote kernel spec.
         assert.ok(
-            controllers.some((item) => item.kind === 'startUsingRemoteKernelSpec'),
+            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote controller'
         );
 
