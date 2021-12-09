@@ -1,4 +1,4 @@
-# This yml is used for PRs, insiders build, and release build.
+# This yml is used for PRs, pre-release, and release build.
 # We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
@@ -23,7 +23,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 14.16.0
@@ -42,7 +42,7 @@ env:
   TEST_RESULTS_DIRECTORY: .
   TEST_RESULTS_GLOB: '**/test-results*.xml'
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
-  DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
+  DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
   VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
@@ -79,7 +79,7 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
-      - name: insiders
+      - name: pre-release
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -87,11 +87,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name: insiders channel
-    #     # Scheduled builds will publish Insider builds.
+    #   - name: pre-release channel
+    #     # Scheduled builds will publish pre-release builds.
     #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
     #     run: |
-    #       echo "release_channel=insider" >> $GITHUB_ENV
+    #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
@@ -923,8 +923,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'insider' || needs.pick_environment.outputs.release_channel == 'stable')
+    # This should happen in the release and main branch
+    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
     needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
     environment:
       name: ${{needs.pick_environment.outputs.release_channel}}
@@ -956,7 +956,12 @@ jobs:
         with:
           name: ${{needs.pick_environment.outputs.vsix_name}}
 
-      - name: Publish
+      - name: Publish Pre-release
+        if: needs.pick_environment.outputs.release_channel == 'pre-release'
+        run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+
+      - name: Publish Stable
+        if: needs.pick_environment.outputs.release_channel == 'stable'
         run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
       - name: Extract Extension
