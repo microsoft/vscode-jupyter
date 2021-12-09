@@ -739,12 +739,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Update any new or removed kernel connections, LiveKernelModels might be added or removed
     // during remote connections
     private async updateRemoteConnections(cancelToken: CancellationToken, connections?: KernelConnectionMetadata[]) {
+        traceInfoIfCI('Updating remote connections');
         // Don't update until initial load is done
         await this.loadNotebookControllers();
 
         // We've connected and done the initial fetch, so this is speedy
         connections = connections || (await this.getRemoteKernelConnectionMetadata(cancelToken));
-
+        traceInfoIfCI(`Current remote connections, ${JSON.stringify(connections)}`);
         if (cancelToken.isCancellationRequested || !connections) {
             // Bail out on making the controllers if we are cancelling
             traceInfo('Cancelled loading notebook controllers');

@@ -232,7 +232,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
                 return remoteKernelSpecs.length > 0;
             },
             defaultNotebookTestTimeout,
-            'Should have at least one remote kernelspec'
+            () =>
+                `Should have at least one remote kernelspec, ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
         );
 
         // Start another jupyter server with a new port.
