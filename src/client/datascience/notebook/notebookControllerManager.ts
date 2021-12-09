@@ -326,12 +326,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
 
         // Filter the connections.
-        connections = connections
-            .map((item) => {
-                this.allKernelConnections.add(item);
-                return item;
-            })
-            .filter((item) => !this.kernelFilter.isKernelHidden(item));
+        connections = connections.filter((item) => !this.kernelFilter.isKernelHidden(item));
 
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
@@ -394,15 +389,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             item.dispose();
         });
     }
-    private removeInvalidRemoteKernelControllers(validBaseUrls: Set<string>) {
-        const remoteControllers = Array.from(this.registeredControllers.values()).filter(
-            (item) => !isLocalConnection(item.connection) && !validBaseUrls.has(item.connection.baseUrl)
-        );
-        remoteControllers.forEach((item) => {
-            this.registeredControllers.delete(item.connection.id);
-            item.dispose();
-        });
-    }
     private reloadControllersAfterChangingRemote() {
         if (this.handlerAddedForChangesToRemoteKernelUri) {
             return;
@@ -422,16 +408,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
             wasLocal = false;
             let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
-            const validBaseUrls = new Set<string>();
-            connections.forEach((item) => {
-                if (item.kind === 'connectToLiveKernel' || item.kind === 'startUsingRemoteKernelSpec') {
-                    validBaseUrls.add(item.baseUrl);
-                }
-            });
-            // Remove remote controllers that are no longer valid.
-            this.removeInvalidRemoteKernelControllers(validBaseUrls);
-            connections.forEach((item) => this.allKernelConnections.add(item));
-
+            const cancellation = new CancellationTokenSource();
+            void this.updateRemoteConnections(cancellation.token, connections).finally(() => cancellation.dispose());
             // Now create the actual controllers from our connections
             this.createNotebookControllers(connections);
         };
@@ -613,7 +591,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
-            this.allKernelConnections.add(value);
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
 
@@ -764,18 +741,25 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Update any new or removed kernel connections, LiveKernelModels might be added or removed
     // during remote connections
-    private async updateRemoteConnections(cancelToken: CancellationToken) {
+    private async updateRemoteConnections(cancelToken: CancellationToken, connections?: KernelConnectionMetadata[]) {
         // Don't update until initial load is done
         await this.loadNotebookControllers();
 
         // We've connected and done the initial fetch, so this is speedy
-        const connections = await this.getRemoteKernelConnectionMetadata(cancelToken);
+        connections = connections || (await this.getRemoteKernelConnectionMetadata(cancelToken));
 
-        if (cancelToken.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested || !connections) {
             // Bail out on making the controllers if we are cancelling
             traceInfo('Cancelled loading notebook controllers');
             return [];
         }
+        // Update total number of connection & the like for existing controllers.
+        connections.forEach((connection) => {
+            const controller = this.registeredControllers.get(connection.id);
+            if (controller && connection.kind === 'connectToLiveKernel') {
+                controller.updateRemoteKernelDetails(connection);
+            }
+        });
 
         // Look for any connections that are not registered already as controllers
         const missingConnections = connections.filter((connection) => {
@@ -783,11 +767,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Look for any controllers that we have disposed
-        const disposedControllers = Array.from(this.registeredControllers.values()).filter((controller) => {
-            return !connections.some((connection) => {
-                return connection.id === controller.connection.id;
+        const disposedControllers = Array.from(this.registeredControllers.values())
+            .filter((controller) => !isLocalConnection(controller.connection))
+            .filter((controller) => {
+                return !connections!.some((connection) => {
+                    return connection.id === controller.connection.id;
+                });
             });
-        });
 
         // If we have any new connections, register them
         if (missingConnections.length > 0) {
