@@ -519,7 +519,6 @@ module.exports = {
         'src/client/common/utils/cacheUtils.ts',
         'src/client/common/utils/workerPool.ts',
         'src/client/common/crypto.ts',
-        'src/client/common/extensions.ts',
         'src/client/common/dotnet/compatibilityService.ts',
         'src/client/common/dotnet/serviceRegistry.ts',
         'src/client/common/dotnet/types.ts',
