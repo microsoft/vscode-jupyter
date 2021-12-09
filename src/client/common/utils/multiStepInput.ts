@@ -24,7 +24,6 @@ export class InputFlowAction {
     public static back = new InputFlowAction();
     public static cancel = new InputFlowAction();
     public static resume = new InputFlowAction();
-    private constructor() {}
 }
 
 export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
