@@ -13,28 +13,19 @@ import {
     IJupyterServerProvider,
     INotebook
 } from '../types';
+import { isLocalConnection } from './kernels/types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()
 export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
-    public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token
-        });
-        return server?.dispose();
-    }
-
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
         const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
             ui: options.ui,
             resource: options.resource,
-            token: options.token
+            token: options.token,
+            localJupyter: options.localJupyter
         });
         return server?.getConnectionInfo();
     }
@@ -42,10 +33,10 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
         // Make sure we have a server
         const server = await this.serverProvider.getOrCreateServer({
-            getOnly: false,
             ui: options.ui,
             resource: options.resource,
-            token: options.token
+            token: options.token,
+            localJupyter: isLocalConnection(options.kernelConnection)
         });
 
         if (server) {

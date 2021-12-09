@@ -16,11 +16,6 @@ export interface IProgressReporter {
  */
 export enum ReportableAction {
     /**
-     * Getting kernels for a local connection.
-     * If not found, user may have to select or we might register a kernel.
-     */
-    KernelsGetKernelForLocalConnection = 'KernelsStartGetKernelForLocalConnection',
-    /**
      * Getting kernels for a remote connection.
      * If not found, user may have to select.
      */
@@ -45,13 +40,7 @@ export enum ReportableAction {
      * Wait for session to go idle.
      */
     JupyterSessionWaitForIdleSession = 'JupyterSessionWaitForIdleSession',
-    /**
-     * Connecting a raw kernel session
-     */
-    RawKernelConnecting = 'RawKernelConnecting',
-    CheckingIfImportIsSupported = 'CheckingIfImportIsSupported',
     InstallingMissingDependencies = 'InstallingMissingDependencies',
     ExportNotebookToPython = 'ExportNotebookToPython',
-    PerformingExport = 'PerformingExport',
-    ConvertingToPDF = 'ConvertingToPDF'
+    PerformingExport = 'PerformingExport'
 }

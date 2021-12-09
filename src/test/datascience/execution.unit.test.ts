@@ -986,7 +986,7 @@ suite('Jupyter Execution', async () => {
             display_name: 'somename'
         };
         const kernelMetadata: LocalKernelConnectionMetadata = {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec,
             id: getKernelId(kernelSpec)
         };
@@ -1018,7 +1018,10 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined }, token.token),
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
                 'Should be able to start a server'
             );
         } finally {
@@ -1042,7 +1045,10 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined }, token.token),
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
                 'Should be able to start a server'
             );
         } finally {
@@ -1058,7 +1064,7 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isRejected(
-                execution.connectToNotebookServer({ ui, resource: undefined }, token.token),
+                execution.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token.token),
                 'Running cells requires jupyter package.'
             );
         } finally {

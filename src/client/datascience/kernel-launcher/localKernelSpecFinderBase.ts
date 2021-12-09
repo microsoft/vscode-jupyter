@@ -17,7 +17,7 @@ import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
@@ -33,7 +33,7 @@ export abstract class LocalKernelSpecFinderBase {
         {
             usesPython: boolean;
             wasPythonExtInstalled: boolean;
-            promise: Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
+            promise: Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
         }
     >();
 
@@ -58,9 +58,9 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        @ignoreLogging() finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        @ignoreLogging() finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
         ignoreCache?: boolean
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
         if (result && !ignoreCache) {
@@ -77,7 +77,7 @@ export abstract class LocalKernelSpecFinderBase {
         const promise = finder().then((items) => {
             const distinctKernelMetadata = new Map<
                 string,
-                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+                LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
             >();
             traceInfoIfCI(
                 `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`

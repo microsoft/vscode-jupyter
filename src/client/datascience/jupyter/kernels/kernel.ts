@@ -21,7 +21,7 @@ import {
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -33,6 +33,7 @@ import {
 } from '../../telemetry/telemetry';
 import {
     IDataScienceErrorHandler,
+    IJupyterConnection,
     IJupyterServerUriStorage,
     IJupyterSession,
     INotebook,
@@ -49,7 +50,7 @@ import {
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import { IKernel, isLocalConnection, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -69,6 +70,9 @@ import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnectError } from '../../errors/jupyterConnectError';
+import { IPythonExtensionChecker } from '../../../api/types';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -164,7 +168,8 @@ export class Kernel implements IKernel {
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         notebookControllerManager: INotebookControllerManager,
         private statusProvider: IStatusProvider,
-        private commandManager: ICommandManager
+        private commandManager: ICommandManager,
+        pythonChecker: IPythonExtensionChecker
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -183,10 +188,12 @@ export class Kernel implements IKernel {
                 ? notebookControllerManager.getPreferredNotebookController(this.notebookDocument)?.controller ===
                   controller
                 : undefined;
-        trackKernelResourceInformation(resourceUri, {
-            kernelConnection: kernelConnectionMetadata,
-            isPreferredKernel
-        });
+        if (pythonChecker.isPythonExtensionInstalled) {
+            trackKernelResourceInformation(resourceUri, {
+                kernelConnection: kernelConnectionMetadata,
+                isPreferredKernel
+            });
+        }
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
@@ -217,15 +224,15 @@ export class Kernel implements IKernel {
     public async start(options?: { disableUI?: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
-    public async interrupt(): Promise<InterruptResult> {
+    public async interrupt(): Promise<void> {
         this._onWillInterrupt.fire();
+        trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
                 `Interrupt requested & currently restarting ${(
                     this.resourceUri || this.notebookDocument.uri
                 ).toString()}`
             );
-            trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
             await this.restarting.promise;
         }
         traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
@@ -233,7 +240,39 @@ export class Kernel implements IKernel {
         const interruptResultPromise = this.kernelExecution.interrupt(
             this._notebookPromise?.then((item) => item.session)
         );
-        return interruptResultPromise;
+
+        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
+
+        let errorContext: 'interrupt' | 'restart' = 'interrupt';
+        let result: InterruptResult | undefined;
+        try {
+            try {
+                traceInfo(
+                    `Interrupt requested & sent for ${getDisplayPath(this.notebookDocument.uri)} in notebookEditor.`
+                );
+                result = await interruptResultPromise;
+            } catch (err) {
+                traceError('Failed to interrupt kernel', err);
+                void this.errorHandler.handleKernelError(
+                    err,
+                    errorContext,
+                    this.kernelConnectionMetadata,
+                    this.resourceUri
+                );
+            }
+            if (result === InterruptResult.TimedOut) {
+                const message = DataScience.restartKernelAfterInterruptMessage();
+                const yes = DataScience.restartKernelMessageYes();
+                const no = DataScience.restartKernelMessageNo();
+                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes, no);
+                if (v === yes) {
+                    errorContext = 'restart';
+                    await this.restart();
+                }
+            }
+        } finally {
+            status.dispose();
+        }
     }
     public async dispose(): Promise<void> {
         this._disposing = true;
@@ -266,18 +305,29 @@ export class Kernel implements IKernel {
         await this.disposingPromise;
     }
     public async restart(): Promise<void> {
-        this._onWillRestart.fire();
         if (this.restarting) {
             return this.restarting.promise;
         }
+        this._onWillRestart.fire();
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
+        // Set our status
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
+        const progress = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.restartingKernelStatus().format(
+                `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+            )
+        );
+
+        const stopWatch = new StopWatch();
         try {
             // If the notebook died, then start a new notebook.
             await (this._notebookPromise
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start({ disableUI: false }));
             traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.notebookDocument.uri)}`, ex);
             this._ignoreNotebookDisposedErrors = true;
@@ -286,9 +336,16 @@ export class Kernel implements IKernel {
             this.notebook = undefined;
             this._notebookPromise = undefined;
             this.restarting = undefined;
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
             await notebook?.session.dispose().catch(noop);
             this._ignoreNotebookDisposedErrors = false;
+            void this.errorHandler.handleKernelError(ex, 'restart', this.kernelConnectionMetadata, this.resourceUri);
             throw ex;
+        } finally {
+            status.dispose();
+            progress.dispose();
         }
 
         // Interactive window needs a restart sys info
@@ -351,6 +408,8 @@ export class Kernel implements IKernel {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
                 const stopWatch = new StopWatch();
+                const disposables: IDisposable[] = [];
+                this.createProgressIndicator(disposables);
                 try {
                     try {
                         // No need to block kernel startup on UI updates.
@@ -401,7 +460,9 @@ export class Kernel implements IKernel {
                     }
                     resolve(this.notebook);
                     this._onStarted.fire();
+                    disposeAllDisposables(disposables);
                 } catch (ex) {
+                    disposeAllDisposables(disposables);
                     sendKernelTelemetryEvent(
                         this.resourceUri,
                         Telemetry.NotebookStart,
@@ -438,13 +499,45 @@ export class Kernel implements IKernel {
         }
         return this._notebookPromise;
     }
+    private createProgressIndicator(disposables: IDisposable[]) {
+        if (this.startupUI.disableUI) {
+            this.startupUI.onDidChangeDisableUI(
+                () => {
+                    if (this.disposing || this.disposed || this.startupUI.disableUI) {
+                        return;
+                    }
+                    disposables.push(
+                        KernelProgressReporter.createProgressReporter(
+                            this.resourceUri,
+                            DataScience.connectingToKernel().format(
+                                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                            )
+                        )
+                    );
+                },
+                this,
+                disposables
+            );
+        } else {
+            disposables.push(
+                KernelProgressReporter.createProgressReporter(
+                    this.resourceUri,
+                    DataScience.connectingToKernel().format(
+                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                    )
+                )
+            );
+        }
+    }
+
     private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
-        if (serverConnection.localLaunch) {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
             return;
         }
+        const remoteConnection = serverConnection as IJupyterConnection;
         // Log this remote URI into our MRU list
         await this.serverStorage.addToUriList(
-            serverConnection.url || serverConnection.displayName,
+            remoteConnection.url || serverConnection.displayName,
             Date.now(),
             serverConnection.displayName
         );
@@ -564,6 +657,10 @@ export class Kernel implements IKernel {
         }
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+            // Restart sessions and retries might make this hard to do correctly otherwise.
+            notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             traceInfoIfCI('After updating working directory');
@@ -574,7 +671,7 @@ export class Kernel implements IKernel {
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
 
-            if (this.connection?.localLaunch) {
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this.resourceUri,
@@ -724,7 +821,7 @@ export class Kernel implements IKernel {
     private async runStartupCommands() {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
-        let setting = settings.runStartupCommands || settings.runMagicCommands;
+        let setting = settings.runStartupCommands;
 
         // Convert to string in case we get an array of startup commands.
         if (Array.isArray(setting)) {
@@ -740,7 +837,7 @@ export class Kernel implements IKernel {
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
-        if (this.connection && this.connection.localLaunch) {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
@@ -757,7 +854,10 @@ export class Kernel implements IKernel {
 
     // Update both current working directory and sys.path with the desired directory
     private async changeDirectoryIfPossible(directory: string): Promise<void> {
-        if (this.connection && this.connection.localLaunch && isPythonKernelConnection(this.kernelConnectionMetadata)) {
+        if (
+            isLocalConnection(this.kernelConnectionMetadata) &&
+            isPythonKernelConnection(this.kernelConnectionMetadata)
+        ) {
             traceInfo('changeDirectoryIfPossible');
             await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
         }

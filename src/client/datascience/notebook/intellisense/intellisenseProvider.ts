@@ -75,6 +75,9 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private getActiveInterpreterSync(fsPath: string | undefined): PythonEnvironment | undefined {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const folder =
             this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
@@ -173,7 +176,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     private getNotebookHeader(uri: Uri) {
         const settings = this.configService.getSettings(uri);
         // Run any startup commands that we specified. Support the old form too
-        let setting = settings.runStartupCommands || settings.runMagicCommands;
+        let setting = settings.runStartupCommands;
 
         // Convert to string in case we get an array of startup commands.
         if (Array.isArray(setting)) {

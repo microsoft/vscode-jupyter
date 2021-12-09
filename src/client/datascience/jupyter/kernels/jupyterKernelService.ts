@@ -21,8 +21,6 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
 import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
 import { cleanEnvironment } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -116,7 +114,6 @@ export class JupyterKernelService {
     // eslint-disable-next-line complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
-    @reportAction(ReportableAction.KernelsRegisterKernel)
     // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,

@@ -169,21 +169,24 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 new CDNWidgetScriptSourceProvider(this.configurationSettings, this.localResourceUriConverter, this.fs)
             );
         }
-        const connection = this.kernel.connection;
-        if (!connection) {
-            //
-        } else if (connection.localLaunch) {
-            scriptProviders.push(
-                new LocalWidgetScriptSourceProvider(
-                    this.kernel,
-                    this.localResourceUriConverter,
-                    this.fs,
-                    this.interpreterService,
-                    this.factory
-                )
-            );
-        } else {
-            scriptProviders.push(new RemoteWidgetScriptSourceProvider(connection, this.httpClient));
+        switch (this.kernel.kernelConnectionMetadata.kind) {
+            case 'connectToLiveKernel':
+            case 'startUsingRemoteKernelSpec':
+                scriptProviders.push(
+                    new RemoteWidgetScriptSourceProvider(this.kernel.kernelConnectionMetadata.baseUrl, this.httpClient)
+                );
+                break;
+
+            default:
+                scriptProviders.push(
+                    new LocalWidgetScriptSourceProvider(
+                        this.kernel,
+                        this.localResourceUriConverter,
+                        this.fs,
+                        this.interpreterService,
+                        this.factory
+                    )
+                );
         }
 
         this.scriptProviders = scriptProviders;

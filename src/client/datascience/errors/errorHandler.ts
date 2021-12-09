@@ -4,7 +4,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
-import { traceError, traceWarning } from '../../common/logger';
+import { traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
@@ -69,7 +69,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {}
     public async handleError(err: Error): Promise<void> {
-        traceError('DataScience Error', err);
+        traceWarning('DataScience Error', err);
         await this.handleErrorImplementation(err);
     }
 
@@ -80,6 +80,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         resource: Resource,
         cellToDisplayErrors?: NotebookCell
     ): Promise<void> {
+        traceWarning('Kernel Error', err);
         await this.handleErrorImplementation(
             err,
             purpose,
@@ -395,7 +396,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             void this.displayErrorsInCell(message, cellToDisplayErrors);
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
-        traceError('DataScience Error', err);
     }
     private async displayIPyKernelMissingErrorInCell(
         kernelConnection: KernelConnectionMetadata,
@@ -521,7 +521,9 @@ function getCombinedErrorMessage(prefix?: string, message?: string) {
         .filter((line) => line.length > 0)
         .join(' \n');
     if (errorMessage.length && errorMessage.indexOf('command:jupyter.viewOutput') === -1) {
-        return `${errorMessage}. \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+        return `${
+            errorMessage.endsWith('.') ? errorMessage : errorMessage + '.'
+        } \n${DataScience.viewJupyterLogForFurtherInfo()}`;
     }
     return errorMessage;
 }

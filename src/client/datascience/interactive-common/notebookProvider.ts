@@ -8,6 +8,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { IConfigurationService } from '../../common/types';
 import { Settings, Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
+import { isLocalConnection } from '../jupyter/kernels/types';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,
@@ -43,26 +44,27 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (this.rawNotebookProvider.isSupported) {
+        if (this.rawNotebookProvider.isSupported && !options.localJupyter) {
             return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
-        } else if (!options.getOnly) {
+        } else {
             handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
     }
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
-        const rawKernel = this.rawNotebookProvider.isSupported;
+        const isLocal = isLocalConnection(options.kernelConnection);
+        const rawKernel = this.rawNotebookProvider.isSupported && isLocal;
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect(options))) {
+            if (!(await this.jupyterNotebookProvider.connect({ ...options, localJupyter: isLocal }))) {
                 return undefined;
             }
         }

@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { disposeAllDisposables } from '../helpers';
-import { traceError, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceVerbose } from '../logger';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IPythonExecutionFactory } from '../process/types';
 import { IDisposable, IOutputChannel, Product, Resource } from '../types';
@@ -18,14 +18,29 @@ import { DataScience } from '../utils/localize';
 import { translateProductToModule } from './productInstaller';
 import { ProductNames } from './productNames';
 
+function isGlobalEnvironment(interpreter: PythonEnvironment): boolean {
+    return (
+        interpreter.envType === EnvironmentType.Global ||
+        interpreter.envType === EnvironmentType.System ||
+        interpreter.envType === EnvironmentType.WindowsStore
+    );
+}
+function isVirtualEnv(interpreter: PythonEnvironment): boolean {
+    return (
+        interpreter.envType === EnvironmentType.Venv ||
+        interpreter.envType === EnvironmentType.VirtualEnv ||
+        interpreter.envType === EnvironmentType.VirtualEnvWrapper
+    );
+}
 /**
- * Class used to install IPyKernel into global enviroments if Python extension fails to install it for what ever reason.
+ * Class used to install IPyKernel into global environments if Python extension fails to install it for what ever reason.
  * We know ipykernel can be easily installed with `python -m pip install ipykernel` for Global Python Environments.
  * Similarly for Jupyter & other python packages.
  *
  * Note: This is only a fallback, we know that sometimes Python fails to install these & Python installs them via the terminal.
  * We don't really know why it fails to install these packages.
  */
+
 @injectable()
 export class BackupPipInstaller {
     constructor(
@@ -43,21 +58,20 @@ export class BackupPipInstaller {
         token: CancellationToken
     ): Promise<boolean> {
         if (product === Product.pip) {
+            traceVerbose(`We cannot pip install pip.`);
             return false;
         }
         // We can only run this installer against global & windows store enviorments.
-        if (
-            interpreter.envType !== EnvironmentType.Global &&
-            interpreter.envType !== EnvironmentType.WindowsStore &&
-            interpreter.envType !== EnvironmentType.System
-        ) {
-            traceWarning(`We cannot pip install packages into non-Global Python environments.`);
+        if (!isGlobalEnvironment(interpreter) && !isVirtualEnv(interpreter)) {
+            traceVerbose(
+                `We cannot pip install packages into non-Global or non-Virtual Python environments '${interpreter.envType}'.`
+            );
             return false;
         }
         // Check if pip is installed.
         const isPipInstalled = await this.isInstalled(Product.pip, interpreter);
         if (isPipInstalled === undefined || isPipInstalled === false) {
-            traceWarning(`We cannot pip install packages if Pip is unavailable.`);
+            traceVerbose(`We cannot pip install packages if Pip is unavailable.`);
             return false;
         }
         try {
@@ -72,7 +86,7 @@ export class BackupPipInstaller {
 
             let installationResult = false;
             await this.appShell.withProgress(options, async (progress, progressToken: CancellationToken) => {
-                installationResult = await this.installImplmentation(
+                installationResult = await this.installImplementation(
                     progress,
                     product,
                     interpreter,
@@ -106,7 +120,7 @@ export class BackupPipInstaller {
             return false;
         }
     }
-    private async installImplmentation(
+    private async installImplementation(
         progress: Progress<{ message?: string; increment?: number }>,
         product: Product,
         interpreter: PythonEnvironment,
@@ -123,7 +137,8 @@ export class BackupPipInstaller {
             return false;
         }
         const productName = ProductNames.get(product)!;
-        const args = this.getInstallerArgs({ product, reinstall: reInstallAndUpdate });
+        const isGlobalPython = isGlobalEnvironment(interpreter);
+        const args = this.getInstallerArgs({ product, reinstall: reInstallAndUpdate, isGlobalPython });
         const cwd = resource ? this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath : undefined;
         this.outputChannel.appendLine(`Pip Installing ${productName} into ${getDisplayPath(interpreter.path)}`);
         this.outputChannel.appendLine('>>>>>>>>>>>>>');
@@ -156,7 +171,7 @@ export class BackupPipInstaller {
             this.outputChannel.appendLine('\n<<<<<<<<<<<<<<');
         }
     }
-    private getInstallerArgs(options: { reinstall: boolean; product: Product }): string[] {
+    private getInstallerArgs(options: { reinstall: boolean; product: Product; isGlobalPython: boolean }): string[] {
         const args: string[] = [];
         const proxy = this.workspaceService.getConfiguration('http').get('proxy', '');
         if (proxy.length > 0) {
@@ -167,7 +182,9 @@ export class BackupPipInstaller {
         if (options.reinstall) {
             args.push('--force-reinstall');
         }
-        args.push('--user');
+        if (options.isGlobalPython) {
+            args.push('--user');
+        }
         const moduleName = translateProductToModule(options.product);
         return [...args, moduleName];
     }

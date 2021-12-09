@@ -15,7 +15,7 @@ import { Telemetry } from '../constants';
 import {
     findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
-    getInterpreterHashInMetdata,
+    getInterpreterHashInMetadata,
     getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -176,13 +176,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         kernels.forEach((item) => uniqueItems.set(item.id, item));
         await this.globalState.update(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
     }
-    private findPreferredLocalKernelConnectionFromCache(
+    public findPreferredLocalKernelConnectionFromCache(
         notebookMetadata?: nbformat.INotebookMetadata
     ): LocalKernelConnectionMetadata | undefined {
         if (!notebookMetadata) {
             return;
         }
-        const interpreterHash = getInterpreterHashInMetdata(notebookMetadata);
+        const interpreterHash = getInterpreterHashInMetadata(notebookMetadata);
         if (!interpreterHash) {
             return;
         }
@@ -238,7 +238,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                             .catch(noop)
                     );
                 }
-                if (item.kind === 'startUsingKernelSpec' && item.kernelSpec?.specFile) {
+                if (item.kind === 'startUsingLocalKernelSpec' && item.kernelSpec?.specFile) {
                     // Possible the kernelspec file no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs

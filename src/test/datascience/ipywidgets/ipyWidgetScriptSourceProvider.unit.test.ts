@@ -14,14 +14,12 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IJupyterSettings } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/remoteWidgetScriptSourceProvider';
-import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
-import { IJupyterConnection, ILocalResourceUriConverter } from '../../../client/datascience/types';
+import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -74,20 +72,14 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
-                const connection: IJupyterConnection = {
-                    type: 'jupyter',
-                    valid: true,
-                    displayName: '',
-                    baseUrl: '',
-                    localProcExitCode: undefined,
-                    disconnected: new EventEmitter<number>().event,
-                    dispose: noop,
-                    hostName: '',
-                    localLaunch,
-                    token: '',
-                    rootDirectory: EXTENSION_ROOT_DIR
-                };
-                when(kernel.connection).thenReturn(connection);
+                if (!localLaunch) {
+                    when(kernel.kernelConnectionMetadata).thenReturn(<RemoteKernelSpecConnectionMetadata>{
+                        baseUrl: '',
+                        id: '',
+                        kernelSpec: {},
+                        kind: 'startUsingRemoteKernelSpec'
+                    });
+                }
             });
             test('Prompt to use CDN', async () => {
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
@@ -259,7 +251,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 // Confirm we first searched CDN before going to local/remote.
                 cdnSource.calledBefore(localOrRemoteSource);
             });
-            test('Widget sources from CDN should be given prefernce', async () => {
+            test('Widget sources from CDN should be given preference', async () => {
                 (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')

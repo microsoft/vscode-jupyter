@@ -61,14 +61,12 @@ export interface IDisplayOptions {
 export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
-    readonly valid: boolean;
     readonly displayName: string;
 }
 
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
-    readonly valid: boolean;
     readonly displayName: string;
     disconnected: Event<number>;
 
@@ -76,7 +74,6 @@ export interface IJupyterConnection extends Disposable {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    localProcExitCode: number | undefined;
     readonly rootDirectory: string; // Directory where the notebook server was started.
     readonly url?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,7 +136,6 @@ export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
     createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
-    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
 export interface INotebook {
@@ -149,9 +145,11 @@ export interface INotebook {
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
-    getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };
@@ -165,6 +163,10 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -845,9 +847,11 @@ type WebViewViewState = {
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
 export type GetServerOptions = {
-    getOnly?: boolean;
     ui: IDisplayOptions;
-    localOnly?: boolean;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
     token: CancellationToken;
     resource: Resource;
 };

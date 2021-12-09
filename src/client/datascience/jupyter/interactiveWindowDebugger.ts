@@ -13,7 +13,6 @@ import { Identifiers } from '../constants';
 import {
     ICellHashListener,
     IFileHashes,
-    IJupyterConnection,
     IInteractiveWindowDebugger,
     IJupyterDebugService,
     ISourceMapRequest
@@ -21,7 +20,7 @@ import {
 import { JupyterDebuggerNotInstalledError } from '../errors/jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupportedError } from '../errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently, executeSilentlySync, getPlainTextOrStreamOutput } from './kernels/kernel';
-import { IKernel } from './kernels/types';
+import { IKernel, isLocalConnection } from './kernels/types';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
@@ -167,13 +166,12 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             request: 'attach',
             ...extraConfig
         };
-        const connectionInfo = kernel.connection;
-        if (connectionInfo && !connectionInfo.localLaunch) {
-            const { host, port } = await this.connectToRemote(kernel, connectionInfo);
+        if (isLocalConnection(kernel.kernelConnectionMetadata)) {
+            const { host, port } = await this.connectToLocal(kernel);
             result.host = host;
             result.port = port;
         } else {
-            const { host, port } = await this.connectToLocal(kernel);
+            const { host, port } = await this.connectToRemote(kernel);
             result.host = host;
             result.port = port;
         }
@@ -213,8 +211,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         // installed locally by the extension
         // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
         // this path.
-        const connectionInfo = kernel.connection;
-        if (connectionInfo && connectionInfo.localLaunch) {
+        if (isLocalConnection(kernel.kernelConnectionMetadata)) {
             let localPath = await this.debuggerPathProvider.getDebuggerPath();
             if (this.platform.isWindows) {
                 localPath = localPath.replace(/\\/g, '\\\\');
@@ -299,10 +296,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         );
     }
 
-    private async connectToRemote(
-        _kernel: IKernel,
-        _connectionInfo: IJupyterConnection
-    ): Promise<{ port: number; host: string }> {
+    private async connectToRemote(_kernel: IKernel): Promise<{ port: number; host: string }> {
         // We actually need a token. This isn't supported at the moment
         throw new JupyterDebuggerRemoteNotSupportedError();
 

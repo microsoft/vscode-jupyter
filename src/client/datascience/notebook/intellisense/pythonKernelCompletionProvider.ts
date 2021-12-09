@@ -15,7 +15,7 @@ import {
 import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
@@ -306,13 +306,13 @@ export function filterCompletions(
         result = result.filter((r) => !set.has(r.itemText));
     }
 
-    traceInfo(
+    traceVerbose(
         `Jupyter completions for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
     );
 
-    traceInfo(
+    traceVerbose(
         `Jupyter results for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`

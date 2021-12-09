@@ -17,7 +17,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IDisplayOptions, IKernelDependencyService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
@@ -94,7 +94,7 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     public async launch(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
@@ -123,7 +123,7 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async launchProcess(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         resource: Resource,
         workingDirectory: string,
         timeout: number,
@@ -217,7 +217,7 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getKernelConnection(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     ): Promise<IKernelConnection> {
         const ports = await this.chainGetConnectionPorts();
         return {

@@ -124,14 +124,15 @@ export class ServerCache implements IAsyncDisposable {
                 options && options.workingDir
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
-            ui: options.ui
+            ui: options.ui,
+            localJupyter: options.localJupyter
         };
     }
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.uri ? options.uri : '';
+        const uri = options.uri ? options.uri.toString() : '';
         const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `${uri}${useFlag}${options.workingDir}`;
+        return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
     }
 }

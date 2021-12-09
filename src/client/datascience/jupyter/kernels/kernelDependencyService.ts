@@ -104,7 +104,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Check cache, faster than spawning process every single time.
         // Makes a big difference with conda on windows.
         if (!ignoreCache && isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, interpreter)) {
-            traceInfo(`IPykernel found previously in this enviornment ${getDisplayPath(interpreter.path)}`);
+            traceInfo(`IPykernel found previously in this environment ${getDisplayPath(interpreter.path)}`);
             return true;
         }
         const installedPromise = this.installer
@@ -205,7 +205,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             const selection = this.isCodeSpace
                 ? Common.install()
                 : await Promise.race([
-                      this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                      this.appShell.showInformationMessage(message, { modal: true }, ...options),
                       promptCancellationPromise
                   ]);
             if (installerToken.isCancellationRequested) {

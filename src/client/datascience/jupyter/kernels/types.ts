@@ -13,7 +13,6 @@ import type {
     IJupyterKernelSpec,
     IJupyterSession,
     INotebookProviderConnection,
-    InterruptResult,
     KernelSocketInformation
 } from '../../types';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -36,6 +35,7 @@ export type LiveKernelConnectionMetadata = Readonly<{
      * Python interpreter will be used for intellisense & the like.
      */
     interpreter?: PythonEnvironment;
+    baseUrl: string;
     kind: 'connectToLiveKernel';
     id: string;
 }>;
@@ -44,7 +44,7 @@ export type LiveKernelConnectionMetadata = Readonly<{
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type KernelSpecConnectionMetadata = Readonly<{
+export type LocalKernelSpecConnectionMetadata = Readonly<{
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
     /**
@@ -53,7 +53,20 @@ export type KernelSpecConnectionMetadata = Readonly<{
      * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
      */
     interpreter?: PythonEnvironment;
-    kind: 'startUsingKernelSpec';
+    kind: 'startUsingLocalKernelSpec';
+    id: string;
+}>;
+/**
+ * Connection metadata for Remote Kernels started using kernelspec (JSON).
+ * This could be a raw kernel (spec might have path to executable for .NET or the like).
+ * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
+ */
+export type RemoteKernelSpecConnectionMetadata = Readonly<{
+    kernelModel?: undefined;
+    interpreter?: undefined;
+    kernelSpec: IJupyterKernelSpec;
+    kind: 'startUsingRemoteKernelSpec';
+    baseUrl: string;
     id: string;
 }>;
 /**
@@ -75,19 +88,28 @@ export type PythonKernelConnectionMetadata = Readonly<{
  */
 export type KernelConnectionMetadata =
     | Readonly<LiveKernelConnectionMetadata>
-    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<LocalKernelSpecConnectionMetadata>
+    | Readonly<RemoteKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
 /**
  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
  */
 export type LocalKernelConnectionMetadata =
-    | Readonly<KernelSpecConnectionMetadata>
+    | Readonly<LocalKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {
     selection: T;
+}
+
+export function isLocalConnection(
+    kernelConnection: KernelConnectionMetadata
+): kernelConnection is LocalKernelConnectionMetadata {
+    return (
+        kernelConnection.kind === 'startUsingLocalKernelSpec' || kernelConnection.kind === 'startUsingPythonInterpreter'
+    );
 }
 
 export interface IKernel extends IAsyncDisposable {
@@ -119,7 +141,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly session?: IJupyterSession;
     start(options?: { disableUI?: boolean }): Promise<void>;
-    interrupt(): Promise<InterruptResult>;
+    interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
     executeHidden(code: string): Promise<nbformat.IOutput[]>;

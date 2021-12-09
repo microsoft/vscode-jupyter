@@ -16,7 +16,6 @@ import {
 } from '../../../common/types';
 import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IDisplayOptions,
     IJupyterConnection,
@@ -25,8 +24,7 @@ import {
     INotebookServer
 } from '../../types';
 import { computeWorkingDirectory } from '../jupyterUtils';
-import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
-import { KernelConnectionMetadata } from '../kernels/types';
+import { isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 import { JupyterNotebook } from '../jupyterNotebook';
@@ -36,7 +34,6 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionManager } from '../jupyterSessionManager';
 import { SessionDisposedError } from '../../errors/sessionDisposedError';
-import { disposeAllDisposables } from '../../../common/helpers';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -54,7 +51,6 @@ export class HostJupyterServer implements INotebookServer {
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -81,45 +77,15 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions
     ): Promise<INotebook> {
-        const disposables: IDisposable[] = [];
-
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
         this.trackDisposable(notebookPromise.promise);
-
         const getExistingSession = async () => {
             const connection = await this.computeLaunchInfo();
 
-            let progressDisposable = ui.disableUI
-                ? undefined
-                : this.progressReporter.createProgressIndicator(
-                      localize.DataScience.connectingToKernel().format(
-                          getDisplayNameOrNameOfKernelConnection(kernelConnection)
-                      )
-                  );
-            cancelToken.onCancellationRequested(() => disposeAllDisposables(disposables), this, disposables);
-            if (progressDisposable) {
-                disposables.push(progressDisposable);
-            } else {
-                ui.onDidChangeDisableUI(
-                    () => {
-                        if (!ui.disableUI && progressDisposable) {
-                            progressDisposable = this.progressReporter.createProgressIndicator(
-                                localize.DataScience.connectingToKernel().format(
-                                    getDisplayNameOrNameOfKernelConnection(kernelConnection)
-                                )
-                            );
-                            disposables.push(progressDisposable);
-                        }
-                    },
-                    this,
-                    disposables
-                );
-            }
-
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
-            const workingDirectory = connection.localLaunch
+            const workingDirectory = isLocalConnection(kernelConnection)
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
             // Start a session (or use the existing one if allowed)
@@ -156,8 +122,6 @@ export class HostJupyterServer implements INotebookServer {
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
-        } finally {
-            disposeAllDisposables(disposables);
         }
 
         return notebookPromise.promise;

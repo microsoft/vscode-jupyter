@@ -11,18 +11,15 @@ import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
-import { Identifiers, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IDisplayOptions, ISessionWithSocket } from '../types';
@@ -62,7 +59,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         super(resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
-    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait until status says idle.
         if (this.session) {
@@ -246,7 +242,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
         if (
-            this.kernelConnectionMetadata.kind !== 'startUsingKernelSpec' &&
+            this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
         ) {
             throw new Error(
@@ -359,10 +355,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     except Empty:
                         break
         */
-
-        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-        // Restart sessions and retries might make this hard to do correctly otherwise.
-        result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
         return result;
     }

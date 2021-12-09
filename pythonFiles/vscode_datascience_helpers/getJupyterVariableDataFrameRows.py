@@ -1,5 +1,6 @@
 # Query Jupyter server for the rows of a data frame
 import json as _VSCODE_json
+import builtins
 import pandas as _VSCODE_pd
 import pandas.io.json as _VSCODE_pd_json
 import builtins as _VSCODE_builtins
@@ -38,7 +39,7 @@ _VSCODE_rows = _VSCODE_df.iloc[_VSCODE_startRow:_VSCODE_endRow]
 _VSCODE_result = _VSCODE_pd_json.to_json(
     None, _VSCODE_rows, orient="table", date_format="iso"
 )
-print(_VSCODE_result)
+builtins.print(_VSCODE_result)
 
 # Cleanup our variables
 del _VSCODE_df

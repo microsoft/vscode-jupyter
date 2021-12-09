@@ -165,6 +165,7 @@ import { KernelCommandListener } from './jupyter/kernels/kernelCommandListener';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 import { ExportToPythonPlain } from './export/exportToPythonPlain';
 import { ErrorRendererCommunicationHandler } from './errors/errorRendererComms';
+import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -294,6 +295,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ErrorRendererCommunicationHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelProgressReporter);
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
 
     registerNotebookTypes(serviceManager);

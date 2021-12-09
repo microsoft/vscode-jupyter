@@ -25,7 +25,8 @@ export function sendKernelListTelemetry(
             case 'connectToLiveKernel':
                 counters.kernelLiveCount += 1;
                 break;
-            case 'startUsingKernelSpec':
+            case 'startUsingRemoteKernelSpec':
+            case 'startUsingLocalKernelSpec':
                 counters.kernelSpecCount += 1;
                 break;
             case 'startUsingPythonInterpreter': {

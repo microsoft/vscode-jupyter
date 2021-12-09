@@ -169,7 +169,7 @@ export class DataScienceInstaller extends BaseInstaller {
         // the packages in the terminal (gitbash, wsh are not supported by Python extension).
         let result = InstallerResponse.Ignore;
         let attemptedToInstallUsingOurInstaller = false;
-        if (this.isWindows && !this.isUsingWindowsTerminalSupportedByPythonExtension) {
+        if (this.isWindows) {
             attemptedToInstallUsingOurInstaller = true;
             const installedInternally = await this.installWithPipWithoutTerminal(
                 product,
@@ -218,11 +218,6 @@ export class DataScienceInstaller extends BaseInstaller {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
     }
-    public get isUsingWindowsTerminalSupportedByPythonExtension() {
-        const shell = this.appEnv.shell.toLowerCase();
-        return shell.endsWith('powershell.exe') || shell.endsWith('cmd.exe') || !shell.endsWith('pwsh.exe');
-    }
-
     private async installWithPipWithoutTerminal(
         product: Product,
         interpreter: PythonEnvironment,

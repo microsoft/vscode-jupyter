@@ -9,7 +9,7 @@ import { IFileSystem } from '../../common/platform/types';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase, oldKernelsSpecFolderName } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
@@ -65,7 +65,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     public async listKernelSpecs(
         includePythonKernels: boolean,
         cancelToken?: CancellationToken
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         return this.listKernelsWithCache(includePythonKernels ? 'IncludePython' : 'ExcludePython', false, async () => {
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
@@ -79,8 +79,8 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                 })
                 .map(
                     (k) =>
-                        <KernelSpecConnectionMetadata>{
-                            kind: 'startUsingKernelSpec',
+                        <LocalKernelSpecConnectionMetadata>{
+                            kind: 'startUsingLocalKernelSpec',
                             kernelSpec: k,
                             interpreter: undefined,
                             id: getKernelId(k)

@@ -21,14 +21,12 @@ import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import { IDisplayOptions, IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { JupyterKernelService } from './kernels/jupyterKernelService';
-import { KernelConnectionMetadata } from './kernels/types';
+import { isLocalConnection, KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
 import { CancellationTokenSource } from 'vscode';
@@ -77,7 +75,6 @@ export class JupyterSession extends BaseJupyterSession {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
-    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
     public waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
@@ -203,7 +200,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // However jupyter does not support relative paths outside of the original root.
         const backingFileOptions: Contents.ICreateOptions =
-            this.connInfo.localLaunch && !relativeDirectory.startsWith('..')
+            isLocalConnection(this.kernelConnectionMetadata) && !relativeDirectory.startsWith('..')
                 ? { type: 'notebook', path: relativeDirectory }
                 : { type: 'notebook' };
 
@@ -222,7 +219,7 @@ export class JupyterSession extends BaseJupyterSession {
             );
         } catch (exc) {
             // If it failed for local, try without a relative directory
-            if (this.connInfo.localLaunch) {
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
                 try {
                     backingFile = await this.contentsManager.newUntitled({ type: 'notebook' });
                     const backingFileDir = path.dirname(backingFile.path);
@@ -249,7 +246,7 @@ export class JupyterSession extends BaseJupyterSession {
         const backingFile = await this.createBackingFile();
 
         // Make sure the kernel has ipykernel installed if on a local machine.
-        if (this.kernelConnectionMetadata?.interpreter && this.connInfo.localLaunch) {
+        if (this.kernelConnectionMetadata?.interpreter && isLocalConnection(this.kernelConnectionMetadata)) {
             // Make sure the kernel actually exists and is up to date.
             try {
                 traceInfoIfCI(`JupyterSession.createSession ${this.kernelConnectionMetadata.id}`);
@@ -314,7 +311,7 @@ export class JupyterSession extends BaseJupyterSession {
                                     userName: session.kernel.username
                                 }
                             };
-                            if (!this.connInfo.localLaunch) {
+                            if (!isLocalConnection(this.kernelConnectionMetadata)) {
                                 sessionWithSocket.isRemoteSession = true;
                             }
                             return sessionWithSocket;
@@ -332,7 +329,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private logRemoteOutput(output: string) {
-        if (this.connInfo && !this.connInfo.localLaunch) {
+        if (!isLocalConnection(this.kernelConnectionMetadata)) {
             this.outputChannel.appendLine(output);
         }
     }

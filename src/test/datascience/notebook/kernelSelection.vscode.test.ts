@@ -20,7 +20,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../const
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -32,7 +31,8 @@ import {
     waitForKernelToChange,
     waitForKernelToGetAutoSelected,
     waitForOutputs,
-    waitForTextOutput
+    waitForTextOutput,
+    defaultNotebookTestTimeout
 } from './helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -62,7 +62,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const venvNoKernelSearchString = '.venvnokernel';
     const venvKernelSearchString = '.venvkernel';
     const venvNoRegSearchString = '.venvnoreg';
-    let activeIntepreterSearchString = '';
+    let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -111,7 +111,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
         venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
-        activeIntepreterSearchString =
+        activeInterpreterSearchString =
             activeInterpreter.displayName === interpreter1.displayName
                 ? venvNoKernelSearchString
                 : activeInterpreter.displayName === interpreter2.displayName
@@ -166,21 +166,30 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
-        // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        const output = getTextOutputValue(cell.outputs[0]);
-        if (
-            !output.includes(activeIntepreterSearchString) &&
-            !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
-            !output.includes(activeInterpreterPath)
-        ) {
-            assert.fail(
-                output,
-                `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
-                `Interpreter does not match for ${activeIntepreterSearchString}: expected ${getNormalizedInterpreterPath(
-                    activeInterpreterPath
-                )} or ${activeInterpreterPath}, but go ${output}`
-            );
-        }
+        await waitForCondition(
+            async () => {
+                // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
+                const output = getTextOutputValue(cell.outputs[0]);
+                if (
+                    !output.includes(activeInterpreterSearchString) &&
+                    !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
+                    !output.includes(activeInterpreterPath)
+                ) {
+                    assert.fail(
+                        output,
+                        `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
+                        `Interpreter does not match for ${activeInterpreterSearchString}: expected ${getNormalizedInterpreterPath(
+                            activeInterpreterPath
+                        )} or ${activeInterpreterPath}, but go ${output}`
+                    );
+                }
+                return true;
+            },
+            defaultNotebookTestTimeout,
+            `Interpreter does not match for ${activeInterpreterSearchString}: expected ${getNormalizedInterpreterPath(
+                activeInterpreterPath
+            )} or ${activeInterpreterPath}, but go ${getTextOutputValue(cell.outputs[0])}`
+        );
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -217,7 +226,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             waitForExecutionCompletedSuccessfully(cell1),
             waitForExecutionCompletedSuccessfully(cell2)
         ]);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
+        await waitForTextOutput(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -244,7 +253,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        assertHasTextOutputInVSCode(cell, venvKernelSearchString, 0, false);
+        await waitForTextOutput(cell, venvKernelSearchString, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -266,7 +275,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
 
         // venvkernel might be the active one (if this test is run more than once)
-        if (activeIntepreterSearchString !== venvKernelSearchString) {
+        if (activeInterpreterSearchString !== venvKernelSearchString) {
             assert.equal(outputText.toLowerCase().indexOf(venvKernelSearchString), -1);
         }
 

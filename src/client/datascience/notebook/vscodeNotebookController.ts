@@ -15,6 +15,7 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -48,7 +49,7 @@ import {
     isPythonKernelConnection,
     getKernelConnectionPath
 } from '../jupyter/kernels/helpers';
-import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
@@ -117,12 +118,12 @@ export class VSCodeNotebookController implements Disposable {
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
-        private readonly localOrRemoteKernel: 'local' | 'remote',
         private readonly configuration: IConfigurationService,
         private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
-        private readonly browser: IBrowserService
+        private readonly browser: IBrowserService,
+        private readonly extensionChecker: IPythonExtensionChecker
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -199,7 +200,7 @@ export class VSCodeNotebookController implements Disposable {
         if (
             !pyVersion ||
             pyVersion.major >= 4 ||
-            (this.kernelConnection.kind !== 'startUsingKernelSpec' &&
+            (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
                 this.kernelConnection.kind !== 'startUsingPythonInterpreter')
         ) {
             return;
@@ -347,7 +348,7 @@ export class VSCodeNotebookController implements Disposable {
         );
         const saveKernelInfo = () => {
             const kernelId = kernelSocket?.options.id;
-            if (!kernelId || this.localOrRemoteKernel === 'local') {
+            if (!kernelId || isLocalConnection(this.kernelConnection)) {
                 return;
             }
             traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
@@ -374,7 +375,10 @@ export class VSCodeNotebookController implements Disposable {
                 kernel.kernelConnectionMetadata,
                 kernel.info
             );
-            if (this.kernelConnection.kind === 'startUsingKernelSpec') {
+            if (
+                this.kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                this.kernelConnection.kind === 'startUsingRemoteKernelSpec'
+            ) {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
                 } else {
@@ -409,7 +413,8 @@ export class VSCodeNotebookController implements Disposable {
                     this.connection.kernelModel.language
                 );
                 break;
-            case 'startUsingKernelSpec':
+            case 'startUsingLocalKernelSpec':
+            case 'startUsingRemoteKernelSpec':
                 sendNotebookOrKernelLanguageTelemetry(
                     Telemetry.SwitchToExistingKernel,
                     this.connection.kernelSpec.language
@@ -422,10 +427,9 @@ export class VSCodeNotebookController implements Disposable {
         // If we have an existing kernel, then we know for a fact the user is changing the kernel.
         // Else VSC is just setting a kernel for a notebook after it has opened.
         if (existingKernel) {
-            const telemetryEvent =
-                this.localOrRemoteKernel === 'local'
-                    ? Telemetry.SelectLocalJupyterKernel
-                    : Telemetry.SelectRemoteJupyterKernel;
+            const telemetryEvent = isLocalConnection(this.kernelConnection)
+                ? Telemetry.SelectLocalJupyterKernel
+                : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
             this.notebookApi.notebookEditors
                 .filter((editor) => editor.document === document)
@@ -456,10 +460,14 @@ export class VSCodeNotebookController implements Disposable {
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
+        // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
+        if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         // Auto start the local kernels.
         if (
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
-            this.localOrRemoteKernel === 'local'
+            isLocalConnection(this.kernelConnection)
         ) {
             await newKernel.start({ disableUI: true }).catch(noop);
         }
@@ -470,7 +478,8 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel':
             return DataScience.kernelCategoryForJupyterSession();
-        case 'startUsingKernelSpec':
+        case 'startUsingRemoteKernelSpec':
+        case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
             switch (kernelConnection.interpreter.envType) {

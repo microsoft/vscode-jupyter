@@ -15,7 +15,7 @@ import { Settings } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
-import { ProgressReporter } from '../progress/progressReporter';
+import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import {
     GetServerOptions,
     IJupyterExecution,
@@ -27,27 +27,42 @@ import {
 
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
-    private serverPromise: Promise<INotebookServer | undefined> | undefined;
+    private serverPromise: {
+        local?: Promise<INotebookServer | undefined> | undefined;
+        remote?: Promise<INotebookServer | undefined> | undefined;
+    } = {};
     private ui = new DisplayOptions(true);
     constructor(
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) {
+        serverUriStorage.onDidChangeUri(
+            () => {
+                // Possible user selected another Server.
+                this.serverPromise.remote = undefined;
+            },
+            this,
+            this.disposables
+        );
+    }
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions(options.resource);
+        const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.getOnly || (options.localOnly && !serverOptions.uri)) {
-            return this.jupyterExecution.getServer(serverOptions);
-        } else {
-            // Otherwise create a new server
-            return this.createServer(options);
+        if (options.localJupyter && !serverOptions.uri) {
+            const server = await this.jupyterExecution.getServer(serverOptions);
+            // Possible it wasn't created, hence create it.
+            if (server) {
+                return server;
+            }
         }
+
+        // Otherwise create a new server
+        return this.createServer(options);
     }
 
     private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
@@ -57,23 +72,27 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.ui.disableUI = false;
         }
         options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
-
-        if (!this.serverPromise) {
+        const property = options.localJupyter ? 'local' : 'remote';
+        if (!this.serverPromise[property]) {
             // Start a server
-            this.serverPromise = this.startServer(options.resource, options.token);
+            this.serverPromise[property] = this.startServer(options.resource, options.token, options.localJupyter);
         }
         try {
-            const value = await this.serverPromise;
+            const value = await this.serverPromise[property];
             return value;
         } catch (e) {
             // Don't cache the error
-            this.serverPromise = undefined;
+            this.serverPromise[property] = undefined;
             throw e;
         }
     }
 
-    private async startServer(resource: Resource, token: CancellationToken): Promise<INotebookServer | undefined> {
-        const serverOptions = await this.getNotebookServerOptions(resource);
+    private async startServer(
+        resource: Resource,
+        token: CancellationToken,
+        forLocal: boolean
+    ): Promise<INotebookServer | undefined> {
+        const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
         traceInfo(`Checking for server existence.`);
 
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
@@ -84,31 +103,23 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
 
         const disposables: IDisposable[] = [];
-        // Status depends upon if we're about to connect to existing server or not.
-        let progressReporter =
-            this.ui.disableUI === false
-                ? (await this.jupyterExecution.getServer(serverOptions))
-                    ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-                    : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
-                : undefined;
-        if (progressReporter) {
+        let progressReporter: IDisposable | undefined;
+        const createProgressReporter = async () => {
+            if (this.ui.disableUI || progressReporter) {
+                return;
+            }
+            // Status depends upon if we're about to connect to existing server or not.
+            progressReporter = (await this.jupyterExecution.getServer(serverOptions))
+                ? KernelProgressReporter.createProgressReporter(resource, localize.DataScience.connectingToJupyter())
+                : KernelProgressReporter.createProgressReporter(resource, localize.DataScience.startingJupyter());
             disposables.push(progressReporter);
-        } else {
-            this.ui.onDidChangeDisableUI(
-                async () => {
-                    if (!progressReporter && !this.ui.disableUI) {
-                        progressReporter = (await this.jupyterExecution.getServer(serverOptions))
-                            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-                            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
-                        disposables.push(progressReporter);
-                    }
-                },
-                this,
-                disposables
-            );
+        };
+        if (this.ui.disableUI) {
+            this.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
         }
         // Check to see if we support ipykernel or not
         try {
+            await createProgressReporter();
             traceInfo(`Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
@@ -126,9 +137,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
-            progressReporter?.dispose(); // NOSONAR
+            disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
-            if (progressReporter && progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
+            if (token.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
 
@@ -169,14 +180,14 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async getNotebookServerOptions(resource: Resource): Promise<INotebookServerOptions> {
+    private async getNotebookServerOptions(resource: Resource, forLocal: boolean): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
         const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
             .useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        if (forLocal || (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch)) {
             serverURI = undefined;
         }
 
@@ -184,7 +195,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             uri: serverURI,
             resource,
             skipUsingDefaultConfig: !useDefaultConfig,
-            ui: this.ui
+            ui: this.ui,
+            localJupyter: forLocal
         };
     }
 }

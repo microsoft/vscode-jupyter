@@ -4,14 +4,13 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, Disposable } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
@@ -29,7 +28,6 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 /* eslint-disable  */
 suite('DataScience - NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
-    let progressReporter: ProgressReporter;
     let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
@@ -43,7 +41,6 @@ suite('DataScience - NotebookServerProvider', () => {
     const disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
-        progressReporter = mock(ProgressReporter);
         configurationService = mock<IConfigurationService>();
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
@@ -55,13 +52,15 @@ suite('DataScience - NotebookServerProvider', () => {
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
         const serverSelector = mock(JupyterServerSelector);
+        const eventEmitter = new EventEmitter<void>();
+        disposables.push(eventEmitter);
+        when(serverStorage.onDidChangeUri).thenReturn(eventEmitter.event);
         when((jupyterExecution as any).then).thenReturn(undefined);
         when((serverSelector as any).then).thenReturn(undefined);
         when((serverStorage as any).then).thenReturn(undefined);
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
-            instance(progressReporter),
             instance(configurationService),
             instance(jupyterExecution),
             instance(interpreterService),
@@ -73,29 +72,16 @@ suite('DataScience - NotebookServerProvider', () => {
         disposables.push(source);
     });
     teardown(() => disposeAllDisposables(disposables));
-    test('NotebookServerProvider - Get Only - no server', async () => {
-        when(jupyterExecution.getServer(anything())).thenResolve(undefined);
-
-        const server = await serverProvider.getOrCreateServer({
-            getOnly: true,
-            resource: undefined,
-            ui: new DisplayOptions(false),
-            token: source.token
-        });
-        expect(server).to.equal(undefined, 'Server expected to be undefined');
-        verify(jupyterExecution.getServer(anything())).once();
-    });
-
     test('NotebookServerProvider - Get Only - server', async () => {
         const notebookServer = mock<INotebookServer>();
         when((notebookServer as any).then).thenReturn(undefined);
         when(jupyterExecution.getServer(anything())).thenResolve(instance(notebookServer));
 
         const server = await serverProvider.getOrCreateServer({
-            getOnly: true,
             resource: undefined,
             ui: new DisplayOptions(false),
-            token: source.token
+            token: source.token,
+            localJupyter: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -108,10 +94,10 @@ suite('DataScience - NotebookServerProvider', () => {
 
         // Disable UI just lets us skip mocking the progress reporter
         const server = await serverProvider.getOrCreateServer({
-            getOnly: false,
             ui: new DisplayOptions(true),
             resource: undefined,
-            token: source.token
+            token: source.token,
+            localJupyter: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });

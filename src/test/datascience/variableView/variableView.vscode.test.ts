@@ -96,6 +96,31 @@ suite('DataScience - VariableView', function () {
         await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
+    test('Can show variables even when print is overridden', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add cell that overrides print
+        await insertCodeCell('def print():\n  x = 1', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Send a second cell
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        await runCell(cell2);
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }];
+        await waitForVariablesToMatch(expectedVariables, variableView);
+    });
+
     // Test variables switching between documents
     test('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
@@ -137,6 +162,86 @@ suite('DataScience - VariableView', function () {
             { name: 'test3', type: 'str', length: '12', value: ' MYTESTVALUE3' }
         ];
         await waitForVariablesToMatch(expectedVariables2, variableView);
+    });
+
+    // Test that we are working will a larger set of basic types
+    test('VariableView basic types A (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add some basic types
+        const code = `import numpy as np
+import pandas as pd
+mynpArray = np.array([1.0, 2.0, 3.0])
+myDataframe = pd.DataFrame(mynpArray)
+mySeries = myDataframe[0]
+class MyClass:
+    x = 5
+myClass = MyClass()
+`;
+        await insertCodeCell(code, { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Parse the HTML for our expected variables
+        // If the value can change (ordering or python version), then omit the value to not check it
+        const expectedVariables = [
+            { name: 'myClass', type: 'MyClass', length: '' },
+            { name: 'myDataframe', type: 'DataFrame', length: '(3, 1)', value: '\n     0\n0  1.0\n1  2.0\n2  3.0' },
+            { name: 'mynpArray', type: 'ndarray', length: '(3,)' },
+            {
+                name: 'mySeries',
+                type: 'Series',
+                length: '(3,)',
+                value: '\n0    1.0\n1    2.0\n2    3.0\nName: 0, dtype: float64'
+            }
+        ];
+
+        await waitForVariablesToMatch(expectedVariables, variableView);
+    });
+
+    test('VariableView basic types B (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add some basic types
+        const code = `myComplex = complex(1, 1)
+myInt = 99999999
+myFloat = 9999.9999
+myList = [1, 2, 3]
+myTuple = 1, 2, 3
+myDict = {'a': 1}
+mySet = {1, 2, 3}
+`;
+        await insertCodeCell(code, { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Parse the HTML for our expected variables
+        // If the value can change (ordering or python version), then omit the value to not check it
+        const expectedVariables = [
+            { name: 'myComplex', type: 'complex', length: '', value: ' (1+1j)' },
+            { name: 'myDict', type: 'dict', length: '1', value: " {'a': 1}" },
+            { name: 'myFloat', type: 'float', length: '', value: ' 9999.9999' },
+            { name: 'myInt', type: 'int', length: '', value: ' 99999999' },
+            { name: 'myList', type: 'list', length: '3', value: ' [1, 2, 3]' },
+            { name: 'mySet', type: 'set', length: '3', value: ' {1, 2, 3}' },
+            { name: 'myTuple', type: 'tuple', length: '3', value: ' (1, 2, 3)' }
+        ];
+
+        await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
     // Test opening data viewers while another dataviewer is open

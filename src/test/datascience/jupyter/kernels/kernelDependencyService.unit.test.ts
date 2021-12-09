@@ -97,11 +97,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                     token.token
                 );
 
-                verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
+                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
             test('Prompt if if ipykernel is not installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
+                when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install() as any);
 
                 await assert.isRejected(
                     dependencyService.installMissingDependencies(
@@ -113,17 +113,17 @@ suite('DataScience - Kernel Dependency Service', () => {
                     'IPyKernel not installed into interpreter'
                 );
 
-                verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
+                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
             test('Install ipykernel', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
 
@@ -140,10 +140,10 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.install())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), Common.install())).thenResolve(
                     Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.install(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), Common.install(), anything())).thenResolve(
                     Common.install() as any
                 );
 
@@ -159,10 +159,10 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenReject(
                     new Error('Install failed - kaboom')
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
 
@@ -182,7 +182,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     DataScience.selectKernel() as any
                 );
 
@@ -206,7 +206,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
 
                 const promise = dependencyService.installMissingDependencies(
                     resource,

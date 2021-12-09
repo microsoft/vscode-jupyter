@@ -223,13 +223,19 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             let userPassword = await this.getUserPassword();
 
             if (userPassword) {
-                xsrfCookie = await this.getXSRFToken(url);
+                xsrfCookie = await this.getXSRFToken(url, '');
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
                     const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
+                } else {
+                    // get xsrf cookie with session cookie
+                    sessionCookieName = 'authservice_session';
+                    sessionCookieValue = userPassword;
+
+                    xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
                 }
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
@@ -315,16 +321,30 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getXSRFToken(url: string): Promise<string | undefined> {
+    private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
+        let headers;
+        let tokenUrl = `${url}login?`;
 
-        const response = await this.makeRequest(`${url}login?`, {
+        if (sessionCookie != '') {
+            tokenUrl = `${url}tree`;
+            headers = {
+                Connection: 'keep-alive',
+                Cookie: sessionCookie
+            };
+        } else {
+            headers = {
+                Connection: 'keep-alive'
+            };
+        }
+
+        const response = await this.makeRequest(tokenUrl, {
             method: 'get',
             redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
+            headers
         });
 
-        if (response.ok) {
+        if (response !== undefined && response.ok) {
             const cookies = this.getCookies(response);
             if (cookies.has('_xsrf')) {
                 xsrfCookie = cookies.get('_xsrf')?.split(';')[0];

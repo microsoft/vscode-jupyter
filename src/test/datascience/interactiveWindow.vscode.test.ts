@@ -18,16 +18,17 @@ import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
+    runCurrentFile,
     submitFromPythonFile,
     waitForLastCellToComplete
 } from './helpers';
 import {
     assertHasTextOutputInVSCode,
-    assertNotHasTextOutputInVSCode,
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './notebook/helper';
 
 suite('Interactive window', async function () {
@@ -87,7 +88,7 @@ suite('Interactive window', async function () {
         const actualSource = secondCell?.document.getText();
         assert.equal(actualSource, source, `Executed cell has unexpected source code`);
         await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, '42');
+        await waitForTextOutput(secondCell!, '42');
     });
     test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
@@ -174,7 +175,7 @@ suite('Interactive window', async function () {
         assert.ok(notebook !== undefined, 'No interactive window found');
         const index = notebook!.cellCount - 1;
         const cell = notebook!.cellAt(index);
-        await waitForCondition(async () => assertHasTextOutputInVSCode(cell, 'foo'), 15_000, 'Incorrect output');
+        await waitForTextOutput(cell, 'foo');
     });
 
     test('Clear output', async function () {
@@ -189,7 +190,7 @@ for i in range(10):
 `;
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, text, disposables);
         const cell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assertHasTextOutputInVSCode(cell!, 'Hello World 9!');
+        await waitForTextOutput(cell!, 'Hello World 9!');
     });
 
     test('Clear input box', async () => {
@@ -213,9 +214,12 @@ for i in range(10):
         );
     });
 
-    test('Collapse / expand cell', async () => {
+    test('Collapse / expand cell', async function () {
+        // Entered issue to track this: https://github.com/microsoft/vscode-jupyter/issues/8492
+        this.skip();
+
         // Cell should initially be collapsed
-        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+        /*        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
             'a=1\na',
             disposables
@@ -265,7 +269,7 @@ for i in range(10):
             codeCell?.metadata.inputCollapsed === true,
             'Code cell input not collapsed after collapsing all cells'
         );
-        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells');
+        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells'); */
     });
 
     test('LiveLossPlot', async () => {
@@ -307,7 +311,7 @@ for i in range(10):
         await insertIntoInputEditor('dh.display("Hello")');
         await vscode.commands.executeCommand('interactive.execute');
         const secondCell = await waitForLastCellToComplete(interactiveWindow);
-        assertHasTextOutputInVSCode(secondCell!, "'Hello'");
+        await waitForTextOutput(secondCell!, "'Hello'");
 
         // Create cell 3
         await insertIntoInputEditor('dh.update("Goodbye")');
@@ -316,7 +320,7 @@ for i in range(10):
         const thirdCell = await waitForLastCellToComplete(interactiveWindow);
         assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
         // Second cell output is updated
-        assertHasTextOutputInVSCode(secondCell!, "'Goodbye'");
+        await waitForTextOutput(secondCell!, "'Goodbye'");
     });
 
     test('Multiple interactive windows', async () => {
@@ -369,30 +373,52 @@ ${actualCode}
         assert.equal(actualCellText, actualCode);
     });
 
-    async function runMagicCommandsTest(settingValue: boolean) {
-        const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('magicCommandsAsComments', settingValue);
-        const code = `# %%
-#!%%time
-print('hi')`;
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, code, disposables);
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assertHasTextOutputInVSCode(lastCell, 'hi', undefined, false);
-        return lastCell;
-    }
+    test('Run current file in interactive window (with cells)', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
+            disposables
+        );
 
-    test('jupyter.magicCommandsAsComments: `true`', async () => {
-        const lastCell = await runMagicCommandsTest(true);
-        assertHasTextOutputInVSCode(lastCell, 'Wall time:', undefined, false);
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        // Should have two cells in the interactive window
+        assert.equal(notebookDocument?.cellCount, 3, `Running a whole file did not split cells`);
+
+        // Make sure it output something
+        notebookDocument?.getCells().forEach((c, i) => {
+            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
+                assertHasTextOutputInVSCode(c, `${i}`);
+            }
+        });
     });
 
-    test('jupyter.magicCommandsAsComments: `false`', async () => {
-        const lastCell = await runMagicCommandsTest(false);
+    test('Run current file in interactive window (without cells)', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            'a=1\nprint(a)\nb=2\nprint(b)\n',
+            disposables
+        );
 
-        // Magic should have remained commented
-        for (let outputIndex = 0; outputIndex < lastCell.outputs.length; outputIndex++) {
-            assertNotHasTextOutputInVSCode(lastCell, 'Wall time:', outputIndex, false);
-        }
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        // Should have two cells in the interactive window
+        assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
+
+        // Make sure it output something
+        notebookDocument?.getCells().forEach((c) => {
+            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
+                assertHasTextOutputInVSCode(c, `1\n2`);
+            }
+        });
     });
 
     // todo@joyceerhl

@@ -292,7 +292,7 @@ export namespace DataScience {
     );
     export const installPackageInstructions = localize(
         'DataScience.installPackageInstructions',
-        "Run the following command to install '{0}' into the Python environmet. \nCommand: '{1}'"
+        "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'"
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
@@ -371,7 +371,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
@@ -513,13 +513,17 @@ export namespace DataScience {
         'DataScience.jupyterNotebookConnectFailed',
         'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}'
     );
-    export const reloadAfterChangingJupyterServerConnection = localize(
-        'DataScience.reloadAfterChangingJupyterServerConnection',
-        'Please reload VS Code when changing the Jupyter Server connection.'
-    );
     export const jupyterNotebookRemoteConnectFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
+    );
+    export const jupyterRemoteConnectFailedModalMessage = localize(
+        'DataScience.jupyterRemoteConnectFailedModalMessage',
+        'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
+    );
+    export const changeJupyterRemoteConnection = localize(
+        'DataScience.changeJupyterRemoteConnection',
+        'Change Jupyter Server connection.'
     );
     export const jupyterNotebookRemoteConnectSelfCertsFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectSelfCertsFailed',
@@ -1050,6 +1054,11 @@ export namespace DataScience {
         'DataScience.failedToStartKernelDueToOldIPyKernel',
         'The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.'
     );
+    export const matplotlibWidgetInsteadOfOther = localize(
+        'DataScience.matplotlibWidgetInsteadOfOther',
+        "'%matplotlib' widget works best inside of VS code"
+    );
+    export const matplotlibWidgetCodeActionTitle = localize('DataScience.matplotlibWidgetCodeActionTitle', 'More info');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

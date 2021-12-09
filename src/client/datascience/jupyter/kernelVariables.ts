@@ -7,10 +7,8 @@ import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
-import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
-import { DataScience } from '../../common/utils/localize';
 import { Identifiers } from '../constants';
 import {
     IJupyterSession,
@@ -293,21 +291,8 @@ export class KernelVariables implements IJupyterVariables {
 
         return [];
     }
-    private checkForExit(kernel: IKernel): Error | undefined {
-        if (kernel.connection?.valid) {
-            if (kernel.connection.type === 'jupyter') {
-                // Not running, just exit
-                if (kernel.connection.localProcExitCode) {
-                    const exitCode = kernel.connection.localProcExitCode;
-                    traceError(`Jupyter crashed with code ${exitCode}`);
-                    return new Error(DataScience.jupyterServerCrashed().format(exitCode.toString()));
-                }
-            }
-        }
-    }
 
     private inspect(
-        kernel: IKernel,
         session: IJupyterSession,
         code: string,
         offsetInCode = 0,
@@ -316,29 +301,22 @@ export class KernelVariables implements IJupyterVariables {
         // Create a deferred that will fire when the request completes
         const deferred = createDeferred<JSONObject>();
 
-        // First make sure still valid.
-        const exitError = this.checkForExit(kernel);
-        if (exitError) {
-            // Not running, just exit
-            deferred.reject(exitError);
-        } else {
-            try {
-                // Ask session for inspect result
-                session
-                    .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
-                    .then((r) => {
-                        if (r && r.content.status === 'ok') {
-                            deferred.resolve(r.content.data);
-                        } else {
-                            deferred.resolve(undefined);
-                        }
-                    })
-                    .catch((ex) => {
-                        deferred.reject(ex);
-                    });
-            } catch (ex) {
-                deferred.reject(ex);
-            }
+        try {
+            // Ask session for inspect result
+            session
+                .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
+                .then((r) => {
+                    if (r && r.content.status === 'ok') {
+                        deferred.resolve(r.content.data);
+                    } else {
+                        deferred.resolve(undefined);
+                    }
+                })
+                .catch((ex) => {
+                    deferred.reject(ex);
+                });
+        } catch (ex) {
+            deferred.reject(ex);
         }
 
         if (cancelToken) {
@@ -354,8 +332,8 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
-        if (kernel.session) {
-            const output = await this.inspect(kernel, kernel.session, targetVariable.name, 0, token);
+        if (!kernel.disposed && kernel.session) {
+            const output = await this.inspect(kernel.session, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
