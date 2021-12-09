@@ -168,6 +168,7 @@
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "vscode.test",
                 "VSC_JUPYTER_EXPOSE_SVC": "1"
+                // "VSC_JUPYTER_REMOTE_NATIVE_TEST": "true"
             },
             "stopOnEntry": false,
             "sourceMaps": true,

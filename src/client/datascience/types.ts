@@ -208,6 +208,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly status: KernelMessage.Status;
+    readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;

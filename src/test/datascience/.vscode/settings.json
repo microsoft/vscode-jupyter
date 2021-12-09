@@ -30,5 +30,6 @@
     "jupyter.magicCommandsAsComments": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
-    "python.defaultInterpreterPath": "python"
+    "python.defaultInterpreterPath": "python",
+    "jupyter.jupyterServerType": "remote"
 }

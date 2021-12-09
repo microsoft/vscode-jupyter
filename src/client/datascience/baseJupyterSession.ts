@@ -69,6 +69,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.getServerStatus();
     }
 
+    public abstract get kernelId(): string;
+
     public get isConnected(): boolean {
         return this.connected;
     }

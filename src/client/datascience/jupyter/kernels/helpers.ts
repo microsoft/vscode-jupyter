@@ -128,7 +128,10 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
     }
     switch (kernelConnection.kind) {
         case 'connectToLiveKernel': {
-            return oldDisplayName;
+            const notebookPath = removeNotebookSuffixAddedByExtension(
+                kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
+            );
+            return notebookPath ? `${oldDisplayName} (${notebookPath})` : oldDisplayName;
         }
         case 'startUsingRemoteKernelSpec':
         case 'startUsingLocalKernelSpec': {
@@ -243,9 +246,7 @@ export function getKernelConnectionPath(
     workspaceService: IWorkspaceService
 ) {
     if (kernelConnection?.kind === 'connectToLiveKernel') {
-        return removeNotebookSuffixAddedByExtension(
-            kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
-        );
+        return undefined;
     }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths

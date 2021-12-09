@@ -35,6 +35,7 @@ import {
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
+    LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
@@ -77,7 +78,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private selectedControllers = new Map<string, VSCodeNotebookController>();
-    private readonly allKernelConnections = new Set<KernelConnectionMetadata>();
+    private allKernelConnections = new Set<KernelConnectionMetadata>();
     private _controllersLoaded?: boolean;
     private failedToFetchRemoteKernels?: boolean;
     public get onNotebookControllerSelectionChanged() {
@@ -89,6 +90,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public get controllersLoaded() {
         return this._controllersLoaded === true;
     }
+    public get remoteRefreshed() {
+        return this.remoteRefreshedEmitter.event;
+    }
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private get isLocalLaunch(): boolean {
@@ -98,6 +102,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
     private notebookNoPythonController?: NoPythonKernelsNotebookController;
     private handlerAddedForChangesToRemoteKernelUri?: boolean;
+    private remoteRefreshedEmitter = new EventEmitter<LiveKernelConnectionMetadata[]>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -425,12 +430,32 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
             wasLocal = false;
             this.removeLocalKernelControllers();
-            let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
 
-            connections.forEach((item) => this.allKernelConnections.add(item));
+            // Filter out the current list of live connections
+            this.allKernelConnections = new Set(
+                [...this.allKernelConnections].filter((k) => k.kind !== 'connectToLiveKernel')
+            );
+
+            // Create the new list of live connections.
+            let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
 
             // Now create the actual controllers from our connections
             this.createNotebookControllers(connections);
+
+            // Update connection time on those that are already registered (metadata needs to be changed)
+            connections.forEach((k) => {
+                const controller = this.registeredControllers.get(k.id);
+                if (controller && k.kind === 'connectToLiveKernel') {
+                    controller.updateMetadata(k);
+                }
+            });
+
+            // Indicate a refresh of the remote connections
+            this.remoteRefreshedEmitter.fire(
+                [...this.allKernelConnections].filter(
+                    (k) => k.kind === 'connectToLiveKernel'
+                ) as LiveKernelConnectionMetadata[]
+            );
         };
         this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
         this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
