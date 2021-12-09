@@ -19,7 +19,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 // that it is inherently synchronous.
 
 export function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {
-    const cont = new Container();
+    const cont = new Container({ skipBaseClassChecks: true });
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
 
