@@ -661,7 +661,6 @@ module.exports = {
         'src/client/datascience/debugLocationTrackerFactory.ts',
         'src/client/datascience/kernelSocketWrapper.ts',
         'src/client/datascience/jupyterUriProviderWrapper.ts',
-        'src/client/datascience/debugLocationTracker.ts',
         'src/client/datascience/plotting/plotViewerMessageListener.ts',
         'src/client/datascience/plotting/types.ts',
         'src/client/datascience/plotting/plotViewerProvider.ts',
