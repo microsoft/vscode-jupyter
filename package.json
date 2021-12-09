@@ -1940,6 +1940,7 @@
         ]
     },
     "enabledApiProposals": [
+        "notebookConcatTextDocument",
         "notebookControllerKind",
         "notebookDebugOptions",
         "notebookDeprecated",
