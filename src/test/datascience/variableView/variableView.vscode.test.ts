@@ -38,7 +38,8 @@ suite('DataScience - VariableView', function () {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST || process.env.VSC_JUPYTER_CI_PYTHON_VERSION === '3.10') {
+            // https://github.com/microsoft/vscode-jupyter/issues/8523
             return this.skip();
         }
 
