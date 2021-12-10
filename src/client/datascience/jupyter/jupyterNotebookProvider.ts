@@ -25,7 +25,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             ui: options.ui,
             resource: options.resource,
             token: options.token,
-            localJupyter: options.localJupyter
+            localJupyter: options.kind === 'localJupyter'
         });
         return server?.getConnectionInfo();
     }

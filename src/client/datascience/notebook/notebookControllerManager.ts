@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import {
     IBrowserService,
     IConfigurationService,
@@ -221,7 +221,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Fetch kernel the fastest possible way (local kernels from cache but remote fetch latest).
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             // Fetching remote kernels cannot be done from cache.
-            this.controllersPromise = Promise.all([
+            const promises = [
                 this.loadNotebookControllersImpl({
                     listLocalNonPythonKernels: true,
                     useCache: 'useCache'
@@ -229,9 +229,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.loadNotebookControllersImpl({
                     listLocalNonPythonKernels: false,
                     useCache: 'useCache'
-                }),
-                this.loadNotebookControllersImpl({ listRemoteKernels: true })
-            ])
+                })
+            ];
+            if (!this.isLocalLaunch) {
+                promises.push(this.loadNotebookControllersImpl({ listRemoteKernels: true }));
+            }
+            this.controllersPromise = Promise.all(promises)
                 .then(() => noop())
                 .catch((error) => {
                     traceError('Error loading notebook controllers', error);
@@ -294,6 +297,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
+    @traceDecorators.verbose('Get default Remote Controller')
     private async createDefaultRemoteController() {
         // Get all remote kernels
         await this.loadNotebookControllers();
@@ -515,7 +519,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         const connection = await this.notebookProvider.connect({
                             resource: document.uri,
                             ui,
-                            localJupyter: false,
+                            kind: 'remoteJupyter',
                             token: preferredSearchToken.token
                         });
                         preferredConnection = await this.remoteKernelFinder.findKernel(
@@ -720,7 +724,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const connection = await this.notebookProvider.connect({
                 resource: undefined,
                 ui,
-                localJupyter: false,
+                kind: 'remoteJupyter',
                 token
             });
 
