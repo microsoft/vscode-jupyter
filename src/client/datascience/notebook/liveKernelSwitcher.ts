@@ -5,6 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { switchKernel } from '../jupyter/kernels/kernelSelector';
 import { IKernelProvider, LiveKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -56,7 +57,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                         await this.memento.update(key, undefined);
                     }
                 })
-                .logErrors();
+                .catch((e) => traceError(e));
         }
     }
 

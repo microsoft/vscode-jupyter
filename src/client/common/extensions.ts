@@ -98,10 +98,6 @@ declare interface Promise<T> {
      * Catches task error and ignores them.
      */
     ignoreErrors(): void;
-    /**
-     * Catches task error and logs them
-     */
-    logErrors(): void;
 }
 
 /**
@@ -110,17 +106,6 @@ declare interface Promise<T> {
 Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
     // eslint-disable-next-line no-empty, @typescript-eslint/no-empty-function
     this.catch(() => {});
-};
-
-/**
- * Logs an error for any promise.
- */
-Promise.prototype.logErrors = function <T>(this: Promise<T>) {
-    // eslint-disable-next-line no-empty, @typescript-eslint/no-empty-function
-    this.catch((e) => {
-        const logError = require('../logging/_global').logError;
-        logError(e);
-    });
 };
 
 if (!String.prototype.format) {
