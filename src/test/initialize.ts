@@ -91,7 +91,7 @@ async function closeWindowsAndNotebooks(): Promise<void> {
 
 async function closeWindowsInternal() {
     // If there are no editors, we can skip. This seems to time out if no editors visible.
-    if (!vscode.window.visibleTextEditors || !vscode.window.visibleNotebookEditors) {
+    if (!vscode.window.visibleTextEditors || !isANotebookOpen()) {
         // Instead just post the command
         void vscode.commands.executeCommand('workbench.action.closeAllEditors');
         return;
@@ -135,6 +135,9 @@ async function closeWindowsInternal() {
 }
 
 function isANotebookOpen() {
+    if (!isInsiders()) {
+        return false;
+    }
     /* eslint-disable */
     if (Array.isArray(vscode.window.visibleNotebookEditors) && vscode.window.visibleNotebookEditors.length) {
         return true;
