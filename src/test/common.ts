@@ -64,7 +64,6 @@ export type PythonSettingKeys =
     | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
-
 export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
     const vscode = require('vscode') as typeof import('vscode');
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
@@ -163,7 +162,6 @@ function getPythonPath(): string {
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
 }
-
 
 export function getOSType(): OSType {
     const platform: string = process.platform;
