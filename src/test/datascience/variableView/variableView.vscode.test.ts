@@ -10,7 +10,6 @@ import { IVariableViewProvider } from '../../../client/datascience/variablesView
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     runCell,
@@ -39,7 +38,7 @@ suite('DataScience - VariableView', function () {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
 

@@ -17,7 +17,6 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     runCell,
@@ -75,9 +74,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            if (!(await canRunNotebookTests())) {
-                return this.skip();
-            }
             await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',

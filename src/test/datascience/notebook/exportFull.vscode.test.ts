@@ -16,7 +16,6 @@ import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     hijackPrompt,
@@ -44,9 +43,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            if (!(await canRunNotebookTests())) {
-                return this.skip();
-            }
             await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',

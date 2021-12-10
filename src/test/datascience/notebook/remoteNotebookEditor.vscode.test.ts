@@ -14,7 +14,6 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/ty
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     startJupyterServer,
@@ -66,9 +65,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         }
         this.timeout(120_000);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
         await startJupyterServer();
         sinon.restore();
         jupyterServerSelector = api.serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
