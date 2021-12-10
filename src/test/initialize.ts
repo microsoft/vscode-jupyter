@@ -64,7 +64,7 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
-    if (isInsiders()) {
+    if (!IS_SMOKE_TEST) {
         clearPendingChainedUpdatesForTests();
     }
     clearPendingTimers();
