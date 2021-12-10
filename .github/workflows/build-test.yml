@@ -488,15 +488,6 @@ jobs:
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
 
-      # Install PyTorch with pip
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.pythonVersion == '3.9' && matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
-
-      - name: Install PyTorch on Mac
-        if: matrix.pythonVersion == '3.9' && matrix.python == 'conda' && matrix.os == 'macos-latest'
-        run: pip install torch torchvision torchaudio
-
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
