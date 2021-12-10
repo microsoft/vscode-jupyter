@@ -50,7 +50,6 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../te
 import { InteractiveWindowView } from '../notebook/constants';
 
 type InteractiveCellMetadata = {
-    inputCollapsed: boolean;
     interactiveWindowCellMarker: string;
     interactive: {
         file: string;

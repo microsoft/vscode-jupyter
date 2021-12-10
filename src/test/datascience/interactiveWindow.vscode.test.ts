@@ -214,64 +214,6 @@ for i in range(10):
         );
     });
 
-    test('Collapse / expand cell', async function () {
-        // Entered issue to track this: https://github.com/microsoft/vscode-jupyter/issues/8492
-        this.skip();
-
-        // Cell should initially be collapsed
-        /*        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
-            interactiveWindowProvider,
-            'a=1\na',
-            disposables
-        );
-        const codeCell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assert.ok(codeCell.metadata.inputCollapsed === true, 'Cell input not initially collapsed');
-
-        // Expand all cells
-        await vscode.commands.executeCommand('jupyter.expandallcells');
-
-        // Verify cell is now expanded
-        assert.ok(codeCell?.metadata.inputCollapsed === false, 'Cell input not expanded after expanding all cells');
-
-        // Add a markdown cell
-        const markdownSource = `# %% [markdown]
-# # Heading
-# ## Sub-heading
-# *bold*,_italic_
-# Horizontal rule
-# ---
-# Bullet List
-# * Apples
-# * Pears
-# Numbered List
-# 1. ???
-# 2. Profit
-#
-# [Link](http://www.microsoft.com)`;
-        const edit = new vscode.WorkspaceEdit();
-        const line = untitledPythonFile.getText().length;
-        edit.insert(untitledPythonFile.uri, new vscode.Position(line, 0), markdownSource);
-        await vscode.workspace.applyEdit(edit);
-        await activeInteractiveWindow.addCode(markdownSource, untitledPythonFile.uri, line);
-
-        // Verify markdown cell is initially expanded
-        const notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-        );
-        const markdownCell = notebookDocument?.cellAt(notebookDocument.cellCount - 1);
-        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells');
-
-        // Collapse all cells
-        await vscode.commands.executeCommand('jupyter.collapseallcells');
-
-        // Verify only the code cell was collapsed, not the markdown
-        assert.ok(
-            codeCell?.metadata.inputCollapsed === true,
-            'Code cell input not collapsed after collapsing all cells'
-        );
-        assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells'); */
-    });
-
     test('LiveLossPlot', async () => {
         const code = `from time import sleep
 import numpy as np
