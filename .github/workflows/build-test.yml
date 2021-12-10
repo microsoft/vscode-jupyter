@@ -376,9 +376,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw, local, remote]
+        jupyter: [raw, local]
         python: [nonConda, conda]
-        pythonVersion: [3.9]
+        pythonVersion: ['3.9', '3.10']
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
         test-suite: [notebook]
@@ -388,13 +388,12 @@ jobs:
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
-        exclude:
-          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            pythonVersion: '3.9'
-            python: conda
-            jupyter: remote
-            test-suite: notebook
         include:
+          - jupyter: remote # We don't care how remote is started (we only want to test connecting to it)
+            python: nonConda
+            pythonVersion: '3.9'
+            test-suite: notebook
+            os: ubuntu-latest
           - jupyter: raw
             python: nonConda
             pythonVersion: '3.9'
