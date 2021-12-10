@@ -43,9 +43,8 @@ export class NotebookProvider implements INotebookProvider {
                 handler.dispose();
             }
         });
-        // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (this.rawNotebookProvider.isSupported && !options.localJupyter) {
-            return this.rawNotebookProvider.connect(options).finally(() => handler.dispose());
+        if (this.rawNotebookProvider.isSupported && options.kind === 'localJupyter') {
+            throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
@@ -58,19 +57,26 @@ export class NotebookProvider implements INotebookProvider {
     }
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
         const isLocal = isLocalConnection(options.kernelConnection);
-        const rawKernel = this.rawNotebookProvider.isSupported && isLocal;
+        const rawLocalKernel = this.rawNotebookProvider.isSupported && isLocal;
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
-        if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect({ ...options, localJupyter: isLocal }))) {
+        if (!rawLocalKernel) {
+            if (
+                !(await this.jupyterNotebookProvider.connect({
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui,
+                    kind: isLocal ? 'localJupyter' : 'remoteJupyter'
+                }))
+            ) {
                 return undefined;
             }
         }
 
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
-        const promise = rawKernel
+        const promise = rawLocalKernel
             ? this.rawNotebookProvider.createNotebook(
                   options.document,
                   options.resource,

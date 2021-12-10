@@ -9,7 +9,13 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DisplayOptions } from '../displayOptions';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookCreationTracker, INotebookProvider } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    INotebookCreationTracker,
+    INotebookProvider,
+    IRawNotebookProvider
+} from '../types';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
@@ -21,7 +27,8 @@ export class ServerPreload implements IExtensionSingleActivationService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
@@ -55,7 +62,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted) {
+        if (!this.workspace.isTrusted || this.rawNotebookProvider.isSupported) {
             return;
         }
         const source = new CancellationTokenSource();
@@ -69,7 +76,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
                 await this.notebookProvider.connect({
                     resource: undefined,
                     ui,
-                    localJupyter: true,
+                    kind: 'localJupyter',
                     token: source.token
                 });
             }
