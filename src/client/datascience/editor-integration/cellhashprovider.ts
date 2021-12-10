@@ -359,6 +359,24 @@ export class CellHashProvider implements ICellHashProvider {
         });
     }
 
+    /* Calculate the runtimeLine that we need for mapping debugging as well as the real .py
+    line that we need to start our mapping at.
+    This start line calculation is needed as the breakpoint is inserted when debugging like so
+    so the leading lines are not stripped sending to Jupyter.
+
+    breakpoint()/n
+    /n // <-- We need to start source mapping here
+    /n
+    first line of code
+
+    But when not debugging, the leading spaces are stripped so you need to map to the first real line
+    /n
+    /n
+    first line of code // <-- We need to start source mapping here
+
+    Given that the hash snill needs to map to the file contents calculating this mapping at this point
+    where we are making debugging calculations for runtimeLine feels appropriate.
+    */
     private adjustRuntimeForDebugging(
         cell: NotebookCell,
         source: string[],
