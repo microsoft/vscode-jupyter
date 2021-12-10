@@ -19,7 +19,7 @@ jobs:
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'claudiaregio', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'amunger', 'IanMatthewHuff', 'DonJayamanne'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -55,7 +55,7 @@ jobs:
           echo ${{steps.week.outputs.odd}}
           echo ${{steps.hour.outputs.hour}}
         shell: bash
-      - name: Saturday (Claudia)
+      - name: Saturday (Aaron)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 6
         uses: actions/github-script@v4
         with:
@@ -65,7 +65,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['claudiaregio']
+              assignees: ['amunger']
             })
       - name: Sunday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
