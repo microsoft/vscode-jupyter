@@ -395,15 +395,15 @@ jobs:
             jupyter: remote
             test-suite: notebook
         include:
-          - os: ubuntu-latest
-            pythonVersion: '3.9'
+          - jupyter: raw
             python: nonConda
-            jupyter: raw
+            pythonVersion: '3.9'
             test-suite: notebookAndWebview # Test webview only with raw & non-conda.
-          - os: ubuntu-latest
-            jupyter: raw
+            os: ubuntu-latest
+          - jupyter: raw
             python: noPython
             test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
+            os: ubuntu-latest
         #   - test-suite: notebook
         #     pythonVersion: '3.9'
         #     python: nonConda
