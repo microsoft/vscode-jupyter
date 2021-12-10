@@ -437,7 +437,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             wasLocal = false;
             const cancellation = new CancellationTokenSource();
             let connections = await this.getRemoteKernelConnectionMetadata(cancellation.token);
-            void this.updateRemoteConnections(cancellation.token, connections).finally(() => cancellation.dispose());
+            await this.updateRemoteConnections(cancellation.token, connections);
+            cancellation.dispose();
 
             // Indicate a refresh of the remote connections
             this.remoteRefreshedEmitter.fire(
