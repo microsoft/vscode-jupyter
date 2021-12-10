@@ -111,7 +111,7 @@ export class VSCodeNotebookController implements Disposable {
 
     private readonly associatedDocuments = new WeakSet<NotebookDocument>();
     constructor(
-        private readonly kernelConnection: KernelConnectionMetadata,
+        private kernelConnection: KernelConnectionMetadata,
         id: string,
         viewType: string,
         label: string,
@@ -179,6 +179,16 @@ export class VSCodeNotebookController implements Disposable {
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
+    }
+
+    public updateMetadata(kernelConnectionMetadata: KernelConnectionMetadata) {
+        if (kernelConnectionMetadata.id === this.kernelConnection.id) {
+            this.kernelConnection = kernelConnectionMetadata;
+            this.controller.detail =
+                this.kernelConnection.kind === 'connectToLiveKernel'
+                    ? getRemoteKernelSessionInformation(this.kernelConnection)
+                    : '';
+        }
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {

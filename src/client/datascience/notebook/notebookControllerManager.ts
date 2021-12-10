@@ -35,6 +35,7 @@ import {
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
+    LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
@@ -89,6 +90,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public get controllersLoaded() {
         return this._controllersLoaded === true;
     }
+    public get remoteRefreshed() {
+        return this.remoteRefreshedEmitter.event;
+    }
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private get isLocalLaunch(): boolean {
@@ -98,6 +102,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
     private notebookNoPythonController?: NoPythonKernelsNotebookController;
     private handlerAddedForChangesToRemoteKernelUri?: boolean;
+    private remoteRefreshedEmitter = new EventEmitter<LiveKernelConnectionMetadata[]>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -434,11 +439,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return;
             }
             wasLocal = false;
-            let connections = await this.getRemoteKernelConnectionMetadata(new CancellationTokenSource().token);
             const cancellation = new CancellationTokenSource();
-            void this.updateRemoteConnections(cancellation.token, connections).finally(() => cancellation.dispose());
-            // Now create the actual controllers from our connections
-            this.createNotebookControllers(connections);
+            let connections = await this.getRemoteKernelConnectionMetadata(cancellation.token);
+            await this.updateRemoteConnections(cancellation.token, connections);
+            cancellation.dispose();
+
+            // Indicate a refresh of the remote connections
+            this.remoteRefreshedEmitter.fire(
+                [...this.allKernelConnections].filter(
+                    (k) => k.kind === 'connectToLiveKernel'
+                ) as LiveKernelConnectionMetadata[]
+            );
         };
         this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
         this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
@@ -630,7 +641,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         label: string,
         doNotHideInteractiveKernel?: boolean
     ) {
-        this.allKernelConnections.add(kernelConnection);
         try {
             // Create notebook selector
             [
@@ -693,6 +703,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
+                    this.allKernelConnections.add(kernelConnection);
                 });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
