@@ -4,6 +4,7 @@
 
 import { Kernel } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
+import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -30,6 +31,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { ignoreLogging } from '../../logging/trace';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -44,7 +46,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -120,15 +123,18 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 ]);
 
                 // Turn them both into a combined list
-                const mappedSpecs = specs.map((s) => {
-                    const kernel: RemoteKernelSpecConnectionMetadata = {
-                        kind: 'startUsingRemoteKernelSpec',
-                        kernelSpec: s,
-                        id: getKernelId(s, undefined, connInfo.baseUrl),
-                        baseUrl: connInfo.baseUrl
-                    };
-                    return kernel;
-                });
+                const mappedSpecs = await Promise.all(
+                    specs.map(async (s) => {
+                        const kernel: RemoteKernelSpecConnectionMetadata = {
+                            kind: 'startUsingRemoteKernelSpec',
+                            interpreter: await this.getInterpreter(s, connInfo.baseUrl),
+                            kernelSpec: s,
+                            id: getKernelId(s, undefined, connInfo.baseUrl),
+                            baseUrl: connInfo.baseUrl
+                        };
+                        return kernel;
+                    })
+                );
                 const mappedLive = sessions.map((s) => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const liveKernel = s.kernel as any;
@@ -195,5 +201,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     private removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
         this.kernelIdsToHide.delete(kernel.id);
         this.kernelIdsToHide.delete(kernel.clientId);
+    }
+
+    private async getInterpreter(spec: IJupyterKernelSpec, baseUrl: string) {
+        const parsed = new url.URL(baseUrl);
+        if (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') {
+            // Interpreter is possible. Same machine as VS code
+            return this.interpreterService.getInterpreterDetails(spec.argv[0]);
+        }
     }
 }

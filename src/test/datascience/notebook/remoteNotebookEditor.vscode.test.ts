@@ -334,4 +334,32 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
+
+    test('Remote kernels support intellisense', async function () {
+        await openNotebook(ipynbFile.fsPath);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
+
+        // Wait for tokens on the second cell (it works with just plain pylance)
+        await waitForCondition(
+            async () => {
+                const promise = commands.executeCommand('vscode.provideDocumentSemanticTokens', cell2.document.uri);
+                const result = (await promise) as any;
+                return result && result.data.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            `Tokens never appear for first cell`,
+            100,
+            true
+        );
+    });
 });

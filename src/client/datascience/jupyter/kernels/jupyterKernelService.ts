@@ -66,7 +66,12 @@ export class JupyterKernelService {
         var specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind != 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter
+        ) {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 

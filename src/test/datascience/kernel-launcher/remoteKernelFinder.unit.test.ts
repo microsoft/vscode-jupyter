@@ -24,6 +24,7 @@ import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyte
 import { JupyterSessionManager } from '../../../client/datascience/jupyter/jupyterSessionManager';
 import { noop } from '../../core';
 import { LiveKernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -31,6 +32,7 @@ suite(`Remote Kernel Finder`, () => {
     let kernelFinder: IRemoteKernelFinder;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
+    let interpreterService: IInterpreterService;
     let sessionCreatedEvent: EventEmitter<Kernel.IKernelConnection>;
     let sessionUsedEvent: EventEmitter<Kernel.IKernelConnection>;
     const connInfo: IJupyterConnection = {
@@ -108,11 +110,13 @@ suite(`Remote Kernel Finder`, () => {
         sessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(sessionCreatedEvent.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(sessionUsedEvent.event);
+        interpreterService = mock<IInterpreterService>();
 
         kernelFinder = new RemoteKernelFinder(
             disposables,
             preferredRemoteKernelIdProvider,
-            instance(jupyterSessionManagerFactory)
+            instance(jupyterSessionManagerFactory),
+            instance(interpreterService)
         );
     });
     teardown(() => {
