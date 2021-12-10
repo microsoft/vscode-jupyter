@@ -376,12 +376,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw, local, remote]
+        jupyter: [raw, local]
         python: [nonConda, conda]
         pythonVersion: [3.9]
-        # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
-        test-suite: [notebook]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
@@ -393,19 +390,15 @@ jobs:
             pythonVersion: '3.9'
             python: conda
             jupyter: remote
-            test-suite: notebook
         include:
-          - jupyter: raw
+          - jupyter: remote
             python: nonConda
             pythonVersion: '3.9'
-            test-suite: notebookAndWebview # Test webview only with raw & non-conda.
             os: ubuntu-latest
           - jupyter: raw
             python: noPython
-            test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
             os: ubuntu-latest
-        #   - test-suite: notebook
-        #     pythonVersion: '3.9'
+        #   - pythonVersion: '3.9'
         #     python: nonConda
         #     jupyter: raw
         #     os: windows-latest
@@ -415,7 +408,6 @@ jobs:
 
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
-        if: matrix.test-suite == 'notebook'
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
@@ -606,17 +598,14 @@ jobs:
         uses: actions/setup-dotnet@v1.8.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'notebook'
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'notebook'
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'notebook'
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
@@ -658,14 +647,14 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
+        if: matrix.python != 'noPython'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
@@ -685,34 +674,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
-
-        # Run native notebook tests that also require webviews
-        # note, Webview test middleware on, and webview build not skipped
-      - name: Run Native Notebook and Webview tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksAndWebviews
-        env:
-          VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_FORCE_LOGGING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
-          VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false'
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        id: test_notebook_webview_vscode
-        if: matrix.test-suite == 'notebookAndWebview' && matrix.python != 'noPython'
-
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
-        if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
         run: npx gulp createNycFolder
@@ -730,7 +693,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
@@ -738,7 +701,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
