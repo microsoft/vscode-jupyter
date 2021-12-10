@@ -324,20 +324,15 @@ jobs:
       matrix:
         jupyter: [raw, local]
         python: [nonConda, conda]
-        pythonVersion: [3.9]
+        pythonVersion: ['3.9', '3.10']
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
-        exclude:
-          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            pythonVersion: '3.9'
-            python: conda
-            jupyter: remote
         include:
-          - jupyter: remote
+          - jupyter: remote # We don't care how remote is started (we only want to test connecting to it)
             python: nonConda
             pythonVersion: '3.9'
             os: ubuntu-latest
@@ -492,15 +487,6 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
-
-      # Install PyTorch with pip
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
-
-      - name: Install PyTorch on Mac
-        if: matrix.python == 'conda' && matrix.os == 'macos-latest'
-        run: pip install torch torchvision torchaudio
 
         # This step is slow.
       - name: Install dependencies (npm ci)
