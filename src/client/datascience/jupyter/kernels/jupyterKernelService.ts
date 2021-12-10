@@ -68,7 +68,7 @@ export class JupyterKernelService {
         // If the spec file doesn't exist or is not defined, we need to register this kernel
         if (
             kernel.kind !== 'connectToLiveKernel' &&
-            kernel.kind != 'startUsingRemoteKernelSpec' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
             kernel.kernelSpec &&
             kernel.interpreter
         ) {
