@@ -146,10 +146,7 @@ export interface INotebook {
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
     ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: boolean;
+    kind: 'localJupyter' | 'remoteJupyter';
     token: CancellationToken;
     resource: Resource;
 };
