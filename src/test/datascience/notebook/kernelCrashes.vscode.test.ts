@@ -15,7 +15,6 @@ import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from 
 import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
@@ -58,9 +57,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         this.timeout(120_000);
         try {
             api = await initialize();
-            if (!(await canRunNotebookTests())) {
-                return this.skip();
-            }
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             await workAroundVSCodeNotebookStartPages();

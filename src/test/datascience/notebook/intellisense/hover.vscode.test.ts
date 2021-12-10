@@ -11,13 +11,7 @@ import { IDisposable } from '../../../../client/common/types';
 import { IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
-import {
-    canRunNotebookTests,
-    closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
-    createEmptyPythonNotebook,
-    waitForHover
-} from '../helper';
+import { closeNotebooksAndCleanUpAfterTests, insertCodeCell, createEmptyPythonNotebook, waitForHover } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook Hover', function () {
@@ -31,9 +25,6 @@ suite('DataScience - VSCode Intellisense Notebook Hover', function () {
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
-            return this.skip();
-        }
-        if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         sinon.restore();

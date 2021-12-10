@@ -71,9 +71,7 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
-    if (isInsiders() && process.env.VSC_JUPYTER_RUN_NB_TEST) {
-        clearPendingChainedUpdatesForTests();
-    }
+    clearPendingChainedUpdatesForTests();
     clearPendingTimers();
     disposeAllDisposables(disposables);
     await closeActiveNotebooks();
@@ -102,10 +100,7 @@ export async function closeActiveNotebooks(): Promise<void> {
 
 async function closeWindowsInternal() {
     // If there are no editors, we can skip. This seems to time out if no editors visible.
-    if (
-        !vscode.window.visibleTextEditors ||
-        (vscode.env.appName.toLowerCase().includes('insiders') && !vscode.window.visibleNotebookEditors)
-    ) {
+    if (!vscode.window.visibleTextEditors || !vscode.window.visibleNotebookEditors) {
         // Instead just post the command
         void vscode.commands.executeCommand('workbench.action.closeAllEditors');
         return;

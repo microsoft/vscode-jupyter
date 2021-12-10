@@ -92,6 +92,7 @@ async function createSettings(): Promise<string> {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
+        'files.autoSave': 'off',
         'python.experiments.enabled': true,
         'python.experiments.optOutFrom': [],
         'security.workspace.trust.enabled': false, // Disable trusted workspaces.
@@ -100,11 +101,6 @@ async function createSettings(): Promise<string> {
         'python.showStartPage': false
     };
 
-    if (channel !== 'insiders') {
-        // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
-        // I.e. ensure we have predictable state/experiments.
-        defaultSettings['jupyter.experiments.optOutFrom'] = ['NativeNotebookEditor'];
-    }
     if (IS_REMOTE_NATIVE_TEST) {
         // Make this a remote instance.
         defaultSettings['jupyter.jupyterServerType'] = 'remote';

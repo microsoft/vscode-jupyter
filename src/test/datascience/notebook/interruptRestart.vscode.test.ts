@@ -30,7 +30,6 @@ import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     runAllCellsInActiveNotebook,
@@ -65,9 +64,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     suiteSetup(async function () {
         traceInfo(`Start Suite Test`);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
