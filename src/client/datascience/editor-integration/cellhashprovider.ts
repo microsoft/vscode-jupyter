@@ -161,6 +161,7 @@ export class CellHashProvider implements ICellHashProvider {
             while (firstNonBlankIndex < stripped.length && stripped[firstNonBlankIndex].trim().length === 0) {
                 firstNonBlankIndex += 1;
             }
+            const firstNonBlankLineIndex = firstNonBlankIndex + trueStartLine;
 
             // Use the original values however to track edits. This is what we need
             // to move around
@@ -168,7 +169,12 @@ export class CellHashProvider implements ICellHashProvider {
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped);
+            const { runtimeLine, debuggerStartLine } = this.adjustRuntimeForDebugging(
+                cell,
+                stripped,
+                trueStartLine,
+                firstNonBlankLineIndex
+            );
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
             const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
@@ -177,7 +183,8 @@ export class CellHashProvider implements ICellHashProvider {
                 hash: hashValue,
                 line: line ? line.lineNumber + 1 : 1,
                 endLine: endLine ? endLine.lineNumber + 1 : 1,
-                firstNonBlankLineIndex: firstNonBlankIndex + trueStartLine,
+                firstNonBlankLineIndex,
+                debuggerStartLine,
                 executionCount: expectedCount,
                 startOffset,
                 endOffset,
@@ -352,7 +359,12 @@ export class CellHashProvider implements ICellHashProvider {
         });
     }
 
-    private adjustRuntimeForDebugging(cell: NotebookCell, source: string[]): number {
+    private adjustRuntimeForDebugging(
+        cell: NotebookCell,
+        source: string[],
+        trueStartLine: number,
+        firstNonBlankLineIndex: number
+    ): { runtimeLine: number; debuggerStartLine: number } {
         if (
             this.debugService.activeDebugSession &&
             this.configService.getSettings(getCellResource(cell)).stopOnFirstLineWhileDebugging
@@ -361,10 +373,12 @@ export class CellHashProvider implements ICellHashProvider {
             source.splice(0, 0, 'breakpoint()\n');
 
             // Start on the second line
-            return 2;
+            // Since a breakpoint was added map to the first line (even if blank)
+            return { runtimeLine: 2, debuggerStartLine: trueStartLine + 1 };
         }
         // No breakpoint necessary, start on the first line
-        return 1;
+        // Since no breakpoint was added map to the first non-blank line
+        return { runtimeLine: 1, debuggerStartLine: firstNonBlankLineIndex + 1 };
     }
 
     /**
