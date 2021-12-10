@@ -116,7 +116,7 @@ export function isLocalConnection(
 export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
     if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
         const parsed = new url.URL(kernelConnection.baseUrl);
-        return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.host === '127.0.0.1';
+        return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
     }
     return false;
 }
