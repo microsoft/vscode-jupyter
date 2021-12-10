@@ -366,7 +366,7 @@ jobs:
           retention-days: 1
 
   vscodeTests:
-    name: VS Code Tests # These tests run with Python extension & real Jupyter
+    name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
@@ -376,16 +376,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
-        pythonVersion: [3.9]
-        python: [nonConda, conda]
         jupyter: [raw, local, remote]
+        python: [nonConda, conda]
+        pythonVersion: [3.9]
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
         test-suite: [integration, notebook]
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
@@ -597,7 +597,6 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-          VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
@@ -618,17 +617,14 @@ jobs:
         uses: actions/setup-dotnet@v1.8.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
