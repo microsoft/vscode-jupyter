@@ -72,7 +72,7 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
     await closeWindowsAndNotebooks();
 }
 async function closeWindowsAndNotebooks(): Promise<void> {
-    if (!isANotebookOpen()) {
+    if (isInsiders() || !isANotebookOpen()) {
         await closeWindowsInternal();
         return;
     }
