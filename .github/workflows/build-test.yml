@@ -33,8 +33,8 @@ env:
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
-  VSC_JUPYTER_FORCE_LOGGING: 'true'
-  VSC_PYTHON_FORCE_LOGGING: 'true'
+#   VSC_JUPYTER_FORCE_LOGGING: 'true'
+#   VSC_PYTHON_FORCE_LOGGING: 'true'
   VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 'true'
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
@@ -366,7 +366,7 @@ jobs:
           retention-days: 1
 
   vscodeTests:
-    name: VS Code Tests # These tests run with Python extension & real Jupyter
+    name: Test # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
@@ -376,16 +376,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
-        pythonVersion: [3.9]
-        python: [nonConda, conda]
         jupyter: [raw, local, remote]
+        python: [nonConda, conda]
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
         test-suite: [integration, notebook]
+        pythonVersion: [3.9]
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.

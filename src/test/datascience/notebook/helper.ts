@@ -217,9 +217,8 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
         configSettings.JupyterSettings.dispose();
     }
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
-    await closeActiveWindows();
     disposeAllDisposables(disposables);
-    await shutdownAllNotebooks();
+    await Promise.all([closeActiveWindows(), shutdownAllNotebooks()]);
     await ensureNewNotebooksHavePythonCells();
     sinon.restore();
 }

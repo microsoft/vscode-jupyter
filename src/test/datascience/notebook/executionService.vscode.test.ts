@@ -120,7 +120,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(async () => {
+        traceInfo(`Ended Suite`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Suite (completed)`);
+    });
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;

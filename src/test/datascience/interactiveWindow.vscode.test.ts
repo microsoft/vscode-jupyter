@@ -50,6 +50,7 @@ suite('Interactive window', async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (Completed) ${this.currentTest?.title}`);
     });
 
     test('Execute cell from Python file', async () => {

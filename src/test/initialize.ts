@@ -2,16 +2,12 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
 import { disposeAllDisposables } from '../client/common/helpers';
+import { traceInfoIfCI } from '../client/common/logger';
 import type { IDisposable } from '../client/common/types';
+import { StopWatch } from '../client/common/utils/stopWatch';
 import { PythonExtension } from '../client/datascience/constants';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
-import {
-    adjustSettingsInPythonExtension,
-    clearPendingTimers,
-    IExtensionTestApi,
-    PYTHON_PATH,
-    setPythonPathInWorkspaceRoot
-} from './common';
+import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
@@ -40,7 +36,6 @@ export function isInsiders() {
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
-    await adjustSettingsInPythonExtension();
     await initializePython();
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
@@ -77,27 +72,29 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
     clearPendingTimers();
     disposeAllDisposables(disposables);
     await closeActiveNotebooks();
-    await closeWindowsInternal();
-    // Work around for https://github.com/microsoft/vscode/issues/125211#issuecomment-863592741
-    await sleep(2_000);
 }
 export async function closeActiveNotebooks(): Promise<void> {
+    const stopWatch = new StopWatch();
     if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
         return;
     }
     // We could have untitled notebooks, close them by reverting changes.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    while ((vscode as any).window.activeNotebookEditor || vscode.window.activeTextEditor) {
+    let counter = 0;
+    while (vscode.window.activeNotebookEditor || vscode.window.activeTextEditor) {
+        counter;
+        traceInfoIfCI(`Waiting for everything to close. Attempt ${counter}`);
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
+    traceInfoIfCI(`Spent a total of ${stopWatch.elapsedTime} ms reverting & closing active editor.`);
     // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
+        traceInfoIfCI(`Waiting for everything to close. Attempt ${counter}`);
         await sleep(counter * 100);
         await closeWindowsInternal();
     }
-    // Work around for https://github.com/microsoft/vscode/issues/125211#issuecomment-863592741
-    await sleep(2_000);
+    traceInfoIfCI(`Spent a total of ${stopWatch.elapsedTime} ms closing active notebooks.`);
 }
 
 async function closeWindowsInternal() {
@@ -150,11 +147,8 @@ async function closeWindowsInternal() {
 
 function isANotebookOpen() {
     /* eslint-disable */
-    if (
-        Array.isArray((vscode as any).window.visibleNotebookEditors) &&
-        (vscode as any).window.visibleNotebookEditors.length
-    ) {
+    if (Array.isArray(vscode.window.visibleNotebookEditors) && vscode.window.visibleNotebookEditors.length) {
         return true;
     }
-    return !!(vscode as any).window.activeNotebookEditor;
+    return !!vscode.window.activeNotebookEditor;
 }

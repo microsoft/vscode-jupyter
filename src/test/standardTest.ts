@@ -100,6 +100,9 @@ async function createSettings(): Promise<string> {
         'python.showStartPage': false
     };
 
+    if (!isRunningSmokeTests) {
+        defaultSettings['files.autoSave'] = 'off';
+    }
     if (channel !== 'insiders') {
         // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
         // I.e. ensure we have predictable state/experiments.
@@ -111,6 +114,7 @@ async function createSettings(): Promise<string> {
     }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
+    console.info(`Created settings file at ${settingsFile}`);
     return userDataDirectory;
 }
 async function start() {
