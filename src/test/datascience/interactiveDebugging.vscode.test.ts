@@ -565,5 +565,36 @@ def foo():
             defaultNotebookTestTimeout,
             `Cursor did not move to expected line when hitting breakpoint`
         );
+
+        // Perform a step into
+        stopped = false;
+        stoppedOnLine = false;
+        debugAdapterTracker = {
+            onDidSendMessage: (message) => {
+                if (message.event == 'stopped') {
+                    stopped = true;
+                }
+                if (message.command == 'stackTrace' && !stoppedOnLine) {
+                    stoppedOnLine = message.body.stackFrames[0].line == 7;
+                }
+            }
+        };
+        void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+        await waitForCondition(
+            async () => {
+                return stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Did not stop on step into`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting stepping into`
+        );
     });
 });
