@@ -971,7 +971,7 @@ export interface IKernelDependencyService {
      */
     installMissingDependencies(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
@@ -980,7 +980,7 @@ export interface IKernelDependencyService {
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
     areDependenciesInstalled(
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean>;

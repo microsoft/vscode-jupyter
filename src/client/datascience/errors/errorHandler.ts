@@ -104,7 +104,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     await this.kernelDependency
                         .installMissingDependencies(
                             resource,
-                            kernelConnection.interpreter,
+                            kernelConnection,
                             new DisplayOptions(false),
                             token.token,
                             true
@@ -142,18 +142,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         if (
                             failureInfo.moduleName.toLowerCase().includes('ipykernel') &&
                             kernelConnection.interpreter &&
-                            !(await this.kernelDependency.areDependenciesInstalled(
-                                kernelConnection.interpreter,
-                                undefined,
-                                true
-                            ))
+                            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
                         ) {
                             const token = new CancellationTokenSource();
                             try {
                                 await this.kernelDependency
                                     .installMissingDependencies(
                                         resource,
-                                        kernelConnection.interpreter,
+                                        kernelConnection,
                                         new DisplayOptions(false),
                                         token.token,
                                         true

@@ -106,7 +106,7 @@ export class KernelLauncher implements IKernelLauncher {
             if (kernelConnectionMetadata.interpreter) {
                 await this.kernelDependencyService.installMissingDependencies(
                     resource,
-                    kernelConnectionMetadata.interpreter,
+                    kernelConnectionMetadata,
                     ui,
                     cancelToken
                 );

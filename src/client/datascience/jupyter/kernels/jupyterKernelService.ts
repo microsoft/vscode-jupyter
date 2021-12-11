@@ -64,7 +64,7 @@ export class JupyterKernelService {
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, ui, token);
+            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
         }
 
         var specFile: string | undefined = undefined;
