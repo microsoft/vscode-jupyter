@@ -417,7 +417,7 @@ suite('Interactive window debugging', async function () {
         assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
     });
 
-    test('IANHU Correctly handle leading spaces in a code cell', async () => {
+    test('Correctly handle leading spaces in a code cell we are debugging', async () => {
         // First just get our window up and started
         const source = 'c = 50\n';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -493,7 +493,7 @@ b = 200
             `Cursor did not move to expected line when hitting breakpoint`
         );
     });
-    test('IANHU Correctly handle leading spaces in a previously run code cell', async () => {
+    test('Correctly handle leading spaces in a previously run code cell', async () => {
         // Define the function with some leading spaces and run it (don't debug it)
         const source = `
 
