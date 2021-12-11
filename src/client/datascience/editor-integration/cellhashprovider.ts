@@ -374,7 +374,7 @@ export class CellHashProvider implements ICellHashProvider {
     /n
     first line of code // <-- We need to start source mapping here
 
-    Given that the hash snill needs to map to the file contents calculating this mapping at this point
+    Given that the hash still needs to map to the actual file contents calculating this mapping at this point
     where we are making debugging calculations for runtimeLine feels appropriate.
     */
     private adjustRuntimeForDebugging(
