@@ -59,7 +59,11 @@ export class JupyterKernelService {
         const token = wrapCancellationTokens(cancelToken, tokenSource.token);
 
         // If we have an interpreter, make sure it has the correct dependencies installed
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.interpreter &&
+            kernel.kind !== 'startUsingRemoteKernelSpec'
+        ) {
             await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, ui, token);
         }
 
@@ -91,7 +95,13 @@ export class JupyterKernelService {
         }
 
         // Update the kernel environment to use the interpreter's latest
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter &&
+            specFile
+        ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
                     kernel.interpreter.path
