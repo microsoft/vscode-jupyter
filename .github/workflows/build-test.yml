@@ -220,67 +220,6 @@ jobs:
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
-  vsc_api_check:
-    needs: pick_environment
-    name: VSC Stable & Proposed API
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
-      - name: Cache npm on linux/mac
-        uses: actions/cache@v2.1.4
-        if: matrix.os != 'windows-latest'
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Get npm cache directory
-        if: matrix.os == 'windows-latest'
-        id: npm-cache
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - name: Cache npm on windows
-        uses: actions/cache@v2.1.4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Cache compiled TS files
-        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
-        id: out-cache
-        uses: actions/cache@v2.1.4
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: Install Stable + Proposed API
-        run: npm run download-api
-
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
-        env:
-          CI_JUPYTER_FAST_COMPILATION: 'true'
-
   ts_tests:
     needs: pick_environment
     name: Type Script Tests
@@ -366,7 +305,7 @@ jobs:
           retention-days: 1
 
   vscodeTests:
-    name: VS Code Tests # These tests run with Python extension & real Jupyter
+    name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
@@ -376,47 +315,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        jupyter: [raw, local]
+        python: [nonConda, conda]
+        pythonVersion: [3.9]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        pythonVersion: [3.9]
-        python: [nonConda, conda]
-        jupyter: [raw, local, remote]
-        # integration: Tests with VS Code, Python extension & real Jupyter
-        # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
-        test-suite: [integration, notebook]
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         exclude:
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-            # With this, we're saying from the result matrix, remove the combination that has python 3.9, remote, integration on ubuntu.
-            pythonVersion: '3.9'
-            jupyter: remote
-            test-suite: integration
-          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
             pythonVersion: '3.9'
             python: conda
             jupyter: remote
-            test-suite: notebook
         include:
-          - os: ubuntu-latest
-            pythonVersion: '3.9'
+          - jupyter: remote
             python: nonConda
-            jupyter: raw
-            test-suite: notebookAndWebview # Test webview only with raw & non-conda.
-          - os: ubuntu-latest
-            jupyter: raw
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+          - jupyter: raw
             python: noPython
-            test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
-        #   - test-suite: integration
-        #     jupyter: raw
-        #     pythonVersion: '3.9'
-        #     python: nonConda
-        #     os: windows-latest
-        #   - test-suite: notebook
-        #     pythonVersion: '3.9'
+            os: ubuntu-latest
+        #   - pythonVersion: '3.9'
         #     python: nonConda
         #     jupyter: raw
         #     os: windows-latest
@@ -426,7 +347,6 @@ jobs:
 
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
@@ -597,7 +517,6 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         env:
-          VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # Used by tests for non-python kernels.
@@ -618,17 +537,14 @@ jobs:
         uses: actions/setup-dotnet@v1.8.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Install .NET Interactive
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Install .NET Kernel
         shell: bash -l {0}
         run: dotnet interactive jupyter install
-        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
@@ -646,17 +562,6 @@ jobs:
       - name: Set xvfb parameters linux
         if: matrix.os == 'ubuntu-latest'
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
-
-      - name: Run tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: ${{ env.xvfbCommand }} npm run testVSCode
-        env:
-          VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_FORCE_LOGGING: 1
-          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-        id: test_vscode
-        if: matrix.test-suite == 'integration' && matrix.python != 'noPython'
 
       - name: Publish VSCode Test Report
         uses: scacap/action-surefire-report@v1
@@ -681,14 +586,14 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
+        if: matrix.python != 'noPython'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
@@ -708,34 +613,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
-
-        # Run native notebook tests that also require webviews
-        # note, Webview test middleware on, and webview build not skipped
-      - name: Run Native Notebook and Webview tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksAndWebviews
-        env:
-          VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_FORCE_LOGGING: 1
-          VSC_PYTHON_FORCE_LOGGING: 1
-          VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false'
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        id: test_notebook_webview_vscode
-        if: matrix.test-suite == 'notebookAndWebview' && matrix.python != 'noPython'
-
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
-        if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
         run: npx gulp createNycFolder
@@ -753,7 +632,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
@@ -761,7 +640,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 

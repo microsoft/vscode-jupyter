@@ -17,7 +17,6 @@ import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     ensureNewNotebooksHavePythonCells,
     workAroundVSCodeNotebookStartPages
@@ -32,7 +31,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         creationOptions = api.serviceContainer.get<CreationOptionService>(CreationOptionService);

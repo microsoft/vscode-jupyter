@@ -32,7 +32,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../co
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     runAllCellsInActiveNotebook,
@@ -144,7 +143,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     [true, false].forEach((which, i) => {
         // Use index on test name as it messes up regex matching
         test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
-            if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST) {
+            if (IS_REMOTE_NATIVE_TEST) {
                 return this.skip();
             }
             // Confirm message is displayed & we click 'Install` button.
@@ -205,7 +204,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         });
     });
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
-        if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
 
