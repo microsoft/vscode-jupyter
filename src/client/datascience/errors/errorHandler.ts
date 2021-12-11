@@ -404,7 +404,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!cellToDisplayErrors) {
             return;
         }
-        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            !kernelConnection.interpreter
+        ) {
             return;
         }
         const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
@@ -443,7 +447,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!cellToDisplayErrors) {
             return;
         }
-        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            !kernelConnection.interpreter
+        ) {
             return;
         }
         const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and()} ${ProductNames.get(
