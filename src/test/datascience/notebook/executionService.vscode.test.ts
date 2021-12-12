@@ -123,6 +123,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
+    test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
+        const uri = vscodeNotebook.activeNotebookEditor?.document.uri;
+        if (uri && uri.scheme === 'file') {
+            await insertCodeCell('print("__vsc_ipynb_file__")', { index: 0 });
+            const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+            await Promise.all([runCell(cell), waitForTextOutput(cell, `${uri.path}`)]);
+        }
+    });
     test('Leading whitespace not suppressed', async () => {
         await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
