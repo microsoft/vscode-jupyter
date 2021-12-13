@@ -344,7 +344,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 );
                 return preferred != undefined;
             },
-            3_000,
+            30_000,
             `Did not find a controller with document affinity`
         );
     } catch {
@@ -367,6 +367,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                       language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 
+    traceInfo(`Preferred kernel for selection is ${match?.id}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange({ labelOrId: match!.id }, timeout);
 }

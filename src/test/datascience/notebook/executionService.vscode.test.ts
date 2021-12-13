@@ -88,6 +88,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
+            traceInfo('Suite Setup (failed) - Execution');
             await captureScreenShot('execution-suite');
             throw e;
         }
