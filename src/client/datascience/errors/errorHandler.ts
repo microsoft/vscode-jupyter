@@ -96,7 +96,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     err instanceof IpyKernelNotInstalledError &&
                     err.reason === KernelInterpreterDependencyResponse.uiHidden &&
                     (purpose === 'start' || purpose === 'restart') &&
-                    kernelConnection.interpreter
+                    kernelConnection.interpreter &&
+                    kernelConnection.kind !== 'connectToLiveKernel' &&
+                    kernelConnection.kind !== 'startUsingRemoteKernelSpec'
                 ) {
                     // Its possible auto start ran and UI was disabled, but subsequently
                     // user attempted to run a cell, & the prompt wasn't displayed to the user.
