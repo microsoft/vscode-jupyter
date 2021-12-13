@@ -315,8 +315,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [remote]
-        python: [nonConda]
+        jupyter: [raw, local]
+        python: [nonConda, conda]
         pythonVersion: [3.9]
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -324,19 +324,19 @@ jobs:
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
-        # exclude:
-        #   - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
-        #     pythonVersion: '3.9'
-        #     python: conda
-        #     jupyter: remote
-        # include:
-        #   - jupyter: remote
-        #     python: nonConda
-        #     pythonVersion: '3.9'
-        #     os: ubuntu-latest
-        #   - jupyter: raw
-        #     python: noPython
-        #     os: ubuntu-latest
+        exclude:
+          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
+            pythonVersion: '3.9'
+            python: conda
+            jupyter: remote
+        include:
+          - jupyter: remote
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+          - jupyter: raw
+            python: noPython
+            os: ubuntu-latest
         #   - pythonVersion: '3.9'
         #     python: nonConda
         #     jupyter: raw
@@ -585,7 +585,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          VSC_JUPYTER_CI_TEST_GREP: 'Execute cell using VSCode Kernel'
         id: test_notebook_vscode
         if: matrix.python != 'noPython'
 
@@ -657,7 +656,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python: [3.9]
     steps:
       - name: Checkout
