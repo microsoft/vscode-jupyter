@@ -28,7 +28,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
             label,
             sortText: generateSortString(index),
             itemText: label,
-            range,
+            range: range ?? new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)),
             kind
         };
     }
