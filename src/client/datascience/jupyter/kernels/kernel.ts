@@ -663,7 +663,11 @@ export class Kernel implements IKernel {
 
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-            traceInfoIfCI('After updating working directory');
+            const file = this.resourceUri?.fsPath;
+            if (file) {
+                await this.executeSilently(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
+            }
+            traceInfoIfCI('After updating working directory and notebook file __vsc_ipynb_file__');
             await this.disableJedi();
             traceInfoIfCI('After Disabing jedi');
 
