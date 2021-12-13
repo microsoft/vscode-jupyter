@@ -70,7 +70,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
             api = await initialize();

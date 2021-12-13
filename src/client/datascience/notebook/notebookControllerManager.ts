@@ -545,7 +545,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 }
 
                 // If we found a preferred kernel, set the association on the NotebookController
-                if (preferredSearchToken.token.isCancellationRequested) {
+                if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
                     traceInfo('Find preferred kernel cancelled');
                     return;
                 }
