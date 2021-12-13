@@ -59,14 +59,23 @@ export class JupyterKernelService {
         const token = wrapCancellationTokens(cancelToken, tokenSource.token);
 
         // If we have an interpreter, make sure it has the correct dependencies installed
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, ui, token);
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.interpreter &&
+            kernel.kind !== 'startUsingRemoteKernelSpec'
+        ) {
+            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
         }
 
         var specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter
+        ) {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 
@@ -86,7 +95,13 @@ export class JupyterKernelService {
         }
 
         // Update the kernel environment to use the interpreter's latest
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter &&
+            specFile
+        ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
                     kernel.interpreter.path

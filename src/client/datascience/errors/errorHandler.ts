@@ -96,7 +96,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     err instanceof IpyKernelNotInstalledError &&
                     err.reason === KernelInterpreterDependencyResponse.uiHidden &&
                     (purpose === 'start' || purpose === 'restart') &&
-                    kernelConnection.interpreter
+                    kernelConnection.interpreter &&
+                    kernelConnection.kind !== 'connectToLiveKernel' &&
+                    kernelConnection.kind !== 'startUsingRemoteKernelSpec'
                 ) {
                     // Its possible auto start ran and UI was disabled, but subsequently
                     // user attempted to run a cell, & the prompt wasn't displayed to the user.
@@ -104,7 +106,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     await this.kernelDependency
                         .installMissingDependencies(
                             resource,
-                            kernelConnection.interpreter,
+                            kernelConnection,
                             new DisplayOptions(false),
                             token.token,
                             true
@@ -142,18 +144,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         if (
                             failureInfo.moduleName.toLowerCase().includes('ipykernel') &&
                             kernelConnection.interpreter &&
-                            !(await this.kernelDependency.areDependenciesInstalled(
-                                kernelConnection.interpreter,
-                                undefined,
-                                true
-                            ))
+                            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
                         ) {
                             const token = new CancellationTokenSource();
                             try {
                                 await this.kernelDependency
                                     .installMissingDependencies(
                                         resource,
-                                        kernelConnection.interpreter,
+                                        kernelConnection,
                                         new DisplayOptions(false),
                                         token.token,
                                         true
@@ -404,7 +402,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!cellToDisplayErrors) {
             return;
         }
-        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            !kernelConnection.interpreter
+        ) {
             return;
         }
         const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
@@ -443,7 +445,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!cellToDisplayErrors) {
             return;
         }
-        if (kernelConnection.kind === 'connectToLiveKernel' || !kernelConnection.interpreter) {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            !kernelConnection.interpreter
+        ) {
             return;
         }
         const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and()} ${ProductNames.get(

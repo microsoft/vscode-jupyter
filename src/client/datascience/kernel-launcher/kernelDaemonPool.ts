@@ -17,6 +17,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { logValue, TraceOptions } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
+import { createInterpreterKernelSpec } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
 import { IPythonKernelDaemon } from './types';
@@ -140,7 +141,15 @@ export class KernelDaemonPool implements IDisposable {
     private async preWarmKernelDaemon(resource: Resource) {
         traceInfo(`Pre-warming kernel daemon for ${getDisplayPath(resource)}`);
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
+        if (
+            !interpreter ||
+            !(await this.kernelDependencyService.areDependenciesInstalled({
+                interpreter,
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: createInterpreterKernelSpec(interpreter, ''),
+                id: '1'
+            }))
+        ) {
             return;
         }
         const key = this.getDaemonKey(resource, interpreter);

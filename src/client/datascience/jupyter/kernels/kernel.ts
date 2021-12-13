@@ -50,7 +50,13 @@ import {
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import { IKernel, isLocalConnection, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import {
+    IKernel,
+    isLocalConnection,
+    isLocalHostConnection,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -841,7 +847,11 @@ export class Kernel implements IKernel {
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
-        if (isLocalConnection(this.kernelConnectionMetadata)) {
+        if (
+            (isLocalConnection(this.kernelConnectionMetadata) ||
+                isLocalHostConnection(this.kernelConnectionMetadata)) &&
+            this.kernelConnectionMetadata.kind !== 'connectToLiveKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
+        ) {
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
@@ -859,7 +869,8 @@ export class Kernel implements IKernel {
     // Update both current working directory and sys.path with the desired directory
     private async changeDirectoryIfPossible(directory: string): Promise<void> {
         if (
-            isLocalConnection(this.kernelConnectionMetadata) &&
+            (isLocalConnection(this.kernelConnectionMetadata) ||
+                isLocalHostConnection(this.kernelConnectionMetadata)) &&
             isPythonKernelConnection(this.kernelConnectionMetadata)
         ) {
             traceInfo('changeDirectoryIfPossible');
