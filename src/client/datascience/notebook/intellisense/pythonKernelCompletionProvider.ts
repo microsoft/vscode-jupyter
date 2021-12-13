@@ -277,6 +277,9 @@ export function filterCompletions(
         const wordIndex = word ? r.itemText.indexOf(word) : -1;
         let newText: string | undefined = undefined;
         let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
+
+        // Two cases for filtering. We're at the '.', then the word we have is the beginning of the string.
+        // Example, user typed 'df.' and r.itemText is 'df.PassengerId'. Word would be 'df.' in this case.
         if (word && wordDot && r.itemText.startsWith(word)) {
             newText = r.itemText.substring(word.length);
             newRange =
@@ -284,6 +287,8 @@ export function filterCompletions(
                     ? new Range(new Position(r.range.start.line, r.range.start.character + word.length), r.range.end)
                     : r.range;
         }
+        // We're after the '.' and the user is typing more. We are in the middle of the string then.
+        // Example, user typed 'df.Pass' and r.itemText is 'df.PassengerId'. Word would be 'Pass' in this case.
         if (!newText && wordIndex > 0) {
             newText = r.itemText.substring(wordIndex);
             newRange =
