@@ -677,6 +677,9 @@ export class Kernel implements IKernel {
             await this.disableJedi();
             traceInfoIfCI('After Disabing jedi');
 
+            // Request completions to warm up the completion engine (first call always takes a lot longer)
+            await this.requestEmptyCompletions();
+
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
@@ -712,6 +715,13 @@ export class Kernel implements IKernel {
 
     private async disableJedi() {
         await this.executeSilently(CodeSnippets.disableJedi);
+    }
+
+    private async requestEmptyCompletions() {
+        await this.session?.requestComplete({
+            code: '__file__.',
+            cursor_pos: 9
+        });
     }
 
     /**

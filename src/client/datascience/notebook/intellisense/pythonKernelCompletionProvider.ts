@@ -18,8 +18,9 @@ import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IConfigurationService } from '../../../common/types';
-import { sleep } from '../../../common/utils/async';
+import { waitForPromise } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { Settings } from '../../constants';
 import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
 import { IKernelProvider } from '../../jupyter/kernels/types';
@@ -74,22 +75,15 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
             traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
-        const emptyResult: INotebookCompletion = { cursor: { end: 0, start: 0 }, matches: [], metadata: {} };
         // Allow slower timeouts for CI (testing).
         const timeout =
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
-            Promise.race([
+            waitForPromise(
                 this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
-                sleep(timeout).then(() => {
-                    if (token.isCancellationRequested) {
-                        return;
-                    }
-                    traceInfoIfCI(`Notebook completions request timed out for Cell ${getDisplayPath(document.uri)}`);
-                    return emptyResult;
-                })
-            ]),
+                timeout
+            ),
             this.getPylanceCompletions(document, position, context, token)
         ]);
         if (!result) {
@@ -157,6 +151,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         offsetInCode: number,
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion> {
+        const stopWatch = new StopWatch();
         // If server is busy, then don't delay code completion.
         if (session.status === 'busy') {
             return {
@@ -177,6 +172,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 result ? JSON.stringify(result) : 'empty'
             }`
         );
+        traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
         if (result && result.content) {
             if ('matches' in result.content) {
                 return {
@@ -278,12 +274,24 @@ export function filterCompletions(
                 sortText: `ZZZ${r.sortText}`
             };
         }
+        const wordIndex = word ? r.itemText.indexOf(word) : -1;
+        let newText: string | undefined = undefined;
+        let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
         if (word && wordDot && r.itemText.startsWith(word)) {
-            const newText = r.itemText.substring(word.length);
-            const newRange =
+            newText = r.itemText.substring(word.length);
+            newRange =
                 r.range && 'start' in r.range
                     ? new Range(new Position(r.range.start.line, r.range.start.character + word.length), r.range.end)
                     : r.range;
+        }
+        if (!newText && wordIndex > 0) {
+            newText = r.itemText.substring(wordIndex);
+            newRange =
+                r.range && 'start' in r.range
+                    ? new Range(new Position(r.range.start.line, r.range.start.character + wordIndex), r.range.end)
+                    : r.range;
+        }
+        if (newText && newRange) {
             return {
                 ...r,
                 sortText: generateSortString(i),
