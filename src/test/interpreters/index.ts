@@ -75,6 +75,7 @@ export async function getActivatedEnvVariables(pythonPath: string): Promise<Node
     const promise = (async () => {
         const cli = await getPythonCli(pythonPath);
         const processService = new ProcessService(new BufferDecoder());
+        const separator = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d';
         const argv = [...cli, path.join(SCRIPTS_DIR, 'printEnvVariables.py')];
         const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
         const result = await processService.shellExec(cmd, {
@@ -89,7 +90,10 @@ export async function getActivatedEnvVariables(pythonPath: string): Promise<Node
             return;
         }
         try {
-            return JSON.parse(result.stdout.trim());
+            // Sometimes when environments get activated, we get a lot of noise in the output.
+            // Having a separator allows us to filter out the noise.
+            const output = result.stdout;
+            return JSON.parse(output.substring(output.indexOf(separator) + separator.length).trim());
         } catch (ex) {
             traceError(`Failed to parse interpreter information for ${argv}`, ex);
         }
