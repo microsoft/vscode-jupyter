@@ -648,6 +648,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: SD-memtest.json
+          path: './SD-memtest.json'
           retention-days: 20
 
   smoke-tests:
