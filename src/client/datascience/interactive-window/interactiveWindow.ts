@@ -530,7 +530,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
+        if (!this._submitters.find((s) => s.toString() == file.toString())) {
             this._submitters.push(file);
         }
 

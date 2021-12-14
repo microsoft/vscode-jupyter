@@ -121,6 +121,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         if (this.debugService.activeDebugSession) {
             const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
+            // Debug locations only work on local paths, so check against fsPath here.
             if (debugLocation && this.fs.areLocalPathsSame(debugLocation.fileName, document.uri.fsPath)) {
                 // We are in the given debug file, so only return the code lens that contains the given line
                 const activeLenses = lenses.filter((lens) => {
