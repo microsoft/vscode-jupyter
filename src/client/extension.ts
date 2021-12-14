@@ -74,7 +74,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             ready: Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
-            showDataViewer: () => Promise.resolve()
+            showDataViewer: () => Promise.resolve(),
+            getKernelService: () => Promise.resolve(undefined)
         };
     }
 }

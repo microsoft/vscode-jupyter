@@ -81,6 +81,10 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
+    public get kernel(): Kernel.IKernelConnection | undefined {
+        return this.session?.kernel || undefined;
+    }
+
     public get kernelId(): string {
         return this.session?.kernel?.id || '';
     }
