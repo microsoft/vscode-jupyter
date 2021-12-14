@@ -483,7 +483,6 @@ module.exports = {
         'src/client/common/platform/errors.ts',
         'src/client/common/platform/fs-temp.ts',
         'src/client/common/platform/constants.ts',
-        'src/client/common/platform/fileSystem.ts',
         'src/client/common/platform/registry.ts',
         'src/client/common/persistentState.ts',
         'src/client/common/terminal/activator/base.ts',
