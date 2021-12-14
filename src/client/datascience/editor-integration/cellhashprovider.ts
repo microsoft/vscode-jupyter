@@ -119,7 +119,7 @@ export class CellHashProvider implements ICellHashProvider {
             this.executionCount += 1;
 
             // Skip hash on unknown file though
-            if (getInteractiveCellMetadata(cell)?.interactive?.uri) {
+            if (getInteractiveCellMetadata(cell)?.interactive?.uristring) {
                 return this.generateHash(cell, this.executionCount);
             }
         }
@@ -147,9 +147,9 @@ export class CellHashProvider implements ICellHashProvider {
         }
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const { line: cellLine, uri } = cell.metadata.interactive;
+        const { line: cellLine, uristring } = cell.metadata.interactive;
         const id = getInteractiveCellMetadata(cell)?.id;
-        const doc = this.documentManager.textDocuments.find((d) => d.uri.toString() === uri.toString());
+        const doc = this.documentManager.textDocuments.find((d) => d.uri.toString() === uristring);
         if (doc && id) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
@@ -194,8 +194,7 @@ export class CellHashProvider implements ICellHashProvider {
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);
 
-            const uriString = uri.toString();
-            let list = this.hashes.get(uriString);
+            let list = this.hashes.get(uristring);
             if (!list) {
                 list = [];
             }
@@ -218,16 +217,17 @@ export class CellHashProvider implements ICellHashProvider {
             if (!inserted) {
                 list.push(hash);
             }
-            this.hashes.set(uriString, list);
+            this.hashes.set(uristring, list);
 
             // Save a regex to find this file later when looking for
-            // exceptions in output
-            if (!this.traceBackRegexes.has(uriString)) {
+            // exceptions in output. Track backs only work on local files.
+            if (!this.traceBackRegexes.has(uristring)) {
+                const uri = Uri.parse(uristring);
                 const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(uri.fsPath)}`);
                 const fileDisplayNameMatchRegex = new RegExp(
                     `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(uri.fsPath))}`
                 );
-                this.traceBackRegexes.set(uriString, [fileMatchRegex, fileDisplayNameMatchRegex]);
+                this.traceBackRegexes.set(uristring, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
 
             // Tell listeners we have new hashes.
@@ -422,20 +422,21 @@ export class CellHashProvider implements ICellHashProvider {
                 return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = offset + n - 1;
-                    return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                    return `${prefix}<a href='${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                 });
             }
         } else {
-            const matchingFile = regexes.find((e) => traceFrame.includes(e[0]));
+            const matchingFile = regexes.find((e) => {
+                const uri = Uri.parse(e[0]);
+                return traceFrame.includes(uri.fsPath);
+            });
             if (matchingFile) {
                 const offset = this.findCellOffset(this.hashes.get(matchingFile[0]), traceFrame);
                 if (offset) {
                     return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
                         const newLine = offset + n - 1;
-                        return `${prefix}<a href='file://${matchingFile[0]}?line=${newLine}'>${
-                            newLine + 1
-                        }</a>${suffix}`;
+                        return `${prefix}<a href='${matchingFile[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                     });
                 }
             }

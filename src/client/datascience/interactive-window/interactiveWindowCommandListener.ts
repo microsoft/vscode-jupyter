@@ -455,7 +455,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {
         if (context && context.metadata?.interactive) {
-            const uri = context.metadata.interactive.uri;
+            const uri = Uri.parse(context.metadata.interactive.uristring);
             const line = context.metadata.interactive.line;
 
             const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });

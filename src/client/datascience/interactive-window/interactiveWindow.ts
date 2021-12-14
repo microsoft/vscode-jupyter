@@ -53,7 +53,7 @@ type InteractiveCellMetadata = {
     inputCollapsed: boolean;
     interactiveWindowCellMarker: string;
     interactive: {
-        uri: Uri;
+        uristring: string;
         line: number;
         originalSource: string;
     };
@@ -575,7 +575,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
-                uri: file,
+                uristring: file.toString(), // Has to be simple types
                 line: line,
                 originalSource: code
             },

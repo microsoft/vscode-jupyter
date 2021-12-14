@@ -30,8 +30,8 @@ function generateMarkdownCell(code: string[], uri: Uri | undefined, useSourceAsI
 }
 
 export function getCellResource(cell: NotebookCell): Resource {
-    if (getInteractiveCellMetadata(cell)?.interactive.uri) {
-        return Uri.parse(cell.metadata.interactive.uri);
+    if (getInteractiveCellMetadata(cell)?.interactive.uristring) {
+        return Uri.parse(cell.metadata.interactive.uristring);
     }
     return undefined;
 }

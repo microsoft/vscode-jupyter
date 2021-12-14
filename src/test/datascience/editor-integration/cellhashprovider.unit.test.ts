@@ -87,7 +87,7 @@ suite('CellHashProvider Unit Tests', () => {
             document: new MockDocument(code, fileName, async () => true),
             metadata: {
                 interactive: {
-                    file: Uri.file(fileName).fsPath,
+                    uri: Uri.file(fileName),
                     line,
                     originalSource: code
                 },
