@@ -13,7 +13,8 @@ import {
     Position,
     Range,
     TextDocumentChangeEvent,
-    TextDocumentContentChangeEvent
+    TextDocumentContentChangeEvent,
+    Uri
 } from 'vscode';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
@@ -92,7 +93,7 @@ export class CellHashProvider implements ICellHashProvider {
         return [...this.hashes.entries()]
             .map((e) => {
                 return {
-                    file: e[0],
+                    uri: Uri.parse(e[0]),
                     hashes: e[1].filter((h) => !h.deleted)
                 };
             })
@@ -118,7 +119,7 @@ export class CellHashProvider implements ICellHashProvider {
             this.executionCount += 1;
 
             // Skip hash on unknown file though
-            if (getInteractiveCellMetadata(cell)?.interactive?.file) {
+            if (getInteractiveCellMetadata(cell)?.interactive?.uri) {
                 return this.generateHash(cell, this.executionCount);
             }
         }
@@ -146,9 +147,9 @@ export class CellHashProvider implements ICellHashProvider {
         }
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const { line: cellLine, file } = cell.metadata.interactive;
+        const { line: cellLine, uri } = cell.metadata.interactive;
         const id = getInteractiveCellMetadata(cell)?.id;
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) => d.uri.toString() === uri.toString());
         if (doc && id) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
@@ -193,7 +194,8 @@ export class CellHashProvider implements ICellHashProvider {
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);
 
-            let list = this.hashes.get(file);
+            const uriString = uri.toString();
+            let list = this.hashes.get(uriString);
             if (!list) {
                 list = [];
             }
@@ -216,16 +218,16 @@ export class CellHashProvider implements ICellHashProvider {
             if (!inserted) {
                 list.push(hash);
             }
-            this.hashes.set(file, list);
+            this.hashes.set(uriString, list);
 
             // Save a regex to find this file later when looking for
             // exceptions in output
-            if (!this.traceBackRegexes.has(file)) {
-                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(file)}`);
+            if (!this.traceBackRegexes.has(uriString)) {
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(uri.fsPath)}`);
                 const fileDisplayNameMatchRegex = new RegExp(
-                    `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(file))}`
+                    `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(uri.fsPath))}`
                 );
-                this.traceBackRegexes.set(file, [fileMatchRegex, fileDisplayNameMatchRegex]);
+                this.traceBackRegexes.set(uriString, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
 
             // Tell listeners we have new hashes.
@@ -255,7 +257,7 @@ export class CellHashProvider implements ICellHashProvider {
 
     private onChangedDocument(e: TextDocumentChangeEvent) {
         // See if the document is in our list of docs to watch
-        const perFile = this.hashes.get(e.document.fileName);
+        const perFile = this.hashes.get(e.document.uri.toString());
         if (perFile) {
             // Apply the content changes to the file's cells.
             const docText = e.document.getText();

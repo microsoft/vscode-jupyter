@@ -307,8 +307,8 @@ suite('CellHashProvider Unit Tests', () => {
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 2, 'Wrong number of hashes');
-        const fooHash = hashes.find((h) => h.file === Uri.file('foo.py').fsPath);
-        const barHash = hashes.find((h) => h.file === Uri.file('bar.py').fsPath);
+        const fooHash = hashes.find((h) => h.uri.fsPath === Uri.file('foo.py').fsPath);
+        const barHash = hashes.find((h) => h.uri.fsPath === Uri.file('bar.py').fsPath);
         assert.ok(fooHash, 'No hash for foo.py');
         assert.ok(barHash, 'No hash for bar.py');
         assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');

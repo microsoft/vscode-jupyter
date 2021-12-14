@@ -70,7 +70,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings(document.uri));
+        return this.matchWatcher(document.uri, document.version, this.configuration.getSettings(document.uri));
     }
 
     private onDebugLocationUpdated() {
@@ -82,9 +82,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private onDidCloseTextDocument(e: vscode.TextDocument) {
-        const index = this.activeCodeWatchers.findIndex(
-            (item) => item.uri && this.fs.areLocalPathsSame(item.uri.fsPath, e.fileName)
-        );
+        const index = this.activeCodeWatchers.findIndex((item) => item.uri && item.uri.toString() === e.uri.toString());
         if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
         }
@@ -154,7 +152,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // See if we already have a watcher for this file and version
         const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(
-            document.fileName,
+            document.uri,
             document.version,
             this.configuration.getSettings(document.uri)
         );
@@ -167,10 +165,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         return newCodeWatcher.getCodeLenses();
     }
 
-    private matchWatcher(fileName: string, version: number, settings: IJupyterSettings): ICodeWatcher | undefined {
-        const index = this.activeCodeWatchers.findIndex(
-            (item) => item.uri && this.fs.areLocalPathsSame(item.uri.fsPath, fileName)
-        );
+    private matchWatcher(uri: vscode.Uri, version: number, settings: IJupyterSettings): ICodeWatcher | undefined {
+        const index = this.activeCodeWatchers.findIndex((item) => item.uri && item.uri.toString() == uri.toString());
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];
             if (item.getVersion() === version) {
@@ -187,7 +183,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Create a new watcher for this file if we can find a matching document
-        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.fileName === fileName);
+        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }

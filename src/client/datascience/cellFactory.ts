@@ -14,24 +14,24 @@ import { ICell, ICellRange } from './types';
 import { createJupyterCellFromVSCNotebookCell } from './notebook/helpers/helpers';
 import { getInteractiveCellMetadata } from './interactive-window/interactiveWindow';
 
-function generateCodeCell(code: string[], file: string, magicCommandsAsComments: boolean): ICell {
+function generateCodeCell(code: string[], uri: Uri | undefined, magicCommandsAsComments: boolean): ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: createCodeCell(code, magicCommandsAsComments),
-        file: file
+        uri
     };
 }
 
-function generateMarkdownCell(code: string[], file: string, useSourceAsIs = false): ICell {
+function generateMarkdownCell(code: string[], uri: Uri | undefined, useSourceAsIs = false): ICell {
     return {
-        file: file,
+        uri,
         data: createMarkdownCell(code, useSourceAsIs)
     };
 }
 
 export function getCellResource(cell: NotebookCell): Resource {
-    if (getInteractiveCellMetadata(cell)?.interactive.file) {
-        return Uri.file(cell.metadata.interactive.file);
+    if (getInteractiveCellMetadata(cell)?.interactive.uri) {
+        return Uri.parse(cell.metadata.interactive.uri);
     }
     return undefined;
 }
@@ -39,7 +39,7 @@ export function getCellResource(cell: NotebookCell): Resource {
 export function generateCells(
     settings: IJupyterSettings | undefined,
     code: string,
-    file: string,
+    uri: Uri | undefined,
     splitMarkdown: boolean
 ): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
@@ -64,16 +64,16 @@ export function generateCells(
         if (firstNonMarkdown >= 0) {
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
-                generateMarkdownCell(split.slice(0, firstNonMarkdown), file),
-                generateCodeCell(split.slice(firstNonMarkdown), file, magicCommandsAsComments)
+                generateMarkdownCell(split.slice(0, firstNonMarkdown), uri),
+                generateCodeCell(split.slice(firstNonMarkdown), uri, magicCommandsAsComments)
             ];
         } else {
             // Just a single markdown cell
-            return [generateMarkdownCell(split, file)];
+            return [generateMarkdownCell(split, uri)];
         }
     } else {
         // Just code
-        return [generateCodeCell(split, file, magicCommandsAsComments)];
+        return [generateCodeCell(split, uri, magicCommandsAsComments)];
     }
 }
 
@@ -128,7 +128,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
     return Array.prototype.concat(
         ...ranges.map((cr) => {
             const code = document.getText(cr.range);
-            return generateCells(settings, code, '', false);
+            return generateCells(settings, code, document.uri, false);
         })
     );
 }

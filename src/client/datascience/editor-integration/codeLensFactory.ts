@@ -16,7 +16,6 @@ import {
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -52,7 +51,6 @@ export class CodeLensFactory implements ICodeLensFactory {
     private codeLensCache = new Map<string, CodeLensCacheData>();
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
@@ -86,7 +84,7 @@ export class CodeLensFactory implements ICodeLensFactory {
 
     private getCodeLensCacheData(document: TextDocument): CodeLensCacheData {
         // See if we have a cached version of the code lenses for this document
-        const key = document.fileName.toLocaleLowerCase();
+        const key = document.uri.toString();
         let cache = this.codeLensCache.get(key);
         let needUpdate = false;
 
@@ -187,7 +185,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         if (data !== undefined && metadata !== undefined) {
             data.cellExecutionCounts.set(metadata.id, e.cell.executionSummary.executionOrder);
             data.documentExecutionCounts.set(
-                metadata.interactive.file.toLowerCase(),
+                metadata.interactive.uri.toString(),
                 e.cell.executionSummary.executionOrder
             );
             this.updateEvent.fire();
@@ -207,7 +205,7 @@ export class CodeLensFactory implements ICodeLensFactory {
     }
 
     private onClosedDocument(doc: TextDocument) {
-        this.codeLensCache.delete(doc.fileName.toLocaleLowerCase());
+        this.codeLensCache.delete(doc.uri.toString());
 
         // Don't delete the document execution count, we need to keep track
         // of it past the closing of a doc if the notebook or interactive window is still open.
@@ -410,7 +408,7 @@ export class CodeLensFactory implements ICodeLensFactory {
 
     private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
         const list = hashes
-            .filter((h) => this.fs.areLocalPathsSame(h.file, document.fileName))
+            .filter((h) => h.uri.toString() === document.uri.toString())
             .map((f) => f.hashes)
             .flat();
         if (list) {

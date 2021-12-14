@@ -10,7 +10,6 @@ import {
     Position,
     Range,
     Selection,
-    TextEditor,
     Uri,
     ViewColumn,
     workspace,
@@ -456,20 +455,10 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {
         if (context && context.metadata?.interactive) {
-            const file = context.metadata.interactive.file;
+            const uri = context.metadata.interactive.uri;
             const line = context.metadata.interactive.line;
 
-            let editor: TextEditor | undefined;
-
-            if (await this.fileSystem.localFileExists(file)) {
-                editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
-            } else {
-                // File URI isn't going to work. Look through the active text documents
-                editor = this.documentManager.visibleTextEditors.find((te) => te.document.fileName === file);
-                if (editor) {
-                    editor.show();
-                }
-            }
+            const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });
 
             // If we found the editor change its selection
             if (editor) {

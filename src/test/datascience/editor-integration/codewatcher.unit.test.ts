@@ -161,7 +161,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         disposables.push(kernelDisposedEvent);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
-            fileSystem.object,
             documentManager.object,
             instance(workspace),
             instance(notebook),
