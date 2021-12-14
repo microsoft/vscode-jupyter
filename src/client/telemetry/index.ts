@@ -591,7 +591,13 @@ export interface IEventNamePropertyMapping {
         /**
          * Reason for not being able to get the env variables.
          */
-        reason?: 'noActivationCommands' | 'unknownOS' | 'emptyVariables' | 'unhandledError' | 'emptyFromCondaRun' | 'emptyFromPython';
+        reason?:
+            | 'noActivationCommands'
+            | 'unknownOS'
+            | 'emptyVariables'
+            | 'unhandledError'
+            | 'emptyFromCondaRun'
+            | 'emptyFromPython';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
