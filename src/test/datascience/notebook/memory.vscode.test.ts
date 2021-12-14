@@ -7,7 +7,6 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as v8 from 'v8';
-import * as vm from 'vm';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
@@ -28,12 +27,14 @@ import {
     defaultNotebookTestTimeout
 } from './helper';
 
-const LAST_SIZE_MEASURED = 5234688;
+// Force GC to be available
+require('expose-gc');
+
+const LAST_SIZE_MEASURED = 18616320;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Memory Test', function () {
     let api: IExtensionTestApi;
-    global.gc = vm.runInNewContext('gc');
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     const snapshot = takeSnapshot();
