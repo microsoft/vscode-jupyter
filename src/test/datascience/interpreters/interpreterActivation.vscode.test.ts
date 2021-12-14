@@ -14,12 +14,10 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { EnvironmentActivationService } from '../../../client/common/process/interpreterActivation';
 import * as path from 'path';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
-import { ProcessService } from '../../../client/common/process/proc';
-import { SpawnOptions } from 'child_process';
-import { ExecutionResult, IProcessServiceFactory } from '../../../client/common/process/types';
+import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { createDeferred, sleep } from '../../../client/common/utils/async';
+import { createDeferred } from '../../../client/common/utils/async';
 import { IPythonApiProvider, PythonApi } from '../../../client/api/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
@@ -70,7 +68,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         envActivationService.clearCache();
         disposeAllDisposables(disposables);
     });
-    function createService(serviceContainer: IServiceContainer){
+    function createService(serviceContainer: IServiceContainer) {
         return new EnvironmentActivationService(
             serviceContainer.get(IPlatformService),
             serviceContainer.get(IProcessServiceFactory),
@@ -81,11 +79,51 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             serviceContainer.get(IPythonApiProvider),
             serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             serviceContainer.get(CondaService),
-            serviceContainer.get(IFileSystem));
+            serviceContainer.get(IFileSystem)
+        );
     }
     test('Verify Conda Activation', async () => {
         const envVars = await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
         verifyVariables(envVars!);
+    });
+    test('Can get conda env variables using Our code', async () => {
+        const envVarsFromPython = await envActivationService.getActivatedEnvironmentVariablesFromPython(
+            undefined,
+            activeCondaInterpreter
+        );
+        verifyVariables(envVarsFromPython!);
+        const envVarsOurselves = await envActivationService.getActivatedEnvironmentVariablesOurselves(
+            undefined,
+            activeCondaInterpreter
+        );
+        verifyVariables(envVarsOurselves!, '(ourselves)');
+    });
+    test('Test activation using conda run and activation commands', async () => {
+        // Ensure we don't get stuff from Python extension.
+        const deferred = createDeferred<PythonApi>();
+        const stub = sinon.stub(pythonApi, 'getApi').returns(deferred.promise);
+        envActivationService = createService(api.serviceContainer);
+        const activatedEnvVars1 = await envActivationService.getActivatedEnvironmentVariables(
+            undefined,
+            activeCondaInterpreter
+        );
+        stub.restore();
+
+        envActivationService = createService(api.serviceContainer);
+        const activatedCommandEnvVars = await envActivationService.getActivatedEnvVarsUsingActivationCommands(
+            undefined,
+            activeCondaInterpreter
+        );
+
+        envActivationService = createService(api.serviceContainer);
+        const activatedCondaRunEnvVars = await envActivationService.getCondaEnvVariables(
+            undefined,
+            activeCondaInterpreter
+        );
+
+        verifyVariables(activatedEnvVars1!, '(main)');
+        verifyVariables(activatedCommandEnvVars!, '(command)');
+        verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
     });
     function verifyVariables(envVars: NodeJS.ProcessEnv, errorMessageSuffix: string = '') {
         assert.ok(envVars, `Conda Env Vars not set ${errorMessageSuffix}`);
@@ -105,69 +143,4 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             `Path for Conda should be at the start of ENV[PATH], expected ${execPath} to be in front of ${envVars[pathEnvVariableName]} ${errorMessageSuffix}`
         );
     }
-    test('Can get conda env variables using Our code', async () => {
-        const envVarsFromPython = await envActivationService.getActivatedEnvironmentVariablesFromPython(
-            undefined,
-            activeCondaInterpreter
-        );
-        verifyVariables(envVarsFromPython!);
-        const envVarsOurselves = await envActivationService.getActivatedEnvironmentVariablesOurselves(
-            undefined,
-            activeCondaInterpreter
-        );
-        verifyVariables(envVarsOurselves!, '(ourselves)');
-    });
-    function getCondaRunCallCount(spiedProc: sinon.SinonSpy<[file: string, args: string[], options?: SpawnOptions | undefined], Promise<ExecutionResult<string>>>){
-        return spiedProc
-            .getCalls()
-            .filter((item) => item.args[0].toLowerCase().includes('conda') && item.args[1][0].toLowerCase() === 'run')
-            .length;
-
-    }
-    test('Ensure we dont run conda run everytime (use cache)', async () => {
-        // Ensure we don't get stuff from Python extension.
-        const deferred = createDeferred<PythonApi>();
-        sinon.stub(pythonApi, 'getApi').returns(deferred.promise);
-        envActivationService = createService(api.serviceContainer);
-        const spiedProc = sinon.spy(ProcessService.prototype, 'exec');
-        await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-        // Wait for memento to get updated.
-        await sleep(5_000);
-        // Even after clearing memory cache, it should be cached in global memento.
-        envActivationService.clearCache();
-
-        // Verify we run `conda run` does not get executed again when calling this method.
-        // Note: This method gets called from other parts of the extension, hence we could already have some
-        // pending calls, hence the call count could be > 1
-        const condaRunCallCount = getCondaRunCallCount(spiedProc);
-
-        await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-        await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-        await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-
-        const newCondaRunCallCount = getCondaRunCallCount(spiedProc);
-
-        assert.ok(condaRunCallCount, 'Must not have at least one call to conda run');
-        assert.strictEqual(condaRunCallCount, newCondaRunCallCount, 'Must not have additional calls to conda run');
-    });
-    test('Test activation using conda run and activation commands', async () => {
-        // Ensure we don't get stuff from Python extension.
-        const deferred = createDeferred<PythonApi>();
-        const stub = sinon.stub(pythonApi, 'getApi').returns(deferred.promise);
-        envActivationService = createService(api.serviceContainer);
-        const activatedEnvVars1 = await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-        stub.restore();
-
-        envActivationService = createService(api.serviceContainer);
-        const activatedCommandEnvVars = await envActivationService.getActivatedEnvVarsUsingActivationCommands(undefined, activeCondaInterpreter);
-
-        envActivationService = createService(api.serviceContainer);
-        const activatedCondaRunEnvVars = await envActivationService.getCondaEnvVariables(undefined, activeCondaInterpreter);
-
-        verifyVariables(activatedEnvVars1!, '(main)');
-        verifyVariables(activatedCommandEnvVars!, '(command)');
-        verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
-
-        assert.deepEqual(activatedEnvVars1, activatedCondaRunEnvVars, 'Env variables should be activated using Conda Run');
-    });
 });
