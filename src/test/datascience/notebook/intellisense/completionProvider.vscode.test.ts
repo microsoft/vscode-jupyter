@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
+import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
@@ -95,7 +95,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         const cell4 = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         const token = new CancellationTokenSource().token;
-        const position = new Position(0, 3);
+        let position = new Position(0, 3);
         const context: CompletionContext = {
             triggerKind: CompletionTriggerKind.TriggerCharacter,
             triggerCharacter: '.'
@@ -106,12 +106,26 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         // Ask a second time as Jupyter can sometimes not be ready
         traceInfo('Get completions second time in test');
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
-        const items = completions.map((item) => item.label);
+        let items = completions.map((item) => item.label);
         assert.isOk(items.length);
         assert.ok(items.find((item) => (typeof item === 'string' ? item.includes('Age') : item.label.includes('Age'))));
 
         // Make sure it is skipping items that are already provided by pylance (no dupes)
         assert.notOk(
+            items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
+        );
+
+        // Add some text after the . and make sure we still get completions
+        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell4.document.uri);
+        await editor?.edit((b) => {
+            b.insert(new Position(3, 0), 'N');
+        });
+
+        position = new Position(0, 4);
+        completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
+        items = completions.map((item) => item.label);
+        assert.isOk(items.length);
+        assert.ok(
             items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         );
     });
