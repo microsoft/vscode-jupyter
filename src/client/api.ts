@@ -10,6 +10,7 @@ import { IExportedKernelService, IPythonApiProvider, PythonApi } from './api/typ
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';
+import { PromiseChain } from './common/utils/async';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookEditorProvider } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -87,11 +88,7 @@ export function buildApi(
         },
         getKernelService: async () => {
             const kernelServiceFactory = serviceContainer.get<JupyterKernelServiceFactory>(JupyterKernelServiceFactory);
-            const apiAccess = serviceContainer.get<ApiAccessService>(ApiAccessService);
-            const accessInfo = await apiAccess.getAccessInformation();
-            if (accessInfo.accessAllowed) {
-                return kernelServiceFactory.create(accessInfo.extensionId);
-            }
+            return kernelServiceFactory.getService();
         }
     };
 

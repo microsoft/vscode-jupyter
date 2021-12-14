@@ -5,27 +5,40 @@ import { injectable, inject } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { traceInfo } from '../common/logger';
 import { IDisposableRegistry } from '../common/types';
+import { PromiseChain } from '../common/utils/async';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
 import { IKernel, IKernelProvider } from '../datascience/jupyter/kernels/types';
 import { INotebookControllerManager } from '../datascience/notebook/types';
+import { ApiAccessService } from './apiAccessService';
 import { ActiveKernel, IExportedKernelService, IKernelConnectionInfo, KernelConnectionMetadata } from './types';
 
 @injectable()
 export class JupyterKernelServiceFactory {
+    private readonly chainedApiAccess = new PromiseChain();
+    private readonly extensionApi = new Map<string, IExportedKernelService>();
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(ApiAccessService) private readonly apiAccess: ApiAccessService
     ) {}
-
-    public create(extensionId: string): IExportedKernelService {
+    public async getService() {
+        const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation());
+        if (!accessInfo.accessAllowed) {
+            return;
+        }
+        if (this.extensionApi.get(accessInfo.extensionId)) {
+            return this.extensionApi.get(accessInfo.extensionId);
+        }
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterKernelService(
-            extensionId,
+        const service = new JupyterKernelService(
+            accessInfo.extensionId,
             this.kernelProvider,
             this.disposables,
             this.notebookControllerManager
         );
+        this.extensionApi.set(accessInfo.extensionId, service);
+        return service;
     }
 }
 
