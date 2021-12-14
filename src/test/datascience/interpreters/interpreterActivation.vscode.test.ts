@@ -27,6 +27,7 @@ import { CondaService } from '../../../client/common/process/condaService';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;
@@ -37,9 +38,9 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let pythonApi: IPythonApiProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
-        // if (!IS_CONDA_TEST || IS_REMOTE_NATIVE_TEST) {
-        //     return this.skip();
-        // }
+        if (!IS_CONDA_TEST || IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         traceInfo('Suite Setup');
         this.timeout(120_000);
         try {
