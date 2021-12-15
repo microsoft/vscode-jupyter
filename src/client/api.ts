@@ -4,8 +4,9 @@
 'use strict';
 
 import { ExtensionMode } from 'vscode';
+import { IExportedKernelService } from './api/extension';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelService, IPythonApiProvider, PythonApi } from './api/types';
+import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';

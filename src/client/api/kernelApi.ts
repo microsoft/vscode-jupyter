@@ -6,11 +6,13 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { traceInfo } from '../common/logger';
 import { IDisposableRegistry } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
+import { Telemetry } from '../datascience/constants';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
 import { IKernel, IKernelProvider } from '../datascience/jupyter/kernels/types';
 import { INotebookControllerManager } from '../datascience/notebook/types';
+import { sendTelemetryEvent } from '../telemetry';
 import { ApiAccessService } from './apiAccessService';
-import { ActiveKernel, IExportedKernelService, IKernelConnectionInfo, KernelConnectionMetadata } from './types';
+import { ActiveKernel, IExportedKernelService, IKernelConnectionInfo, KernelConnectionMetadata } from './extension';
 
 @injectable()
 export class JupyterKernelServiceFactory {
@@ -46,10 +48,18 @@ class JupyterKernelService implements IExportedKernelService {
     private readonly _onDidChangeKernelSpecifications = new EventEmitter<void>();
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     public get onDidChangeKernelSpecifications(): Event<void> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'onDidChangeKernelSpecifications'
+        });
         traceInfo(`API called from ${this.callingExtensionId}`);
         return this._onDidChangeKernelSpecifications.event;
     }
     public get onDidChangeKernels(): Event<void> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'onDidChangeKernels'
+        });
         return this._onDidChangeKernels.event;
     }
     private static readonly wrappedKernelConnections = new WeakMap<IKernel, IKernelConnectionInfo>();
@@ -68,11 +78,19 @@ class JupyterKernelService implements IExportedKernelService {
         );
     }
     async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'getKernelSpecifications'
+        });
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
         return items;
     }
     async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'getActiveKernels'
+        });
         return this.kernelProvider.kernels.map((item) => ({
             metadata: item.kernelConnectionMetadata,
             notebook: item.notebookDocument
@@ -81,6 +99,10 @@ class JupyterKernelService implements IExportedKernelService {
     getKernel(
         notebook: NotebookDocument
     ): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'getKernel'
+        });
         const kernel = this.kernelProvider.get(notebook);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
@@ -88,12 +110,19 @@ class JupyterKernelService implements IExportedKernelService {
         }
     }
     async startKernel(spec: KernelConnectionMetadata, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'startKernel'
+        });
         return this.startOrConnect(spec, notebook);
     }
     async connect(spec: ActiveKernel, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+        sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
+            extensionId: this.callingExtensionId,
+            pemUsed: 'connect'
+        });
         return this.startOrConnect(spec, notebook);
     }
-
     private async startOrConnect(
         spec: KernelConnectionMetadata | ActiveKernel,
         notebook: NotebookDocument

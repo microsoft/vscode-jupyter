@@ -1067,6 +1067,10 @@ export namespace DataScience {
         "'%matplotlib' widget works best inside of VS code"
     );
     export const matplotlibWidgetCodeActionTitle = localize('DataScience.matplotlibWidgetCodeActionTitle', 'More info');
+    export const allowExtensionToUseJupyterKernelApi = localize(
+        'DataScience.allowExtensionToUseJupyterKernelApi',
+        "Do you want to give the extension '{0}' access to the Jupyter kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels."
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

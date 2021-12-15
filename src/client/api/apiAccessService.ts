@@ -7,7 +7,9 @@ import { IApplicationEnvironment, IApplicationShell } from '../common/applicatio
 import { JVSC_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
-import { Common } from '../common/utils/localize';
+import { Common, DataScience } from '../common/utils/localize';
+import { Telemetry } from '../datascience/constants';
+import { sendTelemetryEvent } from '../telemetry';
 
 type ApiExtensionInfo = {
     extensionId: string;
@@ -15,11 +17,12 @@ type ApiExtensionInfo = {
 }[];
 
 const API_ACCESS_GLOBAL_KEY = 'JUPYTER_API_ACCESS_INFORMATION';
+
 // Some publishers like our own `ms-tolsai` will always be allowed to access the API.
-const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
+export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
-const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
+export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
 
 @injectable()
 export class ApiAccessService {
@@ -63,6 +66,10 @@ export class ApiAccessService {
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
         if (extensionPermission) {
+            sendTelemetryEvent(Telemetry.JupyterKernelApiAccess, undefined, {
+                extensionId: info.extensionId,
+                allowed: extensionPermission.allowed
+            });
             return { extensionId: info.extensionId, accessAllowed: extensionPermission.allowed === 'yes' };
         }
         if (this.extensionAccess.get(info.extensionId)) {
@@ -70,9 +77,10 @@ export class ApiAccessService {
         }
 
         const promise = (async () => {
-            const msg = `Extension '${
-                info.displayName
-            }' is requesting access to your Jupyter kernels. Clicking '${Common.bannerLabelYes()}' allows this extension to execute code against all Jupyter Kernels on your behalf.`;
+            const msg = DataScience.allowExtensionToUseJupyterKernelApi().format(
+                `${info.displayName} (${info.extensionId})`,
+                Common.bannerLabelYes()
+            );
             const selection = await this.appShell.showInformationMessage(
                 msg,
                 { modal: true },
@@ -85,6 +93,10 @@ export class ApiAccessService {
                 extensionPermissions = extensionPermissions.filter((item) => item.extensionId !== info.extensionId);
                 extensionPermissions.push({ allowed: allow ? 'yes' : 'no', extensionId: info.extensionId });
                 return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
+            });
+            sendTelemetryEvent(Telemetry.JupyterKernelApiAccess, undefined, {
+                extensionId: info.extensionId,
+                allowed: allow ? 'yes' : 'no'
             });
             return { extensionId: info.extensionId, accessAllowed: allow };
         })();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -16,6 +17,19 @@ export interface JupyterAPI {
      */
     getKernelService(): Promise<IExportedKernelService | undefined>;
 }
+
+/**
+ * Like `Readonly<>`, but recursive.
+ *
+ * See https://github.com/Microsoft/TypeScript/pull/21316.
+ */
+type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
+type DeepReadonlyNonArray<T> = T extends object ? DeepReadonlyObject<T> : T;
+interface IDeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
+type DeepReadonlyObject<T> = {
+    readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
+};
+type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 
 /**
  * The supported Python environment types.
@@ -99,7 +113,7 @@ export interface IJupyterKernelSpec {
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type LocalKernelSpecConnectionMetadata = Readonly<{
+export type LocalKernelSpecConnectionMetadata = DeepReadonly<{
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
     /**
@@ -116,7 +130,7 @@ export type LocalKernelSpecConnectionMetadata = Readonly<{
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type RemoteKernelSpecConnectionMetadata = Readonly<{
+export type RemoteKernelSpecConnectionMetadata = DeepReadonly<{
     kernelModel?: undefined;
     interpreter?: undefined;
     kernelSpec: IJupyterKernelSpec;
@@ -130,7 +144,7 @@ export type RemoteKernelSpecConnectionMetadata = Readonly<{
  * We can have KernelSpec information here as well, however that is totally optional.
  * We will always start this kernel using old Jupyter style (provided we first register this interpreter as a kernel) or raw.
  */
-export type PythonKernelConnectionMetadata = Readonly<{
+export type PythonKernelConnectionMetadata = DeepReadonly<{
     kernelSpec: IJupyterKernelSpec;
     interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
@@ -151,7 +165,7 @@ export type LiveKernelModel = IJupyterKernel &
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveKernelConnectionMetadata = Readonly<{
+export type LiveKernelConnectionMetadata = DeepReadonly<{
     kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
@@ -163,16 +177,15 @@ export type LiveKernelConnectionMetadata = Readonly<{
 }>;
 
 export type KernelConnectionMetadata =
-    | Readonly<LocalKernelSpecConnectionMetadata>
-    | Readonly<RemoteKernelSpecConnectionMetadata>
-    | Readonly<PythonKernelConnectionMetadata>
+    | DeepReadonly<LocalKernelSpecConnectionMetadata>
+    | DeepReadonly<RemoteKernelSpecConnectionMetadata>
+    | DeepReadonly<PythonKernelConnectionMetadata>
     | LiveRemoteKernelConnectionMetadata;
 
-export type LiveRemoteKernelConnectionMetadata = Readonly<LiveKernelConnectionMetadata>;
-export type ActiveKernel = Readonly<LiveKernelConnectionMetadata>;
+export type LiveRemoteKernelConnectionMetadata = DeepReadonly<LiveKernelConnectionMetadata>;
+export type ActiveKernel = DeepReadonly<LiveKernelConnectionMetadata>;
 
 export interface IKernelSocket {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
@@ -189,13 +202,11 @@ export interface IKernelSocket {
      * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
      * @param patch
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
     /**
      * Removes a send hook from the socket.
      * @param hook
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
