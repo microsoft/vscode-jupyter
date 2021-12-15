@@ -18,7 +18,7 @@ py==1.9.0
     # via pytest
 pyparsing==2.4.5
     # via packaging
-pytest==6.2.2
+pytest==6.2.5
     # via -r requirements.in
 toml==0.10.1
     # via pytest
