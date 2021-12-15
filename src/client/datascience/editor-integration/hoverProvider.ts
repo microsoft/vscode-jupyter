@@ -57,7 +57,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
             const size = this.runFiles.size;
             const metadata = getInteractiveCellMetadata(e.cell);
             if (metadata !== undefined) {
-                this.runFiles.add(metadata.interactive.file.toLocaleLowerCase());
+                this.runFiles.add(metadata.interactive.uristring);
             }
             if (size !== this.runFiles.size) {
                 await this.initializeHoverProvider();

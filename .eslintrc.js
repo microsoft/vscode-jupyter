@@ -180,7 +180,6 @@ module.exports = {
         'src/test/datascience/jupyterHelpers.ts',
         'src/test/datascience/mockJupyterManagerFactory.ts',
         'src/test/datascience/kernelFinder.unit.test.ts',
-        'src/test/datascience/editor-integration/helpers.ts',
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
         'src/test/datascience/mockLanguageClient.ts',
         'src/test/datascience/notebook/notebookTrust.native.vscode.test.ts',

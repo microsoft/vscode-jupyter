@@ -308,9 +308,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>,
         doNotUseICell?: boolean
     ) {
-        const cells = doNotUseICell
-            ? [createCodeCell(code)]
-            : generateCells(undefined, code, Uri.file('foo.py').fsPath, true);
+        const cells = doNotUseICell ? [createCodeCell(code)] : generateCells(undefined, code, Uri.file('foo.py'), true);
         cells.forEach((c) => {
             const source = doNotUseICell ? (c as nbformat.ICodeCell).source : (c as ICell).data.source;
             const key = concatMultilineString(source).replace(LineFeedRegEx, '').toLowerCase();

@@ -514,7 +514,7 @@ export interface ICodeLensFactory {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    file?: string;
+    uri?: Uri;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
 }
 
@@ -712,7 +712,7 @@ export interface ICellHash {
 }
 
 export interface IFileHashes {
-    file: string;
+    uri: Uri;
     hashes: ICellHash[];
 }
 
