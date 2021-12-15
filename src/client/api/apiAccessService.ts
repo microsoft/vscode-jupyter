@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { injectable, inject, named } from 'inversify';
-import { Memento } from 'vscode';
+import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { JVSC_EXTENSION_ID } from '../common/constants';
-import { GLOBAL_MEMENTO, IExtensions, IMemento } from '../common/types';
+import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Common } from '../common/utils/localize';
 
@@ -29,11 +29,20 @@ export class ApiAccessService {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
+        @inject(IExtensionContext) private context: IExtensionContext
     ) {}
     public async getAccessInformation(): Promise<{ extensionId: string; accessAllowed: boolean }> {
         const info = await this.extensions.determineExtensionFromCallStack();
         const publisherId = info.extensionId.split('.')[0];
+        if (this.context.extensionMode === ExtensionMode.Test) {
+            if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
+                void this.appShell.showInformationMessage(
+                    'Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).'
+                );
+            }
+            return { extensionId: info.extensionId, accessAllowed: true };
+        }
         // For now, this API is only available in insiders.
         // This way, insider (exploratory API that provides insider/exploratory features are only available in insiders).
         if (this.appEnv.channel !== 'insiders') {
