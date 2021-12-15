@@ -506,32 +506,29 @@ export class Kernel implements IKernel {
         return this._notebookPromise;
     }
     private createProgressIndicator(disposables: IDisposable[]) {
+        // Even if we're not supposed to display the progress indicator,
+        // create it and keep it hidden.
+        const progressReporter = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.connectingToKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            this.startupUI.disableUI
+        );
+        disposables.push(progressReporter);
         if (this.startupUI.disableUI) {
+            // Display the hidden progress indicator if it was previously hidden.
             this.startupUI.onDidChangeDisableUI(
                 () => {
                     if (this.disposing || this.disposed || this.startupUI.disableUI) {
                         return;
                     }
-                    disposables.push(
-                        KernelProgressReporter.createProgressReporter(
-                            this.resourceUri,
-                            DataScience.connectingToKernel().format(
-                                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                            )
-                        )
-                    );
+                    if (progressReporter.show) {
+                        progressReporter.show();
+                    }
                 },
                 this,
                 disposables
-            );
-        } else {
-            disposables.push(
-                KernelProgressReporter.createProgressReporter(
-                    this.resourceUri,
-                    DataScience.connectingToKernel().format(
-                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                    )
-                )
             );
         }
     }
