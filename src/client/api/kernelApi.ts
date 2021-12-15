@@ -6,7 +6,6 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { traceInfo } from '../common/logger';
 import { IDisposableRegistry } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
-import { DeepReadonly } from '../common/utils/misc';
 import { Telemetry } from '../datascience/constants';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
 import {
@@ -173,10 +172,12 @@ class JupyterKernelService implements IExportedKernelService {
         JupyterKernelService.wrappedKernelConnections.set(kernel, info);
         return info;
     }
-    private translateKernelConnectionMetataToExportedType(connection: Readonly<IKernelKernelConnectionMetadata>) {
+    private translateKernelConnectionMetataToExportedType(connection: Readonly<IKernelKernelConnectionMetadata>): KernelConnectionMetadata {
         const readWriteConnection = connection as IKernelKernelConnectionMetadata;
         // By not forcing the cast, we ensure the types are compatible.
         // All we're doing is ensuring the readonly version of one type is compatible with the other.
-        return readWriteConnection as DeepReadonly<typeof readWriteConnection>;
+        // Return a readonly version of the type (to prevent anyone from stuffing this).
+        // Else it breaks the Jupyter extension
+        return Object.freeze(readWriteConnection);
     }
 }

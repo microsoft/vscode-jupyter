@@ -19,19 +19,6 @@ export interface JupyterAPI {
 }
 
 /**
- * Like `Readonly<>`, but recursive.
- *
- * See https://github.com/Microsoft/TypeScript/pull/21316.
- */
-type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
-type DeepReadonlyNonArray<T> = T extends object ? DeepReadonlyObject<T> : T;
-interface IDeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
-type DeepReadonlyObject<T> = {
-    readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
-};
-type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
-
-/**
  * The supported Python environment types.
  */
 export enum EnvironmentType {
@@ -113,7 +100,7 @@ export interface IJupyterKernelSpec {
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type LocalKernelSpecConnectionMetadata = DeepReadonly<{
+export type LocalKernelSpecConnectionMetadata = Readonly<{
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
     /**
@@ -130,7 +117,7 @@ export type LocalKernelSpecConnectionMetadata = DeepReadonly<{
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type RemoteKernelSpecConnectionMetadata = DeepReadonly<{
+export type RemoteKernelSpecConnectionMetadata = Readonly<{
     kernelModel?: undefined;
     interpreter?: undefined;
     kernelSpec: IJupyterKernelSpec;
@@ -144,7 +131,7 @@ export type RemoteKernelSpecConnectionMetadata = DeepReadonly<{
  * We can have KernelSpec information here as well, however that is totally optional.
  * We will always start this kernel using old Jupyter style (provided we first register this interpreter as a kernel) or raw.
  */
-export type PythonKernelConnectionMetadata = DeepReadonly<{
+export type PythonKernelConnectionMetadata = Readonly<{
     kernelSpec: IJupyterKernelSpec;
     interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
@@ -165,7 +152,7 @@ export type LiveKernelModel = IJupyterKernel &
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveKernelConnectionMetadata = DeepReadonly<{
+export type LiveKernelConnectionMetadata = Readonly<{
     kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
