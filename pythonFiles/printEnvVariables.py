@@ -10,7 +10,7 @@ builtins.print("e976ee50-99ed-4aba-9b6b-9dcd5634d07d")
 
 # Special case PYTHONPATH to include sys.path
 formatted_sys_path = os.pathsep.join(sys.path)
-existing = f"{os.getenv('PYTHONPATH')};" if os.getenv("PYTHONPATH") else ''
+existing = f"{os.getenv('PYTHONPATH')};" if os.getenv("PYTHONPATH") else ""
 os.environ["PYTHONPATH"] = f"{existing}{formatted_sys_path}"
 
 # Dump results
