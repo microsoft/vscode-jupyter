@@ -55,6 +55,9 @@ function getIndex(index: number, length: number): number {
     }
 }
 
+// Small helper error to use in our class
+class InteractiveCellResultError extends Error {}
+
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
     private static sentExecuteCellTelemetry: boolean = false;
@@ -66,6 +69,7 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
     private closeDocumentDisposable: IDisposable | undefined;
+    private addCodePromise: Promise<boolean> = Promise.resolve(true);
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -144,6 +148,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
+        let finished = Promise.resolve(true);
         for (const lens of runCellCommands) {
             // Make sure that we have the correct command (RunCell) lenses
             let range: Range = new Range(
@@ -163,13 +168,11 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                const success = await this.addCode(code, this.document.uri, range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                finished = this.addCode(code, this.document.uri, range.start.line, leftCount);
             }
         }
+
+        await finished;
 
         // If there are no codelenses, just run all of the code as a single cell
         if (runCellCommands.length === 0) {
@@ -201,6 +204,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
+        let finished = Promise.resolve(true);
         for (const lens of runCellCommands) {
             // Make sure we are dealing with run cell based code lenses in case more types are added later
             if (leftCount > 0 && this.document) {
@@ -214,16 +218,14 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(range);
-                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                finished = this.addCode(code, this.document.uri, lens.range.start.line, leftCount);
             } else {
                 // If we get a cell past or at the stop point stop
                 break;
             }
         }
+
+        await finished;
     }
 
     @captureTelemetry(Telemetry.RunCellAndAllBelow)
@@ -236,19 +238,18 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run our code lenses from this point to the end, lenses are created in order on document load
         // so we can rely on them being in linear order for this
+        let finished = Promise.resolve(true);
         for (let pos = index; pos >= 0 && pos < runCellCommands.length; pos += 1) {
             if (leftCount > 0 && this.document) {
                 const lens = runCellCommands[pos];
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
-                if (!success) {
-                    await this.addErrorMessage(this.document.uri, leftCount);
-                    break;
-                }
+                finished = this.addCode(code, this.document.uri, lens.range.start.line, leftCount);
             }
         }
+
+        await finished;
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
@@ -268,7 +269,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
+            await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, 0, activeEditor);
         }
     }
 
@@ -281,7 +282,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.document.uri, 0);
+                await this.addCode(code, this.document.uri, 0, 0);
             }
         }
     }
@@ -295,7 +296,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.document.uri, targetLine);
+                await this.addCode(code, this.document.uri, targetLine, 0);
             }
         }
     }
@@ -361,7 +362,6 @@ export class CodeWatcher implements ICodeWatcher {
         const cellMatcher = new CellMatcher();
         let index = 0;
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
-        const { newCellOnRunLast } = this.configService.getSettings(this.documentManager.activeTextEditor.document.uri);
 
         if (editor) {
             void editor.edit((editBuilder) => {
@@ -378,9 +378,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 if (lastCell) {
                     index = editor.document.lineCount;
-                    if (newCellOnRunLast) {
-                        editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
-                    }
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
                 }
             });
         }
@@ -945,10 +943,7 @@ export class CodeWatcher implements ICodeWatcher {
         // ```
         //
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
-        let newCell = `${cellDelineator}\n\n`;
-        if (line >= editor.document.lineCount) {
-            newCell = `\n${cellDelineator}\n`;
-        }
+        const newCell = line >= editor.document.lineCount ? `\n${cellDelineator}\n` : `${cellDelineator}\n\n`;
 
         const cellStartPosition = new Position(line, 0);
         const newCursorPosition = new Position(line + 1, 0);
@@ -986,6 +981,34 @@ export class CodeWatcher implements ICodeWatcher {
         code: string,
         file: Uri,
         line: number,
+        leftCount: number,
+        editor?: TextEditor,
+        debug?: boolean
+    ): Promise<boolean> {
+        this.addCodePromise = this.addCodePromise.then((_previousResult) => {
+            return this.addCodeImpl(code, file, line, leftCount, editor, debug);
+        });
+
+        try {
+            // return await here as we explicily want to catch the exceptions at this point to reset the promise
+            return await this.addCodePromise;
+        } catch (ex) {
+            this.addCodePromise = Promise.resolve(true);
+
+            // We don't want to rethrow the errors that we use to break out of our promise chain
+            if (!(ex instanceof InteractiveCellResultError)) {
+                throw ex;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private async addCodeImpl(
+        code: string,
+        file: Uri,
+        line: number,
+        leftCount: number,
         editor?: TextEditor,
         debug?: boolean
     ): Promise<boolean> {
@@ -1001,6 +1024,15 @@ export class CodeWatcher implements ICodeWatcher {
             this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
             await this.dataScienceErrorHandler.handleError(err);
+        }
+
+        if (!result) {
+            // If our cell result was a failure (but not an exception) show an error
+            // for the count of cells cancelled
+            await this.addErrorMessage(file, leftCount);
+
+            // Throw to break out of the promise chain
+            throw new InteractiveCellResultError();
         }
 
         return result;
@@ -1037,14 +1069,13 @@ export class CodeWatcher implements ICodeWatcher {
         if (currentRunCellLens) {
             // Move the next cell if allowed.
             if (advance) {
+                const editor = this.documentManager.activeTextEditor;
+                const { newCellOnRunLast } = this.configService.getSettings(editor?.document.uri);
                 if (nextRunCellLens) {
                     this.advanceToRange(nextRunCellLens.range);
-                } else {
+                } else if (newCellOnRunLast && editor) {
                     // insert new cell at bottom after current
-                    const editor = this.documentManager.activeTextEditor;
-                    if (editor) {
-                        this.insertCell(editor, currentRunCellLens.range.end.line + 1);
-                    }
+                    this.insertCell(editor, currentRunCellLens.range.end.line + 1);
                 }
             }
 
@@ -1056,6 +1087,7 @@ export class CodeWatcher implements ICodeWatcher {
                     code,
                     this.document.uri,
                     currentRunCellLens.range.start.line,
+                    0,
                     this.documentManager.activeTextEditor,
                     debug
                 );
@@ -1122,7 +1154,26 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.document.uri, 0, undefined, debug);
+
+            // Split code into cells
+            const ranges = this.cells;
+            if (ranges && ranges.length) {
+                // Adds should get started in order with the map call, so just await
+                // all of them
+                const adds = ranges.map((r) =>
+                    this.addCode(
+                        this.document!.getText(r.range),
+                        this.document!.uri,
+                        r.range.start.line,
+                        0,
+                        undefined,
+                        debug
+                    )
+                );
+                await Promise.all(adds);
+            } else {
+                await this.addCode(code, this.document.uri, 0, 0, undefined, debug);
+            }
         }
     }
 

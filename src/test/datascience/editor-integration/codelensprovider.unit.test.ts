@@ -113,7 +113,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .returns(() => {
                 return targetCodeWatcher.object;
             })
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
         await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

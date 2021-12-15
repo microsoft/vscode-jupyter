@@ -57,7 +57,9 @@ export class KernelExecution implements IDisposable {
     public get onPreExecute() {
         return this._onPreExecute.event;
     }
-
+    public get queue() {
+        return this.documentExecutions.get(this.kernel.notebookDocument)?.queue || [];
+    }
     public async executeCell(
         sessionPromise: Promise<IJupyterSession>,
         cell: NotebookCell

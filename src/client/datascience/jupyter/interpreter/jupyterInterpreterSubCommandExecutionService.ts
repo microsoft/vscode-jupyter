@@ -27,6 +27,7 @@ import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../../errors/jupyterInstallError';
 import {
     getMessageForLibrariesNotInstalled,
+    JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
@@ -109,16 +110,20 @@ export class JupyterInterpreterSubCommandExecutionService
         );
         const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
-        return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
+        // We should never set token for long running processes.
+        // We don't want the process to die when the token is cancelled.
+        const spawnOptions = { ...options };
+        spawnOptions.token = undefined;
+        return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
+            interpreter: interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
@@ -137,8 +142,8 @@ export class JupyterInterpreterSubCommandExecutionService
         return serverInfos;
     }
 
-    public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
-        await this.jupyterInterpreter.installMissingDependencies(err);
+    public async installMissingDependencies(err?: JupyterInstallError): Promise<JupyterInterpreterDependencyResponse> {
+        return this.jupyterInterpreter.installMissingDependencies(err);
     }
 
     private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonEnvironment> {

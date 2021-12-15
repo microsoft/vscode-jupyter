@@ -4,10 +4,7 @@
 
 | `main` branch                                                                                                                                                                                                |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [![Insiders VSIX](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main)](https://github.com/microsoft/vscode-jupyter/workflows/Insiders%20VSIX/badge.svg?branch=main) |
-
-[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-toolsai-jupyter-insiders.vsix)]
-
+| ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
 ---
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
@@ -17,10 +14,11 @@
 ### Prerequisites
 
 1. [Node.js](https://nodejs.org/) 14.16.0
-1. [Python](https://www.python.org/) 2.7 or later
-1. Windows, macOS, or Linux
-1. [Visual Studio Code](https://code.visualstudio.com/)
-1. The following VS Code extensions:
+2. [npm](https://www.npmjs.com/) 6.14 (but not newer)
+3. [Python](https://www.python.org/) 3.6 or later
+4. Windows, macOS, or Linux
+5. [Visual Studio Code](https://code.visualstudio.com/)
+6. The following VS Code extensions:
     - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
     - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)

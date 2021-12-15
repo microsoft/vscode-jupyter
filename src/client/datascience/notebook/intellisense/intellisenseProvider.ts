@@ -75,6 +75,9 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private getActiveInterpreterSync(fsPath: string | undefined): PythonEnvironment | undefined {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const folder =
             this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
@@ -165,9 +168,37 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const notebookInterpreter = controller
             ? controller.connection.interpreter
             : this.getActiveInterpreterSync(uri.fsPath);
-        const notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
+        let notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
+
+        // Special case. For remote use the active interpreter as the controller's interpreter isn't
+        // usable by pylance.
+        if (
+            interpreterId !== notebookId &&
+            (controller?.connection.kind === 'startUsingRemoteKernelSpec' ||
+                controller?.connection.kind === 'connectToLiveKernel')
+        ) {
+            const activeInterpreter = this.getActiveInterpreterSync(uri.fsPath);
+            notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;
+        }
 
         return interpreterId == notebookId;
+    }
+
+    private getNotebookHeader(uri: Uri) {
+        const settings = this.configService.getSettings(uri);
+        // Run any startup commands that we specified. Support the old form too
+        let setting = settings.runStartupCommands;
+
+        // Convert to string in case we get an array of startup commands.
+        if (Array.isArray(setting)) {
+            setting = setting.join(`\n`);
+        }
+
+        if (setting) {
+            // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+            return setting.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+        }
+        return '';
     }
 
     private async ensureLanguageServer(interpreter: PythonEnvironment | undefined, notebook: NotebookDocument) {
@@ -186,7 +217,8 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
             const languageServerPromise = LanguageServer.createLanguageServer(
                 middlewareType,
                 interpreter,
-                this.shouldAllowIntellisense.bind(this)
+                this.shouldAllowIntellisense.bind(this),
+                this.getNotebookHeader.bind(this)
             ).then((l) => {
                 // If we just created it, indicate to the language server to start watching this notebook
                 l?.startWatching(notebook);

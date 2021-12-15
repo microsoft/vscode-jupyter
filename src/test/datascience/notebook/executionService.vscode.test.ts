@@ -17,8 +17,6 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
-    assertHasTextOutputInVSCode,
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     runCell,
@@ -72,13 +70,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
             api = await initialize();
-            if (!(await canRunNotebookTests())) {
-                return this.skip();
-            }
             await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',
@@ -93,6 +88,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
+            traceInfo('Suite Setup (failed) - Execution');
             await captureScreenShot('execution-suite');
             throw e;
         }
@@ -128,6 +124,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
+    test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
+        const uri = vscodeNotebook.activeNotebookEditor?.document.uri;
+        if (uri && uri.scheme === 'file') {
+            await insertCodeCell('print(__vsc_ipynb_file__)', { index: 0 });
+            const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+            await Promise.all([runCell(cell), waitForTextOutput(cell, `${uri.path}`)]);
+        }
+    });
     test('Leading whitespace not suppressed', async () => {
         await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -152,7 +156,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Confirm we have execution order and output.
         const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
         assert.equal(cells[0].executionSummary?.executionOrder, 1);
-        assertHasTextOutputInVSCode(cells[0], 'Hello World');
+        await waitForTextOutput(cells[0], 'Hello World');
 
         await Promise.all([
             runAllCellsInActiveNotebook(),
@@ -315,22 +319,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await runAllCellsInActiveNotebook();
 
         // Wait for foo to be printed
-        await waitForCondition(
-            async () =>
-                assertHasTextOutputInVSCode(cell, 'foo', 0, false) &&
-                assertHasTextOutputInVSCode(cell, 'foo', 1, false),
-            15_000,
-            'Incorrect output'
-        );
+        await Promise.all([waitForTextOutput(cell, 'foo', 0, false), waitForTextOutput(cell, 'foo', 1, false)]);
 
         // Wait for bar to be printed
-        await waitForCondition(
-            async () =>
-                assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
-                assertHasTextOutputInVSCode(cell, 'bar', 1, false),
-            15_000,
-            'Incorrect output'
-        );
+        await Promise.all([waitForTextOutput(cell, 'bar', 0, false), waitForTextOutput(cell, 'bar', 1, false)]);
 
         await waitForExecutionCompletedSuccessfully(cell);
     });
@@ -693,12 +685,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
-        assert.equal(cells[0].outputs[0].items[0].data.toString(), 'three\r');
-        assert.equal(cells[1].outputs[0].items[0].data.toString(), 'one\ntwo\nthree\n');
-        assert.equal(cells[2].outputs[0].items[0].data.toString(), '3\n');
-        assert.equal(cells[3].outputs[0].items[0].data.toString(), '2\n');
-        assert.equal(cells[4].outputs[0].items[0].data.toString(), '9%\r');
-        assert.equal(cells[5].outputs[0].items[0].data.toString(), 'Execute\nExecute 9\n');
+        // Wait for the outputs.
+        await Promise.all([
+            waitForTextOutput(cells[0], 'three\r', 0, true),
+            waitForTextOutput(cells[1], 'one\ntwo\nthree\n', 0, true),
+            waitForTextOutput(cells[2], '3\n', 0, true),
+            waitForTextOutput(cells[3], '2\n', 0, true),
+            waitForTextOutput(cells[4], '9%\r', 0, true),
+            waitForTextOutput(cells[5], 'Execute\nExecute 9\n', 0, true)
+        ]);
     });
 
     test('Execute all cells and run after error', async () => {
@@ -999,8 +994,23 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             import IPython
             IPython.get_ipython().set_next_input("print('INSERT')")`
         );
-        expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
-        expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
+        // Wait for UI to get updated, sometimes VSC can be slow, even after execution has completed.
+        await waitForCondition(
+            async () => {
+                expect(cellsPostExecute[1].document.getText()).to.equal("print('INSERT')");
+                return true;
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell not replaced, it is ${cellsPostExecute[1].document.getText()}`
+        );
+        await waitForCondition(
+            async () => {
+                expect(cellsPostExecute[2].document.getText()).to.equal("print('REPLACE')");
+                return true;
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell not replaced, it is ${cellsPostExecute[2].document.getText()}`
+        );
     });
 
     /**

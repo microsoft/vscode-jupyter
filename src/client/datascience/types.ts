@@ -37,6 +37,7 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
+import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -52,17 +53,20 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
+export interface IDisplayOptions {
+    disableUI: boolean;
+    onDidChangeDisableUI: Event<void>;
+}
+
 export interface IRawConnection {
     readonly type: 'raw';
     readonly localLaunch: true;
-    readonly valid: boolean;
     readonly displayName: string;
 }
 
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
-    readonly valid: boolean;
     readonly displayName: string;
     disconnected: Event<number>;
 
@@ -70,7 +74,6 @@ export interface IJupyterConnection extends Disposable {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    localProcExitCode: number | undefined;
     readonly rootDirectory: string; // Directory where the notebook server was started.
     readonly url?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,9 +104,10 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken,
+        ui: IDisplayOptions
     ): Promise<INotebook>;
-    connect(connection: IJupyterConnection, cancelToken?: CancellationToken): Promise<void>;
+    connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
 }
 
@@ -122,8 +126,8 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         document: NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        disableUI?: boolean,
-        cancelToken?: CancellationToken
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
     ): Promise<INotebook>;
 }
 
@@ -132,7 +136,6 @@ export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
     createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
-    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
 export interface INotebook {
@@ -142,10 +145,9 @@ export interface INotebook {
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
-    getOnly?: boolean;
-    disableUI?: boolean;
-    localOnly?: boolean;
-    token?: CancellationToken;
+    ui: IDisplayOptions;
+    kind: 'localJupyter' | 'remoteJupyter';
+    token: CancellationToken;
     resource: Resource;
 };
 
@@ -157,7 +159,11 @@ export interface INotebookServerOptions {
     resource: Resource;
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
-    allowUI(): boolean;
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -165,7 +171,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
@@ -199,6 +205,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly status: KernelMessage.Status;
+    readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
@@ -261,8 +268,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
@@ -382,7 +389,9 @@ export interface IDataScienceErrorHandler {
     handleKernelError(
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
-        kernelConnection: KernelConnectionMetadata
+        kernelConnection: KernelConnectionMetadata,
+        resource: Resource,
+        cellToDisplayErrors?: NotebookCell
     ): Promise<void>;
 }
 
@@ -505,7 +514,7 @@ export interface ICodeLensFactory {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    file?: string;
+    uri?: Uri;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
 }
 
@@ -703,7 +712,7 @@ export interface ICellHash {
 }
 
 export interface IFileHashes {
-    file: string;
+    uri: Uri;
     hashes: ICellHash[];
 }
 
@@ -810,7 +819,7 @@ export interface IJupyterInterpreterDependencyManager {
      * @returns {Promise<void>}
      * @memberof IJupyterInterpreterDependencyManager
      */
-    installMissingDependencies(err?: JupyterInstallError): Promise<void>;
+    installMissingDependencies(err?: JupyterInstallError): Promise<JupyterInterpreterDependencyResponse>;
 }
 
 export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
@@ -835,7 +844,15 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export type GetServerOptions = ConnectNotebookProviderOptions;
+export type GetServerOptions = {
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
+    token: CancellationToken;
+    resource: Resource;
+};
 
 /**
  * Options for getting a notebook
@@ -843,9 +860,9 @@ export type GetServerOptions = ConnectNotebookProviderOptions;
 export type NotebookCreationOptions = {
     resource: Resource;
     document: NotebookDocument;
-    disableUI?: boolean;
+    ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
-    token?: CancellationToken;
+    token: CancellationToken;
 };
 
 export const INotebookProvider = Symbol('INotebookProvider');
@@ -949,13 +966,24 @@ export enum KernelInterpreterDependencyResponse {
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
     installMissingDependencies(
         resource: Resource,
-        interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        kernelConnection: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        token: CancellationToken,
+        ignoreCache?: boolean
     ): Promise<void>;
-    areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
+    areDependenciesInstalled(
+        kernelConnection: KernelConnectionMetadata,
+        token?: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<boolean>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
@@ -1056,6 +1084,7 @@ export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
+    removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;

@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -14,8 +14,10 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { logValue, TraceOptions } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
+import { createInterpreterKernelSpec } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
 import { IPythonKernelDaemon } from './types';
@@ -71,19 +73,19 @@ export class KernelDaemonPool implements IDisposable {
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
+    @traceDecorators.verbose('Get kernel daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async get(
         resource: Resource,
-        kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonEnvironment
+        @logValue<IJupyterKernelSpec>('id') kernelSpec: IJupyterKernelSpec,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<IPythonKernelDaemon | IPythonExecutionService> {
-        const pythonPath = interpreter?.path || kernelSpec.argv[0];
         // If we have environment variables in the kernel.json, then its not we support.
         // Cuz there's no way to know before hand what kernelspec can be used, hence no way to know what envs are required.
         if (kernelSpec.env && Object.keys(kernelSpec.env).length > 0) {
-            return this.createDaemon(resource, pythonPath);
+            return this.createDaemon(resource, interpreter);
         }
 
-        const key = this.getDaemonKey(resource, pythonPath);
+        const key = this.getDaemonKey(resource, interpreter);
         const index = this.daemonPool.findIndex((item) => item.key === key);
         try {
             if (index >= 0) {
@@ -91,7 +93,7 @@ export class KernelDaemonPool implements IDisposable {
                 this.daemonPool.splice(index, 1);
                 return daemon;
             }
-            return this.createDaemon(resource, pythonPath);
+            return this.createDaemon(resource, interpreter);
         } finally {
             // If we removed a daemon from the pool, rehydrate it.
             if (index >= 0) {
@@ -100,13 +102,13 @@ export class KernelDaemonPool implements IDisposable {
         }
     }
 
-    private getDaemonKey(resource: Resource, pythonPath: string): string {
-        return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}#${pythonPath}`;
+    private getDaemonKey(resource: Resource, interpreter: PythonEnvironment): string {
+        return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}#${interpreter.path}`;
     }
-    private createDaemon(resource: Resource, pythonPath: string) {
+    private createDaemon(resource: Resource, interpreter: PythonEnvironment) {
         const daemon = this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
             daemonModule: KernelLauncherDaemonModule,
-            pythonPath,
+            interpreter,
             daemonClass: PythonKernelDaemon,
             dedicated: true,
             resource
@@ -137,19 +139,27 @@ export class KernelDaemonPool implements IDisposable {
         });
     }
     private async preWarmKernelDaemon(resource: Resource) {
-        traceInfo(`Pre-warming kernel daemon for ${resource?.toString()}`);
+        traceInfo(`Pre-warming kernel daemon for ${getDisplayPath(resource)}`);
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter || !(await this.kernelDependencyService.areDependenciesInstalled(interpreter))) {
+        if (
+            !interpreter ||
+            !(await this.kernelDependencyService.areDependenciesInstalled({
+                interpreter,
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: createInterpreterKernelSpec(interpreter, ''),
+                id: '1'
+            }))
+        ) {
             return;
         }
-        const key = this.getDaemonKey(resource, interpreter.path);
+        const key = this.getDaemonKey(resource, interpreter);
         // If we have already created one in the interim, then get out.
         if (this.daemonPool.some((item) => item.key === key)) {
             return;
         }
 
         const workspaceFolderIdentifier = this.workspaceService.getWorkspaceFolderIdentifier(resource);
-        const daemon = this.createDaemon(resource, interpreter.path);
+        const daemon = this.createDaemon(resource, interpreter);
         // Once a daemon is created ensure we pre-warm it (will load ipykernel and start the kernker process waiting to start the actual kernel code).
         // I.e. we'll start python process thats the kernel, but will not start the kernel module (`python -m ipykernel`).
         daemon

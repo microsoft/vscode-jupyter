@@ -17,8 +17,8 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelDependencyService } from '../types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IDisplayOptions, IKernelDependencyService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
@@ -94,23 +94,23 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     public async launch(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const promise = (async () => {
             // If this is a python interpreter, make sure it has ipykernel
             if (kernelConnectionMetadata.interpreter) {
                 await this.kernelDependencyService.installMissingDependencies(
                     resource,
-                    kernelConnectionMetadata.interpreter,
-                    cancelToken,
-                    disableUI
+                    kernelConnectionMetadata,
+                    ui,
+                    cancelToken
                 );
-                if (cancelToken?.isCancellationRequested) {
+                if (cancelToken.isCancellationRequested) {
                     throw new CancellationError();
                 }
             }
@@ -123,14 +123,17 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async launchProcess(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         resource: Resource,
         workingDirectory: string,
         timeout: number,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
-        const connection = await this.getKernelConnection(kernelConnectionMetadata);
-        if (cancelToken?.isCancellationRequested) {
+        const connection = await Promise.race([
+            this.getKernelConnection(kernelConnectionMetadata),
+            createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token: cancelToken })
+        ]);
+        if (!connection || cancelToken?.isCancellationRequested) {
             throw new CancellationError();
         }
         const kernelProcess = new KernelProcess(
@@ -214,7 +217,7 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getKernelConnection(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     ): Promise<IKernelConnection> {
         const ports = await this.chainGetConnectionPorts();
         return {

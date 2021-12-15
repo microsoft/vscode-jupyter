@@ -3,9 +3,10 @@
 import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { TraceOptions } from '../../logging/trace';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
-import { traceVerbose } from '../logger';
+import { traceDecorators, traceVerbose } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
@@ -41,6 +42,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         });
     }
 
+    @traceDecorators.verbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         // Cache resource specific interpreter data
         const key = this.workspaceService.getWorkspaceFolderIdentifier(resource);
@@ -56,12 +58,15 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        if (!workspaceFolderUri) {
+            return;
+        }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
 
         // eslint-disable-next-line
         // TODO: This should be added to the python API (or this entire service should move there)
         // https://github.com/microsoft/vscode-jupyter/issues/51
-        const envFile = workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri.fsPath, '.env') : '.env';
+        const envFile = path.join(workspaceFolderUri.fsPath, '.env');
         this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, process.env);
     }

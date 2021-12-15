@@ -5,10 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
-import { QuickPickItem, Uri } from 'vscode';
-import { IClipboard, ICommandManager } from '../../common/application/types';
+import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
+import { IClipboard } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -38,7 +38,8 @@ export type SelectJupyterUriCommandSource =
     | 'toolbar'
     | 'commandPalette'
     | 'nativeNotebookStatusBar'
-    | 'nativeNotebookToolbar';
+    | 'nativeNotebookToolbar'
+    | 'prompt';
 @injectable()
 export class JupyterServerSelector {
     private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
@@ -47,7 +48,6 @@ export class JupyterServerSelector {
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(ICommandManager) private cmdManager: ICommandManager,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
@@ -67,32 +67,16 @@ export class JupyterServerSelector {
     }
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
         await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
-
-        // Reload if there's a change
-        if (previousValue !== Settings.JupyterServerLocalLaunch) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
     }
 
     public async setJupyterURIToRemote(userURI: string): Promise<void> {
-        const previousValue = await this.serverUriStorage.getUri();
         await this.serverUriStorage.setUri(userURI);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
             azure: userURI.toLowerCase().includes('azure')
         });
-
-        // Reload if there's a change
-        if (previousValue !== userURI) {
-            this.cmdManager
-                .executeCommand('jupyter.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
-                .then(noop, noop);
-        }
     }
 
     private async startSelectingURI(
@@ -104,25 +88,43 @@ export class JupyterServerSelector {
         // newChoice element will be set if the user picked 'enter a new server'
 
         // Get the list of items and show what the current value is
-        const items = await this.getUriPickList(allowLocal);
-        const uri = await this.serverUriStorage.getUri();
+        const currentUri = await this.serverUriStorage.getUri();
+        const items = await this.getUriPickList(allowLocal, currentUri);
         const activeItem = items.find(
-            (i) => i.url === uri || (i.label === this.localLabel && uri === Settings.JupyterServerLocalLaunch)
+            (i) =>
+                i.url === currentUri ||
+                (i.label === this.localLabel && currentUri === Settings.JupyterServerLocalLaunch)
         );
         const currentValue =
-            uri === Settings.JupyterServerLocalLaunch ? DataScience.jupyterSelectURILocalLabel() : activeItem?.label;
+            currentUri === Settings.JupyterServerLocalLaunch
+                ? DataScience.jupyterSelectURILocalLabel()
+                : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
             ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
             : DataScience.jupyterSelectURIQuickPickPlaceholder();
 
+        let pendingUpdatesToUri = Promise.resolve();
+        const onDidChangeItems = new EventEmitter<typeof items>();
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder,
-            items: await this.getUriPickList(allowLocal),
+            items,
             activeItem,
             title: allowLocal
                 ? DataScience.jupyterSelectURIQuickPickTitle()
-                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()
+                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
+            onDidTriggerItemButton: (e) => {
+                const url = e.item.url;
+                if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick()) {
+                    pendingUpdatesToUri = pendingUpdatesToUri.then(() =>
+                        this.serverUriStorage.removeUri(url).catch((ex) => traceError('Failed to update Uri list', ex))
+                    );
+                    items.splice(items.indexOf(e.item), 1);
+                    onDidChangeItems.fire(items.concat([]));
+                }
+            },
+            onDidChangeItems: onDidChangeItems.event
         });
+        await pendingUpdatesToUri.catch((ex) => traceError('Failed to update Uri list', ex));
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
@@ -199,7 +201,7 @@ export class JupyterServerSelector {
         }
     };
 
-    private async getUriPickList(allowLocal: boolean): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(allowLocal: boolean, currentUri: string): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -232,11 +234,20 @@ export class JupyterServerSelector {
         savedURIList.forEach((uriItem) => {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
+                const isSelected = currentUri === uriItem.uri;
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
                     newChoice: false,
-                    url: uriItem.uri
+                    url: uriItem.uri,
+                    buttons: isSelected
+                        ? [] // Cannot delete the current Uri (you can only switch to local).
+                        : [
+                              {
+                                  iconPath: new ThemeIcon('trash'),
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick()
+                              }
+                          ]
                 });
             }
         });

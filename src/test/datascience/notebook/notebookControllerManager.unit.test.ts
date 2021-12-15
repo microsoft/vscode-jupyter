@@ -18,7 +18,8 @@ suite('Notebook Controller Manager', () => {
                 lastActivityTime: new Date(),
                 name: 'livexyz',
                 numberOfConnections: 1
-            }
+            },
+            baseUrl: ''
         });
 
         assert.strictEqual(name, 'livexyz');
@@ -27,7 +28,7 @@ suite('Notebook Controller Manager', () => {
         test('Display the name if language is not specified', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -41,7 +42,7 @@ suite('Notebook Controller Manager', () => {
         test('Display the name if language is not python', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -56,7 +57,7 @@ suite('Notebook Controller Manager', () => {
         test('Display the name even if kernel is inside an unknown Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -73,7 +74,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name even if kernel is inside a global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -91,7 +92,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if kernel is inside a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -111,7 +112,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if kernel is inside a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -131,7 +132,7 @@ suite('Notebook Controller Manager', () => {
         test('Prefixed with `<env name>` kernel is inside a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -151,7 +152,7 @@ suite('Notebook Controller Manager', () => {
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -173,7 +174,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if language is python', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -188,7 +189,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name even if kernel is associated an unknown Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -208,7 +209,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name even if kernel is associated with a global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -229,7 +230,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -251,7 +252,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if kernel is associated with a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -272,7 +273,7 @@ suite('Notebook Controller Manager', () => {
         test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -301,7 +302,7 @@ suite('Notebook Controller Manager', () => {
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',
@@ -330,7 +331,7 @@ suite('Notebook Controller Manager', () => {
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection({
                 id: '',
-                kind: 'startUsingKernelSpec',
+                kind: 'startUsingLocalKernelSpec',
                 kernelSpec: {
                     argv: [],
                     display_name: 'kspecname',

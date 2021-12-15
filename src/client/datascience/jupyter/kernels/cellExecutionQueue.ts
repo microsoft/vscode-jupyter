@@ -33,6 +33,9 @@ export class CellExecutionQueue implements Disposable {
     public get failed(): boolean {
         return this.cancelledOrCompletedWithErrors;
     }
+    public get queue(): Readonly<NotebookCell[]> {
+        return this.queueOfCellsToExecute.map((cell) => cell.cell);
+    }
     constructor(
         private readonly session: Promise<IJupyterSession>,
         private readonly executionFactory: CellExecutionFactory,
@@ -76,6 +79,7 @@ export class CellExecutionQueue implements Disposable {
         this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
+        this.queueOfCellsToExecute.splice(0, this.queueOfCellsToExecute.length);
     }
     /**
      * Wait for cells to complete (for for the queue of cells to be processed)

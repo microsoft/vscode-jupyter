@@ -6,13 +6,13 @@ import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonInstaller, IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
 import { InterpreterUri } from '../../common/installer/types';
-import { IExtensions, IDisposableRegistry, Product, IConfigurationService } from '../../common/types';
+import { IExtensions, IDisposableRegistry, Product } from '../../common/types';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
+import { trackKernelResourceInformation } from './telemetry';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -25,13 +25,9 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {}
     public async activate(): Promise<void> {
-        if (!isLocalLaunch(this.configurationService)) {
-            return;
-        }
         this.notebookControllerManager.onNotebookControllerSelected(
             this.onNotebookControllerSelected,
             this,
@@ -50,6 +46,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         if (!event.controller.connection.interpreter) {
             return;
         }
+        trackKernelResourceInformation(event.notebook.uri, { kernelConnection: event.controller.connection });
         await this.packages.trackPackages(event.controller.connection.interpreter);
     }
     private async trackUponActivation() {

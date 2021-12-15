@@ -19,7 +19,6 @@ export namespace Common {
     export const download = localize('Common.download', 'Download');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
-    export const reInstall = localize('Common.reInstall', 'Re-Install');
     export const loadingExtension = localize('Common.loadingExtension', 'Jupyter extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
@@ -146,6 +145,7 @@ export namespace ExtensionSurveyBanner {
 }
 
 export namespace DataScience {
+    export const installingModule = localize('products.installingModule', 'Installing {0}');
     export const warnWhenSelectingKernelWithUnSupportedPythonVersion = localize(
         'DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion',
         'The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.'
@@ -264,31 +264,35 @@ export namespace DataScience {
     );
     export const couldNotInstallLibrary = localize(
         'DataScience.couldNotInstallLibrary',
-        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+        'Could not install {0} package. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
-        'Running cells requires {0}.'
+        'Running cells requires {0} package.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
-        'Running cells requires {0}.'
+        'Running cells requires {0} package.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
-        "Running cells with '{0}' requires {1} installed or requires an update."
+        "Running cells with '{0}' requires {1} package installed or requires an update."
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        "Running cells with '{0}' requires {1}."
+        "Running cells with '{0}' requires {1} package."
+    );
+    export const installPackageInstructions = localize(
+        'DataScience.installPackageInstructions',
+        "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'"
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
@@ -367,7 +371,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
@@ -379,6 +383,18 @@ export namespace DataScience {
     export const sessionStartFailedWithKernel = localize(
         'DataScience.sessionStartFailedWithKernel',
         "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const failedToStartJupyter = localize(
+        'DataScience.failedToStartJupyter',
+        "Failed to start Jupyter in the environment '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const failedToStartJupyterWithErrorInfo = localize(
+        'DataScience.failedToStartJupyterWithErrorInfo',
+        "Failed to start Jupyter in the environment '{0}'. \n{1} \nView Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const failedToStartJupyterDueToOutdatedTraitlets = localize(
+        'DataScience.failedToStartJupyterDueToOutdatedTraitlets',
+        "Failed to start Jupyter in the environment '{0}' possibly due to an outdated version of 'traitlets'. \n{1} \nConsider updating the 'traitlets' module to '5.1.1' or later. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
     export const failedToRestartKernel = localize('DataScience.failedToRestartKernel', 'Failed to restart the Kernel.');
@@ -462,7 +478,7 @@ export namespace DataScience {
     );
     export const jupyterSelectURIRunningDetailFormat = localize(
         'DataScience.jupyterSelectURIRunningDetailFormat',
-        'Last activity {0}. {1} existing connections.'
+        'Last connection {0}. {1} existing connections.'
     );
     export const jupyterSelectURINotRunningDetail = localize(
         'DataScience.jupyterSelectURINotRunningDetail',
@@ -497,13 +513,17 @@ export namespace DataScience {
         'DataScience.jupyterNotebookConnectFailed',
         'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}'
     );
-    export const reloadAfterChangingJupyterServerConnection = localize(
-        'DataScience.reloadAfterChangingJupyterServerConnection',
-        'Please reload VS Code when changing the Jupyter Server connection.'
-    );
     export const jupyterNotebookRemoteConnectFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
+    );
+    export const jupyterRemoteConnectFailedModalMessage = localize(
+        'DataScience.jupyterRemoteConnectFailedModalMessage',
+        'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
+    );
+    export const changeJupyterRemoteConnection = localize(
+        'DataScience.changeJupyterRemoteConnection',
+        'Change Jupyter Server connection.'
     );
     export const jupyterNotebookRemoteConnectSelfCertsFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectSelfCertsFailed',
@@ -866,6 +886,10 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
     );
+    export const removeRemoteJupyterServerEntryInQuickPick = localize(
+        'DataScience.removeRemoteJupyterServerEntryInQuickPick',
+        'Remove'
+    );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
         'Specify local or remote Jupyter server for connections'
@@ -972,9 +996,13 @@ export namespace DataScience {
     export const exportingToFormat = localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = localize(
         'jupyter.kernel.category.jupyterSession',
-        'Jupyter Session'
+        '(Remote) Jupyter Session'
     );
     export const kernelCategoryForJupyterKernel = localize('jupyter.kernel.category.jupyterKernel', 'Jupyter Kernel');
+    export const kernelCategoryForRemoteJupyterKernel = localize(
+        'jupyter.kernel.category.jupyterRemoteKernel',
+        '(Remote) Jupyter Kernel'
+    );
     export const kernelCategoryForConda = localize('jupyter.kernel.category.conda', 'Conda Env');
     export const kernelCategoryForPoetry = localize('jupyter.kernel.category.poetry', 'Poetry Env');
     export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');
@@ -986,6 +1014,59 @@ export namespace DataScience {
         'DataScience.fileSeemsToBeInterferingWithKernelStartup',
         "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.."
     );
+    export const pipCondaInstallHoverWarning = localize(
+        'jupyter.kernel.pipCondaInstallHoverWarning',
+        "'!{0} install' could install packages into the wrong environment. [More info]({1})"
+    );
+    export const percentPipCondaInstallInsteadOfBang = localize(
+        'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
+        "Use '%{0} install' instead of '!{0} install'"
+    );
+    export const replacePipCondaInstallCodeAction = localize(
+        'jupyter.kernel.replacePipCondaInstallCodeAction',
+        "Replace with '%{0} install'"
+    );
+    export const failedToStartKernelDueToMissingModule = localize(
+        'DataScience.failedToStartKernelDueToMissingModule',
+        "The kernel failed to start due to the missing module '{0}'. Consider installing this module."
+    );
+    export const failedToStartKernelDueToImportFailure = localize(
+        'DataScience.failedToStartKernelDueToImportFailure',
+        "The kernel failed to start as the module '{0}' could not be imported."
+    );
+    export const failedToStartKernelDueToImportFailureFromFile = localize(
+        'DataScience.failedToStartKernelDueToImportFromFileFailure',
+        "The kernel failed to start as '{0}' could not be imported from '{1}'."
+    );
+    export const failedToStartKernelDueToUnknowDllLoadFailure = localize(
+        'DataScience.failedToStartKernelDueToUnknowDllLoadFailure',
+        'The kernel failed to start as a dll could not be loaded.'
+    );
+    export const failedToStartKernelDueToDllLoadFailure = localize(
+        'DataScience.failedToStartKernelDueToDllLoadFailure',
+        "The kernel failed to start as the dll '{0}' could not be loaded."
+    );
+    export const failedToStartKernelDueToWin32APIFailure = localize(
+        'DataScience.failedToStartKernelDueToWin32APIFailure',
+        'The kernel failed to start due to an error with the Win32api module. Consider (re) installing this module.'
+    );
+    export const failedToStartKernelDueToPyZmqFailure = localize(
+        'DataScience.failedToStartKernelDueToPyZmqFailure',
+        "The kernel failed to start due to an error with the 'pyzmq' module. Consider re-installing this module."
+    );
+    export const failedToStartKernelDueToOldIPython = localize(
+        'DataScience.failedToStartKernelDueToOldIPython',
+        'The kernel failed to start due to an outdated version of IPython. Consider updating this module to the latest version.'
+    );
+    export const failedToStartKernelDueToOldIPyKernel = localize(
+        'DataScience.failedToStartKernelDueToOldIPyKernel',
+        'The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.'
+    );
+    export const matplotlibWidgetInsteadOfOther = localize(
+        'DataScience.matplotlibWidgetInsteadOfOther',
+        "'%matplotlib' widget works best inside of VS code"
+    );
+    export const matplotlibWidgetCodeActionTitle = localize('DataScience.matplotlibWidgetCodeActionTitle', 'More info');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

@@ -14,17 +14,19 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IDisposable, IOutputChannel } from '../../common/types';
+import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
+import { disposeAllDisposables } from '../../common/helpers';
+import { JupyterConnectError } from '../errors/jupyterConnectError';
+import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 
 /**
  * Responsible for starting a notebook.
@@ -60,18 +62,19 @@ export class NotebookStarter implements Disposable {
             }
         }
     }
-    // eslint-disable-next-line
-    @reportAction(ReportableAction.NotebookStart)
     public async start(
+        resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
+        const disposables: IDisposable[] = [];
+        const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
@@ -85,7 +88,7 @@ export class NotebookStarter implements Disposable {
             );
 
             // Make sure we haven't canceled already.
-            if (cancelToken && cancelToken.isCancellationRequested) {
+            if (cancelToken.isCancellationRequested) {
                 throw new CancellationError();
             }
 
@@ -108,10 +111,14 @@ export class NotebookStarter implements Disposable {
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
-            if (launchResult && cancelToken) {
-                cancelToken.onCancellationRequested(() => {
-                    launchResult.dispose();
-                });
+            if (launchResult) {
+                cancelToken.onCancellationRequested(
+                    () => {
+                        launchResult.dispose();
+                    },
+                    this,
+                    disposables
+                );
             }
 
             // Wait for the connection information on this result
@@ -154,9 +161,11 @@ export class NotebookStarter implements Disposable {
             } catch (ex) {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
+            disposeAllDisposables(disposables);
             return connection;
         } catch (err) {
-            if (err instanceof CancellationError) {
+            disposeAllDisposables(disposables);
+            if (err instanceof CancellationError || err instanceof JupyterConnectError) {
                 throw err;
             }
 
@@ -175,6 +184,7 @@ export class NotebookStarter implements Disposable {
                 throw WrappedError.from(localize.DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
+            progress.dispose();
             starter?.dispose();
         }
     }

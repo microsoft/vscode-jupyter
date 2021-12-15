@@ -10,10 +10,10 @@ import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile } from './helpers';
 import {
-    assertHasTextOutputInVSCode,
     closeNotebooksAndCleanUpAfterTests,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './notebook/helper';
 
 suite('Interactive window (remote)', async () => {
@@ -23,9 +23,11 @@ suite('Interactive window (remote)', async () => {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         const api = await initialize();
         interactiveWindowProvider = api.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         await startJupyterServer();
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
@@ -54,6 +56,6 @@ suite('Interactive window (remote)', async () => {
 
         const secondCell = notebookDocument?.cellAt(1);
         await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, 'Hello World');
+        await waitForTextOutput(secondCell!, 'Hello World');
     });
 });

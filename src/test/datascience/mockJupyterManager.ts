@@ -31,6 +31,7 @@ import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
+    IDisplayOptions,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -257,7 +258,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             .setup((f) =>
                 f.create(
                     TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
+                        return o && o.interpreter ? o.interpreter.path === interpreter.path : false;
                     })
                 )
             )
@@ -266,7 +267,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             .setup((f) =>
                 f.createDaemon(
                     TypeMoq.It.is((o) => {
-                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
+                        return o && o.interpreter ? o.interpreter.path === interpreter.path : false;
                     })
                 )
             )
@@ -307,9 +308,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>,
         doNotUseICell?: boolean
     ) {
-        const cells = doNotUseICell
-            ? [createCodeCell(code)]
-            : generateCells(undefined, code, Uri.file('foo.py').fsPath, true);
+        const cells = doNotUseICell ? [createCodeCell(code)] : generateCells(undefined, code, Uri.file('foo.py'), true);
         cells.forEach((c) => {
             const source = doNotUseICell ? (c as nbformat.ICodeCell).source : (c as ICell).data.source;
             const key = concatMultilineString(source).replace(LineFeedRegEx, '').toLowerCase();
@@ -423,6 +422,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         _resource: Resource,
         _kernelConnection: KernelConnectionMetadata,
         _workingDirectory: string,
+        _ui: IDisplayOptions,
         cancelToken?: CancellationToken
     ): Promise<JupyterSession> {
         if (this.sessionTimeout && cancelToken) {

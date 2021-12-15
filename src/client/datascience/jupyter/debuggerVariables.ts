@@ -245,24 +245,21 @@ export class DebuggerVariables extends DebugLocationTracker
                 this.currentVariablesReference = newVariablesReference;
                 this.currentSeqNumsForVariables.clear();
             }
-        } else if (
-            message.type === 'response' &&
-            message.command === 'variables' &&
-            message.body &&
-            this.currentSeqNumsForVariables.has(message.request_seq)
-        ) {
-            // If using the interactive debugger, update our variables.
-            // eslint-disable-next-line
-            // TODO: Figure out what resource to use
+        } else if (message.type === 'response' && message.command === 'variables' && message.body) {
+            if (this.currentSeqNumsForVariables.has(message.request_seq)) {
+                // If using the interactive debugger, update our variables.
+                // TODO: Figure out what resource to use
 
-            // Only update variables if it came from a "scopes" command and not a "hover"
-            // 1. Scopes command will come first with a variablesReference number
-            // 2. onWillReceiveMessage will have that variablesReference and
-            // will request for variables with a seq number
-            // 3. We only updateVariables if the seq number is one of the sequence numbers that
-            // came with the most recent 'scopes' variablesReference
+                // Only update variables if it came from a "scopes" command and not a "hover"
+                // 1. Scopes command will come first with a variablesReference number
+                // 2. onWillReceiveMessage will have that variablesReference and
+                // will request for variables with a seq number
+                // 3. We only updateVariables if the seq number is one of the sequence numbers that
+                // came with the most recent 'scopes' variablesReference
+                this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
+            }
 
-            this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
+            // Monkey patch for any sequence number so that expanded variables can get the "Show in Data Viewer" option
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
             // When the debugger exits, make sure the variables are cleared

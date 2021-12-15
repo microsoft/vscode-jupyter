@@ -97,7 +97,7 @@ export class CommandManager implements ICommandManager {
         T,
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    >(command: E, ...rest: U): Thenable<T | undefined> {
+    >(command: E, ...rest: U): Thenable<T> {
         if (!commandsToIgnore.has(command)) {
             sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
         }

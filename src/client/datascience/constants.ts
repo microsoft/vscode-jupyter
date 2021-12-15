@@ -381,7 +381,6 @@ export enum Telemetry {
     OpenNotebookSelection = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION',
     OpenNotebookSelectionRegistered = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION_REGISTERED',
     ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
-    NotebookWorkspaceCount = 'DS_INTERNAL.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
     NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',
     NotebookOpenCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT',
     NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
@@ -566,7 +565,7 @@ export namespace Settings {
     export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
-    export const IntellisenseTimeout = 500;
+    export const IntellisenseTimeout = 2000;
 }
 
 export namespace DataFrameLoading {

@@ -119,7 +119,7 @@ export function tracing<T>(info: LogInfo, run: () => T, call?: CallInfo): T {
 }
 
 export namespace traceDecorators {
-    const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
+    const DEFAULT_OPTS: TraceOptions = TraceOptions.BeforeCall | TraceOptions.Arguments | TraceOptions.ReturnValue;
 
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
         return createTracingDecorator([globalLogger], { message, opts, level: LogLevel.Trace });

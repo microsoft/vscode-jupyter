@@ -15,6 +15,7 @@ import { Telemetry } from '../constants';
 import {
     findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
+    getInterpreterHashInMetadata,
     getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -29,8 +30,11 @@ import { JupyterPaths } from './jupyterPaths';
 import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
+import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
+const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY';
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -41,19 +45,19 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonkernelFinder: LocalKnownPathKernelSpecFinder,
+        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    @traceDecorators.verbose('Find kernel spec')
+    @traceDecorators.verbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        @ignoreLogging() cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         const resourceType = getResourceType(resource);
         const telemetrySafeLanguage =
@@ -61,8 +65,22 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
+            const preferredKernelFromCache = this.findPreferredLocalKernelConnectionFromCache(notebookMetadata);
             // Get list of all of the specs
-            const kernels = await this.listKernels(resource, cancelToken, 'useCache');
+            const kernelsPromise = this.listKernels(resource, cancelToken, 'useCache');
+
+            // If we have a value from cache, return that.
+            // Check if this is still valid (i.e. the interpreter is still installed).
+            if (
+                preferredKernelFromCache &&
+                preferredKernelFromCache.interpreter &&
+                (await this.fs.localFileExists(preferredKernelFromCache.interpreter.path))
+            ) {
+                traceInfo(`Freferred kernel connection found in cache ${preferredKernelFromCache.id}`);
+                return preferredKernelFromCache;
+            }
+
+            const kernels = await kernelsPromise;
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
@@ -108,7 +126,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     public async listNonPythonKernels(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        return this.filterKernels(await this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken));
+        return this.filterKernels(await this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken));
     }
 
     /**
@@ -117,7 +135,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @traceDecorators.error('List kernels failed')
     public async listKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        @ignoreLogging() cancelToken?: CancellationToken,
         useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
     ): Promise<LocalKernelConnectionMetadata[]> {
         const kernelsFromCachePromise =
@@ -141,6 +159,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         //
         kernels = this.filterKernels(kernels);
         sendKernelListTelemetry(resource, kernels);
+        void this.cacheLocalKernelConnections(kernels);
         return kernels;
     }
 
@@ -150,13 +169,40 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         return this.jupyterPaths.getKernelSpecRootPath();
     }
 
+    private async cacheLocalKernelConnections(kernels: LocalKernelConnectionMetadata[]) {
+        const items = this.globalState.get<LocalKernelConnectionMetadata[]>(LocalKernelSpecConnectionsCacheKey, []);
+        const uniqueItems = new Map<string, LocalKernelConnectionMetadata>();
+        items.forEach((item) => uniqueItems.set(item.id, item));
+        kernels.forEach((item) => uniqueItems.set(item.id, item));
+        await this.globalState.update(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
+    }
+    public findPreferredLocalKernelConnectionFromCache(
+        notebookMetadata?: nbformat.INotebookMetadata
+    ): LocalKernelConnectionMetadata | undefined {
+        if (!notebookMetadata) {
+            return;
+        }
+        const interpreterHash = getInterpreterHashInMetadata(notebookMetadata);
+        if (!interpreterHash) {
+            return;
+        }
+        const items = this.globalState.get<LocalKernelConnectionMetadata[]>(LocalKernelSpecConnectionsCacheKey, []);
+        const preferredKernel = items.find(
+            (item) => item.interpreter && getInterpreterHash(item.interpreter) === interpreterHash
+        );
+        if (!preferredKernel?.interpreter) {
+            return;
+        }
+        return preferredKernel;
+    }
+
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     private async listKernelsWithoutCache(
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
-            this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
+            this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken),
             this.pythonKernelFinder.listKernelSpecs(resource, true, cancelToken)
         ]);
 
@@ -192,7 +238,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                             .catch(noop)
                     );
                 }
-                if (item.kind === 'startUsingKernelSpec' && item.kernelSpec?.specFile) {
+                if (item.kind === 'startUsingLocalKernelSpec' && item.kernelSpec?.specFile) {
                     // Possible the kernelspec file no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs

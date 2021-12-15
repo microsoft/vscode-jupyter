@@ -4,6 +4,7 @@
 import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { getDisplayPath } from '../platform/fs-paths';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -120,7 +121,11 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         try {
             // When using the daemon, log the message ourselves.
             if (daemon instanceof PythonDaemonExecutionService) {
-                this.logger.logProcess(`${this.pythonPath} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+                this.logger.logProcess(
+                    `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                    daemonLogMessage.args,
+                    daemonLogMessage.options
+                );
             }
             return await cb(daemon);
         } finally {
@@ -147,7 +152,11 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
 
         // When using the daemon, log the message ourselves.
         if (daemonProc) {
-            this.logger.logProcess(`${this.pythonPath} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+            this.logger.logProcess(
+                `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                daemonLogMessage.args,
+                daemonLogMessage.options
+            );
         }
         const result = cb(execService);
         let completed = false;

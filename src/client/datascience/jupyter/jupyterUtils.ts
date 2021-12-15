@@ -72,8 +72,6 @@ export function createRemoteConnectionInfo(
         token,
         hostName,
         localLaunch: false,
-        localProcExitCode: undefined,
-        valid: true,
         displayName:
             serverUri && serverUri.displayName
                 ? serverUri.displayName

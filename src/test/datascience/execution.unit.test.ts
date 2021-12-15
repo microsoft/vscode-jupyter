@@ -39,6 +39,7 @@ import {
     Product
 } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
@@ -783,33 +784,39 @@ suite('Jupyter Execution', async () => {
         setupWorkingProcessService(processService, notebookStdErr);
         setupMissingKernelProcessService(processService, notebookStdErr);
         setupPathProcessService(jupyterOnPath, processService, notebookStdErr);
-        when(executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))).thenResolve(
-            workingService.object
-        );
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === workingPython.path))
+        ).thenResolve(workingService.object);
+        when(
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingKernelPython.path))
         ).thenResolve(missingKernelService.object);
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython.path))
         ).thenResolve(missingNotebookService.object);
         when(
-            executionFactory.create(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+            executionFactory.create(argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython2.path))
         ).thenResolve(missingNotebookService2.object);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))
+            executionFactory.createDaemon(argThat((o) => o.interpreter && o.interpreter.path === workingPython.path))
         ).thenResolve((workingService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingKernelPython.path)
+            )
         ).thenResolve((missingKernelService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython.path)
+            )
         ).thenResolve((missingNotebookService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
-            executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+            executionFactory.createDaemon(
+                argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython2.path)
+            )
         ).thenResolve((missingNotebookService2.object as unknown) as IPythonDaemonExecutionService);
 
         let activeService = workingService;
@@ -979,7 +986,7 @@ suite('Jupyter Execution', async () => {
             display_name: 'somename'
         };
         const kernelMetadata: LocalKernelConnectionMetadata = {
-            kind: 'startUsingKernelSpec',
+            kind: 'startUsingLocalKernelSpec',
             kernelSpec,
             id: getKernelId(kernelSpec)
         };
@@ -996,8 +1003,6 @@ suite('Jupyter Execution', async () => {
                 instance(workspaceService),
                 instance(configService),
                 notebookStarter,
-                instance(application),
-                instance(jupyterOutputChannel),
                 instance(serviceContainer)
             )
         };
@@ -1009,10 +1014,20 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        await assert.isFulfilled(
-            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
-            'Should be able to start a server'
-        );
+        const ui = new DisplayOptions(true);
+        const token = new CancellationTokenSource();
+        try {
+            await assert.isFulfilled(
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
+                'Should be able to start a server'
+            );
+        } finally {
+            ui.dispose();
+            token.dispose();
+        }
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
@@ -1026,19 +1041,36 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        await assert.isFulfilled(
-            jupyterExecutionFactory.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
-            'Should be able to start a server'
-        );
+        const ui = new DisplayOptions(true);
+        const token = new CancellationTokenSource();
+        try {
+            await assert.isFulfilled(
+                jupyterExecutionFactory.connectToNotebookServer(
+                    { ui, resource: undefined, localJupyter: true },
+                    token.token
+                ),
+                'Should be able to start a server'
+            );
+        } finally {
+            ui.dispose();
+            token.dispose();
+        }
     }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        await assert.isRejected(
-            execution.connectToNotebookServer({ allowUI: () => false, resource: undefined }),
-            'Running cells requires jupyter.'
-        );
+        const ui = new DisplayOptions(true);
+        const token = new CancellationTokenSource();
+        try {
+            await assert.isRejected(
+                execution.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token.token),
+                'Running cells requires jupyter package.'
+            );
+        } finally {
+            ui.dispose();
+            token.dispose();
+        }
     }).timeout(10000);
 
     test('Missing kernel python still finds interpreter', async () => {

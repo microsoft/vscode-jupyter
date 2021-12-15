@@ -8,14 +8,19 @@ import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import {
     getErrorMessageFromPythonTraceback,
     getTelemetrySafeErrorMessageFromPythonTraceback
 } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -27,7 +32,7 @@ import {
     findIndexOfConnectionFile,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
@@ -38,6 +43,7 @@ import { KernelProcessExitedError } from '../errors/kernelProcessExitedError';
 import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { KernelDiedError } from '../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
+import { ignoreLogging, TraceOptions } from '../../logging/trace';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -45,7 +51,9 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
-    public get kernelConnectionMetadata(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
+    public get kernelConnectionMetadata(): Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    > {
         return this._kernelConnectionMetadata;
     }
     public get connection(): Readonly<IKernelConnection> {
@@ -71,12 +79,14 @@ export class KernelProcess implements IKernelProcess {
     private pythonDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
-    private readonly _kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    private readonly _kernelConnectionMetadata: Readonly<
+        LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker,
@@ -101,7 +111,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(workingDirectory: string, timeout: number, cancelToken?: CancellationToken): Promise<void> {
+    public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -109,8 +119,13 @@ export class KernelProcess implements IKernelProcess {
 
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
-
-        const exeObs = await this.launchAsObservable(workingDirectory);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            throw new CancellationError();
+        }
 
         let stdout = '';
         let stderr = '';
@@ -120,7 +135,7 @@ export class KernelProcess implements IKernelProcess {
         const deferred = createDeferred();
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
-            traceInfo('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
+            traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
                 return;
             }
@@ -204,6 +219,9 @@ export class KernelProcess implements IKernelProcess {
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
             ]).catch((ex) => {
+                if (cancelToken.isCancellationRequested) {
+                    return;
+                }
                 traceError(`waitUntilUsed timed out`, ex);
                 // Throw an error we recognize.
                 return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
@@ -245,10 +263,10 @@ export class KernelProcess implements IKernelProcess {
     }
 
     public async dispose(): Promise<void> {
-        traceInfo('Dispose Kernel process');
         if (this.disposed) {
             return;
         }
+        traceInfo('Dispose Kernel process');
         this.disposed = true;
         if (this.pythonDaemon) {
             await this.pythonDaemon.kill().catch(noop);
@@ -373,12 +391,16 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecorators.verbose('Launching kernel in kernelProcess.ts')
-    private async launchAsObservable(workingDirectory: string) {
+    @traceDecorators.verbose('Launching kernel in kernelProcess.ts', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
         // Use a daemon only if the python extension is available. It requires the active interpreter
-        if (this.isPythonKernel && this.extensionChecker.isPythonExtensionInstalled) {
+        if (
+            this.isPythonKernel &&
+            this.extensionChecker.isPythonExtensionInstalled &&
+            this._kernelConnectionMetadata.interpreter
+        ) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(
                 this.daemonPool,
                 this.pythonExecFactory,
@@ -390,7 +412,13 @@ export class KernelProcess implements IKernelProcess {
                 this.launchKernelSpec,
                 this._kernelConnectionMetadata.interpreter
             );
-
+            if (this.disposed || cancelToken.isCancellationRequested) {
+                kernelDaemonLaunch.daemon?.dispose();
+                kernelDaemonLaunch.observableOutput.dispose();
+            }
+            if (cancelToken.isCancellationRequested) {
+                throw new CancellationError();
+            }
             this.pythonDaemon = kernelDaemonLaunch.daemon;
             exeObs = kernelDaemonLaunch.observableOutput;
         }
@@ -400,14 +428,20 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
-                this.processExecutionFactory.create(this.resource),
+                Promise.race([
+                    this.processExecutionFactory.create(this.resource),
+                    promiseCancellation as Promise<IProcessService>
+                ]),
                 // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
+                Promise.race([
+                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
+                ])
             ]);
-
             // Add quotations to arguments if they have a blank space in them.
             // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.

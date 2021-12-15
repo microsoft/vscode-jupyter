@@ -5,13 +5,14 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { IPythonExtensionChecker } from '../../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../common/application/types';
-import { traceInfo, traceWarning } from '../../../common/logger';
+import { traceVerbose, traceWarning } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -66,7 +67,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
     ) {
         this.asyncDisposables.push(this);
     }
@@ -125,7 +127,8 @@ export class KernelProvider implements IKernelProvider {
             this.pythonExecutionFactory,
             this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
             this.statusProvider,
-            this.commandManager
+            this.commandManager,
+            this.pythonChecker
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -149,7 +152,7 @@ export class KernelProvider implements IKernelProvider {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.kernelsByNotebook.get(notebook)?.kernel === kernel) {
                     this.kernelsByNotebook.delete(notebook);
-                    traceInfo(
+                    traceVerbose(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
                             notebook.uri
                         )}`,

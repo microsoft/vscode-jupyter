@@ -3,6 +3,7 @@
 'use strict';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
+import { CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
@@ -10,20 +11,18 @@ import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
-import { Identifiers, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
+import { DisplayOptions } from '../displayOptions';
 import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { ISessionWithSocket } from '../types';
+import { IDisplayOptions, ISessionWithSocket } from '../types';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -47,6 +46,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return super.status;
     }
+    public get kernelId(): string {
+        return this.session?.kernel?.id || '';
+    }
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
@@ -60,20 +62,15 @@ export class RawJupyterSession extends BaseJupyterSession {
         super(resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
-    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait until status says idle.
         if (this.session) {
             return this.waitForIdleOnSession(this.session, timeout);
         }
-        return Promise.resolve();
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
-    public async connect(
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ): Promise<KernelConnectionMetadata | undefined> {
+    public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Save the resource that we connect with
         let newSession: RawSession;
         trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
@@ -81,9 +78,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            newSession = await this.startRawSession(cancelToken, disableUI);
-            if (cancelToken?.isCancellationRequested) {
-                return;
+            newSession = await this.startRawSession(options);
+            if (options.token?.isCancellationRequested) {
+                throw new CancellationError();
             }
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
@@ -162,7 +159,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         this.connected = true;
-        return newSession.kernelProcess.kernelConnectionMetadata;
     }
 
     protected shutdownSession(
@@ -234,20 +230,22 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise) {
-            this.restartSessionPromise = this.createRestartSession();
+            const token = new CancellationTokenSource();
+            const promise = this.createRestartSession(token.token);
+            this.restartSessionPromise = { token, promise };
         }
     }
-    protected async createRestartSession(cancelToken?: CancellationToken): Promise<ISessionWithSocket> {
+    protected async createRestartSession(cancelToken: CancellationToken): Promise<ISessionWithSocket> {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession(cancelToken);
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(true) });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(cancelToken?: CancellationToken, disableUI?: boolean): Promise<RawSession> {
+    private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
         if (
-            this.kernelConnectionMetadata.kind !== 'startUsingKernelSpec' &&
+            this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
         ) {
             throw new Error(
@@ -263,8 +261,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.launchTimeout,
             this.resource,
             this.workingDirectory,
-            cancelToken,
-            disableUI
+            options.ui,
+            options.token
         );
 
         // Create our raw session, it will own the process lifetime
@@ -274,12 +272,12 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Wait for it to be ready
             await Promise.race([
                 result.waitForReady(),
-                createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+                createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
             ]);
         } catch (ex) {
             void process.dispose();
             void result.dispose();
-            if (ex instanceof CancellationError || cancelToken?.isCancellationRequested) {
+            if (ex instanceof CancellationError || options.token.isCancellationRequested) {
                 throw new CancellationError();
             }
             throw ex;
@@ -304,7 +302,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 await Promise.race([
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
                     sleep(Math.min(this.launchTimeout, 10)),
-                    createPromiseFromCancellation({ cancelAction: 'reject', token: cancelToken })
+                    createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
                 ]);
             } catch (ex) {
                 void process.dispose();
@@ -314,12 +312,14 @@ export class RawJupyterSession extends BaseJupyterSession {
 
             result.iopubMessage.disconnect(iopubHandler);
             if (gotIoPubMessage.completed) {
-                traceInfoIfCI(`Get response for requestKernelInfo`);
+                traceInfoIfCI(`Got response for requestKernelInfo`);
                 break;
             } else {
-                traceWarning(`Didn't get response for requestKernelInfo`);
                 continue;
             }
+        }
+        if (!gotIoPubMessage.completed) {
+            traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
         sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
             attempts,
@@ -358,12 +358,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     except Empty:
                         break
         */
-
-        traceWarning(`Didn't get response for requestKernelInfo`);
-
-        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-        // Restart sessions and retries might make this hard to do correctly otherwise.
-        result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
         return result;
     }

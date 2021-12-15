@@ -487,7 +487,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.PythonKerneExecutableMatches]: {
         match: 'true' | 'false';
-        kernelConnectionType: 'startUsingKernelSpec' | 'startUsingPythonInterpreter';
+        kernelConnectionType:
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingPythonInterpreter'
+            | 'startUsingRemoteKernelSpec';
     };
     /**
      * Sent when a jupyter session fails to start and we ask the user for a new kernel
@@ -570,9 +573,31 @@ export interface IEventNamePropertyMapping {
          */
         envType?: EnvironmentType;
         /**
+         * Duplicate of `envType`, the property `envType` doesn't seem to be coming through.
+         * If we can get `envType`, then we'll deprecate this new property.
+         * Else we just deprecate & remote the old property.
+         */
+        pythonEnvType?: EnvironmentType;
+        /**
          * Whether the env variables were fetched successfully or not.
          */
         failed: boolean;
+        /**
+         * Source where the env variables were fetched from.
+         * If `python`, then env variables were fetched from Python extension.
+         * If `jupyter`, then env variables were fetched from Jupyter extension.
+         */
+        source: 'python' | 'jupyter';
+        /**
+         * Reason for not being able to get the env variables.
+         */
+        reason?:
+            | 'noActivationCommands'
+            | 'unknownOS'
+            | 'emptyVariables'
+            | 'unhandledError'
+            | 'emptyFromCondaRun'
+            | 'emptyFromPython';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
@@ -705,7 +730,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.NotebookRunCount]: { count: number };
-    [Telemetry.NotebookWorkspaceCount]: { count: number };
     [Telemetry.NotebookOpenCount]: { count: number };
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
@@ -829,6 +853,8 @@ export interface IEventNamePropertyMapping {
             | 'donotinstall' // User chose not to install from prompt.
             | 'differentKernel' // User chose to select a different kernel.
             | 'error' // Some other error.
+            | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
+            | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
             | 'dismissed'; // User chose to dismiss the prompt.
         resourceType?: 'notebook' | 'interactive';
         /**
@@ -836,6 +862,7 @@ export interface IEventNamePropertyMapping {
          * If we run the same notebook tomorrow, the hash will be the same.
          */
         resourceHash?: string;
+        pythonEnvType?: EnvironmentType;
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
@@ -849,7 +876,13 @@ export interface IEventNamePropertyMapping {
          * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
          * nativeNotebookToolbar - Invoked from Native notebook toolbar.
          */
-        commandSource: 'nonUser' | 'commandPalette' | 'toolbar' | 'nativeNotebookStatusBar' | 'nativeNotebookToolbar';
+        commandSource:
+            | 'nonUser'
+            | 'commandPalette'
+            | 'toolbar'
+            | 'nativeNotebookStatusBar'
+            | 'nativeNotebookToolbar'
+            | 'prompt';
     };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: {
@@ -1435,7 +1468,8 @@ export interface IEventNamePropertyMapping {
         kind:
             | 'startUsingPythonInterpreter'
             | 'startUsingDefaultKernel'
-            | 'startUsingKernelSpec'
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingRemoteKernelSpec'
             | 'connectToLiveKernel';
     } & Partial<TelemetryErrorProperties>;
     /*

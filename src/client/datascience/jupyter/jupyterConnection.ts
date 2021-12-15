@@ -7,7 +7,7 @@ import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
@@ -89,7 +89,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                         this.output(output.out);
                     }
                 },
-                (e) => this.rejectStartPromise(e.message),
+                (e) => this.rejectStartPromise(e),
                 // If the process dies, we can't extract connection information.
                 () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode))
             )
@@ -155,6 +155,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             try {
                 url = new URL(uriString);
             } catch (err) {
+                traceError(`Failed to parse ${uriString}`, err);
                 // Failed to parse the url either via server infos or the string
                 this.rejectStartPromise(localize.DataScience.jupyterLaunchNoURL());
                 return;
@@ -208,10 +209,11 @@ export class JupyterConnectionWaiter implements IDisposable {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private rejectStartPromise = (message: string) => {
+    private rejectStartPromise = (message: string | Error) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.resolved) {
+            message = typeof message === 'string' ? message : message.message;
             this.startPromise.reject(
                 Cancellation.isCanceled(this.cancelToken)
                     ? new CancellationError()
@@ -225,8 +227,6 @@ export class JupyterConnectionWaiter implements IDisposable {
 class JupyterConnection implements IJupyterConnection {
     public readonly localLaunch: boolean = true;
     public readonly type = 'jupyter';
-    public valid: boolean = true;
-    public localProcExitCode: number | undefined;
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
         public readonly baseUrl: string,
@@ -241,8 +241,6 @@ class JupyterConnection implements IJupyterConnection {
             childProc.on('exit', (c) => {
                 // Our code expects the exit code to be of type `number` or `undefined`.
                 const code = typeof c === 'number' ? c : 0;
-                this.valid = false;
-                this.localProcExitCode = code;
                 this.eventEmitter.fire(code);
             });
         }

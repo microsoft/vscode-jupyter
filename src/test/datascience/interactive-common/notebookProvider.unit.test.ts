@@ -8,6 +8,7 @@ import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IJupyterSettings } from '../../../client/common/types';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
@@ -32,13 +33,13 @@ suite('DataScience - NotebookProvider', () => {
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
     let dataScienceSettings: IJupyterSettings;
-
+    let cancelToken: vscode.CancellationTokenSource;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
         const workspaceService = mock<IWorkspaceService>();
         const configService = mock<ConfigurationService>();
-
+        cancelToken = new vscode.CancellationTokenSource();
         // Set up our settings
         dataScienceSettings = mock<IJupyterSettings>();
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -56,7 +57,7 @@ suite('DataScience - NotebookProvider', () => {
             instance(configService)
         );
     });
-
+    teardown(() => cancelToken.dispose());
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
@@ -67,7 +68,9 @@ suite('DataScience - NotebookProvider', () => {
         const notebook = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -82,14 +85,18 @@ suite('DataScience - NotebookProvider', () => {
         const notebook = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.createNotebook({
             document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
-            kernelConnection: instance(mock<KernelConnectionMetadata>())
+            kernelConnection: instance(mock<KernelConnectionMetadata>()),
+            ui: new DisplayOptions(false),
+            token: cancelToken.token
         });
         expect(notebook2).to.equal(notebook);
     });

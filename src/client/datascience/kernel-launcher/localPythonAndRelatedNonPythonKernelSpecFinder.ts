@@ -7,13 +7,13 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { createInterpreterKernelSpec, getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
@@ -65,7 +65,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listKernelsImplementation(
         resource: Resource,
         cancelToken?: CancellationToken
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
@@ -85,16 +85,16 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listGlobalPythonKernelSpecs(
         includeKernelsRegisteredByUs: boolean,
         cancelToken?: CancellationToken
-    ): Promise<KernelSpecConnectionMetadata[]> {
+    ): Promise<LocalKernelSpecConnectionMetadata[]> {
         const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
         return (
             kernelSpecs
                 .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)
-                // If there are any kernels that we regsitered (then don't return them).
+                // If there are any kernels that we registered (then don't return them).
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
                 // We should only return global kernels the user created themselves, others will appear when searching for interprters.
                 .filter((item) => (includeKernelsRegisteredByUs ? true : !isKernelRegisteredByUs(item.kernelSpec)))
-                .map((item) => <KernelSpecConnectionMetadata>item)
+                .map((item) => <LocalKernelSpecConnectionMetadata>item)
         );
     }
     /**
@@ -107,7 +107,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         resource: Resource,
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const rootSpecPathPromise = this.jupyterPaths.getKernelSpecRootPath();
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(resource);
         // First find the on disk kernel specs and interpreters
@@ -123,7 +123,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
         // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
         // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
-        const usingNonIpyKernelLauncher = (item: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata) => {
+        const usingNonIpyKernelLauncher = (
+            item: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+        ) => {
             if (item.kernelSpec.language !== PYTHON_LANGUAGE) {
                 return false;
             }
@@ -144,14 +146,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
 
-        // If the user has intepreters, then don't display the default kernel specs such as `python`, `python3`.
+        // If the user has interpreters, then don't display the default kernel specs such as `python`, `python3`.
         // Such kernel specs are ambiguous, and we have absolutely no idea what interpreters they point to.
         // If a user wants to select a kernel they can pick an interpreter (this way we know exactly what interpreter needs to be started).
         // Else if you have `python3`, depending on the active/default interpreter we could start different interpreters (different for the same notebook opened from different workspace folders).
         const hideDefaultKernelSpecs = interpreters.length > 0 || activeInterpreter ? true : false;
 
         // Then go through all of the kernels and generate their metadata
-        const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
+        const distinctKernelMetadata = new Map<
+            string,
+            LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+        >();
 
         // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
@@ -167,15 +172,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     // Its something special, hence ignore if we cannot find a matching interpreter.
                     const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
                     if (!matchingInterpreter) {
-                        traceInfo(
+                        traceVerbose(
                             `Kernel Spec for ${
                                 item.kernelSpec.display_name
                             } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
                         );
                         return;
                     }
-                    const kernelSpec: KernelSpecConnectionMetadata = {
-                        kind: 'startUsingKernelSpec',
+                    const kernelSpec: LocalKernelSpecConnectionMetadata = {
+                        kind: 'startUsingLocalKernelSpec',
                         kernelSpec: item.kernelSpec,
                         interpreter: matchingInterpreter,
                         id: getKernelId(item.kernelSpec, matchingInterpreter)
@@ -192,7 +197,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
                             kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
                     ) {
-                        traceInfo(
+                        traceVerbose(
                             `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
                                 kernelspec.argv[0]
                             )}`
@@ -255,8 +260,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                                 return;
                             }
                         }
-                        const result: KernelSpecConnectionMetadata = {
-                            kind: 'startUsingKernelSpec',
+                        const result: LocalKernelSpecConnectionMetadata = {
+                            kind: 'startUsingLocalKernelSpec',
                             kernelSpec: k,
                             interpreter,
                             id: getKernelId(k, interpreter)
@@ -267,7 +272,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 .map(async (item) => {
                     const kernelSpec:
                         | undefined
-                        | KernelSpecConnectionMetadata
+                        | LocalKernelSpecConnectionMetadata
                         | PythonKernelConnectionMetadata = await item;
                     // Check if we have already seen this.
                     if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
@@ -321,7 +326,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 kernelSpec.metadata?.interpreter?.path &&
                 areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, this.fs)
             ) {
-                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
+                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
             }
             return false;
@@ -335,7 +340,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
                 if (areInterpreterPathsSame(pathInArgv, i.path, undefined, this.fs)) {
-                    traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
                 return false;
@@ -357,7 +362,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         if (kernelSpec.interpreterPath) {
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
-                    traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;
                 }
                 return false;
@@ -370,7 +375,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         return interpreters.find((i) => {
             // 4. Check display name
             if (kernelSpec.display_name === i.displayName) {
-                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
+                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
                 return true;
             }
 

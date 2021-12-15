@@ -5,12 +5,15 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { getResourceType } from '../../../../client/datascience/common';
+import { DisplayOptions } from '../../../../client/datascience/displayOptions';
+import { createInterpreterKernelSpec } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -30,6 +33,12 @@ suite('DataScience - Kernel Dependency Service', () => {
     let editor: NotebookEditor;
 
     const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
+    const metadata: PythonKernelConnectionMetadata = {
+        interpreter,
+        kind: 'startUsingPythonInterpreter',
+        kernelSpec: createInterpreterKernelSpec(interpreter, ''),
+        id: '1'
+    };
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
@@ -52,11 +61,13 @@ suite('DataScience - Kernel Dependency Service', () => {
     });
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {
         suite(`With resource = ${resource?.toString()}`, () => {
+            let token: CancellationTokenSource;
             setup(() => {
                 const document = mock<NotebookDocument>();
                 editor = mock<NotebookEditor>();
                 const interactiveWindowProvider = mock<IInteractiveWindowProvider>();
                 const activeInteractiveWindow = mock<IInteractiveWindow>();
+                token = new CancellationTokenSource();
                 if (resource && getResourceType(resource) === 'notebook') {
                     when(document.uri).thenReturn(resource);
                     when(notebooks.activeNotebookEditor).thenReturn(instance(editor));
@@ -70,10 +81,16 @@ suite('DataScience - Kernel Dependency Service', () => {
                 }
                 when(editor.document).thenReturn(instance(document));
             });
+            teardown(() => token.dispose());
             test('Check if ipykernel is installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-                await dependencyService.installMissingDependencies(resource, interpreter);
+                await dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
 
                 verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
                 verify(installer.isInstalled(anything(), anything())).once();
@@ -81,34 +98,49 @@ suite('DataScience - Kernel Dependency Service', () => {
             test('Do not prompt if if ipykernel is installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-                await dependencyService.installMissingDependencies(resource, interpreter);
+                await dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
 
-                verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
+                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
             test('Prompt if if ipykernel is not installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
+                when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install() as any);
 
                 await assert.isRejected(
-                    dependencyService.installMissingDependencies(Uri.file('one.ipynb'), interpreter),
+                    dependencyService.installMissingDependencies(
+                        Uri.file('one.ipynb'),
+                        metadata,
+                        new DisplayOptions(false),
+                        token.token
+                    ),
                     'IPyKernel not installed into interpreter'
                 );
 
-                verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
+                verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
             test('Install ipykernel', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
 
-                await dependencyService.installMissingDependencies(resource, interpreter);
+                await dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
             });
             test('Install ipykernel second time should result in a re-install', async () => {
                 when(memento.get(anything(), anything())).thenReturn(true);
@@ -116,28 +148,38 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.reInstall())).thenResolve(
-                    Common.reInstall() as any
+                when(appShell.showInformationMessage(anything(), anything(), Common.install())).thenResolve(
+                    Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), Common.reInstall(), anything())).thenResolve(
-                    Common.reInstall() as any
+                when(appShell.showInformationMessage(anything(), anything(), Common.install(), anything())).thenResolve(
+                    Common.install() as any
                 );
 
-                await dependencyService.installMissingDependencies(resource, interpreter);
+                await dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
             });
             test('Bubble installation errors', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(installer.install(Product.ipykernel, interpreter, anything(), anything(), anything())).thenReject(
                     new Error('Install failed - kaboom')
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter);
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
 
                 await assert.isRejected(promise, 'Install failed - kaboom');
             });
@@ -148,11 +190,16 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     DataScience.selectKernel() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter);
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
 
                 await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
 
@@ -167,9 +214,14 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
 
-                const promise = dependencyService.installMissingDependencies(resource, interpreter);
+                const promise = dependencyService.installMissingDependencies(
+                    resource,
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
+                );
 
                 await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
                 verify(cmdManager.executeCommand('notebook.selectKernel', anything())).never();

@@ -29,6 +29,7 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import {
+    IDisplayOptions,
     IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
@@ -174,8 +175,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
     ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
@@ -203,7 +204,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.configService.getSettings(resource).jupyterInterruptTimeout
         );
         try {
-            await session.connect(cancelToken, disableUI);
+            await session.connect({ token: cancelToken, ui });
         } finally {
             if (!session.isConnected) {
                 await session.dispose();

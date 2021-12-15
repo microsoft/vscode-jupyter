@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable  */
-import { env, ExtensionMode, OutputChannel, UIKind, window, workspace } from 'vscode';
+import { commands, env, ExtensionMode, extensions, OutputChannel, UIKind, window, workspace } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -28,7 +28,8 @@ import {
 import * as localize from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
+import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './datascience/constants';
+import { addClearCacheCommand } from './datascience/devTools/clearCache';
 import { getJupyterOutputChannel } from './datascience/devTools/jupyterOutputChannel';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
@@ -69,7 +70,10 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-
+    if (isDevMode) {
+        void commands.executeCommand('setContext', 'jupyter.development', true);
+    }
+    addClearCacheCommand(context, isDevMode);
     const standardOutputChannel = window.createOutputChannel(localize.OutputChannelNames.jupyter());
     addOutputChannelLogging(standardOutputChannel);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -79,6 +83,15 @@ async function activateLegacy(
         JUPYTER_OUTPUT_CHANNEL
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
+
+    // Log versions of extensions.
+    standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
+    const pythonExtension = extensions.getExtension(PythonExtension);
+    if (pythonExtension) {
+        standardOutputChannel.appendLine(`Python Extension Verison: ${pythonExtension.packageJSON['version']}.`);
+    } else {
+        standardOutputChannel.appendLine('Python Extension not installed.');
+    }
 
     // Initialize logging to file if necessary as early as possible
     registerLoggerTypes(serviceManager);

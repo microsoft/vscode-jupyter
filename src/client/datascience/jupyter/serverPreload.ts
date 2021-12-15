@@ -2,13 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
+import { CancellationTokenSource, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { DisplayOptions } from '../displayOptions';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookCreationTracker, INotebookProvider } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    INotebookCreationTracker,
+    INotebookProvider,
+    IRawNotebookProvider
+} from '../types';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
@@ -20,7 +27,8 @@ export class ServerPreload implements IExtensionSingleActivationService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
@@ -54,31 +62,29 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted) {
+        if (!this.workspace.isTrusted || this.rawNotebookProvider.isSupported) {
             return;
         }
+        const source = new CancellationTokenSource();
+        const ui = new DisplayOptions(true);
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
-            // Check if we are already connected
-            let providerConnection = await this.notebookProvider.connect({
-                getOnly: true,
-                disableUI: true,
-                resource: undefined
-            });
-
             // If it didn't start, attempt for local and if allowed.
-            if (!providerConnection && !this.configService.getSettings(undefined).disableJupyterAutoStart) {
+            if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
-                providerConnection = await this.notebookProvider.connect({
-                    getOnly: false,
+                await this.notebookProvider.connect({
                     resource: undefined,
-                    disableUI: true,
-                    localOnly: true
+                    ui,
+                    kind: 'localJupyter',
+                    token: source.token
                 });
             }
         } catch (exc) {
             traceError(`Error starting server in serverPreload: `, exc);
+        } finally {
+            ui.dispose();
+            source.dispose();
         }
     }
 

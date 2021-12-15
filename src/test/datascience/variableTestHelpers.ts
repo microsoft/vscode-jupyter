@@ -135,7 +135,6 @@
 //     const variableFetcher = ioc.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES);
 //     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
 //     const notebook = await notebookProvider.getOrCreateNotebook({
-//         getOnly: true,
 //         identity: getDefaultInteractiveIdentity(),
 //         resource: undefined
 //     });

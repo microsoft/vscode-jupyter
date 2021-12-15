@@ -11,7 +11,7 @@ export interface IVariableInfo {
     name: string;
     type: string;
     length: string;
-    value: string;
+    value?: string;
 }
 
 export async function waitForVariablesToMatch(expected: IVariableInfo[], variableView: ITestWebviewHost) {
@@ -72,5 +72,12 @@ function extractVariableFromRow(variableHTMLRow: Element): IVariableInfo {
 
 // Compare two variable infos
 function compareVariableInfos(expected: IVariableInfo, actual: IVariableInfo) {
-    return fastDeepEqual(expected, actual);
+    if (expected.value !== undefined) {
+        return fastDeepEqual(expected, actual);
+    } else {
+        // If we don't specify an expected value, then don't check it
+        // useful for things like object and sets where the value can vary
+        delete actual.value;
+        return fastDeepEqual(expected, actual);
+    }
 }

@@ -22,12 +22,14 @@ import { PortAttributesProviders } from '../../client/common/net/portAttributePr
 import { IDisposable } from '../../client/common/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
 
 suite('DataScience - Kernel Launcher', () => {
     let kernelLauncher: IKernelLauncher;
+    let token: CancellationTokenSource;
     const kernelSpec = {
         name: 'python3',
         language: 'python',
@@ -49,9 +51,11 @@ suite('DataScience - Kernel Launcher', () => {
     });
 
     setup(async function () {
+        token = new CancellationTokenSource();
         traceInfo(`Start Test ${this.currentTest?.title}`);
     });
     teardown(function () {
+        token.dispose();
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
         disposeAllDisposables(disposables);
     });
@@ -60,10 +64,12 @@ suite('DataScience - Kernel Launcher', () => {
         let exitExpected = false;
         const deferred = createDeferred<boolean>();
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec, kind: 'startUsingLocalKernelSpec', id: '1' },
             -1,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false),
+            token.token
         );
         kernel.exited(() => {
             if (exitExpected) {
@@ -101,10 +107,12 @@ suite('DataScience - Kernel Launcher', () => {
         };
 
         const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec: spec, kind: 'startUsingLocalKernelSpec', id: '1' },
             30_000,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false),
+            token.token
         );
 
         assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -134,10 +142,12 @@ suite('DataScience - Kernel Launcher', () => {
         };
 
         const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec: spec, kind: 'startUsingLocalKernelSpec', id: '1' },
             30_000,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false),
+            token.token
         );
 
         // Confirm the ports used by this kernel are ignored.
@@ -185,10 +195,12 @@ suite('DataScience - Kernel Launcher', () => {
 
     test('Bind with ZMQ', async function () {
         const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingKernelSpec', id: '1' },
+            { kernelSpec, kind: 'startUsingLocalKernelSpec', id: '1' },
             -1,
             undefined,
-            process.cwd()
+            process.cwd(),
+            new DisplayOptions(false),
+            token.token
         );
 
         try {

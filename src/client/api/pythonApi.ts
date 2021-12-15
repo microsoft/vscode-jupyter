@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceDecorators, traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -32,14 +32,12 @@ import {
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { isResource, noop } from '../common/utils/misc';
-import { StopWatch } from '../common/utils/stopWatch';
 import { PythonExtension, Telemetry } from '../datascience/constants';
 import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
-import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
-import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { TraceOptions } from '../logging/trace';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
@@ -139,6 +137,10 @@ export class PythonApiProvider implements IPythonApiProvider {
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
     private waitingOnInstallPrompt?: Promise<void>;
+    /**
+     * Used only for testsing
+     */
+    public static promptDisplayed?: boolean;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -166,11 +168,17 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
+        PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
+        const answer = await this.appShell.showInformationMessage(
+            localize.DataScience.pythonExtensionRequired(),
+            { modal: true },
+            yes,
+            no
+        );
         if (answer === yes) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             await this.installPythonExtension();
@@ -207,15 +215,6 @@ export class LanguageServerProvider implements ILanguageServerProvider {
 }
 
 @injectable()
-export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-
-    public isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
-        return this.apiProvider.getApi().then((api) => api.isWindowsStoreInterpreter(pythonPath));
-    }
-}
-
-@injectable()
 export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
@@ -247,6 +246,7 @@ export class PythonInstaller implements IPythonInstaller {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
 
+    @traceDecorators.verbose('Installing Product', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async install(
         product: Product,
         resource?: InterpreterUri,
@@ -299,34 +299,6 @@ export class PythonInstaller implements IPythonInstaller {
 
 // eslint-disable-next-line max-classes-per-file
 @injectable()
-export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-
-    public async getActivatedEnvironmentVariables(
-        resource: Resource,
-        interpreter?: PythonEnvironment
-    ): Promise<NodeJS.ProcessEnv | undefined> {
-        const stopWatch = new StopWatch();
-        const env = await this.apiProvider
-            .getApi()
-            .then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false));
-
-        const envType = interpreter?.envType;
-        sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-            envType,
-            failed: Object.keys(env || {}).length === 0
-        });
-        // We must get actiavted env variables for Conda env, if not running stuff against conda will not work.
-        // Hence we must log these as errors (so we can see them in jupyter logs).
-        if (envType === EnvironmentType.Conda) {
-            traceError(`Failed to get activated conda env variables for ${interpreter?.envName}: ${interpreter?.path}`);
-        }
-        return env;
-    }
-}
-
-// eslint-disable-next-line max-classes-per-file
-@injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
@@ -373,6 +345,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
+    @traceDecorators.verbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
@@ -384,6 +357,7 @@ export class InterpreterService implements IInterpreterService {
 
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
+    @traceDecorators.verbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
@@ -415,6 +389,7 @@ export class InterpreterService implements IInterpreterService {
         return promise;
     }
 
+    @traceDecorators.verbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {

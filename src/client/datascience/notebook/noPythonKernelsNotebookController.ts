@@ -61,7 +61,7 @@ export class NoPythonKernelsNotebookController implements Disposable {
     }
     private async handleExecutionWithoutPythonExtension() {
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const selection = await this.appShell.showErrorMessage(
+        const selection = await this.appShell.showInformationMessage(
             DataScience.pythonExtensionRequiredToRunNotebook(),
             { modal: true },
             Common.install()

@@ -124,6 +124,7 @@ export class CellExecution implements IDisposable {
     private static sentExecuteCellTelemetry?: boolean;
 
     private stopWatch = new StopWatch();
+    private stopWatchForTelemetry = new StopWatch();
 
     private readonly _result = createDeferred<NotebookCellRunState>();
 
@@ -328,7 +329,12 @@ export class CellExecution implements IDisposable {
         }
         if (handleError) {
             this.errorHandler
-                .handleKernelError((error as unknown) as Error, 'execution', this.kernelConnection)
+                .handleKernelError(
+                    (error as unknown) as Error,
+                    'execution',
+                    this.kernelConnection,
+                    this.cell.document.uri
+                )
                 .ignoreErrors();
         }
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
@@ -436,9 +442,9 @@ export class CellExecution implements IDisposable {
         const props = { notebook: true };
         if (!CellExecution.sentExecuteCellTelemetry) {
             CellExecution.sentExecuteCellTelemetry = true;
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatch.elapsedTime, props);
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
         } else {
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatch.elapsedTime, props);
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
         }
     }
     private canExecuteCell() {

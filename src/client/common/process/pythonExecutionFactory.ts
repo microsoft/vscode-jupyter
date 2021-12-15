@@ -3,15 +3,16 @@
 import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
+import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
-import { traceError, traceInfo } from '../logger';
+import { traceDecorators, traceError, traceInfo } from '../logger';
+import { getDisplayPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
@@ -45,9 +46,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) private readonly config: IConfigurationService
     ) {
@@ -56,42 +55,34 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
+    @traceDecorators.verbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
-        processService.on('exec', this.logger.logProcess.bind(this.logger));
 
         return createPythonService(
-            pythonPath,
+            options.interpreter,
             processService,
             this.fileSystem,
             undefined,
-            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
+            options.interpreter.envType === EnvironmentType.WindowsStore
         );
     }
 
+    @traceDecorators.verbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : await this.getPythonPath(options.resource);
-        const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-        const interpreterService = this.serviceContainer.tryGet<IInterpreterService>(IInterpreterService);
-        const interpreter = interpreterService
-            ? await interpreterService.getInterpreterDetails(pythonPath, options.resource)
-            : undefined;
+        const daemonPoolKey = `${options.interpreter.path}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
+        const interpreter = options.interpreter;
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
-            interpreter: interpreter,
+            interpreter: options.interpreter,
             resource: options.resource,
             bypassCondaExecution: true
         });
         // No daemon support in Python 2.7 or during shutdown
-        if (
-            !interpreterService ||
-            (interpreter?.version && interpreter.version.major < 3) ||
-            this.config.getSettings().disablePythonDaemon
-        ) {
-            traceInfo(`Not using daemon support for ${pythonPath}`);
+        if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
+            traceInfo(`Not using daemon support for ${getDisplayPath(options.interpreter.path)}`);
             return activatedProcPromise;
         }
 
@@ -105,14 +96,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 traceInfo(
-                    `Creating daemon pool for ${pythonPath} with env variables count ${
+                    `Creating daemon pool for ${getDisplayPath(options.interpreter.path)} with env variables count ${
                         Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const daemon = new PythonDaemonExecutionServicePool(
                     this.logger,
                     this.disposables,
-                    { ...options, pythonPath },
+                    { ...options, interpreter: options.interpreter },
                     activatedProc!,
                     this.platformService,
                     activatedEnvVars
@@ -122,13 +113,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 return (daemon as unknown) as T;
             } else {
                 traceInfo(
-                    `Creating daemon process for ${pythonPath} with env variables count ${
+                    `Creating daemon process for ${getDisplayPath(options.interpreter.path)} with env variables count ${
                         Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const factory = new PythonDaemonFactory(
                     this.disposables,
-                    { ...options, pythonPath },
+                    { ...options, interpreter: options.interpreter },
                     activatedProc!,
                     this.platformService,
                     activatedEnvVars
@@ -157,8 +148,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return (activatedProcPromise as unknown) as T;
         });
     }
+    @traceDecorators.verbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
-        options: ExecutionFactoryCreateWithEnvironmentOptions
+        @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {
@@ -174,25 +166,19 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,
-                pythonPath: options.interpreter ? options.interpreter.path : undefined
+                interpreter: options.interpreter
             });
         }
-        const pythonPath = options.interpreter ? options.interpreter.path : await this.getPythonPath(options.resource);
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
-        return createPythonService(pythonPath, processService, this.fileSystem);
-    }
-
-    private async getPythonPath(resource: Resource): Promise<string> {
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        return interpreter?.path ?? 'python';
+        return createPythonService(options.interpreter, processService, this.fileSystem);
     }
 }
 
 function createPythonService(
-    pythonPath: string,
+    interpreter: PythonEnvironment,
     procService: IProcessService,
     fs: IFileSystem,
     conda?: [
@@ -204,12 +190,12 @@ function createPythonService(
     ],
     isWindowsStore?: boolean
 ): IPythonExecutionService {
-    let env = createPythonEnv(pythonPath, procService, fs);
+    let env = createPythonEnv(interpreter, procService, fs);
     if (conda) {
         const [condaPath, condaInfo] = conda;
-        env = createCondaEnv(condaPath, condaInfo, pythonPath, procService, fs);
+        env = createCondaEnv(condaPath, condaInfo, interpreter, procService, fs);
     } else if (isWindowsStore) {
-        env = createWindowsStoreEnv(pythonPath, procService);
+        env = createWindowsStoreEnv(interpreter, procService);
     }
     const procs = createPythonProcessService(procService, env);
     return {

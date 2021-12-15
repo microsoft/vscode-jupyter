@@ -527,7 +527,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
 
 ## Locations Used
@@ -602,7 +602,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         status: 'installed' | 'notInstalled';
 
 ## Locations Used
@@ -1418,9 +1418,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
-- 
+-
         command: JupyterCommands;
 
 ## Locations Used
@@ -2178,7 +2178,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
          */
@@ -2517,12 +2517,12 @@ Event can be removed. Not referenced anywhere
 
 ## Properties
 
-- 
+-
         /**
          * Extension we recommended the user to install.
          */
         extensionId: string;
-- 
+-
         /**
          * `displayed` - If prompt was displayed
          * `dismissed` - If prompt was displayed & dismissed by the user
@@ -3741,7 +3741,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         azure: boolean;
 
 ## Locations Used
@@ -4147,7 +4147,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
@@ -4521,7 +4521,7 @@ No properties for event
 
 ## Properties
 
-- 
+-
         /**
          * Indicates whether the python extension is installed.
          * If we send telemetry fro this & this is `true`, then we have a bug.
@@ -4533,7 +4533,7 @@ No properties for event
 
 [src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/raw-kernel/liveshare/hostRawNotebookProvider.ts#L86)
 ```typescript
-                kernelConnection.kind === 'startUsingKernelSpec'
+                kernelConnection.kind === 'startUsingLocalKernelSpec'
             ) {
                 if (!kernelConnection.interpreter) {
                     sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
@@ -4869,38 +4869,38 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Hash of the cell output mimetype
          *
          * @type {string}
          */
         hashedName: string;
-- 
+-
         hasText: boolean;
-- 
+-
         hasLatex: boolean;
-- 
+-
         hasHtml: boolean;
-- 
+-
         hasSvg: boolean;
-- 
+-
         hasXml: boolean;
-- 
+-
         hasJson: boolean;
-- 
+-
         hasImage: boolean;
-- 
+-
         hasGeo: boolean;
-- 
+-
         hasPlotly: boolean;
-- 
+-
         hasVega: boolean;
-- 
+-
         hasWidget: boolean;
-- 
+-
         hasJupyter: boolean;
-- 
+-
         hasVnd: boolean;
 
 ## Locations Used
@@ -4975,7 +4975,7 @@ Event can be removed. Not referenced anywhere
 
 ## Properties
 
-- 
+-
         // Result is null if user signalled cancellation or if we timed out
         isResultNull: boolean;
 
@@ -5673,7 +5673,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Total time spent in attempting to start and connect to jupyter before giving up.
          *
@@ -5858,14 +5858,14 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
          * This is a generic property supported for all telemetry (sent by decorators).
          */
         firstTime?: boolean;
-- 
+-
         /**
          * Whether this telemetry is for listing of all kernels or just python or just non-python.
          * (fetching kernels first time in the session is slower, later its cached).
@@ -5932,7 +5932,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action: 'displayed';
 -  // Message displayed.
         /**
@@ -6033,7 +6033,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Number of kernel specs.
          */
@@ -6389,7 +6389,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
@@ -6523,15 +6523,15 @@ No description provided
 
 ## Properties
 
-- 
+-
         moduleName: string;
-- 
+-
         /**
          * Whether the module was already (once before) installed into the python environment or
          * whether this already exists (detected via `pip list`)
          */
         isModulePresent?: 'true' | undefined;
-- 
+-
         action:
             | 'displayed' // Install prompt may have been displayed.
             | 'prompted' // Install prompt was displayed.
@@ -6546,7 +6546,7 @@ No description provided
             | 'dismissed';
 -  // User chose to dismiss the prompt.
         resourceType?: 'notebook' | 'interactive';
-- 
+-
         /**
          * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
          * If we run the same notebook tomorrow, the hash will be the same.
@@ -6709,7 +6709,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
@@ -7229,7 +7229,7 @@ No properties for event
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(cancelToken?: CancellationToken, disableUI?: boolean): Promise<RawSession> {
         if (
-            this.kernelConnectionMetadata.kind !== 'startUsingKernelSpec' &&
+            this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
 ```
 
 </details>
@@ -7271,7 +7271,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Number of kernel specs.
          */
@@ -7348,7 +7348,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * The result of the selection.
          * notSelected - No interpreter was selected.
@@ -7762,7 +7762,7 @@ export function sendNotebookOrKernelLanguageTelemetry(
 [src/client/datascience/notebook/vscodeNotebookController.ts#L379](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/datascience/notebook/vscodeNotebookController.ts#L379)
 ```typescript
                 break;
-            case 'startUsingKernelSpec':
+            case 'startUsingLocalKernelSpec':
                 sendNotebookOrKernelLanguageTelemetry(
                     Telemetry.SwitchToExistingKernel,
                     this.connection.kernelSpec.language
@@ -7931,7 +7931,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         isErrorOutput: boolean;
 
 ## Locations Used
@@ -8524,28 +8524,28 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Carries `true` if environment variables are present, `false` otherwise
          *
          * @type {boolean}
          */
         hasEnvVars?: boolean;
-- 
+-
         /**
          * Carries `true` if fetching environment variables failed, `false` otherwise
          *
          * @type {boolean}
          */
         failed?: boolean;
-- 
+-
         /**
          * Whether the environment was activated within a terminal or not.
          *
          * @type {boolean}
          */
         activatedInTerminal?: boolean;
-- 
+-
         /**
          * Whether the environment was activated by the wrapper class.
          * If `true`, this telemetry is sent by the class that wraps the two activation providers   .

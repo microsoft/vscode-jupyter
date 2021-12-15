@@ -1,6 +1,7 @@
 # Query Jupyter server for defined variables list
 # Tested on 2.7 and 3.6
 import json as _VSCODE_json
+import builtins
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
@@ -32,5 +33,5 @@ if hasattr(_VSCODE_evalResult, "__len__"):
     except TypeError:
         pass
 
-print(_VSCODE_json.dumps(_VSCODE_targetVariable))
+builtins.print(_VSCODE_json.dumps(_VSCODE_targetVariable))
 del _VSCODE_json

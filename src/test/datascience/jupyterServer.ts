@@ -9,6 +9,7 @@ import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH, sleep } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { initialize } from '../initialize';
@@ -24,13 +25,19 @@ export class JupyterServer implements IAsyncDisposable {
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<Uri>;
+    private _secondJupyterServerWithToken?: Promise<Uri>;
     private availablePort?: number;
+    private availableSecondPort?: number;
     public async dispose() {
         this._jupyterServerWithToken = undefined;
+        this._secondJupyterServerWithToken = undefined;
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000);
+        }
+        if (this.availableSecondPort) {
+            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
         }
     }
     public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
@@ -54,6 +61,27 @@ export class JupyterServer implements IAsyncDisposable {
         }
         return this._jupyterServerWithToken;
     }
+    public async startSecondJupyterWithToken(token = 'fbd00a866c54f5d9f64df9ba820860de56f32379407d03e8'): Promise<Uri> {
+        if (!this._secondJupyterServerWithToken) {
+            this._secondJupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
+                const port = await this.getSecondFreePort();
+                // Possible previous instance of jupyter has not completely shutdown.
+                // Wait for it to shutdown fully so that we can re-use the same port.
+                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                try {
+                    await this.startJupyterServer({
+                        port,
+                        token
+                    });
+                    await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+                    resolve(Uri.parse(`http://localhost:${port}/?token=${token}`));
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        }
+        return this._secondJupyterServerWithToken;
+    }
     private async getFreePort() {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
@@ -62,13 +90,23 @@ export class JupyterServer implements IAsyncDisposable {
         }
         return this.availablePort!;
     }
+    private async getSecondFreePort() {
+        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
+        // The remote uri is cached in a few places (known issue).
+        if (!this.availableSecondPort) {
+            this.availableSecondPort = await getFreePort({ host: 'localhost' }).then((p) => p);
+        }
+        return this.availableSecondPort!;
+    }
 
     private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 const api = await initialize();
                 const pythonExecFactory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-                const pythonExecutionService = await pythonExecFactory.create({ pythonPath: PYTHON_PATH });
+                const pythonExecutionService = await pythonExecFactory.create({
+                    interpreter: { path: PYTHON_PATH } as PythonEnvironment
+                });
                 const result = pythonExecutionService.execModuleObservable(
                     'jupyter',
                     ['notebook', '--no-browser', `--NotebookApp.port=${port}`, `--NotebookApp.token=${token}`],

@@ -126,12 +126,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
             generateSVGPlots: false,
-            runStartupCommands: '',
+            runStartupCommands: [],
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgetScriptSources: [],
-            interactiveWindowMode: 'single'
+            interactiveWindowMode: 'single',
+            newCellOnRunLast: true
         });
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
 
@@ -160,7 +161,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         disposables.push(kernelDisposedEvent);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
-            fileSystem.object,
             documentManager.object,
             instance(workspace),
             instance(notebook),
@@ -444,10 +444,10 @@ fourth line
     });
 
     test('Test the RunCell command', async () => {
-        const fileName = Uri.file('test.py');
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const testString = '#%%\ntesting';
-        const document = createDocument(testString, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(testString, fileName, version, TypeMoq.Times.atLeastOnce(), true);
         const testRange = new Range(0, 0, 1, 7);
 
         codeWatcher.setDocument(document.object);
@@ -457,7 +457,7 @@ fourth line
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(testString),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.is((ed: TextEditor) => {
                         return textEditor.object === ed;
@@ -483,23 +483,30 @@ fourth line
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
-
-        document
-            .setup((doc) => doc.getText())
-            .returns(() => inputText)
-            .verifiable(TypeMoq.Times.exactly(1));
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
-        // Set up our expected calls to add code
-        // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
+        // Set up our expected calls to add code. It should split cells
         activeInteractiveWindow
             .setup((h) =>
                 h.addCode(
-                    TypeMoq.It.isValue(inputText),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
                 )
@@ -531,7 +538,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -544,7 +551,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(3),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -554,6 +561,81 @@ testing2`;
             .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCells();
+
+        // Verify function calls
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test two command ordering correct ordering', async () => {
+        const fileName = Uri.file('test.py');
+        const version = 1;
+        const inputText = `#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        const expectedFuncOrder = [1, 2, 3, 1, 2, 3];
+        const funcOrder: number[] = [];
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => {
+                funcOrder.push(1);
+                return Promise.resolve(true);
+            })
+            .verifiable(TypeMoq.Times.exactly(2));
+
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => {
+                funcOrder.push(2);
+                return Promise.resolve(true);
+            })
+            .verifiable(TypeMoq.Times.exactly(2));
+
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting3'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.isValue(4),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => {
+                funcOrder.push(3);
+                return Promise.resolve(true);
+            })
+            .verifiable(TypeMoq.Times.exactly(2));
+
+        void codeWatcher.runAllCells();
+        await codeWatcher.runAllCells();
+
+        expect(funcOrder).deep.equals(expectedFuncOrder);
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();
@@ -576,7 +658,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(2),
                     TypeMoq.It.is((ed: TextEditor) => {
                         return textEditor.object === ed;
@@ -621,7 +703,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -634,7 +716,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(4),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -676,7 +758,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(1),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -689,7 +771,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(3),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -726,7 +808,7 @@ testing1`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -762,7 +844,7 @@ print('testing')`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isAny(),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isAnyNumber(),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -802,7 +884,7 @@ testing3`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -845,7 +927,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('testing2'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(3),
                     TypeMoq.It.is((ed: TextEditor) => {
                         return textEditor.object === ed;
@@ -894,7 +976,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('text arg'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(3),
                     TypeMoq.It.is((ed: TextEditor) => {
                         return textEditor.object === ed;
@@ -917,7 +999,7 @@ testing2`;
         document.verifyAll();
     });
 
-    test('Test the RunCellAndAdvance command with next cell', async () => {
+    test('Test runCurrentCellAndAdvance command with next cell', async () => {
         const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
@@ -933,7 +1015,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.is((ed: TextEditor) => {
                         return textEditor.object === ed;
@@ -966,6 +1048,62 @@ testing2`;
         };
 
         await codeWatcher.runCurrentCellAndAdvance();
+
+        // Verify function calls
+        textEditor.verifyAll();
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test runCurrentCellAndAdvance command does not advance when newCellOnRunLast is false', async () => {
+        const fileName = Uri.file('test.py');
+        const version = 1;
+        const inputText = `#%%
+testing1
+`;
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow
+            .setup((h) =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting1\n'),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        // For this test we need to set up a document selection point
+        const selection = new Selection(0, 0, 0, 0);
+        textEditor.setup((te) => te.selection).returns(() => selection);
+
+        // Apply setting we want to test
+        jupyterSettings.newCellOnRunLast = false;
+        let advanceToRangeCalled = false;
+
+        // Override the advanceToRange function called from within runCurrentCellAndAdvance to
+        // modify local variable advanceToRangeCalled, by testing that no modification happened,
+        // we ensure advanceToRange was never called
+        (codeWatcher as any).advanceToRange = (_targetRange: Range) => {
+            advanceToRangeCalled = true;
+        };
+        (codeWatcher as any).insertCell = () => {
+            advanceToRangeCalled = true;
+        };
+
+        await codeWatcher.runCurrentCellAndAdvance();
+
+        // Revert setting
+        jupyterSettings.newCellOnRunLast = true;
+        expect(advanceToRangeCalled).to.be.equal(false, 'advanceToRange should not have been set');
 
         // Verify function calls
         textEditor.verifyAll();
@@ -1047,7 +1185,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -1060,7 +1198,7 @@ testing2`;
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -1092,7 +1230,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(0),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()
@@ -1105,7 +1243,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             .setup((h) =>
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
-                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
                     TypeMoq.It.isValue(2),
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny()

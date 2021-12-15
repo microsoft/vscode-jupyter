@@ -9,21 +9,21 @@ import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import {
     KernelConnectionMetadata,
-    KernelSpecConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import { INotebookProviderConnection } from '../types';
+import { IDisplayOptions, INotebookProviderConnection } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
     launch(
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
     ): Promise<IKernelProcess>;
 }
 
@@ -42,7 +42,7 @@ export interface IKernelConnection {
 
 export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    readonly kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    readonly kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     /**
      * This event is triggered if the process is exited
      */
@@ -66,10 +66,19 @@ export interface ILocalKernelFinder {
         option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
+    findPreferredLocalKernelConnectionFromCache(
+        notebookMetadata?: nbformat.INotebookMetadata
+    ): LocalKernelConnectionMetadata | undefined;
+    /**
+     * Finds all kernel specs excluding Python.
+     */
     listNonPythonKernels(
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<LocalKernelConnectionMetadata[]>;
+    /**
+     * Finds all kernel specs including Python.
+     */
     listKernels(
         resource: Resource,
         cancelToken?: CancellationToken,

@@ -56,18 +56,23 @@ type DeepReadonlyObject<T> = {
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 
 // Information about a traced function/method call.
-export type TraceInfo = {
-    elapsed: number; // milliseconds
-    // Either returnValue or err will be set.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    returnValue?: any;
-    err?: Error;
-};
+export type TraceInfo =
+    | {
+          elapsed: number; // milliseconds
+          // Either returnValue or err will be set.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          returnValue?: any;
+          err?: Error;
+      }
+    | undefined;
 
 // Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
+export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeCall?: boolean): T {
     const timer = new StopWatch();
     try {
+        if (logBeforeCall) {
+            log(undefined);
+        }
         // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
         const result = run();
 

@@ -3,6 +3,7 @@
 
 import json
 import sys
+import builtins
 
 obj = {}
 obj["versionInfo"] = tuple(sys.version_info)
@@ -11,4 +12,4 @@ obj["version"] = sys.version
 obj["exe"] = sys.executable
 obj["is64Bit"] = sys.maxsize > 2 ** 32
 
-print(json.dumps(obj))
+builtins.print(json.dumps(obj))

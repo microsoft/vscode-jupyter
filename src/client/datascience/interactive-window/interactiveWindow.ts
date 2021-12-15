@@ -15,11 +15,6 @@ import {
     workspace,
     WorkspaceEdit,
     notebooks,
-    Position,
-    Range,
-    Selection,
-    commands,
-    TextEditorRevealType,
     ViewColumn,
     NotebookEditor,
     Disposable,
@@ -27,26 +22,20 @@ import {
     ThemeColor
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IWorkspaceService
-} from '../../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, IDisposableRegistry, InteractiveWindowMode, Resource } from '../../common/types';
+import { IConfigurationService, InteractiveWindowMode, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
@@ -55,7 +44,6 @@ import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, INotebookExport
 import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
-import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
@@ -65,7 +53,7 @@ type InteractiveCellMetadata = {
     inputCollapsed: boolean;
     interactiveWindowCellMarker: string;
     interactive: {
-        file: string;
+        uristring: string;
         line: number;
         originalSource: string;
     };
@@ -120,7 +108,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _inputUri: Uri | undefined;
 
     constructor(
-        private readonly applicationShell: IApplicationShell,
         private readonly documentManager: IDocumentManager,
         private readonly fs: IFileSystem,
         private readonly configuration: IConfigurationService,
@@ -133,7 +120,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly exportDialog: IExportDialog,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
-        private readonly disposables: IDisposableRegistry,
         private readonly interactiveWindowDebugger: IInteractiveWindowDebugger
     ) {
         // Set our owner and first submitter
@@ -220,69 +206,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             })
         );
         this.listenForControllerSelection(notebookEditor.document);
-        this.initializeRendererCommunication();
         return notebookEditor;
-    }
-
-    private initializeRendererCommunication() {
-        const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
-        this.disposables.push(
-            messageChannel.onDidReceiveMessage(async (e) => {
-                const message = e.message;
-                if (message.message === InteractiveWindowMessages.OpenLink) {
-                    const href = message.payload;
-                    if (href.startsWith('file')) {
-                        await this.openFile(href);
-                    } else if (href.startsWith('https://command:')) {
-                        const temp: string = href.split(':')[2];
-                        const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
-                        let command = temp.split('/?')[0];
-                        if (command.endsWith('/')) {
-                            command = command.substring(0, command.length - 1);
-                        }
-                        if (linkCommandAllowList.includes(command)) {
-                            await commands.executeCommand(command, params);
-                        }
-                    } else {
-                        this.applicationShell.openUrl(href);
-                    }
-                }
-            })
-        );
-    }
-
-    private async openFile(fileUri: string) {
-        const uri = Uri.parse(fileUri);
-        let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
-        if (uri.query) {
-            // Might have a line number query on the file name
-            const lineMatch = LineQueryRegex.exec(uri.query);
-            if (lineMatch) {
-                const lineNumber = parseInt(lineMatch[1], 10);
-                selection = new Range(new Position(lineNumber, 0), new Position(lineNumber, 0));
-            }
-        }
-
-        // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
-        if (editor) {
-            return this.documentManager
-                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
-                .then((e) => {
-                    e.revealRange(selection, TextEditorRevealType.InCenter);
-                });
-        } else {
-            // Not a visible editor, try opening otherwise
-            return this.commandManager.executeCommand('vscode.open', uri).then(() => {
-                // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
-                if (editor) {
-                    // Force the selection to change
-                    editor.revealRange(selection);
-                    editor.selection = new Selection(selection.start, selection.start);
-                }
-            });
-        }
     }
 
     private registerControllerChangeListener(controller: VSCodeNotebookController, notebookDocument: NotebookDocument) {
@@ -500,29 +424,29 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async expandAllCells() {
         const notebookEditor = await this._editorReadyPromise;
-        const edit = new WorkspaceEdit();
-        notebookEditor.document.getCells().forEach((cell, index) => {
-            const metadata = {
-                ...(cell.metadata || {}),
-                inputCollapsed: false,
-                outputCollapsed: false
-            };
-            edit.replaceNotebookCellMetadata(notebookEditor.document.uri, index, metadata);
-        });
-        await workspace.applyEdit(edit);
+        await Promise.all(
+            notebookEditor.document.getCells().map(async (_cell, index) => {
+                await this.commandManager.executeCommand('notebook.cell.expandCellInput', {
+                    ranges: [{ start: index, end: index + 1 }],
+                    document: notebookEditor.document.uri
+                });
+            })
+        );
     }
 
     public async collapseAllCells() {
         const notebookEditor = await this._editorReadyPromise;
-        const edit = new WorkspaceEdit();
-        notebookEditor.document.getCells().forEach((cell, index) => {
-            if (cell.kind !== NotebookCellKind.Code) {
-                return;
-            }
-            const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
-            edit.replaceNotebookCellMetadata(notebookEditor.document.uri, index, metadata);
-        });
-        await workspace.applyEdit(edit);
+        await Promise.all(
+            notebookEditor.document.getCells().map(async (cell, index) => {
+                if (cell.kind !== NotebookCellKind.Code) {
+                    return;
+                }
+                await this.commandManager.executeCommand('notebook.cell.collapseCellInput', {
+                    ranges: [{ start: index, end: index + 1 }],
+                    document: notebookEditor.document.uri
+                });
+            })
+        );
     }
 
     public async scrollToCell(id: string): Promise<void> {
@@ -606,7 +530,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
+        if (!this._submitters.find((s) => s.toString() == file.toString())) {
             this._submitters.push(file);
         }
 
@@ -651,7 +575,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
-                file: file.fsPath,
+                uristring: file.toString(), // Has to be simple types
                 line: line,
                 originalSource: code
             },

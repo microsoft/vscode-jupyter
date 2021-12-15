@@ -7,7 +7,11 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
+import {
+    isModulePresentInEnvironment,
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter
+} from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -22,15 +26,21 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { TraceOptions } from '../../../logging/trace';
+import { ignoreLogging, TraceOptions } from '../../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
-import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import {
+    IDisplayOptions,
+    IInteractiveWindowProvider,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { selectKernel } from './kernelSelector';
+import { KernelConnectionMetadata } from './types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -55,12 +65,20 @@ export class KernelDependencyService implements IKernelDependencyService {
     @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
     public async installMissingDependencies(
         resource: Resource,
-        interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        kernelConnection: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        @ignoreLogging() token: CancellationToken,
+        ignoreCache?: boolean
     ): Promise<void> {
-        traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
-        if (await this.areDependenciesInstalled(interpreter, token)) {
+        traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            kernelConnection.interpreter === undefined
+        ) {
+            return;
+        }
+        if (await this.areDependenciesInstalled(kernelConnection, token, ignoreCache)) {
             return;
         }
         if (token?.isCancellationRequested) {
@@ -68,10 +86,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        let promise = this.installPromises.get(interpreter.path);
+        let promise = this.installPromises.get(kernelConnection.interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(resource, interpreter, token, disableUI);
-            this.installPromises.set(interpreter.path, promise);
+            promise = this.runInstaller(resource, kernelConnection.interpreter, ui, token);
+            this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
 
         // Get the result of the question
@@ -80,15 +98,49 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (token?.isCancellationRequested) {
                 return;
             }
-            await this.handleKernelDependencyResponse(result, interpreter, resource);
+            await this.handleKernelDependencyResponse(result, kernelConnection.interpreter, resource);
         } finally {
             // Don't need to cache anymore
-            this.installPromises.delete(interpreter.path);
+            this.installPromises.delete(kernelConnection.interpreter.path);
         }
     }
-    public areDependenciesInstalled(interpreter: PythonEnvironment, token?: CancellationToken): Promise<boolean> {
+    public async areDependenciesInstalled(
+        kernelConnection: KernelConnectionMetadata,
+        token?: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<boolean> {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            kernelConnection.interpreter === undefined
+        ) {
+            return true;
+        }
+        // Check cache, faster than spawning process every single time.
+        // Makes a big difference with conda on windows.
+        if (
+            !ignoreCache &&
+            isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
+        ) {
+            traceInfo(
+                `IPykernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+            );
+            return true;
+        }
+        const installedPromise = this.installer
+            .isInstalled(Product.ipykernel, kernelConnection.interpreter)
+            .then((installed) => installed === true);
+        void installedPromise.then((installed) => {
+            if (installed) {
+                void trackPackageInstalledIntoInterpreter(
+                    this.memento,
+                    Product.ipykernel,
+                    kernelConnection.interpreter
+                );
+            }
+        });
         return Promise.race([
-            this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true),
+            installedPromise,
             createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })
         ]);
     }
@@ -120,11 +172,11 @@ export class KernelDependencyService implements IKernelDependencyService {
     private async runInstaller(
         resource: Resource,
         interpreter: PythonEnvironment,
-        token?: CancellationToken,
-        disableUI?: boolean
+        ui: IDisplayOptions,
+        token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
-        if (disableUI) {
+        if (ui.disableUI) {
             return KernelInterpreterDependencyResponse.uiHidden;
         }
         const installerToken = wrapCancellationTokens(token);
@@ -152,31 +204,32 @@ export class KernelDependencyService implements IKernelDependencyService {
             action: 'displayed',
             moduleName: productNameForTelemetry,
             resourceType,
-            resourceHash
+            resourceHash,
+            pythonEnvType: interpreter.envType
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: undefined,
             token
         });
-        const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selectKernel = DataScience.selectKernel();
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
-        const options = resource ? [installPrompt, selectKernel] : [installPrompt];
+        const options = resource ? [Common.install(), selectKernel] : [Common.install()];
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
             }
             const selection = this.isCodeSpace
-                ? installPrompt
+                ? Common.install()
                 : await Promise.race([
-                      this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                      this.appShell.showInformationMessage(message, { modal: true }, ...options),
                       promptCancellationPromise
                   ]);
             if (installerToken.isCancellationRequested) {
@@ -184,7 +237,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -194,15 +248,17 @@ export class KernelDependencyService implements IKernelDependencyService {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
-            } else if (selection === installPrompt) {
+            } else if (selection === Common.install()) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
                     resourceType,
-                    resourceHash
+                    resourceHash,
+                    pythonEnvType: interpreter.envType
                 });
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
@@ -225,7 +281,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                         action: 'installed',
                         moduleName: productNameForTelemetry,
                         resourceType,
-                        resourceHash
+                        resourceHash,
+                        pythonEnvType: interpreter.envType
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
@@ -233,7 +290,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                         action: 'failed',
                         moduleName: productNameForTelemetry,
                         resourceType,
-                        resourceHash
+                        resourceHash,
+                        pythonEnvType: interpreter.envType
                     });
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
@@ -243,7 +301,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,
                 resourceType,
-                resourceHash
+                resourceHash,
+                pythonEnvType: interpreter.envType
             });
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
@@ -252,7 +311,8 @@ export class KernelDependencyService implements IKernelDependencyService {
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
-                resourceHash
+                resourceHash,
+                pythonEnvType: interpreter.envType
             });
             throw ex;
         }

@@ -8,15 +8,16 @@ import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceDecorators, traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
-import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
@@ -32,7 +33,7 @@ export abstract class LocalKernelSpecFinderBase {
         {
             usesPython: boolean;
             wasPythonExtInstalled: boolean;
-            promise: Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
+            promise: Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
         }
     >();
 
@@ -57,9 +58,9 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        @ignoreLogging() finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
         ignoreCache?: boolean
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
         if (result && !ignoreCache) {
@@ -76,7 +77,7 @@ export abstract class LocalKernelSpecFinderBase {
         const promise = finder().then((items) => {
             const distinctKernelMetadata = new Map<
                 string,
-                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+                LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
             >();
             traceInfoIfCI(
                 `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
@@ -153,7 +154,9 @@ export abstract class LocalKernelSpecFinderBase {
         }
         let kernelJson: ReadWrite<IJupyterKernelSpec>;
         try {
-            traceInfo(`Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`);
+            traceVerbose(
+                `Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`
+            );
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);

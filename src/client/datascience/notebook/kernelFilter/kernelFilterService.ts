@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
-import { traceError } from '../../../common/logger';
+import { traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 
@@ -29,12 +29,12 @@ export class KernelFilterService implements IDisposable {
     }
     public isKernelHidden(kernelConnection: KernelConnectionMetadata): boolean {
         const hiddenList = this.getFilters();
-        if (kernelConnection.kind === 'connectToLiveKernel') {
+        if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
             return false;
         }
         return hiddenList.some((item) => {
             if (
-                kernelConnection.kind === 'startUsingKernelSpec' &&
+                kernelConnection.kind === 'startUsingLocalKernelSpec' &&
                 item.type === 'jupyterKernelspec' &&
                 kernelConnection.kernelSpec.specFile
             ) {
@@ -94,10 +94,10 @@ export class KernelFilterService implements IDisposable {
     }
     private translateConnectionToFilter(connection: KernelConnectionMetadata): KernelFilter | undefined {
         if (connection.kind === 'connectToLiveKernel') {
-            traceError('Hiding default or live kernels via filter is not supported');
+            traceVerbose('Hiding default or live kernels via filter is not supported');
             return;
         }
-        if (connection.kind === 'startUsingKernelSpec' && connection.kernelSpec.specFile) {
+        if (connection.kind === 'startUsingLocalKernelSpec' && connection.kernelSpec.specFile) {
             return <KernelSpecFiter>{
                 path: this.pathUtils.getDisplayName(connection.kernelSpec.specFile),
                 type: 'jupyterKernelspec'

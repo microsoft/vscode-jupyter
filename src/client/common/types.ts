@@ -162,7 +162,6 @@ export interface IJupyterSettings {
     readonly remoteDebuggerPort: number;
     readonly colorizeInputBox: boolean;
     readonly addGotoCodeLenses: boolean;
-    readonly runMagicCommands: string;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
     readonly defaultCellMarker: string;

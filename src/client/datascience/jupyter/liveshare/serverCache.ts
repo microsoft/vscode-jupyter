@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
@@ -17,7 +17,6 @@ import { calculateWorkingDirectory } from '../../utils';
 interface IServerData {
     options: INotebookServerOptions;
     promise: Promise<INotebookServer | undefined>;
-    cancelSource: CancellationTokenSource;
     resolved: boolean;
 }
 
@@ -34,15 +33,11 @@ export class ServerCache implements IAsyncDisposable {
     public async getOrCreate(
         createFunction: (
             options: INotebookServerOptions,
-            cancelToken?: CancellationToken
+            cancelToken: CancellationToken
         ) => Promise<INotebookServer | undefined>,
         options: INotebookServerOptions,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        const cancelSource = new CancellationTokenSource();
-        if (cancelToken) {
-            cancelToken.onCancellationRequested(() => cancelSource.cancel());
-        }
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let data: IServerData | undefined;
@@ -53,9 +48,8 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelSource.token),
+                promise: createFunction(options, cancelToken),
                 options: fixedOptions,
-                cancelSource,
                 resolved: false
             };
             this.cache.set(key, data);
@@ -130,14 +124,15 @@ export class ServerCache implements IAsyncDisposable {
                 options && options.workingDir
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
-            allowUI: options.allowUI
+            ui: options.ui,
+            localJupyter: options.localJupyter
         };
     }
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.uri ? options.uri : '';
+        const uri = options.uri ? options.uri.toString() : '';
         const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `${uri}${useFlag}${options.workingDir}`;
+        return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
     }
 }

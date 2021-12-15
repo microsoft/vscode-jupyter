@@ -147,7 +147,7 @@ export class JupyterExporter implements INotebookExporter {
     // When we export we want to our change directory back to the first real file that we saw run from any workspace folder
     private firstWorkspaceFolder = async (cells: ICell[]): Promise<string | undefined> => {
         for (const cell of cells) {
-            const filename = cell.file;
+            const filename = cell.uri?.fsPath;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
             if (filename && path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {

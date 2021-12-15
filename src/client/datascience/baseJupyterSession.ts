@@ -6,10 +6,10 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { Event, EventEmitter } from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../common/logger';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -69,6 +69,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.getServerStatus();
     }
 
+    public abstract get kernelId(): string;
+
     public get isConnected(): boolean {
         return this.connected;
     }
@@ -76,7 +78,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected statusHandler: Slot<ISessionWithSocket, KernelMessage.Status>;
     protected connected: boolean = false;
-    protected restartSessionPromise: Promise<ISessionWithSocket> | undefined;
+    protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<ISessionWithSocket> };
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
@@ -106,12 +108,14 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this._isDisposed = true;
         if (this.session) {
             try {
-                traceInfo('Shutdown session - current session');
+                traceVerbose('Shutdown session - current session');
                 await this.shutdownSession(this.session, this.statusHandler, false);
-                traceInfo('Shutdown session - get restart session');
+                traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
-                    const restartSession = await this.restartSessionPromise;
-                    traceInfo('Shutdown session - shutdown restart session');
+                    this.restartSessionPromise.token.cancel();
+                    const restartSession = await this.restartSessionPromise.promise;
+                    this.restartSessionPromise.token.dispose();
+                    traceVerbose('Shutdown session - shutdown restart session');
                     await this.shutdownSession(restartSession, undefined, true);
                 }
             } catch {
@@ -125,7 +129,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.onStatusChangedEvent.dispose();
         }
         disposeAllDisposables(this.disposables);
-        traceInfo('Shutdown session -- complete');
+        traceVerbose('Shutdown session -- complete');
     }
     public async interrupt(): Promise<void> {
         if (this.session && this.session.kernel) {
@@ -182,7 +186,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             // keep the old session (user could be restarting for a number of reasons).
 
             // Just switch to the other session. It should already be ready
-            const newSession = await this.restartSessionPromise;
+            const newSession = await this.restartSessionPromise.promise;
             this.setSession(newSession);
 
             if (newSession.kernel) {
@@ -192,6 +196,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // Rewire our status changed event.
                 newSession.statusChanged.connect(this.statusHandler);
             }
+            this.restartSessionPromise.token.dispose();
             this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
             if (oldStatusHandler && oldSession) {
@@ -365,18 +370,18 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     ): Promise<void> {
         if (session && session.kernel) {
             const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
-            traceInfo(`shutdownSession ${kernelIdForLogging} - start`);
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession)) {
-                    traceInfo(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
                 }
                 try {
-                    traceInfo(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
@@ -392,7 +397,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // Ignore, just trace.
                 traceWarning(e);
             }
-            traceInfo(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         }
     }
     private canShutdownSession(session: ISessionWithSocket, isRequestToShutDownRestartSession: boolean | undefined) {

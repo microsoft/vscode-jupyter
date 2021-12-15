@@ -28,8 +28,8 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
-import { Memento, Uri } from 'vscode';
-import { IExtensions } from '../../../client/common/types';
+import { EventEmitter, Memento, Uri } from 'vscode';
+import { IDisposable, IExtensions } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
@@ -39,6 +39,7 @@ import {
     getNormalizedInterpreterPath
 } from '../../../client/pythonEnvironments/info/interpreter';
 import { OSType } from '../../../client/common/utils/platform';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -49,6 +50,7 @@ import { OSType } from '../../../client/common/utils/platform';
         let extensionChecker: IPythonExtensionChecker;
         let extensions: IExtensions;
         const defaultPython3Name = 'python3';
+        const disposables: IDisposable[] = [];
         const pyEnvInterpreter: PythonEnvironment = {
             displayName: 'Python 3 Environment for PyEnv',
             path: '/users/username/pyenv/envs/temp/python',
@@ -275,6 +277,9 @@ import { OSType } from '../../../client/common/utils/platform';
             when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
             const envVarsProvider = mock(EnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
+            const event = new EventEmitter<Uri | undefined>();
+            disposables.push(event);
+            when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(event.event);
             extensionChecker = mock(PythonExtensionChecker);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
@@ -330,11 +335,16 @@ import { OSType } from '../../../client/common/utils/platform';
                 return arePathsSame(a, b);
             });
             when(fs.localDirectoryExists(anything())).thenResolve(true);
-
-            const jupyterPaths = new JupyterPaths(instance(platformService), pathUtils, instance(envVarsProvider));
             const memento = mock<Memento>();
             when(memento.get(anything(), anything())).thenReturn(false);
             when(memento.update(anything(), anything())).thenResolve();
+            const jupyterPaths = new JupyterPaths(
+                instance(platformService),
+                pathUtils,
+                instance(envVarsProvider),
+                disposables,
+                instance(memento)
+            );
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
@@ -342,9 +352,9 @@ import { OSType } from '../../../client/common/utils/platform';
                 instance(extensionChecker),
                 instance(memento)
             );
-            const memeto = mock<Memento>();
-            when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
-            when(memeto.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
+            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY', anything())).thenReturn([]);
+            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
+            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
@@ -359,11 +369,12 @@ import { OSType } from '../../../client/common/utils/platform';
                     nonPythonKernelSpecFinder
                 ),
                 jupyterPaths,
-                instance(memeto),
+                instance(memento),
                 instance(fs)
             );
         });
         teardown(() => {
+            disposeAllDisposables(disposables);
             sinon.restore();
         });
         test('Kernels found on disk with Python extension installed & no python intepreters discovered', async () => {

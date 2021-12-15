@@ -32,7 +32,7 @@ import {
     Hover,
     Diagnostic
 } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
@@ -173,24 +173,6 @@ export async function createTemporaryNotebook(
 
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return tempFile;
-}
-
-export async function canRunNotebookTests() {
-    if (!isInsiders() && !process.env.VSC_JUPYTER_RUN_NB_TEST) {
-        console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
-            }`
-        );
-        return false;
-    }
-    const api = await initialize();
-    const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-    const canRunTests = appEnv.channel === 'insiders';
-    if (!canRunTests) {
-        console.log(`Can't run native nb tests appEnv.channel = ${appEnv.channel}`);
-    }
-    return canRunTests;
 }
 
 export async function shutdownAllNotebooks() {
@@ -362,7 +344,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 );
                 return preferred != undefined;
             },
-            3_000,
+            30_000,
             `Did not find a controller with document affinity`
         );
     } catch {
@@ -385,6 +367,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                       language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 
+    traceInfo(`Preferred kernel for selection is ${match?.id}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange({ labelOrId: match!.id }, timeout);
 }

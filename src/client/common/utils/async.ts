@@ -20,12 +20,6 @@ export async function sleep(timeout: number): Promise<number> {
     });
 }
 
-// TODO: This will never reject when there's a timeout, its only used in 3 places, remove this.
-// TODO: Remove this.
-
-/**
- * @deprecated use Promise.race([..., sleep(n)])
- */
 export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {
@@ -63,6 +57,7 @@ export interface Deferred<T> {
     readonly resolved: boolean;
     readonly rejected: boolean;
     readonly completed: boolean;
+    readonly value?: T;
     resolve(value?: T | PromiseLike<T>): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reject(reason?: any): void;
@@ -75,6 +70,10 @@ class DeferredImpl<T> implements Deferred<T> {
     private _resolved: boolean = false;
     private _rejected: boolean = false;
     private _promise: Promise<T>;
+    private _value: T | undefined;
+    public get value() {
+        return this._value;
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(private scope: any = null) {
         // eslint-disable-next-line
@@ -83,7 +82,8 @@ class DeferredImpl<T> implements Deferred<T> {
             this._reject = rej;
         });
     }
-    public resolve(_value?: T | PromiseLike<T>) {
+    public resolve(value?: T | PromiseLike<T>) {
+        this._value = value as T | undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this._resolve.apply(this.scope ? this.scope : this, arguments as any);
         this._resolved = true;

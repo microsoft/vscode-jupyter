@@ -6,9 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
+import { IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
+import { CondaService } from '../common/process/condaService';
 import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
+import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { IRawNotebookSupportedService } from './types';
@@ -21,7 +24,11 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(CondaService) private readonly condaService: CondaService,
+        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
     ) {}
     public async activate(): Promise<void> {
         // Don't prewarm global interpreter if running with ZMQ
@@ -32,8 +39,20 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
                 )
             );
             this.preWarmInterpreterVariables().ignoreErrors();
+            this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
         }
-        this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
+        if (this.pythonChecker.isPythonExtensionInstalled) {
+            // Don't try to pre-warm variables if user has too many workspace folders opened.
+            const workspaceFolderCount = this.workspace.workspaceFolders?.length ?? 0;
+            if (workspaceFolderCount <= 5) {
+                void this.envVarsProvider.getEnvironmentVariables(undefined);
+                (this.workspace.workspaceFolders || []).forEach((folder) => {
+                    void this.envVarsProvider.getEnvironmentVariables(folder.uri);
+                });
+            }
+            void this.condaService.getCondaFile();
+            void this.condaService.getCondaVersion();
+        }
     }
 
     private async preWarmInterpreterVariables() {

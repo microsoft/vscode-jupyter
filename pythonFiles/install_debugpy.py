@@ -3,6 +3,7 @@ import json
 import os
 import urllib.request as url_lib
 import zipfile
+import builtins
 from packaging.version import parse as version_parser
 
 
@@ -35,7 +36,7 @@ def _get_debugger_wheel_urls(data, version):
 
 def _download_and_extract(root, url, version):
     root = os.getcwd() if root is None or root == "." else root
-    print(url)
+    builtins.print(url)
     with url_lib.urlopen(url) as response:
         data = response.read()
         with zipfile.ZipFile(io.BytesIO(data), "r") as wheel:
@@ -43,7 +44,7 @@ def _download_and_extract(root, url, version):
                 # Ignore dist info since we are merging multiple wheels
                 if ".dist-info/" in zip_info.filename:
                     continue
-                print("\t" + zip_info.filename)
+                builtins.print("\t" + zip_info.filename)
                 wheel.extract(zip_info.filename, root)
 
 

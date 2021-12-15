@@ -42,6 +42,9 @@ export class MockJupyterSession implements IJupyterSession {
     public get disposed() {
         return this._isDisposed === true;
     }
+    public get kernelId(): string {
+        return '1';
+    }
     constructor(
         cellDictionary: Record<string, nbformat.IBaseCell> | nbformat.IBaseCell[],
         timedelay: number,

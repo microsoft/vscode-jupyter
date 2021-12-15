@@ -16,13 +16,12 @@ import { IFileSystem } from '../../../common/platform/types';
 import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
+import { ignoreLogging, logValue } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IKernelDependencyService } from '../../types';
+import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
 import { cleanEnvironment } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
@@ -51,28 +50,32 @@ export class JupyterKernelService {
     @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
         resource: Resource,
-        kernel: KernelConnectionMetadata,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
+        @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
+        @ignoreLogging() ui: IDisplayOptions,
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
         // If we wish to wait for installation to complete, we must provide a cancel token.
         const tokenSource = new CancellationTokenSource();
         const token = wrapCancellationTokens(cancelToken, tokenSource.token);
 
         // If we have an interpreter, make sure it has the correct dependencies installed
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(
-                resource,
-                kernel.interpreter,
-                token,
-                disableUI
-            );
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.interpreter &&
+            kernel.kind !== 'startUsingRemoteKernelSpec'
+        ) {
+            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
         }
 
         var specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter
+        ) {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 
@@ -92,7 +95,13 @@ export class JupyterKernelService {
         }
 
         // Update the kernel environment to use the interpreter's latest
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter &&
+            specFile
+        ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
                     kernel.interpreter.path
@@ -120,17 +129,16 @@ export class JupyterKernelService {
     // eslint-disable-next-line complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
-    @reportAction(ReportableAction.KernelsRegisterKernel)
     // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<string | undefined> {
         // Get the global kernel location
         const root = await this.kernelFinder.getKernelSpecRootPath();
 
         // If that didn't work, we can't continue
-        if (!root || !kernel.kernelSpec || cancelToken?.isCancellationRequested || !kernel.kernelSpec.name) {
+        if (!root || !kernel.kernelSpec || cancelToken.isCancellationRequested || !kernel.kernelSpec.name) {
             return;
         }
 
@@ -170,7 +178,7 @@ export class JupyterKernelService {
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
             throw ex;
         }
-        if (cancelToken?.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested) {
             return;
         }
 
