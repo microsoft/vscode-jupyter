@@ -644,6 +644,13 @@ jobs:
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
+      - name: Upload Memory snapshot
+        uses: actions/upload-artifact@v2
+        with:
+          name: SD-memtest.json
+          path: './SD-memtest.json'
+          retention-days: 20
+
   smoke-tests:
     timeout-minutes: 30
     name: Smoke tests
