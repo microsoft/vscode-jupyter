@@ -41,7 +41,7 @@ export class ApiAccessService {
         if (this.context.extensionMode === ExtensionMode.Test) {
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
                 void this.appShell.showInformationMessage(
-                    'Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).'
+                    DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs()
                 );
             }
             return { extensionId: info.extensionId, accessAllowed: true };

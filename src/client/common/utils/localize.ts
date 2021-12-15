@@ -1071,6 +1071,10 @@ export namespace DataScience {
         'DataScience.allowExtensionToUseJupyterKernelApi',
         "Do you want to give the extension '{0}' access to the Jupyter kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels."
     );
+    export const thanksForUsingJupyterKernelApiPleaseRegisterWithUs = localize(
+        'DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs',
+        'Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
