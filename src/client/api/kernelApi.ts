@@ -4,7 +4,7 @@
 import { injectable, inject } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { traceInfo } from '../common/logger';
-import { IDisposableRegistry, ReadWrite } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { DeepReadonly } from '../common/utils/misc';
 import { Telemetry } from '../datascience/constants';
@@ -174,9 +174,9 @@ class JupyterKernelService implements IExportedKernelService {
         return info;
     }
     private translateKernelConnectionMetataToExportedType(connection: Readonly<IKernelKernelConnectionMetadata>) {
-        const readWriteConnection = connection as ReadWrite<typeof connection>;
+        const readWriteConnection = connection as IKernelKernelConnectionMetadata;
         // By not forcing the cast, we ensure the types are compatible.
         // All we're doing is ensuring the readonly version of one type is compatible with the other.
-        return readWriteConnection as DeepReadonly<typeof connection>;
+        return readWriteConnection as DeepReadonly<typeof readWriteConnection>;
     }
 }
