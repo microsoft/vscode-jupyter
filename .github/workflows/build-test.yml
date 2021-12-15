@@ -405,7 +405,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('nonconda-functional-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
@@ -414,7 +414,7 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('nonconda-functional-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
@@ -423,7 +423,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('nonconda-functional-requirements.txt')}}
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
@@ -471,14 +471,8 @@ jobs:
           python --version
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
           python ./pythonFiles/install_debugpy.py
-          python -m pip install numpy
-          python -m pip install nbformat==5.0.8
-          python -m pip install --upgrade jupyter
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-          python -m pip install --upgrade -r ./build/nonconda-functional-requirements.txt
           python -m ipykernel install --user
 
       - name: Install Python Libs for conda
@@ -487,9 +481,8 @@ jobs:
         run: |
           conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
           python ./pythonFiles/install_debugpy.py
-          python -m pip install --upgrade -r ./build/nonconda-functional-requirements.txt
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
 
@@ -698,13 +691,8 @@ jobs:
 
       - name: pip install system test requirements
         run: |
-          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip install --upgrade -r build/venv-test-requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-        shell: bash
-
-      - name: pip install smoke test requirements
-        run: |
-          python -m pip install --upgrade -r build/smoke-test-requirements.txt
         shell: bash
 
       # Compile the test files.
