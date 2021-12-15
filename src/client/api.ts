@@ -4,13 +4,11 @@
 'use strict';
 
 import { ExtensionMode } from 'vscode';
-import { ApiAccessService } from './api/apiAccessService';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelService, IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';
-import { PromiseChain } from './common/utils/async';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookEditorProvider } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
