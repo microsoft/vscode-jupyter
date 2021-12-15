@@ -256,7 +256,6 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
     return results;
 }
 
-
 /**
  * Provides the ability to chain promises.
  */
@@ -285,7 +284,7 @@ export class PromiseChain {
     /**
      * Chain the provided promise after all previous promises have completed (ignoring errors in previous promises).
      */
-     public chainFinally<T>(promise: () => Promise<T>): Promise<T> {
+    public chainFinally<T>(promise: () => Promise<T>): Promise<T> {
         const deferred = createDeferred<T>();
         this.currentPromise = this.currentPromise.finally(() =>
             promise()
