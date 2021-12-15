@@ -172,12 +172,15 @@ class JupyterKernelService implements IExportedKernelService {
         JupyterKernelService.wrappedKernelConnections.set(kernel, info);
         return info;
     }
-    private translateKernelConnectionMetataToExportedType(connection: Readonly<IKernelKernelConnectionMetadata>): KernelConnectionMetadata {
+    private translateKernelConnectionMetataToExportedType(
+        connection: Readonly<IKernelKernelConnectionMetadata>
+    ): KernelConnectionMetadata {
         const readWriteConnection = connection as IKernelKernelConnectionMetadata;
         // By not forcing the cast, we ensure the types are compatible.
         // All we're doing is ensuring the readonly version of one type is compatible with the other.
         // Return a readonly version of the type (to prevent anyone from stuffing this).
         // Else it breaks the Jupyter extension
-        return Object.freeze(readWriteConnection);
+        // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
+        return Object.freeze(readWriteConnection) as KernelConnectionMetadata;
     }
 }
