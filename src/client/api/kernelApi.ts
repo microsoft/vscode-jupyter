@@ -6,9 +6,14 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { traceInfo } from '../common/logger';
 import { IDisposableRegistry } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
+import { DeepReadonly } from '../common/utils/misc';
 import { Telemetry } from '../datascience/constants';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
-import { IKernel, IKernelProvider } from '../datascience/jupyter/kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    KernelConnectionMetadata as IKernelKernelConnectionMetadata
+} from '../datascience/jupyter/kernels/types';
 import { INotebookControllerManager } from '../datascience/notebook/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { ApiAccessService } from './apiAccessService';
@@ -84,17 +89,19 @@ class JupyterKernelService implements IExportedKernelService {
         });
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
-        return items;
+        return items.map((item) => this.translateKernelConnectionMetataToExportedType(item));
     }
     async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        return this.kernelProvider.kernels.map((item) => ({
-            metadata: item.kernelConnectionMetadata,
-            notebook: item.notebookDocument
-        }));
+        return this.kernelProvider.kernels.map((item) => {
+            return {
+                metadata: this.translateKernelConnectionMetataToExportedType(item.kernelConnectionMetadata),
+                notebook: item.notebookDocument
+            };
+        });
     }
     getKernel(
         notebook: NotebookDocument
@@ -106,7 +113,10 @@ class JupyterKernelService implements IExportedKernelService {
         const kernel = this.kernelProvider.get(notebook);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
-            return { metadata: kernel.kernelConnectionMetadata, connection };
+            return {
+                metadata: this.translateKernelConnectionMetataToExportedType(kernel.kernelConnectionMetadata),
+                connection
+            };
         }
     }
     async startKernel(spec: KernelConnectionMetadata, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
@@ -162,5 +172,10 @@ class JupyterKernelService implements IExportedKernelService {
         const info = { connection, kernelSocket: connection.kernelSocket };
         JupyterKernelService.wrappedKernelConnections.set(kernel, info);
         return info;
+    }
+    private translateKernelConnectionMetataToExportedType(connection: IKernelKernelConnectionMetadata) {
+        // By not forcing the cast, we ensure the types are compatible.
+        // All we're doing is ensuring the readonly version of one type is compatible with the other.
+        return connection as DeepReadonly<typeof connection>;
     }
 }

@@ -177,13 +177,13 @@ export type LiveKernelConnectionMetadata = DeepReadonly<{
 }>;
 
 export type KernelConnectionMetadata =
-    | DeepReadonly<LocalKernelSpecConnectionMetadata>
-    | DeepReadonly<RemoteKernelSpecConnectionMetadata>
-    | DeepReadonly<PythonKernelConnectionMetadata>
+    | LocalKernelSpecConnectionMetadata
+    | RemoteKernelSpecConnectionMetadata
+    | PythonKernelConnectionMetadata
     | LiveRemoteKernelConnectionMetadata;
 
-export type LiveRemoteKernelConnectionMetadata = DeepReadonly<LiveKernelConnectionMetadata>;
-export type ActiveKernel = DeepReadonly<LiveKernelConnectionMetadata>;
+export type LiveRemoteKernelConnectionMetadata = LiveKernelConnectionMetadata;
+export type ActiveKernel = LiveKernelConnectionMetadata;
 
 export interface IKernelSocket {
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;

@@ -26,7 +26,7 @@ import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { DebuggingTelemetry } from '../debugger/constants';
 import { EnvironmentType } from '../pythonEnvironments/info';
-import { IExportedKernelService } from '../api/types';
+import { IExportedKernelService } from '../api/extension';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
