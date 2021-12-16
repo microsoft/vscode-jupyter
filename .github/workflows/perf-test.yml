@@ -34,11 +34,11 @@ jobs:
       shell: bash -l {0}
       run: |
         # end of optional handling for multi line json
-        if (${{fromJson(steps.read_old_results.outputs.content).head_ref}} != ${{github.head_ref}}) || (${{fromJson(steps.read_old_results.outputs.content).run_number}} < ${{github.run_number}})
+        if ("${{fromJson(steps.read_old_results.outputs.content).head_ref}}" != "${{github.head_ref}}") || (${{fromJson(steps.read_old_results.outputs.content).run_number}} < ${{github.run_number}})
         then
            echo "::set-output name=shouldMakeChange::true"
         else
-           echo "::set-output name=shouldMakeChange::true"
+           echo "::set-output name=shouldMakeChange::false"
         fi
         echo "::set-output name=nextRunNumber::$((${{github.run_number}}+200))"
 
@@ -59,5 +59,5 @@ jobs:
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.PERF_UPLOAD_TOKEN_LLLL }}
+        github_token: ${{ secrets.PERF_UPLOAD_TOKEN }}
         branch: ${{ github.event.pull_request.head.ref }}
