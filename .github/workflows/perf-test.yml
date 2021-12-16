@@ -20,6 +20,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
     - name: Create local changes
       run: |
+        echo Try 2
         echo ${{ toJson(github) }}
         echo ${{ github.sha }} > ./build/ci/performance/perf-results.txt
     - name: Commit files
