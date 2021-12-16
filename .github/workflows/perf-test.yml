@@ -34,7 +34,7 @@ jobs:
       name: Parse git log for last message
       shell: bash -l {0}
       run: |
-        export LAST_COMMIT_MESSAGE=`git log --oneline -1 -- ./build/ci/performance/perf-results.json | sed -E 's/.*\s+(.*)/\1/g`
+        export LAST_COMMIT_MESSAGE=`git log --oneline -1 -- ./build/ci/performance/perf-results.json | sed -E 's/.*\s+(.*)/\1/g'`
         echo "::set-output name=message::$LAST_COMMIT_MESSAGE"
                 
     - id: test_make_change
