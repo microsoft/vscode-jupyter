@@ -49,7 +49,7 @@ jobs:
         dir: './build/ci/performance'
         json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}", "results": {} }'
 
-    # Submit the changes to the perf results
+    # Submit the changes to the perf results. Make sure to use special commit message
     - name: Commit files
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
       run: |
