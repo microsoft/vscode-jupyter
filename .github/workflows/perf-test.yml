@@ -20,9 +20,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
     - name: Create local changes
       run: |
-        echo ${{ github.ref }}
-        echo ${{ github.actor }}
-        echo ${{ github.event.commits[0] }}
+        echo ${{ toJson(github) }}
         echo ${{ github.sha }} > ./build/ci/performance/perf-results.txt
     - name: Commit files
       run: |
