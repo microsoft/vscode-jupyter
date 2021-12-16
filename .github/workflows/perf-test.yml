@@ -21,7 +21,7 @@ jobs:
     - name: Create local changes
       run: |
         echo ${{ github.ref }}
-        echo ${{ github.actor }} ${{ github.ref_name }}
+        echo ${{ github.actor }}
         echo ${{ github.sha }} > ./build/ci/performance/perf-results.txt
     - name: Commit files
       run: |
