@@ -28,7 +28,7 @@ jobs:
         content="${content//$'\n'/'%0A'}"
         content="${content//$'\r'/'%0D'}"
         # end of optional handling for multi line json
-        if (${{fromJson(steps.read_old_results.outputs.oldResults).head_ref}} != ${{github.event.head_ref}}) || (${{fromJson(steps.read_old_results.outputs.oldResults).run_number}} < ${{github.event.run_number}})
+        if (${{fromJson($content).head_ref}} != ${{github.event.head_ref}}) || (${{fromJson($content).run_number}} < ${{github.event.run_number}})
         then
            echo "::set-output name=shouldMakeChange::true"
         else
