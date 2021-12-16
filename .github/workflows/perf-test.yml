@@ -38,7 +38,6 @@ jobs:
         else
            echo "::set-output name=shouldMakeChange::0"
         fi
-        echo "::set-output name=nextRunNumber::$((${{github.run_number}}+1))"
 
     # This is the part that will run a test eventually
     - name: Create local changes 
@@ -47,7 +46,7 @@ jobs:
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
-        json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}", "results": {} }'
+        json: '{ "run_number": ${{ github.run_number }}, "head_ref": "${{github.head_ref}}", "results": {} }'
 
     # Submit the changes to the perf results. Make sure to use special commit message
     - name: Commit files
@@ -62,5 +61,5 @@ jobs:
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.PERF_UPLOAD_TOKEN_KK }}
+        github_token: ${{ secrets.PERF_UPLOAD_TOKEN }}
         branch: ${{ github.event.pull_request.head.ref }}
