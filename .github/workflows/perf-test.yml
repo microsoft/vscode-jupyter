@@ -34,13 +34,14 @@ jobs:
         else
            echo "::set-output name=shouldMakeChange::true"
         fi
+        echo "::set-output name=nextRunNumber::${{github.event.run_number}}+1"
     - name: Create local changes
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       uses: jsdaniell/create-json@1.1.2
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
-        json: '{ "run_number": ${{ github.event.run_number + 1 }}, "head_ref": ${{github.event.head_ref}}, "results": {} }'
+        json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": ${{github.event.head_ref}}, "results": {} }'
     - name: Commit files
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       run: |
