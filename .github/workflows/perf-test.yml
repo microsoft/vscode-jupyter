@@ -16,6 +16,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Create local changes
       run: |
         echo ${{ github.ref }}
