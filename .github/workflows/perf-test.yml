@@ -41,7 +41,7 @@ jobs:
         fi
         echo "::set-output name=nextRunNumber::$((${{github.run_number}}+1))"
 
-    - name: Create local changes
+    - name: Create local changes # This is the part that will run a test eventually
       if: (steps.test_make_change.outputs.shouldMakeChange == true)
       uses: jsdaniell/create-json@1.1.2
       with:
