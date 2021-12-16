@@ -173,13 +173,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return kernel;
     }
 
-    private async ensureKernelReady(): Promise<IKernel> {
-        if (this._kernelReadyPromise === undefined){
+    public async ensureKernelReady(): Promise<void> {
+        if (this._kernelReadyPromise === undefined) {
             this._kernelReadyPromise = this.createKernelReadyPromise();
         }
 
         try {
-            return await this._kernelReadyPromise
+            await this._kernelReadyPromise;
         } catch (error) {
             this._kernelReadyPromise = undefined;
             throw error;
@@ -364,7 +364,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         const [notebookEditor, kernel] = await Promise.all([
             this._editorReadyPromise,
-            this.ensureKernelReady(),
+            this._kernelReadyPromise,
             this.updateOwners(fileUri)
         ]);
         const id = uuid();
@@ -625,7 +625,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
-        const kernel = await this.ensureKernelReady();
+        const kernel = await this._kernelReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
