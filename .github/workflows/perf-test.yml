@@ -18,21 +18,35 @@ jobs:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
         ref: ${{ github.event.pull_request.head.ref }}
-    - name: View context attributes
-      uses: actions/github-script@v5
-      with:
-        script: console.log(context)        
+    - id: test_make_change
+        run: |
+          content=`cat ./build/ci/performance/perf-results.json`
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          if (${{fromJson(steps.read_old_results.outputs.oldResults).head_ref}} != ${{github.event.head_ref}}) || (${{fromJson(steps.read_old_results.outputs.oldResults).run_number}} < ${{github.event.run_number}})
+          then
+             echo "::set-output name=shouldMakeChange::true"
+          else
+             echo "::set-output name=shouldMakeChange::true"
+          fi
     - name: Create local changes
-      run: |
-        echo Try 2
-        echo ${{ toJson(github) }}
-        echo ${{ github.sha }} > ./build/ci/performance/perf-results.txt
+      if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
+      uses: jsdaniell/create-json@1.1.2
+      with:
+        name: 'perf-results.json'
+        dir: './build/ci/performance'
+        json: '{ "run_number": ${{ github.event.run_number + 1 }}, "head_ref": ${{github.event.head_ref}}, "results": {} }'
     - name: Commit files
+      if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       run: |
         git config --local user.email "41898282+github-actions@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -m "Update perf results" -a
     - name: Push changes
+      if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.PERF_UPLOAD_TOKEN_LLLL }}
