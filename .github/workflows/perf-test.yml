@@ -42,20 +42,21 @@ jobs:
         echo "::set-output name=nextRunNumber::$((${{github.run_number}}+1))"
 
     - name: Create local changes
-      if: ${{ steps.test_make_change.outputs.shouldMakeChange }} == true
+      if: "${{ steps.test_make_change.outputs.shouldMakeChange }}" == "true"
       uses: jsdaniell/create-json@1.1.2
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
         json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}", "results": {} }'
     - name: Commit files
-      if: ${{ steps.test_make_change.outputs.shouldMakeChange }} == true
+      if: "${{ steps.test_make_change.outputs.shouldMakeChange }}" == "true"
       run: |
+        echo shouldMakeChange = ${{ steps.test_make_change.outputs.shouldMakeChange }}
         git config --local user.email "41898282+github-actions@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -m "Update perf results" -a
     - name: Push changes
-      if: ${{ steps.test_make_change.outputs.shouldMakeChange }} == true
+      if: "${{ steps.test_make_change.outputs.shouldMakeChange }}" == "true"
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.PERF_UPLOAD_TOKEN_LL }}
