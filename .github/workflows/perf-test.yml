@@ -40,7 +40,7 @@ jobs:
         else
            echo "::set-output name=shouldMakeChange::false"
         fi
-        echo "::set-output name=nextRunNumber::$((${{github.run_number}}+200))"
+        echo "::set-output name=nextRunNumber::$((${{github.run_number}}+1))"
 
     - name: Create local changes
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
@@ -48,7 +48,7 @@ jobs:
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
-        json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}"", "results": {} }'
+        json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}", "results": {} }'
     - name: Commit files
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       run: |
