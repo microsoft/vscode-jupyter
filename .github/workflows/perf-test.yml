@@ -18,8 +18,8 @@ jobs:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
         ref: ${{ github.event.pull_request.head.ref }}
-    - id: test_make_change
-      name: Test if need to make changes
+    - id: read_old_results
+      name: Read old results into an output
       shell: bash -l {0}
       run: |
         content=`cat ./build/ci/performance/perf-results.json`
@@ -28,14 +28,20 @@ jobs:
         content="${content//$'\n'/'%0A'}"
         content="${content//$'\r'/'%0D'}"
         echo "::set-output name=content::$content"
+        
+    - id: test_make_change
+      name: Test if need to make changes
+      shell: bash -l {0}
+      run: |
         # end of optional handling for multi line json
-        if (${{fromJson(steps.test_make_change.outputs.content).head_ref}} != ${{github.event.head_ref}}) || (${{fromJson(steps.test_make_change.outputs.content).run_number}} < ${{github.event.run_number}})
+        if (${{fromJson(steps.read_old_results.outputs.content).head_ref}} != ${{github.event.head_ref}}) || (${{fromJson(steps.read_old_results.outputs.content).run_number}} < ${{github.event.run_number}})
         then
            echo "::set-output name=shouldMakeChange::true"
         else
            echo "::set-output name=shouldMakeChange::true"
         fi
         echo "::set-output name=nextRunNumber::${{github.event.run_number}}+1"
+        
     - name: Create local changes
       if: ${{ steps.test_make_change.outputs.shouldMakeChange}}
       uses: jsdaniell/create-json@1.1.2
