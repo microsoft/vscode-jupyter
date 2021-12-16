@@ -26,6 +26,7 @@ import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { DebuggingTelemetry } from '../debugger/constants';
 import { EnvironmentType } from '../pythonEnvironments/info';
+import { IExportedKernelService } from '../api/extension';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1500,5 +1501,13 @@ export interface IEventNamePropertyMapping {
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.endedSession]: {
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
+    };
+    [Telemetry.JupyterKernelApiUsage]: {
+        extensionId: string;
+        pemUsed: keyof IExportedKernelService;
+    };
+    [Telemetry.JupyterKernelApiAccess]: {
+        extensionId: string;
+        allowed: 'yes' | 'no';
     };
 }
