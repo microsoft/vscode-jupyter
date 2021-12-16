@@ -29,7 +29,14 @@ jobs:
         content="${content//$'\n'/'%0A'}"
         content="${content//$'\r'/'%0D'}"
         echo "::set-output name=content::$content"
-        
+
+    - id: determine_last_message
+      name: Parse git log for last message
+      shell: bash -l {0}
+      run: |
+        export LAST_COMMIT_MESSAGE=`git log --oneline -1 -- ./build/ci/performance/perf-results.json | sed -E 's/.*\s+(.*)/\1/g`
+        echo "::set-output name=message::$LAST_COMMIT_MESSAGE"
+                
     - id: test_make_change
       name: Test if need to make changes
       shell: bash -l {0}
@@ -64,5 +71,5 @@ jobs:
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.PERF_UPLOAD_TOKEN_LL }}
+        github_token: ${{ secrets.PERF_UPLOAD_TOKEN_KK }}
         branch: ${{ github.event.pull_request.head.ref }}
