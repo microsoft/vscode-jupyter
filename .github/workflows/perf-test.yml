@@ -12,6 +12,7 @@ on:
 jobs:
   perf-test:
     runs-on: ubuntu-latest
+    # Eventually we can use a pool here to run this on custom hardware
     steps:
     - uses: actions/checkout@v2
       with:
@@ -41,19 +42,24 @@ jobs:
         fi
         echo "::set-output name=nextRunNumber::$((${{github.run_number}}+1))"
 
-    - name: Create local changes # This is the part that will run a test eventually
+    # This is the part that will run a test eventually
+    - name: Create local changes 
       if: (steps.test_make_change.outputs.shouldMakeChange == true)
       uses: jsdaniell/create-json@1.1.2
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
         json: '{ "run_number": ${{ steps.test_make_change.outputs.nextRunNumber }}, "head_ref": "${{github.head_ref}}", "results": {} }'
+
+    # Submit the changes to the perf results
     - name: Commit files
       if: (steps.test_make_change.outputs.shouldMakeChange == true)
       run: |
         git config --local user.email "41898282+github-actions@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -m "Update perf results" -a
+
+    # Push the changes using a secret token
     - name: Push changes
       if: (steps.test_make_change.outputs.shouldMakeChange == true)
       uses: ad-m/github-push-action@master
