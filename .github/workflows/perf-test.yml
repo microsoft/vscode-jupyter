@@ -18,6 +18,8 @@ jobs:
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
     - name: Create local changes
       run: |
+        echo ${{ github.ref }}
+        echo ${{ github.actor }} ${{ github.ref_name }}
         echo ${{ github.sha }} > ./build/ci/performance/perf-results.txt
     - name: Commit files
       run: |
