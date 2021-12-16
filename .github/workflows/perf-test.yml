@@ -34,7 +34,7 @@ jobs:
       shell: bash -l {0}
       run: |
         # end of optional handling for multi line json
-        if ("${{fromJson(steps.read_old_results.outputs.content).head_ref}}" != "${{github.head_ref}}") || (${{fromJson(steps.read_old_results.outputs.content).run_number}} < ${{github.run_number}})
+        if ["${{fromJson(steps.read_old_results.outputs.content).head_ref}}" != "${{github.head_ref}}"] || [${{fromJson(steps.read_old_results.outputs.content).run_number}} -lt ${{github.run_number}}]
         then
            echo "::set-output name=shouldMakeChange::true"
         else
