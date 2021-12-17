@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Disposable, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo } from '../common/logger';
-import { IDisposableRegistry } from '../common/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Telemetry } from '../datascience/constants';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
@@ -14,9 +15,17 @@ import {
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
 } from '../datascience/jupyter/kernels/types';
 import { INotebookControllerManager } from '../datascience/notebook/types';
+import { IKernelSocket as ExtensionKernelSocket } from '../datascience/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { ApiAccessService } from './apiAccessService';
-import { ActiveKernel, IExportedKernelService, IKernelConnectionInfo, KernelConnectionMetadata } from './extension';
+import {
+    ActiveKernel,
+    IExportedKernelService,
+    IKernelConnectionInfo,
+    IKernelSocket,
+    KernelConnectionMetadata,
+    WebSocketData
+} from './extension';
 
 @injectable()
 export class JupyterKernelServiceFactory {
@@ -168,7 +177,8 @@ class JupyterKernelService implements IExportedKernelService {
         }
 
         const connection = new KernelConnectionWrapper(kernel, kernel.session!.kernel!, this.disposables);
-        const info = { connection, kernelSocket: connection.kernelSocket };
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        const info = { connection, kernelSocket: new KernelSocketWrapper(kernel) };
         JupyterKernelService.wrappedKernelConnections.set(kernel, info);
         return info;
     }
@@ -182,5 +192,74 @@ class JupyterKernelService implements IExportedKernelService {
         // Else it breaks the Jupyter extension
         // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
         return Object.freeze(readWriteConnection) as KernelConnectionMetadata;
+    }
+}
+
+/**
+ * Helper class to wrap the IKernelSocket.
+ * This way users of the API will not need to unbind/rebind the hooks and
+ * listen to changes in the observable.
+ * Also prevents the need for users of the API to depend on rxjs.
+ */
+class KernelSocketWrapper implements IKernelSocket {
+    private socket?: ExtensionKernelSocket;
+    private readonly disposables: IDisposable[] = [];
+    private receiveHooks = new Set<(data: WebSocketData) => Promise<void>>();
+    private sendHooks = new Set<(data: unknown, cb?: (err?: Error) => void) => Promise<void>>();
+    private readonly _onDidSocketChange = new EventEmitter<void>();
+    public get ready(): boolean {
+        return !!this.socket;
+    }
+    public get onDidChange(): Event<void> {
+        return this._onDidSocketChange.event;
+    }
+    constructor(kernel: IKernel) {
+        const subscription = kernel.kernelSocket.subscribe((socket) => {
+            this.removeHooks();
+            this.socket = socket?.socket;
+            this.addHooks();
+            this._onDidSocketChange.fire();
+        });
+        this.disposables.push(new Disposable(() => subscription.unsubscribe()));
+    }
+    public dispose() {
+        disposeAllDisposables(this.disposables);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendToRealKernel(data: any, cb?: (err?: Error) => void): void {
+        this.socket?.sendToRealKernel(data, cb);
+    }
+    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void {
+        this.receiveHooks.add(hook);
+    }
+    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void {
+        this.receiveHooks.delete(hook);
+    }
+    addSendHook(
+        hook: (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: any,
+            cb?: (err?: Error) => void
+        ) => Promise<void>
+    ): void {
+        this.sendHooks.add(hook);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
+        this.sendHooks.delete(hook);
+    }
+    private removeHooks() {
+        if (!this.socket) {
+            return;
+        }
+        this.receiveHooks.forEach((hook) => this.socket?.removeReceiveHook(hook));
+        this.sendHooks.forEach((hook) => this.socket?.removeSendHook(hook));
+    }
+    private addHooks() {
+        if (!this.socket) {
+            return;
+        }
+        this.receiveHooks.forEach((hook) => this.socket?.addReceiveHook(hook));
+        this.sendHooks.forEach((hook) => this.socket?.addSendHook(hook));
     }
 }

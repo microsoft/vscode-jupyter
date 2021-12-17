@@ -33,11 +33,8 @@ import type {
 import { ISpecModel } from '@jupyterlab/services/lib/kernelspec/restapi';
 import { JSONObject } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Disposable } from 'vscode';
 import { IDisposable } from '../../../common/types';
-import { IKernelSocket } from '../../types';
 import { IKernel } from './types';
 
 export class KernelConnectionWrapper implements Kernel.IKernelConnection {
@@ -49,11 +46,6 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
     public get serverSettings() {
         return this.kernelConnection.serverSettings;
     }
-    private _kernelSocket = new ReplaySubject<IKernelSocket | undefined>();
-    public get kernelSocket(): Observable<IKernelSocket | undefined> {
-        return this._kernelSocket;
-    }
-
     public readonly disposed = new Signal<this, void>(this);
 
     constructor(
@@ -64,9 +56,6 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         kernel.onDisposed(() => this.disposed.emit(), this, disposables);
         kernel.onStatusChanged(() => this.statusChanged.emit(kernel.status), this, disposables);
         this.startHandleKernelMessages(this.kernelConnection);
-        kernel.kernelSocket.subscribe((socket) => {
-            this._kernelSocket.next(socket?.socket);
-        });
         disposables.push(new Disposable(() => this.stopHandlingKernelMessages(this.kernelConnection)));
     }
     public get id(): string {
