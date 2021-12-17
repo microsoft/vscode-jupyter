@@ -256,7 +256,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._controllerReadyPromise.resolve(e.controller);
 
                 // Recreate the kernel ready promise now that we have a new controller
-                this._kernelReadyPromise = this.createKernelReadyPromise();
+                void this.ensureKernelReady();
             },
             this,
             this.internalDisposables
