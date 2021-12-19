@@ -183,9 +183,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!envVariablesOurSelves.resolved) {
             traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.path)}`);
         }
-        return envVariablesFromPython.promise.then((env) => {
-            return fixEnvVars(env);
-        });
+        return envVariablesFromPython.promise.then((env) => fixEnvVars(env));
     }
     @traceDecorators.verbose(
         'Getting activated env variables from Python',
