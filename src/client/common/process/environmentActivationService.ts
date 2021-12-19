@@ -165,7 +165,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.path)} in ${stopWatch.elapsedTime}ms`)
         );
         const fixEnvVars = (env?: NodeJS.ProcessEnv) => {
-            if (!env || interpreter.envType !== EnvironmentType.Conda) {
+            if (!env) {
                 return env;
             }
             // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
