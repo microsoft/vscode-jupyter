@@ -25,6 +25,7 @@ import {
     waitForKernelToChange,
     waitForCellToHaveOutput
 } from './helper';
+import { traceInfoIfCI } from '../../../client/common/logger';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('sys.path in Python Kernels', function () {
@@ -92,7 +93,7 @@ suite('sys.path in Python Kernels', function () {
         console.log(`End test completed ${this.currentTest?.title}`);
     });
 
-    test('Ensure global site_packages is at the bottom of sys.path in kernel process', async function () {
+    test('Ensure global site_packages is at the bottom of syspath in kernel process', async function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.path', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -106,6 +107,7 @@ suite('sys.path in Python Kernels', function () {
         ]);
 
         const output = Buffer.from(cell.outputs[0].items[0].data).toString().trim();
+        traceInfoIfCI(`sys.path value is ${output}`);
         const paths: string[] = JSON.parse(output);
         const pythonFilesFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles');
         const filteredPaths = paths.filter((value, i) => {
