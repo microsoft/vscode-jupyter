@@ -19,7 +19,8 @@ import { DisplayOptions } from '../displayOptions';
 import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
+import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { RawSession } from '../raw-kernel/rawSession';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IDisplayOptions, ISessionWithSocket } from '../types';
@@ -265,6 +266,16 @@ export class RawJupyterSession extends BaseJupyterSession {
             options.token
         );
 
+        return KernelProgressReporter.wrapAndReportProgress(
+            this.resource,
+            localize.DataScience.waitingForJupyterSessionToBeIdle(),
+            () => this.postStartRawSession(options, process)
+        );
+    }
+    private async postStartRawSession(
+        options: { token: CancellationToken; ui: IDisplayOptions },
+        process: IKernelProcess
+    ): Promise<RawSession> {
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process, this.resource);
 
@@ -284,7 +295,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         // Attempt to get kernel to respond to requests (this is what jupyter does today).
-        // Kinda warms up the kernel communiocation & ensure things are in the right state.
+        // Kinda warms up the kernel communication & ensure things are in the right state.
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
         // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
         // Try again (twice, jupyter tries this a couple f times).
@@ -329,7 +340,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         /**
          * To get a better understanding of the way Jupyter works, we need to look at Jupyter Client code.
          * Here's an excerpt (there are a lot of checks in a number of different files, this is NOT he only place)
-         * Leaving this here for refernce purposes.
+         * Leaving this here for reference purposes.
 
             def wait_for_ready(self):
                 # Wait for kernel info reply on shell channel

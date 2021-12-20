@@ -107,7 +107,7 @@ export class JupyterKernelService {
                     kernel.interpreter.path
                 )} for ${kernel.id}`
             );
-            await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, specFile, token);
+            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, token);
         }
     }
 
@@ -200,6 +200,7 @@ export class JupyterKernelService {
         return kernelSpecFilePath;
     }
     private async updateKernelEnvironment(
+        resource: Resource,
         interpreter: PythonEnvironment | undefined,
         kernel: IJupyterKernelSpec,
         specFile: string,
@@ -242,7 +243,7 @@ export class JupyterKernelService {
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
                 specModel.env = await this.activationHelper
-                    .getActivatedEnvironmentVariables(undefined, interpreter, true)
+                    .getActivatedEnvironmentVariables(resource, interpreter, true)
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);

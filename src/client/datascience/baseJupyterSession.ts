@@ -24,6 +24,7 @@ import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from './errors/sessionDisposedError';
+import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -295,30 +296,40 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         isRestartSession?: boolean
     ): Promise<void> {
         if (session && session.kernel) {
-            traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+            const progress = isRestartSession
+                ? undefined
+                : KernelProgressReporter.reportProgress(
+                      this.resource,
+                      localize.DataScience.waitingForJupyterSessionToBeIdle()
+                  );
+            try {
+                traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            // When our kernel connects and gets a status message it triggers the ready promise
-            const deferred = createDeferred<string>();
-            const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-                if (status == 'idle') {
-                    deferred.resolve(status);
+                // When our kernel connects and gets a status message it triggers the ready promise
+                const deferred = createDeferred<string>();
+                const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
+                    if (status == 'idle') {
+                        deferred.resolve(status);
+                    }
+                };
+                session.kernel.statusChanged?.connect(handler);
+                if (session.kernel.status == 'idle') {
+                    deferred.resolve(session.kernel.status);
                 }
-            };
-            session.kernel.statusChanged?.connect(handler);
-            if (session.kernel.status == 'idle') {
-                deferred.resolve(session.kernel.status);
-            }
 
-            const result = await Promise.race([deferred.promise, sleep(timeout)]);
-            session.kernel.statusChanged?.disconnect(handler);
-            traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                const result = await Promise.race([deferred.promise, sleep(timeout)]);
+                session.kernel.statusChanged?.disconnect(handler);
+                traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            if (result.toString() == 'idle') {
-                return;
+                if (result.toString() == 'idle') {
+                    return;
+                }
+                // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+                this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
+                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            } finally {
+                progress?.dispose();
             }
-            // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-            this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
-            throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         } else {
             throw new JupyterInvalidKernelError(undefined);
         }
