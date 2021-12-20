@@ -313,6 +313,7 @@ async function waitForKernelToChangeImpl(
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, timeout = 100_000) {
+    traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
