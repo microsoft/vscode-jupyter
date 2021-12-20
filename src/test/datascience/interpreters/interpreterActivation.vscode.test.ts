@@ -11,7 +11,7 @@ import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { EnvironmentActivationService } from '../../../client/common/process/interpreterActivation';
+import { EnvironmentActivationService } from '../../../client/common/process/environmentActivationService';
 import * as path from 'path';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';

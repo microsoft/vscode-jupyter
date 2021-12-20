@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import * as internalScripts from '../../common/process/internal/scripts';
-import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
-import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../../common/types';
-import { createDeferredFromPromise, sleep } from '../../common/utils/async';
-import { OSType } from '../../common/utils/platform';
-import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { IWorkspaceService } from '../application/types';
+import { IFileSystem, IPlatformService } from '../platform/types';
+import * as internalScripts from './internal/scripts';
+import { ExecutionResult, IProcessServiceFactory } from './types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../types';
+import { createDeferredFromPromise, sleep } from '../utils/async';
+import { OSType } from '../utils/platform';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { logValue, TraceOptions } from '../../logging/trace';
@@ -29,7 +29,7 @@ import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } fr
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { CondaService } from './condaService';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment';
-import { printEnvVariablesToFile } from '../../common/process/internal/scripts';
+import { printEnvVariablesToFile } from './internal/scripts';
 import { ProcessService } from './proc';
 import { BufferDecoder } from './decoder';
 import { testOnlyMethod } from '../utils/decorators';
