@@ -397,6 +397,7 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
  * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
  */
 export async function createEmptyPythonNotebook(disposables: IDisposable[] = []) {
+    traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const templatePythonNbFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
