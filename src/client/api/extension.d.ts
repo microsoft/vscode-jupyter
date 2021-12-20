@@ -5,8 +5,11 @@
 import { CancellationToken, Event, NotebookDocument } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
-import { Observable } from 'rxjs/Observable';
-import type { Data as WebSocketData } from 'ws';
+
+/**
+ * Data represents the message payload received over the WebSocket.
+ */
+export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export interface JupyterAPI {
     /**
@@ -173,26 +176,35 @@ export type LiveRemoteKernelConnectionMetadata = LiveKernelConnectionMetadata;
 export type ActiveKernel = LiveKernelConnectionMetadata;
 
 export interface IKernelSocket {
+    /**
+     * Whether the kernel socket is read & available for use.
+     */
+    ready: boolean;
+    /**
+     * Event fired when the underlying socket state changes.
+     * E.g. when the socket is connected/available or changes to another socket.
+     */
+    onDidChange: Event<void>;
+    /**
+     * Sends data to the underlying Jupyter kernel over the socket connection.
+     * This bypasses all of the jupyter kernel comms infrastructure.
+     */
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
-     * @param listener
      */
     addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
     /**
      * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
-     * @param listener
      */
     removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
     /**
      * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
-     * @param patch
      */
     addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
     /**
      * Removes a send hook from the socket.
-     * @param hook
      */
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
@@ -206,7 +218,7 @@ export type IKernelConnectionInfo = {
      * Underlying socket used by jupyterlab/services to communicate with kernel.
      * See jupyterlab/services/kernel/default.ts
      */
-    kernelSocket: Observable<IKernelSocket | undefined>;
+    kernelSocket: IKernelSocket;
 };
 
 export interface IExportedKernelService {
