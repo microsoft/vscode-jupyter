@@ -218,7 +218,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 let waitForKernelPendingPromise: Promise<void> | undefined;
 
 export async function waitForKernelToChange(
-    criteria: { labelOrId?: string; interpreterPath?: string },
+    criteria: { labelOrId: string } | { interpreterPath: string },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -230,10 +230,10 @@ export async function waitForKernelToChange(
 }
 
 async function waitForKernelToChangeImpl(
-    criteria: { labelOrId?: string; interpreterPath?: string },
+    criteria: { labelOrId: string } | { interpreterPath: string },
     timeout = defaultNotebookTestTimeout
 ) {
-    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria.labelOrId)}`);
+    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria)}`);
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -254,8 +254,8 @@ async function waitForKernelToChangeImpl(
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
-    if (criteria.labelOrId) {
-        const labelOrId = criteria.labelOrId;
+    const labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+    if (labelOrId) {
         id = notebookControllers?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
         if (!id) {
             // Try includes instead
@@ -264,11 +264,11 @@ async function waitForKernelToChangeImpl(
             )?.id;
         }
     }
-    if (criteria.interpreterPath && !id) {
+    const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
+    if (interpreterPath && !id) {
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
-            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
-            ?.id;
+            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {
