@@ -51,7 +51,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         );
     }
     @testOnlyMethod()
-    public clear() {
+    public clearCache() {
         this.serverPromise.local = undefined;
         this.serverPromise.remote = undefined;
     }
