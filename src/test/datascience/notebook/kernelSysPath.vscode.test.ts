@@ -33,7 +33,6 @@ suite('sys.path in Python Kernels', function () {
     const venvKernelPython = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
 
     let api: IExtensionTestApi;
-    let venvKernelPythonPath: string;
     let interpreterInfo: PythonEnvironment;
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
@@ -99,7 +98,7 @@ suite('sys.path in Python Kernels', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         // Change kernel
-        await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
+        await waitForKernelToChange({ interpreterPath: interpreterInfo.path });
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
