@@ -4,7 +4,7 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentActivationService } from '../common/process/interpreterActivation';
+import { EnvironmentActivationService } from '../common/process/environmentActivationService';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
