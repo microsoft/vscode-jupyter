@@ -39,7 +39,8 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout,
-    waitForCellExecutionState
+    waitForCellExecutionState,
+    getCellOutputs
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -402,9 +403,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         ]);
     });
     test('More messages from background threads', async function () {
-        // Not consistently passing
-        // https://github.com/microsoft/vscode-jupyter/issues/7620
-        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         await insertCodeCell(
             dedent`
@@ -465,9 +463,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         ]);
     });
     test('Messages from background threads can come in other cell output', async function () {
-        // Not consistently passing
-        // https://github.com/microsoft/vscode-jupyter/issues/7620
-        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
         // The background messages (output) from cell one will end up in cell 2.
@@ -513,18 +508,34 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return false;
                 },
                 20_000,
-                'Expected background messages to end up in cell 2'
+                () =>
+                    `1. Expected background messages to end up in cell 2, cell1 output = ${getCellOutputs(
+                        cell1
+                    )}, cell2 output = ${getCellOutputs(cell2)}`
+            ),
+            waitForCondition(
+                async () => {
+                    const cell1Output = getTextOutputValue(cell1.outputs[0]);
+                    const cell2Output = getTextOutputValue(cell2.outputs[0]);
+                    expect(cell1Output).includes('main thread done', 'Main thread did not complete in cell 1');
+                    expect(cell2Output).includes('HELLO', 'Print output from cell 2 not in output of cell 2');
+                    expect(cell2Output).includes(
+                        'iteration 9',
+                        'Background output from cell 1 not in output of cell 2'
+                    );
+                    expect(cell2Output.indexOf('iteration 9')).greaterThan(
+                        cell2Output.indexOf('HELLO'),
+                        'output from cell 2 should be printed before last background output from cell 1'
+                    );
+                    return true;
+                },
+                20_000,
+                () =>
+                    `2. Expected background messages to end up in cell 2, cell1 output = ${getCellOutputs(
+                        cell1
+                    )}, cell2 output = ${getCellOutputs(cell2)}`
             )
         ]);
-        const cell1Output = getTextOutputValue(cell1.outputs[0]);
-        const cell2Output = getTextOutputValue(cell2.outputs[0]);
-        expect(cell1Output).includes('main thread done', 'Main thread did not complete in cell 1');
-        expect(cell2Output).includes('HELLO', 'Print output from cell 2 not in output of cell 2');
-        expect(cell2Output).includes('iteration 9', 'Background output from cell 1 not in output of cell 2');
-        expect(cell2Output.indexOf('iteration 9')).greaterThan(
-            cell2Output.indexOf('HELLO'),
-            'output from cell 2 should be printed before last background output from cell 1'
-        );
     });
     test('Outputs with support for ansic code `\u001b[A`', async function () {
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
