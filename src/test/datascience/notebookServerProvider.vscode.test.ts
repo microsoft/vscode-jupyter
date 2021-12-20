@@ -19,7 +19,7 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IConfigurationService } from '../../client/common/types';
 import { JupyterSettings } from '../../client/common/configSettings';
 
-suite('Interactive window (remote)', async () => {
+suite('Jupyter CLI Tests', async () => {
     let jupyterServerProvider: NotebookServerProvider;
     let pythonExecFactory: IPythonExecutionFactory;
     let settings: JupyterSettings;
