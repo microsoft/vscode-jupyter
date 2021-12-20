@@ -164,18 +164,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         void envVariablesOurSelves.promise.then(() =>
             traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.path)} in ${stopWatch.elapsedTime}ms`)
         );
-        const fixEnvVars = (env?: NodeJS.ProcessEnv) => {
-            if (!env) {
-                return env;
-            }
-            // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-            return { ...env, PYTHONNOUSERSITE: 'True' };
-        };
         // If we got this using our way, and we have env variables use it.
         if (envVariablesOurSelves.resolved) {
             if (envVariablesOurSelves.value) {
                 traceVerbose(`Got env vars ourselves faster ${getDisplayPath(interpreter?.path)}`);
-                return fixEnvVars(envVariablesOurSelves.value);
+                return envVariablesOurSelves.value;
             } else {
                 traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.path)}`);
             }
@@ -183,7 +176,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!envVariablesOurSelves.resolved) {
             traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.path)}`);
         }
-        return envVariablesFromPython.promise.then((env) => fixEnvVars(env));
+        return envVariablesFromPython.promise;
     }
     @traceDecorators.verbose(
         'Getting activated env variables from Python',
