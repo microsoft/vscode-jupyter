@@ -11,7 +11,7 @@
     "python.linting.mypyEnabled": false,
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
-    "python.pythonPath": "python",
+    "python.pythonPath": "/home/don/miniconda3/envs/env1/bin/python",
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
     // and that slows down tests significantly. We have other tests on CI for testing
     // downloading of LS with this setting enabled.
@@ -29,5 +29,5 @@
     "jupyter.magicCommandsAsComments": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
-    "python.defaultInterpreterPath": "python",
+    "python.defaultInterpreterPath": "/home/don/miniconda3/envs/env1/bin/python"
 }
