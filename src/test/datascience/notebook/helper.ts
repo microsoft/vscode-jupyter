@@ -233,6 +233,7 @@ async function waitForKernelToChangeImpl(
     criteria: { labelOrId?: string; interpreterPath?: string },
     timeout = defaultNotebookTestTimeout
 ) {
+    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria.labelOrId)}`);
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -367,9 +368,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                       language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 
-    traceInfo(`Preferred kernel for selection is ${match?.id}`);
+    const criteria = { labelOrId: match!.id };
+    traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
-    return waitForKernelToChange({ labelOrId: match!.id }, timeout);
+    return waitForKernelToChange(criteria, timeout);
 }
 
 export async function startJupyterServer(api?: IExtensionTestApi) {
