@@ -435,7 +435,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 defaultNotebookTestTimeout,
                 'Incorrect number of output'
             ),
-            waitForTextOutput(cells[0], 'iteration 9', 0, false),
             waitForCondition(
                 async () => {
                     const textOutput = getTextOutputValue(cells[0].outputs[0]);
