@@ -191,7 +191,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Check cache.
         const [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false)),
-            this.envVarsService.getEnvironmentVariables(resource)
+            this.envVarsService.getCustomEnvironmentVariables(resource)
         ]);
 
         const envType = interpreter.envType;
@@ -257,13 +257,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         const promise = (async () => {
             // If this is a conda environment that supports conda run, then we don't need conda activation commands.
-            const [activationCommandsForNonCondaEnvironments, customEnvVars] = await Promise.all([
+            const [activationCommands, customEnvVars] = await Promise.all([
                 interpreter.envType === EnvironmentType.Conda
                     ? Promise.resolve([])
                     : this.getActivationCommands(resource, interpreter),
                 this.envVarsService.getCustomEnvironmentVariables(resource)
             ]);
-
 
             // Check cache.
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
