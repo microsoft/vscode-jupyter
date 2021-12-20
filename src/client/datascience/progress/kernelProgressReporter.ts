@@ -74,22 +74,17 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     }
 
     /**
-     * Creates the progress reporter for the duration of a method.
-     * However if one exists for the same resource, then it will use the existing one.
+     * Reports the progress reporter for the duration of a method.
+     * If one exists for the same resource, then it will use the existing one, else it will just get queued as in `reportProgress`.
+     * Behavior is identical to that of `reportProgress`
      */
-    public static wrapWithProgressReporter<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
+    public static wrapAndReportProgress<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
         const key = resource ? resource.fsPath : '';
         if (!KernelProgressReporter.instance) {
             return cb();
         }
-        // If we have a progress reporter, then use it.
-        let progress: IDisposable;
-        if (KernelProgressReporter.instance.kernelResourceProgressReporter.has(key)) {
-            progress = KernelProgressReporter.reportProgressInternal(key, title);
-        } else {
-            progress = KernelProgressReporter.createProgressReporterInternal(key, title);
-        }
-        return cb().finally(() => progress.dispose());
+        const progress = KernelProgressReporter.reportProgressInternal(key, title);
+        return cb().finally(() => progress?.dispose());
     }
 
     /**
@@ -127,6 +122,16 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
             progressInfo.progressList.push(title);
             progressInfo.reporter.report({ message: title });
         } else {
+            // if we've display this message in the past, then no need to display it again.
+            // Due to the async nature of things, we may have already displayed it and we don't want to display it again.
+            // Also displaying the same message again & again could confuse the user.
+            // It could look as though the same operation is being performed multiple times (when in fact its possible we have caching in place).
+            // Eg. we could be attempting to start a python process, which requires activation, thats cached, however calling it multiple times
+            // could result in multiple messages being displayed.
+            // Perhaps its the right thing to do and display the message multiple times, but for now, we'll just not display it.
+            if (progressInfo.progressList.includes(title)) {
+                return new Disposable(noop);
+            }
             progressInfo.pendingProgress.push(title);
         }
         // Unwind the progress messages.
