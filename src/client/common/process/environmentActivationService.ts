@@ -235,6 +235,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return this.activatedEnvVariablesCache.get(key);
         }
 
+        const activatedEnvVariablesUsingCommand = this.getActivatedEnvVarsUsingActivationCommands(
+            resource,
+            interpreter
+        );
+
         const customEnvVarsPromise = this.envVarsService.getEnvironmentVariables(resource);
         // If this is a conda environment that supports conda run, then we don't need conda activation commands.
         let activationCommandsPromise = this.getActivationCommands(resource, interpreter);
@@ -266,7 +271,23 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const condaActivation = async () => {
             const stopWatch = new StopWatch();
             try {
-                const env = await this.getCondaEnvVariables(resource, interpreter);
+                const envUsingCondaRunOrCondaActivatePromise = createDeferredFromPromise(
+                    this.getCondaEnvVariables(resource, interpreter, activatedEnvVariablesUsingCommand)
+                );
+                const envUsingCommandsPromise = createDeferredFromPromise(
+                    activatedEnvVariablesUsingCommand.catch((ex) => {
+                        traceError(`Failed to get conda env variables using conda activation commands`, ex);
+                        return envUsingCondaRunOrCondaActivatePromise.promise;
+                    })
+                );
+                // Try to get the activated conda env variables using which ever is faster.
+                // If conda activation commands fail, then use the conda run method as a fall back.
+                // Note: Conda run should work as that's more reliable.
+                await Promise.race([envUsingCommandsPromise.promise, envUsingCondaRunOrCondaActivatePromise.promise]);
+
+                const env = await (envUsingCommandsPromise.resolved
+                    ? envUsingCommandsPromise.value
+                    : envUsingCondaRunOrCondaActivatePromise.promise);
                 sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
                     envType,
                     pythonEnvType: envType,
@@ -289,7 +310,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         const promise = (async () => {
             if (interpreter.envType !== EnvironmentType.Conda) {
-                return this.getActivatedEnvVarsUsingActivationCommands(resource, interpreter);
+                return activatedEnvVariablesUsingCommand;
             }
             return condaActivation();
         })();
@@ -519,16 +540,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public async getCondaEnvVariables(
         resource: Resource,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        activatedEnvVariablesUsingCommand: Promise<NodeJS.ProcessEnv | undefined>
     ): Promise<NodeJS.ProcessEnv | undefined> {
         void this.condaService.getCondaFile();
         const condaVersion = await this.condaService.getCondaVersion();
         if (!condaVersionSupportsLiveStreaming(condaVersion)) {
-            return this.getActivatedEnvVarsUsingActivationCommands(resource, interpreter);
+            return activatedEnvVariablesUsingCommand;
         }
-        return this.getCondaEnvVariablesImpl(interpreter, resource);
+        return this.getCondaEnvVariablesUsingCondaRun(interpreter, resource);
     }
-    private async getCondaEnvVariablesImpl(
+    private async getCondaEnvVariablesUsingCondaRun(
         interpreter: PythonEnvironment,
         resource: Resource
     ): Promise<NodeJS.ProcessEnv | undefined> {

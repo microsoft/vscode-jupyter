@@ -110,15 +110,18 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         stub.restore();
 
         envActivationService = createService(api.serviceContainer);
-        const activatedCommandEnvVars = await envActivationService.getActivatedEnvVarsUsingActivationCommands(
+        const activatedCommandEnvVarsPromise = envActivationService.getActivatedEnvVarsUsingActivationCommands(
             undefined,
             activeCondaInterpreter
         );
 
+        const activatedCommandEnvVars = await activatedCommandEnvVarsPromise;
+
         envActivationService = createService(api.serviceContainer);
         const activatedCondaRunEnvVars = await envActivationService.getCondaEnvVariables(
             undefined,
-            activeCondaInterpreter
+            activeCondaInterpreter,
+            activatedCommandEnvVarsPromise
         );
 
         verifyVariables(activatedEnvVars1!, '(main)');
