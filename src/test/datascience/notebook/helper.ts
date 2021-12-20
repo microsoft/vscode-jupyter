@@ -732,6 +732,13 @@ export async function waitForTextOutput(
             `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
     );
 }
+export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
+    await waitForCondition(
+        async () => cell.outputs.length > 0,
+        timeout,
+        () => `No outputs for Cell ${cell.index + 1}`
+    );
+}
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
