@@ -3,7 +3,7 @@
 'use strict';
 import '../extensions';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
 import { IFileSystem, IPlatformService } from '../platform/types';
@@ -62,7 +62,7 @@ const condaRetryMessages = [
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
 const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V3_{0}';
 
-type EnvironmentVariablesCacheInformation = {
+export type EnvironmentVariablesCacheInformation = {
     activatedEnvVariables: EnvironmentVariables | undefined;
     originalProcEnvVariablesHash: string;
     customEnvVariablesHash: string;
@@ -109,7 +109,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @optional()
+        private readonly minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
     ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
@@ -213,7 +215,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
             `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
         );
-        if (env && stopWatch.elapsedTime > MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS) {
+        if (env && stopWatch.elapsedTime > this.minTimeAfterWhichWeShouldCacheEnvVariables) {
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
             void this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash);
         } else if (this.memento.get(key)) {
@@ -441,6 +443,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceError('Failed to get activated environment variables ourselves', e);
             return;
         }
+    }
+    @testOnlyMethod()
+    public getInterpreterEnvCacheKeyForTesting(
+        resource: Resource,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
+    ): string {
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        return ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
+            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+        );
     }
     /**
      * We cache activated environment variables.
