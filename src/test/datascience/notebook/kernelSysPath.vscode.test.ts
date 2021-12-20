@@ -108,7 +108,7 @@ suite('sys.path in Python Kernels', function () {
 
         const output = Buffer.from(cell.outputs[0].items[0].data).toString().trim();
         traceInfoIfCI(`sys.path value is ${output}`);
-        const paths: string[] = JSON.parse(output);
+        const paths: string[] = JSON.parse(output.replace(/'/g, '"'));
         const pythonFilesFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles');
         const filteredPaths = paths.filter((value, i) => {
             // First item in sys.path is the workspace folder.
