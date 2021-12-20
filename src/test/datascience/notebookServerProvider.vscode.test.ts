@@ -41,7 +41,6 @@ suite('Jupyter CLI Tests', async () => {
             .getActiveInterpreter(undefined);
         settings.dispose();
         activeInterpreter = interpreter!;
-        jupyterServerProvider.clear();
         await startJupyterServer();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -62,6 +61,7 @@ suite('Jupyter CLI Tests', async () => {
         const availablePort = await getFreePort({ host: 'localhost' });
         settings.jupyterCommandLineArguments = [`--NotebookApp.port=${availablePort}`];
         disposables.push(tokenSource);
+        jupyterServerProvider.clear();
         const server = await jupyterServerProvider.getOrCreateServer({
             localJupyter: true,
             resource: undefined,
