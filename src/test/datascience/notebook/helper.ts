@@ -369,6 +369,9 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
               );
 
     const criteria = { labelOrId: match!.id };
+    if (!match) {
+        traceInfoIfCI(`Houston, we have a problem, no match. Expected language ${expectedLanguage}.`);
+    }
     traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange(criteria, timeout);
