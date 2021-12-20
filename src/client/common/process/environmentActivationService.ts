@@ -60,7 +60,7 @@ const condaRetryMessages = [
 ];
 
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
-const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V2_{0}';
+const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V3_{0}';
 
 type EnvironmentVariablesCacheInformation = {
     activatedEnvVariables: EnvironmentVariables | undefined;
@@ -256,20 +256,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         const promise = (async () => {
-            const customEnvVarsPromise = this.envVarsService.getEnvironmentVariables(resource);
             // If this is a conda environment that supports conda run, then we don't need conda activation commands.
-            let activationCommandsPromise = this.getActivationCommands(resource, interpreter);
-            if (interpreter.envType === EnvironmentType.Conda) {
-                const condaVersion = await this.condaService.getCondaVersion();
-                if (condaVersionSupportsLiveStreaming(condaVersion)) {
-                    activationCommandsPromise = Promise.resolve([] as string[]);
-                }
-            }
-
-            const [activationCommands, customEnvVars] = await Promise.all([
-                activationCommandsPromise,
-                customEnvVarsPromise
+            const [activationCommandsForNonCondaEnvironments, customEnvVars] = await Promise.all([
+                interpreter.envType === EnvironmentType.Conda
+                    ? Promise.resolve([])
+                    : this.getActivationCommands(resource, interpreter),
+                this.envVarsService.getCustomEnvironmentVariables(resource)
             ]);
+
 
             // Check cache.
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
@@ -459,7 +453,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment,
         customEnvVariablesHash: string,
-        activationCommands: string[] = []
+        activationCommandsForNonCondaEnvironments: string[] = []
     ) {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
@@ -476,8 +470,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         ) {
             return;
         }
+        // We're interested in activation commands only for non-conda environments.
+        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands
+        // Or use conda run).
+        // Hence for purposes of caching we don't care about the commands.
         if (
-            cachedData.activationCommands.join(',').toLowerCase() !== (activationCommands || []).join(',').toLowerCase()
+            interpreter.envType !== EnvironmentType.Conda &&
+            cachedData.activationCommands.join(',').toLowerCase() !==
+                (activationCommandsForNonCondaEnvironments || []).join(',').toLowerCase()
         ) {
             return;
         }
@@ -501,6 +501,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
         activationCommands = activationCommands || [];
+        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands or conda run)
+        if (interpreter.envType == EnvironmentType.Conda) {
+            activationCommands = [];
+        }
         const cachedData: EnvironmentVariablesCacheInformation = {
             activationCommands,
             originalProcEnvVariablesHash: getTelemetrySafeHashedString(
