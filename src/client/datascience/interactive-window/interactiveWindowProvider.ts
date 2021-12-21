@@ -11,7 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import {
@@ -117,6 +117,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
     // instantiating multiples.
     private create(resource: Resource, mode: InteractiveWindowMode) {
+        traceError('Creating Interactive window', new Error('stack'));
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new InteractiveWindow(

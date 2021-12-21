@@ -7,6 +7,7 @@ import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
+import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
@@ -227,18 +228,23 @@ export class KernelVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
-                const fullVariable = list.variables[i].value
-                    ? list.variables[i]
-                    : await this.getVariableValueFromKernel(list.variables[i], kernel);
+                try {
+                    const fullVariable = list.variables[i].value
+                        ? list.variables[i]
+                        : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
-                // See if this is excluded or not.
-                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
-                    // Not part of our actual list. Remove from the real list too
+                    // See if this is excluded or not.
+                    if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
+                        // Not part of our actual list. Remove from the real list too
+                        list.variables.splice(i, 1);
+                    } else {
+                        list.variables[i] = fullVariable;
+                        result.pageResponse.push(fullVariable);
+                        i += 1;
+                    }
+                } catch (ex) {
+                    traceError(`Failed to get variable information for ${list.variables[i].name}`, ex);
                     list.variables.splice(i, 1);
-                } else {
-                    list.variables[i] = fullVariable;
-                    result.pageResponse.push(fullVariable);
-                    i += 1;
                 }
             }
 

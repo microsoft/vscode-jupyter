@@ -324,6 +324,7 @@ for i in range(10):
     });
 
     test('Multiple interactive windows', async () => {
+        traceInfoIfCI('Starting test');
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'multiple');
         const window1 = await interactiveWindowProvider.getOrCreate(undefined);

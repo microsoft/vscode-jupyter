@@ -25,7 +25,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -122,6 +122,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly kernelProvider: IKernelProvider,
         private readonly interactiveWindowDebugger: IInteractiveWindowDebugger
     ) {
+        traceError('Creating Interactive window (ctor)', new Error('stack'));
         // Set our owner and first submitter
         this._owner = owner;
         this.mode = mode;
@@ -242,6 +243,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Clear cached kernel when the selected controller for this document changes
                 this.registerControllerChangeListener(e.controller, notebookDocument);
                 this._controllerReadyPromise.resolve(e.controller);
+                traceError('InteractiveWindow.ts.listenForControllerSelection', new Error('stack'));
 
                 // Recreate the kernel ready promise now that we have a new controller
                 this._kernelReadyPromise = this.createKernelReadyPromise();
@@ -349,7 +351,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
     private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
+        traceError('InteractiveWindow.ts.createExecutionPromise.start', new Error('stack'));
         const [notebookEditor, kernel] = await Promise.all([
             this._editorReadyPromise,
             this._kernelReadyPromise,
