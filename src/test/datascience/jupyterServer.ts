@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as tcpPortUsed from 'tcp-port-used';
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceError, traceInfo } from '../../client/common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -107,13 +107,16 @@ export class JupyterServer implements IAsyncDisposable {
                 const pythonExecutionService = await pythonExecFactory.create({
                     interpreter: { path: PYTHON_PATH } as PythonEnvironment
                 });
-                const result = pythonExecutionService.execModuleObservable(
-                    'jupyter',
-                    ['notebook', '--no-browser', `--NotebookApp.port=${port}`, `--NotebookApp.token=${token}`],
-                    {
-                        cwd: testFolder
-                    }
-                );
+                const notebookArgs = [
+                    'notebook',
+                    '--no-browser',
+                    `--NotebookApp.port=${port}`,
+                    `--NotebookApp.token=${token}`
+                ];
+                traceInfoIfCI(`Starting Jupyter on CI with args ${notebookArgs.join(' ')}`);
+                const result = pythonExecutionService.execModuleObservable('jupyter', notebookArgs, {
+                    cwd: testFolder
+                });
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
