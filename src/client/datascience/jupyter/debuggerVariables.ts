@@ -183,7 +183,7 @@ export class DebuggerVariables extends DebugLocationTracker
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<{}> {
+    ): Promise<{ data: Record<string, unknown>[] }> {
         // Developer error. The debugger cannot eval more than 100 rows at once.
         if (end - start > MaximumRowChunkSizeForDebugger) {
             throw new Error(`Debugger cannot provide more than ${MaximumRowChunkSizeForDebugger} rows at once`);
@@ -192,7 +192,7 @@ export class DebuggerVariables extends DebugLocationTracker
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
-            return {};
+            return { data: [] };
         }
         // Listen to notebook events if we haven't already
         if (kernel) {

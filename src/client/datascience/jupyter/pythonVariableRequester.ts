@@ -16,7 +16,7 @@ import { IKernel } from './kernels/types';
 type DataFrameSplitFormat = {
     index: (number | string)[];
     columns: string[];
-    data: unknown[][];
+    data: Record<string, unknown>[];
 };
 
 export function parseDataFrame(df: DataFrameSplitFormat) {
@@ -68,7 +68,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         };
     }
 
-    public async getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}> {
+    public async getDataFrameRows(
+        start: number,
+        end: number,
+        kernel: IKernel,
+        expression: string
+    ): Promise<{ data: Record<string, unknown>[] }> {
         await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the rows and turn it into JSON
