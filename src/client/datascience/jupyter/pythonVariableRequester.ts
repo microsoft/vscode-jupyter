@@ -1,4 +1,3 @@
-// import type * as nbformat from '@jupyterlab/nbformat';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
