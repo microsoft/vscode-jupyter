@@ -118,7 +118,7 @@ export class DataViewerDependencyService {
         const launcher = await this.pythonFactory.createActivatedEnvironment({
             resource: undefined,
             interpreter,
-            allowEnvironmentFetchExceptions: true,
+            allowEnvironmentFetchExceptions: true
         });
         try {
             const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {

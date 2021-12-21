@@ -57,7 +57,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
             // Possible we're running regular code such as `python xyz.py` or `python -m abc` (ansible, or other kernels)
             const executionServicePromise = this.pythonExecFactory.createActivatedEnvironment({
                 resource,
-                interpreter,
+                interpreter
             });
 
             traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${getDisplayPath(interpreter?.path)}`);

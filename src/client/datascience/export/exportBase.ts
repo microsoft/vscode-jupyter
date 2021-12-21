@@ -90,7 +90,7 @@ export class ExportBase implements INbConvertExport {
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
             interpreter,
-            allowEnvironmentFetchExceptions: false,
+            allowEnvironmentFetchExceptions: false
         });
     }
 }
