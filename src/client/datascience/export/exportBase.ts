@@ -91,7 +91,6 @@ export class ExportBase implements INbConvertExport {
             resource: source,
             interpreter,
             allowEnvironmentFetchExceptions: false,
-            bypassCondaExecution: true
         });
     }
 }

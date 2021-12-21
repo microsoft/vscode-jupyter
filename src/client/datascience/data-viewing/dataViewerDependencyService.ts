@@ -119,7 +119,6 @@ export class DataViewerDependencyService {
             resource: undefined,
             interpreter,
             allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
         });
         try {
             const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {

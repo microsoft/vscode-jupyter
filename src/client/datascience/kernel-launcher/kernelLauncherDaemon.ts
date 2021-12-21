@@ -58,7 +58,6 @@ export class PythonKernelLauncherDaemon implements IDisposable {
             const executionServicePromise = this.pythonExecFactory.createActivatedEnvironment({
                 resource,
                 interpreter,
-                bypassCondaExecution: true
             });
 
             traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${getDisplayPath(interpreter?.path)}`);

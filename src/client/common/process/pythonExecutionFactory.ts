@@ -78,7 +78,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             allowEnvironmentFetchExceptions: true,
             interpreter: options.interpreter,
             resource: options.resource,
-            bypassCondaExecution: true
         });
         // No daemon support in Python 2.7 or during shutdown
         if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
