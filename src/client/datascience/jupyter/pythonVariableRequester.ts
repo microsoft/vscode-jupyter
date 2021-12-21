@@ -14,6 +14,28 @@ import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
 import { executeSilently } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
+type DFData = {
+    index: (number | string)[];
+    columns: string[];
+    data: unknown[][];
+};
+
+export function parseDataFrame(df: DFData) {
+    const rowIndexValues = df.index;
+    const columns = df.columns;
+    const rowData = df.data;
+    const data = rowData.map((row, index) => {
+        const rowData: Record<string, unknown> = {
+            index: rowIndexValues[index]
+        };
+        columns.forEach((column, columnIndex) => {
+            rowData[column] = row[columnIndex];
+        });
+        return rowData;
+    });
+    return { data };
+}
+
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
@@ -58,7 +80,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        return this.deserializeJupyterResult(results);
+        return parseDataFrame(this.deserializeJupyterResult<DFData>(results));
     }
 
     public async getVariableProperties(

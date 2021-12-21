@@ -21,6 +21,7 @@ import {
     IJupyterVariablesResponse
 } from '../types';
 import { IKernel } from './kernels/types';
+import { parseDataFrame } from './pythonVariableRequester';
 
 const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -211,7 +212,7 @@ export class DebuggerVariables extends DebugLocationTracker
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
-        return JSON.parse(results.result);
+        return parseDataFrame(JSON.parse(results.result));
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
