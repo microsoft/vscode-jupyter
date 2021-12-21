@@ -247,6 +247,15 @@ export class JupyterKernelService {
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
+
+                // Ensure global site_packages are not in the path.
+                // The global site_packages will be added to the path later.
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
+                if (specModel.env) {
+                    specModel.env.PYTHONNOUSERSITE = 'True';
+                }
+
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }

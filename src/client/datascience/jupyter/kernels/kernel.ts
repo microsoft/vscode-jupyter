@@ -664,6 +664,14 @@ export class Kernel implements IKernel {
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                await this.executeSilently(`import site;site.addsitedir(site.getusersitepackages())`);
+            }
+
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             const file = this.resourceUri?.fsPath;

@@ -218,7 +218,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 let waitForKernelPendingPromise: Promise<void> | undefined;
 
 export async function waitForKernelToChange(
-    criteria: { labelOrId?: string; interpreterPath?: string },
+    criteria: { labelOrId: string } | { interpreterPath: string },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -230,9 +230,10 @@ export async function waitForKernelToChange(
 }
 
 async function waitForKernelToChangeImpl(
-    criteria: { labelOrId?: string; interpreterPath?: string },
+    criteria: { labelOrId: string } | { interpreterPath: string },
     timeout = defaultNotebookTestTimeout
 ) {
+    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria)}`);
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -253,8 +254,8 @@ async function waitForKernelToChangeImpl(
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
-    if (criteria.labelOrId) {
-        const labelOrId = criteria.labelOrId;
+    const labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+    if (labelOrId) {
         id = notebookControllers?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
         if (!id) {
             // Try includes instead
@@ -263,11 +264,11 @@ async function waitForKernelToChangeImpl(
             )?.id;
         }
     }
-    if (criteria.interpreterPath && !id) {
+    const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
+    if (interpreterPath && !id) {
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
-            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
-            ?.id;
+            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {
@@ -312,6 +313,7 @@ async function waitForKernelToChangeImpl(
 }
 
 export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, timeout = 100_000) {
+    traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -367,9 +369,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                       language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 
-    traceInfo(`Preferred kernel for selection is ${match?.id}`);
+    const criteria = { labelOrId: match!.id };
+    if (!match) {
+        traceInfoIfCI(`Houston, we have a problem, no match. Expected language ${expectedLanguage}.`);
+    }
+    traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
-    return waitForKernelToChange({ labelOrId: match!.id }, timeout);
+    return waitForKernelToChange(criteria, timeout);
 }
 
 export async function startJupyterServer(api?: IExtensionTestApi) {
@@ -392,6 +398,7 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
  * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
  */
 export async function createEmptyPythonNotebook(disposables: IDisposable[] = []) {
+    traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const templatePythonNbFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -730,6 +737,13 @@ export async function waitForTextOutput(
         timeout,
         () =>
             `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
+    );
+}
+export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
+    await waitForCondition(
+        async () => cell.outputs.length > 0,
+        timeout,
+        () => `No outputs for Cell ${cell.index + 1}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
