@@ -421,8 +421,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             thread.start()
             time.sleep(0.3)
 
-        print('main thread done')
         spawn()
+        print('main thread done')
         `,
             { index: 0 }
         );
@@ -478,8 +478,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             thread.start()
             time.sleep(0.3)
 
-        print('main thread done')
         spawn()
+        print('main thread done')
         `,
             { index: 0 }
         );
@@ -503,7 +503,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     traceInfoIfCI(`Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
                     return false;
                 },
-                20_000,
+                defaultNotebookTestTimeout,
                 () =>
                     `1. Expected background messages to end up in cell 2, cell1 output = ${getCellOutputs(
                         cell1
@@ -525,7 +525,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     );
                     return true;
                 },
-                20_000,
+                defaultNotebookTestTimeout,
                 () =>
                     `2. Expected background messages to end up in cell 2, cell1 output = ${getCellOutputs(
                         cell1
