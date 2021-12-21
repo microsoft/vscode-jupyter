@@ -14,13 +14,13 @@ import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
 import { executeSilently } from './kernels/kernel';
 import { IKernel } from './kernels/types';
 
-type DFData = {
+type DataFrameSplitFormat = {
     index: (number | string)[];
     columns: string[];
     data: unknown[][];
 };
 
-export function parseDataFrame(df: DFData) {
+export function parseDataFrame(df: DataFrameSplitFormat) {
     const rowIndexValues = df.index;
     const columns = df.columns;
     const rowData = df.data;
@@ -80,7 +80,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        return parseDataFrame(this.deserializeJupyterResult<DFData>(results));
+        return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
     }
 
     public async getVariableProperties(
