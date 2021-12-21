@@ -25,7 +25,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
-    let worksapceService: IWorkspaceService;
+    let workspaceService: IWorkspaceService;
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
@@ -39,7 +39,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
     setup(() => {
         applicationShell = mock<IApplicationShell>();
-        worksapceService = mock<IWorkspaceService>();
+        workspaceService = mock<IWorkspaceService>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
@@ -47,11 +47,11 @@ suite('DataScience Error Handler Unit Tests', () => {
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
-        when(worksapceService.workspaceFolders).thenReturn([]);
+        when(workspaceService.workspaceFolders).thenReturn([]);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
-            instance(worksapceService),
+            instance(workspaceService),
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
@@ -60,6 +60,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
+        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
     });
     const message = 'Test error message.';
 
@@ -233,7 +234,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     uri: Uri.file('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues')
                 }
             ];
-            when(worksapceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows),
                 'start',
@@ -277,7 +278,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     uri: Uri.file('/home/xyz/samples/pySamples/crap/')
                 }
             ];
-            when(worksapceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix),
                 'start',
