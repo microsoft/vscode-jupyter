@@ -101,6 +101,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             sinon.restore();
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
+            await commands.executeCommand('jupyter.viewOutput');
+            await commands.executeCommand('workbench.action.togglePanel');
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
@@ -494,14 +496,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     const text = getTextOutputValue(output);
                     // Since we're printing output in a background thread, the output should go into last executed cell.
                     // Last executed cell is cell 2, hence output should end with `iteration 9`.
-                    if (text.trim().endsWith('iteration 9')) {
-                        return true;
-                    }
-                    const cell1Output = getTextOutputValue(cell1.outputs[0]);
-                    const cell2Output = getTextOutputValue(cell2.outputs[0]);
-                    // https://github.com/microsoft/vscode-jupyter/issues/6175
-                    traceInfoIfCI(`Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
-                    return false;
+                    return text.trim().endsWith('iteration 9');
                 },
                 defaultNotebookTestTimeout,
                 () =>
