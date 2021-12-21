@@ -132,13 +132,6 @@ export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
     interpreter: PythonEnvironment;
     allowEnvironmentFetchExceptions?: boolean;
-    /**
-     * Ignore running `conda run` when running code.
-     * It is known to fail in certain scenarios. Where necessary we might want to bypass this.
-     *
-     * @type {boolean}
-     */
-    bypassCondaExecution?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;

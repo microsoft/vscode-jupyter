@@ -17,8 +17,7 @@ export async function createPythonService(
             return pythonFactory.createActivatedEnvironment({
                 resource: undefined,
                 interpreter: python,
-                allowEnvironmentFetchExceptions: true,
-                bypassCondaExecution: true
+                allowEnvironmentFetchExceptions: true
             });
         }
     }

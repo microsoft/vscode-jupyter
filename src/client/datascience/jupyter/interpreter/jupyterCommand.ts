@@ -64,8 +64,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                 }
             }
             return pythonExecutionFactory.createActivatedEnvironment({
-                interpreter: this._interpreter,
-                bypassCondaExecution: true
+                interpreter: this._interpreter
             });
         });
     }
@@ -197,8 +196,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
     private async getKernelSpecList(interpreter: PythonEnvironment, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter,
-            bypassCondaExecution: true
+            interpreter
         });
         return activatedEnv.exec(
             [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterKernels.py')],
@@ -208,8 +206,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
     private async getKernelSpecVersion(interpreter: PythonEnvironment, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter,
-            bypassCondaExecution: true
+            interpreter
         });
         return activatedEnv.exec(
             [
