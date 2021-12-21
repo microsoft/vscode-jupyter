@@ -412,8 +412,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         def work():
             for i in range(10):
-                print('iteration %d'%i)
                 time.sleep(0.1)
+                print('iteration %d'%i)
 
         def spawn():
             thread = threading.Thread(target=work)
@@ -442,14 +442,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                         textOutput.indexOf('iteration 9'),
                         'Main thread should have completed before background thread'
                     );
-                    return true;
-                },
-                defaultNotebookTestTimeout,
-                'Main thread should have completed before background thread'
-            ),
-            waitForCondition(
-                async () => {
-                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
                     expect(textOutput.indexOf('main thread done')).greaterThan(
                         textOutput.indexOf('iteration 0'),
                         'Main thread should have completed after background starts'
@@ -457,7 +449,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                'Main thread should have completed before background thread'
+                () =>
+                    `1. Main thread should have completed before background thread, cell output: ${getCellOutputs(
+                        cells[0]
+                    )}`
             )
         ]);
     });
