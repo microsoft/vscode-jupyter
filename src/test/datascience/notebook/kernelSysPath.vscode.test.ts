@@ -128,7 +128,11 @@ suite('sys.path in Python Kernels', function () {
         let lastIndexOfEnvironmentPath = -1;
         let firstIndexOfNonEnvPath = -1;
         filteredPaths.forEach((value, index) => {
-            if (value.toLowerCase().startsWith(interpreterInfo.sysPrefix.toLowerCase())) {
+            value = value.toLowerCase();
+            if (!value.includes('site-packages')) {
+                return;
+            }
+            if (value.includes(interpreterInfo.sysPrefix.toLowerCase())) {
                 lastIndexOfEnvironmentPath = index;
             } else if (firstIndexOfNonEnvPath === -1) {
                 firstIndexOfNonEnvPath = index;
@@ -137,7 +141,7 @@ suite('sys.path in Python Kernels', function () {
 
         assert.ok(
             firstIndexOfNonEnvPath > lastIndexOfEnvironmentPath,
-            `non-env paths should be after the Env Paths in sys.path ${output}`
+            `non-env paths should be after (gut got ${firstIndexOfNonEnvPath} > ${lastIndexOfEnvironmentPath}) the Env Paths in sys.path ${output}`
         );
     });
 });
