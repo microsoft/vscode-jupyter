@@ -219,14 +219,14 @@ jobs:
           file-pattern: 'telemetry.md'
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
-    
+
       - name: 'Check for news entry'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:
           file-pattern: 'news/*/*.md'
           skip-label: 'skip news'
           failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
-          
+
   ts_tests:
     needs: pick_environment
     name: Type Script Tests
@@ -339,6 +339,9 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
+        exclude:
+          - python: conda  # Conda does't seem to support 3.10 yet.
+            pythonVersion: '3.10'
         #   - pythonVersion: '3.9'
         #     python: nonConda
         #     jupyter: raw
