@@ -7,10 +7,6 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "extensionPack": [
-        "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.jupyter-renderers"
-    ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
