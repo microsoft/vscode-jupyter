@@ -411,6 +411,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         from IPython.display import display
 
         def work():
+            time.sleep(1)
             for i in range(10):
                 time.sleep(0.1)
                 print('iteration %d'%i)
@@ -467,9 +468,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         from IPython.display import display
 
         def work():
+            time.sleep(1)
             for i in range(10):
-                print('iteration %d'%i)
                 time.sleep(0.1)
+                print('iteration %d'%i)
 
         def spawn():
             thread = threading.Thread(target=work)
