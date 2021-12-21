@@ -41,6 +41,9 @@ export async function initialize(): Promise<IExtensionTestApi> {
         jupyterServerStarted = true;
         await startJupyterServer((api as unknown) as IExtensionTestApi);
     }
+    // We don't want the bottom panel in any test (else variable viewer kicks in and we have more requests).
+    // Also it gets in the way of screenshots.
+    await vscode.commands.executeCommand('workbench.action.closePanel');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (api as any) as IExtensionTestApi;
 }
