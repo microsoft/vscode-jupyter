@@ -299,7 +299,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
-        traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
+        traceError(
+            `Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`,
+            new Error('stack')
+        );
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecorators.verbose('Get default Remote Controller')

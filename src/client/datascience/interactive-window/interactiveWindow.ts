@@ -181,7 +181,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.owner
         );
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-        traceInfo(`Starting interactive window with controller ID ${controllerId}`);
+        traceError(`Starting interactive window with controller ID ${controllerId}`, new Error('stack'));
         const hasOwningFile = this.owner !== undefined;
         const { inputUri, notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
