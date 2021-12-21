@@ -64,15 +64,19 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             throw e;
         }
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         envActivationService = createService(api.serviceContainer);
         envActivationService.clearCache();
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(() => {
+    teardown(function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         sinon.restore();
         envActivationService.clearCache();
         disposeAllDisposables(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     function createService(serviceContainer: IServiceContainer) {
         return new EnvironmentActivationService(
@@ -163,6 +167,14 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             return Promise.resolve();
         });
         await memento.update(cacheKey, cachedData);
+        // Verify data is in cache.
+        // Some times while extension code is running the cache can get cleared.
+        assert.strictEqual(
+            memento.get<EnvironmentVariablesCacheInformation>(cacheKey)!.activatedEnvVariables!.HELLO,
+            env.HELLO,
+            'Env variables not in cache anymore'
+        );
+
         disposables.push(new Disposable(() => stub.restore()));
 
         // Create a whole new instance.
@@ -187,6 +199,13 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         const activatedEnvVars1 = await envActivationService.getActivatedEnvironmentVariables(
             undefined,
             activeCondaInterpreter
+        );
+
+        // Verify data is still in cache (possible it got blown away by some other test)
+        assert.strictEqual(
+            memento.get<EnvironmentVariablesCacheInformation>(cacheKey)!.activatedEnvVariables!.HELLO,
+            env.HELLO,
+            'Env variables not in cache'
         );
 
         // Ensure we get the env variables from the cache.
