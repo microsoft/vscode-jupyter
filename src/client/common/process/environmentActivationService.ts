@@ -99,6 +99,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     private readonly disposables: IDisposable[] = [];
     private readonly activatedEnvVariablesCache = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     private readonly envActivationCommands = new Map<string, Promise<string[] | undefined>>();
+    private static minTimeAfterWhichWeShouldCacheEnvVariables: number = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS;
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -111,8 +112,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(CondaService) private readonly condaService: CondaService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @optional()
-        private readonly minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
+        minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
     ) {
+        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables = minTimeAfterWhichWeShouldCacheEnvVariables;
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
@@ -215,7 +217,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
             `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
         );
-        if (env && stopWatch.elapsedTime > this.minTimeAfterWhichWeShouldCacheEnvVariables) {
+        if (env && stopWatch.elapsedTime > EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables) {
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
             void this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash);
         } else if (this.memento.get(key)) {
