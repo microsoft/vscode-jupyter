@@ -420,8 +420,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             thread.start()
             time.sleep(0.3)
 
-        spawn()
         print('main thread done')
+        spawn()
         `,
             { index: 0 }
         );
