@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
+import { traceDecorators, traceError, traceErrorIf, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import {
     IBrowserService,
     IConfigurationService,
@@ -52,7 +52,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
@@ -299,6 +299,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
+
+        // Printing stack trace to identify where this is called from in our smoke tests.
+        // https://github.com/microsoft/vscode-jupyter/issues/8599
+        traceErrorIf(
+            isCI,
+            `Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`,
+            new Error('Stack')
+        );
         traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
