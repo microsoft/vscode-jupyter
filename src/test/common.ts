@@ -17,7 +17,6 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
 import { isCI } from '../client/common/constants';
-import { traceInfoIfCI } from '../client/common/logger';
 
 const StreamZip = require('node-stream-zip');
 
@@ -147,7 +146,7 @@ async function setPythonPathInWorkspace(
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (!value || value[prop] !== pythonPath) {
-        traceInfoIfCI(`Updating Interpreter path to ${pythonPath} in workspace`);
+        console.log(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
@@ -155,7 +154,7 @@ async function setPythonPathInWorkspace(
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
     } else {
-        traceInfoIfCI(`No need to update Interpreter path, as it is ${value[prop]} in workspacen`);
+        console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
 }
 function getPythonPath(): string {
