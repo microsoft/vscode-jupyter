@@ -101,7 +101,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             sinon.restore();
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
-            await commands.executeCommand('workbench.action.closePanel');
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {

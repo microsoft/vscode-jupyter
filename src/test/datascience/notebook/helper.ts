@@ -203,8 +203,6 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
-    // We don't want the bottom panel in screenshots.
-    await commands.executeCommand('workbench.action.closePanel');
     sinon.restore();
 }
 
