@@ -3,6 +3,7 @@
 'use strict';
 import '../extensions';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable, named, optional } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
