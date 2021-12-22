@@ -79,6 +79,8 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     function createService(serviceContainer: IServiceContainer) {
+        // Ensure everything is cached.
+        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables = 1;
         return new EnvironmentActivationService(
             serviceContainer.get(IPlatformService),
             serviceContainer.get(IProcessServiceFactory),
@@ -89,8 +91,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             serviceContainer.get(IPythonApiProvider),
             serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             serviceContainer.get(CondaService),
-            serviceContainer.get(IFileSystem),
-            1
+            serviceContainer.get(IFileSystem)
         );
     }
     test('Verify Conda Activation', async () => {
@@ -190,8 +191,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             api.serviceContainer.get(IPythonApiProvider),
             api.serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             instance(mockConda),
-            api.serviceContainer.get(IFileSystem),
-            1
+            api.serviceContainer.get(IFileSystem)
         );
 
         // Get the env variables from a new instance of the class.

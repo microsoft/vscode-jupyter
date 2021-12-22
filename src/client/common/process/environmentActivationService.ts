@@ -3,7 +3,7 @@
 'use strict';
 import '../extensions';
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
 import { IFileSystem, IPlatformService } from '../platform/types';
@@ -99,7 +99,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     private readonly disposables: IDisposable[] = [];
     private readonly activatedEnvVariablesCache = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     private readonly envActivationCommands = new Map<string, Promise<string[] | undefined>>();
-    private static minTimeAfterWhichWeShouldCacheEnvVariables: number = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS;
+    public static minTimeAfterWhichWeShouldCacheEnvVariables: number = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS;
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -110,11 +110,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @optional()
-        minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
-    ) {
-        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables = minTimeAfterWhichWeShouldCacheEnvVariables;
+        @inject(IFileSystem) private readonly fs: IFileSystem    ) {
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
