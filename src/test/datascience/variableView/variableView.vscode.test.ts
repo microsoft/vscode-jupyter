@@ -77,7 +77,7 @@ suite('DataScience - VariableView', function () {
 
     // Test for basic variable view functionality with one document
     test('Can show VariableView (webview-test)', async function () {
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = (coreVariableView as any) as ITestWebviewHost;
