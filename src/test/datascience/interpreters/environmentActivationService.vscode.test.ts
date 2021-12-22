@@ -136,7 +136,8 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         verifyVariables(activatedCommandEnvVars!, '(command)');
         verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
     });
-    test('Verify env variables are cached and we do not attempt to get env vars using Conda scripts our selves', async () => {
+    test('Verify env variables are cached and we do not attempt to get env vars using Conda scripts our selves', async function () {
+        return this.skip();
         const cacheKey = envActivationService.getInterpreterEnvCacheKeyForTesting(undefined, activeCondaInterpreter);
         const memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         await memento.update(cacheKey, undefined);
