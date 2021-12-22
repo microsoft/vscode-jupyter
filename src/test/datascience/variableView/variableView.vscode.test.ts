@@ -63,8 +63,6 @@ suite('DataScience - VariableView', function () {
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        // Send the command to open the view
-        await commandManager.executeCommand(Commands.OpenVariableView);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -77,7 +75,10 @@ suite('DataScience - VariableView', function () {
 
     // Test for basic variable view functionality with one document
     test('Can show VariableView (webview-test)', async function () {
-        // Acquire the variable view from the provider
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = (coreVariableView as any) as ITestWebviewHost;
@@ -102,6 +103,9 @@ suite('DataScience - VariableView', function () {
     });
 
     test('Can show variables even when print is overridden', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,6 +129,9 @@ suite('DataScience - VariableView', function () {
 
     // Test variables switching between documents
     test('VariableView document switching (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -169,6 +176,9 @@ suite('DataScience - VariableView', function () {
             // https://github.com/microsoft/vscode-jupyter/issues/8523
             return this.skip();
         }
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,6 +217,9 @@ myClass = MyClass()
     });
 
     test('VariableView basic types B (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -243,6 +256,9 @@ mySet = {1, 2, 3}
 
     // Test opening data viewers while another dataviewer is open
     test('Open dataviewer', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
