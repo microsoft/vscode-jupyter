@@ -444,10 +444,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                         textOutput.indexOf('iteration 9'),
                         'Main thread should have completed before background thread'
                     );
-                    expect(textOutput.indexOf('main thread done')).greaterThan(
-                        textOutput.indexOf('iteration 0'),
-                        'Main thread should have completed after background starts'
-                    );
+                    for (let counter = 0; counter <= 9; counter++) {
+                        expect(textOutput).includes(`iteration ${counter}`, `Iteration ${counter} not found`);
+                    }
                     return true;
                 },
                 defaultNotebookTestTimeout,
