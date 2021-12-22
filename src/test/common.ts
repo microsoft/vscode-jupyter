@@ -17,6 +17,7 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
 import { isCI } from '../client/common/constants';
+import { traceInfoIfCI } from '../client/common/logger';
 
 const StreamZip = require('node-stream-zip');
 
@@ -40,7 +41,7 @@ export enum OSType {
 
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
-    | 'pythonPath'
+    | 'defaultInterpreterPath'
     | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
@@ -142,15 +143,19 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('defaultInterpreterPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (!value || value[prop] !== pythonPath) {
+        traceInfoIfCI(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
+        await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
+    } else {
+        traceInfoIfCI(`No need to update Interpreter path, as it is ${value[prop]} in workspacen`);
     }
 }
 function getPythonPath(): string {
