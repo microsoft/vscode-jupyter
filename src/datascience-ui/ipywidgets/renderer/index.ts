@@ -37,15 +37,19 @@ function hookupTestScripts(context: RendererContext<unknown>) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyWindow = window as any;
     if (!anyWindow.widgetEntryPoint || typeof anyWindow.widgetEntryPoint.initialize !== 'function') {
+        console.log(`No Widgetentry point`);
         return;
     }
+    console.log(`Widgetentry point found`);
     anyWindow.widgetEntryPoint.initialize(context);
 }
 function sendRenderOutputItem(outputItem: OutputItem, element: HTMLElement) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyWindow = window as any;
     if (!anyWindow.widgetEntryPoint || typeof anyWindow.widgetEntryPoint.renderOutputItem !== 'function') {
+        console.log(`No Widgetentry point (2)`);
         return;
     }
+    console.log(`Widgetentry point found (2)`);
     anyWindow.widgetEntryPoint.renderOutputItem(outputItem, element);
 }

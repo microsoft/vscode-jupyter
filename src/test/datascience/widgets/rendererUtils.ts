@@ -14,6 +14,7 @@ let rendererContext: RendererContext<unknown>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).widgetEntryPoint = {
     initialize: (context: RendererContext<unknown>) => {
+        console.log(`Initialize in Widget renderer`);
         rendererContext = context;
         initializeComms();
     },
@@ -35,6 +36,8 @@ function initializeComms() {
         return;
     }
     rendererContext.onDidReceiveMessage((message) => {
+        console.log(`Received message in Widget renderer ${JSON.stringify(message)}`);
+
         if (!message || !message.command) {
             return;
         }
