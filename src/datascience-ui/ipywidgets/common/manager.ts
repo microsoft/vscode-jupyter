@@ -101,6 +101,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         data: nbformat.IMimeBundle & { model_id: string; version_major: number },
         ele: HTMLElement
     ): Promise<Widget | undefined> {
+        debugger;
         if (!data) {
             throw new Error(
                 "application/vnd.jupyter.widget-view+json not in msg.content.data, as msg.content.data is 'undefined'."
@@ -144,6 +145,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         return this.manager.display_view(data, view, { node: ele });
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
+        debugger;
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
@@ -185,6 +187,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
      * Ensure we create the model for the display data.
      */
     private handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
+        debugger;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
 

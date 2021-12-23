@@ -94,6 +94,7 @@ export class CommonMessageCoordinator {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
+        traceInfoIfCI(`WidgetCommonMessageCoordinator: ${message}`);
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {

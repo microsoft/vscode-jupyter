@@ -184,6 +184,7 @@ async function createWidgetView(
     widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number },
     element: HTMLElement
 ) {
+    debugger;
     const wm = await getWidgetManager();
     try {
         return await wm?.renderWidget(widgetData, element);

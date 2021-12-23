@@ -104,9 +104,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public receiveMessage(message: IPyWidgetMessage): void {
-        if (process.env.VSC_JUPYTER_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
-            traceInfoIfCI(`IPyWidgetMessage: ${util.inspect(message)}`);
-        }
+        // if (process.env.VSC_JUPYTER_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
+        traceInfoIfCI(`IPyWidgetMessage: ${util.inspect(message)}`);
+        // }
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_logMessage:
                 traceInfoIfCI(`Widget Message: ${message.payload}`);
