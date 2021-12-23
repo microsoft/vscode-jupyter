@@ -147,7 +147,7 @@ export class NotebookIPyWidgetCoordinator {
         });
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        this.notebook.notebookEditors.map((editor) => this.initializeNotebookCommunication(editor));
+        this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor));
         if (this.notebook.notebookEditors.length === 0) {
             traceInfo(`Cannot attach coords for ${getDisplayPath(notebook.uri)} because there are no editors`);
         } else {
@@ -209,7 +209,8 @@ export class NotebookIPyWidgetCoordinator {
     private async onDidChangeVisibleNotebookEditors(e: NotebookEditor[]) {
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
-        e.map((editor) => this.initializeNotebookCommunication(editor));
+        traceInfo(`(2). onDidChangeVisibleNotebookEditors`);
+        e.forEach((editor) => this.initializeNotebookCommunication(editor));
         if (e.length === 0) {
             traceInfo(`(2). Cannot attach coords because there are no editors`);
         } else {

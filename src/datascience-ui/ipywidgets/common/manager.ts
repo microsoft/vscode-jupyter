@@ -51,13 +51,13 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         private readonly postOffice: PostOffice,
         private readonly scriptLoader: ScriptLoader
     ) {
-        setLogger((message: string) =>
-            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, message)
-        );
         this.postOffice.addHandler(this);
 
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
+        setLogger((message: string) =>
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, message)
+        );
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR

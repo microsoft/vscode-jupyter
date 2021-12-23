@@ -157,6 +157,8 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         if (this.messageApi) {
             this.messageApi.sendMessage(type, payload);
+        } else if (type === 'IPyWidgets_logMessage') {
+            console.log('Message not sent', type, payload);
         } else {
             logMessage(`No message API to post message ${type}`);
         }
