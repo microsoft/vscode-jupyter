@@ -38,7 +38,7 @@ suite('Standard IPyWidget (Execution) (slow)', function () {
         'src',
         'test',
         'datascience',
-        'uiTests',
+        'widgets',
         'notebooks',
         'standard_widgets.ipynb'
     );

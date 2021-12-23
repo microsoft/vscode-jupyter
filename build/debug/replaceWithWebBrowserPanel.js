@@ -14,7 +14,7 @@ const common = require('../constants');
 const fileToModify = path.join(common.ExtensionRootDir, 'out/client/common/installer/serviceRegistry.js');
 const fileContents = fs.readFileSync(fileToModify).toString();
 
-const newInjection = 'require("../../../test/datascience/uiTests/webBrowserPanelProvider").WebBrowserPanelProvider';
+const newInjection = 'require("../../../test/datascience/widgets/webBrowserPanelProvider").WebBrowserPanelProvider';
 const oldInjection = 'webPanelProvider_1.WebPanelProvider';
 
 if (fileContents.indexOf(oldInjection) === -1 && fileContents.indexOf(newInjection) === -1) {

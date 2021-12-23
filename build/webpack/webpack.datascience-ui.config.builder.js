@@ -35,7 +35,7 @@ function getEntry(bundle) {
         case 'ipywidgetsRenderer':
             // This is only used in tests (not shipped with extension).
             return {
-                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/rendererUtils.ts`]
+                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
             };
         case 'errorRenderer':
             return {
@@ -43,7 +43,7 @@ function getEntry(bundle) {
             };
         case 'widgetTester':
             return {
-                widgetTester: [`./src/test/datascience/uiTests/renderer/index.ts`]
+                widgetTester: [`./src/test/datascience/widgets/rendererUtils.ts`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
