@@ -21,7 +21,7 @@ export function initializeWidgetComms(serviceContainer: IServiceContainer): Util
     const disposable = messageChannel.onDidReceiveMessage(async ({ editor, message }) => {
         traceInfo(`Received message from Widget renderer ${JSON.stringify(message)}`);
         if (message && message.command === 'INIT') {
-            disposable.dispose();
+            // disposable.dispose();
             deferred.resolve(editor);
         }
     });

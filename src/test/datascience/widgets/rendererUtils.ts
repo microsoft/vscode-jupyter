@@ -16,11 +16,13 @@ let rendererContext: RendererContext<unknown>;
     initialize: (context: RendererContext<unknown>) => {
         console.log(`Initialize in Widget renderer`);
         rendererContext = context;
+        context.postMessage!({ command: 'log', message: 'Initializing' });
         initializeComms();
     },
     renderOutputItem: (outputItem: OutputItem, element: HTMLElement) => {
         outputs.set(outputItem.id, element);
         if (rendererContext && rendererContext.postMessage) {
+            rendererContext.postMessage({ command: 'log', message: `Rendering (2) ${outputItem.id}` });
             const message = { command: 'TEST_RENDER_OUTPUT', data: outputItem.id };
             rendererContext.postMessage(message);
         }
@@ -37,11 +39,19 @@ function initializeComms() {
     }
     rendererContext.onDidReceiveMessage((message) => {
         console.log(`Received message in Widget renderer ${JSON.stringify(message)}`);
+        rendererContext.postMessage!({
+            command: 'log',
+            message: `Received message in Widget renderer ${JSON.stringify(message)}`
+        });
 
         if (!message || !message.command) {
             return;
         }
         if (handlers.has(message.command)) {
+            rendererContext.postMessage!({
+                command: 'log',
+                message: `Handled message in Widget renderer ${JSON.stringify(message)}`
+            });
             handlers.get(message.command)!(message);
         } else {
             console.error('No handler for command', message.command);
