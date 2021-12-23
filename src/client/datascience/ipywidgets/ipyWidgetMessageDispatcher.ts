@@ -108,6 +108,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             traceInfoIfCI(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
         switch (message.message) {
+            case IPyWidgetMessages.IPyWidgets_logMessage:
+                traceInfoIfCI(`Widget Message: ${message.payload}`);
+                break;
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
                 this.initialize();
