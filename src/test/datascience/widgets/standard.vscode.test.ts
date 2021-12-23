@@ -91,7 +91,14 @@ suite('Standard IPyWidget (Execution) (slow)', function () {
         ]);
 
         // Verify the slider widget is created.
-        const innerHTML = await comms.queryHtml(`#${cell1.outputs[0].id} .widget-readout`);
-        assert.strictEqual(innerHTML, '666', 'Slider not renderer with the correct value');
+        await waitForCondition(
+            async () => {
+                const innerHTML = await comms.queryHtml(`#${cell1.outputs[0].id} .widget-readout`);
+                assert.strictEqual(innerHTML, '666', 'Slider not renderer with the correct value');
+                return true;
+            },
+            15_000,
+            'Slider not rendered'
+        );
     });
 });
