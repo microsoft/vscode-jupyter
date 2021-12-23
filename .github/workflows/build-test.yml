@@ -220,12 +220,12 @@ jobs:
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
-      - name: 'Check for news entry'
-        uses: brettcannon/check-for-changed-files@v1.1.0
-        with:
-          file-pattern: 'news/*/*.md'
-          skip-label: 'skip news'
-          failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
+    #   - name: 'Check for news entry'
+    #     uses: brettcannon/check-for-changed-files@v1.1.0
+    #     with:
+    #       file-pattern: 'news/*/*.md'
+    #       skip-label: 'skip news'
+    #       failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
 
   ts_tests:
     needs: pick_environment
