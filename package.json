@@ -1905,7 +1905,8 @@
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
-                ]
+                ],
+                "requiresMessaging": "optional"
             },
             {
                 "id": "jupyter-error-renderer",

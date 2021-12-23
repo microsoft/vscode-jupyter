@@ -5,6 +5,7 @@ import { join } from 'path';
 import {
     Disposable,
     EventEmitter,
+    ExtensionMode,
     languages,
     NotebookCell,
     NotebookCellKind,
@@ -323,12 +324,19 @@ export class VSCodeNotebookController implements Disposable {
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        return [
+        const scripts = [
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
             join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
-        ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
+        ];
+        if (
+            this.context.extensionMode === ExtensionMode.Development ||
+            this.context.extensionMode === ExtensionMode.Test
+        ) {
+            scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
+        }
+        return scripts.map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {

@@ -91,6 +91,7 @@ out/datascience-ui/react-common/**
 out/datascience-ui/viewers/datascience-ui/**
 out/datascience-ui/viewers/ipywidgets/**
 out/datascience-ui/viewers/index.*.html
+out/datascience-ui/widgetTester/**
 out/pythonFiles/**
 out/src/**
 out/test/**
