@@ -39,18 +39,19 @@ class Utils {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async queryHtml(selector: string) {
+    public async queryHtml(selector: string, outputId: string) {
         // Verify the slider widget is created.
         const request = {
-            id: Date.now().toString(),
+            requestId: Date.now().toString(),
+            id: outputId,
             command: 'queryInnerHTML',
             selector
         };
         const editor = await this.editorPromise;
         void this.messageChannel.postMessage!(request, editor);
-        return await new Promise<string>((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                if (message && message.id === request.id) {
+                if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {
                         return reject(message.error);

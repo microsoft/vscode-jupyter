@@ -27,6 +27,7 @@ import {
     workAroundVSCodeNotebookStartPages
 } from '../notebook/helper';
 import { initializeWidgetComms } from './commUtils';
+import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Standard IPyWidget (Execution) (slow)', function () {
@@ -83,7 +84,7 @@ suite('Standard IPyWidget (Execution) (slow)', function () {
             runCell(cell1),
             waitForExecutionCompletedSuccessfully(cell1),
             waitForCondition(
-                async () => cell1.outputs.length === 0,
+                async () => cell1.outputs.length > 0,
                 defaultNotebookTestTimeout,
                 'Cell output is not empty'
             ),
@@ -93,11 +94,11 @@ suite('Standard IPyWidget (Execution) (slow)', function () {
         // Verify the slider widget is created.
         await waitForCondition(
             async () => {
-                const innerHTML = await comms.queryHtml(`#${cell1.outputs[0].id} .widget-readout`);
-                assert.strictEqual(innerHTML, '666', 'Slider not renderer with the correct value');
+                const innerHTML = await comms.queryHtml('.widget-readout', cell1.outputs[0].id);
+                assert.strictEqual(innerHTML, '666', 'Slider not renderer with the right value.');
                 return true;
             },
-            15_000,
+            WidgetRenderingTimeoutForTests,
             'Slider not rendered'
         );
     });

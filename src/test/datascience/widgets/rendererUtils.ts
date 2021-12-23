@@ -9,6 +9,7 @@
 
 import { RendererContext, OutputItem } from 'vscode-notebook-renderer';
 
+const outputs = new Map<string, HTMLElement>();
 let rendererContext: RendererContext<unknown>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).widgetEntryPoint = {
@@ -16,7 +17,8 @@ let rendererContext: RendererContext<unknown>;
         rendererContext = context;
         initializeComms();
     },
-    renderOutputItem: (outputItem: OutputItem, _element: HTMLElement) => {
+    renderOutputItem: (outputItem: OutputItem, element: HTMLElement) => {
+        outputs.set(outputItem.id, element);
         if (rendererContext && rendererContext.postMessage) {
             const message = { command: 'TEST_RENDER_OUTPUT', data: outputItem.id };
             rendererContext.postMessage(message);
@@ -45,11 +47,18 @@ function initializeComms() {
     rendererContext.postMessage({ command: 'INIT' });
 }
 
-function queryInnerHTMLHandler(message: { id: string; selector: string }) {
+function queryInnerHTMLHandler({ requestId, id, selector }: { requestId: string; id: string; selector: string }) {
     try {
-        const innerHTML = document.querySelector(message.selector)?.innerHTML;
-        rendererContext.postMessage!({ id: message.id, innerHTML });
+        const element = outputs.get(id);
+        if (!element) {
+            return rendererContext.postMessage!({
+                requestId,
+                error: `No element for id ${id}`
+            });
+        }
+        const innerHTML = element.querySelector(selector)?.innerHTML;
+        rendererContext.postMessage!({ requestId, innerHTML });
     } catch (ex) {
-        rendererContext.postMessage!({ id: message.id, error: ex.message });
+        rendererContext.postMessage!({ requestId, error: ex.message });
     }
 }
