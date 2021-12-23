@@ -32,7 +32,6 @@ module.exports = {
         'build/webpack/loaders/externalizeDependencies.js',
         'build/tslint-rules/messagesMustBeLocalizedRule.js',
         'build/tslint-rules/baseRuleWalker.js',
-        'build/debug/replaceWithWebBrowserPanel.js',
         'src/test/mocks/process.ts',
         'src/test/mocks/moduleInstaller.ts',
         'src/test/mocks/proc.ts',
