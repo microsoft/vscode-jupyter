@@ -106,7 +106,6 @@ export class ScriptManager extends EventEmitter {
      * Or check local FS then fall back to CDN (depending on the order defined by the user).
      */
     public loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
-        debugger;
         // eslint-disable-next-line no-console
         logMessage(`Fetch IPyWidget source for ${moduleName}`);
         let request = this.widgetSourceRequests.get(moduleName);
