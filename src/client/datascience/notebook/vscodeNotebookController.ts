@@ -325,13 +325,6 @@ export class VSCodeNotebookController implements Disposable {
     }
     private getRendererScripts(): NotebookRendererScript[] {
         const scripts: string[] = [];
-        // Only used in tests & while debugging.
-        if (
-            this.context.extensionMode === ExtensionMode.Development ||
-            this.context.extensionMode === ExtensionMode.Test
-        ) {
-            scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
-        }
         scripts.push(
             ...[
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
@@ -340,6 +333,14 @@ export class VSCodeNotebookController implements Disposable {
                 join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
             ]
         );
+        // Only used in tests & while debugging.
+        if (
+            this.context.extensionMode === ExtensionMode.Development ||
+            this.context.extensionMode === ExtensionMode.Test
+        ) {
+            console.log('Nothing');
+            // scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
+        }
         return scripts.map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 

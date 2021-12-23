@@ -76,6 +76,8 @@ class VsCodeMessageApi implements IMessageApi {
         if (this.vscodeApi) {
             logMessageOnlyOnCI(`UI PostOffice Sent ${type}`);
             this.vscodeApi.postMessage({ type: type, payload });
+        } else if (type === 'IPyWidgets_logMessage') {
+            logMessage(`No vscode API to post message ${type}, ${payload}`);
         } else {
             logMessage(`No vscode API to post message ${type}`);
         }

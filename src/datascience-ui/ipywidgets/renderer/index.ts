@@ -3,7 +3,7 @@
 
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
-
+console.error('Loaded ipywidgets renderer');
 export const activate: ActivationFunction = (context) => {
     if (context.postMessage) {
         context.postMessage({
