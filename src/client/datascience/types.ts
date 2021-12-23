@@ -642,7 +642,7 @@ export interface IJupyterVariables {
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<JSONObject>;
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getMatchingVariable(
         name: string,
         kernel?: IKernel,
@@ -996,7 +996,12 @@ export interface IKernelVariableRequester {
         kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
-    getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}>;
+    getDataFrameRows(
+        start: number,
+        end: number,
+        kernel: IKernel,
+        expression: string
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getVariableProperties(
         word: string,
         kernel: IKernel,

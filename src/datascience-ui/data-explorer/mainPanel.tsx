@@ -3,7 +3,6 @@
 'use strict';
 import './mainPanel.css';
 
-import { JSONArray } from '@lumino/coreutils';
 import * as React from 'react';
 
 import {
@@ -342,7 +341,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
-        const rows = response ? (response as JSONArray) : [];
+        const rows = response || [];
         const normalized = this.normalizeData(rows);
 
         // Update our fetched count and actual rows
@@ -357,7 +356,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
-        const rows = response.rows ? (response.rows as JSONArray) : [];
+        const rows = response.rows || [];
         const normalized = this.normalizeData(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
@@ -420,7 +419,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [];
     }
 
-    private normalizeData(rows: JSONArray): ISlickRow[] {
+    private normalizeData(rows: Record<string, unknown>[]): ISlickRow[] {
         // While processing rows we may encounter Inf or -Inf.
         // These rows' column types will initially be 'string' or 'object' so
         // make sure we update the column types

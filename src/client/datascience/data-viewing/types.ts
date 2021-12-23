@@ -96,8 +96,7 @@ export enum ColumnType {
     Bool = 'bool'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type IRowsResponse = any[];
+export type IRowsResponse = Record<string, unknown>[];
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
