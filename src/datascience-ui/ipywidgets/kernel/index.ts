@@ -90,7 +90,7 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(outputItem: OutputItem, element: HTMLElement) {
+export function renderOutput(outputItem: OutputItem, element: HTMLElement, logger: (message: string) => void) {
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
         const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
@@ -98,12 +98,15 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
         if (!model) {
+            logger(`Error: Model not found to render output ${outputItem.id}`);
             // eslint-disable-next-line no-console
             return console.error('Nothing to render');
         }
+        logger(`Model found to render output ${outputItem.id}`);
         /* eslint-disable no-console */
-        renderIPyWidget(outputItem.id, model, element);
+        renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
+        logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`);
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
@@ -118,11 +121,14 @@ export function disposeOutput(outputId?: string) {
 function renderIPyWidget(
     outputId: string,
     model: nbformat.IMimeBundle & { model_id: string; version_major: number },
-    container: HTMLElement
+    container: HTMLElement,
+    logger: (message: string) => void
 ) {
     if (renderedWidgets.has(outputId)) {
+        logger(`Error: Alreading rendering ${outputId}`);
         return console.error('already rendering');
     }
+    logger(`Rendering ipywidget ${outputId}`);
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
     const ele = document.createElement('div');
@@ -144,10 +150,14 @@ function renderIPyWidget(
             // Keep track of the fact that we have successfully rendered a widget for this outputId.
             const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
             if (statusInfo) {
+                logger(`Success: Rendered ${outputId}, successfully`);
                 statusInfo.success = true;
             }
         })
-        .catch((ex) => console.error('Failed to render', ex));
+        .catch((ex) => {
+            logger(`Error: Failed to render ${outputId}, ${ex.toString()}`);
+            console.error('Failed to render', ex);
+        });
 }
 
 let widgetManagerPromise: Promise<WidgetManager> | undefined;

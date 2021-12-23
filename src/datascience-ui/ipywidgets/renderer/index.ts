@@ -13,6 +13,14 @@ export const activate: ActivationFunction = (context) => {
     }
     console.log('Jupyter IPyWidget Renderer Activated');
     hookupTestScripts(context);
+    const logger = (message: string) => {
+        if (context.postMessage) {
+            context.postMessage({
+                command: 'log',
+                message
+            });
+        }
+    };
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
             if (context.postMessage) {
@@ -27,7 +35,13 @@ export const activate: ActivationFunction = (context) => {
                     (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
                 if (renderOutputFunc) {
                     element.className = (element.className || '') + ' cell-output-ipywidget-background';
-                    return renderOutputFunc(outputItem, element);
+                    if (context.postMessage) {
+                        context.postMessage({
+                            command: 'log',
+                            message: `Rendering ${outputItem.id} for ${element.className} and widget renderer found *************`
+                        });
+                    }
+                    return renderOutputFunc(outputItem, element, logger);
                 }
                 console.error('Rendering widgets on notebook open is not supported.');
             } finally {
