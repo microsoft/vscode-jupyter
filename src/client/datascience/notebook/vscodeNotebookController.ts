@@ -324,18 +324,22 @@ export class VSCodeNotebookController implements Disposable {
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        const scripts = [
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
-            join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
-        ];
+        const scripts: string[] = [];
+        // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||
             this.context.extensionMode === ExtensionMode.Test
         ) {
             scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
         }
+        scripts.push(
+            ...[
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
+                join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
+                join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
+            ]
+        );
         return scripts.map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
