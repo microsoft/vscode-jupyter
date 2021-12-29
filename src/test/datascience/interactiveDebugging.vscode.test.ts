@@ -535,13 +535,14 @@ def foo():
 
         let stopped = false;
         let stoppedOnLine = false;
+        let targetLine = 9;
         debugAdapterTracker = {
             onDidSendMessage: (message) => {
                 if (message.event == 'stopped') {
                     stopped = true;
                 }
                 if (message.command == 'stackTrace' && !stoppedOnLine) {
-                    stoppedOnLine = message.body.stackFrames[0].line == 9;
+                    stoppedOnLine = message.body.stackFrames[0].line == targetLine;
                 }
             }
         };
@@ -572,16 +573,8 @@ def foo():
         // Perform a step into
         stopped = false;
         stoppedOnLine = false;
-        debugAdapterTracker = {
-            onDidSendMessage: (message) => {
-                if (message.event == 'stopped') {
-                    stopped = true;
-                }
-                if (message.command == 'stackTrace' && !stoppedOnLine) {
-                    stoppedOnLine = message.body.stackFrames[0].line == 7;
-                }
-            }
-        };
+        targetLine = 7;
+
         void vscode.commands.executeCommand('workbench.action.debug.stepInto');
         await waitForCondition(
             async () => {
