@@ -7,12 +7,45 @@ import { IInteractiveWindowProvider } from '../../types';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { getResourceType } from '../../common';
 import { traceError } from '../../../common/logger';
+import { KernelConnectionMetadata } from './types';
+import { JVSC_EXTENSION_ID } from '../../../common/constants';
 
 export async function selectKernel(
     resource: Resource,
     notebooks: IVSCodeNotebook,
-    interactiveWindowProvider: IInteractiveWindowProvider,
+    interactiveWindowProvider: IInteractiveWindowProvider | undefined,
     commandManager: ICommandManager
+) {
+    const notebookEditor = findNotebookEditor(resource, notebooks, interactiveWindowProvider);
+    if (notebookEditor) {
+        return commandManager.executeCommand('notebook.selectKernel', {
+            notebookEditor
+        });
+    }
+    traceError(`Unable to select kernel as the Notebook document could not be identified`);
+}
+
+export async function switchKernel(
+    resource: Resource,
+    notebooks: IVSCodeNotebook,
+    interactiveWindowProvider: IInteractiveWindowProvider | undefined,
+    commandManager: ICommandManager,
+    kernelMetadata: KernelConnectionMetadata
+) {
+    const notebookEditor = findNotebookEditor(resource, notebooks, interactiveWindowProvider);
+    if (notebookEditor) {
+        return commandManager.executeCommand('notebook.selectKernel', {
+            id: kernelMetadata.id,
+            extension: JVSC_EXTENSION_ID
+        });
+    }
+    traceError(`Unable to select kernel as the Notebook document could not be identified`);
+}
+
+function findNotebookEditor(
+    resource: Resource,
+    notebooks: IVSCodeNotebook,
+    interactiveWindowProvider: IInteractiveWindowProvider | undefined
 ) {
     const notebook =
         getResourceType(resource) === 'notebook'
@@ -22,18 +55,12 @@ export async function selectKernel(
         notebook && notebooks.activeNotebookEditor?.document === notebook ? notebooks.activeNotebookEditor : undefined;
     const targetInteractiveNotebookEditor =
         resource && getResourceType(resource) === 'interactive'
-            ? interactiveWindowProvider.get(resource)?.notebookEditor
+            ? interactiveWindowProvider?.get(resource)?.notebookEditor
             : undefined;
     const activeInteractiveNotebookEditor =
-        getResourceType(resource) === 'interactive'
+        getResourceType(resource) === 'interactive' && interactiveWindowProvider
             ? getActiveInteractiveWindow(interactiveWindowProvider)?.notebookEditor
             : undefined;
 
-    const notebookEditor = targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
-    if (notebookEditor) {
-        return commandManager.executeCommand('notebook.selectKernel', {
-            notebookEditor
-        });
-    }
-    traceError(`Unable to select kernel as the Notebook document could not be identified`);
+    return targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
 }

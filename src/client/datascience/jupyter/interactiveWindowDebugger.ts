@@ -250,7 +250,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
-        const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
+        const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.uri.fsPath }, pydevdSourceMaps: [] };
         sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.debuggerStartLine,

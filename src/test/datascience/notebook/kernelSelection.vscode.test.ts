@@ -20,7 +20,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../const
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -82,9 +81,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             return this.skip();
         }
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
 
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);

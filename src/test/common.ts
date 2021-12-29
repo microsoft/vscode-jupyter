@@ -6,7 +6,6 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
@@ -16,7 +15,7 @@ import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IJupyterSettings } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
-import { noop, sleep } from './core';
+import { noop } from './core';
 import { isCI } from '../client/common/constants';
 
 const StreamZip = require('node-stream-zip');
@@ -32,9 +31,6 @@ export const PYTHON_PATH = getPythonPath();
 // Useful to see on CI (when working with conda & non-conda, virtual envs & the like).
 console.log(`Python used in tests is ${PYTHON_PATH}`);
 
-const arch = require('arch');
-export const IS_64_BIT = arch() === 'x64';
-
 export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
@@ -44,7 +40,7 @@ export enum OSType {
 
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
-    | 'pythonPath'
+    | 'defaultInterpreterPath'
     | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
@@ -68,83 +64,10 @@ export type PythonSettingKeys =
     | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
-async function disposePythonSettings() {
-    if (!IS_SMOKE_TEST) {
-        const configSettings = await import('../client/common/configSettings');
-        configSettings.JupyterSettings.dispose();
-    }
-}
-
-export async function updateSetting(
-    setting: PythonSettingKeys,
-    value: {} | undefined,
-    resource: Uri | undefined,
-    configTarget: ConfigurationTarget
-) {
-    const vscode = require('vscode') as typeof import('vscode');
-    const settings = vscode.workspace.getConfiguration('python', resource || null);
-    const currentValue = settings.inspect(setting);
-    if (
-        currentValue !== undefined &&
-        ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
-            (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-            (configTarget === vscode.ConfigurationTarget.WorkspaceFolder &&
-                currentValue.workspaceFolderValue === value))
-    ) {
-        await disposePythonSettings();
-        return;
-    }
-    await settings.update(setting, value, configTarget);
-
-    // We've experienced trouble with .update in the past, where VSC returns stale data even
-    // after invoking the update method. This issue has regressed a few times as well. This
-    // delay is merely a backup to ensure it extension doesn't break the tests due to similar
-    // regressions in VSC:
-    // await sleep(2000);
-    // ... please see issue #2356 and PR #2332 for a discussion on the matter
-
-    await disposePythonSettings();
-}
-
-export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
-    const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
-}
-
 export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
     const vscode = require('vscode') as typeof import('vscode');
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
 }
-
-export async function restorePythonPathInWorkspaceRoot() {
-    const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
-}
-
-export async function setGlobalInterpreterPath(pythonPath: string) {
-    return retryAsync(setGlobalPathToInterpreter)(pythonPath);
-}
-
-export const resetGlobalInterpreterPathSetting = async () => retryAsync(restoreGlobalInterpreterPathSetting)();
-
-async function restoreGlobalInterpreterPathSetting(): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('defaultInterpreterPath', undefined, true);
-    await disposePythonSettings();
-}
-async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-    await disposePythonSettings();
-}
-export async function adjustSettingsInPythonExtension(): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('experiments.enabled', 'true', vscode.ConfigurationTarget.Global).then(noop, noop);
-}
-export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
     const vscode = require('vscode') as typeof import('vscode');
@@ -219,48 +142,20 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('defaultInterpreterPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (!value || value[prop] !== pythonPath) {
+        console.log(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
+        await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
-        await disposePythonSettings();
+    } else {
+        console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
-}
-async function restoreGlobalPythonPathSetting(): Promise<void> {
-    const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await Promise.all([
-        pythonConfig.update('pythonPath', undefined, true).then(noop, noop),
-        pythonConfig.update('defaultInterpreterPath', undefined, true).then(noop, noop)
-    ]);
-    await disposePythonSettings();
-}
-
-export async function deleteDirectory(dir: string) {
-    const exists = await fs.pathExists(dir);
-    if (exists) {
-        await fs.remove(dir);
-    }
-}
-
-export async function deleteFile(file: string) {
-    const exists = await fs.pathExists(file);
-    if (exists) {
-        await fs.remove(file);
-    }
-}
-
-export async function deleteFiles(globPattern: string) {
-    const items = await new Promise<string[]>((resolve, reject) => {
-        glob(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
-    });
-
-    return Promise.all(items.map((item) => fs.remove(item).catch(noop)));
 }
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -270,22 +165,6 @@ function getPythonPath(): string {
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
-}
-
-/**
- * Determine if the current platform is included in a list of platforms.
- *
- * @param {OSes} OSType[] List of operating system Ids to check within.
- * @return true if the current OS matches one from the list, false otherwise.
- */
-export function isOs(...OSes: OSType[]): boolean {
-    // get current OS
-    const currentOS: OSType = getOSType();
-    // compare and return
-    if (OSes.indexOf(currentOS) === -1) {
-        return false;
-    }
-    return true;
 }
 
 export function getOSType(): OSType {
@@ -299,24 +178,6 @@ export function getOSType(): OSType {
     } else {
         return OSType.Unknown;
     }
-}
-
-/**
- * Update a string that represents a path in any OS to the string representation of
- * that same path in a different OS. Note: Does not handle drive letter if the path
- * is intended for a root.
- *
- * @param pathToCorrect The string representation of a path from a specific OS.
- * @param os The OS representation to switch to - if left undefined the current OS is used.
- */
-export function correctPathForOsType(pathToCorrect: string, os?: OSType): string {
-    if (os === undefined) {
-        os = getOSType();
-    }
-    const pathSep: string = os === OSType.Windows ? '\\' : '/';
-    const replacePathSepRegex: RegExp = os === OSType.Windows ? /\//g : /\\/g;
-
-    return pathToCorrect.replace(replacePathSepRegex, pathSep);
 }
 
 /**
@@ -391,41 +252,6 @@ export function isVersionInList(version: SemVer, ...searchVersions: string[]): b
         return true;
     }
     return false;
-}
-
-/**
- * Determine if the Python interpreter version running in a given `IProcessService`
- * is in a selection of versions.
- *
- * You can specify versions by specifying the major version at minimum - the minor and
- * patch version numbers are optional.
- *
- * '3', '3.6', '3.6.6', are all vald and only the portions specified will be matched
- * against the current running Python interpreter version.
- *
- * Example scenarios:
- * '3' will match version 3.5.6, 3.6.4, 3.6.6, and 3.7.0.
- * '3.6' will match version 3.6.4 and 3.6.6.
- * '3.6.4' will match version 3.6.4 only.
- *
- * If you don't need to specify the environment (ie. the workspace) that the Python
- * interpreter is running under, use the simpler `isPythonVersion` instead.
- *
- * @param {procService} IProcessService Optionally, use this process service to call out to python with.
- * @param {versions} string[] Python versions to test for, specified as described above.
- * @return true if the current Python version matches a version in the skip list, false otherwise.
- */
-export async function isPythonVersionInProcess(procService?: IProcessService, ...versions: string[]): Promise<boolean> {
-    // get the current python version major/minor
-    const currentPyVersion = await getPythonSemVer(procService);
-    if (currentPyVersion) {
-        return isVersionInList(currentPyVersion, ...versions);
-    } else {
-        console.error(
-            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`
-        );
-        return false;
-    }
 }
 
 /**
@@ -554,112 +380,12 @@ export async function waitForCondition(
     });
 }
 
-/**
- * Execute a method until it executes without any exceptions.
- */
-export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 60_000): Promise<T> {
-    let lastEx: Error | undefined;
-    const started = new Date().getTime();
-    while (timeoutMs > new Date().getTime() - started) {
-        try {
-            // eslint-disable-next-line
-            const result = await fn();
-            // Capture result, if no exceptions return that.
-            return result;
-        } catch (ex) {
-            lastEx = ex as any;
-        }
-        await sleep(10);
-    }
-    if (lastEx) {
-        throw lastEx;
-    }
-    throw new Error('Timeout waiting for function to complete without any errors');
-}
-
 export async function openFile(file: string): Promise<TextDocument> {
     const vscode = require('vscode') as typeof import('vscode');
     const textDocument = await vscode.workspace.openTextDocument(file);
     await vscode.window.showTextDocument(textDocument);
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
-}
-
-/**
- * Fakes for timers in nodejs when testing, using `lolex`.
- * An alternative to `sinon.useFakeTimers` (which in turn uses `lolex`, but doesn't expose the `async` methods).
- * Use this class when you have tests with `setTimeout` and which to avoid them for faster tests.
- *
- * For further information please refer:
- * - https://www.npmjs.com/package/lolex
- * - https://sinonjs.org/releases/v1.17.6/fake-timers/
- *
- * @class FakeClock
- */
-export class FakeClock {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private clock?: any;
-    /**
-     * Creates an instance of FakeClock.
-     * @param {number} [advacenTimeMs=10_000] Default `timeout` value. Defaults to 10s. Assuming we do not have anything bigger.
-     * @memberof FakeClock
-     */
-    constructor(private readonly advacenTimeMs: number = 10_000) {}
-    public install() {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const lolex = require('lolex');
-        this.clock = lolex.install();
-    }
-    public uninstall() {
-        this.clock?.uninstall();
-    }
-    /**
-     * Wait for timers to kick in, and then wait for all of them to complete.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    public async wait(): Promise<void> {
-        await this.waitForTimersToStart();
-        await this.waitForTimersToFinish();
-    }
-
-    /**
-     * Wait for timers to start.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    private async waitForTimersToStart(): Promise<void> {
-        if (!this.clock) {
-            throw new Error('Fake clock not installed');
-        }
-        while (this.clock.countTimers() === 0) {
-            // Relinquish control to event loop, so other timer code will run.
-            // We want to wait for `setTimeout` to kick in.
-            await new Promise((resolve) => process.nextTick(resolve));
-        }
-    }
-    /**
-     * Wait for timers to finish.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    private async waitForTimersToFinish(): Promise<void> {
-        if (!this.clock) {
-            throw new Error('Fake clock not installed');
-        }
-        while (this.clock.countTimers()) {
-            // Advance clock by 10s (can be anything to ensure the next scheduled block of code executes).
-            // Assuming we do not have timers > 10s
-            // This will ensure any such such as `setTimeout(..., 10)` will get executed.
-            this.clock.tick(this.advacenTimeMs);
-
-            // Wait for the timer code to run to completion (incase they are promises).
-            await this.clock.runAllAsync();
-        }
-    }
 }
 
 /**

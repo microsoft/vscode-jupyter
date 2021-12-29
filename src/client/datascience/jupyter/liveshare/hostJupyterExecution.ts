@@ -18,6 +18,7 @@ import { JupyterExecutionBase } from '../jupyterExecution';
 import { NotebookStarter } from '../notebookStarter';
 import { ServerCache } from './serverCache';
 import { inject, injectable } from 'inversify';
+import { testOnlyMethod } from '../../../common/utils/decorators';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -41,6 +42,10 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         asyncRegistry.push(this);
     }
 
+    @testOnlyMethod()
+    public clearCache() {
+        this.serverCache.clearCache();
+    }
     public async dispose(): Promise<void> {
         traceInfo(`Disposing HostJupyterExecution ${this._id}`);
         if (!this._disposed) {

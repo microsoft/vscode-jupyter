@@ -141,7 +141,7 @@ export class KernelVariables implements IJupyterVariables {
         end: number,
         kernel: IKernel,
         sliceExpression?: string
-    ): Promise<{}> {
+    ): Promise<{ data: Record<string, unknown>[] }> {
         const language = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(language);
         if (variableRequester) {
@@ -151,7 +151,7 @@ export class KernelVariables implements IJupyterVariables {
             }
             return variableRequester.getDataFrameRows(start, end, kernel, expression);
         }
-        return {};
+        return { data: [] };
     }
 
     public async getFullVariable(

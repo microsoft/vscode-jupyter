@@ -122,7 +122,6 @@ export class InterpreterPackages {
     private async getPackageInformation(interpreter: PythonEnvironment) {
         const service = await this.executionFactory.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true,
             interpreter
         });
 

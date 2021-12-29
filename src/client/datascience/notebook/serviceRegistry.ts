@@ -26,6 +26,7 @@ import { IntellisenseProvider } from './intellisense/intellisenseProvider';
 import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
+import { LiveKernelSwitcher } from './liveKernelSwitcher';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -76,4 +77,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        LiveKernelSwitcher
+    );
 }

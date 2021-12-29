@@ -11,6 +11,8 @@ import { noop } from '../../common/utils/misc';
 import { getUserMessageForAction } from './messages';
 import { ReportableAction } from './types';
 
+type ProgressReporter = IDisposable & { show?: () => void };
+
 /**
  * Used to report any progress related to Kernels, such as start, restart, interrupt, install, etc.
  */
@@ -21,13 +23,14 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     private kernelResourceProgressReporter = new Map<
         string,
         {
+            title: string;
             pendingProgress: string[];
             /**
              * List of messages displayed in the progress UI.
              */
             progressList: string[];
             reporter?: Progress<{ message?: string; increment?: number }>;
-        } & IDisposable
+        } & ProgressReporter
     >();
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push(this);
@@ -42,8 +45,21 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
 
     /**
      * Creates the progress reporter, however if one exists for the same resource, then it will use the existing one.
+     * If `initiallyHidden` is true, then we still create the progress reporter, but its not displayed.
+     * Later this progress indicator can be displayed.
+     *
+     * This is done so as to maintain a progress progress stack.
+     * E.g. we start kernels automatically, then there's no progress, but we keep the object.
+     * Then later we need to display progress indicator we display it and set a message,
+     * After the code now completes, we can properly unwind the stack and when the top most
+     * operation completes, the progress is disposed (i.e only the first caller can completely hide it)
+     * For this to happen, the progress reporter must be created and hidden.
      */
-    public static createProgressReporter(resource: Resource, title: string): IDisposable {
+    public static createProgressReporter(
+        resource: Resource,
+        title: string,
+        initiallyHidden?: boolean
+    ): ProgressReporter {
         if (!KernelProgressReporter.instance) {
             return new Disposable(noop);
         }
@@ -53,27 +69,22 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         if (KernelProgressReporter.instance.kernelResourceProgressReporter.has(key)) {
             return KernelProgressReporter.reportProgress(resource, title);
         } else {
-            return KernelProgressReporter.createProgressReporterInternal(key, title);
+            return KernelProgressReporter.createProgressReporterInternal(key, title, initiallyHidden);
         }
     }
 
     /**
-     * Creates the progress reporter for the duration of a method.
-     * However if one exists for the same resource, then it will use the existing one.
+     * Reports the progress reporter for the duration of a method.
+     * If one exists for the same resource, then it will use the existing one, else it will just get queued as in `reportProgress`.
+     * Behavior is identical to that of `reportProgress`
      */
-    public static wrapWithProgressReporter<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
+    public static wrapAndReportProgress<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
         const key = resource ? resource.fsPath : '';
         if (!KernelProgressReporter.instance) {
             return cb();
         }
-        // If we have a progress reporter, then use it.
-        let progress: IDisposable;
-        if (KernelProgressReporter.instance.kernelResourceProgressReporter.has(key)) {
-            progress = KernelProgressReporter.reportProgressInternal(key, title);
-        } else {
-            progress = KernelProgressReporter.createProgressReporterInternal(key, title);
-        }
-        return cb().finally(() => progress.dispose());
+        const progress = KernelProgressReporter.reportProgressInternal(key, title);
+        return cb().finally(() => progress?.dispose());
     }
 
     /**
@@ -84,7 +95,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     public static reportProgress(resource: Resource, action: ReportableAction): IDisposable;
     public static reportProgress(resource: Resource, title: string): IDisposable;
     public static reportProgress(resource: Resource, option: string | ReportableAction): IDisposable {
-        const progressMessage = typeof option === 'string' ? option : getUserMessageForAction(option);
+        const progressMessage = getUserMessageForAction((option as unknown) as ReportableAction) || option;
         const key = resource ? resource.fsPath : '';
         if (!progressMessage) {
             return new Disposable(() => noop);
@@ -99,6 +110,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         let progressInfo = KernelProgressReporter.instance.kernelResourceProgressReporter.get(key);
         if (!progressInfo) {
             progressInfo = {
+                title,
                 pendingProgress: [],
                 progressList: [],
                 dispose: noop
@@ -110,6 +122,16 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
             progressInfo.progressList.push(title);
             progressInfo.reporter.report({ message: title });
         } else {
+            // if we've display this message in the past, then no need to display it again.
+            // Due to the async nature of things, we may have already displayed it and we don't want to display it again.
+            // Also displaying the same message again & again could confuse the user.
+            // It could look as though the same operation is being performed multiple times (when in fact its possible we have caching in place).
+            // Eg. we could be attempting to start a python process, which requires activation, thats cached, however calling it multiple times
+            // could result in multiple messages being displayed.
+            // Perhaps its the right thing to do and display the message multiple times, but for now, we'll just not display it.
+            if (progressInfo.progressList.includes(title)) {
+                return new Disposable(noop);
+            }
             progressInfo.pendingProgress.push(title);
         }
         // Unwind the progress messages.
@@ -126,9 +148,12 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                     }
                     // If we have previous messages, display the last item.
                     if (progressInfo.progressList.length > 0) {
-                        progressInfo.reporter.report({
-                            message: progressInfo.progressList[progressInfo.progressList.length - 1]
-                        });
+                        const message = progressInfo.progressList[progressInfo.progressList.length - 1];
+                        if (message !== progressInfo.title) {
+                            progressInfo.reporter.report({
+                                message
+                            });
+                        }
                     } else {
                         // If we have no more messages, then remove the reporter.
                         KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
@@ -141,41 +166,61 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         };
     }
 
-    private static createProgressReporterInternal(key: string, title: string) {
+    private static createProgressReporterInternal(key: string, title: string, initiallyHidden?: boolean) {
         const deferred = createDeferred();
         const disposable = new Disposable(() => deferred.resolve());
         const existingInfo = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) || {
+            title,
             pendingProgress: [] as string[],
             progressList: [] as string[],
-            dispose: () => disposable.dispose()
+            dispose: () => {
+                disposable.dispose();
+            }
+        };
+
+        let shownOnce = false;
+        const show = () => {
+            if (shownOnce) {
+                // Its already visible.
+                return;
+            }
+            shownOnce = true;
+            void window.withProgress({ location: ProgressLocation.Notification, title }, async (progress) => {
+                const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
+                if (!info) {
+                    return;
+                }
+                info.reporter = progress;
+                // If we have any messages, then report them.
+                while (info.pendingProgress.length > 0) {
+                    const message = info.pendingProgress.shift();
+                    if (message === title) {
+                        info.progressList.push(message);
+                    } else if (message !== title && message) {
+                        info.progressList.push(message);
+                        progress.report({ message });
+                    }
+                }
+                await deferred.promise;
+                if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
+                    KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
+                }
+                KernelProgressReporter.disposables.delete(disposable);
+            });
         };
 
         KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, {
             ...existingInfo,
-            dispose: () => disposable.dispose()
-        });
-        void window.withProgress({ location: ProgressLocation.Notification, title }, async (progress) => {
-            const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
-            if (!info) {
-                return;
-            }
-            info.reporter = progress;
-            // If we have any messages, then report them.
-            while (info.pendingProgress.length > 0) {
-                const message = info.pendingProgress.shift();
-                if (message) {
-                    info.progressList.push(message);
-                    progress.report({ message });
-                }
-            }
-            await deferred.promise;
-            if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
-                KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
-            }
-            KernelProgressReporter.disposables.delete(disposable);
+            dispose: () => disposable.dispose(),
+            show
         });
         KernelProgressReporter.disposables.add(disposable);
+        existingInfo.pendingProgress.push(title);
 
-        return disposable;
+        if (!initiallyHidden) {
+            show();
+        }
+
+        return { dispose: () => disposable.dispose(), show };
     }
 }

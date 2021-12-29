@@ -12,7 +12,6 @@ import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../..
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     startJupyterServer,
@@ -33,9 +32,6 @@ suite('DataScience - VSCode semantic token tests', function () {
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
-            return this.skip();
-        }
-        if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         await startJupyterServer();

@@ -14,7 +14,6 @@ import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForConditi
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize, IS_CI_SERVER } from '../../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     startJupyterServer,
@@ -50,9 +49,6 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
-            return this.skip();
-        }
-        if (!(await canRunNotebookTests())) {
             return this.skip();
         }
         // These are slow tests, hence lets run only on linux on CI.

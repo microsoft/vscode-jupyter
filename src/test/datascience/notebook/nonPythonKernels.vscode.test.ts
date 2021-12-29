@@ -19,7 +19,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
@@ -84,12 +83,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     suiteSetup(async function () {
         api = await initialize();
         verifyPromptWasNotDisplayed();
-        if (
-            !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
-            !(await canRunNotebookTests()) ||
-            IS_REMOTE_NATIVE_TEST ||
-            IS_NON_RAW_NATIVE_TEST
-        ) {
+        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
             return this.skip();
         }
         sinon.restore();

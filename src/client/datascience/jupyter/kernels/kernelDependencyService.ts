@@ -33,6 +33,7 @@ import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     IDisplayOptions,
     IInteractiveWindowProvider,
@@ -40,6 +41,7 @@ import {
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { selectKernel } from './kernelSelector';
+import { KernelConnectionMetadata } from './types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -64,13 +66,25 @@ export class KernelDependencyService implements IKernelDependencyService {
     @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
     public async installMissingDependencies(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
     ): Promise<void> {
-        traceInfo(`installMissingDependencies ${getDisplayPath(interpreter.path)}`);
-        if (await this.areDependenciesInstalled(interpreter, token, ignoreCache)) {
+        traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            kernelConnection.interpreter === undefined
+        ) {
+            return;
+        }
+        const result = await KernelProgressReporter.wrapAndReportProgress(
+            resource,
+            DataScience.validatingKernelDependencies(),
+            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+        );
+        if (result) {
             return;
         }
         if (token?.isCancellationRequested) {
@@ -78,10 +92,14 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        let promise = this.installPromises.get(interpreter.path);
+        let promise = this.installPromises.get(kernelConnection.interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(resource, interpreter, ui, token);
-            this.installPromises.set(interpreter.path, promise);
+            promise = KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                DataScience.installingMissingDependencies(),
+                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, token)
+            );
+            this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
 
         // Get the result of the question
@@ -90,29 +108,45 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (token?.isCancellationRequested) {
                 return;
             }
-            await this.handleKernelDependencyResponse(result, interpreter, resource);
+            await this.handleKernelDependencyResponse(result, kernelConnection.interpreter, resource);
         } finally {
             // Don't need to cache anymore
-            this.installPromises.delete(interpreter.path);
+            this.installPromises.delete(kernelConnection.interpreter.path);
         }
     }
     public async areDependenciesInstalled(
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean> {
+        if (
+            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            kernelConnection.interpreter === undefined
+        ) {
+            return true;
+        }
         // Check cache, faster than spawning process every single time.
         // Makes a big difference with conda on windows.
-        if (!ignoreCache && isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, interpreter)) {
-            traceInfo(`IPykernel found previously in this environment ${getDisplayPath(interpreter.path)}`);
+        if (
+            !ignoreCache &&
+            isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
+        ) {
+            traceInfo(
+                `IPykernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+            );
             return true;
         }
         const installedPromise = this.installer
-            .isInstalled(Product.ipykernel, interpreter)
+            .isInstalled(Product.ipykernel, kernelConnection.interpreter)
             .then((installed) => installed === true);
         void installedPromise.then((installed) => {
             if (installed) {
-                void trackPackageInstalledIntoInterpreter(this.memento, Product.ipykernel, interpreter);
+                void trackPackageInstalledIntoInterpreter(
+                    this.memento,
+                    Product.ipykernel,
+                    kernelConnection.interpreter
+                );
             }
         });
         return Promise.race([

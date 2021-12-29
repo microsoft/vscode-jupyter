@@ -9,6 +9,7 @@ import { CancellationError } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import { testOnlyMethod } from '../../common/utils/decorators';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { Settings } from '../constants';
@@ -48,6 +49,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this,
             this.disposables
         );
+    }
+    @testOnlyMethod()
+    public clearCache() {
+        this.serverPromise.local = undefined;
+        this.serverPromise.remote = undefined;
     }
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);

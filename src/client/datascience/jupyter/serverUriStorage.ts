@@ -42,6 +42,17 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Add this entry into the liast
         editedList.push({ uri, time, displayName: displayName || uri });
 
+        return this.updateMemento(editedList);
+    }
+    public async removeUri(uri: string) {
+        // Start with saved list.
+        const uriList = await this.getSavedUriList();
+
+        // Remove this uri if already found (going to add again with a new time)
+        const editedList = uriList.filter((f) => f.uri !== uri);
+        return this.updateMemento(editedList);
+    }
+    private async updateMemento(editedList: { uri: string; time: number; displayName?: string | undefined }[]) {
         // Sort based on time. Newest time first
         const sorted = editedList.sort((a, b) => {
             return b.time - a.time;

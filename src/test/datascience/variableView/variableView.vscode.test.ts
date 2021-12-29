@@ -10,7 +10,6 @@ import { IVariableViewProvider } from '../../../client/datascience/variablesView
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     runCell,
@@ -25,6 +24,8 @@ import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
 import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
@@ -32,6 +33,7 @@ suite('DataScience - VariableView', function () {
     let vscodeNotebook: IVSCodeNotebook;
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
+    let activeInterpreter: PythonEnvironment;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
@@ -39,7 +41,7 @@ suite('DataScience - VariableView', function () {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
 
@@ -47,6 +49,10 @@ suite('DataScience - VariableView', function () {
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        const interpreter = await api.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getActiveInterpreter();
+        activeInterpreter = interpreter!;
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
@@ -166,6 +172,10 @@ suite('DataScience - VariableView', function () {
 
     // Test that we are working will a larger set of basic types
     test('VariableView basic types A (webview-test)', async function () {
+        if (activeInterpreter.version?.major === 3 && activeInterpreter.version.minor >= 10) {
+            // https://github.com/microsoft/vscode-jupyter/issues/8523
+            return this.skip();
+        }
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 

@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import { traceInfo } from '../../../client/common/logger';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { openNotebook } from '../helpers';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
+import { closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -26,9 +26,6 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
         'withMixedMimeTypeOutput.ipynb'
     );
     suiteSetup(async function () {
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
         await initialize();
     });
     setup(async function () {

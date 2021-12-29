@@ -21,6 +21,7 @@ import {
     IJupyterVariablesResponse
 } from '../types';
 import { IKernel } from './kernels/types';
+import { parseDataFrame } from './pythonVariableRequester';
 
 const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -182,7 +183,7 @@ export class DebuggerVariables extends DebugLocationTracker
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<{}> {
+    ): Promise<{ data: Record<string, unknown>[] }> {
         // Developer error. The debugger cannot eval more than 100 rows at once.
         if (end - start > MaximumRowChunkSizeForDebugger) {
             throw new Error(`Debugger cannot provide more than ${MaximumRowChunkSizeForDebugger} rows at once`);
@@ -191,7 +192,7 @@ export class DebuggerVariables extends DebugLocationTracker
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
-            return {};
+            return { data: [] };
         }
         // Listen to notebook events if we haven't already
         if (kernel) {
@@ -211,7 +212,7 @@ export class DebuggerVariables extends DebugLocationTracker
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
-        return JSON.parse(results.result);
+        return parseDataFrame(JSON.parse(results.result));
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

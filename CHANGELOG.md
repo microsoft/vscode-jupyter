@@ -1,5 +1,16 @@
 # Changelog
 
+VS Code Stable releases along with the minimum recommended version of the Jupyter Extension.
+
+| Release   | VS Code Stable | Recommended Jupyter Build |
+| --------- | -------------- | --------------------------|
+| November  | 1.63.0         | **2021.11.100**1550889        |
+| October   | 1.62.0         | **2021.10.100**1414422        |
+| September | 1.61.2         | **2021.9.110**1343141         |
+| August    | 1.60.2         | **2021.8.204**1215044         |
+| July      | 1.59.1         | **2021.8.123**6758218         |
+| June      | 1.58.2         | **2021.8.105**4968649         |
+
 ## 2021.11.100 (November Release on 8 December 2021)
 
 ### Enhancements
@@ -101,16 +112,6 @@ make this extension useful:
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
-
-VS Code Stable releases along with the minimum recommended version of the Jupyter Extension.
-
-| Release   | VS Code Stable | Recommended Jupyter Build |
-| --------- | -------------- | --------------------------|
-| October   | 1.62.0         | **2021.10.100**1414422        |
-| September | 1.61.2         | **2021.9.110**1343141         |
-| August    | 1.60.2         | **2021.8.204**1215044         |
-| July      | 1.59.1         | **2021.8.123**6758218         |
-| June      | 1.58.2         | **2021.8.105**4968649         |
 
 ## 2021.10.100 (October Release on 3 November 2021)
 
