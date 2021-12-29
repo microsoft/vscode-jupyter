@@ -710,6 +710,7 @@ export interface ICellHash {
     id: string; // Cell id as sent to jupyter
     timestamp: number;
     code: string; // Code that was actually hashed (might include breakpoint)
+    debuggerStartLine: number; // 1 based line in source .py that we start our file mapping from
 }
 
 export interface IFileHashes {
