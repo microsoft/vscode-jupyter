@@ -23,9 +23,11 @@ suite('Interactive window (remote)', async () => {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         const api = await initialize();
         interactiveWindowProvider = api.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         await startJupyterServer();
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);

@@ -168,7 +168,18 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const notebookInterpreter = controller
             ? controller.connection.interpreter
             : this.getActiveInterpreterSync(uri.fsPath);
-        const notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
+        let notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
+
+        // Special case. For remote use the active interpreter as the controller's interpreter isn't
+        // usable by pylance.
+        if (
+            interpreterId !== notebookId &&
+            (controller?.connection.kind === 'startUsingRemoteKernelSpec' ||
+                controller?.connection.kind === 'connectToLiveKernel')
+        ) {
+            const activeInterpreter = this.getActiveInterpreterSync(uri.fsPath);
+            notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;
+        }
 
         return interpreterId == notebookId;
     }

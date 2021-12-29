@@ -3,7 +3,7 @@
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import type * as vsc from 'vscode-languageclient/node';
 import { Resource } from '../../common/types';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
@@ -14,6 +14,7 @@ export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
     readonly onNotebookControllerSelectionChanged: Event<void>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
+    readonly remoteRefreshed: Event<LiveKernelConnectionMetadata[]>;
     loadNotebookControllers(): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers

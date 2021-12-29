@@ -9,12 +9,11 @@ import * as sinon from 'sinon';
 import * as path from 'path';
 import { commands, Memento, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     startJupyterServer,
@@ -25,12 +24,19 @@ import {
     runCell,
     deleteAllCellsAndWait,
     insertCodeCell,
-    waitForTextOutput
+    waitForTextOutput,
+    defaultNotebookTestTimeout,
+    createEmptyPythonNotebook
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { Settings } from '../../../client/datascience/constants';
+import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
+import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { RemoteKernelSpecConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { JupyterServer } from '../jupyterServer';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
@@ -50,20 +56,25 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     let ipynbFile: Uri;
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
+    let controllerManager: INotebookControllerManager;
+    let jupyterServerSelector: JupyterServerSelector;
+
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
         this.timeout(120_000);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
         await startJupyterServer();
         sinon.restore();
+        jupyterServerSelector = api.serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        controllerManager = api.serviceContainer.get<INotebookControllerManager>(
+            INotebookControllerManager,
+            INotebookControllerManager
+        );
         remoteKernelIdProvider = api.serviceContainer.get<PreferredRemoteKernelIdProvider>(
             PreferredRemoteKernelIdProvider
         );
@@ -101,11 +112,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
     test('Use same kernel when re-opening notebook', async function () {
-        // This isn't actually working. Preferred kernel is set to the old kernel but VS code remembers
-        // the notebook and doesn't use the preferred kernel. We'd have to update the 'id' from last time to
-        // point to this one
-        // https://github.com/microsoft/vscode-jupyter/issues/7610
-        this.skip();
         await openNotebook(ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
@@ -157,5 +163,199 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             waitForExecutionCompletedSuccessfully(cell2),
             waitForTextOutput(cell2, 'Hello World', 0, false)
         ]);
+    });
+    test('Local and Remote kernels are listed', async function () {
+        await controllerManager.loadNotebookControllers();
+        const controllers = controllerManager.registeredNotebookControllers();
+        assert.ok(
+            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
+            'Should have at least one remote kernelspec'
+        );
+        assert.ok(
+            controllers.some(
+                (item) =>
+                    item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingPythonInterpreter'
+            ),
+            'Should have at least one local kernel'
+        );
+    });
+    test('Remote kernels are removed when switching to local', async function () {
+        await controllerManager.loadNotebookControllers();
+        assert.ok(async () => {
+            const controllers = controllerManager.registeredNotebookControllers();
+            return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
+        }, 'Should have at least one remote kernelspec');
+
+        // After resetting connection to local only, then remove all remote connections.
+        await jupyterServerSelector.setJupyterURIToLocal();
+        traceInfoIfCI('Waiting for remote kernels to be removed');
+
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
+            },
+            defaultNotebookTestTimeout,
+            () =>
+                `Should not have any remote controllers, existing ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
+        );
+    });
+
+    test('Old Remote kernels are removed when switching to new Remote Server', async function () {
+        await controllerManager.loadNotebookControllers();
+
+        // Opening a notebook will trigger the refresh of the kernel list.
+        let nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        await openNotebook(nbUri.fsPath);
+
+        const baseUrls = new Set<string>();
+        // Wait til we get new controllers with a different base url.
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                const remoteKernelSpecs = controllers
+                    .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
+                    .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
+                remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
+                return remoteKernelSpecs.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            () =>
+                `Should have at least one remote kernelspec, ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
+        );
+
+        traceInfoIfCI(`Base Url is ${Array.from(baseUrls).join(', ')}`);
+
+        // Start another jupyter server with a new port.
+        const uri = await JupyterServer.instance.startSecondJupyterWithToken();
+        const uriString = decodeURIComponent(uri.toString());
+        traceInfo(`Another Jupyter started and listening at ${uriString}`);
+        await jupyterServerSelector.setJupyterURIToLocal();
+        await jupyterServerSelector.setJupyterURIToRemote(uriString);
+
+        // Opening a notebook will trigger the refresh of the kernel list.
+        nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        await openNotebook(nbUri.fsPath);
+        traceInfo(`Waiting for kernels to get refreshed for Jupyter Remotenp ${uriString}`);
+
+        // Wait til we get new controllers with a different base url.
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.some(
+                    (item) =>
+                        item.connection.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.connection.baseUrl)
+                );
+            },
+            defaultNotebookTestTimeout,
+            () =>
+                `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
+                    controllerManager.registeredNotebookControllers()
+                )}`
+        );
+    });
+
+    test('Local Kernel state is not lost when connecting to remote', async function () {
+        await controllerManager.loadNotebookControllers();
+
+        // After resetting connection to local only, verify all remote connections are no longer available.
+        await jupyterServerSelector.setJupyterURIToLocal();
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
+            },
+            defaultNotebookTestTimeout,
+            'Should not have any remote controllers'
+        );
+
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('a = "123412341234"', { index: 0 });
+        await insertCodeCell('print(a)', { index: 1 });
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        await runCell(cell1);
+
+        // Now that we don't have any remote kernels, connect to a remote jupyter server.
+        await startJupyterServer();
+
+        // Verify we have a remote kernel spec.
+        await waitForCondition(
+            async () => {
+                const controllers = controllerManager.registeredNotebookControllers();
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
+            },
+            defaultNotebookTestTimeout,
+            'Should have at least one remote controller'
+        );
+
+        // Run the second cell and verify we still have the same kernel state.
+        await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);
+    });
+
+    test('Can run against a remote kernelspec', async function () {
+        await controllerManager.loadNotebookControllers();
+        const controllers = controllerManager.registeredNotebookControllers();
+
+        // Verify we have a remote kernel spec.
+        assert.ok(
+            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
+            'Should have at least one remote controller'
+        );
+
+        await createEmptyPythonNotebook(disposables);
+
+        // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
+        const defaultPythonKernel = await controllerManager.getActiveInterpreterOrDefaultController(
+            'jupyter-notebook',
+            undefined
+        );
+        assert.ok(defaultPythonKernel, 'No default remote kernel');
+        assert.strictEqual(
+            defaultPythonKernel?.connection.kind,
+            'startUsingRemoteKernelSpec',
+            'Not a remote kernelspec'
+        );
+        await commands.executeCommand('notebook.selectKernel', {
+            id: defaultPythonKernel!.controller.id,
+            extension: JVSC_EXTENSION_ID_FOR_TESTS
+        });
+
+        await insertCodeCell('print("123412341234")', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+    });
+
+    test('Remote kernels support intellisense', async function () {
+        await openNotebook(ipynbFile.fsPath);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
+
+        // Wait for tokens on the second cell (it works with just plain pylance)
+        await waitForCondition(
+            async () => {
+                const promise = commands.executeCommand('vscode.provideDocumentSemanticTokens', cell2.document.uri);
+                const result = (await promise) as any;
+                return result && result.data.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            `Tokens never appear for first cell`,
+            100,
+            true
+        );
     });
 });

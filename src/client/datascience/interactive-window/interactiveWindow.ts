@@ -53,7 +53,7 @@ type InteractiveCellMetadata = {
     inputCollapsed: boolean;
     interactiveWindowCellMarker: string;
     interactive: {
-        file: string;
+        uristring: string;
         line: number;
         originalSource: string;
     };
@@ -530,7 +530,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
+        if (!this._submitters.find((s) => s.toString() == file.toString())) {
             this._submitters.push(file);
         }
 
@@ -575,7 +575,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
-                file: file.fsPath,
+                uristring: file.toString(), // Has to be simple types
                 line: line,
                 originalSource: code
             },

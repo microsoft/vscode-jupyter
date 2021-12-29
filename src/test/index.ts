@@ -18,6 +18,7 @@ const nyc = setupCoverage();
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 import {
     IS_MULTI_ROOT_TEST,
@@ -140,6 +141,8 @@ function activateExtensionScript() {
  * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
+    // Enable gc during tests
+    v8.setFlagsFromString('--expose_gc');
     const options = configure();
     const mocha = new Mocha(options);
     const testsRoot = path.join(__dirname);

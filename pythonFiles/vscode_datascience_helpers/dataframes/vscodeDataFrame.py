@@ -153,7 +153,7 @@ def _VSCODE_getDataFrameRows(df, start, end):
         )
     except:
         pass
-    return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
+    return _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
 
 
 # Function to get info on the passed in data frame

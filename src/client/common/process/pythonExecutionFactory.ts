@@ -77,8 +77,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: options.interpreter,
-            resource: options.resource,
-            bypassCondaExecution: true
+            resource: options.resource
         });
         // No daemon support in Python 2.7 or during shutdown
         if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {

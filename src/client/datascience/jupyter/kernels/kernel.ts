@@ -50,7 +50,13 @@ import {
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import { IKernel, isLocalConnection, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import {
+    IKernel,
+    isLocalConnection,
+    isLocalHostConnection,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -500,32 +506,29 @@ export class Kernel implements IKernel {
         return this._notebookPromise;
     }
     private createProgressIndicator(disposables: IDisposable[]) {
+        // Even if we're not supposed to display the progress indicator,
+        // create it and keep it hidden.
+        const progressReporter = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.connectingToKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            this.startupUI.disableUI
+        );
+        disposables.push(progressReporter);
         if (this.startupUI.disableUI) {
+            // Display the hidden progress indicator if it was previously hidden.
             this.startupUI.onDidChangeDisableUI(
                 () => {
                     if (this.disposing || this.disposed || this.startupUI.disableUI) {
                         return;
                     }
-                    disposables.push(
-                        KernelProgressReporter.createProgressReporter(
-                            this.resourceUri,
-                            DataScience.connectingToKernel().format(
-                                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                            )
-                        )
-                    );
+                    if (progressReporter.show) {
+                        progressReporter.show();
+                    }
                 },
                 this,
                 disposables
-            );
-        } else {
-            disposables.push(
-                KernelProgressReporter.createProgressReporter(
-                    this.resourceUri,
-                    DataScience.connectingToKernel().format(
-                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                    )
-                )
             );
         }
     }
@@ -661,11 +664,26 @@ export class Kernel implements IKernel {
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                await this.executeSilently(`import site;site.addsitedir(site.getusersitepackages())`);
+            }
+
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-            traceInfoIfCI('After updating working directory');
+            const file = this.resourceUri?.fsPath;
+            if (file) {
+                await this.executeSilently(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
+            }
+            traceInfoIfCI('After updating working directory and notebook file __vsc_ipynb_file__');
             await this.disableJedi();
             traceInfoIfCI('After Disabing jedi');
+
+            // Request completions to warm up the completion engine (first call always takes a lot longer)
+            await this.requestEmptyCompletions();
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
@@ -702,6 +720,13 @@ export class Kernel implements IKernel {
 
     private async disableJedi() {
         await this.executeSilently(CodeSnippets.disableJedi);
+    }
+
+    private async requestEmptyCompletions() {
+        await this.session?.requestComplete({
+            code: '__file__.',
+            cursor_pos: 9
+        });
     }
 
     /**
@@ -837,7 +862,11 @@ export class Kernel implements IKernel {
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
-        if (isLocalConnection(this.kernelConnectionMetadata)) {
+        if (
+            (isLocalConnection(this.kernelConnectionMetadata) ||
+                isLocalHostConnection(this.kernelConnectionMetadata)) &&
+            this.kernelConnectionMetadata.kind !== 'connectToLiveKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
+        ) {
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
@@ -855,7 +884,8 @@ export class Kernel implements IKernel {
     // Update both current working directory and sys.path with the desired directory
     private async changeDirectoryIfPossible(directory: string): Promise<void> {
         if (
-            isLocalConnection(this.kernelConnectionMetadata) &&
+            (isLocalConnection(this.kernelConnectionMetadata) ||
+                isLocalHostConnection(this.kernelConnectionMetadata)) &&
             isPythonKernelConnection(this.kernelConnectionMetadata)
         ) {
             traceInfo('changeDirectoryIfPossible');

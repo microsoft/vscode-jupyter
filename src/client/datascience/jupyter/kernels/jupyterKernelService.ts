@@ -59,14 +59,23 @@ export class JupyterKernelService {
         const token = wrapCancellationTokens(cancelToken, tokenSource.token);
 
         // If we have an interpreter, make sure it has the correct dependencies installed
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, ui, token);
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.interpreter &&
+            kernel.kind !== 'startUsingRemoteKernelSpec'
+        ) {
+            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
         }
 
         var specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter
+        ) {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 
@@ -86,13 +95,19 @@ export class JupyterKernelService {
         }
 
         // Update the kernel environment to use the interpreter's latest
-        if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter && specFile) {
+        if (
+            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kernelSpec &&
+            kernel.interpreter &&
+            specFile
+        ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
                     kernel.interpreter.path
                 )} for ${kernel.id}`
             );
-            await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, specFile, token);
+            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, token);
         }
     }
 
@@ -185,6 +200,7 @@ export class JupyterKernelService {
         return kernelSpecFilePath;
     }
     private async updateKernelEnvironment(
+        resource: Resource,
         interpreter: PythonEnvironment | undefined,
         kernel: IJupyterKernelSpec,
         specFile: string,
@@ -227,10 +243,19 @@ export class JupyterKernelService {
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
                 specModel.env = await this.activationHelper
-                    .getActivatedEnvironmentVariables(undefined, interpreter, true)
+                    .getActivatedEnvironmentVariables(resource, interpreter, true)
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
+
+                // Ensure global site_packages are not in the path.
+                // The global site_packages will be added to the path later.
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
+                if (specModel.env) {
+                    specModel.env.PYTHONNOUSERSITE = 'True';
+                }
+
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }

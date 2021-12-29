@@ -15,6 +15,8 @@ const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 export class CondaService {
     private _file?: string;
     private _version?: SemVer;
+    private _previousVersionCall?: Promise<SemVer | undefined>;
+    private _previousFileCall?: Promise<string | undefined>;
     constructor(
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
@@ -24,41 +26,57 @@ export class CondaService {
         if (this._version) {
             return this._version;
         }
-        const latestInfo = this.pythonApi
-            .getApi()
-            .then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
-        void latestInfo.then((version) => {
-            this._version = version;
-            void this.updateCache();
-        });
-        const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
-        await Promise.race([cachedInfo, latestInfo]);
-        if (cachedInfo.completed && cachedInfo.value?.version) {
-            return (this._version = cachedInfo.value.version);
+        if (this._previousVersionCall) {
+            return this._previousVersionCall;
         }
-        return latestInfo;
+        const promise = async () => {
+            const latestInfo = this.pythonApi
+                .getApi()
+                .then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
+            void latestInfo.then((version) => {
+                this._version = version;
+                void this.updateCache();
+            });
+            const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
+            await Promise.race([cachedInfo, latestInfo]);
+            if (cachedInfo.completed && cachedInfo.value?.version) {
+                return (this._version = cachedInfo.value.version);
+            }
+            return latestInfo;
+        };
+        this._previousVersionCall = promise();
+        return this._previousVersionCall;
     }
     async getCondaFile() {
         if (this._file) {
             return this._file;
         }
-        const latestInfo = this.pythonApi.getApi().then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
-        void latestInfo.then((file) => {
-            this._file = file;
-            void this.updateCache();
-        });
-        const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
-        await Promise.race([cachedInfo, latestInfo]);
-        if (cachedInfo.completed && cachedInfo.value?.file) {
-            return (this._file = cachedInfo.value.file);
+        if (this._previousFileCall) {
+            return this._previousFileCall;
         }
-        return latestInfo;
+        const promise = async () => {
+            const latestInfo = this.pythonApi
+                .getApi()
+                .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
+            void latestInfo.then((file) => {
+                this._file = file;
+                void this.updateCache();
+            });
+            const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
+            await Promise.race([cachedInfo, latestInfo]);
+            if (cachedInfo.completed && cachedInfo.value?.file) {
+                return (this._file = cachedInfo.value.file);
+            }
+            return latestInfo;
+        };
+        this._previousFileCall = promise();
+        return this._previousFileCall;
     }
     private async updateCache() {
         if (!this._file || !this._version) {
             return;
         }
-        const fileHash = await this.fs.getFileHash(this._file);
+        const fileHash = this._file.toLowerCase() === 'conda' ? '' : await this.fs.getFileHash(this._file);
         await this.globalState.update(CACHEKEY_FOR_CONDA_INFO, {
             version: this._version.raw,
             file: this._file,
@@ -78,7 +96,7 @@ export class CondaService {
         if (!cachedInfo) {
             return;
         }
-        const fileHash = await this.fs.getFileHash(cachedInfo.file);
+        const fileHash = cachedInfo.file.toLowerCase() === 'conda' ? '' : await this.fs.getFileHash(cachedInfo.file);
         if (cachedInfo.fileHash === fileHash) {
             return {
                 version: new SemVer(cachedInfo.version),

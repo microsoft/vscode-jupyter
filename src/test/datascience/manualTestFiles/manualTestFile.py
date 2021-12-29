@@ -79,3 +79,7 @@ alt.Chart(iris).mark_point().encode(
 import plotly.graph_objects as go
 fig = go.Figure(data=go.Bar(y=[2, 3, 1, 5]))
 fig.show()
+
+#%% [markdown]
+# ## Test split cell (code below should run -- see issue https://github.com/microsoft/vscode-jupyter/issues/8543)
+print("hi")

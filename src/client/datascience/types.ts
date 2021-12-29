@@ -146,10 +146,7 @@ export interface INotebook {
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = {
     ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: boolean;
+    kind: 'localJupyter' | 'remoteJupyter';
     token: CancellationToken;
     resource: Resource;
 };
@@ -207,7 +204,9 @@ export const IJupyterSession = Symbol('IJupyterSession');
  */
 export interface IJupyterSession extends IAsyncDisposable {
     readonly disposed: boolean;
+    readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
+    readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
@@ -516,7 +515,7 @@ export interface ICodeLensFactory {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    file?: string;
+    uri?: Uri;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
 }
 
@@ -643,7 +642,7 @@ export interface IJupyterVariables {
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<JSONObject>;
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getMatchingVariable(
         name: string,
         kernel?: IKernel,
@@ -714,7 +713,7 @@ export interface ICellHash {
 }
 
 export interface IFileHashes {
-    file: string;
+    uri: Uri;
     hashes: ICellHash[];
 }
 
@@ -973,7 +972,7 @@ export interface IKernelDependencyService {
      */
     installMissingDependencies(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
@@ -982,7 +981,7 @@ export interface IKernelDependencyService {
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
     areDependenciesInstalled(
-        interpreter: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean>;
@@ -997,7 +996,12 @@ export interface IKernelVariableRequester {
         kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
-    getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}>;
+    getDataFrameRows(
+        start: number,
+        end: number,
+        kernel: IKernel,
+        expression: string
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getVariableProperties(
         word: string,
         kernel: IKernel,
@@ -1086,6 +1090,7 @@ export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
+    removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;

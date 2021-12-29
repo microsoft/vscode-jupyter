@@ -11,7 +11,9 @@ import { IInstaller, InstallerResponse, Product } from '../../../../client/commo
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { getResourceType } from '../../../../client/datascience/common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
+import { createInterpreterKernelSpec } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -31,6 +33,12 @@ suite('DataScience - Kernel Dependency Service', () => {
     let editor: NotebookEditor;
 
     const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
+    const metadata: PythonKernelConnectionMetadata = {
+        interpreter,
+        kind: 'startUsingPythonInterpreter',
+        kernelSpec: createInterpreterKernelSpec(interpreter, ''),
+        id: '1'
+    };
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
@@ -79,7 +87,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 await dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -92,7 +100,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 await dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -106,7 +114,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                 await assert.isRejected(
                     dependencyService.installMissingDependencies(
                         Uri.file('one.ipynb'),
-                        interpreter,
+                        metadata,
                         new DisplayOptions(false),
                         token.token
                     ),
@@ -129,7 +137,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 await dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -149,7 +157,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 await dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -168,7 +176,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 const promise = dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -188,7 +196,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 const promise = dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );
@@ -210,7 +218,7 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 const promise = dependencyService.installMissingDependencies(
                     resource,
-                    interpreter,
+                    metadata,
                     new DisplayOptions(false),
                     token.token
                 );

@@ -17,8 +17,7 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     createEmptyPythonNotebook,
-    runAllCellsInActiveNotebook,
-    canRunNotebookTests
+    runAllCellsInActiveNotebook
 } from '../notebook/helper';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
@@ -30,9 +29,6 @@ suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
 
     suiteSetup(async function () {
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
-            return this.skip();
-        }
         await startJupyterServer();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });

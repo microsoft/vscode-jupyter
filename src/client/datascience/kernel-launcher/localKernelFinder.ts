@@ -45,7 +45,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonkernelFinder: LocalKnownPathKernelSpecFinder,
+        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
@@ -126,7 +126,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
 
     public async listNonPythonKernels(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        return this.filterKernels(await this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken));
+        return this.filterKernels(await this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken));
     }
 
     /**
@@ -202,7 +202,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
-            this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
+            this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken),
             this.pythonKernelFinder.listKernelSpecs(resource, true, cancelToken)
         ]);
 

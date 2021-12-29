@@ -20,12 +20,6 @@ export async function sleep(timeout: number): Promise<number> {
     });
 }
 
-// TODO: This will never reject when there's a timeout, its only used in 3 places, remove this.
-// TODO: Remove this.
-
-/**
- * @deprecated use Promise.race([..., sleep(n)])
- */
 export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {
@@ -254,4 +248,43 @@ export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Prom
         result = await iterator.next();
     }
     return results;
+}
+
+/**
+ * Provides the ability to chain promises.
+ */
+export class PromiseChain {
+    private currentPromise: Promise<void | undefined> = Promise.resolve(undefined);
+    /**
+     * Chain the provided promise after all previous promises have successfully completed.
+     * If the previously chained promises have failed, then this call will fail.
+     */
+    public async chain<T>(promise: () => Promise<T>): Promise<T> {
+        const deferred = createDeferred<T>();
+        const previousPromise = this.currentPromise;
+        this.currentPromise = this.currentPromise.then(async () => {
+            try {
+                const result = await promise();
+                deferred.resolve(result);
+            } catch (ex) {
+                deferred.reject(ex);
+                throw ex;
+            }
+        });
+        // Wait for previous promises to complete.
+        await previousPromise;
+        return deferred.promise;
+    }
+    /**
+     * Chain the provided promise after all previous promises have completed (ignoring errors in previous promises).
+     */
+    public chainFinally<T>(promise: () => Promise<T>): Promise<T> {
+        const deferred = createDeferred<T>();
+        this.currentPromise = this.currentPromise.finally(() =>
+            promise()
+                .then((result) => deferred.resolve(result))
+                .catch((ex) => deferred.reject(ex))
+        );
+        return deferred.promise;
+    }
 }

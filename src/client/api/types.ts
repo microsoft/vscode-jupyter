@@ -8,7 +8,6 @@ import { InstallerResponse, Product, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import type { SemVer } from 'semver';
-
 export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'

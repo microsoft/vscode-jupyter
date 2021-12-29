@@ -17,7 +17,6 @@ import { IDisposable, Product } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     runCell,
@@ -71,13 +70,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup');
+        traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
             api = await initialize();
-            if (!(await canRunNotebookTests())) {
-                return this.skip();
-            }
             await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',
@@ -92,6 +88,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
+            traceInfo('Suite Setup (failed) - Execution');
             await captureScreenShot('execution-suite');
             throw e;
         }
@@ -126,6 +123,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+    });
+    test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
+        const uri = vscodeNotebook.activeNotebookEditor?.document.uri;
+        if (uri && uri.scheme === 'file') {
+            await insertCodeCell('print(__vsc_ipynb_file__)', { index: 0 });
+            const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+            await Promise.all([runCell(cell), waitForTextOutput(cell, `${uri.path}`)]);
+        }
     });
     test('Leading whitespace not suppressed', async () => {
         await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });

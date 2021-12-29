@@ -4,6 +4,8 @@
 'use strict';
 
 import { ExtensionMode } from 'vscode';
+import { IExportedKernelService } from './api/extension';
+import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
@@ -40,6 +42,13 @@ export interface IExtensionApi {
      * Creates a blank notebook and defaults the empty cell to the language provided.
      */
     createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
+    /**
+     * Gets the service that provides access to kernels.
+     * Returns `undefined` if the calling extension is not allowed to access this API. This could
+     * happen either when user doesn't allow this or the extension doesn't allow this.
+     * There are a specific set of extensions that are currently allowed to access this API.
+     */
+    getKernelService(): Promise<IExportedKernelService | undefined>;
 }
 
 export function buildApi(
@@ -75,6 +84,10 @@ export function buildApi(
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
             await service.createNew(options);
+        },
+        getKernelService: async () => {
+            const kernelServiceFactory = serviceContainer.get<JupyterKernelServiceFactory>(JupyterKernelServiceFactory);
+            return kernelServiceFactory.getService();
         }
     };
 
