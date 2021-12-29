@@ -12,7 +12,7 @@ import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { IExtensionTestApi, waitForCondition } from '../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile, waitForLastCellToComplete } from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
@@ -50,6 +50,9 @@ suite('Interactive window debugging', async function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         sinon.restore();
         debugAdapterTracker = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
