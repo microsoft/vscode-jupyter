@@ -95,9 +95,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             result = this.create(resource, mode);
         }
 
-        // make sure the existing IW has a kernel in case it failed to start previously
-        result.ensureKernelReadyPromise();
-
         await result.readyPromise;
         return result;
     }

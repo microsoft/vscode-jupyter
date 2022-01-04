@@ -69,6 +69,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     // Promise that resolves when the interactive window is ready to handle code execution.
     public get readyPromise(): Promise<void> {
+        this.ensureKernelReadyPromise();
         return Promise.all([this._editorReadyPromise, this._kernelReadyPromise]).then(noop, noop);
     }
     public get closed(): Event<void> {
@@ -135,7 +136,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
 
         // Set up promise for kernel ready
-        this._kernelReadyPromise = this.createKernelReadyPromise();
+        this.ensureKernelReadyPromise();
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this._notebookDocument) {
@@ -167,26 +168,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.internalDisposables
         );
         this.internalDisposables.push(kernel);
-
-        try{
-            await kernel.start();
-        }
-        catch(e){
-            this._kernelReadyPromise = undefined;
-            throw e;
-        }
-
+        await kernel.start();
         this.fileInKernel = undefined;
         await this.runIntialization(kernel, this.owner);
         return kernel;
     }
 
-    public ensureKernelReadyPromise(): Promise<IKernel> {
-        if (this._kernelReadyPromise === undefined) {
+    private ensureKernelReadyPromise() {
+        if (!this._kernelReadyPromise) {
             this._kernelReadyPromise = this.createKernelReadyPromise();
+            this._kernelReadyPromise.catch(() => this._kernelReadyPromise = undefined);
         }
-
-        return this._kernelReadyPromise;
     }
 
     private async createEditorReadyPromise(): Promise<NotebookEditor> {
@@ -259,7 +251,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._controllerReadyPromise.resolve(e.controller);
 
                 // Recreate the kernel ready promise now that we have a new controller
-                this._kernelReadyPromise = this.createKernelReadyPromise();
+                this.ensureKernelReadyPromise();
             },
             this,
             this.internalDisposables

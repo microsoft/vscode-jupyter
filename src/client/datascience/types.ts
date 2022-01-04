@@ -433,7 +433,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly readyPromise: Promise<void>;
     readonly kernelPromise: Promise<IKernel | undefined>;
     closed: Event<void>;
-    ensureKernelReadyPromise(): Promise<IKernel>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
