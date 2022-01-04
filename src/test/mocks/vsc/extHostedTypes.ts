@@ -25,8 +25,6 @@ export namespace vscMockExtHostedTypes {
             public readonly runStartTime?: number,
             public readonly statusMessage?: string,
             public readonly lastRunDuration?: number,
-            public readonly inputCollapsed?: boolean,
-            public readonly outputCollapsed?: boolean,
             public readonly custom?: Record<string, any>
         ) {}
 
@@ -40,8 +38,6 @@ export namespace vscMockExtHostedTypes {
             runStartTime?: number | null;
             statusMessage?: string | null;
             lastRunDuration?: number | null;
-            inputCollapsed?: boolean | null;
-            outputCollapsed?: boolean | null;
             custom?: Record<string, any> | null;
         }): NotebookCellMetadata {
             return new NotebookCellMetadata(
@@ -53,8 +49,6 @@ export namespace vscMockExtHostedTypes {
                 change.runStartTime || this.runStartTime,
                 change.statusMessage || this.statusMessage,
                 change.lastRunDuration || this.lastRunDuration,
-                change.inputCollapsed || this.inputCollapsed,
-                change.outputCollapsed || this.outputCollapsed,
                 change.custom || this.custom
             );
         }
