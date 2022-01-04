@@ -5,9 +5,7 @@ permissions:
   deployments: write
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch
 
 jobs:
   perf-test:
