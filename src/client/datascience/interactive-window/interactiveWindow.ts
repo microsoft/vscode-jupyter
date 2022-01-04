@@ -167,23 +167,26 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.internalDisposables
         );
         this.internalDisposables.push(kernel);
-        await kernel.start();
+
+        try{
+            await kernel.start();
+        }
+        catch(e){
+            this._kernelReadyPromise = undefined;
+            throw e;
+        }
+
         this.fileInKernel = undefined;
         await this.runIntialization(kernel, this.owner);
         return kernel;
     }
 
-    public async ensureKernelReady(): Promise<void> {
+    public ensureKernelReadyPromise(): Promise<IKernel> {
         if (this._kernelReadyPromise === undefined) {
             this._kernelReadyPromise = this.createKernelReadyPromise();
         }
 
-        try {
-            await this._kernelReadyPromise;
-        } catch (error) {
-            this._kernelReadyPromise = undefined;
-            throw error;
-        }
+        return this._kernelReadyPromise;
     }
 
     private async createEditorReadyPromise(): Promise<NotebookEditor> {
@@ -256,7 +259,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._controllerReadyPromise.resolve(e.controller);
 
                 // Recreate the kernel ready promise now that we have a new controller
-                void this.ensureKernelReady();
+                this._kernelReadyPromise = this.createKernelReadyPromise();
             },
             this,
             this.internalDisposables
