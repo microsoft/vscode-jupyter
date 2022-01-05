@@ -47,6 +47,7 @@ import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { CellHashProviderFactory } from '../../../client/datascience/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { InteractiveCellResultError } from '../../../client/datascience/errors/interactiveCellResultError';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -836,10 +837,6 @@ print('testing')`;
         codeWatcher.setDocument(document.object);
 
         // If adding empty lines nothing should be added and history should not be started
-        interactiveWindowProvider
-            .setup((h) => h.getOrCreate(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(activeInteractiveWindow.object))
-            .verifiable(TypeMoq.Times.never());
         activeInteractiveWindow
             .setup((h) =>
                 h.addCode(
@@ -1191,7 +1188,7 @@ testing2`;
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => Promise.resolve(false))
+            .returns(() => Promise.reject(new InteractiveCellResultError()))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
@@ -1205,7 +1202,7 @@ testing2`;
                 )
             )
             .returns(() => Promise.resolve(true))
-            .verifiable(TypeMoq.Times.never());
+            .verifiable(TypeMoq.Times.once()); // Still called but not executed
 
         await codeWatcher.runAllCellsAbove(4, 0);
 
@@ -1236,7 +1233,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => Promise.resolve(false))
+            .returns(() => Promise.reject(new InteractiveCellResultError()))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
@@ -1250,7 +1247,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                 )
             )
             .returns(() => Promise.resolve(true))
-            .verifiable(TypeMoq.Times.never());
+            .verifiable(TypeMoq.Times.once()); // Still called, but not executed
 
         await codeWatcher.runAllCells();
 
