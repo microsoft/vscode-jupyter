@@ -177,7 +177,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private ensureKernelReadyPromise() {
         if (!this._kernelReadyPromise) {
             this._kernelReadyPromise = this.createKernelReadyPromise();
-            this._kernelReadyPromise.catch(() => this._kernelReadyPromise = undefined);
+            this._kernelReadyPromise.catch(() => (this._kernelReadyPromise = undefined));
         }
     }
 
