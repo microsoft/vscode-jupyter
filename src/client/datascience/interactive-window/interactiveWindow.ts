@@ -71,6 +71,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     // Promise that resolves when the interactive window is ready to handle code execution.
     public get readyPromise(): Promise<void> {
+        this.ensureKernelReadyPromise();
         return Promise.all([this._editorReadyPromise, this._kernelReadyPromise]).then(noop, noop);
     }
     public get closed(): Event<void> {
@@ -137,7 +138,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
 
         // Set up promise for kernel ready
-        this._kernelReadyPromise = this.createKernelReadyPromise();
+        this.ensureKernelReadyPromise();
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this._notebookDocument) {
@@ -173,6 +174,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.fileInKernel = undefined;
         await this.runIntialization(kernel, this.owner);
         return kernel;
+    }
+
+    private ensureKernelReadyPromise() {
+        if (!this._kernelReadyPromise) {
+            const readyPromise = this.createKernelReadyPromise();
+            this._kernelReadyPromise = readyPromise;
+            this._kernelReadyPromise.catch(() => {
+                // The promise will throw if there is no existing kernel for the environment and the user either
+                // 1. Opts to change the kernel, in which this promise will be replaced for the newer kernel - Don't do anything.
+                // 2. Opts to cancel the install - Clear the promise so that we will retry when another cell is run.
+                if (this._kernelReadyPromise === readyPromise) {
+                    this._kernelReadyPromise = undefined;
+                }
+            });
+        }
     }
 
     private async createEditorReadyPromise(): Promise<NotebookEditor> {
@@ -244,7 +260,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._controllerReadyPromise.resolve(e.controller);
 
                 // Recreate the kernel ready promise now that we have a new controller
-                this._kernelReadyPromise = this.createKernelReadyPromise();
+                this._kernelReadyPromise = undefined;
+                this.ensureKernelReadyPromise();
             },
             this,
             this.internalDisposables
