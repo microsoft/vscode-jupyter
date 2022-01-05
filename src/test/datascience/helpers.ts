@@ -10,7 +10,7 @@ import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import {
     createTemporaryFile,
     waitForCellExecutionToComplete,
@@ -114,6 +114,24 @@ export async function submitFromPythonFile(
         untitledPythonFile.uri
     )) as InteractiveWindow;
     await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+    return { activeInteractiveWindow, untitledPythonFile };
+}
+
+export async function submitFromPythonFileUsingCodeWatcher(
+    interactiveWindowProvider: IInteractiveWindowProvider,
+    codeWatcherProvider: IDataScienceCodeLensProvider,
+    source: string,
+    disposables: vscode.Disposable[]
+) {
+    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
+    disposables.push(tempFile);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+    const editor = await vscode.window.showTextDocument(untitledPythonFile);
+    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
+        untitledPythonFile.uri
+    )) as InteractiveWindow;
+    const codeWatcher = codeWatcherProvider.getCodeWatcher(editor.document);
+    void codeWatcher?.runAllCells(); // Dont wait for execution to complete
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
