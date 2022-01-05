@@ -12,7 +12,7 @@ import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -20,6 +20,7 @@ import {
     insertIntoInputEditor,
     runCurrentFile,
     submitFromPythonFile,
+    submitFromPythonFileUsingCodeWatcher,
     waitForLastCellToComplete
 } from './helpers';
 import {
@@ -28,6 +29,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
     waitForExecutionCompletedSuccessfully,
+    waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
 
@@ -36,6 +38,7 @@ suite('Interactive window', async function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
+    let codeWatcherProvider: IDataScienceCodeLensProvider;
 
     setup(async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -44,6 +47,8 @@ suite('Interactive window', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
+        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
+
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -263,6 +268,36 @@ for i in range(10):
         assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
         // Second cell output is updated
         await waitForTextOutput(secondCell!, "'Goodbye'");
+    });
+
+    test('Cells with errors cancel execution for others', async () => {
+        const source = '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)';
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+            interactiveWindowProvider,
+            codeWatcherProvider,
+            source,
+            disposables
+        );
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        await waitForCondition(
+            async () => {
+                return notebookDocument?.cellCount == 4;
+            },
+            defaultNotebookTestTimeout,
+            `Cells should be added`
+        );
+        const secondCell = notebookDocument?.cellAt(2);
+        await waitForExecutionCompletedWithErrors(secondCell!);
+        await waitForCondition(
+            async () => {
+                return notebookDocument?.cellCount == 5;
+            },
+            defaultNotebookTestTimeout,
+            `Markdown error didnt appear`
+        );
     });
 
     test('Multiple interactive windows', async () => {
