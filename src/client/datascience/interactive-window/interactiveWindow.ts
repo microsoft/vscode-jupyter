@@ -176,8 +176,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private ensureKernelReadyPromise() {
         if (!this._kernelReadyPromise) {
-            this._kernelReadyPromise = this.createKernelReadyPromise();
-            this._kernelReadyPromise.catch(() => (this._kernelReadyPromise = undefined));
+            const readyPromise = this.createKernelReadyPromise();
+            this._kernelReadyPromise = readyPromise;
+            this._kernelReadyPromise.catch(() => {
+                // The promise will throw if there is no existing kernel for the environment and the user either
+                // 1. Opts to change the kernel, in which this promise will be replaced for the newer kernel - Don't do anything.
+                // 2. Opts to cancel the install - Clear the promise so that we will retry when another cell is run.
+                if (this._kernelReadyPromise === readyPromise) {
+                    this._kernelReadyPromise = undefined;
+                }
+            });
         }
     }
 
