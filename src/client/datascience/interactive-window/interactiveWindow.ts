@@ -49,6 +49,7 @@ import { generateInteractiveCode } from '../../../datascience-ui/common/cellFact
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { InteractiveWindowView } from '../notebook/constants';
 import { chainable } from '../../common/utils/decorators';
+import { InteractiveCellResultError } from '../errors/interactiveCellResultError';
 
 type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -269,16 +270,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     // Add message to the notebook document in a markdown cell
-    public async addMessage(message: string): Promise<void> {
+    @chainable()
+    public async addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
         const edit = new WorkspaceEdit();
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
-        edit.replaceNotebookCells(
-            notebookEditor.document.uri,
-            new NotebookRange(notebookEditor.document.cellCount, notebookEditor.document.cellCount),
-            [markdownCell]
-        );
+        const index = getIndex ? getIndex(notebookEditor) : -1;
+        const insertionIndex = index >= 0 ? index : notebookEditor.document.cellCount;
+        edit.replaceNotebookCells(notebookEditor.document.uri, new NotebookRange(insertionIndex, insertionIndex), [
+            markdownCell
+        ]);
         await workspace.applyEdit(edit);
     }
 
@@ -400,6 +402,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 kernelBeginDisposable.dispose();
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.end');
+        }
+
+        if (!result) {
+            // Throw to break out of the promise chain
+            throw new InteractiveCellResultError();
         }
         return result;
     }
@@ -594,8 +601,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             );
         });
         const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
-
-        // All cells added are immediately executed. Indicate that now
 
         // The default behavior is to scroll to the last cell if the user is already at the bottom
         // of the history, but not to scroll if the user has scrolled somewhere in the middle

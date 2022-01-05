@@ -8,6 +8,7 @@ import {
     commands,
     Event,
     EventEmitter,
+    NotebookEditor,
     Position,
     Range,
     Selection,
@@ -29,6 +30,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { InteractiveCellResultError } from '../errors/interactiveCellResultError';
 import {
     ICellRange,
     ICodeLensFactory,
@@ -56,9 +58,6 @@ function getIndex(index: number, length: number): number {
         return index;
     }
 }
-
-// Small helper error to use in our class
-class InteractiveCellResultError extends Error {}
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -1006,36 +1005,52 @@ export class CodeWatcher implements ICodeWatcher {
         debug?: boolean
     ): Promise<boolean> {
         let result = false;
+        const stopWatch = new StopWatch();
         try {
-            const stopWatch = new StopWatch();
             if (debug) {
                 result = await interactiveWindow.debugCode(code, file, line, editor);
             } else {
                 result = await interactiveWindow.addCode(code, file, line, editor);
             }
-            this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
-            await this.dataScienceErrorHandler.handleError(err);
-        }
-
-        if (!result) {
-            // If our cell result was a failure (but not an exception) show an error
-            // for the count of cells cancelled
-            await this.addErrorMessage(interactiveWindow, leftCount);
-
-            // Throw to break out of the promise chain
-            throw new InteractiveCellResultError();
+            if (err instanceof InteractiveCellResultError) {
+                // If our cell result was a failure show an error
+                // for the count of cells cancelled
+                await this.addErrorMessage(
+                    interactiveWindow,
+                    (e) => {
+                        // Index of message should be after the cell that we just inserted.
+                        const matchingCell = e.document
+                            .getCells()
+                            .find(
+                                (c) =>
+                                    c.metadata?.interactive?.uristring === file.toString() &&
+                                    c.metadata?.interactive?.line === line
+                            );
+                        return matchingCell ? matchingCell.index + 1 : -1;
+                    },
+                    leftCount
+                );
+            } else {
+                await this.dataScienceErrorHandler.handleError(err);
+            }
+        } finally {
+            this.sendPerceivedCellExecute(stopWatch);
         }
 
         return result;
     }
 
-    private async addErrorMessage(interactiveWindow: IInteractiveWindow, leftCount: number): Promise<void> {
+    private async addErrorMessage(
+        interactiveWindow: IInteractiveWindow,
+        getIndex: (editor: NotebookEditor) => number,
+        leftCount: number
+    ): Promise<void> {
         // Only show an error message if any left
         if (leftCount > 0) {
             const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
             try {
-                await interactiveWindow.addMessage(message);
+                await interactiveWindow.addMessage(message, getIndex);
             } catch (err) {
                 await this.dataScienceErrorHandler.handleError(err);
             }
