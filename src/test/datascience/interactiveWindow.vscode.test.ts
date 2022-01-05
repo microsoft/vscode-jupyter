@@ -13,7 +13,7 @@ import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../common';
+import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
@@ -53,6 +53,10 @@ suite('Interactive window', async function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            // For a flaky interrupt test.
+            await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
+        }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
@@ -390,12 +394,8 @@ ${actualCode}
         // Should have two cells in the interactive window
         assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
 
-        // Make sure it output something
-        notebookDocument?.getCells().forEach((c) => {
-            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
-                assertHasTextOutputInVSCode(c, `1\n2`);
-            }
-        });
+        // Wait for output to appear
+        await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
     // todo@joyceerhl
