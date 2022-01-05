@@ -48,6 +48,7 @@ import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { InteractiveWindowView } from '../notebook/constants';
+import { chainable } from '../../common/utils/decorators';
 
 type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -102,9 +103,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
     private _notebookDocument: NotebookDocument | undefined;
-    private executionPromise: Promise<boolean> | undefined;
     private _notebookEditor: NotebookEditor | undefined;
     private _inputUri: Uri | undefined;
+    private pendingNotebookScrolls: NotebookRange[] = [];
 
     constructor(
         private readonly documentManager: IDocumentManager,
@@ -215,7 +216,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
                     this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
                     this._kernelReadyPromise = undefined;
-                    this.executionPromise = undefined;
                     controllerChangeListener.dispose();
                 }
             },
@@ -331,53 +331,41 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this.cellMatcher.stripFirstMarker(code).trim().length === 0) {
             return true;
         }
-        // Chain execution promises so that cells are executed in the right order
-        if (this.executionPromise) {
-            this.executionPromise = this.executionPromise.then(() =>
-                this.createExecutionPromise(code, fileUri, line, isDebug)
-            );
-        } else {
-            this.executionPromise = this.createExecutionPromise(code, fileUri, line, isDebug);
-        }
-        try {
-            return await this.executionPromise;
-        } catch (exc) {
-            // Rethrow, but clear execution promise so we can execute again
-            this.executionPromise = undefined;
-            throw exc;
-        }
+
+        // Update the owner list ASAP (this is before we execute)
+        this.updateOwners(fileUri);
+
+        // Add the cell first. We don't need to wait for this part as we want to add them
+        // as quickly as possible
+        const notebookCellPromise = this.addNotebookCell(code, fileUri, line);
+
+        // Queue up execution
+        return this.createExecutionPromise(notebookCellPromise, isDebug);
     }
-    private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+
+    @chainable()
+    private async createExecutionPromise(
+        notebookCellPromise: Promise<{ cell: NotebookCell; wasScrolled: boolean }>,
+        isDebug: boolean
+    ) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
-        const [notebookEditor, kernel] = await Promise.all([
-            this._editorReadyPromise,
+        const [kernel, { cell, wasScrolled }, editor] = await Promise.all([
             this._kernelReadyPromise,
-            this.updateOwners(fileUri)
+            notebookCellPromise,
+            this._editorReadyPromise
         ]);
-        const id = uuid();
-
-        // Compute isAtBottom based on last notebook cell before adding a notebook cell,
-        // since the notebook cell we're going to add is by definition not visible
-        const isLastCellVisible = notebookEditor?.visibleRanges.find((r) => {
-            return r.end === notebookEditor.document.cellCount - 1;
-        });
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.before.AddNotebookCell');
-        const notebookCell = await this.addNotebookCell(notebookEditor.document, code, fileUri, line, id);
-        traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.after.AddNotebookCell');
-        const settings = this.configuration.getSettings(this.owningResource);
-        // The default behavior is to scroll to the last cell if the user is already at the bottom
-        // of the history, but not to scroll if the user has scrolled somewhere in the middle
-        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
-        // to newly-inserted cells.
-        if (settings.alwaysScrollOnNewCell || isLastCellVisible) {
-            this.revealCell(notebookCell, notebookEditor, false);
-        }
-
         if (!kernel) {
             return false;
         }
         let result = true;
         let kernelBeginDisposable = undefined;
+
+        // Scroll if the initial placement of this cell was scrolled as well
+        const settings = this.configuration.getSettings(this.owningResource);
+        if (settings.alwaysScrollOnNewCell || wasScrolled) {
+            this.revealCell(cell, editor, false);
+        }
+
         try {
             // If debugging attach to the kernel but don't enable tracing just yet
             if (isDebug) {
@@ -391,15 +379,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Breakpoint fires in <ipython-2-hashystuff> because hidden cell inherits that value.
                 // So we have to enable tracing after we send the hidden cell.
                 kernelBeginDisposable = kernel.onPreExecute((c) => {
-                    if (c === notebookCell) {
+                    if (c === cell) {
                         this.interactiveWindowDebugger.enable(kernel);
                     }
                 });
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
-            result = (await kernel!.executeCell(notebookCell)) !== NotebookCellRunState.Error;
+            result = (await kernel!.executeCell(cell)) !== NotebookCellRunState.Error;
+            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
 
-            traceInfo(`Finished execution for ${id}`);
+            // After execution see if we need to scroll to this cell or not.
+            if (settings.alwaysScrollOnNewCell || wasScrolled) {
+                this.revealCell(cell, editor, false);
+            }
         } finally {
             if (isDebug) {
                 await this.interactiveWindowDebugger.detach(kernel!);
@@ -407,6 +399,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             if (kernelBeginDisposable) {
                 kernelBeginDisposable.dispose();
             }
+            traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.end');
         }
         return result;
     }
@@ -450,6 +443,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
+        await this.show();
         const matchingCell = notebookEditor.document
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
@@ -460,6 +454,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private revealCell(notebookCell: NotebookCell, notebookEditor: NotebookEditor, useDecoration: boolean) {
         const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
+        this.pendingNotebookScrolls.push(notebookRange);
         const decorationType = useDecoration
             ? notebooks.createNotebookEditorDecorationType({
                   backgroundColor: new ThemeColor('peekViewEditor.background'),
@@ -469,6 +464,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // This will always try to reveal the whole cell--input + output combined
         setTimeout(() => {
             notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+
+            // No longer pending
+            this.pendingNotebookScrolls.shift();
 
             // Also add a decoration to make it look highlighted (peek background color)
             if (decorationType) {
@@ -522,7 +520,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async updateOwners(file: Uri) {
+    private updateOwners(file: Uri) {
         // Update the owner for this window if not already set
         if (!this._owner) {
             this._owner = file;
@@ -532,18 +530,26 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (!this._submitters.find((s) => s.toString() == file.toString())) {
             this._submitters.push(file);
         }
-
-        // Make sure our web panel opens.
-        await this.show();
     }
 
+    @chainable()
     private async addNotebookCell(
-        notebookDocument: NotebookDocument,
         code: string,
         file: Uri,
-        line: number,
-        id: string
-    ): Promise<NotebookCell> {
+        line: number
+    ): Promise<{ cell: NotebookCell; wasScrolled: boolean }> {
+        // Wait for the editor to be ready.
+        const editor = await this._editorReadyPromise;
+        const notebookDocument = editor.document;
+
+        // Compute if we should scroll based on last notebook cell before adding a notebook cell,
+        // since the notebook cell we're going to add is by definition not visible
+        const shouldScroll =
+            editor?.visibleRanges.find((r) => {
+                return r.end === editor.document.cellCount - 1;
+            }) != undefined ||
+            this.pendingNotebookScrolls.find((r) => r.end == editor.document.cellCount - 1) != undefined;
+
         // ensure editor is opened but not focused
         await this.commandManager.executeCommand(
             'interactive.open',
@@ -578,7 +584,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 line: line,
                 originalSource: code
             },
-            id: id
+            id: uuid()
         };
         await chainWithPendingUpdates(notebookDocument, (edit) => {
             edit.replaceNotebookCells(
@@ -587,7 +593,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 [notebookCellData]
             );
         });
-        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+        const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
+
+        // All cells added are immediately executed. Indicate that now
+
+        // The default behavior is to scroll to the last cell if the user is already at the bottom
+        // of the history, but not to scroll if the user has scrolled somewhere in the middle
+        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
+        // to newly-inserted cells.
+        if (settings.alwaysScrollOnNewCell || shouldScroll) {
+            this.revealCell(cell, editor, false);
+        }
+
+        return { cell, wasScrolled: shouldScroll };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
