@@ -73,6 +73,7 @@ jobs:
         run: |
           echo "Event_name is ${{ github.event_name }}"
           echo "Ref is ${{ github.ref }}"
+          echo "Commit message is ${{github.event.head_commit.message}}"
 
       - name: pr
         if: github.event_name == 'pull_request'

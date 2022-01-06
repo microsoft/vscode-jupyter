@@ -5,7 +5,7 @@ inputs:
   package_command:
      description: 'Package.json package script'
      required: false
-     default: package
+     default: 'package'
 outputs:
   path:
     description: 'Path to the VSIX'
