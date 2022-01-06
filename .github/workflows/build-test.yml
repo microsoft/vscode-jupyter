@@ -84,7 +84,7 @@ jobs:
         if: github.event_name == 'pull_request' && contains(github.event.head_commit.message, 'publish')
         run: |
           echo "release_channel=stable" >> $GITHUB_ENV
-          echo "package_command=package" >> $GITHUB_ENV
+          echo "package_command=packagePreRelease" >> $GITHUB_ENV
 
       - name: pre-release
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
