@@ -70,10 +70,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: dump_event
-        run: |
-          echo "Event_name is ${{ github.event_name }}"
-          echo "Ref is ${{ github.ref }}"
-          echo "Commit message is ${{github.event.head_commit.message}}"
+        uses: crazy-max/ghaction-dump-context@v1
 
       - name: pr
         if: github.event_name == 'pull_request'
@@ -150,7 +147,7 @@ jobs:
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         with:
-          package_command: ${{ needs.pick_environment.outputs.package_command }}
+          package-command: ${{ needs.pick_environment.outputs.package_command }}
         id: build-vsix
 
       - name: Rename VSIX for release branch
