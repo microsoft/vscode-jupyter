@@ -46,7 +46,7 @@ import {
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
 import { ICellHash, ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { executeSilently, isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -483,17 +483,8 @@ export class CellExecution implements IDisposable {
 
                 // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
                 // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-                // No need to wait for the result.
-                session.requestExecute(
-                    {
-                        code: `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`,
-                        silent: false,
-                        stop_on_error: false,
-                        allow_stdin: true,
-                        store_history: false
-                    },
-                    true
-                );
+                // We need to wait for the result so we don't accidently hang the kernel (QT5 event loop doesn't handle concurrent requests)
+                await executeSilently(session, `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`);
             }
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that

@@ -10,8 +10,8 @@ import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, GetVariableInfo } from '../constants';
 import { IJupyterVariable, IKernelVariableRequester } from '../types';
 import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
-import { executeSilently } from './kernels/kernel';
 import { IKernel } from './kernels/types';
+import { executeSilently } from './kernels/helpers';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
