@@ -72,6 +72,11 @@ jobs:
       - name: dump_event
         uses: crazy-max/ghaction-dump-context@v1
 
+      - name: default_package
+        run: |
+          echo "package_command=package" >> $GITHUB_ENV
+          
+
       - name: pr
         if: github.event_name == 'pull_request'
         run: |
@@ -79,7 +84,7 @@ jobs:
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
       - name: pr release push
-        if: github.event_name == 'pull_request' && contains(github.event.head_commit.message, 'publish')
+        if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
         run: |
           echo "release_channel=stable" >> $GITHUB_ENV
           echo "package_command=packagePreRelease" >> $GITHUB_ENV
@@ -109,7 +114,6 @@ jobs:
         # All pushes to release can push to marketplace place with the words `release` `publish` in commit.
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release') && contains(github.event.head_commit.message, 'release') && contains(github.event.head_commit.message, 'publish')
         run: |
-          echo "package_command=package" >> $GITHUB_ENV
           echo "release_channel=stable" >> $GITHUB_ENV
 
   build-vsix:
