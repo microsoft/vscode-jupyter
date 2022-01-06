@@ -3,7 +3,7 @@ description: "Build the extension's VSIX"
 
 inputs:
   package_command:
-     description: 'Method for packaging'
+     description: 'Package.json package script'
      required: false
      default: package
 outputs:
