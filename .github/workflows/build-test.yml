@@ -66,18 +66,28 @@ jobs:
       vsix_name: ${{ env.vsix_name }}
       test_matrix_os: ${{ env.test_matrix_os }}
       release_channel: ${{ env.release_channel }}
+      package_command: ${{ env.package_command }}
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: dump_event
+        uses: crazy-max/ghaction-dump-context@v1
+
+      - name: default_package
         run: |
-          echo "Event_name is ${{ github.event_name }}"
-          echo "Ref is ${{ github.ref }}"
+          echo "package_command=package" >> $GITHUB_ENV
+          
 
       - name: pr
         if: github.event_name == 'pull_request'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
+      - name: pr release push
+        if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
+        run: |
+          echo "release_channel=stable" >> $GITHUB_ENV
+          echo "package_command=packagePreRelease" >> $GITHUB_ENV
 
       - name: pre-release
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
@@ -91,6 +101,7 @@ jobs:
         # Scheduled builds will publish pre-release builds.
         if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
         run: |
+          echo "package_command=packagePreRelease" >> $GITHUB_ENV
           echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
@@ -139,6 +150,8 @@ jobs:
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
+        with:
+          package_command: ${{ needs.pick_environment.outputs.package_command }}
         id: build-vsix
 
       - name: Rename VSIX for release branch
