@@ -6,6 +6,9 @@ inputs:
      description: 'Package.json package script'
      required: true
      default: 'package'
+  foo:
+     required: false
+     default: 'foobar'
 outputs:
   path:
     description: 'Path to the VSIX'
@@ -18,9 +21,11 @@ runs:
       shell: bash
 
     - name: Echo inputs
+      shell: bash
       run: |
         echo $INPUTS_PACKAGE_COMMAND
-        echo 'Inputs method: ${{inputs.package_command}}
+        echo "FOO: ${{inputs.foo}}"
+        echo 'Inputs method: ${{inputs.package_command}}'
        
 
 
