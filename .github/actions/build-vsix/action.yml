@@ -28,5 +28,5 @@ runs:
     # - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID --updateChangelog
     #   shell: bash
 
-    - run: npm run $PACKAGE_COMMAND
+    - run: npm run $INPUT_PACKAGE_COMMAND
       shell: bash
