@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
@@ -72,7 +71,7 @@ export class JupyterVariables implements IJupyterVariables {
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<JSONObject> {
+    ): Promise<{ data: Record<string, unknown>[] }> {
         return this.variableHandler.getDataFrameRows(targetVariable, start, end, kernel, sliceExpression);
     }
 

@@ -1,18 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../extensions';
 
-import { inject, injectable, named } from 'inversify';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { inject, injectable, named, optional } from 'inversify';
 
-import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import * as internalScripts from '../../common/process/internal/scripts';
-import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
-import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../../common/types';
-import { createDeferredFromPromise, sleep } from '../../common/utils/async';
-import { OSType } from '../../common/utils/platform';
-import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { IWorkspaceService } from '../application/types';
+import { IFileSystem, IPlatformService } from '../platform/types';
+import * as internalScripts from './internal/scripts';
+import { ExecutionResult, IProcessServiceFactory } from './types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../types';
+import { createDeferredFromPromise, sleep } from '../utils/async';
+import { OSType } from '../utils/platform';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { logValue, TraceOptions } from '../../logging/trace';
@@ -29,10 +30,12 @@ import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } fr
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { CondaService } from './condaService';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment';
-import { printEnvVariablesToFile } from '../../common/process/internal/scripts';
+import { printEnvVariablesToFile } from './internal/scripts';
 import { ProcessService } from './proc';
 import { BufferDecoder } from './decoder';
 import { testOnlyMethod } from '../utils/decorators';
+import { KernelProgressReporter } from '../../datascience/progress/kernelProgressReporter';
+import { DataScience } from '../utils/localize';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;
@@ -58,9 +61,9 @@ const condaRetryMessages = [
 ];
 
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
-const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V2_{0}';
+const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V3_{0}';
 
-type EnvironmentVariablesCacheInformation = {
+export type EnvironmentVariablesCacheInformation = {
     activatedEnvVariables: EnvironmentVariables | undefined;
     originalProcEnvVariablesHash: string;
     customEnvVariablesHash: string;
@@ -97,6 +100,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     private readonly disposables: IDisposable[] = [];
     private readonly activatedEnvVariablesCache = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     private readonly envActivationCommands = new Map<string, Promise<string[] | undefined>>();
+    private static minTimeAfterWhichWeShouldCacheEnvVariables: number = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS;
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -107,8 +111,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @optional()
+        minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
     ) {
+        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables = minTimeAfterWhichWeShouldCacheEnvVariables;
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,
@@ -130,6 +137,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
+        resource: Resource,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
+    ): Promise<NodeJS.ProcessEnv | undefined> {
+        const title = DataScience.activatingPythonEnvironment().format(
+            interpreter.displayName || getDisplayPath(interpreter.path)
+        );
+        return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
+            this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
+        );
+    }
+    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
@@ -177,7 +196,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Check cache.
         const [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false)),
-            this.envVarsService.getEnvironmentVariables(resource)
+            this.envVarsService.getCustomEnvironmentVariables(resource)
         ]);
 
         const envType = interpreter.envType;
@@ -199,7 +218,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
             `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
         );
-        if (env && stopWatch.elapsedTime > MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS) {
+        if (env && stopWatch.elapsedTime > EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables) {
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
             void this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash);
         } else if (this.memento.get(key)) {
@@ -218,9 +237,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
+
         const shellInfo = defaultShells[this.platform.osType];
         const envType = interpreter?.envType;
         if (!shellInfo) {
+            traceWarning(
+                `Cannot get activated env variables for ${getDisplayPath(
+                    interpreter?.path
+                )}, shell cannot be determined.`
+            );
             sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, 0, {
                 envType,
                 pythonEnvType: envType,
@@ -231,23 +256,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
 
-        if (this.activatedEnvVariablesCache.has(key)) {
-            return this.activatedEnvVariablesCache.get(key);
-        }
-
-        const customEnvVarsPromise = this.envVarsService.getEnvironmentVariables(resource);
         // If this is a conda environment that supports conda run, then we don't need conda activation commands.
-        let activationCommandsPromise = this.getActivationCommands(resource, interpreter);
-        if (interpreter.envType === EnvironmentType.Conda) {
-            const condaVersion = await this.condaService.getCondaVersion();
-            if (condaVersionSupportsLiveStreaming(condaVersion)) {
-                activationCommandsPromise = Promise.resolve([] as string[]);
-            }
-        }
-
         const [activationCommands, customEnvVars] = await Promise.all([
-            activationCommandsPromise,
-            customEnvVarsPromise
+            interpreter.envType === EnvironmentType.Conda
+                ? Promise.resolve([])
+                : this.getActivationCommands(resource, interpreter),
+            this.envVarsService.getCustomEnvironmentVariables(resource)
         ]);
 
         // Check cache.
@@ -263,36 +277,41 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return cachedVariables;
         }
 
-        const condaActivation = async () => {
-            const stopWatch = new StopWatch();
-            try {
-                const env = await this.getCondaEnvVariables(resource, interpreter);
-                sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                    envType,
-                    pythonEnvType: envType,
-                    source: 'jupyter',
-                    failed: Object.keys(env || {}).length === 0,
-                    reason: Object.keys(env || {}).length === 0 ? 'emptyFromCondaRun' : undefined
-                });
-                return env;
-            } catch (ex) {
-                sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                    envType,
-                    pythonEnvType: envType,
-                    source: 'jupyter',
-                    failed: true,
-                    reason: 'unhandledError'
-                });
-                traceError('Failed to get activated environment variables ourselves', ex);
-            }
-        };
+        if (this.activatedEnvVariablesCache.has(key)) {
+            return this.activatedEnvVariablesCache.get(key);
+        }
 
         const promise = (async () => {
+            const condaActivation = async () => {
+                const stopWatch = new StopWatch();
+                try {
+                    const env = await this.getCondaEnvVariables(resource, interpreter);
+                    sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+                        envType,
+                        pythonEnvType: envType,
+                        source: 'jupyter',
+                        failed: Object.keys(env || {}).length === 0,
+                        reason: Object.keys(env || {}).length === 0 ? 'emptyFromCondaRun' : undefined
+                    });
+                    return env;
+                } catch (ex) {
+                    sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
+                        envType,
+                        pythonEnvType: envType,
+                        source: 'jupyter',
+                        failed: true,
+                        reason: 'unhandledError'
+                    });
+                    traceError('Failed to get activated environment variables ourselves', ex);
+                }
+            };
+
             if (interpreter.envType !== EnvironmentType.Conda) {
                 return this.getActivatedEnvVarsUsingActivationCommands(resource, interpreter);
             }
             return condaActivation();
         })();
+
         promise.catch(() => {
             if (this.activatedEnvVariablesCache.get(key) === promise) {
                 this.activatedEnvVariablesCache.delete(key);
@@ -428,6 +447,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
     }
+    @testOnlyMethod()
+    public getInterpreterEnvCacheKeyForTesting(
+        resource: Resource,
+        @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
+    ): string {
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        return ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
+            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+        );
+    }
     /**
      * We cache activated environment variables.
      * When activating environments, all activation scripts update environment variables, nothing else (after all they don't start a process).
@@ -438,7 +467,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment,
         customEnvVariablesHash: string,
-        activationCommands: string[] = []
+        activationCommandsForNonCondaEnvironments: string[] = []
     ) {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
@@ -455,8 +484,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         ) {
             return;
         }
+        // We're interested in activation commands only for non-conda environments.
+        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands
+        // Or use conda run).
+        // Hence for purposes of caching we don't care about the commands.
         if (
-            cachedData.activationCommands.join(',').toLowerCase() !== (activationCommands || []).join(',').toLowerCase()
+            interpreter.envType !== EnvironmentType.Conda &&
+            cachedData.activationCommands.join(',').toLowerCase() !==
+                (activationCommandsForNonCondaEnvironments || []).join(',').toLowerCase()
         ) {
             return;
         }
@@ -480,6 +515,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
         activationCommands = activationCommands || [];
+        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands or conda run)
+        if (interpreter.envType == EnvironmentType.Conda) {
+            activationCommands = [];
+        }
         const cachedData: EnvironmentVariablesCacheInformation = {
             activationCommands,
             originalProcEnvVariablesHash: getTelemetrySafeHashedString(

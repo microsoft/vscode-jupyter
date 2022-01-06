@@ -506,32 +506,29 @@ export class Kernel implements IKernel {
         return this._notebookPromise;
     }
     private createProgressIndicator(disposables: IDisposable[]) {
+        // Even if we're not supposed to display the progress indicator,
+        // create it and keep it hidden.
+        const progressReporter = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.connectingToKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            this.startupUI.disableUI
+        );
+        disposables.push(progressReporter);
         if (this.startupUI.disableUI) {
+            // Display the hidden progress indicator if it was previously hidden.
             this.startupUI.onDidChangeDisableUI(
                 () => {
                     if (this.disposing || this.disposed || this.startupUI.disableUI) {
                         return;
                     }
-                    disposables.push(
-                        KernelProgressReporter.createProgressReporter(
-                            this.resourceUri,
-                            DataScience.connectingToKernel().format(
-                                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                            )
-                        )
-                    );
+                    if (progressReporter.show) {
+                        progressReporter.show();
+                    }
                 },
                 this,
                 disposables
-            );
-        } else {
-            disposables.push(
-                KernelProgressReporter.createProgressReporter(
-                    this.resourceUri,
-                    DataScience.connectingToKernel().format(
-                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                    )
-                )
             );
         }
     }
@@ -666,6 +663,14 @@ export class Kernel implements IKernel {
             // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                await this.executeSilently(`import site;site.addsitedir(site.getusersitepackages())`);
+            }
 
             // Change our initial directory and path
             await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);

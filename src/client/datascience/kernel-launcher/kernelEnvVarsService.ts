@@ -97,6 +97,12 @@ export class KernelEnvironmentVariablesService {
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
         }
+        // Ensure global site_packages are not in the path.
+        // The global site_packages will be added to the path later.
+        // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+        // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
+        mergedVars.PYTHONNOUSERSITE = 'True';
+
         return mergedVars;
     }
 }

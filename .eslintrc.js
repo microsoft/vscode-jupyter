@@ -204,7 +204,6 @@ module.exports = {
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelector.unit.test.ts',
         'src/test/datascience/jupyter/serverCache.unit.test.ts',
-        'src/test/datascience/mockWorkspaceConfig.ts',
         'src/test/datascience/mockProcessService.ts',
         'src/test/refactor/extension.refactor.extract.method.test.ts',
         'src/test/refactor/extension.refactor.extract.var.test.ts',

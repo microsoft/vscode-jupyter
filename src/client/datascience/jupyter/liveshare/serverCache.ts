@@ -13,6 +13,7 @@ import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
+import { testOnlyMethod } from '../../../common/utils/decorators';
 
 interface IServerData {
     options: INotebookServerOptions;
@@ -29,6 +30,10 @@ export class ServerCache implements IAsyncDisposable {
         private workspace: IWorkspaceService,
         private fs: IFileSystem
     ) {}
+    @testOnlyMethod()
+    public clearCache() {
+        this.cache.clear();
+    }
 
     public async getOrCreate(
         createFunction: (

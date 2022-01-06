@@ -162,6 +162,7 @@ export class CellHashProvider implements ICellHashProvider {
             while (firstNonBlankIndex < stripped.length && stripped[firstNonBlankIndex].trim().length === 0) {
                 firstNonBlankIndex += 1;
             }
+            const firstNonBlankLineIndex = firstNonBlankIndex + trueStartLine;
 
             // Use the original values however to track edits. This is what we need
             // to move around
@@ -169,7 +170,12 @@ export class CellHashProvider implements ICellHashProvider {
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped);
+            const { runtimeLine, debuggerStartLine } = this.adjustRuntimeForDebugging(
+                cell,
+                stripped,
+                trueStartLine,
+                firstNonBlankLineIndex
+            );
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
             const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
@@ -178,7 +184,8 @@ export class CellHashProvider implements ICellHashProvider {
                 hash: hashValue,
                 line: line ? line.lineNumber + 1 : 1,
                 endLine: endLine ? endLine.lineNumber + 1 : 1,
-                firstNonBlankLineIndex: firstNonBlankIndex + trueStartLine,
+                firstNonBlankLineIndex,
+                debuggerStartLine,
                 executionCount: expectedCount,
                 startOffset,
                 endOffset,
@@ -354,7 +361,30 @@ export class CellHashProvider implements ICellHashProvider {
         });
     }
 
-    private adjustRuntimeForDebugging(cell: NotebookCell, source: string[]): number {
+    /* Calculate the runtimeLine that we need for mapping debugging as well as the real .py
+    line that we need to start our mapping at.
+    This start line calculation is needed as the breakpoint is inserted when debugging like so
+    so the leading lines are not stripped sending to Jupyter.
+
+    breakpoint()/n
+    /n // <-- We need to start source mapping here
+    /n
+    first line of code
+
+    But when not debugging, the leading spaces are stripped so you need to map to the first real line
+    /n
+    /n
+    first line of code // <-- We need to start source mapping here
+
+    Given that the hash still needs to map to the actual file contents calculating this mapping at this point
+    where we are making debugging calculations for runtimeLine feels appropriate.
+    */
+    private adjustRuntimeForDebugging(
+        cell: NotebookCell,
+        source: string[],
+        trueStartLine: number,
+        firstNonBlankLineIndex: number
+    ): { runtimeLine: number; debuggerStartLine: number } {
         if (
             this.debugService.activeDebugSession &&
             this.configService.getSettings(getCellResource(cell)).stopOnFirstLineWhileDebugging
@@ -363,10 +393,12 @@ export class CellHashProvider implements ICellHashProvider {
             source.splice(0, 0, 'breakpoint()\n');
 
             // Start on the second line
-            return 2;
+            // Since a breakpoint was added map to the first line (even if blank)
+            return { runtimeLine: 2, debuggerStartLine: trueStartLine + 1 };
         }
         // No breakpoint necessary, start on the first line
-        return 1;
+        // Since no breakpoint was added map to the first non-blank line
+        return { runtimeLine: 1, debuggerStartLine: firstNonBlankLineIndex + 1 };
     }
 
     /**

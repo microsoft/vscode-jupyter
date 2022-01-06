@@ -40,7 +40,7 @@ export enum OSType {
 
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
-    | 'pythonPath'
+    | 'defaultInterpreterPath'
     | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
@@ -142,15 +142,19 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('defaultInterpreterPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (!value || value[prop] !== pythonPath) {
+        console.log(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
+        await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
+    } else {
+        console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
 }
 function getPythonPath(): string {

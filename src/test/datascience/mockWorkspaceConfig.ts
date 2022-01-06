@@ -16,8 +16,8 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
         }
 
         // Special case python path (not in the object)
-        if (defaultSettings && defaultSettings.pythonPath) {
-            this.values.set('pythonPath', defaultSettings.pythonPath);
+        if (defaultSettings && defaultSettings.defaultInterpreterPath) {
+            this.values.set('defaultInterpreterPath', defaultSettings.defaultInterpreterPath);
         }
     }
 

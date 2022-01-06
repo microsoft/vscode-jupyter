@@ -33,6 +33,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     private readonly waitForDebugClientCode: string;
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
+    private debuggingActive: boolean = false;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -67,6 +68,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             traceInfo('stop debugging');
 
             // Tell our debug service to shutdown if possible
+            this.debuggingActive = false;
             this.debugService.stop();
 
             // Disable tracing after we disconnect because we don't want to step through this
@@ -79,13 +81,15 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
 
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
-        if (this.debugService.activeDebugSession) {
+        if (this.debugService.activeDebugSession && this.debuggingActive) {
             await Promise.all(
-                hashes.map((fileHash) => {
-                    return this.debugService.activeDebugSession!.customRequest(
-                        'setPydevdSourceMap',
-                        this.buildSourceMap(fileHash)
-                    );
+                hashes.map(async (fileHash) => {
+                    if (this.debuggingActive) {
+                        return this.debugService.activeDebugSession!.customRequest(
+                            'setPydevdSourceMap',
+                            this.buildSourceMap(fileHash)
+                        );
+                    }
                 })
             );
         }
@@ -119,22 +123,24 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         if (config) {
             traceInfo('connected to notebook during debugging');
 
-            await startCommand(config);
+            this.debuggingActive = await startCommand(config);
 
-            // Force the debugger to update its list of breakpoints. This is used
-            // to make sure the breakpoint list is up to date when we do code file hashes
-            this.debugService.removeBreakpoints([]);
+            if (this.debuggingActive) {
+                // Force the debugger to update its list of breakpoints. This is used
+                // to make sure the breakpoint list is up to date when we do code file hashes
+                this.debugService.removeBreakpoints([]);
 
-            // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode);
-            if (importResults.some((item) => item.output_type === 'error')) {
-                traceWarning(`${this.debuggerPackage} not found in path.`);
-            } else {
-                traceInfo(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
+                // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
+                const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode);
+                if (importResults.some((item) => item.output_type === 'error')) {
+                    traceWarning(`${this.debuggerPackage} not found in path.`);
+                } else {
+                    traceInfo(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
+                }
+
+                // After attach initially disable debugging
+                await this.disable(kernel);
             }
-
-            // After attach initially disable debugging
-            await this.disable(kernel);
         }
     }
 
@@ -253,7 +259,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.uri.fsPath }, pydevdSourceMaps: [] };
         sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
-                line: cellHash.line,
+                line: cellHash.debuggerStartLine,
                 endLine: cellHash.endLine,
                 runtimeSource: {
                     path: cellHash.runtimeFile

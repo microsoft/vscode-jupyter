@@ -27,7 +27,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.64.0-insiders"
+        "vscode": "^1.63.0"
     },
     "keywords": [
         "jupyter",
@@ -1956,6 +1956,7 @@
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
+        "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
@@ -2004,7 +2005,7 @@
         "@jupyterlab/services": "^6.1.17",
         "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
-        "@vscode/jupyter-lsp-middleware": "^0.2.29",
+        "@vscode/jupyter-lsp-middleware": "^0.2.34",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
@@ -2243,7 +2244,7 @@
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
-        "vsce": "^1.99.0",
+        "vsce": "^2.6.3",
         "vscode-dts": "^0.3.2",
         "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",

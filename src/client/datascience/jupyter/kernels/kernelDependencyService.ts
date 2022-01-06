@@ -33,6 +33,7 @@ import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     IDisplayOptions,
     IInteractiveWindowProvider,
@@ -78,7 +79,12 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return;
         }
-        if (await this.areDependenciesInstalled(kernelConnection, token, ignoreCache)) {
+        const result = await KernelProgressReporter.wrapAndReportProgress(
+            resource,
+            DataScience.validatingKernelDependencies(),
+            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+        );
+        if (result) {
             return;
         }
         if (token?.isCancellationRequested) {
@@ -88,7 +94,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Cache the install run
         let promise = this.installPromises.get(kernelConnection.interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(resource, kernelConnection.interpreter, ui, token);
+            promise = KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                DataScience.installingMissingDependencies(),
+                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, token)
+            );
             this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
 

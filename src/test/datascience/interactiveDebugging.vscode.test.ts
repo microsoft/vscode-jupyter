@@ -12,7 +12,7 @@ import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { IExtensionTestApi, waitForCondition } from '../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile, waitForLastCellToComplete } from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
@@ -50,6 +50,9 @@ suite('Interactive window debugging', async function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         sinon.restore();
         debugAdapterTracker = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -415,5 +418,179 @@ suite('Interactive window debugging', async function () {
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, true);
         const outputs = getCellOutputs(lastCell);
         assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
+    });
+
+    test('Correctly handle leading spaces in a code cell we are debugging', async () => {
+        // First just get our window up and started
+        const source = 'c = 50\n';
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+            interactiveWindowProvider,
+            source,
+            disposables
+        );
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        // Next add some code lines with leading spaces, we are going to debug this cell and we want to end up on the
+        // correct starting line
+        const leadingSpacesSource = `# %%
+
+
+
+
+a = 100
+b = 200
+`;
+        const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
+        assert.ok(editor, `Couldn't find python file`);
+        await editor?.edit((edit) => {
+            edit.insert(new vscode.Position(2, 0), leadingSpacesSource);
+        });
+
+        let codeLenses: vscode.CodeLens[] = [];
+        // Wait for the debug cell code lens to appear
+        await waitForCondition(
+            async () => {
+                codeLenses = (await vscode.commands.executeCommand(
+                    'vscode.executeCodeLensProvider',
+                    untitledPythonFile.uri
+                )) as vscode.CodeLens[];
+                return codeLenses && codeLenses.length == 3;
+            },
+            defaultNotebookTestTimeout,
+            `Invalid number of code lenses returned`
+        );
+        let stopped = false;
+        let stoppedOnLine = false;
+        debugAdapterTracker = {
+            onDidSendMessage: (message) => {
+                if (message.event == 'stopped') {
+                    stopped = true;
+                }
+                if (message.command == 'stackTrace' && !stoppedOnLine) {
+                    stoppedOnLine = message.body.stackFrames[0].line == 7;
+                }
+            }
+        };
+
+        // Try debugging the cell
+        assert.ok(codeLenses, `No code lenses found`);
+        assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
+        let args = codeLenses[2].command!.arguments || [];
+        void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+
+        // Wait for breakpoint to be hit
+        await waitForCondition(
+            async () => {
+                return vscode.debug.activeDebugSession != undefined && stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Never hit stop event when waiting for debug cell`
+        );
+
+        // Verify we are on the 'a = 100' line (might take a second for UI to update after stop event)
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting breakpoint`
+        );
+    });
+    test('Correctly handle leading spaces in a previously run code cell', async () => {
+        // Define the function with some leading spaces and run it (don't debug it)
+        const source = `
+
+
+
+
+def foo():
+    x = 10`;
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+            interactiveWindowProvider,
+            source,
+            disposables
+        );
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        // Add some more text
+        const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
+        assert.ok(editor, `Couldn't find python file`);
+        await editor?.edit((b) => {
+            b.insert(new vscode.Position(8, 0), '\n# %%\nfoo()');
+        });
+
+        let codeLenses: vscode.CodeLens[] = [];
+        // Wait for the debug cell code lens to appear
+        await waitForCondition(
+            async () => {
+                codeLenses = (await vscode.commands.executeCommand(
+                    'vscode.executeCodeLensProvider',
+                    untitledPythonFile.uri
+                )) as vscode.CodeLens[];
+                return codeLenses && codeLenses.length == 3;
+            },
+            defaultNotebookTestTimeout,
+            `Invalid number of code lenses returned`
+        );
+
+        let stopped = false;
+        let stoppedOnLine = false;
+        let targetLine = 9;
+        debugAdapterTracker = {
+            onDidSendMessage: (message) => {
+                if (message.event == 'stopped') {
+                    stopped = true;
+                }
+                if (message.command == 'stackTrace' && !stoppedOnLine) {
+                    stoppedOnLine = message.body.stackFrames[0].line == targetLine;
+                }
+            }
+        };
+
+        assert.ok(codeLenses, `No code lenses found`);
+        assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
+        let args = codeLenses[2].command!.arguments || [];
+        void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+
+        // Wait for breakpoint to be hit
+        await waitForCondition(
+            async () => {
+                return vscode.debug.activeDebugSession != undefined && stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Never hit stop event when waiting for debug cell`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting breakpoint`
+        );
+
+        // Perform a step into
+        stopped = false;
+        stoppedOnLine = false;
+        targetLine = 7;
+
+        void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+        await waitForCondition(
+            async () => {
+                return stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Did not stop on step into`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting stepping into`
+        );
     });
 });

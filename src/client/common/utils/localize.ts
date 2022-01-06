@@ -210,6 +210,10 @@ export namespace DataScience {
         'DataScience.installingMissingDependencies',
         'Installing missing dependencies'
     );
+    export const validatingKernelDependencies = localize(
+        'DataScience.validatingKernelDependencies',
+        'Validating kernel dependencies'
+    );
     export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
@@ -1074,6 +1078,10 @@ export namespace DataScience {
     export const thanksForUsingJupyterKernelApiPleaseRegisterWithUs = localize(
         'DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs',
         'Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).'
+    );
+    export const activatingPythonEnvironment = localize(
+        'DataScience.activatingEnvironment',
+        "Activating Python Environment '{0}'"
     );
 }
 

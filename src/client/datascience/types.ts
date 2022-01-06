@@ -434,7 +434,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly kernelPromise: Promise<IKernel | undefined>;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
-    addMessage(message: string): Promise<void>;
+    addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;
     debugCode(
         code: string,
         file: Uri,
@@ -642,7 +642,7 @@ export interface IJupyterVariables {
         end: number,
         kernel?: IKernel,
         sliceExpression?: string
-    ): Promise<JSONObject>;
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getMatchingVariable(
         name: string,
         kernel?: IKernel,
@@ -710,6 +710,7 @@ export interface ICellHash {
     id: string; // Cell id as sent to jupyter
     timestamp: number;
     code: string; // Code that was actually hashed (might include breakpoint)
+    debuggerStartLine: number; // 1 based line in source .py that we start our file mapping from
 }
 
 export interface IFileHashes {
@@ -996,7 +997,12 @@ export interface IKernelVariableRequester {
         kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
-    getDataFrameRows(start: number, end: number, kernel: IKernel, expression: string): Promise<{}>;
+    getDataFrameRows(
+        start: number,
+        end: number,
+        kernel: IKernel,
+        expression: string
+    ): Promise<{ data: Record<string, unknown>[] }>;
     getVariableProperties(
         word: string,
         kernel: IKernel,

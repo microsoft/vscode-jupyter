@@ -5,9 +5,7 @@ permissions:
   deployments: write
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch
 
 jobs:
   perf-test:
@@ -27,7 +25,7 @@ jobs:
         export LAST_COMMIT_MESSAGE=`git log --oneline -1 | sed -E 's/[a-z,A-Z,0-9]*?\s+(.*)/\1/g'`
         echo LAST_COMMIT_MESSAGE is "$LAST_COMMIT_MESSAGE"
         echo "::set-output name=message::$LAST_COMMIT_MESSAGE"
-                
+
     - id: test_make_change
       name: Test if need to make changes
       shell: bash -l {0}
@@ -40,7 +38,7 @@ jobs:
         fi
 
     # This is the part that will run a test eventually
-    - name: Create local changes 
+    - name: Create local changes
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
       uses: jsdaniell/create-json@1.1.2
       with:
@@ -50,7 +48,7 @@ jobs:
 
     # Submit the changes to the perf results. Make sure to use special commit message
     - name: Commit files
-      if: (steps.test_make_change.outputs.shouldMakeChange == 1)
+      if: (steps.test_make_change.outputs.shouldMakeChange == 1 && github.event_name != 'pull_request')
       run: |
         git config --local user.email "41898282+github-actions@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
@@ -58,7 +56,7 @@ jobs:
 
     # Push the changes using a secret token
     - name: Push changes
-      if: (steps.test_make_change.outputs.shouldMakeChange == 1)
+      if: (steps.test_make_change.outputs.shouldMakeChange == 1 && github.event_name != 'pull_request')
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.PERF_UPLOAD_TOKEN }}

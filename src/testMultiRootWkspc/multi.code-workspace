@@ -45,6 +45,7 @@
         ],
         "python.linting.lintOnSave": false,
         "python.linting.enabled": true,
-        "python.pythonPath": "python"
+        "python.pythonPath": "python",
+        "python.defaultInterpreterPath": "python"
     }
 }

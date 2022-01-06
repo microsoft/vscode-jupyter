@@ -875,8 +875,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         executionService
             .createActivatedEnvironment({
                 interpreter: kernelConnection.interpreter,
-                allowEnvironmentFetchExceptions: true,
-                bypassCondaExecution: true
+                allowEnvironmentFetchExceptions: true
             })
             .then(async (execService) => {
                 const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], {

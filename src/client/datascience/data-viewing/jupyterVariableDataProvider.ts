@@ -128,7 +128,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this._kernel,
                 sliceExpression
             );
-            allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
+            allRows = dataFrameRows.data;
         }
         return allRows;
     }
@@ -144,7 +144,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this._kernel,
                 sliceExpression
             );
-            rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
+            rows = dataFrameRows.data;
         }
         return rows;
     }
