@@ -2,9 +2,9 @@ name: 'Build VSIX'
 description: "Build the extension's VSIX"
 
 inputs:
-  package_command:
+  package-command:
      description: 'Package.json package script'
-     required: true
+     required: false
      default: 'package'
   foo:
      required: false
@@ -25,7 +25,7 @@ runs:
       run: |
         echo $INPUTS_PACKAGE_COMMAND
         echo "FOO: ${{inputs.foo}}"
-        echo 'Inputs method: ${{inputs.package_command}}'
+        echo "Inputs method: ${{inputs.package-command}}"
        
 
 
