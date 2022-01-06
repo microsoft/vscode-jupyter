@@ -151,7 +151,7 @@ jobs:
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         with:
-          package-command: ${{ needs.pick_environment.outputs.package_command }}
+          package_command: ${{ needs.pick_environment.outputs.package_command }}
         id: build-vsix
 
       - name: Rename VSIX for release branch
