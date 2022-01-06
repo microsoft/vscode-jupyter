@@ -1,11 +1,6 @@
 name: 'Build VSIX'
 description: "Build the extension's VSIX"
 
-inputs:
-  package_command:
-     description: 'Method for packaging'
-     required: false
-     default: package
 outputs:
   path:
     description: 'Path to the VSIX'
@@ -28,5 +23,5 @@ runs:
     # - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID --updateChangelog
     #   shell: bash
 
-    - run: npm run $PACKAGE_COMMAND
+    - run: npm run package
       shell: bash
