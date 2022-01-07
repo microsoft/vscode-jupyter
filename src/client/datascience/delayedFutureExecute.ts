@@ -4,6 +4,8 @@
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { createDeferred } from '../common/utils/async';
+import { CancellationError } from '../common/cancellation';
+import { traceInfoIfCI } from '../common/logger';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute
@@ -28,6 +30,7 @@ export class DelayedFutureExecute
         | KernelMessage.IInputReply
     )[] = [];
     private disposed = false;
+    private statusChangedHandler: (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => void;
     constructor(
         private kernelConnection: Kernel.IKernelConnection,
         previousLink: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
@@ -39,6 +42,17 @@ export class DelayedFutureExecute
         if (previousLink) {
             previousLink.done.then(() => this.requestExecute()).catch((e) => this.doneDeferred.reject(e));
         }
+
+        // If the kernel dies, finish our future
+        this.statusChangedHandler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
+            if (status === 'unknown' || status === 'restarting' || status === 'dead') {
+                this.doneDeferred.reject(new CancellationError());
+            }
+        };
+        kernelConnection.statusChanged?.connect(this.statusChangedHandler);
+
+        // Run the handler now to check
+        this.statusChangedHandler(kernelConnection, kernelConnection.status);
     }
     public get msg(): KernelMessage.IExecuteRequestMsg {
         if (this.requestFuture) {
@@ -118,6 +132,7 @@ export class DelayedFutureExecute
     }
     dispose(): void {
         this.disposed = true;
+        this.kernelConnection.statusChanged.disconnect(this.statusChangedHandler);
         if (this.requestFuture) {
             this.requestFuture.dispose();
             this.requestFuture = undefined;
@@ -137,6 +152,7 @@ export class DelayedFutureExecute
         if (this.requestFuture) {
             throw new Error(`ChainedFuture already executed. Can't execute more than once.`);
         }
+        traceInfoIfCI(`DelayedFuture is starting request now for ${this.content}.`);
         this.requestFuture = this.kernelConnection.requestExecute(this.content, this.disposeOnDone, this.metadata);
         if (this.requestFuture) {
             if (this.pendingOnReply) {

@@ -54,6 +54,7 @@ import { disposeAllDisposables } from '../../../common/helpers';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { BaseError } from '../../../common/errors/types';
+import * as localize from '../../../common/utils/localize';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -545,7 +546,11 @@ export class CellExecution implements IDisposable {
             traceError('Error in waiting for cell to complete', ex);
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
-            if (ex && ex instanceof Error && ex.message.includes('Canceled')) {
+            if (
+                ex &&
+                ex instanceof Error &&
+                (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
+            ) {
                 this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {

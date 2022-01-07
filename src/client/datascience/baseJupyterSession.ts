@@ -25,7 +25,7 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from './errors/sessionDisposedError';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
-import { DelayedFutureExecute } from './delayedFutureExecute';
+import { ChainingExecuteRequester } from './chainingExecuteRequester';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -86,9 +86,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
-    private previousExecute:
-        | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
-        | undefined;
+    private chainingExecute = new ChainingExecuteRequester();
 
     constructor(
         protected resource: Resource,
@@ -221,23 +219,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (!this.session?.kernel) {
             throw new SessionDisposedError();
         }
-        // Wrap execute in a delay so we don't queue up more than one of these at a time.
-        const nextExecute = this.previousExecute
-            ? new DelayedFutureExecute(this.session.kernel, this.previousExecute, content, disposeOnDone, metadata)
-            : this.session.kernel.requestExecute(content, disposeOnDone, metadata);
-        this.previousExecute = nextExecute;
-        nextExecute.done
-            .then(() => {
-                if (this.previousExecute == nextExecute) {
-                    this.previousExecute = undefined;
-                }
-            })
-            .catch(() => {
-                if (this.previousExecute == nextExecute) {
-                    this.previousExecute = undefined;
-                }
-            });
-        return nextExecute;
+        // Make sure to chain the executes
+        return this.chainingExecute.requestExecute(this.session.kernel, content, disposeOnDone, metadata);
     }
 
     public requestDebug(
