@@ -19,8 +19,9 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from '../errors/jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupportedError } from '../errors/jupyterDebuggerRemoteNotSupportedError';
-import { executeSilently, executeSilentlySync, getPlainTextOrStreamOutput } from './kernels/kernel';
+import { getPlainTextOrStreamOutput } from './kernels/kernel';
 import { IKernel, isLocalConnection } from './kernels/types';
+import { executeSilently } from './kernels/helpers';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
@@ -99,14 +100,14 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         if (!kernel.session) {
             return;
         }
-        executeSilentlySync(kernel.session, this.tracingEnableCode);
+        executeSilently(kernel.session, this.tracingEnableCode).ignoreErrors();
     }
 
     public disable(kernel: IKernel) {
         if (!kernel.session) {
             return;
         }
-        executeSilentlySync(kernel.session, this.tracingDisableCode);
+        executeSilently(kernel.session, this.tracingDisableCode).ignoreErrors();
     }
 
     private async startDebugSession(

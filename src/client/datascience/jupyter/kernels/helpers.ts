@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IJupyterKernelSpec } from '../../types';
+import { IJupyterKernelSpec, IJupyterSession } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -40,7 +40,6 @@ import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { executeSilently } from './kernel';
 import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
@@ -902,4 +901,80 @@ export async function sendTelemetryForPythonKernelExecutable(
         traceError('Failed to compare interpreters', ex);
     }
     traceInfoIfCI('End sendTelemetryForPythonKernelExecutable');
+}
+
+export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+    traceInfo(
+        `Executing (status ${session.status}) silently Code = ${code.substring(0, 100).splitLines().join('\\n')}`
+    );
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+    const request = session.requestExecute(
+        {
+            code: code.replace(/\r\n/g, '\n'),
+            silent: false,
+            stop_on_error: false,
+            allow_stdin: true,
+            store_history: false
+        },
+        true
+    );
+    const outputs: nbformat.IOutput[] = [];
+    request.onIOPub = (msg) => {
+        if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (stream), ${msg.content.text.substr(0, 100).splitLines().join('\\n')}`);
+            if (
+                outputs.length > 0 &&
+                outputs[outputs.length - 1].output_type === 'stream' &&
+                outputs[outputs.length - 1].name === msg.content.name
+            ) {
+                const streamOutput = outputs[outputs.length - 1] as nbformat.IStream;
+                streamOutput.text += msg.content.text;
+            } else {
+                const streamOutput: nbformat.IStream = {
+                    name: msg.content.name,
+                    text: msg.content.text,
+                    output_type: 'stream'
+                };
+                outputs.push(streamOutput);
+            }
+        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (execresult)}`);
+            const output: nbformat.IExecuteResult = {
+                data: msg.content.data,
+                execution_count: msg.content.execution_count,
+                metadata: msg.content.metadata,
+                output_type: 'execute_result'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            traceInfoIfCI(`Got io pub message (displaydata)}`);
+            const output: nbformat.IDisplayData = {
+                data: msg.content.data,
+                metadata: msg.content.metadata,
+                output_type: 'display_data'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            traceInfoIfCI(
+                `Got io pub message (error), ${msg.content.ename},${
+                    msg.content.evalue
+                }, ${msg.content.traceback.join().substring(0, 100)}}`
+            );
+            const output: nbformat.IError = {
+                ename: msg.content.ename,
+                evalue: msg.content.evalue,
+                traceback: msg.content.traceback,
+                output_type: 'error'
+            };
+            outputs.push(output);
+        } else {
+            traceInfoIfCI(`Got io pub message (${msg.header.msg_type})`);
+        }
+    };
+    await request.done;
+    traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+
+    return outputs;
 }
