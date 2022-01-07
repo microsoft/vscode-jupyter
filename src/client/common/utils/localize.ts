@@ -938,7 +938,7 @@ export namespace DataScience {
 
     export const widgetScriptNotFoundOnCDNWidgetMightNotWork = localize(
         'DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork',
-        "Unable to load a compatible version of the widget '{0}'. Expected behavior may be affected."
+        "Unable to find widget '{0}' version '{1}' from configured widget sources {2}. Expected behavior may be affected. More Info: 'https://aka.ms/PVSCIPyWidgets'"
     );
     export const qgridWidgetScriptVersionCompatibilityWarning = localize(
         'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
