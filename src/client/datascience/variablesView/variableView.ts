@@ -15,7 +15,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
@@ -186,9 +186,11 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         const activeNotebook = this.notebookWatcher.activeKernel;
         if (activeNotebook) {
+            traceInfo(`IANHUZ Request Variables`);
             const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+            traceInfo(`IANHUZ Post Response ${response.pageResponse.length}`);
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
                 variableCount: response.totalCount
             });
@@ -234,6 +236,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     private async activeNotebookRestarted() {
+        traceInfo(`IANHUZ Restarted Kernel`);
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
     }
 
