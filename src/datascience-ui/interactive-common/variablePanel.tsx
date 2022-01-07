@@ -26,7 +26,6 @@ export interface IVariablePanelProps {
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
     sort(sortColumn: string, sortAscending: boolean): void;
-    standaloneMode?: boolean;
     viewHeight: number;
 }
 
@@ -49,7 +48,6 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 sort={this.props.sort}
                 executionCount={this.props.executionCount}
                 refreshCount={this.props.refreshCount}
-                standaloneMode={this.props.standaloneMode}
                 viewHeight={this.props.viewHeight}
             />
         );

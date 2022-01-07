@@ -8,8 +8,6 @@ import * as React from 'react';
 
 import { RegExpValues } from '../../client/datascience/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
-import { Image, ImageName } from '../react-common/image';
-import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
@@ -18,9 +16,6 @@ import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
-
-// eslint-disable-next-line
-import Draggable from 'react-draggable';
 
 import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
@@ -41,7 +36,6 @@ interface IVariableExplorerProps {
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
     sort(sortColumn: string, sortAscending: boolean): void;
-    standaloneMode?: boolean;
     viewHeight: number;
 }
 
@@ -182,15 +176,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
             return true;
         }
-        if (
-            prevState.containerHeight !== this.state.containerHeight ||
-            (prevState.gridHeight !== this.state.gridHeight && !this.props.standaloneMode)
-        ) {
+        if (prevState.containerHeight !== this.state.containerHeight) {
             return true;
         }
 
-        // In standalone mode, we need to update when our height changes
-        if (this.props.standaloneMode && prevState.viewHeight !== nextProps.viewHeight) {
+        // We need to update when height changes
+        if (prevState.viewHeight !== nextProps.viewHeight) {
             return true;
         }
 
@@ -198,15 +189,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
-        // This control renders differently when hosted standalone versus a document
-        if (this.props.standaloneMode) {
-            return this.renderInViewMode();
-        } else {
-            return this.renderInDocumentMode();
-        }
-    }
-
-    private renderInViewMode() {
         const contentClassName = `variable-explorer-content`;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
         if (this.props.viewHeight !== 0) {
@@ -228,60 +210,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         );
     }
 
-    private renderInDocumentMode() {
-        const contentClassName = `variable-explorer-content`;
-        const containerHeight = this.state.containerHeight;
-        let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
-
-        // add properties to explorer styles
-        if (containerHeight !== 0) {
-            variableExplorerStyles = { ...variableExplorerStyles, height: containerHeight };
-        }
-
-        return (
-            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
-                <span>
-                    <div id="variable-panel" ref={this.variablePanelRef}>
-                        <div id="variable-panel-padding">
-                            <div
-                                className="variable-explorer"
-                                ref={this.variableExplorerRef}
-                                style={variableExplorerStyles}
-                            >
-                                <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
-                                    <label className="inputLabel variable-explorer-label">
-                                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                                    </label>
-                                    <ImageButton
-                                        baseTheme={this.props.baseTheme}
-                                        onClick={this.props.closeVariableExplorer}
-                                        className="variable-explorer-close-button"
-                                        tooltip={getLocString('DataScience.close', 'Close')}
-                                    >
-                                        <Image
-                                            baseTheme={this.props.baseTheme}
-                                            class="image-button-image"
-                                            image={ImageName.Cancel}
-                                        />
-                                    </ImageButton>
-                                </div>
-                                <div className={contentClassName}>{this.renderGrid()}</div>
-                            </div>
-                        </div>
-                        <div id="variable-divider" className="handle-resize" />
-                    </div>
-                </span>
-            </Draggable>
-        );
-    }
-
     private renderGrid() {
-        let newGridHeight: number | undefined;
-
-        // In in standalone mode, just use the viewHeight prop for calculating size
-        if (this.props.standaloneMode) {
-            newGridHeight = this.calculateGridHeight(this.props.viewHeight);
-        }
+        const newGridHeight = this.calculateGridHeight(this.props.viewHeight);
 
         return (
             <div
