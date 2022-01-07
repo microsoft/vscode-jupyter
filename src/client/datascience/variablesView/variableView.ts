@@ -15,7 +15,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {

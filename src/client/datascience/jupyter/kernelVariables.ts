@@ -7,7 +7,6 @@ import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
-import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
