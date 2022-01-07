@@ -642,7 +642,7 @@ testing3`;
         document.verifyAll();
     });
 
-    test('IANHU Test two command ordering correct ordering', async () => {
+    test('Test two command ordering correct ordering', async () => {
         const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%

@@ -73,7 +73,6 @@ export class KernelVariables implements IJupyterVariables {
     // IJupyterVariables implementation
     public async getVariables(request: IJupyterVariablesRequest, kernel: IKernel): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
-        traceInfo(`IANHUZ GetVariables ${JSON.stringify(request)}`);
         return this.getVariablesBasedOnKernel(kernel, request);
     }
 
@@ -251,7 +250,6 @@ export class KernelVariables implements IJupyterVariables {
             result.totalCount = list.variables.length;
         }
 
-        traceInfo(`IANHUZ Variable Response ${result.totalCount}`);
         return result;
     }
 

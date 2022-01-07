@@ -121,7 +121,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        console.log(`IANHUZZ pageInVariableData startIndex: ${startIndex} pageSize: ${pageSize} `);
         this.props.getVariableData(
             this.props.variableState.currentExecutionCount,
             this.props.variableState.refreshCount,

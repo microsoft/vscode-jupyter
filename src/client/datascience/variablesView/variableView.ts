@@ -186,11 +186,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         const activeNotebook = this.notebookWatcher.activeKernel;
         if (activeNotebook) {
-            traceInfo(`IANHUZ Request Variables`);
             const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
-            traceInfo(`IANHUZ Post Response ${response.pageResponse.length}`);
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
                 variableCount: response.totalCount
             });
@@ -236,7 +234,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     private async activeNotebookRestarted() {
-        traceInfo(`IANHUZ Restarted Kernel`);
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
     }
 

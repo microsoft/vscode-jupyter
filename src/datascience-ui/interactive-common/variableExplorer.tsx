@@ -451,9 +451,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.props.refreshCount !== this.requestedRefreshCount;
         // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
-        console.log(`IANHUZZZ ensureLoaded index: ${index} executionCount: ${this.props.executionCount} requested: ${this.requestedPagesExecutionCount} refreshCount: ${this.props.refreshCount} requested: ${this.requestedRefreshCount}`);
         if (!haveValue && (newExecution || notRequested)) {
-            console.log(`IANHUZZ Need Value newExecution: ${newExecution} notRequested: ${notRequested}`);
             // Try to find a page of data around this index.
             let pageIndex = index;
             while (
@@ -469,7 +467,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 this.requestedPagesExecutionCount !== this.props.executionCount ||
                 this.requestedRefreshCount !== this.props.refreshCount
             ) {
-                console.log('IANHUZZ Clear Out Requested Pages');
                 this.requestedPages = [];
             }
 

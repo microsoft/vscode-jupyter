@@ -54,9 +54,6 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
         arg.payload.data.executionCount !== undefined
             ? arg.payload.data.executionCount
             : arg.prevState.currentExecutionCount;
-    console.log(
-        `IANHUZZ handleRequest newExecutionCount: ${newExecutionCount} previous: ${arg.prevState.currentExecutionCount}`
-    );
     postActionToExtension(arg, InteractiveWindowMessages.GetVariablesRequest, {
         executionCount: newExecutionCount,
         sortColumn: arg.payload.data.sortColumn,
@@ -180,11 +177,6 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
     const response = arg.payload.data;
-    console.log(
-        `IANHUZZ handleResponse executionCount: ${response.executionCount} prev: ${arg.prevState.currentExecutionCount}
-refreshCount: ${response.refreshCount} prev: ${arg.prevState.refreshCount}
-prevLength: ${arg.prevState.variables.length}`
-    );
 
     // Check to see if we have moved to a new execution count
     if (
@@ -193,11 +185,6 @@ prevLength: ${arg.prevState.variables.length}`
         (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0) ||
         (response.refreshCount === arg.prevState.refreshCount && arg.prevState.variables.length === 0)
     ) {
-        console.log(
-            `IANHUZZ handleResponse new execution executionCount: ${response.executionCount} prev: ${arg.prevState.currentExecutionCount}
-refreshCount: ${response.refreshCount} prev: ${arg.prevState.refreshCount}
-prevLength: ${arg.prevState.variables.length}`
-        );
         // Should be an entirely new request. Make an empty list
         const variables = Array<IJupyterVariable>(response.totalCount);
 
@@ -242,7 +229,6 @@ prevLength: ${arg.prevState.variables.length}`
 }
 
 function handleRestarted(arg: VariableReducerArg): IVariableState {
-    console.log(`IANHUZZ Handle Restarted`);
     const result = handleRequest({
         ...arg,
         payload: {
