@@ -39,13 +39,11 @@ export class DelayedFutureExecute
         private metadata?: JSONObject
     ) {
         // Setup our request based on the previous link finishing
-        if (previousLink) {
-            previousLink.done.then(() => this.requestExecute()).catch((e) => this.doneDeferred.reject(e));
-        }
+        previousLink.done.then(() => this.requestExecute()).catch((e) => this.doneDeferred.reject(e));
 
         // If the kernel dies, finish our future
         this.statusChangedHandler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-            if (status === 'unknown' || status === 'restarting' || status === 'dead') {
+            if (status === 'unknown' || status === 'restarting' || status === 'dead' || status === 'autorestarting') {
                 this.doneDeferred.reject(new CancellationError());
             }
         };
