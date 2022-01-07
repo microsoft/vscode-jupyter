@@ -238,8 +238,8 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
                 sortColumn: arg.prevState.sortColumn,
                 sortAscending: arg.prevState.sortAscending,
                 startIndex: 0,
-                pageSize: arg.prevState.pageSize,
-                refreshCount: 0
+                pageSize: 5,
+                refreshCount: arg.prevState.refreshCount
             }
         }
     });
