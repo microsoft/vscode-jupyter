@@ -130,7 +130,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(widgetSource.moduleName);
         const selection = await this.appShell.showWarningMessage(
-            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(widgetSource.moduleName, version, JSON.stringify(this.configuredScriptSources)),
+            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+                widgetSource.moduleName,
+                version,
+                JSON.stringify(this.configuredScriptSources)
+            ),
             Common.ok(),
             Common.doNotShowAgain(),
             Common.reportThisIssue()
