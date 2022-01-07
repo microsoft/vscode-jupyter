@@ -25,6 +25,7 @@ import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from './errors/sessionDisposedError';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
+import { ChainingExecuteRequester } from './chainingExecuteRequester';
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -85,6 +86,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
+    private chainingExecute = new ChainingExecuteRequester();
 
     constructor(
         protected resource: Resource,
@@ -217,7 +219,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (!this.session?.kernel) {
             throw new SessionDisposedError();
         }
-        return this.session.kernel.requestExecute(content, disposeOnDone, metadata);
+        // Make sure to chain the executes
+        return this.chainingExecute.requestExecute(this.session.kernel, content, disposeOnDone, metadata);
     }
 
     public requestDebug(
