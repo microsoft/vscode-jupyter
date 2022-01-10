@@ -285,14 +285,12 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 assert.deepEqual(values, { moduleName: 'module1' });
                 assert.isTrue(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
-                verify(
-                    appShell.showWarningMessage(
-                        DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format('module1'),
-                        anything(),
-                        anything(),
-                        anything()
-                    )
-                ).once();
+                const expectedMessage = DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+                    'module1',
+                    '1',
+                    JSON.stringify((<any>settings).widgetScriptSources)
+                );
+                verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
 
                 // Ensure message is not displayed more than once.
                 values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
@@ -300,14 +298,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 assert.deepEqual(values, { moduleName: 'module1' });
                 assert.isTrue(localOrRemoteSource.calledTwice);
                 assert.isTrue(cdnSource.calledTwice);
-                verify(
-                    appShell.showWarningMessage(
-                        DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format('module1'),
-                        anything(),
-                        anything(),
-                        anything()
-                    )
-                ).once();
+                verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
             });
         });
     });

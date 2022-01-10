@@ -64,6 +64,7 @@ export class CommonMessageCoordinator {
     private readonly postEmitter = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
+    private readonly configService: IConfigurationService;
 
     private constructor(
         private readonly document: NotebookDocument,
@@ -73,6 +74,7 @@ export class CommonMessageCoordinator {
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public static async create(
@@ -132,13 +134,14 @@ export class CommonMessageCoordinator {
     private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
             let errorMessage: string = payload.error.toString();
+            const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
             if (!payload.isOnline) {
                 errorMessage = localize.DataScience.loadClassFailedWithNoInternet().format(
                     payload.moduleName,
                     payload.moduleVersion
                 );
                 this.appShell.showErrorMessage(errorMessage).then(noop, noop);
-            } else if (!payload.cdnsUsed) {
+            } else if (!cdnsEnabled) {
                 const moreInfo = localize.Common.moreInfo();
                 const enableDownloads = localize.DataScience.enableCDNForWidgetsButton();
                 errorMessage = localize.DataScience.enableCDNForWidgetsSetting().format(
