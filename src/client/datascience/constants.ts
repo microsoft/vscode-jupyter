@@ -602,6 +602,11 @@ export namespace GetVariableInfo {
     export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
+export namespace AddRunCellHook {
+    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'kernel');
+    export const ScriptPath = path.join(SysPath, 'addRunCellHook.py');
+}
+
 export namespace Identifiers {
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const RawPurpose = 'raw';

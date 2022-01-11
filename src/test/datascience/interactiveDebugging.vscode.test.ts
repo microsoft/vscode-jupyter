@@ -593,4 +593,96 @@ def foo():
             `Cursor did not move to expected line when hitting stepping into`
         );
     });
+
+    test('Step into a previous cell', async () => {
+        // Need a function and a call to i
+        const source = `
+# %%
+def foo():
+    x = 10
+
+# %%
+foo()
+`;
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+            interactiveWindowProvider,
+            source,
+            disposables
+        );
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        let codeLenses: vscode.CodeLens[] = [];
+        // Wait for the debug cell code lens to appear
+        await waitForCondition(
+            async () => {
+                codeLenses = (await vscode.commands.executeCommand(
+                    'vscode.executeCodeLensProvider',
+                    untitledPythonFile.uri
+                )) as vscode.CodeLens[];
+                return codeLenses && codeLenses.length == 8;
+            },
+            defaultNotebookTestTimeout,
+            `Invalid number of code lenses returned`
+        );
+
+        let stopped = false;
+        let stoppedOnLine = false;
+        let targetLine = 9;
+        debugAdapterTracker = {
+            onDidSendMessage: (message) => {
+                if (message.event == 'stopped') {
+                    stopped = true;
+                }
+                if (message.command == 'stackTrace' && !stoppedOnLine) {
+                    stoppedOnLine = message.body.stackFrames[0].line == targetLine;
+                }
+            }
+        };
+
+        assert.ok(codeLenses, `No code lenses found`);
+        assert.equal(codeLenses.length, 8, `Wrong number of code lenses found`);
+        let args = codeLenses[6].command!.arguments || [];
+        void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+
+        // Wait for breakpoint to be hit
+        await waitForCondition(
+            async () => {
+                return vscode.debug.activeDebugSession != undefined && stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Never hit stop event when waiting for debug cell`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting breakpoint`
+        );
+
+        // Perform a step into
+        stopped = false;
+        stoppedOnLine = false;
+        targetLine = 7;
+
+        void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+        await waitForCondition(
+            async () => {
+                return stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Did not stop on step into`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting stepping into`
+        );
+    });
 });

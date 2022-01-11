@@ -398,6 +398,24 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
+    test('Raising an exception from within a function has a stack trace', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
+            disposables
+        );
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+
+        await waitForExecutionCompletedWithErrors(notebookDocument!.cellAt(notebookDocument!.cellCount - 1));
+
+        // Wait for error to appear
+        await waitForExecutionCompletedWithErrors(notebookDocument!.cellAt(1));
+    });
+
     // todo@joyceerhl
     // test('Verify CWD', () => { });
     // test('Multiple executes go to last active window', async () => { });
