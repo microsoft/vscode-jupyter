@@ -597,7 +597,7 @@ def foo():
     });
 
     test('Step into a previous cell', async () => {
-        // Need a function and a call to i
+        // Need a function and a call to the function
         const source = `
 # %%
 def foo():

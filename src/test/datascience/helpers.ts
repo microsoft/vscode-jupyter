@@ -171,7 +171,7 @@ export async function waitForLastCellToComplete(
             return codeCell && (numberOfCells === -1 || numberOfCells === codeCells!.length) ? true : false;
         },
         defaultNotebookTestTimeout,
-        `No code cell found in interactive window notebook documen`
+        `No code cell found in interactive window notebook document`
     );
     if (errorsOkay) {
         await waitForCellExecutionToComplete(codeCell!);
