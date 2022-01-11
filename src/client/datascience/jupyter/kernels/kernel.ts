@@ -692,7 +692,7 @@ export class Kernel implements IKernel {
 
             // Initialize debug cell support.
             // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
-            await this.initializeDebugCellHook();
+            await this.initializeDebugCellHook(notebookDocument);
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -849,14 +849,18 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async initializeDebugCellHook() {
-        // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
-        // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-        if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
-            const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
-            await this.executeSilently(fileContents);
+    private async initializeDebugCellHook(notebookDocument: NotebookDocument) {
+        // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
+        // notebooks
+        if (notebookDocument.notebookType === InteractiveWindowView) {
+            // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
+            // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+            if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
+                const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
+                await this.executeSilently(fileContents);
+            }
+            traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
         }
-        traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
     }
 
     private async runStartupCommands() {
