@@ -37,7 +37,8 @@ import {
 } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { ConsoleForegroundColors } from '../../logging/_global';
+import { TraceOptions } from '../../logging/trace';
+import { ConsoleForegroundColors, traceDecorators } from '../../logging/_global';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
@@ -197,6 +198,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     // Handle the execution of notebook cell
+    @traceDecorators.verbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             traceInfoIfCI('No cells passed to handleExecution');

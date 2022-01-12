@@ -659,40 +659,13 @@ export class Kernel implements IKernel {
             };
             this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
         }
-
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                // Append the global site_packages to the kernel's sys.path
-                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
-                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
-                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                await this.executeSilently(`import site;site.addsitedir(site.getusersitepackages())`);
-            }
-
-            // Change our initial directory and path
-            await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
-            const file = this.resourceUri?.fsPath;
-            if (file) {
-                await this.executeSilently(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
-            }
-            traceInfoIfCI('After updating working directory and notebook file __vsc_ipynb_file__');
-            await this.disableJedi();
-            traceInfoIfCI('After Disabing jedi');
-
             // Request completions to warm up the completion engine (first call always takes a lot longer)
             await this.requestEmptyCompletions();
-
-            // For Python notebook initialize matplotlib
-            await this.initializeMatplotLib();
-            traceInfoIfCI('After initializing matplotlib');
-
-            // Initialize debug cell support.
-            // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
-            await this.initializeDebugCellHook(notebookDocument);
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -704,11 +677,11 @@ export class Kernel implements IKernel {
             }
         }
 
-        // Run any startup commands that we have specified
-        traceInfoIfCI('Run startup commands');
-        await this.runStartupCommands();
-        traceInfoIfCI('After running startup commands');
+        // Gather all of the startup code at one time and execute as one cell
+        const startupCode = await this.gatherStartupCode(notebookDocument);
+        await this.executeSilently(startupCode.join('\n'));
 
+        // Then request our kernel info (indicates kernel is ready to go)
         try {
             traceInfoIfCI('Requesting Kernel info');
             const info = await notebook.session.requestKernelInfo();
@@ -723,8 +696,41 @@ export class Kernel implements IKernel {
         traceInfoIfCI('End running kernel initialization, session is idle');
     }
 
-    private async disableJedi() {
-        await this.executeSilently(CodeSnippets.disableJedi);
+    private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
+        // Gather all of the startup code into a giant string array so we
+        // can execute it all at once.
+        const result: string[] = [];
+
+        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                result.push(`import site;site.addsitedir(site.getusersitepackages())`);
+            }
+
+            // Change our initial directory and path
+            result.push(...(await this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri?.fsPath)));
+
+            // Set the ipynb file
+            const file = this.resourceUri?.fsPath;
+            if (file) {
+                result.push(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
+            }
+            result.push(CodeSnippets.disableJedi);
+
+            // For Python notebook initialize matplotlib
+            result.push(...this.getMatplotLibInitializeCode());
+
+            // Initialize debug cell support.
+            // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
+            result.push(...(await this.getDebugCellHook(notebookDocument)));
+        }
+
+        // Run any startup commands that we have specified
+        result.push(...this.getStartupCommands());
+        return result;
     }
 
     private async requestEmptyCompletions() {
@@ -813,7 +819,8 @@ export class Kernel implements IKernel {
             });
         }
     }
-    private async initializeMatplotLib(): Promise<void> {
+    private getMatplotLibInitializeCode(): string[] {
+        const results: string[] = [];
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
@@ -828,13 +835,13 @@ export class Kernel implements IKernel {
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
-            await this.executeSilently(matplobInit);
+            results.push(...matplobInit.splitLines());
 
             // TODO: This must be joined with the previous request (else we send two seprate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.
-                await this.executeSilently(
+                results.push(
                     useDark
                         ? "matplotlib.style.use('dark_background')"
                         : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
@@ -845,11 +852,12 @@ export class Kernel implements IKernel {
             traceInfoIfCI(
                 `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
             );
-            await this.executeSilently(configInit);
+            results.push(...configInit.splitLines());
         }
+        return results;
     }
 
-    private async initializeDebugCellHook(notebookDocument: NotebookDocument) {
+    private async getDebugCellHook(notebookDocument: NotebookDocument): Promise<string[]> {
         // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
         // notebooks
         if (notebookDocument.notebookType === InteractiveWindowView) {
@@ -857,13 +865,14 @@ export class Kernel implements IKernel {
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
                 const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
-                await this.executeSilently(fileContents);
+                return fileContents.splitLines();
             }
             traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
         }
+        return [];
     }
 
-    private async runStartupCommands() {
+    private getStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
         let setting = settings.runStartupCommands;
@@ -876,11 +885,12 @@ export class Kernel implements IKernel {
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
             const cleanedUp = setting.replace(/\\n/g, '\n');
-            await this.executeSilently(cleanedUp);
+            return cleanedUp.splitLines();
         }
+        return [];
     }
 
-    private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
+    private async getUpdateWorkingDirectoryAndPathCode(launchingFile?: string): Promise<string[]> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (
             (isLocalConnection(this.kernelConnectionMetadata) ||
@@ -890,27 +900,29 @@ export class Kernel implements IKernel {
             let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
-                return this.changeDirectoryIfPossible(suggestedDir);
+                return this.getChangeDirectoryCode(suggestedDir);
             } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
                 suggestedDir = expandWorkingDir(suggestedDir, launchingFile, this.workspaceService);
                 if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
-                    return this.changeDirectoryIfPossible(suggestedDir);
+                    return this.getChangeDirectoryCode(suggestedDir);
                 }
             }
         }
+        return [];
     }
 
     // Update both current working directory and sys.path with the desired directory
-    private async changeDirectoryIfPossible(directory: string): Promise<void> {
+    private getChangeDirectoryCode(directory: string): string[] {
         if (
             (isLocalConnection(this.kernelConnectionMetadata) ||
                 isLocalHostConnection(this.kernelConnectionMetadata)) &&
             isPythonKernelConnection(this.kernelConnectionMetadata)
         ) {
             traceInfo('changeDirectoryIfPossible');
-            await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
+            return CodeSnippets.UpdateCWDAndPath.format(directory).splitLines();
         }
+        return [];
     }
 
     private async executeSilently(code: string) {
