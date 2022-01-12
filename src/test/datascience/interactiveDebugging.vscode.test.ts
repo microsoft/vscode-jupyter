@@ -10,11 +10,11 @@ import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
-import { submitFromPythonFile, waitForLastCellToComplete } from './helpers';
+import { submitFromPythonFile, submitFromPythonFileUsingCodeWatcher, waitForLastCellToComplete } from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
@@ -26,6 +26,7 @@ suite('Interactive window debugging', async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     let variableViewProvider: ITestVariableViewProvider;
+    let codeWatcherProvider: IDataScienceCodeLensProvider;
     let debugAdapterTracker: vscode.DebugAdapterTracker | undefined;
     const tracker: vscode.DebugAdapterTrackerFactory = {
         createDebugAdapterTracker: function (
@@ -47,6 +48,7 @@ suite('Interactive window debugging', async function () {
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
+        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
@@ -415,7 +417,7 @@ suite('Interactive window debugging', async function () {
             defaultNotebookTestTimeout,
             `Couldn't find stop command`
         );
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, true);
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, -1, true);
         const outputs = getCellOutputs(lastCell);
         assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
     });
@@ -574,6 +576,99 @@ def foo():
         stopped = false;
         stoppedOnLine = false;
         targetLine = 7;
+
+        void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+        await waitForCondition(
+            async () => {
+                return stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Did not stop on step into`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting stepping into`
+        );
+    });
+
+    test('Step into a previous cell', async () => {
+        // Need a function and a call to the function
+        const source = `
+# %%
+def foo():
+    x = 10
+
+# %%
+foo()
+`;
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFileUsingCodeWatcher(
+            interactiveWindowProvider,
+            codeWatcherProvider,
+            source,
+            disposables
+        );
+        await waitForLastCellToComplete(activeInteractiveWindow, 2);
+
+        let codeLenses: vscode.CodeLens[] = [];
+        // Wait for the debug cell code lens to appear
+        await waitForCondition(
+            async () => {
+                codeLenses = (await vscode.commands.executeCommand(
+                    'vscode.executeCodeLensProvider',
+                    untitledPythonFile.uri
+                )) as vscode.CodeLens[];
+                return codeLenses && codeLenses.length == 7;
+            },
+            defaultNotebookTestTimeout,
+            `Invalid number of code lenses returned`
+        );
+
+        let stopped = false;
+        let stoppedOnLine = false;
+        let targetLine = 7;
+        debugAdapterTracker = {
+            onDidSendMessage: (message) => {
+                if (message.event == 'stopped') {
+                    stopped = true;
+                }
+                if (message.command == 'stackTrace' && !stoppedOnLine) {
+                    stoppedOnLine = message.body.stackFrames[0].line == targetLine;
+                }
+            }
+        };
+
+        const debugCellCodeLenses = codeLenses.filter((c) => c.command?.command === Commands.DebugCell);
+        const debugCellCodeLens = debugCellCodeLenses[1];
+        let args = debugCellCodeLens.command!.arguments || [];
+        void vscode.commands.executeCommand(debugCellCodeLens.command!.command, ...args);
+
+        // Wait for breakpoint to be hit
+        await waitForCondition(
+            async () => {
+                return vscode.debug.activeDebugSession != undefined && stopped;
+            },
+            defaultNotebookTestTimeout,
+            `Never hit stop event when waiting for debug cell`
+        );
+
+        // Verify that we hit the correct line
+        await waitForCondition(
+            async () => {
+                return stoppedOnLine;
+            },
+            defaultNotebookTestTimeout,
+            `Cursor did not move to expected line when hitting breakpoint`
+        );
+
+        // Perform a step into
+        stopped = false;
+        stoppedOnLine = false;
+        targetLine = 4;
 
         void vscode.commands.executeCommand('workbench.action.debug.stepInto');
         await waitForCondition(

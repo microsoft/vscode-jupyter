@@ -46,7 +46,7 @@ import {
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
 import { ICellHash, ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
-import { executeSilently, isPythonKernelConnection } from './helpers';
+import { isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -481,11 +481,6 @@ export class CellExecution implements IDisposable {
             let hash: ICellHash | undefined = undefined;
             if (this.cell.notebook.notebookType === InteractiveWindowView) {
                 hash = await this.cellHashProvider.addCellHash(this.cell);
-
-                // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
-                // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-                // We need to wait for the result so we don't accidently hang the kernel (QT5 event loop doesn't handle concurrent requests)
-                await executeSilently(session, `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`);
             }
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that

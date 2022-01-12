@@ -25,7 +25,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } fro
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { CodeSnippets, Commands, Identifiers, Telemetry } from '../../constants';
+import { AddRunCellHook, CodeSnippets, Commands, Identifiers, Telemetry } from '../../constants';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent,
@@ -690,6 +690,10 @@ export class Kernel implements IKernel {
             await this.initializeMatplotLib();
             traceInfoIfCI('After initializing matplotlib');
 
+            // Initialize debug cell support.
+            // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
+            await this.initializeDebugCellHook(notebookDocument);
+
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
@@ -844,6 +848,21 @@ export class Kernel implements IKernel {
             await this.executeSilently(configInit);
         }
     }
+
+    private async initializeDebugCellHook(notebookDocument: NotebookDocument) {
+        // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
+        // notebooks
+        if (notebookDocument.notebookType === InteractiveWindowView) {
+            // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
+            // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+            if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
+                const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
+                await this.executeSilently(fileContents);
+            }
+            traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
+        }
+    }
+
     private async runStartupCommands() {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
