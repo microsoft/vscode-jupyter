@@ -79,7 +79,11 @@ export class WorkspaceService implements IWorkspaceService {
         return workspace.findFiles(include, exclude, maxResults, token);
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
-        const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
+        const workspaceFolder = resource
+            ? workspace.getWorkspaceFolder(resource)
+            : workspace.workspaceFolders
+            ? workspace.workspaceFolders[0] // Default to first folder if resource not passed in.
+            : undefined;
         return workspaceFolder
             ? path.normalize(
                   getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath

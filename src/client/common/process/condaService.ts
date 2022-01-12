@@ -5,6 +5,8 @@ import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { Memento } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
+import { TraceOptions } from '../../logging/trace';
+import { traceDecorators } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { GLOBAL_MEMENTO, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
@@ -22,6 +24,7 @@ export class CondaService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
+    @traceDecorators.verbose('getCondaVersion', TraceOptions.BeforeCall)
     async getCondaVersion() {
         if (this._version) {
             return this._version;
@@ -30,15 +33,13 @@ export class CondaService {
             return this._previousVersionCall;
         }
         const promise = async () => {
-            const latestInfo = this.pythonApi
-                .getApi()
-                .then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
+            const latestInfo = this.getCondaVersionFromPython();
             void latestInfo.then((version) => {
                 this._version = version;
                 void this.updateCache();
             });
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
-            await Promise.race([cachedInfo, latestInfo]);
+            await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.version) {
                 return (this._version = cachedInfo.value.version);
             }
@@ -47,6 +48,7 @@ export class CondaService {
         this._previousVersionCall = promise();
         return this._previousVersionCall;
     }
+    @traceDecorators.verbose('getCondaFile', TraceOptions.BeforeCall)
     async getCondaFile() {
         if (this._file) {
             return this._file;
@@ -63,7 +65,7 @@ export class CondaService {
                 void this.updateCache();
             });
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
-            await Promise.race([cachedInfo, latestInfo]);
+            await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.file) {
                 return (this._file = cachedInfo.value.file);
             }
@@ -103,5 +105,9 @@ export class CondaService {
                 file: cachedInfo.file
             };
         }
+    }
+    @traceDecorators.verbose('getCondaVersionFromPython', TraceOptions.BeforeCall)
+    private async getCondaVersionFromPython(): Promise<SemVer | undefined> {
+        return this.pythonApi.getApi().then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
     }
 }

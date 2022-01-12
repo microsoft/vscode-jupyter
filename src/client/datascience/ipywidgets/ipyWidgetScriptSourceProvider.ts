@@ -114,10 +114,10 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (!found.scriptUri) {
             traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
         }
-        this.handleWidgetSourceNotFoundOnCDN(found).ignoreErrors();
+        this.handleWidgetSourceNotFoundOnCDN(found, moduleVersion).ignoreErrors();
         return found;
     }
-    private async handleWidgetSourceNotFoundOnCDN(widgetSource: WidgetScriptSource) {
+    private async handleWidgetSourceNotFoundOnCDN(widgetSource: WidgetScriptSource, version: string) {
         // if widget exists nothing to do.
         if (widgetSource.source === 'cdn' || this.neverWarnAboutScriptsNotFoundOnCDN.value === true) {
             return;
@@ -130,7 +130,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(widgetSource.moduleName);
         const selection = await this.appShell.showWarningMessage(
-            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(widgetSource.moduleName),
+            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+                widgetSource.moduleName,
+                version,
+                JSON.stringify(this.configuredScriptSources)
+            ),
             Common.ok(),
             Common.doNotShowAgain(),
             Common.reportThisIssue()

@@ -147,7 +147,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
         );
     }
-    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecorators.verbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
@@ -278,6 +278,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         if (this.activatedEnvVariablesCache.has(key)) {
+            traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
             return this.activatedEnvVariablesCache.get(key);
         }
 
@@ -303,6 +304,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         reason: 'unhandledError'
                     });
                     traceError('Failed to get activated environment variables ourselves', ex);
+                } finally {
+                    traceVerbose(`getCondaEnvVariables and send telemetry took: ${stopWatch.elapsedTime}ms`);
                 }
             };
 
@@ -318,6 +321,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         });
         this.activatedEnvVariablesCache.set(key, promise);
+        traceVerbose(`Got activation Env Vars without any caching. Key is ${key}`);
 
         return promise;
     }
@@ -556,11 +560,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         });
     }
+
+    @traceDecorators.verbose('getCondaEnvVariables', TraceOptions.BeforeCall)
     public async getCondaEnvVariables(
         resource: Resource,
         interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        void this.condaService.getCondaFile();
         const condaVersion = await this.condaService.getCondaVersion();
         if (!condaVersionSupportsLiveStreaming(condaVersion)) {
             return this.getActivatedEnvVarsUsingActivationCommands(resource, interpreter);
@@ -623,12 +628,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!interpreter?.path) {
             return;
         }
+        traceInfo(`Getting activation commands for ${interpreter.path}`);
         const key = ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX.format(interpreter.path);
         const cachedData = this.memento.get<string[]>(key, []);
         if (cachedData && cachedData.length > 0) {
+            traceInfo(`Getting activation commands for ${interpreter.path} are cached.`);
             return cachedData;
         }
         if (this.envActivationCommands.has(key)) {
+            traceInfo(`Getting activation commands for ${interpreter.path} are cached with a promise.`);
             return this.envActivationCommands.get(key);
         }
         const shellInfo = defaultShells[this.platform.osType];
@@ -657,6 +665,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         })();
         this.envActivationCommands.set(key, promise);
+        traceInfo(`Getting activation commands for ${interpreter.path} are not cached. May take a while.`);
         return promise;
     }
     protected fixActivationCommands(commands: string[]): string[] {

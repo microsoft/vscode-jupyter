@@ -11,8 +11,10 @@ import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { waitForCondition } from '../common';
 import {
     createTemporaryFile,
+    defaultNotebookTestTimeout,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
@@ -151,20 +153,26 @@ export async function runCurrentFile(
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
-export async function waitForLastCellToComplete(interactiveWindow: InteractiveWindow, errorsOkay?: boolean) {
+export async function waitForLastCellToComplete(
+    interactiveWindow: InteractiveWindow,
+    numberOfCells: number = -1,
+    errorsOkay?: boolean
+) {
     const notebookDocument = vscode.workspace.notebookDocuments.find(
         (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
     );
-    const cells = notebookDocument?.getCells();
     assert.ok(notebookDocument !== undefined, 'Interactive window notebook document not found');
+
     let codeCell: vscode.NotebookCell | undefined;
-    for (let i = cells!.length - 1; i >= 0; i -= 1) {
-        if (cells![i].kind === vscode.NotebookCellKind.Code) {
-            codeCell = cells![i];
-            break;
-        }
-    }
-    assert.ok(codeCell !== undefined, 'No code cell found in interactive window notebook document');
+    await waitForCondition(
+        async () => {
+            const codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+            codeCell = codeCells && codeCells.length ? codeCells[codeCells.length - 1] : undefined;
+            return codeCell && (numberOfCells === -1 || numberOfCells === codeCells!.length) ? true : false;
+        },
+        defaultNotebookTestTimeout,
+        `No code cell found in interactive window notebook document`
+    );
     if (errorsOkay) {
         await waitForCellExecutionToComplete(codeCell!);
     } else {

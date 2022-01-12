@@ -11,6 +11,7 @@ import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
@@ -396,6 +397,35 @@ ${actualCode}
 
         // Wait for output to appear
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
+    });
+
+    test('Raising an exception from within a function has a stack trace', async function () {
+        // IPython 8.0 has broken tracebacks. See issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/8675
+        this.skip();
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
+            disposables
+        );
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+
+        // Parse the last cell's error output
+        const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
+        assert.ok(errorOutput, 'No error output found');
+        assert.equal(errorOutput.traceback.length, 5, 'Traceback wrong size');
+
+        // Convert to html for easier parsing
+        const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
+        const converter = new ansiToHtml();
+        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+
+        // Should be threee hrefs for the two lines in the call stack
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
+        assert.equal(hrefs?.length, 3, '3 hrefs not found in traceback');
+        assert.ok(hrefs[0].endsWith("line=4'"), 'Wrong first ref line');
+        assert.ok(hrefs[1].endsWith("line=1'"), 'Wrong second ref line');
+        assert.ok(hrefs[2].endsWith("line=2'"), 'Wrong third ref line');
     });
 
     // todo@joyceerhl

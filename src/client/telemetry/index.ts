@@ -159,7 +159,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     // Queue telemetry for now only in insiders.
     if (
         sharedProperties['isInsiderExtension'] === 'true' &&
-        isPromise(properties?.waitBeforeSending || queuedTelemetry.length)
+        (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length)
     ) {
         queuedTelemetry.push({
             eventName: eventName as string,

@@ -26,6 +26,8 @@ import { chainable } from '../../common/utils/decorators';
 import * as localize from '../../common/utils/localize';
 import { isUri } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { traceDecorators } from '../../logging';
+import { TraceOptions } from '../../logging/trace';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
@@ -313,7 +315,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @captureTelemetry(Telemetry.RunCell)
+    @traceDecorators.verbose('CodeWatcher::runCell', TraceOptions.BeforeCall)
     public async runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;

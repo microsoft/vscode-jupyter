@@ -709,7 +709,7 @@ export interface ICellHash {
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
-    code: string; // Code that was actually hashed (might include breakpoint)
+    code: string; // Code that was actually hashed (might include breakpoint and other code)
     debuggerStartLine: number; // 1 based line in source .py that we start our file mapping from
 }
 

@@ -170,15 +170,17 @@ export class CellHashProvider implements ICellHashProvider {
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const { runtimeLine, debuggerStartLine } = this.adjustRuntimeForDebugging(
+            const { runtimeLine, debuggerStartLine } = this.addHiddenLines(
                 cell,
                 stripped,
                 trueStartLine,
                 firstNonBlankLineIndex
             );
+
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
             const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
+            const runtimeFile = this.getRuntimeFile(hashValue, expectedCount);
 
             const hash: IRangedCellHash = {
                 hash: hashValue,
@@ -194,7 +196,7 @@ export class CellHashProvider implements ICellHashProvider {
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
-                runtimeFile: this.getRuntimeFile(hashValue, expectedCount),
+                runtimeFile,
                 id: id,
                 timestamp: Date.now()
             };
@@ -379,7 +381,7 @@ export class CellHashProvider implements ICellHashProvider {
     Given that the hash still needs to map to the actual file contents calculating this mapping at this point
     where we are making debugging calculations for runtimeLine feels appropriate.
     */
-    private adjustRuntimeForDebugging(
+    private addHiddenLines(
         cell: NotebookCell,
         source: string[],
         trueStartLine: number,

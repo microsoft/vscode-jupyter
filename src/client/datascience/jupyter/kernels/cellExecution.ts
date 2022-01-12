@@ -46,7 +46,7 @@ import {
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
 import { ICellHash, ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
-import { executeSilently, isPythonKernelConnection } from './helpers';
+import { isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -54,6 +54,7 @@ import { disposeAllDisposables } from '../../../common/helpers';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { BaseError } from '../../../common/errors/types';
+import * as localize from '../../../common/utils/localize';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -480,11 +481,6 @@ export class CellExecution implements IDisposable {
             let hash: ICellHash | undefined = undefined;
             if (this.cell.notebook.notebookType === InteractiveWindowView) {
                 hash = await this.cellHashProvider.addCellHash(this.cell);
-
-                // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
-                // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-                // We need to wait for the result so we don't accidently hang the kernel (QT5 event loop doesn't handle concurrent requests)
-                await executeSilently(session, `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${hash?.runtimeFile}'`);
             }
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
@@ -545,7 +541,11 @@ export class CellExecution implements IDisposable {
             traceError('Error in waiting for cell to complete', ex);
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
-            if (ex && ex instanceof Error && ex.message.includes('Canceled')) {
+            if (
+                ex &&
+                ex instanceof Error &&
+                (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
+            ) {
                 this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
