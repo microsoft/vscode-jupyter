@@ -434,7 +434,7 @@ ${actualCode}
             '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
             disposables
         );
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
 
         // Parse the last cell's output
         await waitForTextOutput(lastCell, '1');
