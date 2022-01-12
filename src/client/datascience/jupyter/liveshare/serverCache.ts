@@ -128,8 +128,7 @@ export class ServerCache implements IAsyncDisposable {
             workingDir:
                 options && options.workingDir
                     ? options.workingDir
-                    : // IANHU: Check resource vs uri?
-                      await calculateWorkingDirectory(this.configService, this.workspace, this.fs, options.resource),
+                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fs, options.resource),
             ui: options.ui,
             localJupyter: options.localJupyter
         };
