@@ -252,7 +252,7 @@ export class JupyterKernelService {
                 // The global site_packages will be added to the path later.
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-                if (specModel.env) {
+                if (specModel.env && Object.keys(specModel.env).length > 0) {
                     specModel.env.PYTHONNOUSERSITE = 'True';
                 }
 
