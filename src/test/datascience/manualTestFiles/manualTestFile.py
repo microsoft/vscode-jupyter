@@ -13,7 +13,11 @@ plt.plot(x, np.sin(x))
 plt.show()
 
 #%% Test exception
-raise Exception("<This is bracketed>")
+def raiser():
+    raise Exception("<This is bracketed>")
+
+#%% Call exception
+raiser()
 
 # %% Bokeh Plot
 from bokeh.io import output_notebook, show
@@ -43,6 +47,7 @@ for i in trange(100):
 # 2. Profit
 #
 # [Link](http://www.microsoft.com)
+print('post markdown cell')
 
 # %% Magics
 %whos

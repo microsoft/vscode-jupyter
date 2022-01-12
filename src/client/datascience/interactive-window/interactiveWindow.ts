@@ -42,7 +42,7 @@ import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, INotebookExporter } from '../types';
 import { getInteractiveWindowTitle } from './identity';
-import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { generateMarkdownFromCodeLines, parseForComments } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
@@ -354,12 +354,37 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Update the owner list ASAP (this is before we execute)
         this.updateOwners(fileUri);
 
-        // Add the cell first. We don't need to wait for this part as we want to add them
-        // as quickly as possible
-        const notebookCellPromise = this.addNotebookCell(code, fileUri, line);
+        // Code may have markdown inside of it, if so, split into two cells
+        const split = code.splitLines({ trim: false });
+        let firstNonMarkdown = -1;
+        parseForComments(
+            split,
+            (_s, _i) => noop(),
+            (s, i) => {
+                // Make sure there's actually some code.
+                if (s && s.length > 0 && firstNonMarkdown === -1) {
+                    firstNonMarkdown = i;
+                }
+            }
+        );
 
-        // Queue up execution
-        return this.createExecutionPromise(notebookCellPromise, isDebug);
+        const cells =
+            firstNonMarkdown >= 0
+                ? [split.slice(0, firstNonMarkdown).join('\n'), split.slice(firstNonMarkdown).join('\n')]
+                : [code];
+
+        // Multiple cells that have split our code.
+        const promises = cells.map((c) => {
+            // Add the cell first. We don't need to wait for this part as we want to add them
+            // as quickly as possible
+            const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
+
+            // Queue up execution
+            return this.createExecutionPromise(notebookCellPromise, isDebug);
+        });
+
+        // Last promise should be when we're all done submitting.
+        return promises[promises.length - 1];
     }
 
     @chainable()
