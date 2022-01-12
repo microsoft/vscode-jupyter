@@ -707,7 +707,7 @@ export class Kernel implements IKernel {
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
                 // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(`import site;site.addsitedir(site.getusersitepackages())`);
+                result.push(`import site\nsite.addsitedir(site.getusersitepackages())`);
             }
 
             // Change our initial directory and path
@@ -835,7 +835,7 @@ export class Kernel implements IKernel {
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
-            results.push(...matplobInit.splitLines());
+            results.push(...matplobInit.splitLines({ trim: false }));
 
             // TODO: This must be joined with the previous request (else we send two seprate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
@@ -852,7 +852,7 @@ export class Kernel implements IKernel {
             traceInfoIfCI(
                 `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
             );
-            results.push(...configInit.splitLines());
+            results.push(...configInit.splitLines({ trim: false }));
         }
         return results;
     }
@@ -865,7 +865,7 @@ export class Kernel implements IKernel {
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
                 const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
-                return fileContents.splitLines();
+                return fileContents.splitLines({ trim: false });
             }
             traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
         }
@@ -885,7 +885,7 @@ export class Kernel implements IKernel {
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
             const cleanedUp = setting.replace(/\\n/g, '\n');
-            return cleanedUp.splitLines();
+            return cleanedUp.splitLines({ trim: false });
         }
         return [];
     }
@@ -920,7 +920,7 @@ export class Kernel implements IKernel {
             isPythonKernelConnection(this.kernelConnectionMetadata)
         ) {
             traceInfo('changeDirectoryIfPossible');
-            return CodeSnippets.UpdateCWDAndPath.format(directory).splitLines();
+            return CodeSnippets.UpdateCWDAndPath.format(directory).splitLines({ trim: false });
         }
         return [];
     }
