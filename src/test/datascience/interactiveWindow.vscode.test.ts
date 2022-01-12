@@ -399,7 +399,10 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
-    test('Raising an exception from within a function has a stack trace', async () => {
+    test('Raising an exception from within a function has a stack trace', async function () {
+        // IPython 8.0 has broken tracebacks. See issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/8675
+        this.skip();
         const { activeInteractiveWindow } = await runCurrentFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
