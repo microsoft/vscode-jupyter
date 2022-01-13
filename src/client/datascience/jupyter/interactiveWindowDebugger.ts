@@ -69,6 +69,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             traceInfo('stop debugging');
 
             // Tell our debug service to shutdown if possible
+            traceInfo(`IANHUZ Debug Detach`);
             this.debuggingActive = false;
             this.debugService.stop();
 
@@ -126,9 +127,11 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         if (config) {
             traceInfo('connected to notebook during debugging');
 
+            traceInfo(`IANHUZ start Debug Session`);
             this.debuggingActive = await startCommand(config);
 
             if (this.debuggingActive) {
+                traceInfo(`IANHUZ start Debug Session debug active`);
                 // Force the debugger to update its list of breakpoints. This is used
                 // to make sure the breakpoint list is up to date when we do code file hashes
                 this.debugService.removeBreakpoints([]);
