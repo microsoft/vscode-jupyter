@@ -1869,7 +1869,10 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Determines if pylance's experimental notebook support is used or not",
-                    "scope": "machine"
+                    "scope": "machine",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
