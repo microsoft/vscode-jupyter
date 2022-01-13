@@ -2042,20 +2042,31 @@ export namespace vscMockExtHostedTypes {
 
     export class RelativePattern implements IRelativePattern {
         base: string;
+        baseUri: vscode.Uri;
         pattern: string;
 
         constructor(base: vscode.WorkspaceFolder | vscode.Uri | string, pattern: string) {
-            if (typeof base !== 'string' && !(base instanceof vscode.Uri)) {
-                if (!base || !vscUri.URI.isUri(base.uri)) {
+            if (typeof base === 'string') {
+                // String
+                this.baseUri = vscUri.URI.from({ scheme: 'file', path: base });
+                this.base = base;
+            } else if (vscUri.URI.isUri(base)) {
+                // vscode.Uri
+                this.baseUri = base;
+                this.base = base.fsPath;
+            } else {
+                // vscode.WorkspaceFolder
+                if (!base || !('uri' in base)) {
                     throw illegalArgument('base');
                 }
+                this.baseUri = base.uri;
+                this.base = base.uri.fsPath;
             }
 
             if (typeof pattern !== 'string') {
                 throw illegalArgument('pattern');
             }
 
-            this.base = typeof base === 'string' ? base : base instanceof vscode.Uri ? base.fsPath : base.uri.fsPath;
             this.pattern = pattern;
         }
 
@@ -2063,7 +2074,6 @@ export namespace vscMockExtHostedTypes {
             return relative(from, to);
         }
     }
-
     export class Breakpoint {
         readonly enabled: boolean;
         readonly condition?: string;
