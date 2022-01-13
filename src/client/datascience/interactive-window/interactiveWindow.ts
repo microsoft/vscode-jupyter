@@ -369,7 +369,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
 
         const cells =
-            firstNonMarkdown >= 0
+            firstNonMarkdown > 0
                 ? [split.slice(0, firstNonMarkdown).join('\n'), split.slice(firstNonMarkdown).join('\n')]
                 : [code];
 
