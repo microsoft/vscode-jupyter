@@ -71,7 +71,7 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-    const isPreRelease = isDevMode || context.extension.packageJSON.__metadata.preRelease;
+    const isPreRelease = isDevMode || context.extension.packageJSON?.__metadata?.preRelease;
     serviceManager.addSingletonInstance<boolean>(IsPreRelease, isPreRelease);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
