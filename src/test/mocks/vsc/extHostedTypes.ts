@@ -2042,20 +2042,31 @@ export namespace vscMockExtHostedTypes {
 
     export class RelativePattern implements IRelativePattern {
         base: string;
+        baseUri: vscUri.URI;
         pattern: string;
 
-        constructor(base: vscode.WorkspaceFolder | string, pattern: string) {
-            if (typeof base !== 'string') {
-                if (!base || !vscUri.URI.isUri(base.uri)) {
+        constructor(base: vscode.WorkspaceFolder | vscUri.URI | string, pattern: string) {
+            if (typeof base === 'string') {
+                // String
+                this.baseUri = vscUri.URI.from({ scheme: 'file', path: base });
+                this.base = base;
+            } else if (vscUri.URI.isUri(base)) {
+                // vscode.Uri
+                this.baseUri = base;
+                this.base = base.fsPath;
+            } else {
+                // vscode.WorkspaceFolder
+                if (!base || !('uri' in base)) {
                     throw illegalArgument('base');
                 }
+                this.baseUri = base.uri;
+                this.base = base.uri.fsPath;
             }
 
             if (typeof pattern !== 'string') {
                 throw illegalArgument('pattern');
             }
 
-            this.base = typeof base === 'string' ? base : base.uri.fsPath;
             this.pattern = pattern;
         }
 
