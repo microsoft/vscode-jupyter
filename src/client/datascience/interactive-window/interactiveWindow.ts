@@ -356,17 +356,20 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Code may have markdown inside of it, if so, split into two cells
         const split = code.splitLines({ trim: false });
+        const matcher = new CellMatcher(this.configuration.getSettings(fileUri));
         let firstNonMarkdown = -1;
-        parseForComments(
-            split,
-            (_s, _i) => noop(),
-            (s, i) => {
-                // Make sure there's actually some code.
-                if (s && s.length > 0 && firstNonMarkdown === -1) {
-                    firstNonMarkdown = i;
+        if (matcher.isMarkdown(split[0])) {
+            parseForComments(
+                split,
+                (_s, _i) => noop(),
+                (s, i) => {
+                    // Make sure there's actually some code.
+                    if (s && s.length > 0 && firstNonMarkdown === -1) {
+                        firstNonMarkdown = i;
+                    }
                 }
-            }
-        );
+            );
+        }
 
         const cells =
             firstNonMarkdown > 0
