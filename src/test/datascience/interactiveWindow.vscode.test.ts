@@ -428,6 +428,18 @@ ${actualCode}
         assert.ok(hrefs[2].endsWith("line=2'"), 'Wrong third ref line');
     });
 
+    test('Running a cell with markdown and code runs two cells', async () => {
+        const { activeInteractiveWindow } = await runCurrentFile(
+            interactiveWindowProvider,
+            '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
+            disposables
+        );
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+
+        // Parse the last cell's output
+        await waitForTextOutput(lastCell, '1');
+    });
+
     // todo@joyceerhl
     // test('Verify CWD', () => { });
     // test('Multiple executes go to last active window', async () => { });

@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-11-15"
+    "value": "$TODAYS_DATE=2022-01-13"
   },
   {
     "kind": 1,
@@ -17,17 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPO=repo:microsoft/vscode\r\n$VSCODE_INTERNAL_REPO=repo:microsoft/vscode-internalbacklog\r\n$VSCODE_ALL_REPOS=$VSCODE_REPO $VSCODE_INTERNAL_REPO\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_ALL_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Team Members"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff assignee:rebornix assignee:roblourens"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPO=repo:microsoft/vscode\r\n$VSCODE_INTERNAL_REPO=repo:microsoft/vscode-internalbacklog\r\n$VSCODE_ALL_REPOS=$VSCODE_REPO $VSCODE_INTERNAL_REPO\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_ALL_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n\r\n// Team Members: author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:aamunger author:rebornix author:roblourens \r\n// Unfortunately, it seems that the github api can't handle having more than one author field passed in.\r\n"
   },
   {
     "kind": 1,
@@ -37,7 +27,17 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"November 2021\"\r\n$RECOVERY_MILESTONE=milestone:\"October 2021 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"January 2021\""
+    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\r\n$RECOVERY_MILESTONE=milestone:\"\"\r\n$NEXT_MILESTONE=milestone:\"February 2022\""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": ""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": ""
   },
   {
     "kind": 1,
@@ -57,7 +57,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue in:title 'YourSearchTerm'"
+    "value": " $ALL_REPOS is:open is:issue in:title 'YourSearchTerm'"
   },
   {
     "kind": 1,
@@ -95,24 +95,9 @@
     "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
   },
   {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Customer Entered"
-  },
-  {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open label:needs-triage,notebook-triage $TEAM_AUTHOR_EXLUSION sort:author-date\r\n"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Engineering Team Entered and Internal Issues"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open $TEAM_AUTHOR_INCLUSION sort:created-asc label:needs-triage"
+    "value": "$ALL_REPOS is:issue is:open sort:author-date label:needs-triage,notebook-triage   \r\n"
   },
   {
     "kind": 1,
@@ -142,7 +127,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:closed label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate closed:2021-10-01..$TODAYS_DATE"
+    "value": "$VSCODE_ALL_REPOS is:closed closed:2021-10-01..$TODAYS_DATE label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate "
   },
   {
     "kind": 1,
@@ -152,7 +137,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
+    "value": "$VSCODE_ALL_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
   },
   {
     "kind": 1,
@@ -172,7 +157,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden,iw-golden sort:created-asc"
+    "value": "$ALL_REPOS is:issue is:open sort:created-asc -label:important label:nb-golden,iw-golden "
   },
   {
     "kind": 1,
@@ -182,7 +167,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage sort:created-asc"
   },
   {
     "kind": 1,
@@ -197,7 +182,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:iteration-plan -label:release-plan $RECOVERY_MILESTONE sort:comments-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $RECOVERY_MILESTONE sort:comments-asc -label:iteration-plan -label:release-plan "
   },
   {
     "kind": 1,
@@ -207,7 +192,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:iteration-plan -label:release-plan $CURRENT_MILESTONE sort:comments-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $CURRENT_MILESTONE sort:comments-asc -label:iteration-plan -label:release-plan "
   },
   {
     "kind": 1,
@@ -222,7 +207,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$ALL_REPOS is:issue label:testplan-item $CURRENT_MILESTONE sort:created-asc"
   },
   {
     "kind": 1,
@@ -232,7 +217,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_ASSIGNMENT sort:created-asc"
+    "value": "$ALL_REPOS is:open is:issue $CURRENT_MILESTONE sort:created-asc label:testplan-item "
   },
   {
     "kind": 1,
@@ -242,7 +227,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue label:verification-needed -label:verified $CURRENT_MILESTONE sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue  $CURRENT_MILESTONE sort:created-asc label:verification-needed -label:verified"
   },
   {
     "kind": 1,
@@ -252,7 +237,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc \r\n$VSCODE_REPO is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc "
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue $CURRENT_MILESTONE sort:created-asc -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid \r\n$VSCODE_REPO is:closed is:issue  $CURRENT_MILESTONE sort:created-asc -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid "
   },
   {
     "kind": 1,
@@ -277,7 +262,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue label:awaiting-community-thoughts sort:created-asc"
+    "value": "$JUPYTER_REPO is:open is:issue  sort:created-asc label:awaiting-community-thoughts"
   },
   {
     "kind": 1,
@@ -352,7 +337,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue $TEAM_ASSIGNMENT -$CURRENT_MILESTONE -label:info-needed \r\n\r\n// NOTE: The expanded query will not return the same results in github as this cell's execution will. "
+    "value": "$HOUSEKEEPING_REPO is:open is:issue -$CURRENT_MILESTONE -label:info-needed \r\n\r\n// NOTE: The expanded query will not return the same results in github as this cell's execution will. "
   },
   {
     "kind": 1,
