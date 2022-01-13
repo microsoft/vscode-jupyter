@@ -6,7 +6,7 @@ import { ConfigurationChangeEvent, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IsPreRelease } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
@@ -37,7 +37,8 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IsPreRelease) private readonly isPreRelease: boolean
     ) {}
     public activate() {
         // Sign up for kernel change events on notebooks
@@ -205,9 +206,10 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         // We should have one language server per active interpreter.
 
         // Check the setting to determine if we let pylance handle notebook intellisense or not
-        const middlewareType = this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks
-            ? 'pylance'
-            : 'jupyter';
+        const middlewareType =
+            this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks || this.isPreRelease
+                ? 'pylance'
+                : 'jupyter';
 
         // See if we already have one for this interpreter or not
         const id = interpreter ? getInterpreterId(interpreter) : undefined;

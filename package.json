@@ -1872,7 +1872,7 @@
                     "scope": "machine",
                     "tags": [
                         "experimental"
-                    ]                    
+                    ]
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",

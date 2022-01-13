@@ -2044,8 +2044,8 @@ export namespace vscMockExtHostedTypes {
         base: string;
         pattern: string;
 
-        constructor(base: vscode.WorkspaceFolder | string, pattern: string) {
-            if (typeof base !== 'string') {
+        constructor(base: vscode.WorkspaceFolder | vscode.Uri | string, pattern: string) {
+            if (typeof base !== 'string' && !(base instanceof vscode.Uri)) {
                 if (!base || !vscUri.URI.isUri(base.uri)) {
                     throw illegalArgument('base');
                 }
@@ -2055,7 +2055,7 @@ export namespace vscMockExtHostedTypes {
                 throw illegalArgument('pattern');
             }
 
-            this.base = typeof base === 'string' ? base : base.uri.fsPath;
+            this.base = typeof base === 'string' ? base : base instanceof vscode.Uri ? base.fsPath : base.uri.fsPath;
             this.pattern = pattern;
         }
 
