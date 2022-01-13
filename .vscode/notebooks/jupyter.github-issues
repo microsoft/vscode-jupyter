@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-11-15"
+    "value": "$TODAYS_DATE=2022-01-13"
   },
   {
     "kind": 1,
@@ -37,7 +37,17 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"November 2021\"\r\n$RECOVERY_MILESTONE=milestone:\"October 2021 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"January 2021\""
+    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\r\n$RECOVERY_MILESTONE=milestone:\"\"\r\n$NEXT_MILESTONE=milestone:\"February 2022\""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": ""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": ""
   },
   {
     "kind": 1,
@@ -102,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open label:needs-triage,notebook-triage $TEAM_AUTHOR_EXLUSION sort:author-date\r\n"
+    "value": "$ALL_REPOS is:issue is:open sort:author-date $TEAM_AUTHOR_EXLUSION label:needs-triage,notebook-triage   \r\n"
   },
   {
     "kind": 1,
@@ -142,7 +152,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:closed label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate closed:2021-10-01..$TODAYS_DATE"
+    "value": "$VSCODE_ALL_REPOS is:closed closed:2021-10-01..$TODAYS_DATE label:$VSCODE_FEATURE_AREAS -label:invalid -label:verified -label:z-author-verified -label:insiders-released -label:*duplicate "
   },
   {
     "kind": 1,
@@ -152,7 +162,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
+    "value": "$VSCODE_ALL_REPOS is:closed label:*extension-candidate label:$VSCODE_FEATURE_AREAS"
   },
   {
     "kind": 1,
@@ -172,7 +182,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden,iw-golden sort:created-asc"
+    "value": "$ALL_REPOS is:issue is:open sort:created-asc -label:important label:nb-golden,iw-golden "
   },
   {
     "kind": 1,
@@ -197,7 +207,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:iteration-plan -label:release-plan $RECOVERY_MILESTONE sort:comments-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $RECOVERY_MILESTONE sort:comments-asc -label:iteration-plan -label:release-plan "
   },
   {
     "kind": 1,
@@ -207,7 +217,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:iteration-plan -label:release-plan $CURRENT_MILESTONE sort:comments-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $CURRENT_MILESTONE sort:comments-asc -label:iteration-plan -label:release-plan "
   },
   {
     "kind": 1,
@@ -232,7 +242,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_ASSIGNMENT sort:created-asc"
+    "value": "$ALL_REPOS is:open is:issue $CURRENT_MILESTONE $TEAM_ASSIGNMENT sort:created-asc label:testplan-item "
   },
   {
     "kind": 1,
@@ -242,7 +252,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue label:verification-needed -label:verified $CURRENT_MILESTONE sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue  $CURRENT_MILESTONE sort:created-asc label:verification-needed -label:verified"
   },
   {
     "kind": 1,
@@ -252,7 +262,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc \r\n$VSCODE_REPO is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid $CURRENT_MILESTONE sort:created-asc "
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue $CURRENT_MILESTONE sort:created-asc -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid \r\n$VSCODE_REPO is:closed is:issue  $CURRENT_MILESTONE sort:created-asc -label:verified -label:verification-needed label:bug -label:duplicate -label:on-testplan -label:invalid "
   },
   {
     "kind": 1,
@@ -277,7 +287,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue label:awaiting-community-thoughts sort:created-asc"
+    "value": "$JUPYTER_REPO is:open is:issue  sort:created-asc label:awaiting-community-thoughts"
   },
   {
     "kind": 1,
