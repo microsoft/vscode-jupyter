@@ -16,6 +16,7 @@ import {
     Event,
     WorkspaceFolder
 } from 'vscode';
+import { traceInfoIfCI } from '../logger';
 import { IDebugService } from './types';
 
 @injectable()
@@ -25,6 +26,7 @@ export class DebugService implements IDebugService {
         return debug.activeDebugConsole;
     }
     public get activeDebugSession(): DebugSession | undefined {
+        traceInfoIfCI(`Getting active debug session`);
         return debug.activeDebugSession;
     }
     public get breakpoints(): readonly Breakpoint[] {
