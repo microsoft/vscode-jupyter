@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
 import { IPythonDebuggerPathProvider } from '../../api/types';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -83,6 +83,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession && this.debuggingActive) {
+            traceInfoIfCI(`Sending debug request for source map`);
             await Promise.all(
                 hashes.map(async (fileHash) => {
                     if (this.debuggingActive) {
