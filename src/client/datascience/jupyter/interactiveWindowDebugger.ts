@@ -87,6 +87,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             await Promise.all(
                 hashes.map(async (fileHash) => {
                     if (this.debuggingActive) {
+                        traceInfo(`IANHUZ ${this.debuggingActive}`);
                         return this.debugService.activeDebugSession!.customRequest(
                             'setPydevdSourceMap',
                             this.buildSourceMap(fileHash)
