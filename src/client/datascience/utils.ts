@@ -7,16 +7,17 @@ import * as path from 'path';
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, Resource } from '../common/types';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
     workspace: IWorkspaceService,
-    fs: IFileSystem
+    fs: IFileSystem,
+    resource: Resource
 ): Promise<string | undefined> {
     let workingDir: string | undefined;
     // For a local launch calculate the working directory that we should switch into
-    const settings = configService.getSettings(undefined);
+    const settings = configService.getSettings(resource);
     const fileRoot = settings.notebookFileRoot;
 
     // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
