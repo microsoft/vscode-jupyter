@@ -95,14 +95,9 @@
     "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
   },
   {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Customer Entered"
-  },
-  {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open sort:author-date -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens label:needs-triage,notebook-triage   \r\n"
+    "value": "$ALL_REPOS is:issue is:open sort:author-date label:needs-triage,notebook-triage   \r\n"
   },
   {
     "kind": 1,
