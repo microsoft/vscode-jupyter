@@ -555,5 +555,9 @@
     "DataScience.importingIpynb": "Importing notebook file.",
     "DataScience.exportingToFormat": "Exporting to {0}.",
     "DataScience.matplotlibWidgetInsteadOfOther": "'%matplotlib widget' or '%matplotlib inline' works best in VS code notebooks.",
-    "DataScience.matplotlibWidgetCodeActionTitle": "More information"
+    "DataScience.matplotlibWidgetCodeActionTitle": "More information",
+    "DataScience.usingNonPrereleaseYes": "Yes",
+    "DataScience.usingNonPrereleaseNo": "No",
+    "DataScience.usingNonPrereleaseNoAndDontAskAgain": "Don't ask again",
+    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter extension is recommended when running on VS code insiders. Would you like to switch?"
 }

@@ -1083,6 +1083,18 @@ export namespace DataScience {
         'DataScience.activatingEnvironment',
         "Activating Python Environment '{0}'"
     );
+
+    export const usingNonPrereleaseYes = localize('DataScience.usingNonPrereleaseYes', 'Yes');
+    export const usingNonPrereleaseNo = localize('DataScience.usingNonPrereleaseNo', 'No');
+    export const usingNonPrereleaseNoAndDontAskAgain = localize(
+        'DataScience.usingNonPrereleaseNoAndDontAskAgain',
+        `Don't Ask Again`
+    );
+
+    export const usingNonPrerelease = localize(
+        'DataScience.usingNonPrerelease',
+        `The 'prerelease' version of the Jupyter extension is recommended when running on VS code insiders. Would you like to switch?`
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
