@@ -23,6 +23,14 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
                 });
                 event.preventDefault();
                 return;
+            }
+            if (node.href.indexOf('vscode-notebook-cell') === 0) {
+                context.postMessage({
+                    message: 'open_link',
+                    payload: node.href
+                });
+                event.preventDefault();
+                return;
             } else if (node.href.indexOf('command') === 0) {
                 context.postMessage({
                     message: 'open_link',
@@ -79,16 +87,18 @@ export const activate: ActivationFunction = (_context) => {
             // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
             // When we escape, the links would be escaped as well.
             // We need to unescape them.
-            const fileLinkRegExp = new RegExp(/&lt;a href=&#39;file:(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/);
+            const fileLinkRegExp = new RegExp(
+                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/
+            );
             const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             const akaMsLinks = new RegExp(/&lt;a href=&#39;https:\/\/aka.ms\/(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             traceback = traceback.map((line) => {
                 let matches: RegExpExecArray | undefined | null;
                 while ((matches = fileLinkRegExp.exec(line)) !== null) {
-                    if (matches.length === 4) {
+                    if (matches.length === 5) {
                         line = line.replace(
                             matches[0],
-                            `<a href='file:${matches[1]}?line=${matches[2]}'>${matches[3]}<a>`
+                            `<a href='${matches[1]}:${matches[2]}?line=${matches[3]}'>${matches[4]}<a>`
                         );
                     }
                 }

@@ -1083,6 +1083,8 @@ export namespace DataScience {
         'DataScience.activatingEnvironment',
         "Activating Python Environment '{0}'"
     );
+
+    export const cellAtFormat = localize('DataScience.cellAtFormat', '{0} Cell {1}');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

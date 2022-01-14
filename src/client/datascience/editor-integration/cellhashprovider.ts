@@ -16,6 +16,7 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
+import * as localize from '../../common/utils/localize';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { uncommentMagicCommands } from '../../../datascience-ui/common/cellFactory';
@@ -28,6 +29,7 @@ import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernel } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -60,6 +62,7 @@ export class CellHashProvider implements ICellHashProvider {
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private traceBackRegexes = new Map<string, RegExp[]>();
     private disposables: Disposable[] = [];
+    private executionCounts: Map<number, string> = new Map<number, string>();
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -67,11 +70,12 @@ export class CellHashProvider implements ICellHashProvider {
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IFileSystem) private fs: IFileSystem,
         @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined,
-        kernel: IKernel
+        private readonly kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
         this.disposables.push(kernel.onRestarted(() => this.onKernelRestarted()));
+        kernel.onPreExecute(this.onPreExecute, this, this.disposables);
     }
 
     public dispose() {
@@ -105,6 +109,17 @@ export class CellHashProvider implements ICellHashProvider {
         this.traceBackRegexes.clear();
         this.executionCount = 0;
         this.updateEventEmitter.fire();
+        this.executionCounts.clear();
+    }
+
+    public onPreExecute(cell: NotebookCell) {
+        if (cell.kind === NotebookCellKind.Code && cell.notebook.notebookType !== InteractiveWindowView) {
+            const executableLines = this.extractExecutableLines(cell);
+            if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
+                // Keep track of predicted execution counts for cells. Used to parse exception errors
+                this.executionCounts.set(this.executionCounts.size + 1, cell.document.uri.toString());
+            }
+        }
     }
 
     public async addCellHash(cell: NotebookCell) {
@@ -489,6 +504,30 @@ export class CellHashProvider implements ICellHashProvider {
                     /.*?\n/,
                     `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
+            } else if (this.kernel && this.kernel.notebookDocument.notebookType !== InteractiveWindowView) {
+                const matchingCellUri = this.executionCounts.get(executionCount);
+                const cellIndex = this.kernel.notebookDocument
+                    .getCells()
+                    .findIndex((c) => c.document.uri.toString() === matchingCellUri);
+                if (matchingCellUri && cellIndex >= 0) {
+                    // Parse string to a real URI so we can use pieces of it.
+                    matchUri = Uri.parse(matchingCellUri);
+
+                    // We have a match, replace source lines first
+                    const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                        const n = parseInt(num, 10);
+                        return `${prefix}<a href='${matchingCellUri}?line=${n - 1}'>${n}</a>${suffix}`;
+                    });
+
+                    // Then replace the input line with our uri for this cell
+                    return afterLineReplace.replace(
+                        /.*?\n/,
+                        `\u001b[1;32m${localize.DataScience.cellAtFormat().format(
+                            matchUri.fsPath,
+                            (cellIndex + 1).toString()
+                        )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                    );
+                }
             }
         }
 

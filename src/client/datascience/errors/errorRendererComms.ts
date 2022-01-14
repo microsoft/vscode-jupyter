@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
+import { commands, NotebookRange, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
+import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -17,7 +18,8 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
     ) {}
 
     activate(): void {
@@ -29,6 +31,8 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
                     const href = message.payload;
                     if (href.startsWith('file')) {
                         await this.openFile(href);
+                    } else if (href.startsWith('vscode-notebook-cell')) {
+                        await this.openCell(href);
                     } else if (href.startsWith('https://command:') || href.startsWith('command:')) {
                         const temp: string = href.startsWith('https://command:')
                             ? href.split(':')[2]
@@ -80,6 +84,42 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
                     editor.selection = new Selection(selection.start, selection.start);
                 }
             });
+        }
+    }
+
+    private async openCell(cellUri: string) {
+        let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
+        // Might have a line number query on the fragment (URI doesn't seem to parse correctly)
+        const lineMatch = LineQueryRegex.exec(cellUri);
+        if (lineMatch) {
+            const lineNumber = parseInt(lineMatch[1], 10);
+            selection = new Range(new Position(lineNumber, 0), new Position(lineNumber, 0));
+            cellUri = cellUri.slice(0, lineMatch.index - 1);
+        }
+        const uri = Uri.parse(cellUri);
+
+        // Show the matching notebook if there is one
+        let editor = this.notebooks.notebookEditors.find((n) => arePathsSame(n.document.uri.fsPath, uri.fsPath));
+        if (editor) {
+            // If there is one, go to the cell that matches
+            const cell = editor.document.getCells().find((c) => c.document.uri.toString() === cellUri);
+            if (cell) {
+                const cellRange = new NotebookRange(cell.index, cell.index);
+                return this.notebooks
+                    .showNotebookDocument(editor.document.uri, { selections: [cellRange] })
+                    .then((_e) => {
+                        return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
+                            const cellEditor = this.documentManager.visibleTextEditors.find(
+                                (v) => v.document.uri.toString() === cellUri
+                            );
+                            if (cellEditor) {
+                                // Force the selection to change
+                                cellEditor.revealRange(selection);
+                                cellEditor.selection = new Selection(selection.start, selection.start);
+                            }
+                        });
+                    });
+            }
         }
     }
 }
