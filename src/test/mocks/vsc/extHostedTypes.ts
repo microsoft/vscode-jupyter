@@ -2074,7 +2074,6 @@ export namespace vscMockExtHostedTypes {
             return relative(from, to);
         }
     }
-
     export class Breakpoint {
         readonly enabled: boolean;
         readonly condition?: string;

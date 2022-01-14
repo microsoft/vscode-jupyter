@@ -166,6 +166,7 @@ import { CellHashProviderFactory } from './editor-integration/cellHashProviderFa
 import { ExportToPythonPlain } from './export/exportToPythonPlain';
 import { ErrorRendererCommunicationHandler } from './errors/errorRendererComms';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
+import { PreReleaseChecker } from './prereleaseChecker';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -295,6 +296,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ErrorRendererCommunicationHandler);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelProgressReporter);
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreReleaseChecker);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

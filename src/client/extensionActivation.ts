@@ -23,7 +23,8 @@ import {
     IFeatureDeprecationManager,
     IOutputChannel,
     IsCodeSpace,
-    IsDevMode
+    IsDevMode,
+    IsPreRelease
 } from './common/types';
 import * as localize from './common/utils/localize';
 import { noop } from './common/utils/misc';
@@ -70,6 +71,8 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
+    const isPreRelease = isDevMode || context.extension.packageJSON?.__metadata?.preRelease;
+    serviceManager.addSingletonInstance<boolean>(IsPreRelease, isPreRelease);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }

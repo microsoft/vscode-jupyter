@@ -711,7 +711,7 @@ export class Kernel implements IKernel {
             }
 
             // Change our initial directory and path
-            result.push(...(await this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri?.fsPath)));
+            result.push(...(await this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri)));
 
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
@@ -890,20 +890,25 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async getUpdateWorkingDirectoryAndPathCode(launchingFile?: string): Promise<string[]> {
+    private async getUpdateWorkingDirectoryAndPathCode(launchingFile?: Resource): Promise<string[]> {
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (
             (isLocalConnection(this.kernelConnectionMetadata) ||
                 isLocalHostConnection(this.kernelConnectionMetadata)) &&
             this.kernelConnectionMetadata.kind !== 'connectToLiveKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
         ) {
-            let suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+            let suggestedDir = await calculateWorkingDirectory(
+                this.configService,
+                this.workspaceService,
+                this.fs,
+                launchingFile
+            );
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 return this.getChangeDirectoryCode(suggestedDir);
-            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localFileExists(launchingFile.fsPath))) {
                 // Combine the working directory with this file if possible.
-                suggestedDir = expandWorkingDir(suggestedDir, launchingFile, this.workspaceService);
+                suggestedDir = expandWorkingDir(suggestedDir, launchingFile.fsPath, this.workspaceService);
                 if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                     return this.getChangeDirectoryCode(suggestedDir);
                 }

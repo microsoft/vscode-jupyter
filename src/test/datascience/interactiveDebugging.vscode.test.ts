@@ -51,6 +51,17 @@ suite('Interactive window debugging', async function () {
         codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
     });
     teardown(async function () {
+        // Make sure that debugging is shut down
+        await vscode.commands.executeCommand('workbench.action.debug.stop');
+        await vscode.commands.executeCommand('workbench.action.debug.disconnect');
+        await waitForCondition(
+            async () => {
+                return vscode.debug.activeDebugSession === undefined;
+            },
+            defaultNotebookTestTimeout,
+            `Unable to stop debug session on test teardown`
+        );
+
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
