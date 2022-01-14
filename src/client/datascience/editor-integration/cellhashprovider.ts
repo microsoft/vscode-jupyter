@@ -437,7 +437,7 @@ export class CellHashProvider implements ICellHashProvider {
 
     private modifyTracebackFrame(traceFrame: string): string {
         // Check IPython8. We handle that one special
-        if (/^Input.*?\n.*/.test(traceFrame)) {
+        if (/^[Input|File].*?\n.*/.test(traceFrame)) {
             return this.modifyTracebackFrameIPython8(traceFrame);
         } else {
             return this.modifyTracebackFrameIPython7(traceFrame);
@@ -452,7 +452,14 @@ export class CellHashProvider implements ICellHashProvider {
         traceFrame = traceFrame.replace(/\u001b\[4\dm/g, '');
 
         // Also remove specific foreground colors (38 is the ascii code for picking one) (they don't translate either)
-        traceFrame = traceFrame.replace(/\u001b\[38;.*?\d+m/g, '\u001b[1;32m');
+        // Turn them into default foreground
+        traceFrame = traceFrame.replace(/\u001b\[38;.*?\d+m/g, '\u001b[39m');
+
+        // Turn all foreground colors after the --> to default foreground
+        traceFrame = traceFrame.replace(/(;32m[ ->]*?)(\d+)(.*)\n/g, (_s, prefix, num, suffix) => {
+            suffix = suffix.replace(/\u001b\[3\d+m/g, '\u001b[39m');
+            return `${prefix}${num}${suffix}\n`;
+        });
 
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
         if (inputMatch && inputMatch.length > 1) {
@@ -484,6 +491,17 @@ export class CellHashProvider implements ICellHashProvider {
                 );
             }
         }
+
+        const fileMatch = /^File.*?\[1;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
+        if (fileMatch && fileMatch.length > 1) {
+            const fileUri = Uri.file(fileMatch[1]);
+            // We have a match, replace source lines with hrefs
+            return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                const n = parseInt(num, 10);
+                return `${prefix}<a href='${fileUri?.toString()}?line=${n - 1}'>${n}</a>${suffix}`;
+            });
+        }
+
         return traceFrame;
     }
 
