@@ -1587,6 +1587,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Collapse cell input code by default.",
+                    "markdownDeprecationMessage": "This setting has been deprecated, please use `#interactiveWindow.collapseCellInputCode#` instead.",
                     "scope": "resource"
                 },
                 "jupyter.maxOutputSize": {

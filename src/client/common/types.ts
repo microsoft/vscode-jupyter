@@ -135,7 +135,6 @@ export interface IJupyterSettings {
     readonly searchForJupyter: boolean;
     readonly allowInput: boolean;
     readonly showCellInputCode: boolean;
-    readonly collapseCellInputCodeByDefault: boolean;
     readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;

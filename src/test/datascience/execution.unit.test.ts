@@ -881,7 +881,6 @@ suite('Jupyter Execution', async () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: !skipSearch,
             showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
             enableScrollingForCellOutputs: true,
