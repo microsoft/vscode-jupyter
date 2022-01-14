@@ -447,9 +447,9 @@ ${actualCode}
         // Should be more than 3 hrefs if ipython 8 or not
         const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
         if (ipythonVersion >= 8) {
-            assert.ok(hrefs?.length > 3, 'Wrong number of hrefs found in traceback');
+            assert.isAtLeast(hrefs?.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
         } else {
-            assert.ok(hrefs?.length >= 1, 'Wrong number of hrefs found in traceback');
+            assert.isAtLeast(hrefs?.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
         }
     });
 

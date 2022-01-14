@@ -21,7 +21,7 @@ import * as localize from '../../common/utils/localize';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { uncommentMagicCommands } from '../../../datascience-ui/common/cellFactory';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
@@ -475,6 +475,8 @@ export class CellHashProvider implements ICellHashProvider {
             suffix = suffix.replace(/\u001b\[3\d+m/g, '\u001b[39m');
             return `${prefix}${num}${suffix}\n`;
         });
+
+        traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
 
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
         if (inputMatch && inputMatch.length > 1) {
