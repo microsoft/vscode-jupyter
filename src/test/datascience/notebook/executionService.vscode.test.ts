@@ -50,6 +50,7 @@ import {
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IPYTHON_VERSION_CODE } from '../../constants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -135,6 +136,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Test exceptions have hrefs', async () => {
         const uri = vscodeNotebook.activeNotebookEditor?.document.uri;
         if (uri && uri.scheme === 'file') {
+            let ipythonVersionCell = await insertCodeCell(IPYTHON_VERSION_CODE, { index: 0 });
+            await runCell(ipythonVersionCell);
+            await waitForExecutionCompletedSuccessfully(ipythonVersionCell);
+            const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
+
             const codeCell = await insertCodeCell('raise Exception("FOO")', { index: 0 });
             await runCell(codeCell);
             await waitForExecutionCompletedWithErrors(codeCell);
@@ -148,9 +154,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             const converter = new ansiToHtml();
             const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
-            // Should be more than 3 hrefs
-            const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-            assert.ok(hrefs?.length >= 1, 'Hrefs not found in traceback');
+            // Should be more than 3 hrefs if ipython 8
+            if (ipythonVersion >= 8) {
+                const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
+                assert.ok(hrefs?.length >= 1, 'Hrefs not found in traceback');
+            }
         }
     });
     test('Leading whitespace not suppressed', async () => {

@@ -11,11 +11,11 @@ import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
+import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
@@ -428,10 +428,12 @@ ${actualCode}
     test('Raising an exception from system code has a stack trace', async function () {
         const { activeInteractiveWindow } = await runCurrentFile(
             interactiveWindowProvider,
-            '# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")',
+            `# %%\n${IPYTHON_VERSION_CODE}# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")`,
             disposables
         );
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+        const ipythonVersionCell = activeInteractiveWindow.notebookDocument?.cellAt(lastCell.index - 1);
+        const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
 
         // Parse the last cell's error output
         const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
@@ -442,9 +444,13 @@ ${actualCode}
         const converter = new ansiToHtml();
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
-        // Should be more than 3 hrefs
+        // Should be more than 3 hrefs if ipython 8 or not
         const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.ok(hrefs?.length > 3, '3 hrefs not found in traceback');
+        if (ipythonVersion >= 8) {
+            assert.ok(hrefs?.length > 3, 'Wrong number of hrefs found in traceback');
+        } else {
+            assert.ok(hrefs?.length >= 1, 'Wrong number of hrefs found in traceback');
+        }
     });
 
     test('Running a cell with markdown and code runs two cells', async () => {
