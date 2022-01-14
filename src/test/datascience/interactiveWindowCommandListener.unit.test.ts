@@ -127,7 +127,6 @@ export const __ = '';
 //             jupyterInterruptTimeout: 10000,
 //             searchForJupyter: true,
 //             showCellInputCode: true,
-//             collapseCellInputCodeByDefault: true,
 //             allowInput: true,
 //             maxOutputSize: 400,
 //             enableScrollingForCellOutputs: true,

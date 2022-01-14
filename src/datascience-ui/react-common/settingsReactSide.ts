@@ -23,7 +23,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         searchForJupyter: true,
         allowInput: true,
         showCellInputCode: true,
-        collapseCellInputCodeByDefault: true,
         maxOutputSize: 400,
         enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',

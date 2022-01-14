@@ -51,7 +51,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public searchForJupyter: boolean = false;
     public allowInput: boolean = false;
     public showCellInputCode: boolean = false;
-    public collapseCellInputCodeByDefault: boolean = false;
     public maxOutputSize: number = -1;
     public enableScrollingForCellOutputs: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;

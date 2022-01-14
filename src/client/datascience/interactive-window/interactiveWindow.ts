@@ -629,7 +629,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = <InteractiveCellMetadata>{
-            inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
                 uristring: file.toString(), // Has to be simple types
