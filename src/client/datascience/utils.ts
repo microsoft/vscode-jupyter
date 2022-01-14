@@ -3,6 +3,7 @@
 'use strict';
 
 import * as path from 'path';
+import untildify = require('untildify');
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
@@ -18,7 +19,7 @@ export async function calculateWorkingDirectory(
     let workingDir: string | undefined;
     // For a local launch calculate the working directory that we should switch into
     const settings = configService.getSettings(resource);
-    const fileRoot = settings.notebookFileRoot;
+    const fileRoot = untildify(settings.notebookFileRoot);
 
     // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
     // so only do this setting if we actually have a valid workspace open
