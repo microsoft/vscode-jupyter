@@ -436,6 +436,58 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     private modifyTracebackFrame(traceFrame: string): string {
+        // Check IPython8. We handle that one special
+        if (/^Input.*?\n.*/.test(traceFrame)) {
+            return this.modifyTracebackFrameIPython8(traceFrame);
+        } else {
+            return this.modifyTracebackFrameIPython7(traceFrame);
+        }
+    }
+    private modifyTracebackFrameIPython8(traceFrame: string): string {
+        // Ansi colors are described here:
+        // https://en.wikipedia.org/wiki/ANSI_escape_code under the SGR section
+
+        // First step is always to remove background colors. They don't work well with
+        // themes 40-49 sets background color
+        traceFrame = traceFrame.replace(/\u001b\[4\dm/g, '');
+
+        // Also remove specific foreground colors (38 is the ascii code for picking one) (they don't translate either)
+        traceFrame = traceFrame.replace(/\u001b\[38;.*?\d+m/g, '\u001b[1;32m');
+
+        const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
+        if (inputMatch && inputMatch.length > 1) {
+            const executionCount = parseInt(inputMatch[1]);
+
+            // Find the cell that matches the execution count in group 1
+            let matchUri: Uri | undefined;
+            let matchHash: IRangedCellHash | undefined;
+            // eslint-disable-next-line no-restricted-syntax
+            for (let entry of this.hashes.entries()) {
+                matchHash = entry[1].find((h) => h.executionCount === executionCount);
+                if (matchHash) {
+                    matchUri = Uri.parse(entry[0]);
+                    break;
+                }
+            }
+            if (matchHash && matchUri) {
+                // We have a match, replace source lines first
+                const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                    const n = parseInt(num, 10);
+                    const newLine = matchHash!.firstNonBlankLineIndex + n - 1;
+                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                });
+
+                // Then replace the input line with our uri for this cell
+                return afterLineReplace.replace(
+                    /.*?\n/,
+                    `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                );
+            }
+        }
+        return traceFrame;
+    }
+
+    private modifyTracebackFrameIPython7(traceFrame: string): string {
         // See if this item matches any of our cell files
         const regexes = [...this.traceBackRegexes.entries()];
         const match = regexes.find((e) => {
