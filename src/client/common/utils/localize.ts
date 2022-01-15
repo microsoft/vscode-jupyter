@@ -1084,6 +1084,7 @@ export namespace DataScience {
         "Activating Python Environment '{0}'"
     );
 
+    export const cellAtFormat = localize('DataScience.cellAtFormat', '{0} Cell {1}');
     export const usingNonPrereleaseYes = localize('DataScience.usingNonPrereleaseYes', 'Yes');
     export const usingNonPrereleaseNo = localize('DataScience.usingNonPrereleaseNo', 'No');
     export const usingNonPrereleaseNoAndDontAskAgain = localize(

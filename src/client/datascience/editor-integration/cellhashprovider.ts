@@ -16,11 +16,12 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
+import * as localize from '../../common/utils/localize';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { uncommentMagicCommands } from '../../../datascience-ui/common/cellFactory';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
@@ -28,6 +29,7 @@ import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernel } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -60,6 +62,7 @@ export class CellHashProvider implements ICellHashProvider {
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private traceBackRegexes = new Map<string, RegExp[]>();
     private disposables: Disposable[] = [];
+    private executionCounts: Map<number, string> = new Map<number, string>();
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -67,11 +70,12 @@ export class CellHashProvider implements ICellHashProvider {
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IFileSystem) private fs: IFileSystem,
         @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined,
-        kernel: IKernel
+        private readonly kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
         this.disposables.push(kernel.onRestarted(() => this.onKernelRestarted()));
+        kernel.onPreExecute(this.onPreExecute, this, this.disposables);
     }
 
     public dispose() {
@@ -105,6 +109,17 @@ export class CellHashProvider implements ICellHashProvider {
         this.traceBackRegexes.clear();
         this.executionCount = 0;
         this.updateEventEmitter.fire();
+        this.executionCounts.clear();
+    }
+
+    public onPreExecute(cell: NotebookCell) {
+        if (cell.kind === NotebookCellKind.Code && cell.notebook.notebookType !== InteractiveWindowView) {
+            const executableLines = this.extractExecutableLines(cell);
+            if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
+                // Keep track of predicted execution counts for cells. Used to parse exception errors
+                this.executionCounts.set(this.executionCounts.size + 1, cell.document.uri.toString());
+            }
+        }
     }
 
     public async addCellHash(cell: NotebookCell) {
@@ -436,6 +451,102 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     private modifyTracebackFrame(traceFrame: string): string {
+        // Check IPython8. We handle that one special
+        if (/^[Input|File].*?\n.*/.test(traceFrame)) {
+            return this.modifyTracebackFrameIPython8(traceFrame);
+        } else {
+            return this.modifyTracebackFrameIPython7(traceFrame);
+        }
+    }
+    private modifyTracebackFrameIPython8(traceFrame: string): string {
+        // Ansi colors are described here:
+        // https://en.wikipedia.org/wiki/ANSI_escape_code under the SGR section
+
+        // First step is always to remove background colors. They don't work well with
+        // themes 40-49 sets background color
+        traceFrame = traceFrame.replace(/\u001b\[4\dm/g, '');
+
+        // Also remove specific foreground colors (38 is the ascii code for picking one) (they don't translate either)
+        // Turn them into default foreground
+        traceFrame = traceFrame.replace(/\u001b\[38;.*?\d+m/g, '\u001b[39m');
+
+        // Turn all foreground colors after the --> to default foreground
+        traceFrame = traceFrame.replace(/(;32m[ ->]*?)(\d+)(.*)\n/g, (_s, prefix, num, suffix) => {
+            suffix = suffix.replace(/\u001b\[3\d+m/g, '\u001b[39m');
+            return `${prefix}${num}${suffix}\n`;
+        });
+
+        traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
+
+        const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
+        if (inputMatch && inputMatch.length > 1) {
+            const executionCount = parseInt(inputMatch[1]);
+
+            // Find the cell that matches the execution count in group 1
+            let matchUri: Uri | undefined;
+            let matchHash: IRangedCellHash | undefined;
+            // eslint-disable-next-line no-restricted-syntax
+            for (let entry of this.hashes.entries()) {
+                matchHash = entry[1].find((h) => h.executionCount === executionCount);
+                if (matchHash) {
+                    matchUri = Uri.parse(entry[0]);
+                    break;
+                }
+            }
+            if (matchHash && matchUri) {
+                // We have a match, replace source lines first
+                const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                    const n = parseInt(num, 10);
+                    const newLine = matchHash!.firstNonBlankLineIndex + n - 1;
+                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                });
+
+                // Then replace the input line with our uri for this cell
+                return afterLineReplace.replace(
+                    /.*?\n/,
+                    `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                );
+            } else if (this.kernel && this.kernel.notebookDocument.notebookType !== InteractiveWindowView) {
+                const matchingCellUri = this.executionCounts.get(executionCount);
+                const cellIndex = this.kernel.notebookDocument
+                    .getCells()
+                    .findIndex((c) => c.document.uri.toString() === matchingCellUri);
+                if (matchingCellUri && cellIndex >= 0) {
+                    // Parse string to a real URI so we can use pieces of it.
+                    matchUri = Uri.parse(matchingCellUri);
+
+                    // We have a match, replace source lines first
+                    const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                        const n = parseInt(num, 10);
+                        return `${prefix}<a href='${matchingCellUri}?line=${n - 1}'>${n}</a>${suffix}`;
+                    });
+
+                    // Then replace the input line with our uri for this cell
+                    return afterLineReplace.replace(
+                        /.*?\n/,
+                        `\u001b[1;32m${localize.DataScience.cellAtFormat().format(
+                            matchUri.fsPath,
+                            (cellIndex + 1).toString()
+                        )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                    );
+                }
+            }
+        }
+
+        const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
+        if (fileMatch && fileMatch.length > 1) {
+            const fileUri = Uri.file(fileMatch[1]);
+            // We have a match, replace source lines with hrefs
+            return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                const n = parseInt(num, 10);
+                return `${prefix}<a href='${fileUri?.toString()}?line=${n - 1}'>${n}</a>${suffix}`;
+            });
+        }
+
+        return traceFrame;
+    }
+
+    private modifyTracebackFrameIPython7(traceFrame: string): string {
         // See if this item matches any of our cell files
         const regexes = [...this.traceBackRegexes.entries()];
         const match = regexes.find((e) => {

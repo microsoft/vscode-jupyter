@@ -43,3 +43,5 @@ export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     'ext',
     'smokeTestExtensionsFolder'
 );
+
+export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version__[0]))\n';
