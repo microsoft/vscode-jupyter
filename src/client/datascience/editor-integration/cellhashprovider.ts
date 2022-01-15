@@ -533,7 +533,7 @@ export class CellHashProvider implements ICellHashProvider {
             }
         }
 
-        const fileMatch = /^File.*?\[1;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
+        const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
         if (fileMatch && fileMatch.length > 1) {
             const fileUri = Uri.file(fileMatch[1]);
             // We have a match, replace source lines with hrefs
