@@ -890,10 +890,12 @@ export class CellExecution implements IDisposable {
         if (!displayId) {
             return;
         }
-        const outputToBeUpdated = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
-        if (!outputToBeUpdated) {
+        const mapping = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        if (!mapping) {
             return;
         }
+        const outputToBeUpdated = mapping.output;
+        // const cell = mapping.cell;
         const output = translateCellDisplayOutput(outputToBeUpdated);
         const newOutput = cellOutputToVSCCellOutput({
             ...output,
@@ -908,8 +910,16 @@ export class CellExecution implements IDisposable {
         // Hence this is a safe comparison.
         if (outputToBeUpdated.items.length === newOutput.items.length) {
             let allAllOutputItemsSame = true;
+            // Check for changes in metadata.
+            if (
+                outputToBeUpdated.metadata &&
+                newOutput.metadata &&
+                !fastDeepEqual(outputToBeUpdated.metadata, newOutput.metadata)
+            ) {
+                allAllOutputItemsSame = false;
+            }
             for (let index = 0; index < outputToBeUpdated.items.length; index++) {
-                if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
+                if (!allAllOutputItemsSame || !fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
                     allAllOutputItemsSame = false;
                     break;
                 }
@@ -922,8 +932,9 @@ export class CellExecution implements IDisposable {
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        const task = this.execution || this.createTemporaryTask();
-        task?.replaceOutputItems(newOutput.items, outputToBeUpdated).then(noop, noop);
+        const task = this.createTemporaryTask();
+        // void task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
+        void task?.replaceOutput(newOutput, mapping.cell);
         this.endTemporaryTask();
     }
 }

@@ -50,13 +50,16 @@ export class CellOutputDisplayIdTracker {
     /**
      * We return a promise, as we need to wait until the output is part of the DOM before we can update it.
      */
-    public getMappedOutput(notebook: NotebookDocument, displayId: string): NotebookCellOutput | undefined {
+    public getMappedOutput(
+        notebook: NotebookDocument,
+        displayId: string
+    ): { output: NotebookCellOutput; cell: NotebookCell } | undefined {
         const mapOfDisplayIdToOutput = this.displayIdCellOutputMappingPerDocument.get(notebook);
         if (!mapOfDisplayIdToOutput) {
             return;
         }
         // Check if the cell still exists.
         const mapping = mapOfDisplayIdToOutput.get(displayId);
-        return mapping?.cell.document.isClosed ? undefined : mapping?.output;
+        return mapping?.cell.document.isClosed ? undefined : mapping;
     }
 }
