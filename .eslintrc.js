@@ -217,7 +217,6 @@ module.exports = {
         'src/ipywidgets/scripts/clean.js',
         'src/ipywidgets/src/widgetLoader.ts',
         'src/ipywidgets/src/index.ts',
-        'src/ipywidgets/src/embed.ts',
         'src/datascience-ui/renderers/index.tsx',
         'src/datascience-ui/renderers/webviewApi.d.ts',
         'src/datascience-ui/renderers/constants.ts',
