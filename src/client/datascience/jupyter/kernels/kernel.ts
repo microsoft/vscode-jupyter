@@ -710,8 +710,15 @@ export class Kernel implements IKernel {
                 result.push(`import site\nsite.addsitedir(site.getusersitepackages())`);
             }
 
-            // Change our initial directory and path
-            result.push(...(await this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri)));
+            const [changeDirScripts, debugCellScripts] = await Promise.all([
+                // Change our initial directory and path
+                this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri),
+                // Initialize debug cell support.
+                // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
+                this.getDebugCellHook(notebookDocument)
+            ]);
+
+            result.push(...changeDirScripts);
 
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
@@ -723,9 +730,7 @@ export class Kernel implements IKernel {
             // For Python notebook initialize matplotlib
             result.push(...this.getMatplotLibInitializeCode());
 
-            // Initialize debug cell support.
-            // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
-            result.push(...(await this.getDebugCellHook(notebookDocument)));
+            result.push(...debugCellScripts);
         }
 
         // Run any startup commands that we have specified
