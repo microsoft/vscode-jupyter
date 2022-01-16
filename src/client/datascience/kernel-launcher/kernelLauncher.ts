@@ -12,7 +12,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
