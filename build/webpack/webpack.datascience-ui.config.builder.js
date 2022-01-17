@@ -99,11 +99,11 @@ function getPlugins(bundle) {
             );
             break;
         }
-        case 'widgetTester':
-        case 'ipywidgetsKernel': {
+        case 'widgetTester': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             break;
         }
+        case 'ipywidgetsKernel':
         case 'ipywidgetsRenderer':
         case 'errorRenderer': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
@@ -146,10 +146,10 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer'
+        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'ipywidgetsKernel'
             ? {}
             : {
-                  library: 'LIB',
+                  library: `LIB${bundle.toUpperCase()}`,
                   libraryTarget: 'var'
               };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {

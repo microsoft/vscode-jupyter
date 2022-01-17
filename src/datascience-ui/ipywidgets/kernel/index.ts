@@ -238,4 +238,8 @@ function attemptInitialize() {
         setTimeout(attemptInitialize, 100);
     }
 }
-attemptInitialize();
+
+export const activate = () => {
+    attemptInitialize();
+    // Noop.
+};
