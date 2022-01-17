@@ -23,7 +23,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constant
 import { Uri, workspace } from 'vscode';
 
 // eslint-disable-next-line
-suite.only('3rd Party Kernel Service API', function () {
+suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
