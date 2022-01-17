@@ -110,7 +110,7 @@ suite('3rd Party Kernel Service API', function () {
         assert.strictEqual(kernels!.length, 0, 'Should not have any kernels');
     });
 
-    test('Start Local Kernel', async function () {
+    test('Start Kernel', async function () {
         const kernelService = await api.getKernelService();
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
