@@ -3,7 +3,6 @@
 
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
-console.error('Loaded ipywidgets renderer');
 export const activate: ActivationFunction = (context) => {
     if (context.postMessage) {
         context.postMessage({
@@ -11,7 +10,6 @@ export const activate: ActivationFunction = (context) => {
             message: 'Jupyter IPyWidget Renderer Activated'
         });
     }
-    console.log('Jupyter IPyWidget Renderer Activated');
     hookupTestScripts(context);
     const logger = (message: string) => {
         if (context.postMessage) {
@@ -85,7 +83,6 @@ function sendRenderOutputItem(context: RendererContext<unknown>, outputItem: Out
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyWindow = window as any;
     if (!anyWindow.widgetEntryPoint || typeof anyWindow.widgetEntryPoint.renderOutputItem !== 'function') {
-        console.log(`No Widgetentry point (2)`);
         return;
     }
     if (context.postMessage) {
@@ -94,6 +91,5 @@ function sendRenderOutputItem(context: RendererContext<unknown>, outputItem: Out
             message: 'rendering output'
         });
     }
-    console.log(`Widgetentry point found (2)`);
     anyWindow.widgetEntryPoint.renderOutputItem(outputItem, element);
 }

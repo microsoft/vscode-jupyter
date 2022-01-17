@@ -120,7 +120,7 @@ export class NotebookIPyWidgetCoordinator {
         traceInfo(`Setting setActiveController for ${getDisplayPath(notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
-            traceInfo(`Deleting previous controller for ${getDisplayPath(notebook.uri)}`);
+            traceInfoIfCI(`Deleting previous controller for ${getDisplayPath(notebook.uri)}`);
             this.messageCoordinators.delete(notebook);
             this.attachedEditors.delete(notebook);
             this.notebook.notebookEditors
@@ -142,24 +142,14 @@ export class NotebookIPyWidgetCoordinator {
             .filter((editor) => this.notebookCommunications.has(editor))
             .map((editor) => this.notebookCommunications.get(editor)!);
         notebookComms.forEach((comm) => {
-            traceInfo(`Swapping previous controller for ${getDisplayPath(comm.editor.document.uri)}`);
+            traceInfoIfCI(`Swapping previous controller for ${getDisplayPath(comm.editor.document.uri)}`);
             comm.changeController(controller);
         });
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
         this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor));
-        if (this.notebook.notebookEditors.length === 0) {
-            traceInfo(`Cannot attach coords for ${getDisplayPath(notebook.uri)} because there are no editors`);
-        } else {
-            traceInfo(
-                `Can attach coords for ${getDisplayPath(notebook.uri)} because there are ${
-                    this.notebook.notebookEditors.length
-                } editors`
-            );
-        }
     }
     private initializeNotebookCommunication(editor: NotebookEditor) {
-        traceVerbose(`(1). Intiailize notebook communications for editor ${getDisplayPath(editor.document.uri)}`);
         const notebook = editor.document;
         const controller = this.selectedNotebookController.get(notebook);
         if (!controller) {
@@ -209,17 +199,7 @@ export class NotebookIPyWidgetCoordinator {
     private async onDidChangeVisibleNotebookEditors(e: NotebookEditor[]) {
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
-        traceInfo(`(2). onDidChangeVisibleNotebookEditors`);
         e.forEach((editor) => this.initializeNotebookCommunication(editor));
-        if (e.length === 0) {
-            traceInfo(`(2). Cannot attach coords because there are no editors`);
-        } else {
-            traceInfo(
-                `(2). Can attach coords for ${e
-                    .map((item) => getDisplayPath(item.document.uri))
-                    .join(', ')} because there are editors`
-            );
-        }
     }
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
         const editors = this.notebookEditors.get(notebook) || [];

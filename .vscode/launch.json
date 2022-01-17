@@ -142,7 +142,7 @@
                 "VSC_JUPYTER_FORCE_LOGGING": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "", // Leave as `VSCode Notebook` to run only Notebook tests.
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                "CI_PYTHON_PATH": "/home/don/samples/pySamples/crap/.venvWidgets/bin/python", // Update with path to real python interpereter used for testing.
+                "CI_PYTHON_PATH": "", // Update with path to real python interpereter used for testing.
                 "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
@@ -157,7 +157,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "2_tests",

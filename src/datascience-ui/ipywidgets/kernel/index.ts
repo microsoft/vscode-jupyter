@@ -232,16 +232,14 @@ let capturedContext: KernelMessagingApi | undefined;
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize(context?: KernelMessagingApi) {
     capturedContext = capturedContext || context;
-    console.error('Attempt Initialize IpyWidgets kernel.js', context);
+    console.log('Attempt Initialize IpyWidgets kernel.js', context);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         logMessage('IPyWidget kernel initializing...');
         initialize(capturedContext);
     } else {
-        console.error('Re-Attempt Initialize IpyWidgets kernel.js');
         setTimeout(attemptInitialize, 100);
     }
 }
-console.error('Initialize IpyWidgets kernel.js');
 
 export const activate = attemptInitialize;
