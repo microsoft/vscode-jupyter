@@ -60,6 +60,10 @@ export class JupyterKernelServiceFactory {
 class JupyterKernelService implements IExportedKernelService {
     private readonly _onDidChangeKernelSpecifications = new EventEmitter<void>();
     private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private readonly translatedConnections = new WeakMap<
+        Readonly<IKernelKernelConnectionMetadata>,
+        KernelConnectionMetadata
+    >();
     public get onDidChangeKernelSpecifications(): Event<void> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
@@ -185,13 +189,17 @@ class JupyterKernelService implements IExportedKernelService {
     private translateKernelConnectionMetataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>
     ): KernelConnectionMetadata {
-        const readWriteConnection = connection as IKernelKernelConnectionMetadata;
-        // By not forcing the cast, we ensure the types are compatible.
-        // All we're doing is ensuring the readonly version of one type is compatible with the other.
-        // Also, we must return a readonly version of the type (to prevent anyone from stuffing this).
-        // Else it breaks the Jupyter extension
-        // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
-        return Object.freeze(readWriteConnection) as KernelConnectionMetadata;
+        if (!this.translatedConnections.has(connection)) {
+            const readWriteConnection = connection as IKernelKernelConnectionMetadata;
+            // By not forcing the cast, we ensure the types are compatible.
+            // All we're doing is ensuring the readonly version of one type is compatible with the other.
+            // Also, we must return a readonly version of the type (to prevent anyone from stuffing this).
+            // Else it breaks the Jupyter extension
+            // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
+            const translatedConnection = Object.freeze(readWriteConnection) as KernelConnectionMetadata;
+            this.translatedConnections.set(connection, translatedConnection);
+        }
+        return this.translatedConnections.get(connection)!;
     }
 }
 
