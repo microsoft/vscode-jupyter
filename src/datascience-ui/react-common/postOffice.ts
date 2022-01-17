@@ -55,6 +55,7 @@ class VsCodeMessageApi implements IMessageApi {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.vscodeApi = (window as any).acquireVsCodeApi();
         }
+        console.error('The vscode api?', this.vscodeApi);
         if (!this.registered) {
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
@@ -105,17 +106,26 @@ class VsCodeMessageApi implements IMessageApi {
 class KernelMessageApi implements IMessageApi {
     private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
     private kernelHandler: IDisposable | undefined;
+    private readonly kernelMessagingApi: KernelMessagingApi;
+    constructor(kernelMessagingApi?: KernelMessagingApi) {
+        this.kernelMessagingApi = kernelMessagingApi
+            ? kernelMessagingApi
+            : {
+                  onDidReceiveKernelMessage,
+                  postKernelMessage
+              };
+    }
 
     public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
         this.messageCallback = msgCallback;
         if (!this.kernelHandler) {
-            this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
+            this.kernelHandler = this.kernelMessagingApi.onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendMessage(type: string, payload?: any) {
-        postKernelMessage({ type: type, payload });
+        this.kernelMessagingApi.postKernelMessage({ type: type, payload });
     }
 
     public dispose() {
@@ -125,7 +135,7 @@ class KernelMessageApi implements IMessageApi {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleKernelMessage(ev: VSCodeEvent<any>) {
+    private async handleKernelMessage(ev: unknown) {
         const msg = (ev as unknown) as WebviewMessage;
         if (msg && this.messageCallback) {
             await this.messageCallback(msg);
@@ -135,6 +145,10 @@ class KernelMessageApi implements IMessageApi {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PostOfficeMessage = { type: string; payload?: any };
+export type KernelMessagingApi = {
+    onDidReceiveKernelMessage: VSCodeEvent<unknown>;
+    postKernelMessage: (data: unknown) => void;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PostOffice implements IDisposable {
@@ -142,7 +156,7 @@ export class PostOffice implements IDisposable {
     private handlers: IMessageHandler[] = [];
     private readonly subject = new Subject<PostOfficeMessage>();
     private readonly observable: Observable<PostOfficeMessage>;
-    constructor() {
+    constructor(private readonly kernelMessagingApi?: KernelMessagingApi) {
         this.observable = this.subject.asObservable();
     }
     public asObservable(): Observable<PostOfficeMessage> {
@@ -188,7 +202,7 @@ export class PostOffice implements IDisposable {
         // If the kernel message API is available use that if not use the VS Code webview messaging API
         if (this.useKernelMessageApi()) {
             console.error('Using Kernel message API');
-            this.messageApi = new KernelMessageApi();
+            this.messageApi = new KernelMessageApi(this.kernelMessagingApi);
         } else {
             console.error('Using VSCode message API');
             this.messageApi = new VsCodeMessageApi();
@@ -200,7 +214,10 @@ export class PostOffice implements IDisposable {
     // Check to see if global kernel message API is supported, if so use that
     // instead of the VSCodeAPI which is not available in NativeNotebooks
     private useKernelMessageApi(): boolean {
-        if (typeof postKernelMessage !== 'undefined') {
+        if (
+            (this.kernelMessagingApi && typeof this.kernelMessagingApi.postKernelMessage !== 'undefined') ||
+            typeof postKernelMessage !== 'undefined'
+        ) {
             return true;
         }
 

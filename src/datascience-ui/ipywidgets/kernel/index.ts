@@ -8,7 +8,7 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { logMessage } from '../../react-common/logger';
-import { PostOffice } from '../../react-common/postOffice';
+import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
@@ -193,10 +193,10 @@ async function createWidgetView(
     }
 }
 
-function initialize() {
+function initialize(context?: KernelMessagingApi) {
     try {
         // Setup the widget manager
-        const postOffice = new PostOffice();
+        const postOffice = new PostOffice(context);
         const mgr = new WidgetManagerComponent(postOffice);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
@@ -229,19 +229,17 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(
 };
 
 // To ensure we initialize after the other scripts, wait for them.
-function attemptInitialize() {
+function attemptInitialize(context?: KernelMessagingApi) {
     console.error('Attempt Initialize IpyWidgets kernel.js');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         logMessage('IPyWidget kernel initializing...');
-        initialize();
+        initialize(context);
     } else {
         console.error('Re-Attempt Initialize IpyWidgets kernel.js');
         setTimeout(attemptInitialize, 100);
     }
 }
 console.error('Initialize IpyWidgets kernel.js');
-export const activate = () => {
-    attemptInitialize();
-    // Noop.
-};
+
+export const activate = attemptInitialize;
