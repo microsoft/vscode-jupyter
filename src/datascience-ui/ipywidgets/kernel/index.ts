@@ -103,7 +103,7 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
             return console.error('Nothing to render');
         }
         /* eslint-disable no-console */
-        renderIPyWidget(outputItem.id, model, element);
+        renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
         logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`);
         console.error(`Failed to render ipywidget type`, ex);
@@ -120,7 +120,8 @@ export function disposeOutput(outputId?: string) {
 function renderIPyWidget(
     outputId: string,
     model: nbformat.IMimeBundle & { model_id: string; version_major: number },
-    container: HTMLElement
+    container: HTMLElement,
+    logger: (message: string) => void
 ) {
     if (renderedWidgets.has(outputId)) {
         return console.error('already rendering');
@@ -150,6 +151,7 @@ function renderIPyWidget(
             }
         })
         .catch((ex) => {
+            logger(`Error: Failed to render ${outputId}, ${ex.toString()}`);
             console.error('Failed to render', ex);
         });
 }

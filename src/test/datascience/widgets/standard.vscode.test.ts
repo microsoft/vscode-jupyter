@@ -30,7 +30,7 @@ import { initializeWidgetComms } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('Standard IPyWidget (Execution) (slow)', function () {
+suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

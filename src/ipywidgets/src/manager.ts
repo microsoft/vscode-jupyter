@@ -83,16 +83,12 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             .then((reply) => (reply.content as any).comms);
     }
     public async display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget> {
-        this.logger('Display view');
         const widget = await super.display_view(msg, view, options);
-        this.logger('Widget created successfully');
         const element = options.node ? (options.node as HTMLElement) : this.el;
         // When do we detach?
         if (element) {
-            this.logger('Widget attached successfully');
             Widget.attach(widget, element);
         }
-        this.logger('Widget returning');
         return widget;
     }
     public async restoreWidgets(): Promise<void> {
@@ -108,12 +104,10 @@ export class WidgetManager extends jupyterlab.WidgetManager {
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
-        this.logger(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
         const result = await super
             .loadClass(className, moduleName, moduleVersion)
             .then((r) => {
-                this.logger(`WidgetManager: Success, Loading class ${className}:${moduleName}:${moduleVersion}`);
                 this.sendSuccess(className, moduleName, moduleVersion);
                 return r;
             })

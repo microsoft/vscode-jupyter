@@ -94,7 +94,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         this.wrapper = mount();
 
         // We can remove the global api and event listener now.
-        // delete (global as any).acquireVsCodeApi;
+        delete (global as any).acquireVsCodeApi;
         window.addEventListener = oldListener;
     }
 

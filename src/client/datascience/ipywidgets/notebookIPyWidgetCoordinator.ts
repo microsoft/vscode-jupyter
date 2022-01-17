@@ -120,7 +120,6 @@ export class NotebookIPyWidgetCoordinator {
         traceInfo(`Setting setActiveController for ${getDisplayPath(notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
-            traceInfoIfCI(`Deleting previous controller for ${getDisplayPath(notebook.uri)}`);
             this.messageCoordinators.delete(notebook);
             this.attachedEditors.delete(notebook);
             this.notebook.notebookEditors
@@ -141,10 +140,7 @@ export class NotebookIPyWidgetCoordinator {
         const notebookComms = editors
             .filter((editor) => this.notebookCommunications.has(editor))
             .map((editor) => this.notebookCommunications.get(editor)!);
-        notebookComms.forEach((comm) => {
-            traceInfoIfCI(`Swapping previous controller for ${getDisplayPath(comm.editor.document.uri)}`);
-            comm.changeController(controller);
-        });
+        notebookComms.forEach((comm) => comm.changeController(controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
         this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor));
@@ -217,7 +213,6 @@ export class NotebookIPyWidgetCoordinator {
         webview: INotebookCommunication,
         c: CommonMessageCoordinator
     ): Promise<void> {
-        traceInfoIfCI(`Attach Coordinator for called ${getDisplayPath(document.uri)}`);
         const promise = createDeferred<void>();
         const attachedEditors = this.attachedEditors.get(document) || new Set<NotebookEditor>();
         this.attachedEditors.set(document, attachedEditors);
