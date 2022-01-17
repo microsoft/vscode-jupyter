@@ -115,6 +115,8 @@ suite('3rd Party Kernel Service API', function () {
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
+        console.log(`Kernel specs ${kernelSpecs.length}`);
+        console.log(JSON.stringify(kernelSpecs, null, 2));
         const pythonKernel = IS_REMOTE_NATIVE_TEST
             ? kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter')
             : kernelSpecs.find(
