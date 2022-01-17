@@ -23,7 +23,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constant
 import { Uri, workspace } from 'vscode';
 
 // eslint-disable-next-line
-suite('3rd Party Kernel Service API', function () {
+suite.only('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
@@ -115,13 +115,11 @@ suite('3rd Party Kernel Service API', function () {
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
-        console.log(`Kernel specs ${kernelSpecs.length}`);
-        console.log(JSON.stringify(kernelSpecs, null, 2));
         const pythonKernel = IS_REMOTE_NATIVE_TEST
-            ? kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter')
-            : kernelSpecs.find(
+            ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
-              );
+              )
+            : kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter');
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
         const templatePythonNbFile = path.join(
