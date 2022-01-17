@@ -10,6 +10,7 @@ import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
 import { IServiceManager } from '../ioc/types';
+import { ApiAccessService } from './apiAccessService';
 import { JupyterKernelServiceFactory } from './kernelApi';
 import {
     InterpreterSelector,
@@ -45,4 +46,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
     );
     serviceManager.addSingleton<IPythonInstaller>(IPythonInstaller, PythonInstaller);
     serviceManager.addSingleton<JupyterKernelServiceFactory>(JupyterKernelServiceFactory, JupyterKernelServiceFactory);
+    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }
