@@ -42,6 +42,7 @@ class VsCodeMessageApi implements IMessageApi {
 
     public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
         this.messageCallback = msgCallback;
+
         // Only do this once as it crashes if we ask more than once
         // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {

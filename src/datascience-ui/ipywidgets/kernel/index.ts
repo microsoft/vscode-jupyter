@@ -102,7 +102,6 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
             // eslint-disable-next-line no-console
             return console.error('Nothing to render');
         }
-        logger(`Model found to render output ${outputItem.id}`);
         /* eslint-disable no-console */
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
@@ -125,10 +124,8 @@ function renderIPyWidget(
     logger: (message: string) => void
 ) {
     if (renderedWidgets.has(outputId)) {
-        logger(`Error: Alreading rendering ${outputId}`);
         return console.error('already rendering');
     }
-    logger(`Rendering ipywidget ${outputId}`);
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
     const ele = document.createElement('div');
@@ -150,12 +147,10 @@ function renderIPyWidget(
             // Keep track of the fact that we have successfully rendered a widget for this outputId.
             const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
             if (statusInfo) {
-                logger(`Success: Rendered ${outputId}, successfully`);
                 statusInfo.success = true;
             }
         })
         .catch((ex) => {
-            logger(`Error: Failed to render ${outputId}, ${ex.toString()}`);
             console.error('Failed to render', ex);
         });
 }
