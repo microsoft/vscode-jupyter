@@ -17,7 +17,7 @@
         "**/.ropeproject/**": true
     },
     "search.exclude": {
-        "out": true, // set this to false to include "out" folder in search results
+        "out": false, // set this to false to include "out" folder in search results
         "**/node_modules": true,
         "coverage": true,
         "languageServer*/**": true,

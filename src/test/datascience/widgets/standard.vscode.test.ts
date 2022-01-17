@@ -11,6 +11,7 @@ import { Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
+import { sleep } from '../../../client/common/utils/async';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
@@ -90,7 +91,7 @@ suite.only('Standard IPyWidget (Execution) (slow)', function () {
             ),
             comms.ready
         ]);
-
+        await sleep(60_000);
         // Verify the slider widget is created.
         await waitForCondition(
             async () => {

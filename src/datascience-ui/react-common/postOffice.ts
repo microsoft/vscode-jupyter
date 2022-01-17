@@ -41,8 +41,11 @@ class VsCodeMessageApi implements IMessageApi {
     private baseHandler = this.handleVSCodeApiMessages.bind(this);
 
     public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
+        console.error('Register Register Register Register Register Register Register');
+        console.error('Register Register Register Register Register Register Register');
+        console.error('Register Register Register Register Register Register Register');
         this.messageCallback = msgCallback;
-
+        debugger;
         // Only do this once as it crashes if we ask more than once
         // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
@@ -77,7 +80,7 @@ class VsCodeMessageApi implements IMessageApi {
             logMessageOnlyOnCI(`UI PostOffice Sent ${type}`);
             this.vscodeApi.postMessage({ type: type, payload });
         } else if (type === 'IPyWidgets_logMessage') {
-            logMessage(`No vscode API to post message ${type}, ${payload}`);
+            logMessage(`Logging message ${type}, ${payload}`);
         } else {
             logMessage(`No vscode API to post message ${type}`);
         }
@@ -184,8 +187,10 @@ export class PostOffice implements IDisposable {
 
         // If the kernel message API is available use that if not use the VS Code webview messaging API
         if (this.useKernelMessageApi()) {
+            console.error('Using Kernel message API');
             this.messageApi = new KernelMessageApi();
         } else {
+            console.error('Using VSCode message API');
             this.messageApi = new VsCodeMessageApi();
         }
 
