@@ -75,3 +75,5 @@ function queryInnerHTMLHandler({ requestId, id, selector }: { requestId: string;
         rendererContext.postMessage!({ requestId, error: ex.message });
     }
 }
+
+console.error('Loaded Kernel Test Utils');

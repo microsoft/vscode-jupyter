@@ -45,7 +45,6 @@ class VsCodeMessageApi implements IMessageApi {
         console.error('Register Register Register Register Register Register Register');
         console.error('Register Register Register Register Register Register Register');
         this.messageCallback = msgCallback;
-        debugger;
         // Only do this once as it crashes if we ask more than once
         // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
