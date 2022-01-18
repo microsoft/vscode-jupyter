@@ -7,7 +7,7 @@ import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 
@@ -195,7 +195,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.factory
         );
         this.initializeNotebook();
-        traceInfo('IPyWidgetScriptSource.initialize');
+        traceVerbose('IPyWidgetScriptSource.initialize');
     }
 
     /**

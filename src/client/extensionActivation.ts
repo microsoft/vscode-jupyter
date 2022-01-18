@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable  */
-import { commands, env, ExtensionMode, extensions, OutputChannel, UIKind, window, workspace } from 'vscode';
+import { commands, env, ExtensionMode, extensions, OutputChannel, UIKind, version, window, workspace } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -87,11 +87,12 @@ async function activateLegacy(
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
 
-    // Log versions of extensions.
+    // Log env info.
+    standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);
     standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
     const pythonExtension = extensions.getExtension(PythonExtension);
     if (pythonExtension) {
-        standardOutputChannel.appendLine(`Python Extension Verison: ${pythonExtension.packageJSON['version']}.`);
+        standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
     }

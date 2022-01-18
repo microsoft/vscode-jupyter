@@ -628,19 +628,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!interpreter?.path) {
             return;
         }
-        traceInfo(`Getting activation commands for ${interpreter.path}`);
+        traceVerbose(`Getting activation commands for ${interpreter.path}`);
         const key = ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX.format(interpreter.path);
         const cachedData = this.memento.get<string[]>(key, []);
         if (cachedData && cachedData.length > 0) {
-            traceInfo(`Getting activation commands for ${interpreter.path} are cached.`);
+            traceVerbose(`Getting activation commands for ${interpreter.path} are cached.`);
             return cachedData;
         }
         if (this.envActivationCommands.has(key)) {
-            traceInfo(`Getting activation commands for ${interpreter.path} are cached with a promise.`);
+            traceVerbose(`Getting activation commands for ${interpreter.path} are cached with a promise.`);
             return this.envActivationCommands.get(key);
         }
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
+            traceWarning(`No activation commands for ${interpreter.path}, as the OS is unknown.`);
             return;
         }
         const promise = (async () => {
@@ -656,7 +657,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (!activationCommands || activationCommands.length === 0) {
                     return;
                 }
-                traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
+                traceInfo(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 void this.memento.update(key, activationCommands);
                 return activationCommands;
             } catch (ex) {

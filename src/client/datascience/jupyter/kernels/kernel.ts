@@ -891,7 +891,6 @@ export class Kernel implements IKernel {
     }
 
     private async getUpdateWorkingDirectoryAndPathCode(launchingFile?: Resource): Promise<string[]> {
-        traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (
             (isLocalConnection(this.kernelConnectionMetadata) ||
                 isLocalHostConnection(this.kernelConnectionMetadata)) &&
@@ -904,12 +903,14 @@ export class Kernel implements IKernel {
                 launchingFile
             );
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+                traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
                 // We should use the launch info directory. It trumps the possible dir
                 return this.getChangeDirectoryCode(suggestedDir);
             } else if (launchingFile && (await this.fs.localFileExists(launchingFile.fsPath))) {
                 // Combine the working directory with this file if possible.
                 suggestedDir = expandWorkingDir(suggestedDir, launchingFile.fsPath, this.workspaceService);
                 if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+                    traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
                     return this.getChangeDirectoryCode(suggestedDir);
                 }
             }
@@ -924,7 +925,6 @@ export class Kernel implements IKernel {
                 isLocalHostConnection(this.kernelConnectionMetadata)) &&
             isPythonKernelConnection(this.kernelConnectionMetadata)
         ) {
-            traceInfo('changeDirectoryIfPossible');
             return CodeSnippets.UpdateCWDAndPath.format(directory).splitLines({ trim: false });
         }
         return [];
