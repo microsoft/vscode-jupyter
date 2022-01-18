@@ -16,6 +16,8 @@ import { INotebookControllerManager, INotebookLanguageClientProvider } from '../
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
 
+const EmptyWorkspaceKey = 'EMPTY_WORKSPACE_KEY';
+
 /**
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
  */
@@ -82,15 +84,16 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const folder =
             this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
             (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
-        if (folder && !this.activeInterpreterCache.has(folder.fsPath)) {
+        const key = folder ? folder.fsPath : EmptyWorkspaceKey;
+        if (!this.activeInterpreterCache.has(key)) {
             this.interpreterService
                 .getActiveInterpreter(folder)
                 .then((a) => {
-                    this.activeInterpreterCache.set(folder.fsPath, a);
+                    this.activeInterpreterCache.set(key, a);
                 })
                 .ignoreErrors();
         }
-        return folder ? this.activeInterpreterCache.get(folder.fsPath) : undefined;
+        return this.activeInterpreterCache.get(key);
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
