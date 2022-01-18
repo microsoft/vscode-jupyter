@@ -16,7 +16,7 @@ import { INotebookControllerManager, INotebookLanguageClientProvider } from '../
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
 
-const EmptyWorkspaceKey = 'EMPTY_WORKSPACE_KEY';
+const EmptyWorkspaceKey = '';
 
 /**
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
