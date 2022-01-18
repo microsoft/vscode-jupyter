@@ -2,20 +2,49 @@
 // Licensed under the MIT License.
 
 import './styles.css';
-import { ActivationFunction, OutputItem } from 'vscode-notebook-renderer';
-
-export const activate: ActivationFunction = (_context) => {
-    console.log('Jupyter IPyWidget Renderer Activated');
+import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
+export const activate: ActivationFunction = (context) => {
+    if (context.postMessage) {
+        context.postMessage({
+            command: 'log',
+            message: 'Jupyter IPyWidget Renderer Activated'
+        });
+    }
+    hookupTestScripts(context);
+    const logger = (message: string) => {
+        if (context.postMessage) {
+            context.postMessage({
+                command: 'log',
+                message
+            });
+        }
+    };
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
-            const renderOutputFunc =
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
-            if (renderOutputFunc) {
-                element.className = (element.className || '') + ' cell-output-ipywidget-background';
-                return renderOutputFunc(outputItem, element);
+            if (context.postMessage) {
+                context.postMessage({
+                    command: 'log',
+                    message: `Rendering ${outputItem.id}`
+                });
             }
-            console.error('Rendering widgets on notebook open is not supported.');
+            try {
+                const renderOutputFunc =
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
+                if (renderOutputFunc) {
+                    element.className = (element.className || '') + ' cell-output-ipywidget-background';
+                    if (context.postMessage) {
+                        context.postMessage({
+                            command: 'log',
+                            message: `Rendering ${outputItem.id} for ${element.className} and widget renderer found *************`
+                        });
+                    }
+                    return renderOutputFunc(outputItem, element, logger);
+                }
+                console.error('Rendering widgets on notebook open is not supported.');
+            } finally {
+                sendRenderOutputItem(context, outputItem, element);
+            }
         },
         disposeOutputItem(id?: string) {
             const disposeOutputFunc =
@@ -27,3 +56,40 @@ export const activate: ActivationFunction = (_context) => {
         }
     };
 };
+
+function hookupTestScripts(context: RendererContext<unknown>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyWindow = window as any;
+    if (!anyWindow.widgetEntryPoint || typeof anyWindow.widgetEntryPoint.initialize !== 'function') {
+        if (context.postMessage) {
+            context.postMessage({
+                command: 'log',
+                message: 'Hook not registered'
+            });
+        }
+        console.log(`No Widgetentry point`);
+        return;
+    }
+    if (context.postMessage) {
+        context.postMessage({
+            command: 'log',
+            message: 'Hook registered'
+        });
+    }
+    console.log(`Widgetentry point found`);
+    anyWindow.widgetEntryPoint.initialize(context);
+}
+function sendRenderOutputItem(context: RendererContext<unknown>, outputItem: OutputItem, element: HTMLElement) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyWindow = window as any;
+    if (!anyWindow.widgetEntryPoint || typeof anyWindow.widgetEntryPoint.renderOutputItem !== 'function') {
+        return;
+    }
+    if (context.postMessage) {
+        context.postMessage({
+            command: 'log',
+            message: 'rendering output'
+        });
+    }
+    anyWindow.widgetEntryPoint.renderOutputItem(outputItem, element);
+}

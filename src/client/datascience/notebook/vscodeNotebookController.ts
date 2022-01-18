@@ -5,6 +5,7 @@ import { join } from 'path';
 import {
     Disposable,
     EventEmitter,
+    ExtensionMode,
     languages,
     NotebookCell,
     NotebookCellKind,
@@ -323,12 +324,23 @@ export class VSCodeNotebookController implements Disposable {
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        return [
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
-            join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
-        ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
+        const scripts: string[] = [];
+        // Only used in tests & while debugging.
+        if (
+            this.context.extensionMode === ExtensionMode.Development ||
+            this.context.extensionMode === ExtensionMode.Test
+        ) {
+            scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
+        }
+        scripts.push(
+            ...[
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
+                join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
+                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
+                join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
+            ]
+        );
+        return scripts.map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {

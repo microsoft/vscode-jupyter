@@ -26,7 +26,8 @@ export type ScriptLoader = {
 export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
-    scriptLoader: ScriptLoader
+    scriptLoader: ScriptLoader,
+    logger: (message: string) => void
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {

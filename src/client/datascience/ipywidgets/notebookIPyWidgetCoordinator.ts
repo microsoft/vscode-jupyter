@@ -143,7 +143,7 @@ export class NotebookIPyWidgetCoordinator {
         notebookComms.forEach((comm) => comm.changeController(controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        this.notebook.notebookEditors.map((editor) => this.initializeNotebookCommunication(editor));
+        this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor));
     }
     private initializeNotebookCommunication(editor: NotebookEditor) {
         const notebook = editor.document;
@@ -195,7 +195,7 @@ export class NotebookIPyWidgetCoordinator {
     private async onDidChangeVisibleNotebookEditors(e: NotebookEditor[]) {
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
-        e.map((editor) => this.initializeNotebookCommunication(editor));
+        e.forEach((editor) => this.initializeNotebookCommunication(editor));
     }
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
         const editors = this.notebookEditors.get(notebook) || [];

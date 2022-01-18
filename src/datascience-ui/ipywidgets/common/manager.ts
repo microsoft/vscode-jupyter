@@ -20,7 +20,7 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { WIDGET_MIMETYPE } from '../../../client/datascience/ipywidgets/constants';
 import { KernelSocketOptions } from '../../../client/datascience/types';
-import { logMessage } from '../../react-common/logger';
+import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
@@ -55,6 +55,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
 
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
+        setLogger((message: string) =>
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, message)
+        );
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
@@ -158,7 +161,12 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                 throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
             }
             // Create the real manager and point it at our proxy kernel.
-            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.scriptLoader);
+            this.manager = new JupyterLabWidgetManager(
+                this.proxyKernel,
+                this.widgetContainer,
+                this.scriptLoader,
+                logMessage
+            );
 
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));

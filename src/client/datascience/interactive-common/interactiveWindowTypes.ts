@@ -60,6 +60,7 @@ export enum InteractiveWindowMessages {
 }
 
 export enum IPyWidgetMessages {
+    IPyWidgets_logMessage = 'IPyWidgets_logMessage',
     IPyWidgets_IsReadyRequest = 'IPyWidgets_IsReadyRequest',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
@@ -281,6 +282,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: { moduleName: string; moduleVersion: string };
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: WidgetScriptSource;
     public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_logMessage]: string;
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;

@@ -52,6 +52,9 @@ class VsCodeMessageApi implements IMessageApi {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.vscodeApi = (window as any).acquireVsCodeApi();
         }
+        if (!this.vscodeApi) {
+            console.error('The vscode api is not set');
+        }
         if (!this.registered) {
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
@@ -76,6 +79,8 @@ class VsCodeMessageApi implements IMessageApi {
         if (this.vscodeApi) {
             logMessageOnlyOnCI(`UI PostOffice Sent ${type}`);
             this.vscodeApi.postMessage({ type: type, payload });
+        } else if (type === 'IPyWidgets_logMessage') {
+            logMessage(`Logging message ${type}, ${payload}`);
         } else {
             logMessage(`No vscode API to post message ${type}`);
         }
@@ -100,17 +105,26 @@ class VsCodeMessageApi implements IMessageApi {
 class KernelMessageApi implements IMessageApi {
     private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
     private kernelHandler: IDisposable | undefined;
+    private readonly kernelMessagingApi: KernelMessagingApi;
+    constructor(kernelMessagingApi?: KernelMessagingApi) {
+        this.kernelMessagingApi = kernelMessagingApi
+            ? kernelMessagingApi
+            : {
+                  onDidReceiveKernelMessage,
+                  postKernelMessage
+              };
+    }
 
     public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
         this.messageCallback = msgCallback;
         if (!this.kernelHandler) {
-            this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
+            this.kernelHandler = this.kernelMessagingApi.onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendMessage(type: string, payload?: any) {
-        postKernelMessage({ type: type, payload });
+        this.kernelMessagingApi.postKernelMessage({ type: type, payload });
     }
 
     public dispose() {
@@ -120,7 +134,7 @@ class KernelMessageApi implements IMessageApi {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleKernelMessage(ev: VSCodeEvent<any>) {
+    private async handleKernelMessage(ev: unknown) {
         const msg = (ev as unknown) as WebviewMessage;
         if (msg && this.messageCallback) {
             await this.messageCallback(msg);
@@ -130,6 +144,10 @@ class KernelMessageApi implements IMessageApi {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PostOfficeMessage = { type: string; payload?: any };
+export type KernelMessagingApi = {
+    onDidReceiveKernelMessage: VSCodeEvent<unknown>;
+    postKernelMessage: (data: unknown) => void;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PostOffice implements IDisposable {
@@ -137,7 +155,7 @@ export class PostOffice implements IDisposable {
     private handlers: IMessageHandler[] = [];
     private readonly subject = new Subject<PostOfficeMessage>();
     private readonly observable: Observable<PostOfficeMessage>;
-    constructor() {
+    constructor(private readonly kernelMessagingApi?: KernelMessagingApi) {
         this.observable = this.subject.asObservable();
     }
     public asObservable(): Observable<PostOfficeMessage> {
@@ -157,6 +175,8 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         if (this.messageApi) {
             this.messageApi.sendMessage(type, payload);
+        } else if (type === 'IPyWidgets_logMessage') {
+            console.log('Message not sent', type, payload);
         } else {
             logMessage(`No message API to post message ${type}`);
         }
@@ -180,7 +200,7 @@ export class PostOffice implements IDisposable {
 
         // If the kernel message API is available use that if not use the VS Code webview messaging API
         if (this.useKernelMessageApi()) {
-            this.messageApi = new KernelMessageApi();
+            this.messageApi = new KernelMessageApi(this.kernelMessagingApi);
         } else {
             this.messageApi = new VsCodeMessageApi();
         }
@@ -191,7 +211,10 @@ export class PostOffice implements IDisposable {
     // Check to see if global kernel message API is supported, if so use that
     // instead of the VSCodeAPI which is not available in NativeNotebooks
     private useKernelMessageApi(): boolean {
-        if (typeof postKernelMessage !== 'undefined') {
+        if (
+            (this.kernelMessagingApi && typeof this.kernelMessagingApi.postKernelMessage !== 'undefined') ||
+            typeof postKernelMessage !== 'undefined'
+        ) {
             return true;
         }
 

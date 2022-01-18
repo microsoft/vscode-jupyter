@@ -31,7 +31,8 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
             loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void>;
             successHandler(className: string, moduleName: string, moduleVersion: string): void;
-        }
+        },
+        private readonly logger: (message: string) => void
     ) {
         super(
             new DocumentContext(kernel),
@@ -127,8 +128,10 @@ export class WidgetManager extends jupyterlab.WidgetManager {
                         this.sendSuccess(className, moduleName, moduleVersion);
                         return m[className];
                     }
+                    this.logger(`WidgetManager: failed, Loading class ${className}:${moduleName}:${moduleVersion}`);
                     throw originalException;
                 } catch (ex) {
+                    this.logger(`WidgetManager: failed, Loading class ${className}:${moduleName}:${moduleVersion}`);
                     this.sendError(className, moduleName, moduleVersion, originalException);
                     throw originalException;
                 }

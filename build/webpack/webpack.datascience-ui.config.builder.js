@@ -33,6 +33,7 @@ function getEntry(bundle) {
                 ipywidgetsKernel: [`./src/datascience-ui/ipywidgets/kernel/index.ts`]
             };
         case 'ipywidgetsRenderer':
+            // This is only used in tests (not shipped with extension).
             return {
                 ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
             };
@@ -40,6 +41,11 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
             };
+        case 'widgetTester':
+            return {
+                widgetTester: [`./src/test/datascience/widgets/rendererUtils.ts`]
+            };
+        default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
 }
@@ -93,10 +99,11 @@ function getPlugins(bundle) {
             );
             break;
         }
-        case 'ipywidgetsKernel': {
+        case 'widgetTester': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             break;
         }
+        case 'ipywidgetsKernel':
         case 'ipywidgetsRenderer':
         case 'errorRenderer': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
@@ -139,10 +146,10 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer'
+        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'ipywidgetsKernel'
             ? {}
             : {
-                  library: 'LIB',
+                  library: `LIB${bundle.toUpperCase()}`,
                   libraryTarget: 'var'
               };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
@@ -150,11 +157,27 @@ function buildConfiguration(bundle) {
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
             to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'ipywidgetsKernel')
         });
+    } else if (bundle === 'widgetTester') {
+        ///
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
             to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
         });
+    }
+    const plugins = [
+        new FixDefaultImportPlugin(),
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 100
+        }),
+        ...getPlugins(bundle)
+    ];
+    if (filesToCopy.length > 0) {
+        plugins.push(
+            new CopyWebpackPlugin({
+                patterns: [...filesToCopy]
+            })
+        );
     }
     return {
         context: constants.ExtensionRootDir,
@@ -172,16 +195,7 @@ function buildConfiguration(bundle) {
         node: {
             fs: 'empty'
         },
-        plugins: [
-            new FixDefaultImportPlugin(),
-            new CopyWebpackPlugin({
-                patterns: [...filesToCopy]
-            }),
-            new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: 100
-            }),
-            ...getPlugins(bundle)
-        ],
+        plugins,
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
@@ -276,3 +290,4 @@ exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
 exports.errorRenderer = buildConfiguration('errorRenderer');
+exports.widgetTester = buildConfiguration('widgetTester');
