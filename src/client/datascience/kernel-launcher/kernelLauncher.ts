@@ -12,12 +12,16 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    isLocalConnection,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { IDisplayOptions, IKernelDependencyService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
@@ -27,6 +31,8 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import { getDisplayPath } from '../../common/platform/fs-paths';
+import { swallowExceptions } from '../../common/utils/decorators';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -115,11 +121,59 @@ export class KernelLauncher implements IKernelLauncher {
                 }
             }
 
+            void this.logIPyKernelPath(resource, kernelConnectionMetadata);
+
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
         sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
         return promise;
+    }
+
+    /**
+     * Sometimes users install this in user site_packages and things don't work as expected.
+     * It should be installed into the specific python env.
+     * Logging this information would be helpful in diagnosing issues.
+     */
+    @swallowExceptions('Failed to capture IPyKernel version and path')
+    private async logIPyKernelPath(
+        resource: Resource,
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    ) {
+        const interpreter = kernelConnectionMetadata.interpreter;
+        if (!isLocalConnection(kernelConnectionMetadata) || !interpreter) {
+            return;
+        }
+        const service = await this.pythonExecFactory.createActivatedEnvironment({
+            interpreter,
+            resource
+        });
+        const output = await service.exec(
+            [
+                '-c',
+                'import ipykernel; print(ipykernel.__version__); print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d"); print(ipykernel.__file__)'
+            ],
+            {}
+        );
+        const displayInterpreterPath = getDisplayPath(interpreter.path);
+        if (output.stdout) {
+            const outputs = output.stdout
+                .trim()
+                .split('5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d')
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+            if (outputs.length === 2) {
+                traceInfo(`ipykernel version ${outputs[0]} for ${displayInterpreterPath}`);
+                traceInfo(`ipykernel location ${getDisplayPath(outputs[1])} for ${displayInterpreterPath}`);
+            } else {
+                traceInfo(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
+            }
+        }
+        if (output.stderr) {
+            traceWarning(
+                `Stderr output when getting ipykernel version & path ${output.stderr.trim()} for ${displayInterpreterPath}`
+            );
+        }
     }
 
     private async launchProcess(

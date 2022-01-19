@@ -76,7 +76,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 preferredKernelFromCache.interpreter &&
                 (await this.fs.localFileExists(preferredKernelFromCache.interpreter.path))
             ) {
-                traceInfo(`Freferred kernel connection found in cache ${preferredKernelFromCache.id}`);
+                traceInfo(`Preferred kernel connection found in cache ${preferredKernelFromCache.id}`);
                 return preferredKernelFromCache;
             }
 
