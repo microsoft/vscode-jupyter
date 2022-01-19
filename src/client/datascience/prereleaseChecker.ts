@@ -7,7 +7,7 @@ import '../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
-import { GLOBAL_MEMENTO, IMemento } from '../common/types';
+import { GLOBAL_MEMENTO, IMemento, IsPreRelease } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { JVSC_EXTENSION_ID } from '../common/constants';
 import * as vscode from 'vscode';
@@ -19,13 +19,13 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
+        @inject(IsPreRelease) private isPreRelease: boolean
     ) {}
     public async activate(): Promise<void> {
         // Ask user if the version is not prerelease
-        const isPreRelease = this.appEnv.packageJson.__metadata?.preRelease == true;
         const dontAsk = this.globalState.get(PRERELEASE_DONT_ASK_FLAG, false);
-        if (!isPreRelease && this.appEnv.channel === 'insiders' && !dontAsk) {
+        if (!this.isPreRelease && this.appEnv.channel === 'insiders' && !dontAsk) {
             const yes = localize.DataScience.usingNonPrereleaseYes();
             const no = localize.DataScience.usingNonPrereleaseNo();
             const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();

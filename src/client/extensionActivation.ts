@@ -4,6 +4,8 @@
 'use strict';
 
 /* eslint-disable  */
+import * as path from 'path';
+import * as fsExtra from 'fs-extra';
 import { commands, env, ExtensionMode, extensions, OutputChannel, UIKind, version, window, workspace } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
@@ -71,7 +73,11 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-    const isPreRelease = isDevMode || context.extension.packageJSON?.__metadata?.preRelease;
+    const packageJSONLive = JSON.parse(
+        fsExtra.readFileSync(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
+    );
+    const isPreRelease = isDevMode || packageJSONLive?.__metadata?.preRelease;
+    console.log(`Context package json metadata ${packageJSONLive?.__metadata}`);
     serviceManager.addSingletonInstance<boolean>(IsPreRelease, isPreRelease);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
