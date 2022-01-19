@@ -10,16 +10,14 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
+import { IProcessServiceFactory } from '../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IDisplayOptions, IKernelDependencyService } from '../types';
-import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
@@ -44,13 +42,10 @@ export class KernelLauncher implements IKernelLauncher {
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
 
     public static async cleanupStartPort() {
@@ -138,14 +133,11 @@ export class KernelLauncher implements IKernelLauncher {
         }
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
-            this.daemonPool,
             connection,
             kernelConnectionMetadata,
             this.fs,
             resource,
-            this.extensionChecker,
-            this.kernelEnvVarsService,
-            this.pythonExecFactory
+            this.kernelEnvVarsService
         );
 
         try {

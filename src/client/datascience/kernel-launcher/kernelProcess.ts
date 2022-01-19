@@ -7,7 +7,6 @@ import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import {
     getErrorMessageFromPythonTraceback,
@@ -15,12 +14,7 @@ import {
 } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IProcessService,
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    ObservableExecutionResult
-} from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -34,7 +28,6 @@ import {
 } from '../jupyter/kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon } from './types';
@@ -84,14 +77,11 @@ export class KernelProcess implements IKernelProcess {
     >;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
-        private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fileSystem: IFileSystem,
         private readonly resource: Resource,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
-        private readonly pythonExecFactory: IPythonExecutionFactory
+        private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
