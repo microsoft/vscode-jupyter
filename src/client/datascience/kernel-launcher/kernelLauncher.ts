@@ -124,6 +124,7 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        // Get the connection to the kernel
         const connection = await Promise.race([
             this.getKernelConnection(kernelConnectionMetadata),
             createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token: cancelToken })
