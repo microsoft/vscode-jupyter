@@ -395,72 +395,41 @@ export class KernelProcess implements IKernelProcess {
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 
-        // Use a daemon only if the python extension is available. It requires the active interpreter
-        if (
-            this.isPythonKernel &&
-            this.extensionChecker.isPythonExtensionInstalled &&
-            this._kernelConnectionMetadata.interpreter
-        ) {
-            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(
-                this.daemonPool,
-                this.pythonExecFactory,
-                this.kernelEnvVarsService
-            );
-            const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
-                this.resource,
-                workingDirectory,
-                this.launchKernelSpec,
-                this._kernelConnectionMetadata.interpreter
-            );
-            if (this.disposed || cancelToken.isCancellationRequested) {
-                kernelDaemonLaunch.daemon?.dispose();
-                kernelDaemonLaunch.observableOutput.dispose();
-            }
-            if (cancelToken.isCancellationRequested) {
-                throw new CancellationError();
-            }
-            this.pythonDaemon = kernelDaemonLaunch.daemon;
-            exeObs = kernelDaemonLaunch.observableOutput;
-        }
-
-        // If we are not python just use the ProcessExecutionFactory
-        if (!exeObs) {
-            // First part of argument is always the executable.
-            const executable = this.launchKernelSpec.argv[0];
-            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
-            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
-            const [executionService, env] = await Promise.all([
-                Promise.race([
-                    this.processExecutionFactory.create(this.resource),
-                    promiseCancellation as Promise<IProcessService>
-                ]),
-                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
-                // Note that there might still be python env vars to merge from the kernel spec in the case of something like
-                // a Java kernel registered in a conda environment
-                Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
-                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
-                ])
-            ]);
-            // Add quotations to arguments if they have a blank space in them.
-            // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
-            // The first argument is sliced because it is the executable command.
-            const args = this.launchKernelSpec.argv.slice(1).map((a) => {
-                // Some kernel specs (non-python) can have argv as `--connection-file={connection_file}`
-                // The `connection-file` will be quoted when we update it with the real path.
-                if (a.includes('--connection-file')) {
-                    return a;
-                }
-                if (a.includes(' ')) {
-                    return `"${a}"`;
-                }
+        // First part of argument is always the executable.
+        const executable = this.launchKernelSpec.argv[0];
+        traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+        const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
+        const [executionService, env] = await Promise.all([
+            Promise.race([
+                this.processExecutionFactory.create(this.resource),
+                promiseCancellation as Promise<IProcessService>
+            ]),
+            // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+            // Note that there might still be python env vars to merge from the kernel spec in the case of something like
+            // a Java kernel registered in a conda environment
+            Promise.race([
+                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
+            ])
+        ]);
+        // Add quotations to arguments if they have a blank space in them.
+        // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
+        // The first argument is sliced because it is the executable command.
+        const args = this.launchKernelSpec.argv.slice(1).map((a) => {
+            // Some kernel specs (non-python) can have argv as `--connection-file={connection_file}`
+            // The `connection-file` will be quoted when we update it with the real path.
+            if (a.includes('--connection-file')) {
                 return a;
-            });
-            exeObs = executionService.execObservable(executable, args, {
-                env,
-                cwd: workingDirectory
-            });
-        }
+            }
+            if (a.includes(' ')) {
+                return `"${a}"`;
+            }
+            return a;
+        });
+        exeObs = executionService.execObservable(executable, args, {
+            env,
+            cwd: workingDirectory
+        });
 
         if (!exeObs || !exeObs.proc) {
             throw new Error('KernelProcess failed to launch');
