@@ -9,14 +9,19 @@ import { IKernelConnection } from '../../client/datascience/kernel-launcher/type
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { IDisposable } from '../../client/common/types';
 import rewiremock from 'rewiremock';
-import { IProcessService, IProcessServiceFactory, ObservableExecutionResult } from '../../client/common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { LocalKernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';
+import { IPythonExtensionChecker } from '../../client/api/types';
 import { noop } from '../core';
-import { PythonKernelLauncherDaemon } from '../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo } from '../../client/common/logger';
@@ -24,6 +29,7 @@ import { CancellationTokenSource } from 'vscode';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;
+    let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];
     let token: CancellationTokenSource;
     suiteSetup(async function () {
@@ -57,6 +63,7 @@ suite('DataScience - Kernel Process', () => {
         const processExecutionFactory = mock<IProcessServiceFactory>();
         const connection = mock<IKernelConnection>();
         const fs = mock<IFileSystem>();
+        const extensionChecker = mock<IPythonExtensionChecker>();
         const kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
         processService = mock<IProcessService>();
         const instanceOfExecutionService = instance(processService);
@@ -71,12 +78,12 @@ suite('DataScience - Kernel Process', () => {
                 on: noop
             } as any
         };
+        pythonExecFactory = mock<IPythonExecutionFactory>();
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
         when(fs.writeFile(anything(), anything())).thenResolve();
         when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve(process.env);
         when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
-        sinon.stub(PythonKernelLauncherDaemon.prototype, 'launch');
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         return new KernelProcess(
@@ -85,7 +92,9 @@ suite('DataScience - Kernel Process', () => {
             metadata,
             instance(fs),
             undefined,
-            instance(kernelEnvVarsService)
+            instance(extensionChecker),
+            instance(kernelEnvVarsService),
+            instance(pythonExecFactory)
         );
     }
     test('Launch from kernelspec (linux)', async function () {

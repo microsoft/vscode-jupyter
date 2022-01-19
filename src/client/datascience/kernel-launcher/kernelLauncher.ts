@@ -10,6 +10,7 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -48,6 +49,7 @@ export class KernelLauncher implements IKernelLauncher {
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
@@ -179,7 +181,6 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
-        // Get the connection to the kernel
         const connection = await Promise.race([
             this.getKernelConnection(kernelConnectionMetadata),
             createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token: cancelToken })
@@ -193,7 +194,9 @@ export class KernelLauncher implements IKernelLauncher {
             kernelConnectionMetadata,
             this.fs,
             resource,
-            this.kernelEnvVarsService
+            this.extensionChecker,
+            this.kernelEnvVarsService,
+            this.pythonExecFactory
         );
 
         try {
