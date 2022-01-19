@@ -1031,6 +1031,21 @@ export namespace DataScience {
         'jupyter.kernel.pipCondaInstallHoverWarning',
         "'!{0} install' could install packages into the wrong environment. [More info]({1})"
     );
+    export const pythonFileOverridesPythonPackage = localize(
+        'DataScience.pythonFileOverridesPythonPackage',
+        'This file could potentially override an existing Python package, consider renaming it.'
+    );
+    export const alwaysIgnoreWarningsAboutOverridingPythonPackages = localize(
+        'DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages',
+        'Always ignore warnings about overriding Python packages'
+    );
+    export const ignoreWarningAboutOverridingPythonPackage = localize(
+        'DataScience.ignoreWarningAboutOverridingPythonPackage',
+        'Ignore reserved file warning for {0}'
+    );
+    export const moreInfoAboutFileNamesOverridingPythonPackages = localize(
+        "DataScience.moreInfoAboutFileNamesOverridingPythonPackages", "More information on overriding Python packages"
+    );
     export const percentPipCondaInstallInsteadOfBang = localize(
         'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
         "Use '%{0} install' instead of '!{0} install'"

@@ -36,12 +36,14 @@ export class InterpreterPackages {
     private static pendingInterpreterInformation = new Map<string, Promise<void>>();
     private pendingInterpreterBeforeActivation = new Set<InterpreterUri>();
     private static instance?: InterpreterPackages;
+    private readonly interpreterPackages = new Map<string, Promise<Set<string>>>();
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         InterpreterPackages.instance = this;
         this.apiProvider.onDidActivatePythonExtension(
@@ -80,6 +82,41 @@ export class InterpreterPackages {
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
+    /**
+     * Lists all packages that are accessible from the interpreter.
+     */
+    public async listPackages(resource?: Resource): Promise<Set<string>> {
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        if (!this.interpreterPackages.has(workspaceKey)) {
+            const promise = this.listPackagesImpl(resource);
+            this.interpreterPackages.set(workspaceKey, promise);
+            promise.catch((ex) => {
+                if (this.interpreterPackages.get(workspaceKey) === promise) {
+                    this.interpreterPackages.delete(workspaceKey)!;
+                }
+                traceWarning(`Failed to get list of installed packages for ${workspaceKey}`, ex);
+            });
+        }
+        return this.interpreterPackages.get(workspaceKey)!;
+    }
+    private async listPackagesImpl(resource?: Resource): Promise<Set<string>> {
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!interpreter) {
+            return new Set<string>();
+        }
+        const service = await this.executionFactory.createActivatedEnvironment({ interpreter, resource });
+        const separator = '389a87b7-288f-4235-92bf-73bf19bf6491';
+        const code = `import pkgutil;import json;print("${separator}");print(json.dumps(list([x.name for x in pkgutil.iter_modules()])));print("${separator}");`;
+        const modulesOutput = await service.exec(['-c', code], { throwOnStdErr: false });
+        if (modulesOutput.stdout) {
+            const modules = JSON.parse(modulesOutput.stdout.split(separator)[1].trim()) as string[];
+            return new Set(modules.concat(modules.map((item) => item.toLowerCase())));
+        } else {
+            traceError(`Failed to get list of installed packages for ${interpreter.path}`, modulesOutput.stderr);
+            return new Set<string>();
+        }
+    }
+
     private async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             this.pendingInterpreterBeforeActivation.add(interpreterUri);
