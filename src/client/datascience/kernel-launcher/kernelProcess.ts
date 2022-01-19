@@ -394,11 +394,14 @@ export class KernelProcess implements IKernelProcess {
                 this.processExecutionFactory.create(this.resource),
                 promiseCancellation as Promise<IProcessService>
             ]),
-            // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
             // Note that there might still be python env vars to merge from the kernel spec in the case of something like
             // a Java kernel registered in a conda environment
             Promise.race([
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                this.kernelEnvVarsService.getEnvironmentVariables(
+                    this.resource,
+                    this._kernelConnectionMetadata.interpreter,
+                    this.launchKernelSpec
+                ),
                 promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
             ])
         ]);
