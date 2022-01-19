@@ -40,7 +40,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IsPreRelease) private readonly isPreRelease: boolean
+        @inject(IsPreRelease) private readonly isPreRelease: Promise<boolean>
     ) {}
     public activate() {
         // Sign up for kernel change events on notebooks
@@ -210,7 +210,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
 
         // Check the setting to determine if we let pylance handle notebook intellisense or not
         const middlewareType =
-            this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks || this.isPreRelease
+            this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks || (await this.isPreRelease)
                 ? 'pylance'
                 : 'jupyter';
 
