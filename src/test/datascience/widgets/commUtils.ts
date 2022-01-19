@@ -29,7 +29,7 @@ export function initializeWidgetComms(serviceContainer: IServiceContainer): Util
     return utils;
 }
 
-class Utils {
+export class Utils {
     private readonly disposables: IDisposable[] = [];
     public get ready(): Promise<void> {
         return this.editorPromise.then(() => undefined);
