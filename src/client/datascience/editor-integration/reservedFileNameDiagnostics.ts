@@ -2,43 +2,62 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import {
+    CancellationToken,
     CodeAction,
     CodeActionContext,
     CodeActionKind,
     CodeActionProvider,
+    commands,
     Diagnostic,
     DiagnosticCollection,
+    EventEmitter,
+    FileDecoration,
+    FileDecorationProvider,
     languages,
+    Memento,
     Range,
     TextDocument,
     TextEditor,
-    Uri
+    ThemeColor,
+    Uri,
+    window,
+    workspace
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IDocumentManager } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
-import { IDisposable } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../common/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { DiagnosticSeverity } from 'vscode-languageserver-protocol';
 import { DataScience } from '../../common/utils/localize';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { IPythonExtensionChecker } from '../../api/types';
+import { BuiltInModules } from './constants';
 
+const PYTHON_PACKAGES_MEMENTO_KEY = 'jupyter.pythonPackages';
 @injectable()
-export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActivationService, CodeActionProvider {
+export class ReservedFileNamesDiagnosticProvider
+    implements IExtensionSingleActivationService, CodeActionProvider, FileDecorationProvider {
     private readonly disposables: IDisposable[] = [];
     private readonly diagnosticCollection: DiagnosticCollection;
+    private readonly _onDidChangeFileDecorations = new EventEmitter<Uri | Uri[] | undefined>();
+    private readonly ignoredFiles = new Set<string>();
+    private readonly cachedModules = new Set<string>();
+    onDidChangeFileDecorations = this._onDidChangeFileDecorations.event;
     constructor(
         @inject(InterpreterPackages) private readonly packages: InterpreterPackages,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IDocumentManager) private readonly documentManager: IDocumentManager
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private cache: Memento
     ) {
         this.diagnosticCollection = languages.createDiagnosticCollection('Reserved Python Filenames');
+        this.cachedModules = new Set(
+            this.cache.get<string[]>(PYTHON_PACKAGES_MEMENTO_KEY, BuiltInModules).map((item) => item.toLowerCase())
+        );
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
+        this._onDidChangeFileDecorations.dispose();
         this.diagnosticCollection.dispose();
     }
     public async activate(): Promise<void> {
@@ -46,15 +65,17 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
             return;
         }
         this.disposables.push(languages.registerCodeActionsProvider(PYTHON_LANGUAGE, this));
-        this.documentManager.onDidChangeActiveTextEditor(this.provideDiagnosticsForEditor, this, this.disposables);
-        this.documentManager.onDidCloseTextDocument(
-            (e) => {
-                this.diagnosticCollection.delete(e.uri);
-            },
-            this,
-            this.disposables
+        this.disposables.push(window.registerFileDecorationProvider(this));
+        window.onDidChangeActiveTextEditor(this.provideDiagnosticsForEditor, this, this.disposables);
+        workspace.onDidCloseTextDocument((e) => this.diagnosticCollection.delete(e.uri), this, this.disposables);
+        window.visibleTextEditors.forEach((editor) => this.provideDiagnosticsForEditor(editor));
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.ignoreReservedFileNamesDiagnostic',
+                this.ignoreReservedFileNamesDiagnostic,
+                this
+            )
         );
-        this.documentManager.visibleTextEditors.forEach((editor) => this.provideDiagnosticsForEditor(editor));
     }
 
     public async provideCodeActions(
@@ -84,8 +105,8 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
             CodeActionKind.QuickFix
         );
         codeActionIgnore.command = {
-            command: 'IgnoreReservedFileNamesDiagnostic',
-            arguments: [name],
+            command: 'jupyter.ignoreReservedFileNamesDiagnostic',
+            arguments: [document.uri],
             title: codeActionIgnore.title
         };
         const codeActionMoreAction = new CodeAction(
@@ -103,20 +124,33 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
         codeActions.forEach((action) => (action.diagnostics = ourDiagnostic));
         return codeActions;
     }
+
+    public async provideFileDecoration(uri: Uri, _token: CancellationToken): Promise<FileDecoration | undefined> {
+        if (!uri.fsPath.toLowerCase().endsWith('.py')) {
+            return;
+        }
+        const ourDiagnostic = this.diagnosticCollection.get(uri);
+        if (ourDiagnostic && ourDiagnostic.length > 0) {
+            return new FileDecoration('!', ourDiagnostic[0].message, new ThemeColor('editorWarning.foreground'));
+        }
+
+        if (await this.overridesPythonPackage(uri)) {
+            const diagnostic = new Diagnostic(
+                new Range(0, 0, 0, 0),
+                DataScience.pythonFileOverridesPythonPackage(),
+                DiagnosticSeverity.Warning
+            );
+            diagnostic.source = `Jupyter`;
+            this.diagnosticCollection.set(uri, [diagnostic]);
+            return new FileDecoration('!', diagnostic.message, new ThemeColor('editorWarning.foreground'));
+        }
+    }
+
     private async provideDiagnosticsForEditor(editor?: TextEditor) {
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             return;
         }
-        const filePath = editor.document.fileName.toLowerCase();
-        // If this file is in a site_packages folder, then get out.
-        // Any file in <python env>/lib/python<version> is a reserved file.
-        const foldersToIgnore = ['site-packages', `lib${path.sep}python`, `lib64${path.sep}python`];
-        if (foldersToIgnore.some((item) => filePath.includes(item))) {
-            return;
-        }
-        const packages = await this.packages.listPackages(editor.document.uri);
-        const fileName = path.basename(editor.document.fileName, path.extname(editor.document.fileName));
-        if (packages.has(fileName.toLowerCase())) {
+        if (await this.overridesPythonPackage(editor.document.uri)) {
             const lastLine = editor.document.lineCount;
             const diagnostic = new Diagnostic(
                 new Range(0, 0, lastLine, editor.document.lineAt(lastLine - 1).range.end.character),
@@ -126,6 +160,43 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
             diagnostic.source = `Jupyter`;
             this.diagnosticCollection.delete(editor.document.uri);
             this.diagnosticCollection.set(editor.document.uri, [diagnostic]);
+            this._onDidChangeFileDecorations.fire(editor.document.uri);
         }
+    }
+    private async overridesPythonPackage(uri: Uri): Promise<boolean> {
+        if (this.ignoredFiles.has(uri.fsPath)) {
+            return false;
+        }
+        const filePath = uri.fsPath.toLowerCase();
+        // If this file is in a site_packages folder, then get out.
+        // Any file in <python env>/lib/python<version> is a reserved file.
+        const foldersToIgnore = ['site-packages', `lib${path.sep}python`, `lib64${path.sep}python`];
+        if (foldersToIgnore.some((item) => filePath.includes(item))) {
+            return false;
+        }
+        if (this.cache.get<string[]>(PYTHON_PACKAGES_MEMENTO_KEY, BuiltInModules)) {
+        }
+        const possibleModule = path.basename(uri.fsPath, path.extname(uri.fsPath)).toLowerCase();
+        if (this.cachedModules.has(possibleModule)) {
+            return true;
+        }
+
+        const packages = await this.packages.listPackages(uri);
+        const previousCount = this.cachedModules.size;
+        packages.forEach((item) => this.cachedModules.add(item));
+        if (previousCount < this.cachedModules.size) {
+            void this.cache.update(PYTHON_PACKAGES_MEMENTO_KEY, Array.from(this.cachedModules));
+        }
+        return packages.has(possibleModule);
+    }
+    private ignoreReservedFileNamesDiagnostic(uri: Uri) {
+        this.ignoredFiles.add(uri.fsPath);
+        this.diagnosticCollection.delete(uri);
+        this._onDidChangeFileDecorations.fire(uri);
+        const fileName = path.basename(uri.fsPath);
+        void window.showInformationMessage(
+            `File '${fileName}' allowed to override Python Packages.`,
+            'Revert this action'
+        );
     }
 }

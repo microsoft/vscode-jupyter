@@ -1922,6 +1922,15 @@
                     "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
                     "scope": "application"
                 },
+                "jupyter.diagnostics.overridePythonPackages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": "",
+                    "description": "Files such as `string.py` could override Python packages and warnings are displayed for such file names. File paths added to this list will be excluded from such warnings.",
+                    "scope": "application"
+                },
                 "jupyter.debugJustMyCode": {
                     "type": "boolean",
                     "default": true,
