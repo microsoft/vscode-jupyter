@@ -20,12 +20,12 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
-        @inject(IsPreRelease) private isPreRelease: boolean
+        @inject(IsPreRelease) private isPreRelease: Promise<boolean>
     ) {}
     public async activate(): Promise<void> {
         // Ask user if the version is not prerelease
         const dontAsk = this.globalState.get(PRERELEASE_DONT_ASK_FLAG, false);
-        if (!this.isPreRelease && this.appEnv.channel === 'insiders' && !dontAsk) {
+        if (!(await this.isPreRelease) && this.appEnv.channel === 'insiders' && !dontAsk) {
             const yes = localize.DataScience.usingNonPrereleaseYes();
             const no = localize.DataScience.usingNonPrereleaseNo();
             const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();

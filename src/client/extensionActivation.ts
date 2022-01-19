@@ -73,12 +73,13 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-    const packageJSONLive = JSON.parse(
-        fsExtra.readFileSync(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
-    );
-    const isPreRelease = isDevMode || packageJSONLive?.__metadata?.preRelease;
-    console.log(`Context package json metadata ${packageJSONLive?.__metadata}`);
-    serviceManager.addSingletonInstance<boolean>(IsPreRelease, isPreRelease);
+    const isPreReleasePromise = fsExtra
+        .readFile(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
+        .then((contents) => {
+            const packageJSONLive = JSON.parse(contents);
+            return isDevMode || packageJSONLive?.__metadata?.preRelease;
+        });
+    serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
