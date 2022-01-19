@@ -407,6 +407,13 @@ ${actualCode}
         );
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
 
+        // Wait for the outputs to be available.
+        await waitForCondition(
+            async () => lastCell.outputs.length > 0 && lastCell.outputs[0].items.length > 0,
+            defaultNotebookTestTimeout,
+            'Outputs not avaialble'
+        );
+
         // Parse the last cell's error output
         const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
         assert.ok(errorOutput, 'No error output found');
