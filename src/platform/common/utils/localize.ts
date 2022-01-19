@@ -1033,7 +1033,7 @@ export namespace DataScience {
     );
     export const pythonFileOverridesPythonPackage = localize(
         'DataScience.pythonFileOverridesPythonPackage',
-        'This file could potentially override an existing Python package, consider renaming it.'
+        'This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.'
     );
     export const alwaysIgnoreWarningsAboutOverridingPythonPackages = localize(
         'DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages',
@@ -1041,10 +1041,11 @@ export namespace DataScience {
     );
     export const ignoreWarningAboutOverridingPythonPackage = localize(
         'DataScience.ignoreWarningAboutOverridingPythonPackage',
-        'Ignore reserved file warning for {0}'
+        "Ignore reserved file warning for '{0}'"
     );
     export const moreInfoAboutFileNamesOverridingPythonPackages = localize(
-        "DataScience.moreInfoAboutFileNamesOverridingPythonPackages", "More information on overriding Python packages"
+        'DataScience.moreInfoAboutFileNamesOverridingPythonPackages',
+        'More information on overriding Python packages'
     );
     export const percentPipCondaInstallInsteadOfBang = localize(
         'jupyter.kernel.percentPipCondaInstallInsteadOfBang',

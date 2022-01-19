@@ -24,6 +24,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { DiagnosticSeverity } from 'vscode-languageserver-protocol';
 import { DataScience } from '../../common/utils/localize';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
+import { IPythonExtensionChecker } from '../../api/types';
 
 @injectable()
 export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActivationService, CodeActionProvider {
@@ -31,6 +32,7 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
     private readonly diagnosticCollection: DiagnosticCollection;
     constructor(
         @inject(InterpreterPackages) private readonly packages: InterpreterPackages,
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager
     ) {
         this.diagnosticCollection = languages.createDiagnosticCollection('Reserved Python Filenames');
@@ -40,6 +42,9 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
         this.diagnosticCollection.dispose();
     }
     public async activate(): Promise<void> {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         this.disposables.push(languages.registerCodeActionsProvider(PYTHON_LANGUAGE, this));
         this.documentManager.onDidChangeActiveTextEditor(this.provideDiagnosticsForEditor, this, this.disposables);
         this.documentManager.onDidCloseTextDocument(
@@ -100,6 +105,13 @@ export class ReservedFileNamesDiagnosticProvider implements IExtensionSingleActi
     }
     private async provideDiagnosticsForEditor(editor?: TextEditor) {
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
+            return;
+        }
+        const filePath = editor.document.fileName.toLowerCase();
+        // If this file is in a site_packages folder, then get out.
+        // Any file in <python env>/lib/python<version> is a reserved file.
+        const foldersToIgnore = ['site-packages', `lib${path.sep}python`, `lib64${path.sep}python`];
+        if (foldersToIgnore.some((item) => filePath.includes(item))) {
             return;
         }
         const packages = await this.packages.listPackages(editor.document.uri);
