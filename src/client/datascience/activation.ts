@@ -14,7 +14,6 @@ import { sendTelemetryEvent } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './commands/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
-import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { INotebookCreationTracker, IRawNotebookSupportedService } from './types';
 import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';
@@ -29,7 +28,6 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
-        @inject(KernelDaemonPreWarmer) private readonly daemonPoolPrewarmer: KernelDaemonPreWarmer,
         @inject(IRawNotebookSupportedService) private readonly rawSupported: IRawNotebookSupportedService,
         @inject(INotebookCreationTracker)
         private readonly tracker: INotebookCreationTracker,
@@ -39,7 +37,6 @@ export class Activation implements IExtensionSingleActivationService {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         void this.contextService.activate();
-        void this.daemonPoolPrewarmer.activate(undefined);
         this.tracker.startTracking();
     }
 

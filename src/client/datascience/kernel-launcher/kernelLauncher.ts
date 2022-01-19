@@ -23,7 +23,6 @@ import {
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { IDisplayOptions, IKernelDependencyService } from '../types';
-import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
@@ -50,7 +49,6 @@ export class KernelLauncher implements IKernelLauncher {
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
@@ -192,7 +190,6 @@ export class KernelLauncher implements IKernelLauncher {
         }
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
-            this.daemonPool,
             connection,
             kernelConnectionMetadata,
             this.fs,

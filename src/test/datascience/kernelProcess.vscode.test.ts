@@ -16,14 +16,12 @@ import {
     ObservableExecutionResult
 } from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { LocalKernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';
 import { IPythonExtensionChecker } from '../../client/api/types';
 import { noop } from '../core';
-import { PythonKernelLauncherDaemon } from '../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo } from '../../client/common/logger';
@@ -63,7 +61,6 @@ suite('DataScience - Kernel Process', () => {
 
     function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {
         const processExecutionFactory = mock<IProcessServiceFactory>();
-        const daemonPool = mock<KernelDaemonPool>();
         const connection = mock<IKernelConnection>();
         const fs = mock<IFileSystem>();
         const extensionChecker = mock<IPythonExtensionChecker>();
@@ -87,12 +84,10 @@ suite('DataScience - Kernel Process', () => {
         when(fs.writeFile(anything(), anything())).thenResolve();
         when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve(process.env);
         when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
-        sinon.stub(PythonKernelLauncherDaemon.prototype, 'launch');
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         return new KernelProcess(
             instance(processExecutionFactory),
-            instance(daemonPool),
             instance(connection),
             metadata,
             instance(fs),
