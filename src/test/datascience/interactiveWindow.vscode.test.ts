@@ -411,7 +411,7 @@ ${actualCode}
         await waitForCondition(
             async () => lastCell.outputs.length > 0 && lastCell.outputs[0].items.length > 0,
             defaultNotebookTestTimeout,
-            'Outputs not avaialble'
+            'Outputs not available'
         );
 
         // Parse the last cell's error output
