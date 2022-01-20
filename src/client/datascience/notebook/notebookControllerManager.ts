@@ -182,16 +182,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const stopWatch = new StopWatch();
 
             // Fetch the list of kernels ignoring the cache.
-            Promise.all([
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: true,
-                    useCache: 'ignoreCache'
-                }),
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: false,
-                    useCache: 'ignoreCache'
-                })
-            ])
+            this.loadNotebookControllersImpl({
+                useCache: 'ignoreCache'
+            })
                 .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
                 .finally(() => {
                     this._controllersLoaded = true;
@@ -205,7 +198,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                             timer = setTimeout(
                                 () =>
                                     this.loadNotebookControllersImpl({
-                                        listLocalNonPythonKernels: false,
                                         useCache: 'ignoreCache'
                                     }).catch((ex) =>
                                         console.error(
@@ -228,11 +220,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Fetching remote kernels cannot be done from cache.
             const promises = [
                 this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: true,
-                    useCache: 'useCache'
-                }),
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: false,
                     useCache: 'useCache'
                 })
             ];
@@ -336,21 +323,18 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
      * Turn all our kernelConnections that we know about into registered NotebookControllers
      */
     private async loadNotebookControllersImpl(
-        options:
-            | { listLocalNonPythonKernels: boolean; useCache: 'useCache' | 'ignoreCache' }
-            | { listRemoteKernels: boolean }
+        options: { useCache: 'useCache' | 'ignoreCache' } | { listRemoteKernels: boolean }
     ): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
         let connections: KernelConnectionMetadata[] = [];
-        if ('listLocalNonPythonKernels' in options) {
-            connections = await (options.listLocalNonPythonKernels
-                ? this.localKernelFinder.listNonPythonKernels(cancelToken.token, options.useCache)
-                : this.localKernelFinder.listKernels(undefined, cancelToken.token, options.useCache)
-            ).catch((ex) => {
-                traceError('Failed to get local kernel connections', ex);
-                return [] as KernelConnectionMetadata[];
-            });
+        if ('useCache' in options) {
+            connections = await this.localKernelFinder
+                .listKernels(undefined, cancelToken.token, options.useCache)
+                .catch((ex) => {
+                    traceError('Failed to get local kernel connections', ex);
+                    return [] as KernelConnectionMetadata[];
+                });
         } else {
             connections = await this.getRemoteKernelConnectionMetadata(cancelToken.token);
         }
@@ -362,7 +346,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.createNotebookControllers(connections);
 
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
-        if ('listLocalNonPythonKernels' in options && !options.listLocalNonPythonKernels) {
+        if (!('listRemoteKernels' in options)) {
             if (connections.some((item) => isPythonKernelConnection(item))) {
                 this.removeNoPythonControllers();
             } else {

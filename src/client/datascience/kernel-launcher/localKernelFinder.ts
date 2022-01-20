@@ -125,10 +125,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         }
     }
 
-    public async listNonPythonKernels(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        return this.filterKernels(await this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken));
-    }
-
     /**
      * Search all our local file system locations for installed kernel specs and return them
      */
