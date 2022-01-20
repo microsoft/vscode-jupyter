@@ -196,7 +196,8 @@ suite('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    test('Run a second time after interrupt', async function () {
+    test.skip('Run a second time after interrupt', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/8753
         await insertCodeCell(
             'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final output")',
             {
