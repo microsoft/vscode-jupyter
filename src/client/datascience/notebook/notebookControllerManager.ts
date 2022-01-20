@@ -182,16 +182,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const stopWatch = new StopWatch();
 
             // Fetch the list of kernels ignoring the cache.
-            Promise.all([
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: true,
-                    useCache: 'ignoreCache'
-                }),
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: false,
-                    useCache: 'ignoreCache'
-                })
-            ])
+            this.loadLocalNotebookControllersImpl('ignoreCache')
                 .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
                 .finally(() => {
                     this._controllersLoaded = true;
@@ -204,10 +195,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                             }
                             timer = setTimeout(
                                 () =>
-                                    this.loadNotebookControllersImpl({
-                                        listLocalNonPythonKernels: false,
-                                        useCache: 'ignoreCache'
-                                    }).catch((ex) =>
+                                    this.loadLocalNotebookControllersImpl('ignoreCache').catch((ex) =>
                                         console.error(
                                             'Failed to re-query python kernels after changes to list of interpreters',
                                             ex
@@ -226,18 +214,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Fetch kernel the fastest possible way (local kernels from cache but remote fetch latest).
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             // Fetching remote kernels cannot be done from cache.
-            const promises = [
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: true,
-                    useCache: 'useCache'
-                }),
-                this.loadNotebookControllersImpl({
-                    listLocalNonPythonKernels: false,
-                    useCache: 'useCache'
-                })
-            ];
+            const promises = [this.loadLocalNotebookControllersImpl('useCache')];
             if (!this.isLocalLaunch) {
-                promises.push(this.loadNotebookControllersImpl({ listRemoteKernels: true }));
+                promises.push(this.loadRemoteNotebookControllersImpl());
             }
             this.controllersPromise = Promise.all(promises)
                 .then(() => noop())
@@ -333,27 +312,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel || controllers[0];
     }
     /**
-     * Turn all our kernelConnections that we know about into registered NotebookControllers
+     * Turn all our local kernelConnections that we know about into registered NotebookControllers
      */
-    private async loadNotebookControllersImpl(
-        options:
-            | { listLocalNonPythonKernels: boolean; useCache: 'useCache' | 'ignoreCache' }
-            | { listRemoteKernels: boolean }
-    ): Promise<void> {
+    private async loadLocalNotebookControllersImpl(useCache: 'useCache' | 'ignoreCache'): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        let connections: KernelConnectionMetadata[] = [];
-        if ('listLocalNonPythonKernels' in options) {
-            connections = await (options.listLocalNonPythonKernels
-                ? this.localKernelFinder.listNonPythonKernels(cancelToken.token, options.useCache)
-                : this.localKernelFinder.listKernels(undefined, cancelToken.token, options.useCache)
-            ).catch((ex) => {
+        let connections = await this.localKernelFinder
+            .listKernels(undefined, cancelToken.token, useCache)
+            .catch((ex) => {
                 traceError('Failed to get local kernel connections', ex);
                 return [] as KernelConnectionMetadata[];
             });
-        } else {
-            connections = await this.getRemoteKernelConnectionMetadata(cancelToken.token);
-        }
 
         // Filter the connections.
         connections = connections.filter((item) => !this.kernelFilter.isKernelHidden(item));
@@ -361,14 +330,26 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
 
-        // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
-        if ('listLocalNonPythonKernels' in options && !options.listLocalNonPythonKernels) {
-            if (connections.some((item) => isPythonKernelConnection(item))) {
-                this.removeNoPythonControllers();
-            } else {
-                this.registerNoPythonControllers();
-            }
+        // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python
+        if (connections.some((item) => isPythonKernelConnection(item))) {
+            this.removeNoPythonControllers();
+        } else {
+            this.registerNoPythonControllers();
         }
+    }
+    /**
+     * Turn all our remote kernelConnections that we know about into registered NotebookControllers
+     */
+    private async loadRemoteNotebookControllersImpl(): Promise<void> {
+        const cancelToken = new CancellationTokenSource();
+        this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
+        let connections = await this.getRemoteKernelConnectionMetadata(cancelToken.token);
+
+        // Filter the connections.
+        connections = connections.filter((item) => !this.kernelFilter.isKernelHidden(item));
+
+        // Now create the actual controllers from our connections
+        this.createNotebookControllers(connections);
     }
     private removeNoPythonControllers() {
         this.notebookNoPythonController?.dispose();
@@ -431,9 +412,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // Possible we started a new kernel or shutdown a kernel.
                 // Hence no need to fetch kernels again.
                 if (!wasLocal) {
-                    void this.loadNotebookControllersImpl({
-                        listRemoteKernels: true
-                    });
+                    void this.loadRemoteNotebookControllersImpl();
                 }
                 wasLocal = true;
                 return;

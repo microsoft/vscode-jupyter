@@ -70,13 +70,6 @@ export interface ILocalKernelFinder {
         notebookMetadata?: nbformat.INotebookMetadata
     ): LocalKernelConnectionMetadata | undefined;
     /**
-     * Finds all kernel specs excluding Python.
-     */
-    listNonPythonKernels(
-        cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
-    ): Promise<LocalKernelConnectionMetadata[]>;
-    /**
      * Finds all kernel specs including Python.
      */
     listKernels(
