@@ -132,6 +132,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         );
     });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
+        // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
 
@@ -166,7 +167,8 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
 
         await testSliderWidget(comms);
     });
-    test('Widget renders after interrupting kernel', async () => {
+    test.skip('Widget renders after interrupting kernel', async () => {
+        // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
 
