@@ -28,6 +28,7 @@ import {
     UIKind,
     DebugSession,
     languages,
+    Range,
     Position,
     Hover,
     Diagnostic
@@ -133,6 +134,23 @@ export async function deleteAllCellsAndWait() {
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(0, activeEditor.document.cellCount), [])
     );
+}
+export async function insertIntoCell(cell: NotebookCell, pos: Position, text: string) {
+    // Find matching editor
+    const editor = window.visibleTextEditors.find((e) => e.document === cell.document);
+    assert.ok(editor, `Cannot find editor for cell ${cell.document.uri.toString()}`);
+    return editor?.edit((b) => {
+        b.insert(pos, text);
+    });
+}
+
+export async function deleteFromCell(cell: NotebookCell, range: Range) {
+    // Find matching editor
+    const editor = window.visibleTextEditors.find((e) => e.document === cell.document);
+    assert.ok(editor, `Cannot find editor for cell ${cell.document.uri.toString()}`);
+    return editor?.edit((b) => {
+        b.delete(range);
+    });
 }
 
 export async function createTemporaryFile(options: {

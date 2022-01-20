@@ -7,7 +7,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as assert from 'assert';
-import { Uri } from 'vscode';
+import { Position, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
@@ -30,9 +30,11 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutput
+    waitForTextOutput,
+    insertIntoCell
 } from './helper';
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
+import { sleep } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
@@ -221,5 +223,23 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
                 throw ex;
             }
         }
+    });
+    test('Cannot affect julia notebook with cell magics', async function () {
+        this.timeout(60_000); // Can be slow to start Julia kernel on CI.
+        await openNotebook(testJuliaNb.fsPath);
+        const topCell = await insertCodeCell('123456', { language: 'julia', index: 0 });
+
+        // Change cell to have a magic at the top
+        await insertIntoCell(topCell, new Position(0, 0), '%%python\n');
+
+        // Give the language update code a bit of time
+        await sleep(100);
+
+        // Check the language
+        assert.strictEqual(
+            topCell.document.languageId,
+            'julia',
+            `Inserting magics into non python kernels should have no effect`
+        );
     });
 });

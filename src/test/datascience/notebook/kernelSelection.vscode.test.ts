@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, window } from 'vscode';
+import { commands, Range, Position, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
@@ -31,7 +31,10 @@ import {
     waitForKernelToGetAutoSelected,
     waitForOutputs,
     waitForTextOutput,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    insertIntoCell,
+    deleteFromCell,
+    runCell
 } from './helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -334,5 +337,68 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
             waitForTextOutput(cell, venvNoRegSearchString, 0, false)
         ]);
+    });
+
+    test('Switch languages using cell magics', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        // Run all cells (to force python kernel)
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForOutputs(cell, 1)
+        ]);
+
+        // Insert another cell for changing the language
+        const magicCell = await insertCodeCell('');
+
+        // Edit the cell to have SQL
+        await insertIntoCell(magicCell, new Position(0, 0), '%%sql\n');
+        await waitForCondition(
+            async () => {
+                return magicCell.document.languageId === 'sql';
+            },
+            defaultNotebookTestTimeout,
+            `Language did not change to sql`
+        );
+
+        // Delete the line and switch back to python
+        await deleteFromCell(magicCell, new Range(new Position(0, 0), new Position(1, 0)));
+        await insertIntoCell(magicCell, new Position(0, 0), '%%python\n');
+        await waitForCondition(
+            async () => {
+                return magicCell.document.languageId === 'python';
+            },
+            defaultNotebookTestTimeout,
+            `Language did not change back to python`
+        );
+
+        // Delete the line and switch to bash
+        await deleteFromCell(magicCell, new Range(new Position(0, 0), new Position(1, 0)));
+        await insertIntoCell(magicCell, new Position(0, 0), '%%bash\necho from bash');
+        await waitForCondition(
+            async () => {
+                return magicCell.document.languageId === 'shellscript';
+            },
+            defaultNotebookTestTimeout,
+            `Language did not change to shell script`
+        );
+
+        // Make sure we can run the bash cell
+        await Promise.all([
+            runCell(magicCell),
+            waitForExecutionCompletedSuccessfully(magicCell),
+            waitForOutputs(magicCell, 1)
+        ]);
+
+        // check bash cell output
+        assert.ok(magicCell.outputs.length);
+        const outputText = getTextOutputValue(magicCell.outputs[0]).trim();
+        assert.equal(outputText, 'from bash', `Bash output did not work`);
     });
 });

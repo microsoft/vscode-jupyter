@@ -1880,6 +1880,12 @@
                     "default": ".%",
                     "description": "Characters which trigger auto completion on a python jupyter kernel (requires reload of VS code)",
                     "scope": "machine"
+                },
+                "jupyter.switchCellsOnMagic": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Controls whether or not cell magics auto switch the language of a cell or not",
+                    "scope": "machine"
                 }
             }
         },
