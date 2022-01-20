@@ -346,7 +346,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.createNotebookControllers(connections);
 
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
-        if (!('listRemoteKernels' in options)) {
+        if ('useCache' in options) {
             if (connections.some((item) => isPythonKernelConnection(item))) {
                 this.removeNoPythonControllers();
             } else {
