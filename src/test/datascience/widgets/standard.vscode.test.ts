@@ -150,7 +150,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
 
         await testSliderWidget(comms);
     });
-    test('Widget renders after restarting kernel', async () => {
+    test.skip('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
 
