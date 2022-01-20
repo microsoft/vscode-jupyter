@@ -23,27 +23,32 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
         @inject(IsPreRelease) private isPreRelease: Promise<boolean>
     ) {}
     public async activate(): Promise<void> {
-        // Ask user if the version is not prerelease
-        const dontAsk = this.globalState.get(PRERELEASE_DONT_ASK_FLAG, false);
-        if (!(await this.isPreRelease) && this.appEnv.channel === 'insiders' && !dontAsk) {
-            const yes = localize.DataScience.usingNonPrereleaseYes();
-            const no = localize.DataScience.usingNonPrereleaseNo();
-            const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();
-            void this.appShell
-                .showWarningMessage(localize.DataScience.usingNonPrerelease(), yes, no, dontAskAgain)
-                .then((answer) => {
-                    if (answer === yes) {
-                        return vscode.commands.executeCommand(
-                            'workbench.extensions.installExtension',
-                            JVSC_EXTENSION_ID,
-                            {
-                                installPreReleaseVersion: true
+        this.isPreRelease
+            .then((isPreRelease) => {
+                const dontAsk = this.globalState.get(PRERELEASE_DONT_ASK_FLAG, false);
+
+                // Ask user if the version is not prerelease
+                if (!isPreRelease && dontAsk && this.appEnv.channel === 'insiders') {
+                    const yes = localize.DataScience.usingNonPrereleaseYes();
+                    const no = localize.DataScience.usingNonPrereleaseNo();
+                    const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();
+                    void this.appShell
+                        .showWarningMessage(localize.DataScience.usingNonPrerelease(), yes, no, dontAskAgain)
+                        .then((answer) => {
+                            if (answer === yes) {
+                                return vscode.commands.executeCommand(
+                                    'workbench.extensions.installExtension',
+                                    JVSC_EXTENSION_ID,
+                                    {
+                                        installPreReleaseVersion: true
+                                    }
+                                );
+                            } else if (answer == dontAskAgain) {
+                                return this.globalState.update(PRERELEASE_DONT_ASK_FLAG, true);
                             }
-                        );
-                    } else if (answer == dontAskAgain) {
-                        return this.globalState.update(PRERELEASE_DONT_ASK_FLAG, true);
-                    }
-                });
-        }
+                        });
+                }
+            })
+            .ignoreErrors();
     }
 }
