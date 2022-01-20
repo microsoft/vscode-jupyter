@@ -13,7 +13,6 @@ import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { sleep } from '../../core';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -132,7 +131,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
             'Checkbox not rendered'
         );
     });
-    test('Widget renders after executing a notebook which was saved after previous execution', async () => {
+    test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         let comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
 
@@ -142,18 +141,12 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await closeActiveWindows();
 
         // Open this notebook again.
-        traceInfo('Step1');
         comms = await initializeNotebook({ notebookFile: uri.fsPath });
-        traceInfo('Step2');
-        // If we have a widget then we need for wait for comms to initialize.
-        await sleep(10_000);
-        traceInfo('Step3');
 
         // Verify we have output in the first cell.
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
 
-        traceInfo('Step4');
         await testSliderWidget(comms);
     });
     test('Widget renders after restarting kernel', async () => {
