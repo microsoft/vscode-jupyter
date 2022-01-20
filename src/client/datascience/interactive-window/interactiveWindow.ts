@@ -602,7 +602,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }) != undefined ||
             this.pendingNotebookScrolls.find((r) => r.end == editor.document.cellCount - 1) != undefined;
 
-
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings(this.owningResource);
         const isMarkdown = this.cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
