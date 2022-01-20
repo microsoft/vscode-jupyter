@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable, inject } from 'inversify';
-import { TextDocumentChangeEvent, Range, Position, languages, workspace, TextDocument } from 'vscode';
+import { TextDocumentChangeEvent, Range, Position, languages, workspace, TextDocument, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { INotebookControllerManager } from './types';
+import { VSCodeNotebookController } from './vscodeNotebookController';
 
 // This list comes from here: https://ipython.readthedocs.io/en/stable/interactive/magics.html#cell-magics
 const LanguageMagics = [
@@ -47,6 +48,7 @@ export class LanguageSwitcher implements IExtensionSingleActivationService {
     ) {}
     public async activate(): Promise<void> {
         this.documentManager.onDidChangeTextDocument(this.onDidChangeTextDocument, this, this.disposables);
+        this.controllerManager.onNotebookControllerSelected(this.onDidChangeKernelSelection, this, this.disposables);
     }
 
     private onDidChangeTextDocument(e: TextDocumentChangeEvent) {
@@ -60,9 +62,20 @@ export class LanguageSwitcher implements IExtensionSingleActivationService {
         }
     }
 
-    private hasPythonController(cellDocument: TextDocument): boolean {
-        const notebook = workspace.notebookDocuments.find((n) => n.getCells().find((c) => c.document === cellDocument));
-        const controller = notebook ? this.controllerManager.getSelectedNotebookController(notebook) : undefined;
+    private onDidChangeKernelSelection(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
+        if (this.isPythonController(e.controller)) {
+            // Go through all of the cells and see if any have a match for a language change
+            e.notebook.getCells().forEach((c) => {
+                const lines = c.document.getText().splitLines();
+                const match = LanguageMagics.find((m) => lines.find((l) => l.includes(m[0])));
+                if (match) {
+                    void languages.setTextDocumentLanguage(c.document, match[1]);
+                }
+            });
+        }
+    }
+
+    private isPythonController(controller: VSCodeNotebookController | undefined) {
         switch (controller?.connection.kind) {
             case 'startUsingPythonInterpreter':
                 return true;
@@ -74,6 +87,12 @@ export class LanguageSwitcher implements IExtensionSingleActivationService {
             default:
                 return false;
         }
+    }
+
+    private hasPythonController(cellDocument: TextDocument): boolean {
+        const notebook = workspace.notebookDocuments.find((n) => n.getCells().find((c) => c.document === cellDocument));
+        const controller = notebook ? this.controllerManager.getSelectedNotebookController(notebook) : undefined;
+        return this.isPythonController(controller);
     }
 
     private switchOnMatch(e: TextDocumentChangeEvent, setToMatch: string[][]) {

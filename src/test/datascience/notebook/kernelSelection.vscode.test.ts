@@ -401,4 +401,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const outputText = getTextOutputValue(magicCell.outputs[0]).trim();
         assert.equal(outputText, 'from bash', `Bash output did not work`);
     });
+
+    test('Switch languages on open', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+    });
 });
