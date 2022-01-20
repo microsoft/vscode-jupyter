@@ -602,14 +602,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }) != undefined ||
             this.pendingNotebookScrolls.find((r) => r.end == editor.document.cellCount - 1) != undefined;
 
-        // ensure editor is opened but not focused
-        await this.commandManager.executeCommand(
-            'interactive.open',
-            { preserveFocus: true },
-            notebookDocument.uri,
-            this.notebookControllerManager.getSelectedNotebookController(notebookDocument)?.id,
-            undefined
-        );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings(this.owningResource);
