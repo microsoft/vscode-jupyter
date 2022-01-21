@@ -29,7 +29,7 @@ import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensions } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
@@ -48,7 +48,6 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
         let platformService: IPlatformService;
         let fs: IFileSystem;
         let extensionChecker: IPythonExtensionChecker;
-        let extensions: IExtensions;
         const defaultPython3Name = 'python3';
         const disposables: IDisposable[] = [];
         const pyEnvInterpreter: PythonEnvironment = {
@@ -262,8 +261,6 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
             when(platformService.isWindows).thenReturn(isWindows);
             when(platformService.isLinux).thenReturn(!isWindows);
             when(platformService.isMac).thenReturn(false);
-            extensions = mock<IExtensions>();
-            when(extensions.getExtension(anything())).thenReturn();
             fs = mock(FileSystem);
             when(fs.deleteLocalFile(anything())).thenResolve();
             when(fs.localFileExists(anything())).thenResolve(true);
@@ -358,7 +355,6 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
-                instance(extensions),
                 nonPythonKernelSpecFinder,
                 new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                     instance(interpreterService),
