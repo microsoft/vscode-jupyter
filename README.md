@@ -81,8 +81,6 @@ Learn more about the rich features of the Jupyter extension:
 
 -   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more.
 
-    -   _May be limited due to kernelspec of choice_
-
 -   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code/markdown cells, render plots, create presentation-friendly versions of your notebook by exporting to HTML or PDF and more.
 
 ## Supported locales
