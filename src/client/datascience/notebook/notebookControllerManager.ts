@@ -72,6 +72,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }>;
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
+    private readonly interactiveControllerIdSuffix = ' (Interactive)';
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -509,7 +510,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
-            let preferredId: string | undefined;
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
             if (document.notebookType === JupyterNotebookView) {
@@ -582,14 +582,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     document.uri
                 );
                 preferredConnection = defaultInteractiveController?.connection;
-                preferredId = `${preferredConnection?.id} (Interactive)`;
             }
             // const targetController = Array.from(this.registeredControllers.values()).find(
             // //(value) => preferredConnection?.id === value.connection.id
             // (value) => preferredId === value.connection.id
             // );
             let targetController;
-            if (preferredId) {
+            if (preferredConnection) {
+                const preferredId =
+                    document.notebookType === 'interactive'
+                        ? `${preferredConnection.id}${this.interactiveControllerIdSuffix}`
+                        : preferredConnection.id;
                 targetController = this.registeredControllers.get(preferredId);
             }
 
@@ -659,7 +662,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Create notebook selector
             [
                 [kernelConnection.id, JupyterNotebookView],
-                [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
+                [`${kernelConnection.id}${this.interactiveControllerIdSuffix}`, InteractiveWindowView]
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
                 .forEach(([id, viewType]) => {
