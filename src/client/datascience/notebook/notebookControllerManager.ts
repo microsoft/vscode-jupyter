@@ -509,6 +509,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
+            let preferredId: string | undefined;
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
             if (document.notebookType === JupyterNotebookView) {
@@ -574,10 +575,23 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await loadControllersPromise;
+
+                // For interactive set the preferred controller as the interpreter or default
+                const defaultInteractiveController = await this.getActiveInterpreterOrDefaultController(
+                    'interactive',
+                    document.uri
+                );
+                preferredConnection = defaultInteractiveController?.connection;
+                preferredId = `${preferredConnection?.id} (Interactive)`;
             }
-            const targetController = Array.from(this.registeredControllers.values()).find(
-                (value) => preferredConnection?.id === value.connection.id
-            );
+            // const targetController = Array.from(this.registeredControllers.values()).find(
+            // //(value) => preferredConnection?.id === value.connection.id
+            // (value) => preferredId === value.connection.id
+            // );
+            let targetController;
+            if (preferredId) {
+                targetController = this.registeredControllers.get(preferredId);
+            }
 
             if (targetController) {
                 traceInfo(
