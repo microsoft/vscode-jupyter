@@ -96,7 +96,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
     -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
 
--   Contributions are always welcome. Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
+-   Contributions are always welcome, so please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
 
 -   If you're interested in the development of the extension, you can read about our [development process](https://github.com/microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
 
