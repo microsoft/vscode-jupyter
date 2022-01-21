@@ -8,7 +8,7 @@ import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo } from '../../common/logger';
-import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
