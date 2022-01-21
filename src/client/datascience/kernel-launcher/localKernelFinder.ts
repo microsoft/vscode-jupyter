@@ -8,7 +8,7 @@ import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo } from '../../common/logger';
-import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -44,7 +44,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
@@ -271,11 +270,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             // Disable xeus python for now.
             if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
                 traceInfo(`Hiding xeus kernelspec`);
-                return false;
-            }
-            const extensionId = kernelSpec.metadata?.vscode?.extension_id;
-            if (extensionId && this.extensions.getExtension(extensionId)) {
-                traceInfo(`Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionId}`);
                 return false;
             }
             return true;
