@@ -44,7 +44,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
@@ -271,11 +270,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             // Disable xeus python for now.
             if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
                 traceInfo(`Hiding xeus kernelspec`);
-                return false;
-            }
-            const extensionId = kernelSpec.metadata?.vscode?.extension_id;
-            if (extensionId && this.extensions.getExtension(extensionId)) {
-                traceInfo(`Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionId}`);
                 return false;
             }
             return true;
