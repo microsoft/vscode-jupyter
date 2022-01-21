@@ -2,11 +2,11 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
-The Jupyter Extension includes the Jupyter Keymaps and the Jupyter Notebook Renderers extensions by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and the Jupyter Notebook Rendereres extension provides renderers for mime types such as latex, plotly, vega and the like. Both of these extensions can be disabled or uninstalled.
+The Jupyter Extension includes the Jupyter Keymaps and the Jupyter Notebook Renderers extensions by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and the Jupyter Notebook Renderers extension provides renderers for MIME types such as latex, plotly, vega, and the like. Both of these extensions can be disabled or uninstalled.
 
 ## Notebook support
 
-The Jupyter Extension uses the [built-in notebook support](https://code.visualstudio.com/api/extension-guides/notebook#:~:text=The%20Notebook%20API%20allows%20Visual%20Studio%20Code%20extensions,allows%20for%20similar%20experiences%20inside%20Visual%20Studio%20Code.) from VS code. This UI gives a number of advantages to users of notebooks:
+The Jupyter Extension uses the [built-in notebook support](https://code.visualstudio.com/api/extension-guides/notebook#:~:text=The%20Notebook%20API%20allows%20Visual%20Studio%20Code%20extensions,allows%20for%20similar%20experiences%20inside%20Visual%20Studio%20Code.) from VS Code. This UI gives a number of advantages to users of notebooks:
 
 -   Out of the box support for VS Code's vast array of basic code editing features like [hot exit](https://code.visualstudio.com/docs/editor/codebasics#_hot-exit), [find & replace](https://code.visualstudio.com/docs/editor/codebasics#_find-and-replace), and [code folding](https://code.visualstudio.com/docs/editor/codebasics#_folding).
 -   Editor extensions like [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim), [bracket colorization](https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer), linters and many more are available while editing a cell.
@@ -19,7 +19,7 @@ The Jupyter Extension uses the [built-in notebook support](https://code.visualst
 
 ## Working with Python
 
-Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
+If you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
 
 Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) instructions to get started and visit the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support) to learn more about how the Python and Jupyter Extension are working together to provide an optimum Python notebooks experience.
 
@@ -36,21 +36,21 @@ To set it up, follow the steps [here](https://github.com/microsoft/vscode-jupyte
 
 ## Working with other Languages
 
-The Jupyter Extension supports other languages in addition to Python such as Julia, R, and C# in VS Code Insiders with our latest Native VS Code Notebooks Experience!
+The Jupyter Extension supports other languages in addition to Python such as Julia, R, and C#.
 
 ### Quick Start
 
--   **Step 1.** Install [VS Code Insiders](https://code.visualstudio.com/insiders/)
+-   **Step 1.** Install [VS Code](https://code.visualstudio.com/)
 
 -   **Step 2** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
 
 -   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
 
--   **Step 4.** Open or create a notebook file and start coding!
+-   **Step 4.** Open or create a notebook file and start coding.
 
 ## Notebooks Quick Start
 
--   To create a new notebook open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Notebook"`
+-   To create a new notebook open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select the command `"Jupyter: Create New Jupyter Notebook"`
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
@@ -68,7 +68,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 
 | Command                                          | Description                                                            |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `Jupyter: Create New Blank Notebook`             | Create a new blank Jupyter Notebook                                    |
+| `Jupyter: Create New Jupyter Notebook`             | Create a new blank Jupyter Notebook                                    |
 | `Notebook: Select Notebook Kernel`               | Select or switch kernels within your notebook                          |
 | `Notebook: Change Cell Language`                 | Change the language of the cell currently in focus                     |
 | `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF |
@@ -79,11 +79,11 @@ To see all available Jupyter Notebook commands, open the Command Palette and typ
 
 Learn more about the rich features of the Jupyter extension:
 
--   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more!
+-   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more.
 
     -   _May be limited due to kernelspec of choice_
 
--   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code/markdown cells, render plots, create presentation-friendly versions of your notebook by exporting to HTML or PDF and more!
+-   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code/markdown cells, render plots, create presentation-friendly versions of your notebook by exporting to HTML or PDF and more.
 
 ## Supported locales
 
@@ -96,7 +96,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
     -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
 
--   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
+-   Contributions are always welcome. Please see our [contributing guide](https://github.com/Microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md) for more details.
 
 -   If you're interested in the development of the extension, you can read about our [development process](https://github.com/microsoft/vscode-jupyter/blob/main/CONTRIBUTING.md#development-process)
 
