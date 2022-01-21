@@ -222,6 +222,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 }
             })
         );
+
+        if (window.activeNotebookEditor === this._notebookEditor) {
+            this._onDidChangeViewState.fire();
+        }
+
         this.listenForControllerSelection(notebookEditor.document);
         return notebookEditor;
     }
