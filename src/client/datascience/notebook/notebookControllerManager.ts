@@ -583,10 +583,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 );
                 preferredConnection = defaultInteractiveController?.connection;
             }
-            // const targetController = Array.from(this.registeredControllers.values()).find(
-            // //(value) => preferredConnection?.id === value.connection.id
-            // (value) => preferredId === value.connection.id
-            // );
+
+            // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
             let targetController;
             if (preferredConnection) {
                 const preferredId =
