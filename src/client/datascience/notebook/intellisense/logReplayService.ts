@@ -132,10 +132,28 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 edit.replaceNotebookCells(this.activeNotebook.uri, new vscode.NotebookRange(index, index), [cellData]);
                 await vscode.workspace.applyEdit(edit);
             } else if (editor) {
+                // First reveal the cell
+                const cell = this.activeNotebook
+                    ?.getCells()
+                    .find((c) => c.document.uri.toString() === step.textDocument.uri);
+                if (cell) {
+                    const notebookRange = new vscode.NotebookRange(cell.index, cell.index + 1);
+                    vscode.window.activeNotebookEditor?.revealRange(
+                        notebookRange,
+                        vscode.NotebookEditorRevealType.Default
+                    );
+                }
+
+                // Then apply the edit to it
                 const vscodeRange = new vscode.Range(
                     new vscode.Position(change.range.start.line, change.range.start.character),
                     new vscode.Position(change.range.end.line, change.range.end.character)
                 );
+
+                // Jump to this range so we can see the edit happen
+                editor.revealRange(vscodeRange);
+
+                // Then do the actual edit
                 await editor.edit((b) => {
                     if (change.text == '') {
                         // This is a delete
