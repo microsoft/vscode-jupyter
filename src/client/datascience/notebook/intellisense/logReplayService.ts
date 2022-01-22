@@ -1,0 +1,229 @@
+import { injectable, inject } from 'inversify';
+import * as vscode from 'vscode';
+import { IExtensionSingleActivationService } from '../../../activation/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IFileSystem } from '../../../common/platform/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { Commands, EditorContexts } from '../../constants';
+import * as lspConcat from '@vscode/lsp-notebook-concat';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
+import * as protocol from 'vscode-languageserver-protocol';
+import { traceInfo } from '../../../common/logger';
+import { ContextKey } from '../../../common/contextKey';
+
+/**
+ * Class used to replay pylance log output to regenerate a series of edits. SHIFT+F10 will play the steps one at a time
+ */
+@injectable()
+export class LogReplayService implements IExtensionSingleActivationService {
+    private steps: protocol.DidChangeTextDocumentParams[] = [];
+    private index = -1;
+    private converter: lspConcat.NotebookConverter | undefined;
+    private activeNotebook: vscode.NotebookDocument | undefined;
+    private isLogActive: ContextKey | undefined;
+    constructor(
+        @inject(ICommandManager) private readonly commandService: ICommandManager,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
+    ) {}
+    public async activate(): Promise<void> {
+        this.disposableRegistry.push(
+            this.commandService.registerCommand(Commands.ReplayPylanceLog, this.replayPylanceLog, this)
+        );
+        this.disposableRegistry.push(
+            this.commandService.registerCommand(Commands.ReplayPylanceLogStep, this.step, this)
+        );
+        this.isLogActive = new ContextKey(EditorContexts.ReplayLogLoaded, this.commandService);
+        void this.isLogActive.set(false);
+    }
+
+    private async replayPylanceLog() {
+        if (vscode.window.activeNotebookEditor) {
+            const file = await this.appShell.showOpenDialog({ title: 'Open Pylance Output Log' });
+            if (file && file.length === 1) {
+                this.activeNotebook = vscode.window.activeNotebookEditor.document;
+                this.steps = await this.parsePylanceLogSteps(file[0].fsPath);
+                this.index = -1;
+                void this.isLogActive?.set(true);
+            }
+        } else {
+            void this.appShell.showErrorMessage(`Command should be run with a jupyter notebook open`);
+        }
+    }
+
+    private async step() {
+        if (
+            this.steps.length - 1 > this.index &&
+            this.steps.length > 0 &&
+            this.activeNotebook === vscode.window.activeNotebookEditor?.document
+        ) {
+            void this.appShell.showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`);
+
+            // Move to next step
+            this.index += 1;
+            let step = this.steps[this.index];
+            let change: {
+                range: protocol.Range;
+                rangeLength: number;
+                text: string;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } = step.contentChanges[0] as any;
+
+            // Convert the change if necessary
+            if (step.textDocument.uri.includes('_NotebookConcat_') && this.activeNotebook) {
+                // Apply the change to our concat document
+                const converter = await this.getConverter();
+                if (converter) {
+                    const originalChange: protocol.DidChangeTextDocumentParams = {
+                        textDocument: {
+                            version: step.textDocument.version,
+                            uri: converter.toNotebookUri(step.textDocument.uri, change.range)
+                        },
+                        contentChanges: [
+                            {
+                                text: change.text,
+                                range: converter.toNotebookRange(step.textDocument.uri, change.range),
+                                rangeLength: change.rangeLength
+                            }
+                        ]
+                    };
+
+                    // Apply the original change to our concat document
+                    converter.handleChange(originalChange);
+
+                    // Change our step to the modified one (so we can apply it correctly to the real notebook)
+                    step = originalChange;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    change = originalChange.contentChanges[0] as any;
+                }
+            } else if (this.activeNotebook) {
+                // Should be real pylance handling the result. Convert the cell into our active notebook. Really just need the fragment part for the cell
+                // uri
+                const fragment = /(#ch\d+)/.exec(step.textDocument.uri);
+                const replaced =
+                    fragment != null && fragment.length > 1
+                        ? this.activeNotebook
+                              .cellAt(0)
+                              .document.uri.toString()
+                              .replace(/(#ch\d+)/, fragment[1])
+                        : step.textDocument.uri;
+                step.textDocument.uri = replaced;
+            }
+
+            traceInfo(`*** Replaying step: ${JSON.stringify(step, undefined, '  ')}`);
+
+            // Find the associated document and apply the edit
+            const editor = vscode.window.visibleTextEditors.find(
+                (e) => e.document.uri.toString() === step.textDocument.uri
+            );
+            if (!editor && this.activeNotebook) {
+                // Cell doesn't exist yet, create it
+                const index = this.activeNotebook.cellCount;
+                const edit = new vscode.WorkspaceEdit();
+                const cellData = new vscode.NotebookCellData(
+                    vscode.NotebookCellKind.Code,
+                    change.text,
+                    PYTHON_LANGUAGE
+                );
+                cellData.outputs = [];
+                cellData.metadata = {};
+                edit.replaceNotebookCells(this.activeNotebook.uri, new vscode.NotebookRange(index, index), [cellData]);
+                await vscode.workspace.applyEdit(edit);
+            } else if (editor) {
+                const vscodeRange = new vscode.Range(
+                    new vscode.Position(change.range.start.line, change.range.start.character),
+                    new vscode.Position(change.range.end.line, change.range.end.character)
+                );
+                await editor.edit((b) => {
+                    if (change.text == '') {
+                        // This is a delete
+                        b.delete(vscodeRange);
+                    } else if (change.rangeLength > 0) {
+                        // This is a replace
+                        b.replace(vscodeRange, change.text);
+                    } else {
+                        b.insert(vscodeRange.start, change.text);
+                    }
+                });
+            }
+            if (this.steps.length === this.index) {
+                void this.isLogActive?.set(false);
+            }
+        } else if (
+            this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.document.uri.toString() &&
+            this.index < this.steps.length - 1
+        ) {
+            void this.appShell.showErrorMessage(
+                `You changed the notebook editor in the middle of stepping through the log`
+            );
+        }
+    }
+
+    private async parsePylanceLogSteps(fileName: string) {
+        const contents = await this.fs.readLocalFile(fileName);
+        const results: protocol.DidChangeTextDocumentParams[] = [];
+        const regex = /textDocument\/didChange'[\s\S]*?Params:\s(?<json_event>[\s\S]*?\n\})/g;
+
+        // Split into textDocument/change groups
+        let match: RegExpExecArray | null = null;
+        while ((match = regex.exec(contents)) != null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (match.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+            if (match.groups && match.groups['json_event']) {
+                const json = JSON.parse(match.groups['json_event']);
+
+                // Json should already be a TextDocumentChangeEvent
+                results.push(json);
+            }
+        }
+
+        return results;
+    }
+
+    private getNotebookHeader(uri: vscode.Uri) {
+        const settings = this.configService.getSettings(uri);
+        // Run any startup commands that we specified. Support the old form too
+        let setting = settings.runStartupCommands;
+
+        // Convert to string in case we get an array of startup commands.
+        if (Array.isArray(setting)) {
+            setting = setting.join(`\n`);
+        }
+
+        if (setting) {
+            // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+            return setting.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+        }
+        return '';
+    }
+
+    private async getConverter() {
+        if (!this.converter && this.activeNotebook) {
+            const converter = lspConcat.createConverter(
+                (_u) => this.getNotebookHeader(this.activeNotebook!.uri),
+                () => ''
+            );
+            converter.handleRefresh({
+                cells: this.activeNotebook
+                    .getCells()
+                    .filter((c) => vscode.languages.match(NOTEBOOK_SELECTOR, c.document) > 0)
+                    .map((c) => {
+                        return {
+                            textDocument: {
+                                uri: c.document.uri.toString(),
+                                text: c.document.getText(),
+                                languageId: c.document.languageId,
+                                version: c.document.version
+                            }
+                        };
+                    })
+            });
+            this.converter = converter;
+        }
+        return this.converter;
+    }
+}

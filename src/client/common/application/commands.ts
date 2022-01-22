@@ -186,4 +186,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
     [DSCommands.RunByLineStop]: [];
+    [DSCommands.ReplayPylanceLog]: [Uri];
+    [DSCommands.ReplayPylanceLogStep]: [];
 }
