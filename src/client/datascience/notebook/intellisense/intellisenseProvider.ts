@@ -185,7 +185,10 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
             notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;
         }
 
-        return interpreterId == notebookId;
+        // Cell also have to support python
+        const cell = notebook?.getCells().find((c) => c.document.uri.toString() === uri.toString());
+
+        return interpreterId == notebookId && (!cell || cell.document.languageId === 'python');
     }
 
     private getNotebookHeader(uri: Uri) {
