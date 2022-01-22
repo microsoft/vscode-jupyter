@@ -5,7 +5,7 @@ import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, NotebookDocument } from 'vscode';
 import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo } from '../common/logger';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Telemetry } from '../datascience/constants';
 import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
@@ -35,10 +35,12 @@ export class JupyterKernelServiceFactory {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ApiAccessService) private readonly apiAccess: ApiAccessService
+        @inject(ApiAccessService) private readonly apiAccess: ApiAccessService,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     public async getService() {
-        const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation());
+        const info = await this.extensions.determineExtensionFromCallStack();
+        const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation(info));
         if (!accessInfo.accessAllowed) {
             return;
         }

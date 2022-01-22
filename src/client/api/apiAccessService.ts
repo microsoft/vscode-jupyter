@@ -5,7 +5,7 @@ import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { JVSC_EXTENSION_ID } from '../common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../common/types';
+import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Common, DataScience } from '../common/utils/localize';
 import { Telemetry } from '../datascience/constants';
@@ -19,24 +19,25 @@ type ApiExtensionInfo = {
 const API_ACCESS_GLOBAL_KEY = 'JUPYTER_API_ACCESS_INFORMATION';
 
 // Some publishers like our own `ms-tolsai` will always be allowed to access the API.
-export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
+export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo']);
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
-export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0]]);
+export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo']);
 
 @injectable()
 export class ApiAccessService {
     private readonly extensionAccess = new Map<string, Promise<{ extensionId: string; accessAllowed: boolean }>>();
     private promiseChain = new PromiseChain();
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IExtensionContext) private context: IExtensionContext
     ) {}
-    public async getAccessInformation(): Promise<{ extensionId: string; accessAllowed: boolean }> {
-        const info = await this.extensions.determineExtensionFromCallStack();
+    public async getAccessInformation(info: {
+        extensionId: string;
+        displayName: string;
+    }): Promise<{ extensionId: string; accessAllowed: boolean }> {
         const publisherId = info.extensionId.split('.')[0];
         if (this.context.extensionMode === ExtensionMode.Test) {
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
