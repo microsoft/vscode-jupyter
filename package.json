@@ -278,6 +278,7 @@
                 "command": "jupyter.replayPylanceLogStep",
                 "title": "Step Pylance Log",
                 "category": "Jupyter (Dev)",
+                "icon": "$(debug-start)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded"
             },
             {
@@ -1043,11 +1044,6 @@
                     "command": "jupyter.replayPylanceLog",
                     "title": "Replay Pylance Log",
                     "when": "jupyter.development && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "title": "%jupyter.command.jupyter.debug.title%",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.debugNotebook",

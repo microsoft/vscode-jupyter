@@ -21,8 +21,17 @@ import { sleep, waitForCondition } from '../../../common/utils/async';
  * Class used to replay pylance log output to regenerate a series of edits.
  *
  * To use this
- * - Run "Jupyter (dev): Replay pylance log"
+ * - Have customer do a bunch of edits with these settings active:
+ *   "notebook-intellisense.logLevel": "Trace"
+ *   "notebook-intellisense.trace.server.verbosity": "Verbose",
+ * - Save output of the 'language server' trace (should have the same name as the kernel)
+ * - Run "Jupyter (dev): Replay pylance log" and pick the output file
  * - Click on the 'Step Pylance Log' button that appears
+ *
+ * Note:
+ * There may be bugs with
+ * - Creating new cells
+ * - Deleting tabs (seems to only delete a single space)
  */
 @injectable()
 export class LogReplayService implements IExtensionSingleActivationService {
