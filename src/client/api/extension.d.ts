@@ -178,6 +178,7 @@ export type ActiveKernel = LiveKernelConnectionMetadata;
 export interface IKernelSocket {
     /**
      * Whether the kernel socket is read & available for use.
+     * Use `onDidChange` to be notified when this changes.
      */
     ready: boolean;
     /**
