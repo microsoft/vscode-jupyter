@@ -1,4 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
 import { injectable, inject } from 'inversify';
+import * as os from 'os';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
@@ -10,6 +15,7 @@ import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
 import * as protocol from 'vscode-languageserver-protocol';
 import { traceInfo } from '../../../common/logger';
 import { ContextKey } from '../../../common/contextKey';
+import { sleep, waitForCondition } from '../../../common/utils/async';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits. SHIFT+F10 will play the steps one at a time
@@ -57,7 +63,8 @@ export class LogReplayService implements IExtensionSingleActivationService {
         if (
             this.steps.length - 1 > this.index &&
             this.steps.length > 0 &&
-            this.activeNotebook === vscode.window.activeNotebookEditor?.document
+            this.activeNotebook === vscode.window.activeNotebookEditor?.document &&
+            this.activeNotebook
         ) {
             void this.appShell.showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`);
 
@@ -73,8 +80,12 @@ export class LogReplayService implements IExtensionSingleActivationService {
 
             // Convert the change if necessary
             if (step.textDocument.uri.includes('_NotebookConcat_') && this.activeNotebook) {
-                // Apply the change to our concat document
                 const converter = await this.getConverter();
+                step.textDocument.uri = converter!
+                    .getConcatDocument(this.activeNotebook.cellAt(0).document.uri.toString())
+                    .concatUri?.toString();
+
+                // Apply the change to our concat document
                 if (converter) {
                     const originalChange: protocol.DidChangeTextDocumentParams = {
                         textDocument: {
@@ -90,6 +101,30 @@ export class LogReplayService implements IExtensionSingleActivationService {
                         ]
                     };
 
+                    // Original change may be a replace for an entire cell. This happens when the user edits
+                    // a line with a magic in it
+                    if (change.text.startsWith(`import IPython\nIPython.get_ipython()\n`)) {
+                        // Just replace the entire cell contents.
+                        const newContents = change.text
+                            .slice(`import IPython\nIPython.get_ipython()\n`.length)
+                            .replace(` # type: ignore`, '');
+                        const entireCell = this.activeNotebook
+                            .getCells()
+                            .find((c) => originalChange.textDocument.uri === c.document.uri.toString());
+                        if (entireCell) {
+                            originalChange.contentChanges = [
+                                {
+                                    text: newContents,
+                                    range: new vscode.Range(
+                                        new vscode.Position(0, 0),
+                                        new vscode.Position(entireCell.document.lineCount, 0)
+                                    ),
+                                    rangeLength: entireCell.document.getText().length
+                                }
+                            ];
+                        }
+                    }
+
                     // Apply the original change to our concat document
                     converter.handleChange(originalChange);
 
@@ -98,7 +133,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     change = originalChange.contentChanges[0] as any;
                 }
-            } else if (this.activeNotebook) {
+            } else {
                 // Should be real pylance handling the result. Convert the cell into our active notebook. Really just need the fragment part for the cell
                 // uri
                 const fragment = /(#ch\d+)/.exec(step.textDocument.uri);
@@ -114,44 +149,48 @@ export class LogReplayService implements IExtensionSingleActivationService {
 
             traceInfo(`*** Replaying step: ${JSON.stringify(step, undefined, '  ')}`);
 
-            // Find the associated document and apply the edit
-            const editor = vscode.window.visibleTextEditors.find(
-                (e) => e.document.uri.toString() === step.textDocument.uri
-            );
-            if (!editor && this.activeNotebook) {
+            // Find the associated cell in the real notebook
+            let cell = this.activeNotebook?.getCells().find((c) => c.document.uri.toString() === step.textDocument.uri);
+            if (!cell) {
                 // Cell doesn't exist yet, create it
                 const index = this.activeNotebook.cellCount;
                 const edit = new vscode.WorkspaceEdit();
-                const cellData = new vscode.NotebookCellData(
-                    vscode.NotebookCellKind.Code,
-                    change.text,
-                    PYTHON_LANGUAGE
-                );
+                const cellData = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', PYTHON_LANGUAGE);
                 cellData.outputs = [];
                 cellData.metadata = {};
                 edit.replaceNotebookCells(this.activeNotebook.uri, new vscode.NotebookRange(index, index), [cellData]);
                 await vscode.workspace.applyEdit(edit);
-            } else if (editor) {
-                // First reveal the cell
-                const cell = this.activeNotebook
-                    ?.getCells()
-                    .find((c) => c.document.uri.toString() === step.textDocument.uri);
-                if (cell) {
-                    const notebookRange = new vscode.NotebookRange(cell.index, cell.index + 1);
-                    vscode.window.activeNotebookEditor?.revealRange(
-                        notebookRange,
-                        vscode.NotebookEditorRevealType.Default
-                    );
-                }
+                cell = this.activeNotebook.cellAt(this.activeNotebook.cellCount - 1);
+            }
 
-                // Then apply the edit to it
+            // Reveal the cell (this should force the editor to become visible)
+            const notebookRange = new vscode.NotebookRange(cell.index, cell.index + 1);
+            vscode.window.activeNotebookEditor?.revealRange(
+                notebookRange,
+                vscode.NotebookEditorRevealType.InCenterIfOutsideViewport
+            );
+
+            // Wait for editor to show up
+            await waitForCondition(
+                async () => {
+                    return vscode.window.visibleTextEditors.find((e) => e.document === cell!.document) !== undefined;
+                },
+                3000,
+                10
+            );
+            // Find the associated document and apply the edit
+            const editor = vscode.window.visibleTextEditors.find((e) => e.document === cell!.document);
+            if (editor) {
                 const vscodeRange = new vscode.Range(
                     new vscode.Position(change.range.start.line, change.range.start.character),
                     new vscode.Position(change.range.end.line, change.range.end.character)
                 );
 
                 // Jump to this range so we can see the edit happen
-                editor.revealRange(vscodeRange);
+                editor.revealRange(vscodeRange, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+                editor.selection = new vscode.Selection(vscodeRange.start, vscodeRange.start);
+
+                await sleep(100);
 
                 // Then do the actual edit
                 await editor.edit((b) => {
@@ -168,6 +207,8 @@ export class LogReplayService implements IExtensionSingleActivationService {
             }
             if (this.steps.length === this.index) {
                 void this.isLogActive?.set(false);
+                this.steps = [];
+                this.index = -1;
             }
         } else if (
             this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.document.uri.toString() &&
@@ -223,23 +264,22 @@ export class LogReplayService implements IExtensionSingleActivationService {
         if (!this.converter && this.activeNotebook) {
             const converter = lspConcat.createConverter(
                 (_u) => this.getNotebookHeader(this.activeNotebook!.uri),
-                () => ''
+                () => os.platform()
             );
-            converter.handleRefresh({
-                cells: this.activeNotebook
-                    .getCells()
-                    .filter((c) => vscode.languages.match(NOTEBOOK_SELECTOR, c.document) > 0)
-                    .map((c) => {
-                        return {
-                            textDocument: {
-                                uri: c.document.uri.toString(),
-                                text: c.document.getText(),
-                                languageId: c.document.languageId,
-                                version: c.document.version
-                            }
-                        };
-                    })
-            });
+            this.activeNotebook
+                .getCells()
+                .filter((c) => vscode.languages.match(NOTEBOOK_SELECTOR, c.document) > 0)
+                .forEach((c) => {
+                    converter.handleOpen({
+                        textDocument: {
+                            uri: c.document.uri.toString(),
+                            text: c.document.getText(),
+                            languageId: c.document.languageId,
+                            version: c.document.version
+                        }
+                    });
+                });
+
             this.converter = converter;
         }
         return this.converter;

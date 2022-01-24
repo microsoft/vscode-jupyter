@@ -38,6 +38,32 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     });
 }
 
+export async function waitForCondition(
+    condition: () => Promise<boolean>,
+    timeout: number,
+    interval: number
+): Promise<boolean> {
+    // Set a timer that will resolve with null
+    return new Promise<boolean>((resolve) => {
+        let finish: (result: boolean) => void;
+        const timer = setTimeout(() => finish(false), timeout);
+        const intervalId = setInterval(() => {
+            condition()
+                .then((r) => {
+                    if (r) {
+                        finish(true);
+                    }
+                })
+                .catch((_e) => finish(false));
+        }, interval);
+        finish = (result: boolean) => {
+            clearTimeout(timer);
+            clearInterval(intervalId);
+            resolve(result);
+        };
+    });
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isThenable<T>(v: any): v is Thenable<T> {
     return typeof v?.then === 'function';
