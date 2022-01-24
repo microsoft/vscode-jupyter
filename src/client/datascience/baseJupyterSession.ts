@@ -171,6 +171,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
             await this.session.kernel.restart();
+            this.setSession(this.session, true);
             return;
         }
 
@@ -342,7 +343,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Changes the current session.
-    protected setSession(session: ISessionWithSocket | undefined) {
+    protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
         const oldSession = this._session;
         if (oldSession) {
             if (this.ioPubHandler) {
@@ -367,7 +368,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 session.unhandledMessage.connect(this.unhandledMessageHandler);
             }
             // If we have a new session, then emit the new kernel connection information.
-            if (oldSession !== session && session.kernel) {
+            if ((forceUpdateKernelSocketInfo || oldSession !== session) && session.kernel) {
                 this._kernelSocket.next({
                     options: {
                         clientId: session.kernel.clientId,

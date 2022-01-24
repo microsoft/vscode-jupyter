@@ -111,7 +111,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
 
         if (!data || data.version_major !== 2) {
-            console.warn('Widget data not avaialble to render an ipywidget');
+            console.warn('Widget data not available to render an ipywidget');
             return undefined;
         }
 
@@ -144,7 +144,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         return this.manager.display_view(data, view, { node: ele });
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
-        if (this.proxyKernel && fastDeepEqual(options, this.options)) {
+        if (this.manager && this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
         this.proxyKernel?.dispose(); // NOSONAR
