@@ -150,7 +150,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
 
         await testSliderWidget(comms);
     });
-    test.skip('Widget renders after restarting kernel', async () => {
+    test('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
 
@@ -159,15 +159,15 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await kernel.restart();
         await testSliderWidget(comms);
 
-        // Clear all cells and restart and test again.
-        await kernel.restart();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-        await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
+        // // Clear all cells and restart and test again.
+        // await kernel.restart();
+        // const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        // await commands.executeCommand('notebook.clearAllCellsOutputs');
+        // await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
-        await testSliderWidget(comms);
+        // await testSliderWidget(comms);
     });
-    test.skip('Widget renders after interrupting kernel', async () => {
+    test('Widget renders after interrupting kernel', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         await testSliderWidget(comms);
@@ -177,12 +177,12 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await kernel.interrupt();
         await testSliderWidget(comms);
 
-        // Clear all cells and restart and test again.
-        await kernel.interrupt();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-        await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
+        // // Clear all cells and restart and test again.
+        // await kernel.interrupt();
+        // const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        // await commands.executeCommand('notebook.clearAllCellsOutputs');
+        // await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
-        await testSliderWidget(comms);
+        // await testSliderWidget(comms);
     });
 });
