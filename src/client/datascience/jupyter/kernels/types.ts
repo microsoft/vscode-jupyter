@@ -123,6 +123,10 @@ export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata
 
 export interface IKernel extends IAsyncDisposable {
     readonly connection: INotebookProviderConnection | undefined;
+    /**
+     * Notebook that owns this kernel.
+     * Closing the notebook will dispose this kernel (except in the case of remote kernels).
+     */
     readonly notebookDocument: NotebookDocument;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -130,6 +134,11 @@ export interface IKernel extends IAsyncDisposable {
      * However if we create an intearctive window without a file, then this is undefined.
      */
     readonly resourceUri: Resource;
+    /**
+     * Connection metadata used to start/connect to a kernel.
+     * When dealing with local & remote kernels we can start a kernel.
+     * When dealing with existing (live/already running) kernels, we then connect to an existing kernel.
+     */
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<KernelMessage.Status>;
     readonly onDisposed: Event<void>;
@@ -139,6 +148,9 @@ export interface IKernel extends IAsyncDisposable {
     readonly onWillInterrupt: Event<void>;
     readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
+    /**
+     * Whether any cells are still being executed.
+     */
     readonly hasPendingCells: boolean;
     readonly disposed: boolean;
     readonly disposing: boolean;
@@ -147,12 +159,23 @@ export interface IKernel extends IAsyncDisposable {
      * Crucial for non-python notebooks, else we save the incorrect information.
      */
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
+    /**
+     * Provides access to the underlying Kernel (web) socket.
+     * The socket changes upon restarting the kernel, hence the use of an observable.
+     */
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    /**
+     * Provides access to the underlying kernel.
+     * The Jupyter kernel can be directly access via the `session.kernel` property.
+     */
     readonly session?: IJupyterSession;
     start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    /**
+     * Executes arbitrary code against the kernel without incrementing the execution count.
+     */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 

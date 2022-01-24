@@ -65,14 +65,25 @@ export type PythonEnvironment = {
     envPath?: string;
 };
 
+/**
+ * Details of the kernel spec.
+ * See https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
+ */
 export interface IJupyterKernelSpec {
     /**
      * Id of an existing (active) Kernel from an active session.
      */
     id?: string;
     name: string;
+    /**
+     * The name of the language of the kernel
+     */
     language?: string;
     path: string;
+    /**
+     * A dictionary of environment variables to set for the kernel.
+     * These will be added to the current environment variables before the kernel is started.
+     */
     env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
@@ -81,8 +92,13 @@ export interface IJupyterKernelSpec {
     /**
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpreter).
+     * Metadata added here should be namespaced for the tool reading and writing that metadata.
      */
     readonly metadata?: Record<string, unknown> & { interpreter?: Partial<PythonEnvironment> };
+    /**
+     * A list of command line arguments used to start the kernel.
+     * The text {connection_file} in any argument will be replaced with the path to the connection file.
+     */
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
@@ -96,6 +112,12 @@ export interface IJupyterKernelSpec {
      * Plenty of conda packages ship kernels in this manner (beakerx, java, etc).
      */
     interpreterPath?: string;
+    /**
+     * May be either signal or message and specifies how a client is supposed to interrupt cell execution on this kernel,
+     * either by sending an interrupt signal via the operating system’s signalling facilities (e.g. SIGINT on POSIX systems),
+     * or by sending an interrupt_request message on the control channel.
+     * If this is not specified the client will default to signal mode.
+     */
     readonly interrupt_mode?: 'message' | 'signal';
 }
 /**
@@ -178,6 +200,7 @@ export type ActiveKernel = LiveKernelConnectionMetadata;
 export interface IKernelSocket {
     /**
      * Whether the kernel socket is read & available for use.
+     * Use `onDidChange` to be notified when this changes.
      */
     ready: boolean;
     /**
