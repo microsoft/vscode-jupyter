@@ -18,7 +18,11 @@ import { ContextKey } from '../../../common/contextKey';
 import { sleep, waitForCondition } from '../../../common/utils/async';
 
 /**
- * Class used to replay pylance log output to regenerate a series of edits. SHIFT+F10 will play the steps one at a time
+ * Class used to replay pylance log output to regenerate a series of edits.
+ *
+ * To use this
+ * - Run "Jupyter (dev): Replay pylance log"
+ * - Click on the 'Step Pylance Log' button that appears
  */
 @injectable()
 export class LogReplayService implements IExtensionSingleActivationService {
