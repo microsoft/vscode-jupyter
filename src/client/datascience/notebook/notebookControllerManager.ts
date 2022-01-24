@@ -72,6 +72,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }>;
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
+    private readonly interactiveControllerIdSuffix = ' (Interactive)';
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -553,10 +554,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await loadControllersPromise;
+
+                // For interactive set the preferred controller as the interpreter or default
+                const defaultInteractiveController = await this.getActiveInterpreterOrDefaultController(
+                    'interactive',
+                    document.uri
+                );
+                preferredConnection = defaultInteractiveController?.connection;
             }
-            const targetController = Array.from(this.registeredControllers.values()).find(
-                (value) => preferredConnection?.id === value.connection.id
-            );
+
+            // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
+            let targetController;
+            if (preferredConnection) {
+                const preferredId =
+                    document.notebookType === 'interactive'
+                        ? `${preferredConnection.id}${this.interactiveControllerIdSuffix}`
+                        : preferredConnection.id;
+                targetController = this.registeredControllers.get(preferredId);
+            }
 
             if (targetController) {
                 traceInfo(
@@ -624,7 +639,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Create notebook selector
             [
                 [kernelConnection.id, JupyterNotebookView],
-                [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
+                [`${kernelConnection.id}${this.interactiveControllerIdSuffix}`, InteractiveWindowView]
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
                 .forEach(([id, viewType]) => {
