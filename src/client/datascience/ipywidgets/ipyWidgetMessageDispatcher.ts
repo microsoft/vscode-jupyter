@@ -46,7 +46,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly disposables: IDisposable[] = [];
     private kernelRestartHandlerAttached?: boolean;
     private kernelSocketInfo?: KernelSocketInformation;
-    private kernelWasConnectedAtleastOnce?: boolean;
+    private kernelWasConnectedAtLeastOnce?: boolean;
     private disposed = false;
     private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
@@ -191,7 +191,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
 
-            if (this.kernelWasConnectedAtleastOnce) {
+            if (this.kernelWasConnectedAtLeastOnce) {
                 // this means we restarted the kernel and we now have new information.
                 // Discard all of the messages upto this point.
                 while (this.pendingMessages.length) {
@@ -210,7 +210,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 return;
             }
 
-            this.kernelWasConnectedAtleastOnce = true;
+            this.kernelWasConnectedAtLeastOnce = true;
             this.kernelSocketInfo = info;
             this.kernelSocketInfo.socket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR

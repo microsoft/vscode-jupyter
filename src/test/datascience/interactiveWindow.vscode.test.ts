@@ -439,6 +439,14 @@ ${actualCode}
             disposables
         );
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+
+        // Wait for the outputs to be available.
+        await waitForCondition(
+            async () => lastCell.outputs.length > 0 && lastCell.outputs[0].items.length > 0,
+            defaultNotebookTestTimeout,
+            'Outputs not available'
+        );
+
         const ipythonVersionCell = activeInteractiveWindow.notebookDocument?.cellAt(lastCell.index - 1);
         const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
 
@@ -467,6 +475,13 @@ ${actualCode}
             disposables
         );
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+
+        // Wait for the outputs to be available.
+        await waitForCondition(
+            async () => lastCell.outputs.length > 0 && lastCell.outputs[0].items.length > 0,
+            defaultNotebookTestTimeout,
+            'Outputs not available'
+        );
 
         // Parse the last cell's output
         await waitForTextOutput(lastCell, '1');

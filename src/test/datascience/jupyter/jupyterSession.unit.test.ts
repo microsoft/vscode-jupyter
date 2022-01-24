@@ -66,6 +66,10 @@ suite('DataScience - JupyterSession', () => {
                 connect: noop,
                 disconnect: noop
             },
+            unhandledMessage: {
+                connect: noop,
+                disconnect: noop
+            },
             kernel: {
                 status: 'idle',
                 restart: () => (restartCount = restartCount + 1),
@@ -409,6 +413,14 @@ suite('DataScience - JupyterSession', () => {
 
                 const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                 when(remoteSession.statusChanged).thenReturn(instance(signal));
+                when(remoteSession.unhandledMessage).thenReturn(
+                    instance(mock<ISignal<ISessionWithSocket, KernelMessage.IMessage<KernelMessage.MessageType>>>())
+                );
+                when(remoteSession.iopubMessage).thenReturn(
+                    instance(
+                        mock<ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
+                    )
+                );
 
                 await connect('connectToLiveKernel');
             });

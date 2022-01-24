@@ -311,7 +311,11 @@ export class JupyterSession extends BaseJupyterSession {
                             sessionWithSocket.resource = this.resource;
                             sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
                             sessionWithSocket.kernelSocketInformation = {
-                                socket: JupyterWebSockets.get(session.kernel.id),
+                                get socket() {
+                                    // When we restart kernels, a new websocket is created and we need to get the new one.
+                                    // & the id in the dictionary is the kernel.id.
+                                    return JupyterWebSockets.get(session.kernel!.id);
+                                },
                                 options: {
                                     clientId: session.kernel.clientId,
                                     id: session.kernel.id,

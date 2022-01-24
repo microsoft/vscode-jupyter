@@ -79,9 +79,6 @@ class WidgetManagerComponent {
     }
 }
 
-// eslint-disable-next-line  no-empty,@typescript-eslint/no-empty-function
-const noop = () => {};
-
 const outputDisposables = new Map<string, { dispose(): void }>();
 const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
 const renderedWidgets = new Set<string>();
@@ -159,19 +156,25 @@ function renderIPyWidget(
 let widgetManagerPromise: Promise<WidgetManager> | undefined;
 async function getWidgetManager(): Promise<WidgetManager> {
     if (!widgetManagerPromise) {
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-        widgetManagerPromise = new Promise((resolve) => WidgetManager.instance.subscribe(resolve as any));
-        widgetManagerPromise
-            .then((wm) => {
+        function reInitializeWidgetManager(resolve?: (value: WidgetManager) => void) {
+            WidgetManager.instance.subscribe((wm) => {
                 if (wm) {
                     const oldDispose = wm.dispose.bind(wm);
                     wm.dispose = () => {
+                        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
                         widgetManagerPromise = undefined;
                         return oldDispose();
                     };
+                    if (resolve) {
+                        resolve(wm);
+                        resolve = undefined;
+                    }
+                    widgetManagerPromise = Promise.resolve(wm);
                 }
-            })
-            .catch(noop);
+            });
+        }
+        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
+        widgetManagerPromise = new Promise((resolve) => reInitializeWidgetManager(resolve as any));
     }
     return widgetManagerPromise;
 }
@@ -180,8 +183,8 @@ async function createWidgetView(
     widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number },
     element: HTMLElement
 ) {
-    const wm = await getWidgetManager();
     try {
+        const wm = await getWidgetManager();
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
         // eslint-disable-next-line no-console
