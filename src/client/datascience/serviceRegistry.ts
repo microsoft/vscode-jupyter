@@ -165,11 +165,12 @@ import { ExportToPythonPlain } from './export/exportToPythonPlain';
 import { ErrorRendererCommunicationHandler } from './errors/errorRendererComms';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { PreReleaseChecker } from './prereleaseChecker';
+import { LogReplayService } from './notebook/intellisense/logReplayService';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
 // eslint-disable-next-line
-export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean) {
+export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, isDevMode: boolean) {
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
     const useVSCodeNotebookAPI = inNotebookApiExperiment;
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
@@ -231,6 +232,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
+    if (isDevMode) {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LogReplayService);
+    }
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);

@@ -269,6 +269,19 @@
                 "enablement": "jupyter.development"
             },
             {
+                "command": "jupyter.replayPylanceLog",
+                "title": "Replay Pylance Log",
+                "category": "Jupyter (Dev)",
+                "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted"
+            },
+            {
+                "command": "jupyter.replayPylanceLogStep",
+                "title": "Step Pylance Log",
+                "category": "Jupyter (Dev)",
+                "icon": "$(debug-start)",
+                "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded"
+            },
+            {
                 "command": "jupyter.debugNotebook",
                 "title": "%jupyter.command.jupyter.debug.title%",
                 "icon": "$(bug)",
@@ -915,6 +928,11 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.ispythonnotebook"
+                },
+                {
+                    "command": "jupyter.replayPylanceLogStep",
+                    "group": "navigation@1",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.replayLogLoaded"
                 }
             ],
             "notebook/cell/title": [
@@ -1022,6 +1040,11 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.replayPylanceLog",
+                    "title": "Replay Pylance Log",
+                    "when": "jupyter.development && isWorkspaceTrusted"
+                },
                 {
                     "command": "jupyter.debugNotebook",
                     "title": "%jupyter.command.jupyter.debug.title%",

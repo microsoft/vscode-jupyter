@@ -162,6 +162,8 @@ export namespace Commands {
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineNext = 'jupyter.runByLineNext';
     export const RunByLineStop = 'jupyter.runByLineStop';
+    export const ReplayPylanceLog = 'jupyter.replayPylanceLog';
+    export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
 }
 
 export namespace CodeLensCommands {
@@ -199,6 +201,7 @@ export namespace EditorContexts {
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
     export const ZmqAvailable = 'jupyter.zmqavailable';
+    export const ReplayLogLoaded = 'jupyter.replayLogLoaded';
 }
 
 export namespace RegExpValues {

@@ -144,7 +144,7 @@ async function activateLegacy(
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
-    dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI);
+    dataScienceRegisterTypes(serviceManager, useVSCodeNotebookAPI, isDevMode);
 
     // Language feature registrations.
     activationRegisterTypes(serviceManager);
