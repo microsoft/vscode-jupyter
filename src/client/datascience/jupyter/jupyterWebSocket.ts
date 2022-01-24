@@ -40,7 +40,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             }
 
             super(url, protocols, co);
-
+            let timer: NodeJS.Timeout | undefined = undefined;
             // Parse the url for the kernel id
             const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);
             if (parsed && parsed.length > 1) {
@@ -49,10 +49,10 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             if (this.kernelId) {
                 JupyterWebSockets.set(this.kernelId, this);
                 this.on('close', () => {
-                    if (this.timer !== timer){
+                    if (timer && this.timer !== timer) {
                         clearInterval(timer as any);
                     }
-                    if (JupyterWebSockets.get(this.kernelId!) === this){
+                    if (JupyterWebSockets.get(this.kernelId!) === this) {
                         JupyterWebSockets.delete(this.kernelId!);
                     }
                 });
@@ -61,7 +61,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             }
 
             // Ping the websocket connection every 30 seconds to make sure it stays alive
-            const timer = this.timer = setInterval(() => this.ping(noop), 30_000);
+            timer = this.timer = setInterval(() => this.ping(noop), 30_000);
         }
     }
     return JupyterWebSocket;
