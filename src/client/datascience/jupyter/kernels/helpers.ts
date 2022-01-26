@@ -365,14 +365,16 @@ export function isKernelRegisteredByUs(kernelSpec: IJupyterKernelSpec): 'oldVers
 // Create a default kernelspec with the given display name
 export function createInterpreterKernelSpec(
     interpreter?: PythonEnvironment,
-    rootKernelFilePath?: string
+    rootKernelFilePath?: string,
+    originalSpec?: LocalKernelSpecConnectionMetadata
 ): IJupyterKernelSpec {
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: KernelSpec.ISpecModel = {
         name: getInterpreterKernelSpecName(interpreter),
+        metadata_name: originalSpec?.kernelSpec.name,
         language: 'python',
-        display_name: interpreter?.displayName || 'Python 3',
+        display_name: originalSpec?.kernelSpec.display_name || interpreter?.displayName || 'Python 3',
         metadata: {
             interpreter
         },
@@ -382,10 +384,11 @@ export function createInterpreterKernelSpec(
     };
 
     // Generate spec file path if we know where kernel files will go
-    const specFile =
-        rootKernelFilePath && defaultSpec.name
-            ? path.join(rootKernelFilePath, defaultSpec.name, 'kernel.json')
-            : undefined;
+    const specFile = originalSpec?.kernelSpec.specFile
+        ? originalSpec?.kernelSpec.specFile
+        : rootKernelFilePath && defaultSpec.name
+        ? path.join(rootKernelFilePath, defaultSpec.name, 'kernel.json')
+        : undefined;
 
     return new JupyterKernelSpec(defaultSpec, specFile, interpreter?.path);
 }

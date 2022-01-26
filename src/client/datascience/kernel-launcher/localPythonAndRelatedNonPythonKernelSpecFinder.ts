@@ -285,8 +285,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const results = [
             ...Array.from(distinctKernelMetadata.values()),
             ...filteredInterpreters.map((i) => {
+                // Try to find a global spec that matches this interpreter. Its name and display name
+                // are more likely what the user would like to use
+                const matchingGlobal = globalKernelSpecs.find((g) => this.doesInterpreterPathMatch(g, i));
                 // Update spec to have a default spec file
-                const spec = createInterpreterKernelSpec(i, rootSpecPath);
+                const spec = createInterpreterKernelSpec(i, rootSpecPath, matchingGlobal);
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: spec,
@@ -309,6 +312,32 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 return 1;
             }
         });
+    }
+
+    private doesInterpreterPathMatch(
+        kernel: LocalKernelSpecConnectionMetadata,
+        interpreter: PythonEnvironment
+    ): boolean {
+        if (kernel.kernelSpec.language && kernel.kernelSpec.language !== PYTHON_LANGUAGE) {
+            return false;
+        }
+        if (
+            kernel.kernelSpec.metadata?.interpreter?.path &&
+            areInterpreterPathsSame(kernel.kernelSpec.metadata?.interpreter?.path, interpreter.path, undefined, this.fs)
+        ) {
+            return true;
+        }
+        const pathInArgv =
+            kernel.kernelSpec && Array.isArray(kernel.kernelSpec.argv) && kernel.kernelSpec.argv.length > 0
+                ? kernel.kernelSpec.argv[0]
+                : undefined;
+        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
+            if (areInterpreterPathsSame(pathInArgv, interpreter.path, undefined, this.fs)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async findMatchingInterpreter(

@@ -13,6 +13,7 @@ import { tryGetRealPath } from '../../common';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
+    public metadata_name?: string | undefined;
     public language: string;
     public path: string;
     public readonly env: NodeJS.ProcessEnv | undefined;
@@ -32,6 +33,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.language = specModel.language;
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.display_name = specModel.display_name;
+        this.metadata_name = specModel.metadata_name?.toString();
         this.metadata = specModel.metadata;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.env = specModel.env as any; // JSONObject, but should match

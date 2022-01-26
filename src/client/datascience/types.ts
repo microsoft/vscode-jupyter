@@ -299,6 +299,10 @@ export interface IJupyterKernelSpec {
      */
     id?: string;
     name: string;
+    /**
+     * Optional value to specify the metadata_name when an existing kernelspec matches
+     */
+    metadata_name?: string;
     language?: string;
     path: string;
     env?: NodeJS.ProcessEnv | undefined;
