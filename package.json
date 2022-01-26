@@ -91,7 +91,7 @@
                     {
                         "id": "jupyter.createNewNotebook",
                         "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Blank Notebook``.\n[Create new Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:git.clone).",
+                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
                         "media": {
                             "image": "images/OpenOrCreateNotebook.gif",
                             "altText": "Creating a new Jupyter notebook"
@@ -106,11 +106,14 @@
                     {
                         "id": "jupyter.selectKernel",
                         "title": "Select a Jupyter kernel",
-                        "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. \n[Select a kernel](command:notebook.selectKernel)",
+                        "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
                         "media": {
                             "image": "images/jupyter README/kernelPicker.gif",
                             "altText": "Selecting or changing a notebook kernel"
-                        }
+                        },
+                        "completionEvents": [
+                            "onCommand:notebook.selectKernel"
+                        ]
                     },
                     {
                         "id": "jupyter.exploreAndDebug",
