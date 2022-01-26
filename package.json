@@ -93,7 +93,7 @@
                         "title": "Create or open a Jupyter Notebook",
                         "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
                         "media": {
-                            "image": "images/OpenOrCreateNotebook.gif",
+                            "image": "resources/walkthroughs/OpenOrCreateNotebook.gif",
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
@@ -108,7 +108,7 @@
                         "title": "Select a Jupyter kernel",
                         "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
                         "media": {
-                            "image": "images/jupyter README/kernelPicker.gif",
+                            "image": "resources/walkthroughs/KernelPicker.gif",
                             "altText": "Selecting or changing a notebook kernel"
                         },
                         "completionEvents": [
@@ -120,7 +120,7 @@
                         "title": "Explore data and debug",
                         "description": "📅 You can use the [Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data) to view, sort, and filter the rows of data. After loading your data, click \"Variables\" at the top right of notebook and click the Data Viewer icon to the left of the data table. \n \n[Learn about Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data)\n \n📒 Debug your notebook using the [Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line) mode to execute a cell one line at a time. Click the Run by Line icon from your cell (play button with lines) or hit F10. \n \n[Learn about Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line)",
                         "media": {
-                            "image": "images/dataviewerdark.gif",
+                            "image": "resources/walkthroughs/dataviewerdark.gif",
                             "altText": "Opening data viewer"
                         }
                     },
@@ -129,7 +129,7 @@
                         "title": "Find out more!",
                         "description": "🎨 Explore all the features the Jupyter extension has to offer by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with data science in [Python](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) by installing the Python extension ([search Python extension](command:workbench.extensions.search?\"ms-python.python\")). \n 📃 Find out more features in our [Tutorials](https://code.visualstudio.com/docs/datascience/jupyter-notebooks).  \n[Learn more](https://aka.ms/AAdar6q)",
                         "media": {
-                            "image": "images/interactive.gif",
+                            "image": "resources/walkthroughs/interactive.gif",
                             "altText": "Image representing our documentation page and mailing list resources."
                         }
                     }
