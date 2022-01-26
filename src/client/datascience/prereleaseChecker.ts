@@ -28,7 +28,7 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
                 const dontAsk = this.globalState.get(PRERELEASE_DONT_ASK_FLAG, false);
 
                 // Ask user if the version is not prerelease
-                if (!isPreRelease && dontAsk && this.appEnv.channel === 'insiders') {
+                if (!isPreRelease && !dontAsk && this.appEnv.channel === 'insiders') {
                     const yes = localize.DataScience.usingNonPrereleaseYes();
                     const no = localize.DataScience.usingNonPrereleaseNo();
                     const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();
