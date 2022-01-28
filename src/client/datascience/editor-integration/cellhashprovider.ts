@@ -498,7 +498,9 @@ export class CellHashProvider implements ICellHashProvider {
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = matchHash!.firstNonBlankLineIndex + n - 1;
-                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                    return `${prefix}<a href='${matchUri?.toString().replace('file:', 'file_link:')}?line=${newLine}'>${
+                        newLine + 1
+                    }</a>${suffix}`;
                 });
 
                 // Then replace the input line with our uri for this cell
@@ -518,7 +520,9 @@ export class CellHashProvider implements ICellHashProvider {
                     // We have a match, replace source lines first
                     const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
-                        return `${prefix}<a href='${matchingCellUri}?line=${n - 1}'>${n}</a>${suffix}`;
+                        return `${prefix}<a href='${matchingCellUri.replace('file:', 'file_link:')}?line=${
+                            n - 1
+                        }'>${n}</a>${suffix}`;
                     });
 
                     // Then replace the input line with our uri for this cell
@@ -539,7 +543,9 @@ export class CellHashProvider implements ICellHashProvider {
             // We have a match, replace source lines with hrefs
             return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                 const n = parseInt(num, 10);
-                return `${prefix}<a href='${fileUri?.toString()}?line=${n - 1}'>${n}</a>${suffix}`;
+                return `${prefix}<a href='${fileUri?.toString().replace('file:', 'file_link:')}?line=${
+                    n - 1
+                }'>${n}</a>${suffix}`;
             });
         }
 
@@ -567,7 +573,9 @@ export class CellHashProvider implements ICellHashProvider {
                 return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = offset + n - 1;
-                    return `${prefix}<a href='${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                    return `${prefix}<a href='${match[0].replace('file:', 'file_link:')}?line=${newLine}'>${
+                        newLine + 1
+                    }</a>${suffix}`;
                 });
             }
         } else {
@@ -581,7 +589,9 @@ export class CellHashProvider implements ICellHashProvider {
                     return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
                         const newLine = offset + n - 1;
-                        return `${prefix}<a href='${matchingFile[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                        return `${prefix}<a href='${matchingFile[0].replace('file:', 'file_link:')}?line=${newLine}'>${
+                            newLine + 1
+                        }</a>${suffix}`;
                     });
                 }
             }

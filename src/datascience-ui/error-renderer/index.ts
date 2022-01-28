@@ -16,7 +16,7 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
     for (const pathElement of event.composedPath()) {
         const node: any = pathElement;
         if (node.tagName && node.tagName.toLowerCase() === 'a' && node.href && context.postMessage) {
-            if (node.href.indexOf('file') === 0) {
+            if (node.href.indexOf('file_link:') >= 0) {
                 context.postMessage({
                     message: 'open_link',
                     payload: node.href
@@ -88,7 +88,7 @@ export const activate: ActivationFunction = (_context) => {
             // When we escape, the links would be escaped as well.
             // We need to unescape them.
             const fileLinkRegExp = new RegExp(
-                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/
+                /&lt;a href=&#39;(file_link|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/
             );
             const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             const akaMsLinks = new RegExp(/&lt;a href=&#39;https:\/\/aka.ms\/(.*)&#39;&gt;(.*)&lt;\/a&gt;/);

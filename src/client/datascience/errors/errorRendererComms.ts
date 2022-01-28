@@ -29,7 +29,8 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
                 const message = e.message;
                 if (message.message === InteractiveWindowMessages.OpenLink) {
                     const href = message.payload;
-                    if (href.startsWith('file')) {
+                    if (href.includes('file_link:')) {
+                        // VS code's file handling doesn't behave like we want, so we had to replace it
                         await this.openFile(href);
                     } else if (href.startsWith('vscode-notebook-cell')) {
                         await this.openCell(href);
@@ -45,7 +46,8 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
                         if (linkCommandAllowList.includes(command)) {
                             await commands.executeCommand(command, params);
                         }
-                    } else {
+                    } else if (!href.startsWith('file')) {
+                        // Everything else is a link. File is handled by VS code though
                         this.applicationShell.openUrl(href);
                     }
                 }
@@ -53,7 +55,8 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         );
     }
 
-    private async openFile(fileUri: string) {
+    private async openFile(fileLinkUri: string) {
+        const fileUri = fileLinkUri.replace(/.*?file_link:/, 'file:');
         const uri = Uri.parse(fileUri);
         let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
         if (uri.query) {
