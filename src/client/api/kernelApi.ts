@@ -103,7 +103,7 @@ class JupyterKernelService implements IExportedKernelService {
         });
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
-        return items.map((item) => this.translateKernelConnectionMetataToExportedType(item));
+        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
     async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -112,7 +112,7 @@ class JupyterKernelService implements IExportedKernelService {
         });
         return this.kernelProvider.kernels.map((item) => {
             return {
-                metadata: this.translateKernelConnectionMetataToExportedType(item.kernelConnectionMetadata),
+                metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
                 notebook: item.notebookDocument
             };
         });
@@ -128,7 +128,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
-                metadata: this.translateKernelConnectionMetataToExportedType(kernel.kernelConnectionMetadata),
+                metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
                 connection
             };
         }
@@ -182,13 +182,13 @@ class JupyterKernelService implements IExportedKernelService {
             return JupyterKernelService.wrappedKernelConnections.get(kernel)!;
         }
 
-        const connection = new KernelConnectionWrapper(kernel, kernel.session!.kernel!, this.disposables);
+        const connection = new KernelConnectionWrapper(kernel, this.disposables);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const info = { connection, kernelSocket: new KernelSocketWrapper(kernel) };
         JupyterKernelService.wrappedKernelConnections.set(kernel, info);
         return info;
     }
-    private translateKernelConnectionMetataToExportedType(
+    private translateKernelConnectionMetadataToExportedType(
         connection: Readonly<IKernelKernelConnectionMetadata>
     ): KernelConnectionMetadata {
         if (!this.translatedConnections.has(connection)) {

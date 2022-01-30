@@ -21,8 +21,12 @@ export interface INotebookControllerManager {
     registeredNotebookControllers(): VSCodeNotebookController[];
     getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
-        resoruce: Resource
+        resource: Resource
     ): Promise<VSCodeNotebookController | undefined>;
+    getControllerForConnection(
+        connection: KernelConnectionMetadata,
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): VSCodeNotebookController | undefined;
     getPreferredNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {

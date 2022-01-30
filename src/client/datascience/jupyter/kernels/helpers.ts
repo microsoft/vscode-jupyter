@@ -185,10 +185,10 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
             ? kernelConnection.kernelModel.name
             : kernelConnection.kernelSpec?.name;
 
-    const interpeterName =
+    const interpreterName =
         kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
 
-    return displayName || name || interpeterName || '';
+    return displayName || name || interpreterName || '';
 }
 
 export function getNameOfKernelConnection(

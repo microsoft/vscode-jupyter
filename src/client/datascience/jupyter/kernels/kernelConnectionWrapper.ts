@@ -44,84 +44,145 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
     public readonly unhandledMessage = new Signal<this, IMessage<MessageType>>(this);
     public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     public get serverSettings() {
-        return this.kernelConnection.serverSettings;
+        return (this.kernelConnection || this._previousKernelConnection).serverSettings;
     }
     public readonly disposed = new Signal<this, void>(this);
+    private _kernelConnection!: Kernel.IKernelConnection;
+    private _previousKernelConnection!: Kernel.IKernelConnection;
+    // private _isRestarting?: boolean;
+    private get kernelConnection(): undefined | Kernel.IKernelConnection {
+        if (this.kernel.session?.kernel === this._kernelConnection) {
+            return this._kernelConnection;
+        }
+        this.stopHandlingKernelMessages(this._kernelConnection);
+        if (this.kernel.session?.kernel) {
+            this.startHandleKernelMessages(this.kernel.session.kernel);
+            return this._kernelConnection;
+        }
+    }
+    private getKernelConnection(): Kernel.IKernelConnection {
+        if (!this.kernelConnection) {
+            throw new Error(
+                `Kernel connection is not available, status = ${this.status}, connection = ${this.connectionStatus}`
+            );
+        }
+        return this.kernelConnection;
+    }
 
-    constructor(
-        readonly kernel: IKernel,
-        private kernelConnection: Kernel.IKernelConnection,
-        disposables: IDisposable[]
-    ) {
-        kernel.onDisposed(() => this.disposed.emit(), this, disposables);
-        kernel.onStatusChanged(() => this.statusChanged.emit(kernel.status), this, disposables);
-        this.startHandleKernelMessages(this.kernelConnection);
-        disposables.push(new Disposable(() => this.stopHandlingKernelMessages(this.kernelConnection)));
+    constructor(readonly kernel: IKernel, disposables: IDisposable[]) {
+        const emiStatusChangeEvents = () => {
+            this.statusChanged.emit(kernel.status);
+            if (kernel.status === 'dead' && !kernel.disposed && !kernel.disposing) {
+                this.connectionStatusChanged.emit('disconnected');
+            }
+        };
+        kernel.onDisposed(
+            () => {
+                // this._isRestarting = false;
+                emiStatusChangeEvents();
+                this.disposed.emit();
+            },
+            this,
+            disposables
+        );
+        kernel.onStarted(emiStatusChangeEvents, this, disposables);
+        kernel.onRestarted(emiStatusChangeEvents, this, disposables);
+        kernel.onStatusChanged(emiStatusChangeEvents, this, disposables);
+        // if (this.kernel.connection?.localLaunch) {
+        //     // For local kernel kernels we restart manually,
+        //     // hence mimic a restart with a status change.
+        //     kernel.onWillRestart(
+        //         () => {
+        //             this._isRestarting = true;
+        //             this.statusChanged.emit('restarting');
+        //         },
+        //         this,
+        //         disposables
+        //     );
+
+        //     kernel.onRestarted(
+        //         () => {
+        //             this._isRestarting = false;
+        //             this.statusChanged.emit(this.status);
+        //         },
+        //         this,
+        //         disposables
+        //     );
+        // }
+        this._previousKernelConnection = kernel.session!.kernel!;
+        this.startHandleKernelMessages(kernel.session!.kernel!);
+        disposables.push(
+            new Disposable(() => {
+                if (this.kernelConnection) {
+                    this.stopHandlingKernelMessages(this.kernelConnection);
+                }
+            })
+        );
     }
     public get id(): string {
-        return this.kernelConnection.id;
+        return (this.kernelConnection || this._previousKernelConnection).id;
     }
     public get name(): string {
-        return this.kernelConnection.name;
+        return (this.kernelConnection || this._previousKernelConnection).name;
     }
     public get isDisposed(): boolean {
         return this.kernel.disposed;
     }
 
     public get model(): Kernel.IModel {
-        return this.kernelConnection.model;
+        return (this.kernelConnection || this._previousKernelConnection).model;
     }
     public get username(): string {
-        return this.kernelConnection.username;
+        return (this.kernelConnection || this._previousKernelConnection).username;
     }
     public get clientId(): string {
-        return this.kernelConnection.clientId;
+        return (this.kernelConnection || this._previousKernelConnection).clientId;
     }
     public get status(): Kernel.Status {
-        return this.kernelConnection.status;
+        return this.kernelConnection?.status || 'dead';
     }
     public get connectionStatus(): Kernel.ConnectionStatus {
-        return this.kernelConnection.connectionStatus;
+        return this.kernelConnection?.connectionStatus || 'disconnected';
     }
     public get info(): Promise<IInfoReply> {
-        return this.kernelConnection.info;
+        return (this.kernelConnection || this._previousKernelConnection).info;
     }
     public get spec(): Promise<ISpecModel | undefined> {
-        return this.kernelConnection.spec;
+        return (this.kernelConnection || this._previousKernelConnection).spec;
     }
     public get handleComms(): boolean {
-        return this.kernelConnection.handleComms;
+        return (this.kernelConnection || this._previousKernelConnection).handleComms;
     }
     sendShellMessage<T extends ShellMessageType>(
         msg: IShellMessage<T>,
         expectReply?: boolean,
         disposeOnDone?: boolean
     ): Kernel.IShellFuture<IShellMessage<T>, IShellMessage<ShellMessageType>> {
-        return this.kernelConnection.sendShellMessage(msg, expectReply, disposeOnDone);
+        return this.getKernelConnection().sendShellMessage(msg, expectReply, disposeOnDone);
     }
     sendControlMessage<T extends ControlMessageType>(
         msg: IControlMessage<T>,
         expectReply?: boolean,
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<IControlMessage<T>, IControlMessage<ControlMessageType>> {
-        return this.kernelConnection.sendControlMessage(msg, expectReply, disposeOnDone);
+        return this.getKernelConnection().sendControlMessage(msg, expectReply, disposeOnDone);
     }
     reconnect(): Promise<void> {
-        return this.kernelConnection.reconnect();
+        return this.getKernelConnection().reconnect();
     }
     requestKernelInfo(): Promise<IInfoReplyMsg | undefined> {
-        return this.kernelConnection.requestKernelInfo();
+        return this.getKernelConnection().requestKernelInfo();
     }
     requestComplete(content: { code: string; cursor_pos: number }): Promise<ICompleteReplyMsg> {
-        return this.kernelConnection.requestComplete(content);
+        return this.getKernelConnection().requestComplete(content);
     }
     requestInspect(content: { code: string; cursor_pos: number; detail_level: 0 | 1 }): Promise<IInspectReplyMsg> {
-        return this.kernelConnection.requestInspect(content);
+        return this.getKernelConnection().requestInspect(content);
     }
     requestHistory(
         content: IHistoryRequestRange | IHistoryRequestSearch | IHistoryRequestTail
     ): Promise<IHistoryReplyMsg> {
-        return this.kernelConnection.requestHistory(content);
+        return this.getKernelConnection().requestHistory(content);
     }
     requestExecute(
         content: {
@@ -135,7 +196,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg> {
-        return this.kernelConnection.requestExecute(content, disposeOnDone, metadata);
+        return this.getKernelConnection().requestExecute(content, disposeOnDone, metadata);
     }
     requestDebug(
         content: {
@@ -147,49 +208,55 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<IDebugRequestMsg, IDebugReplyMsg> {
-        return this.kernelConnection.requestDebug(content, disposeOnDone);
+        return this.getKernelConnection().requestDebug(content, disposeOnDone);
     }
     requestIsComplete(content: { code: string }): Promise<IIsCompleteReplyMsg> {
-        return this.kernelConnection.requestIsComplete(content);
+        return this.getKernelConnection().requestIsComplete(content);
     }
     requestCommInfo(content: { target_name?: string | undefined }): Promise<ICommInfoReplyMsg> {
-        return this.kernelConnection.requestCommInfo(content);
+        return this.getKernelConnection().requestCommInfo(content);
     }
     sendInputReply(content: IReplyErrorContent | IReplyAbortContent | IInputReply): void {
-        return this.kernelConnection.sendInputReply(content);
+        return this.getKernelConnection().sendInputReply(content);
     }
     createComm(targetName: string, commId?: string): Kernel.IComm {
-        return this.kernelConnection.createComm(targetName, commId);
+        return this.getKernelConnection().createComm(targetName, commId);
     }
     hasComm(commId: string): boolean {
-        return this.kernelConnection.hasComm(commId);
+        return this.getKernelConnection().hasComm(commId);
     }
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
     ): void {
-        return this.kernelConnection.registerCommTarget(targetName, callback);
+        return this.getKernelConnection().registerCommTarget(targetName, callback);
     }
     removeCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
     ): void {
-        return this.kernelConnection.removeCommTarget(targetName, callback);
+        return this.getKernelConnection().removeCommTarget(targetName, callback);
     }
     registerMessageHook(
         msgId: string,
         hook: (msg: IIOPubMessage<IOPubMessageType>) => boolean | PromiseLike<boolean>
     ): void {
-        return this.kernelConnection.registerMessageHook(msgId, hook);
+        return this.getKernelConnection().registerMessageHook(msgId, hook);
     }
     removeMessageHook(
         msgId: string,
         hook: (msg: IIOPubMessage<IOPubMessageType>) => boolean | PromiseLike<boolean>
     ): void {
-        return this.kernelConnection.removeMessageHook(msgId, hook);
+        return this.getKernelConnection().removeMessageHook(msgId, hook);
     }
-    shutdown(): Promise<void> {
-        return this.kernel.dispose();
+    async shutdown(): Promise<void> {
+        if (
+            this.kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec' ||
+            this.kernel.kernelConnectionMetadata.kind === 'connectToLiveKernel'
+        ) {
+            await this.kernel.session?.shutdown();
+        }
+        await this.kernel.dispose();
     }
     clone(
         _options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
@@ -202,7 +269,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
     async interrupt(): Promise<void> {
         // Sometimes we end up starting a new session.
         // Hence assume a new session was created, meaning we need to bind to the kernel connection all over again.
-        this.stopHandlingKernelMessages(this.kernelConnection);
+        this.stopHandlingKernelMessages(this.kernelConnection!);
 
         await this.kernel.interrupt();
 
@@ -212,7 +279,9 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         this.startHandleKernelMessages(this.kernel.session?.kernel);
     }
     async restart(): Promise<void> {
-        this.stopHandlingKernelMessages(this.kernelConnection);
+        if (this.kernelConnection) {
+            this.stopHandlingKernelMessages(this.kernelConnection);
+        }
 
         // If this is a remote, then we do something special.
         await this.kernel.restart();
@@ -223,7 +292,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         this.startHandleKernelMessages(this.kernel.session?.kernel);
     }
     private startHandleKernelMessages(kernelConnection: Kernel.IKernelConnection) {
-        this.kernelConnection = kernelConnection;
+        this._kernelConnection = kernelConnection;
         kernelConnection.anyMessage.connect(this.onAnyMessage, this);
         kernelConnection.iopubMessage.connect(this.onIOPubMessage, this);
         kernelConnection.unhandledMessage.connect(this.onUnhandledMessage, this);

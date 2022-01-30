@@ -298,10 +298,10 @@ export class Kernel implements IKernel {
             if (this.notebook) {
                 promises.push(this.notebook.session.dispose().catch(noop));
                 this.notebook = undefined;
-                this._disposed = true;
-                this._onDisposed.fire();
-                this._onStatusChanged.fire('dead');
             }
+            this._disposed = true;
+            this._onDisposed.fire();
+            this._onStatusChanged.fire('dead');
             this.kernelExecution.dispose();
             await Promise.all(promises);
         };
