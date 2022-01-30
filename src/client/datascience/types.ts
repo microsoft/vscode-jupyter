@@ -366,7 +366,8 @@ export interface IInteractiveWindowProvider {
     readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
     /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
-     * @param owner file that started this interactive window
+     * @param {Resource} owner File that started this interactive window
+     * @param {KernelConnectionMetadata} [connection] The kernel connection to be used when starting/connecting to the kernel.
      */
     getOrCreate(owner: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow>;
     /**
