@@ -88,27 +88,6 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         kernel.onStarted(emiStatusChangeEvents, this, disposables);
         kernel.onRestarted(emiStatusChangeEvents, this, disposables);
         kernel.onStatusChanged(emiStatusChangeEvents, this, disposables);
-        // if (this.kernel.connection?.localLaunch) {
-        //     // For local kernel kernels we restart manually,
-        //     // hence mimic a restart with a status change.
-        //     kernel.onWillRestart(
-        //         () => {
-        //             this._isRestarting = true;
-        //             this.statusChanged.emit('restarting');
-        //         },
-        //         this,
-        //         disposables
-        //     );
-
-        //     kernel.onRestarted(
-        //         () => {
-        //             this._isRestarting = false;
-        //             this.statusChanged.emit(this.status);
-        //         },
-        //         this,
-        //         disposables
-        //     );
-        // }
         this._previousKernelConnection = kernel.session!.kernel!;
         this.startHandleKernelMessages(kernel.session!.kernel!);
         disposables.push(
