@@ -10,6 +10,6 @@ obj["versionInfo"] = tuple(sys.version_info)
 obj["sysPrefix"] = sys.prefix
 obj["version"] = sys.version
 obj["exe"] = sys.executable
-obj["is64Bit"] = sys.maxsize > 2 ** 32
+obj["is64Bit"] = sys.maxsize > 2**32
 
 builtins.print(json.dumps(obj))

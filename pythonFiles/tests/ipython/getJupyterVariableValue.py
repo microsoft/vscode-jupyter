@@ -25,7 +25,7 @@ class VC_SafeRepr(object):
     # String types are truncated to maxstring_outer when at the outer-
     # most level, and truncated to maxstring_inner characters inside
     # collections.
-    maxstring_outer = 2 ** 16
+    maxstring_outer = 2**16
     maxstring_inner = 30
     if not VC_IS_PY2:
         string_types = (str, bytes)
@@ -81,7 +81,7 @@ class VC_SafeRepr(object):
 
     # All other types are treated identically to strings, but using
     # different limits.
-    maxother_outer = 2 ** 16
+    maxother_outer = 2**16
     maxother_inner = 30
 
     convert_to_hex = False
