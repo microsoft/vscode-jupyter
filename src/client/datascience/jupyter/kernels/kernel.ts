@@ -233,7 +233,6 @@ export class Kernel implements IKernel {
         return promise;
     }
     public async start(options?: { disableUI?: boolean }): Promise<void> {
-        this._startedAtLeastOnce = true;
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
@@ -390,6 +389,7 @@ export class Kernel implements IKernel {
         }
     }
     private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
+        this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
