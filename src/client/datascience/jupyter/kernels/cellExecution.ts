@@ -473,7 +473,7 @@ export class CellExecution implements IDisposable {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...{ cellId: this.cell.document.uri.toString() },
-            ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
+            ...(this.cell.metadata?.custom?.metadata || {}) // Send the Cell Metadata
         };
 
         try {
