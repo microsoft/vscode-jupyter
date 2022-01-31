@@ -679,7 +679,7 @@ export class Kernel implements IKernel {
 
         // Gather all of the startup code at one time and execute as one cell
         const startupCode = await this.gatherStartupCode(notebookDocument);
-        await this.executeSilently(startupCode.join('\n'));
+        await this.executeSilently(startupCode);
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
@@ -935,11 +935,11 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(code: string) {
-        if (!this.notebook) {
+    private async executeSilently(code: string[]) {
+        if (!this.notebook || code.join('').trim().length === 0) {
             return;
         }
-        await executeSilently(this.notebook.session, code);
+        await executeSilently(this.notebook.session, code.join('\n'));
     }
 }
 
