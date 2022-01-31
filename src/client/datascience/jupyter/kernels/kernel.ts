@@ -72,7 +72,7 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
-import { Deferred } from '../../../common/utils/async';
+import { Deferred, sleep } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
@@ -665,7 +665,14 @@ export class Kernel implements IKernel {
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
             // Request completions to warm up the completion engine (first call always takes a lot longer)
-            await this.requestEmptyCompletions();
+            const completionPromise = this.requestEmptyCompletions();
+
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+                // No need to wait for this to complete when connecting to a like kernel.
+                completionPromise.catch(noop);
+            } else {
+                await completionPromise;
+            }
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -677,23 +684,54 @@ export class Kernel implements IKernel {
             }
         }
 
-        // Gather all of the startup code at one time and execute as one cell
-        const startupCode = await this.gatherStartupCode(notebookDocument);
-        await this.executeSilently(startupCode);
+        // If this is a live kernel, we shouldn't be changing anything by running startup code.
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+            // Gather all of the startup code at one time and execute as one cell
+            const startupCode = await this.gatherStartupCode(notebookDocument);
+            await this.executeSilently(startupCode);
+        }
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
             traceInfoIfCI('Requesting Kernel info');
-            const info = await notebook.session.requestKernelInfo();
-            traceInfoIfCI('Got Kernel info');
-            this._info = info?.content;
+
+            const promises: Promise<
+                | KernelMessage.IReplyErrorContent
+                | KernelMessage.IReplyAbortContent
+                | KernelMessage.IInfoReply
+                | undefined
+            >[] = [];
+
+            const defaultResponse: KernelMessage.IInfoReply = {
+                banner: '',
+                help_links: [],
+                implementation: '',
+                implementation_version: '',
+                language_info: { name: '', version: '' },
+                protocol_version: '',
+                status: 'ok'
+            };
+            promises.push(notebook.session.requestKernelInfo().then((item) => item?.content));
+            // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+                promises.push(sleep(5_000).then(() => defaultResponse));
+            }
+            const content = await Promise.race(promises);
+            if (content === defaultResponse) {
+                traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
+            } else {
+                traceInfoIfCI('Got Kernel info');
+            }
+            this._info = content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
-        traceInfoIfCI('End running kernel initialization, now waiting for idle');
-        await notebook.session.waitForIdle(this.launchTimeout);
-        traceInfoIfCI('End running kernel initialization, session is idle');
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+            traceInfoIfCI('End running kernel initialization, now waiting for idle');
+            await notebook.session.waitForIdle(this.launchTimeout);
+            traceInfoIfCI('End running kernel initialization, session is idle');
+        }
     }
 
     private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {

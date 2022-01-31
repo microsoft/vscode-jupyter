@@ -30,6 +30,7 @@ import { isLocalConnection, KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
 import { CancellationTokenSource } from 'vscode';
+import { waitForCondition } from '../../common/utils/async';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -130,14 +131,21 @@ export class JupyterSession extends BaseJupyterSession {
                 };
                 newSession.isRemoteSession = true;
                 newSession.resource = this.resource;
+
+                // newSession.kernel?.connectionStatus
+                await waitForCondition(
+                    async () => newSession?.kernel?.connectionStatus === 'connected',
+                    this.idleTimeout,
+                    100
+                );
             } else {
                 traceInfoIfCI(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
                 newSession.resource = this.resource;
-            }
 
-            // Make sure it is idle before we return
-            await this.waitForIdleOnSession(newSession, this.idleTimeout);
+                // Make sure it is idle before we return
+                await this.waitForIdleOnSession(newSession, this.idleTimeout);
+            }
         } catch (exc) {
             // Don't swallow known exceptions.
             if (exc instanceof BaseError) {
