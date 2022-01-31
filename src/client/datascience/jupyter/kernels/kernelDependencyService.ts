@@ -183,6 +183,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
             if (kernel) {
                 // If user changes the kernel, then the next kernel must run the pending cells.
+                // Store it for the other kernel to pick them up.
                 VSCodeNotebookController.pendingCells.set(kernel.notebookDocument, kernel.pendingCells);
             }
             await selectKernel(
