@@ -465,10 +465,10 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIQuickPickCurrent',
         'Current: {0}'
     );
-    export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Default');
-    export const jupyterSelectURILocalDetail = localize(
-        'DataScience.jupyterSelectURILocalDetail',
-        'VS Code will automatically start a server for you on the localhost'
+    export const jupyterSelectURINoneLabel = localize('DataScience.jupyterSelectURINoneLabel', 'None');
+    export const jupyterSelectURINoneDetail = localize(
+        'DataScience.jupyterSelectURINoneDetail',
+        'Do not connect to any remote Jupyter server'
     );
     export const jupyterSelectURIMRUDetail = localize('DataScience.jupyterSelectURIMRUDetail', 'Last Connection: {0}');
     export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Existing');
@@ -896,7 +896,7 @@ export namespace DataScience {
     );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
-        'Specify local or remote Jupyter server for connections'
+        'Specify Jupyter server for connections'
     );
     export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
