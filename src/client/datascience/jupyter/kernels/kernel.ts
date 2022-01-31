@@ -104,11 +104,18 @@ export class Kernel implements IKernel {
     get onPreExecute(): Event<NotebookCell> {
         return this._onPreExecute.event;
     }
+    get startedAtLeastOnce() {
+        return this._startedAtLeastOnce;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
+    private _startedAtLeastOnce?: boolean;
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
     get status(): KernelMessage.Status {
+        if (this._notebookPromise && !this.notebook) {
+            return 'starting';
+        }
         return this.notebook?.session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
@@ -226,6 +233,7 @@ export class Kernel implements IKernel {
         return promise;
     }
     public async start(options?: { disableUI?: boolean }): Promise<void> {
+        this._startedAtLeastOnce = true;
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
@@ -423,6 +431,7 @@ export class Kernel implements IKernel {
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.isKernelDead = false;
+                        this._onStatusChanged.fire('starting');
                         this.notebook = await this.notebookProvider.createNotebook({
                             document: this.notebookDocument,
                             resource: this.resourceUri,

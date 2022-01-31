@@ -96,12 +96,12 @@ class JupyterKernelService implements IExportedKernelService {
             disposables
         );
     }
-    async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
+    async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernelSpecifications'
         });
-        await this.notebookControllerManager.loadNotebookControllers();
+        await this.notebookControllerManager.loadNotebookControllers(refresh);
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
@@ -110,12 +110,14 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        return this.kernelProvider.kernels.map((item) => {
-            return {
-                metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                notebook: item.notebookDocument
-            };
-        });
+        return this.kernelProvider.kernels
+            .filter((item) => item.startedAtLeastOnce)
+            .map((item) => {
+                return {
+                    metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
+                    notebook: item.notebookDocument
+                };
+            });
     }
     getKernel(
         notebook: NotebookDocument

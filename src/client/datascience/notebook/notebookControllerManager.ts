@@ -61,6 +61,10 @@ import { DisplayOptions } from '../displayOptions';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
 
+// Even after shutting down a kernel, the server API still returns the old information.
+// Re-query after 2 seconds to ensure we don't get stale information.
+const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
+
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -190,8 +194,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Find all the notebook controllers that we have registered
-    public async loadNotebookControllers(): Promise<void> {
-        if (!this.controllersPromise) {
+    public async loadNotebookControllers(refresh?: boolean): Promise<void> {
+        if (!this.controllersPromise || refresh) {
             const stopWatch = new StopWatch();
 
             // Fetch the list of kernels ignoring the cache.
@@ -444,7 +448,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         };
         this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
         this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
-        this.kernelProvider.onDidDisposeKernel(refreshRemoteKernels, this, this.disposables);
+        this.kernelProvider.onDidDisposeKernel(
+            () => {
+                void refreshRemoteKernels();
+                setTimeout(refreshRemoteKernels, REMOTE_KERNEL_REFRESH_INTERVAL);
+            },
+            this,
+            this.disposables
+        );
     }
     // When a document is opened we need to look for a preferred kernel for it
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
