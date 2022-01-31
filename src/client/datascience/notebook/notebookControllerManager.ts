@@ -766,6 +766,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (controller && connection.kind === 'connectToLiveKernel') {
                 controller.updateRemoteKernelDetails(connection);
             }
+            const iwController = this.registeredControllers.get(
+                `${connection.id}${this.interactiveControllerIdSuffix}`
+            );
+            if (iwController && connection.kind === 'connectToLiveKernel') {
+                iwController.updateRemoteKernelDetails(connection);
+            }
         });
 
         // Look for any connections that are not registered already as controllers
