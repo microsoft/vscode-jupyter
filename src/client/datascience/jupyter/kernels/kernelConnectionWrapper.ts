@@ -48,7 +48,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
     }
     public readonly disposed = new Signal<this, void>(this);
     private _kernelConnection!: Kernel.IKernelConnection;
-    private _previousKernelConnection!: Kernel.IKernelConnection;
+    private readonly _previousKernelConnection: Kernel.IKernelConnection;
     // private _isRestarting?: boolean;
     private get kernelConnection(): undefined | Kernel.IKernelConnection {
         if (this.kernel.session?.kernel === this._kernelConnection) {
