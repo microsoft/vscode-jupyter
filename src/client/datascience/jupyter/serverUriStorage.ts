@@ -151,7 +151,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
 
     private async updateServerType(val: string): Promise<void> {
-        this.currentUriPromise = undefined;
         if (this.workspaceService.hasWorkspaceFolders) {
             return this.configService.updateSetting('jupyterServerType', val, undefined, ConfigurationTarget.Workspace);
         } else {
