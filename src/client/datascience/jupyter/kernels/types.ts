@@ -149,9 +149,9 @@ export interface IKernel extends IAsyncDisposable {
     readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
     /**
-     * Whether any cells are still being executed.
+     * Cells that are still being executed (or pending).
      */
-    readonly hasPendingCells: boolean;
+    readonly pendingCells: readonly NotebookCell[];
     readonly disposed: boolean;
     readonly disposing: boolean;
     /**

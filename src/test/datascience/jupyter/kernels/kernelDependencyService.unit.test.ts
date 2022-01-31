@@ -13,7 +13,7 @@ import { getResourceType } from '../../../../client/datascience/common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 import { createInterpreterKernelSpec } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -29,6 +29,8 @@ suite('DataScience - Kernel Dependency Service', () => {
     let cmdManager: ICommandManager;
     let installer: IInstaller;
     let serviceContainer: IServiceContainer;
+    let vscNotebooks: IVSCodeNotebook;
+    let kernelProvider: IKernelProvider;
     let memento: Memento;
     let editor: NotebookEditor;
 
@@ -45,8 +47,11 @@ suite('DataScience - Kernel Dependency Service', () => {
         cmdManager = mock<ICommandManager>();
         serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
+        vscNotebooks = mock<IVSCodeNotebook>();
+        kernelProvider = mock<IKernelProvider>();
         notebooks = mock<IVSCodeNotebook>();
         when(memento.get(anything(), anything())).thenReturn(false);
+        when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
         when(notebooks.notebookDocuments).thenReturn([]);
         dependencyService = new KernelDependencyService(
@@ -56,6 +61,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             false,
             instance(cmdManager),
             instance(notebooks),
+            instance(vscNotebooks),
             instance(serviceContainer)
         );
     });

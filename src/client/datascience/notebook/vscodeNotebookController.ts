@@ -77,6 +77,7 @@ export class VSCodeNotebookController implements Disposable {
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
+    public static pendingCells = new WeakMap<NotebookDocument, readonly NotebookCell[]>();
     public readonly controller: NotebookController;
     /**
      * Used purely for testing purposes.
@@ -251,8 +252,12 @@ export class VSCodeNotebookController implements Disposable {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
             return;
         }
+        // Capture list of pending cells to execute.
+        // As we're in an async method these can be deleted by the time we got to the bottom of this method.
+        const pendingCells = VSCodeNotebookController.pendingCells.get(event.notebook);
+
         if (!event.selected) {
-            // If user has selectd another controller, then kill the current kernel.
+            // If user has selected another controller, then kill the current kernel.
             // Possible user selected a controller that's not contributed by us at all.
             const kernel = this.kernelProvider.get(event.notebook);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
@@ -286,6 +291,10 @@ export class VSCodeNotebookController implements Disposable {
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire();
+
+        if (pendingCells?.length) {
+            await this.handleExecution([...pendingCells], event.notebook);
+        }
     }
     /**
      * Scenario 1:
