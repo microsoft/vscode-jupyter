@@ -117,7 +117,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     err instanceof IpyKernelNotInstalledError &&
                     (purpose === 'start' || purpose === 'restart')
                 ) {
-                    void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
+                    cellToDisplayErrors = err.firstQueuedCell || cellToDisplayErrors;
+                    if (!err.anotherKernelSelected) {
+                        void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
+                    }
                     return;
                 } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
                     void this.displayJupyterMissingErrorInCell(err, kernelConnection, cellToDisplayErrors);
@@ -475,25 +478,25 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!cellToDisplayErrors || !errorMessage) {
             return;
         }
-        const associatedkernel = this.serviceContainer
+        const associatedKernel = this.serviceContainer
             .get<IKernelProvider>(IKernelProvider)
             .get(cellToDisplayErrors.notebook);
-        if (!associatedkernel) {
+        if (!associatedKernel) {
             return;
         }
         // Sometimes the cells are still running, wait for 1s for cells to finish & get cleared,
         // Then display the error in the cell.
         const stopWatch = new StopWatch();
-        while (stopWatch.elapsedTime <= 1_000 && associatedkernel.hasPendingCells) {
+        while (stopWatch.elapsedTime <= 1_000 && associatedKernel.pendingCells.length) {
             await sleep(100);
         }
-        if (associatedkernel.hasPendingCells) {
+        if (associatedKernel.pendingCells.length) {
             return;
         }
         const controllers = this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
         const controller = controllers.getSelectedNotebookController(cellToDisplayErrors.notebook);
         // Possible it changed.
-        if (!controller || controller.connection !== associatedkernel.kernelConnectionMetadata) {
+        if (!controller || controller.connection !== associatedKernel.kernelConnectionMetadata) {
             return;
         }
         // If we have markdown links to run a command, turn that into a link.

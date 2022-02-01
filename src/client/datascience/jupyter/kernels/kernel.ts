@@ -131,8 +131,8 @@ export class Kernel implements IKernel {
     public get session(): IJupyterSession | undefined {
         return this.notebook?.session;
     }
-    public get hasPendingCells() {
-        return this.kernelExecution.queue.length > 0;
+    public get pendingCells() {
+        return this.kernelExecution.queue;
     }
     private _disposed?: boolean;
     private _disposing?: boolean;
