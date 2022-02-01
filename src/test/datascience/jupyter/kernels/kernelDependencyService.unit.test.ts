@@ -50,6 +50,8 @@ suite('DataScience - Kernel Dependency Service', () => {
         vscNotebooks = mock<IVSCodeNotebook>();
         kernelProvider = mock<IKernelProvider>();
         notebooks = mock<IVSCodeNotebook>();
+        when(kernelProvider.kernels).thenReturn([]);
+        when(kernelProvider.get(anything())).thenReturn();
         when(memento.get(anything(), anything())).thenReturn(false);
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
