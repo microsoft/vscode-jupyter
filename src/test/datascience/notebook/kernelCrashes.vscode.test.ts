@@ -300,7 +300,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await Promise.race([prompt.displayed, sleep(5_000).then(() => Promise.reject('Prompt not displayed'))]);
             prompt.dispose();
         }
-        test('Display error about overriding builtin modules (with Python daemon', () =>
+        test.skip('Display error about overriding builtin modules (with Python daemon', () =>
             displayErrorAboutOverriddenBuiltInModules(false));
         test('Display error about overriding builtin modules (without Python daemon', () =>
             displayErrorAboutOverriddenBuiltInModules(true));
