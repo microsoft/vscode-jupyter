@@ -308,7 +308,7 @@ jobs:
         uses: scacap/action-surefire-report@v1
         if: steps.test_unittests.outcome == 'failure' && failure()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
@@ -568,7 +568,7 @@ jobs:
       - name: Publish VSCode Test Report
         uses: scacap/action-surefire-report@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
@@ -594,7 +594,7 @@ jobs:
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
@@ -614,7 +614,7 @@ jobs:
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
@@ -878,10 +878,10 @@ jobs:
         if: needs.pick_environment.outputs.release_channel == 'stable'
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
         with:
           tag_name: ${{steps.version.outputs.version}}
           release_name: Release ${{steps.version.outputs.version}}
           body_path: RELEASE_CHANGELOG.md
-          draft: true
+          draft: false
           prerelease: false
