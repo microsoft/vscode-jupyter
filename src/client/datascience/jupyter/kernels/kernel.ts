@@ -33,8 +33,6 @@ import {
 } from '../../telemetry/telemetry';
 import {
     IDataScienceErrorHandler,
-    IJupyterConnection,
-    IJupyterServerUriStorage,
     IJupyterSession,
     INotebook,
     INotebookProvider,
@@ -166,7 +164,6 @@ export class Kernel implements IKernel {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
-        private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
@@ -462,9 +459,6 @@ export class Kernel implements IKernel {
                         Telemetry.PerceivedJupyterStartupNotebook,
                         stopWatch.elapsedTime
                     );
-                    if (this.notebook?.connection) {
-                        this.updateRemoteUriList(this.notebook.connection).catch(noop);
-                    }
                     resolve(this.notebook);
                     this._onStarted.fire();
                     disposeAllDisposables(disposables);
@@ -533,20 +527,6 @@ export class Kernel implements IKernel {
             );
         }
     }
-
-    private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
-        if (isLocalConnection(this.kernelConnectionMetadata)) {
-            return;
-        }
-        const remoteConnection = serverConnection as IJupyterConnection;
-        // Log this remote URI into our MRU list
-        await this.serverStorage.addToUriList(
-            remoteConnection.url || serverConnection.displayName,
-            Date.now(),
-            serverConnection.displayName
-        );
-    }
-
     private async populateStartKernelInfoForInteractive(
         notebookDocument: NotebookDocument,
         kernelConnection: KernelConnectionMetadata
