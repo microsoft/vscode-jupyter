@@ -212,7 +212,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 return true;
             }
             if (owner && w.owner && this.fs.areLocalPathsSame(owner.fsPath, w.owner.fsPath)) {
-                return connection ? w.originalConnection?.id === connection.id : true;
+                return !connection || w.originalConnection?.id === connection.id;
             }
             return false;
         });
