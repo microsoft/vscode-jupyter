@@ -308,10 +308,7 @@ export function filterCompletions(
         return r;
     });
 
-    // If not inside of a string, filter out file names (things with a '.' in them or end with '/')
-    if (!insideString) {
-        result = result.filter((r) => !r.itemText.includes('.') && !r.itemText.endsWith('/'));
-    } else {
+    if (insideString) {
         // If inside a string and ending with '/', then add a command to force a suggestion right after
         result = result.map((r) => {
             if (r.itemText.endsWith('/')) {
