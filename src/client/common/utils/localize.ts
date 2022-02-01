@@ -1096,6 +1096,16 @@ export namespace DataScience {
         'DataScience.usingNonPrerelease',
         `The 'prerelease' version of the Jupyter extension is recommended when running on VS code insiders. Would you like to switch?`
     );
+
+    export const jupyterServerConsoleOutputChannel = localize(
+        'DataScience.jupyterServerConsoleOutputChannel',
+        `Jupyter Server Console`
+    );
+
+    export const kernelConsoleOutputChannel = localize(
+        'DataScience.kernelConsoleOutputChannel',
+        `{0} Kernel Console Output`
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

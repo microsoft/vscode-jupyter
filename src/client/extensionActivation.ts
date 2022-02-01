@@ -89,7 +89,7 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
-        getJupyterOutputChannel(isDevMode, standardOutputChannel),
+        getJupyterOutputChannel(isDevMode, context.subscriptions, standardOutputChannel),
         JUPYTER_OUTPUT_CHANNEL
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);

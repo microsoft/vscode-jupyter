@@ -21,7 +21,7 @@ import {
     IPythonExecutionFactory,
     ObservableExecutionResult
 } from '../../common/process/types';
-import { Resource } from '../../common/types';
+import { IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
@@ -83,7 +83,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
-        private readonly pythonExecFactory: IPythonExecutionFactory
+        private readonly pythonExecFactory: IPythonExecutionFactory,
+        private readonly outputChannel: IOutputChannel | undefined
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -142,6 +143,7 @@ export class KernelProcess implements IKernelProcess {
             // Hence log only using traceLevel = verbose.
             // But only useful if daemon doesn't start for any reason.
             traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
+            this.sendToOutput((data || '').toString());
         });
 
         exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
@@ -150,6 +152,7 @@ export class KernelProcess implements IKernelProcess {
             // But only useful if daemon doesn't start for any reason.
             stderrProc += data.toString();
             traceVerbose(`KernelProcess error: ${(data || '').toString()}`);
+            this.sendToOutput((data || '').toString());
         });
 
         exeObs.out.subscribe(
@@ -162,6 +165,7 @@ export class KernelProcess implements IKernelProcess {
                     stdout += output.out;
                     traceInfo(`Kernel Output: ${stdout}`);
                 }
+                this.sendToOutput(output.out);
             },
             (error) => {
                 if (this.disposed) {
@@ -171,6 +175,7 @@ export class KernelProcess implements IKernelProcess {
                 traceError('Kernel died', error, stderr);
                 if (error instanceof PythonKernelDiedError) {
                     providedExitCode = error.exitCode;
+                    this.sendToOutput(`Exit - ${error.exitCode}, ${error.reason}`);
                     if (this.disposed) {
                         traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                         return;
@@ -261,6 +266,12 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire({});
         });
         swallowExceptions(async () => (this.connectionFile ? fs.remove(this.connectionFile) : noop()));
+    }
+
+    private sendToOutput(data: string) {
+        if (this.outputChannel) {
+            this.outputChannel.appendLine(data);
+        }
     }
 
     private get launchKernelSpec(): IJupyterKernelSpec {

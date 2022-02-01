@@ -180,6 +180,7 @@ export interface IJupyterSettings {
     readonly newCellOnRunLast: boolean;
     readonly pylanceHandlesNotebooks?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
+    readonly logKernelOutputSeparately: boolean;
 }
 
 export interface IVariableTooltipFields {

@@ -1,18 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { window } from 'vscode';
-import { IOutputChannel } from '../../common/types';
+import { window, workspace } from 'vscode';
+import { IDisposableRegistry, IOutputChannel } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 
 /**
  * Returns the output panel for output related to Jupyter Server.
  */
-export function getJupyterOutputChannel(isDevMode: boolean, defaultOutputChannel: IOutputChannel): IOutputChannel {
-    if (!isDevMode) {
+export function getJupyterOutputChannel(
+    isDevMode: boolean,
+    disposables: IDisposableRegistry,
+    defaultOutputChannel: IOutputChannel
+): IOutputChannel {
+    const forceLog = workspace.getConfiguration('jupyter').get('logKernelOutputSeparately', false);
+    if (!isDevMode && !forceLog) {
         return defaultOutputChannel;
     }
-    // This isn't added to list of disposables, that should be fine (only used in dev mode).
-    const jupyterServerOutputChannel = window.createOutputChannel('Dev: Jupyter Server');
+    const jupyterServerOutputChannel = window.createOutputChannel(
+        localize.DataScience.jupyterServerConsoleOutputChannel()
+    );
+    disposables.push(jupyterServerOutputChannel);
     const handler: ProxyHandler<IOutputChannel> = {
         get(target: IOutputChannel, propKey: keyof IOutputChannel) {
             const method = target[propKey];
