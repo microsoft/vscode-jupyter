@@ -668,7 +668,7 @@ export class Kernel implements IKernel {
             const completionPromise = this.requestEmptyCompletions();
 
             if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
-                // No need to wait for this to complete when connecting to a like kernel.
+                // No need to wait for this to complete when connecting to a live kernel.
                 completionPromise.catch(noop);
             } else {
                 await completionPromise;
