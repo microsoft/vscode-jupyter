@@ -212,7 +212,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         // First output can contain `text/html` with some Jupyter UI specific stuff.
         try {
             traceInfo(`Cell output length ${cell.outputs.length}`);
-            await waitForTextOutput(cell, 'Hello', 0, false);
+            await waitForTextOutput(cell, 'Hello', 0, false, 5_000);
         } catch (ex) {
             if (cell.outputs.length > 1) {
                 await waitForTextOutput(cell, 'Hello', 1, false);
