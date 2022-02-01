@@ -884,5 +884,5 @@ jobs:
           tag_name: 2022.1.1001775990
           release_name: Release 2022.1.1001775990
           body_path: RELEASE_CHANGELOG.md
-          draft: true
+          draft: false
           prerelease: false
