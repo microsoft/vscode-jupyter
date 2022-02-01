@@ -47,6 +47,10 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         return (this.kernelConnection || this._previousKernelConnection).serverSettings;
     }
     public readonly disposed = new Signal<this, void>(this);
+    /**
+     * Use `kernelConnection` to access the value as its not a constant (can change over time).
+     * E.g. when restarting kernels or the like.
+     */
     private _kernelConnection!: Kernel.IKernelConnection;
     private readonly _previousKernelConnection: Kernel.IKernelConnection;
     // private _isRestarting?: boolean;
