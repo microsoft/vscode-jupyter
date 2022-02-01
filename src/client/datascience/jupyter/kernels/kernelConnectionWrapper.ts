@@ -64,7 +64,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
             return this._kernelConnection;
         }
     }
-    private getKernelConnection(): Kernel.IKernelConnection {
+    private getPossibleKernelConnection(): Kernel.IKernelConnection {
         if (!this.kernelConnection) {
             throw new Error(
                 `Kernel connection is not available, status = ${this.status}, connection = ${this.connectionStatus}`
@@ -141,31 +141,31 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         expectReply?: boolean,
         disposeOnDone?: boolean
     ): Kernel.IShellFuture<IShellMessage<T>, IShellMessage<ShellMessageType>> {
-        return this.getKernelConnection().sendShellMessage(msg, expectReply, disposeOnDone);
+        return this.getPossibleKernelConnection().sendShellMessage(msg, expectReply, disposeOnDone);
     }
     sendControlMessage<T extends ControlMessageType>(
         msg: IControlMessage<T>,
         expectReply?: boolean,
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<IControlMessage<T>, IControlMessage<ControlMessageType>> {
-        return this.getKernelConnection().sendControlMessage(msg, expectReply, disposeOnDone);
+        return this.getPossibleKernelConnection().sendControlMessage(msg, expectReply, disposeOnDone);
     }
     reconnect(): Promise<void> {
-        return this.getKernelConnection().reconnect();
+        return this.getPossibleKernelConnection().reconnect();
     }
     requestKernelInfo(): Promise<IInfoReplyMsg | undefined> {
-        return this.getKernelConnection().requestKernelInfo();
+        return this.getPossibleKernelConnection().requestKernelInfo();
     }
     requestComplete(content: { code: string; cursor_pos: number }): Promise<ICompleteReplyMsg> {
-        return this.getKernelConnection().requestComplete(content);
+        return this.getPossibleKernelConnection().requestComplete(content);
     }
     requestInspect(content: { code: string; cursor_pos: number; detail_level: 0 | 1 }): Promise<IInspectReplyMsg> {
-        return this.getKernelConnection().requestInspect(content);
+        return this.getPossibleKernelConnection().requestInspect(content);
     }
     requestHistory(
         content: IHistoryRequestRange | IHistoryRequestSearch | IHistoryRequestTail
     ): Promise<IHistoryReplyMsg> {
-        return this.getKernelConnection().requestHistory(content);
+        return this.getPossibleKernelConnection().requestHistory(content);
     }
     requestExecute(
         content: {
@@ -179,7 +179,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg> {
-        return this.getKernelConnection().requestExecute(content, disposeOnDone, metadata);
+        return this.getPossibleKernelConnection().requestExecute(content, disposeOnDone, metadata);
     }
     requestDebug(
         content: {
@@ -191,46 +191,46 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         },
         disposeOnDone?: boolean
     ): Kernel.IControlFuture<IDebugRequestMsg, IDebugReplyMsg> {
-        return this.getKernelConnection().requestDebug(content, disposeOnDone);
+        return this.getPossibleKernelConnection().requestDebug(content, disposeOnDone);
     }
     requestIsComplete(content: { code: string }): Promise<IIsCompleteReplyMsg> {
-        return this.getKernelConnection().requestIsComplete(content);
+        return this.getPossibleKernelConnection().requestIsComplete(content);
     }
     requestCommInfo(content: { target_name?: string | undefined }): Promise<ICommInfoReplyMsg> {
-        return this.getKernelConnection().requestCommInfo(content);
+        return this.getPossibleKernelConnection().requestCommInfo(content);
     }
     sendInputReply(content: IReplyErrorContent | IReplyAbortContent | IInputReply): void {
-        return this.getKernelConnection().sendInputReply(content);
+        return this.getPossibleKernelConnection().sendInputReply(content);
     }
     createComm(targetName: string, commId?: string): Kernel.IComm {
-        return this.getKernelConnection().createComm(targetName, commId);
+        return this.getPossibleKernelConnection().createComm(targetName, commId);
     }
     hasComm(commId: string): boolean {
-        return this.getKernelConnection().hasComm(commId);
+        return this.getPossibleKernelConnection().hasComm(commId);
     }
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
     ): void {
-        return this.getKernelConnection().registerCommTarget(targetName, callback);
+        return this.getPossibleKernelConnection().registerCommTarget(targetName, callback);
     }
     removeCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: ICommOpenMsg<'iopub' | 'shell'>) => void | PromiseLike<void>
     ): void {
-        return this.getKernelConnection().removeCommTarget(targetName, callback);
+        return this.getPossibleKernelConnection().removeCommTarget(targetName, callback);
     }
     registerMessageHook(
         msgId: string,
         hook: (msg: IIOPubMessage<IOPubMessageType>) => boolean | PromiseLike<boolean>
     ): void {
-        return this.getKernelConnection().registerMessageHook(msgId, hook);
+        return this.getPossibleKernelConnection().registerMessageHook(msgId, hook);
     }
     removeMessageHook(
         msgId: string,
         hook: (msg: IIOPubMessage<IOPubMessageType>) => boolean | PromiseLike<boolean>
     ): void {
-        return this.getKernelConnection().removeMessageHook(msgId, hook);
+        return this.getPossibleKernelConnection().removeMessageHook(msgId, hook);
     }
     async shutdown(): Promise<void> {
         if (

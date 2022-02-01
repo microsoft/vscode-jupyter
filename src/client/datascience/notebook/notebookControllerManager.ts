@@ -242,6 +242,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     throw error;
                 })
                 .finally(() => {
+                    if (!this.isLocalLaunch) {
+                        const cancellation = new CancellationTokenSource();
+                        this.updateRemoteConnections(cancellation.token)
+                            .catch(noop)
+                            .finally(() => cancellation.dispose());
+                    }
+
                     // Send telemetry related to fetching the kernel connections
                     sendKernelListTelemetry(
                         Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
