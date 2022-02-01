@@ -94,7 +94,8 @@ suite('DataScience - Kernel Process', () => {
             undefined,
             instance(extensionChecker),
             instance(kernelEnvVarsService),
-            instance(pythonExecFactory)
+            instance(pythonExecFactory),
+            undefined
         );
     }
     test('Launch from kernelspec (linux)', async function () {
