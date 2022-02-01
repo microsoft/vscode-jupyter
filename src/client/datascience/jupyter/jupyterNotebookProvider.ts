@@ -11,14 +11,18 @@ import {
     IJupyterConnection,
     IJupyterNotebookProvider,
     IJupyterServerProvider,
-    INotebook
+    INotebook,
+    IJupyterServerUriStorage
 } from '../types';
 import { isLocalConnection } from './kernels/types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()
 export class JupyterNotebookProvider implements IJupyterNotebookProvider {
-    constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
+    constructor(
+        @inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider,
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
+    ) {}
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
         const server = await this.serverProvider.getOrCreateServer({
@@ -27,7 +31,16 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             token: options.token,
             localJupyter: options.kind === 'localJupyter'
         });
-        return server?.getConnectionInfo();
+        const connection = await server?.getConnectionInfo();
+        if (connection && options.kind === 'remoteJupyter') {
+            // Log this remote URI into our MRU list
+            void this.serverStorage.addToUriList(
+                connection.url || connection.displayName,
+                Date.now(),
+                connection.displayName
+            );
+        }
+        return connection;
     }
 
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {

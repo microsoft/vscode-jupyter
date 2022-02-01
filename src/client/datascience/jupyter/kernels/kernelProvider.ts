@@ -27,7 +27,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { INotebookControllerManager } from '../../notebook/types';
-import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebookProvider, IStatusProvider } from '../../types';
+import { IDataScienceErrorHandler, INotebookProvider, IStatusProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
@@ -59,7 +59,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
@@ -118,7 +117,6 @@ export class KernelProvider implements IKernelProvider {
             this.errorHandler,
             this.appShell,
             this.fs,
-            this.serverStorage,
             options.controller,
             this.configService,
             this.outputTracker,
