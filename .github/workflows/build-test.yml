@@ -244,7 +244,7 @@ jobs:
     needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
-    if: github.repository == '__microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
@@ -327,7 +327,7 @@ jobs:
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
-    if: github.repository == '__microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     env:
       VSC_FORCE_REAL_JUPYTER: 1
       VSC_PYTHON_FORCE_LOGGING: 1
@@ -659,7 +659,7 @@ jobs:
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == '__microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix, pick_environment]
     env:
       VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
@@ -809,10 +809,9 @@ jobs:
     runs-on: ubuntu-latest
     # This should happen in the release and main branch
     if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
-    needs: [pick_environment, build-vsix, lint]
-    # needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
-    # environment:
-    #   name: ${{needs.pick_environment.outputs.release_channel}}
+    needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
+    environment:
+      name: ${{needs.pick_environment.outputs.release_channel}}
     steps:
       - name: dump_event
         run: |
@@ -841,13 +840,13 @@ jobs:
         with:
           name: ${{needs.pick_environment.outputs.vsix_name}}
 
-    #   - name: Publish Pre-release
-    #     if: needs.pick_environment.outputs.release_channel == 'pre-release'
-    #     run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+      - name: Publish Pre-release
+        if: needs.pick_environment.outputs.release_channel == 'pre-release'
+        run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
-    #   - name: Publish Stable
-    #     if: needs.pick_environment.outputs.release_channel == 'stable'
-    #     run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+      - name: Publish Stable
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
       - name: Extract Extension
         if: needs.pick_environment.outputs.release_channel == 'stable'
@@ -881,8 +880,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
         with:
-          tag_name: 2022.1.1001775990
-          release_name: Release 2022.1.1001775990
+          tag_name: ${{steps.version.outputs.version}}
+          release_name: Release ${{steps.version.outputs.version}}
           body_path: RELEASE_CHANGELOG.md
           draft: false
           prerelease: false
