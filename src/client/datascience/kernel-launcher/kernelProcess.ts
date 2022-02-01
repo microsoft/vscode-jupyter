@@ -270,7 +270,7 @@ export class KernelProcess implements IKernelProcess {
 
     private sendToOutput(data: string) {
         if (this.outputChannel) {
-            this.outputChannel.appendLine(data);
+            this.outputChannel.append(data);
         }
     }
 
