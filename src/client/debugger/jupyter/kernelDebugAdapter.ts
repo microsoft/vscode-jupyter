@@ -21,7 +21,7 @@ import {
     notebooks
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceVerbose } from '../../common/logger';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
@@ -62,6 +62,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService
     ) {
+        traceInfoIfCI(`Creating kernel debug adapter for debugging notebooks`);
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -74,7 +75,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.jupyterSession.onIOPubMessage(async (msg: KernelMessage.IIOPubMessage) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const anyMsg = msg as any;
-
+                traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
                 if (anyMsg.header.msg_type === 'debug_event') {
                     this.trace('event', JSON.stringify(msg));
                     if (!(await this.delegate?.willSendEvent(anyMsg))) {
