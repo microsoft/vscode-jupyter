@@ -104,38 +104,14 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    public dispose(): Promise<void> {
-        return this.shutdown();
+    public async dispose(): Promise<void> {
+        await this.shutdownImplementation(false);
     }
     // Abstracts for each Session type to implement
     public abstract waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
-        this._isDisposed = true;
-        if (this.session) {
-            try {
-                traceVerbose('Shutdown session - current session');
-                await this.shutdownSession(this.session, this.statusHandler, false);
-                traceVerbose('Shutdown session - get restart session');
-                if (this.restartSessionPromise) {
-                    this.restartSessionPromise.token.cancel();
-                    const restartSession = await this.restartSessionPromise.promise;
-                    this.restartSessionPromise.token.dispose();
-                    traceVerbose('Shutdown session - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined, true);
-                }
-            } catch {
-                noop();
-            }
-            this.setSession(undefined);
-            this.restartSessionPromise = undefined;
-            this.onStatusChangedEvent.fire('dead');
-            this._disposed.fire();
-            this._disposed.dispose();
-            this.onStatusChangedEvent.dispose();
-        }
-        disposeAllDisposables(this.disposables);
-        traceVerbose('Shutdown session -- complete');
+        await this.shutdownImplementation(true);
     }
     public async interrupt(): Promise<void> {
         if (this.session && this.session.kernel) {
@@ -384,7 +360,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected async shutdownSession(
         session: ISessionWithSocket | undefined,
         statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
-        isRequestToShutDownRestartSession: boolean | undefined
+        isRequestToShutDownRestartSession: boolean | undefined,
+        shutdownEvenIfRemote?: boolean
     ): Promise<void> {
         if (session && session.kernel) {
             const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
@@ -393,7 +370,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
-                if (!this.canShutdownSession(session, isRequestToShutDownRestartSession)) {
+                if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                     traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
@@ -418,9 +395,40 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         }
     }
-    private canShutdownSession(session: ISessionWithSocket, isRequestToShutDownRestartSession: boolean | undefined) {
+    private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
+        this._isDisposed = true;
+        if (this.session) {
+            try {
+                traceVerbose('Shutdown session - current session');
+                await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
+                traceVerbose('Shutdown session - get restart session');
+                if (this.restartSessionPromise) {
+                    this.restartSessionPromise.token.cancel();
+                    const restartSession = await this.restartSessionPromise.promise;
+                    this.restartSessionPromise.token.dispose();
+                    traceVerbose('Shutdown session - shutdown restart session');
+                    await this.shutdownSession(restartSession, undefined, true);
+                }
+            } catch {
+                noop();
+            }
+            this.setSession(undefined);
+            this.restartSessionPromise = undefined;
+            this.onStatusChangedEvent.fire('dead');
+            this._disposed.fire();
+            this._disposed.dispose();
+            this.onStatusChangedEvent.dispose();
+        }
+        disposeAllDisposables(this.disposables);
+        traceVerbose('Shutdown session -- complete');
+    }
+    private canShutdownSession(
+        session: ISessionWithSocket,
+        isRequestToShutDownRestartSession: boolean | undefined,
+        shutdownEvenIfRemote?: boolean
+    ): boolean {
         // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel') {
+        if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel' && !shutdownEvenIfRemote) {
             return false;
         }
         // We can always shutdown restart sessions.
@@ -432,7 +440,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             return true;
         }
         // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
-        if (session.resource && getResourceType(session.resource) === 'notebook' && session.isRemoteSession === true) {
+        if (
+            session.resource &&
+            getResourceType(session.resource) === 'notebook' &&
+            session.isRemoteSession === true &&
+            !shutdownEvenIfRemote
+        ) {
             return false;
         }
 

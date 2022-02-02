@@ -169,6 +169,13 @@ export interface IKernel extends IAsyncDisposable {
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
     readonly session?: IJupyterSession;
+    /**
+     * We create IKernels early on to ensure they are mapped with the notebook documents.
+     * I.e. created even before they are used.
+     * Thus even if we have an IKernel it doesn't mean that we have a real (underlying) kernel active.
+     * This flag will tell us whether a real kernel was or is active.
+     */
+    readonly startedAtLeastOnce?: boolean;
     start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
