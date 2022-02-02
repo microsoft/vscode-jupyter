@@ -265,20 +265,19 @@ export function filterCompletions(
     position: Position
 ) {
     let result = completions;
-    const charBeforeCursorPosition = new Range(
-        position.line,
-        position.character - 1,
-        position.line,
-        position.character
-    );
-    const charBeforeCursor = cell.getText(charBeforeCursorPosition);
+    const charBeforeCursorPosition =
+        position.character === 0
+            ? undefined
+            : new Range(position.line, position.character - 1, position.line, position.character);
+    const charBeforeCursor = charBeforeCursorPosition ? cell.getText(charBeforeCursorPosition) : undefined;
     const isPreviousCharTriggerCharacter = charBeforeCursor === '.';
     const wordRange = cell.getWordRangeAtPosition(
         isPreviousCharTriggerCharacter || triggerCharacter === '.'
             ? new Position(position.line, position.character - 1)
             : position
     );
-    const wordRangeWithTriggerCharacter = wordRange ? wordRange.union(charBeforeCursorPosition) : undefined;
+    const wordRangeWithTriggerCharacter =
+        wordRange && charBeforeCursorPosition ? wordRange.union(charBeforeCursorPosition) : undefined;
     const word = wordRangeWithTriggerCharacter
         ? cell.getText(wordRangeWithTriggerCharacter)
         : cell.lineAt(position.line).text;
