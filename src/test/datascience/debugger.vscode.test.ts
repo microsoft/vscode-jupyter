@@ -85,8 +85,10 @@ suite('VSCode Notebook - Run By Line', function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        traceInfo(`Inserted cell`);
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
+        traceInfo(`Executed run by line`);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!);
@@ -95,12 +97,14 @@ suite('VSCode Notebook - Run By Line', function () {
         });
         assert.isTrue(stack.stackFrames.length > 0, 'has frames');
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        traceInfo(`Got past first stop event`);
 
         const coreVariableView = await variableViewProvider.activeVariableView;
         const variableView = (coreVariableView as unknown) as ITestWebviewHost;
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
+        traceInfo(`Got past second stop event`);
 
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         await waitForVariablesToMatch(expectedVariables, variableView);
@@ -116,6 +120,8 @@ suite('VSCode Notebook - Run By Line', function () {
             defaultNotebookTestTimeout,
             'Cell should have output'
         );
+        traceInfo(`Got past third stop event`);
+
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 

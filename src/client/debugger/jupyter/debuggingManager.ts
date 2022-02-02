@@ -26,7 +26,7 @@ import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
 import { EditorContexts } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -220,16 +220,20 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
+        traceInfoIfCI(`Starting debugging with mode ${mode}`);
+
         if (!editor) {
             void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
             return;
         }
 
         if (this.notebookInProgress.has(editor.document)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
 
         if (this.isDebugging(editor.document)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
             this.updateToolbar(true);
             if (mode === KernelDebugMode.RunByLine) {
                 this.updateCellToolbar(true);
@@ -284,6 +288,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         try {
             this.notebookInProgress.add(editor.document);
             await checkIpykernelAndStart();
+        } catch (e) {
+            traceInfo(`Error starting debugging: ${e}`);
         } finally {
             this.notebookInProgress.delete(editor.document);
         }
