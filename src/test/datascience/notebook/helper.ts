@@ -894,6 +894,7 @@ export async function waitForDebugEvent<T>(
 }
 
 export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
+    assert.ok(debugAdapter, `No debug adapter when waiting for stoppped event`);
     return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
 
