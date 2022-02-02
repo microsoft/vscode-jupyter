@@ -108,7 +108,7 @@ export class BackupPipInstaller {
                 } installed (when checking via IInstaller.isInstalled).`
             );
 
-            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                 action: isInstalled === true ? 'installedInJupyter' : 'failedToInstallInJupyter',
                 moduleName: productName,
                 pythonEnvType: interpreter.envType
