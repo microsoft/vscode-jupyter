@@ -289,16 +289,23 @@ export function filterCompletions(
                 sortText: `ZZZ${r.sortText}`
             };
         }
+        // Do nothing for paths and the like inside strings.
+        if (insideString) {
+            return r;
+        }
+
         const wordIndex = word ? r.itemText.indexOf(word) : -1;
         let newLabel: string | undefined = undefined;
+        let newText: string | undefined = undefined;
         let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
 
         // Two cases for filtering. We're at the '.', then the word we have is the beginning of the string.
         // Example, user typed 'df.' and r.itemText is 'df.PassengerId'. Word would be 'df.' in this case.
         if (word && wordDot && r.itemText.includes(word)) {
-            newLabel = r.itemText.substring(r.itemText.indexOf(word) + word.length);
+            newLabel = r.itemText.substring(r.itemText.indexOf(word) + (wordDot ? word.length : 0));
+            newText = r.itemText.substring(r.itemText.indexOf(word) + word.length);
             const changeInCharacters =
-                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newLabel.length;
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
             newRange =
                 r.range && 'start' in r.range
                     ? new Range(
@@ -309,10 +316,11 @@ export function filterCompletions(
         }
         // We're after the '.' and the user is typing more. We are in the middle of the string then.
         // Example, user typed 'df.Pass' and r.itemText is 'df.PassengerId'. Word would be 'Pass' in this case.
-        if (!newLabel && wordIndex > 0) {
-            newLabel = r.itemText.substring(r.itemText.indexOf(word) + word.length);
+        if (!newText && wordIndex > 0) {
+            newLabel = r.itemText.substring(r.itemText.indexOf(word) + (wordDot ? word.length : 0));
+            newText = r.itemText.substring(r.itemText.indexOf(word) + word.length);
             const changeInCharacters =
-                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newLabel.length;
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newText.length;
             newRange =
                 r.range && 'start' in r.range
                     ? new Range(
@@ -321,11 +329,11 @@ export function filterCompletions(
                       )
                     : r.range;
         }
-        if (newLabel && newRange) {
+        if (newLabel && newText && newRange) {
             r.label = newLabel;
-            r.itemText = newLabel;
-            r.insertText = newLabel;
-            r.filterText = wordDot ? `.${newLabel}` : newLabel;
+            r.itemText = newText;
+            r.insertText = newText;
+            r.filterText = wordDot ? `.${newText}` : newText;
             r.range = newRange;
             r.sortText = generateSortString(i);
         }
