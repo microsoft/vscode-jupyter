@@ -97,7 +97,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         let completions: JupyterCompletionItem[] = [];
 
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
-        // Check if we have more information about the complication items & whether its valid.
+        // Check if we have more information about the completion items & whether its valid.
         // This will ensure that we don't regress (as long as all items are valid & we have the same number of completions items
         // then we should be able to use the experiment matches value)
         if (
@@ -252,9 +252,24 @@ export function filterCompletions(
     position: Position
 ) {
     let result = completions;
-    const wordRange = cell.getWordRangeAtPosition(position);
-    const word = wordRange ? cell.getText(wordRange) : cell.lineAt(position.line).text;
-    const wordDot = word.endsWith('.');
+    const charBeforeCursorPosition = new Range(
+        position.line,
+        position.character - 1,
+        position.line,
+        position.character
+    );
+    const charBeforeCursor = cell.getText(charBeforeCursorPosition);
+    const isPreviousCharTriggerCharacter = charBeforeCursor === '.';
+    const wordRange = cell.getWordRangeAtPosition(
+        isPreviousCharTriggerCharacter || triggerCharacter === '.'
+            ? new Position(position.line, position.character - 1)
+            : position
+    );
+    const wordRangeWithTriggerCharacter = wordRange ? wordRange.union(charBeforeCursorPosition) : undefined;
+    const word = wordRangeWithTriggerCharacter
+        ? cell.getText(wordRangeWithTriggerCharacter)
+        : cell.lineAt(position.line).text;
+    const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
     const insideString =
         allowStringFilter &&
         (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position));
@@ -275,42 +290,51 @@ export function filterCompletions(
             };
         }
         const wordIndex = word ? r.itemText.indexOf(word) : -1;
-        let newText: string | undefined = undefined;
+        let newLabel: string | undefined = undefined;
         let newRange: Range | { inserting: Range; replacing: Range } | undefined = undefined;
 
         // Two cases for filtering. We're at the '.', then the word we have is the beginning of the string.
         // Example, user typed 'df.' and r.itemText is 'df.PassengerId'. Word would be 'df.' in this case.
-        if (word && wordDot && r.itemText.startsWith(word)) {
-            newText = r.itemText.substring(word.length);
+        if (word && wordDot && r.itemText.includes(word)) {
+            newLabel = r.itemText.substring(r.itemText.indexOf(word) + word.length);
+            const changeInCharacters =
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newLabel.length;
             newRange =
                 r.range && 'start' in r.range
-                    ? new Range(new Position(r.range.start.line, r.range.start.character + word.length), r.range.end)
+                    ? new Range(
+                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                          r.range.end
+                      )
                     : r.range;
         }
         // We're after the '.' and the user is typing more. We are in the middle of the string then.
         // Example, user typed 'df.Pass' and r.itemText is 'df.PassengerId'. Word would be 'Pass' in this case.
-        if (!newText && wordIndex > 0) {
-            newText = r.itemText.substring(wordIndex);
+        if (!newLabel && wordIndex > 0) {
+            newLabel = r.itemText.substring(r.itemText.indexOf(word) + word.length);
+            const changeInCharacters =
+                (typeof r.label === 'string' ? r.label.length : r.label.label.length) - newLabel.length;
             newRange =
                 r.range && 'start' in r.range
-                    ? new Range(new Position(r.range.start.line, r.range.start.character + wordIndex), r.range.end)
+                    ? new Range(
+                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                          r.range.end
+                      )
                     : r.range;
         }
-        if (newText && newRange) {
-            return {
-                ...r,
-                sortText: generateSortString(i),
-                label: newText,
-                itemText: newText,
-                range: newRange
-            };
+        if (newLabel && newRange) {
+            r.label = newLabel;
+            r.itemText = newLabel;
+            r.insertText = newLabel;
+            r.filterText = wordDot ? `.${newLabel}` : newLabel;
+            r.range = newRange;
+            r.sortText = generateSortString(i);
         }
         return r;
     });
 
     // If not inside of a string, filter out file names (things that end with '/')
     if (!insideString) {
-        result = result.filter((r) => !r.itemText.endsWith('/'));
+        result = result.filter((r) => !r.itemText.includes('.') && !r.itemText.endsWith('/'));
     } else {
         // If inside a string and ending with '/', then add a command to force a suggestion right after
         result = result.map((r) => {
@@ -322,6 +346,15 @@ export function filterCompletions(
                         title: ''
                     }
                 };
+            }
+            // Sometimes we have items with spaces, and Jupyter escapes spaces with `\ `
+            if (r.itemText.includes(' ')) {
+                r.itemText = r.itemText.replace(/\\ /g, ' ');
+                if (typeof r.label === 'string') {
+                    r.label = r.label.replace(/\\ /g, ' ');
+                } else {
+                    r.label.label = r.label.label.replace(/\\ /g, ' ');
+                }
             }
             return r;
         });
