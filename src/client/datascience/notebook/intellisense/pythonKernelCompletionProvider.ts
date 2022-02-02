@@ -10,14 +10,15 @@ import {
     CompletionItemProvider,
     Position,
     Range,
-    TextDocument
+    TextDocument,
+    workspace
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { waitForPromise } from '../../../common/utils/async';
 import { isNotebookCell } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -45,11 +46,23 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookLanguageClientProvider)
         private readonly languageClientProvider: INotebookLanguageClientProvider,
-        @inject(IConfigurationService) config: IConfigurationService
+        @inject(IConfigurationService) config: IConfigurationService,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         const triggerChars = config.getSettings().pythonCompletionTriggerCharacters;
         this.allowStringFilter =
             triggerChars != undefined && (triggerChars.includes("'") || triggerChars.includes('"'));
+        workspace.onDidChangeConfiguration(
+            (e) => {
+                if (e.affectsConfiguration('jupyter.pythonCompletionTriggerCharacters')) {
+                    const triggerChars = config.getSettings().pythonCompletionTriggerCharacters;
+                    this.allowStringFilter =
+                        triggerChars != undefined && (triggerChars.includes("'") || triggerChars.includes('"'));
+                }
+            },
+            this,
+            disposables
+        );
     }
     public async provideCompletionItems(
         document: TextDocument,
