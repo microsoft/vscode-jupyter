@@ -23,7 +23,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
+    - cron: '0 9 * * 1,4' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 14.16.0
@@ -67,7 +67,7 @@ jobs:
       test_matrix_os: ${{ env.test_matrix_os }}
       release_channel: ${{ env.release_channel }}
       package_command: ${{ env.package_command }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    if: github.repository == 'r3m0t/vscode-jupyter'
     steps:
       - name: dump_event
         uses: crazy-max/ghaction-dump-context@v1
@@ -166,7 +166,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -244,7 +244,7 @@ jobs:
     needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
@@ -327,7 +327,7 @@ jobs:
   vscodeTests:
     name: Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     env:
       VSC_FORCE_REAL_JUPYTER: 1
       VSC_PYTHON_FORCE_LOGGING: 1
@@ -659,7 +659,7 @@ jobs:
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix, pick_environment]
     env:
       VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
@@ -808,7 +808,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     # This should happen in the release and main branch
-    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
+    if: (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
     needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
     environment:
       name: ${{needs.pick_environment.outputs.release_channel}}
@@ -839,14 +839,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ${{needs.pick_environment.outputs.vsix_name}}
-
-      - name: Publish Pre-release
-        if: needs.pick_environment.outputs.release_channel == 'pre-release'
-        run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
-      - name: Publish Stable
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
       - name: Extract Extension
         if: needs.pick_environment.outputs.release_channel == 'stable'
