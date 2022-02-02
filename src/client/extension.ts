@@ -38,6 +38,8 @@ import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { noop } from './common/utils/misc';
 
+export { JupyterServerSelector } from './datascience/jupyter/serverSelector';
+
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
 //===============================================
@@ -75,7 +77,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve(),
-            getKernelService: () => Promise.resolve(undefined)
+            getKernelService: () => Promise.resolve(undefined),
+            getServiceContainer: () => { throw new Error() },
+            getServiceManager: () => { throw new Error() },
         };
     }
 }

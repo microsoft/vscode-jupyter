@@ -190,7 +190,7 @@ function buildConfiguration(bundle) {
             ...outputProps
         },
         mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        devtool: isProdBuild ? undefined : 'inline-source-map',
+        devtool: 'inline-source-map',
         optimization: undefined,
         node: {
             fs: 'empty'

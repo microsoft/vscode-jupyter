@@ -3,7 +3,7 @@ typings/**
 out/test/**
 test/**
 src/**
-**/*.map
+#**/*.map
 .gitignore
 tsconfig.json
 vsc-extension-quickstart.md

@@ -49,6 +49,9 @@ export interface IExtensionApi {
      * There are a specific set of extensions that are currently allowed to access this API.
      */
     getKernelService(): Promise<IExportedKernelService | undefined>;
+
+    getServiceManager(): IServiceManager;
+    getServiceContainer(): IServiceContainer;
 }
 
 export function buildApi(
@@ -88,7 +91,13 @@ export function buildApi(
         getKernelService: async () => {
             const kernelServiceFactory = serviceContainer.get<JupyterKernelServiceFactory>(JupyterKernelServiceFactory);
             return kernelServiceFactory.getService();
-        }
+        },
+        getServiceManager: () => {
+            return serviceManager;
+        },
+        getServiceContainer: () => {
+            return serviceContainer;
+        },
     };
 
     // In test/dev environment return the DI Container.

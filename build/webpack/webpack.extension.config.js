@@ -19,7 +19,7 @@ const config = {
     entry: {
         extension: './src/client/extension.ts'
     },
-    devtool: 'source-map',
+    devtool: 'inline-source-map',
     node: {
         __dirname: false
     },

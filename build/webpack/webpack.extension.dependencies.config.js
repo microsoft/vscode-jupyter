@@ -16,7 +16,7 @@ const config = {
     target: 'node',
     context: constants.ExtensionRootDir,
     entry: entryItems,
-    devtool: 'source-map',
+    devtool: 'inline-source-map',
     node: {
         __dirname: false
     },

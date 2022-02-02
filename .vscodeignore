@@ -1,4 +1,4 @@
-**/*.map
+# **/*.map
 **/*.analyzer.html
 !out/datascience-ui/common/node_modules/**/*
 images/**
