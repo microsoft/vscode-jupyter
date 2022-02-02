@@ -4,7 +4,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, window } from 'vscode';
+import {
+    CancellationTokenSource,
+    CompletionContext,
+    CompletionTriggerKind,
+    Position,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
@@ -61,7 +68,19 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and get completions that require jupyter', async () => {
+    /**
+     * Test completions.
+     * @param {string} cellCode e.g. `df.`
+     * @param {string} itemToExistInCompletion E.g. `Name`, `Age`
+     * @param {string} textToFilterCompletions The text typed to filter the list, e.g. `N`.
+     * @param {string} itemToExistInCompletionAfterFilter The filtered list, e.g. if user types `N`, then `Age` will not show up, but `Name` will.
+     */
+    async function testCompletions(
+        cellCode: string,
+        itemToExistInCompletion: string,
+        textToFilterCompletions?: string,
+        itemToExistInCompletionAfterFilter?: string
+    ) {
         await insertCodeCell('%pip install pandas', {
             index: 0
         });
@@ -91,12 +110,12 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`last cell output: ${getCellOutputs(cell3)}`);
 
         // Now add the cell to check intellisense.
-        await insertCodeCell('df.');
+        await insertCodeCell(cellCode);
         const cell4 = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         const token = new CancellationTokenSource().token;
-        let position = new Position(0, 3);
-        const context: CompletionContext = {
+        let position = new Position(0, cellCode.length);
+        let context: CompletionContext = {
             triggerKind: CompletionTriggerKind.TriggerCharacter,
             triggerCharacter: '.'
         };
@@ -108,7 +127,13 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         let items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(items.find((item) => (typeof item === 'string' ? item.includes('Age') : item.label.includes('Age'))));
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string'
+                    ? item.includes(itemToExistInCompletion)
+                    : item.label.includes(itemToExistInCompletion)
+            )
+        );
 
         // Make sure it is skipping items that are already provided by pylance (no dupes)
         // Pylance isn't returning them right now: https://github.com/microsoft/vscode-jupyter/issues/8842
@@ -116,18 +141,43 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         //     items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         // );
 
+        if (!textToFilterCompletions || !itemToExistInCompletionAfterFilter) {
+            return;
+        }
         // Add some text after the . and make sure we still get completions
-        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell4.document.uri);
-        await editor?.edit((b) => {
-            b.insert(new Position(3, 0), 'N');
-        });
-
-        position = new Position(0, 4);
+        const edit = new WorkspaceEdit();
+        edit.insert(cell4.document.uri, new Position(cellCode.length, 0), textToFilterCompletions);
+        await workspace.applyEdit(edit);
+        position = new Position(0, cellCode.length + textToFilterCompletions.length);
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(
-            items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
+        assert.isUndefined(
+            // Since we've filtered the completion the old item will no longer exist.
+            items.find((item) =>
+                typeof item === 'string'
+                    ? item.includes(itemToExistInCompletion)
+                    : item.label.includes(itemToExistInCompletion)
+            )
         );
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string'
+                    ? item.includes(itemToExistInCompletionAfterFilter)
+                    : item.label.includes(itemToExistInCompletionAfterFilter)
+            )
+        );
+    }
+    test('Execute cell and get completions that require jupyter', async () => {
+        await testCompletions('df.', 'Age', 'N', 'Name');
+    });
+    test('Execute cell and get completions that require jupyter', async () => {
+        await testCompletions('df.Name.', 'add_prefix', 'add_s', 'add_suffix');
+    });
+    test('Execute cell and get completions that require jupyter', async () => {
+        await testCompletions('var_name = df.', 'Age', 'N', 'Name');
+    });
+    test('Execute cell and get completions that require jupyter', async () => {
+        await testCompletions('var_name = df.Name.', 'add_prefix', 'add_s', 'add_suffix');
     });
 });
