@@ -332,6 +332,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         config: IKernelDebugAdapterConfig,
         options?: DebugSessionOptions
     ) {
+        traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             dbg = new Debugger(doc, config, options);
@@ -339,10 +340,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             try {
                 await dbg.session;
+                traceInfoIfCI(`Debugger session is ready. Should be debugging now`);
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
                 void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
             }
+        } else {
+            traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);
         }
     }
 
