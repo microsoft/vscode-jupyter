@@ -6,18 +6,12 @@
 // Copied from https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/html-manager/webpack.config.js
 
 const postcss = require('postcss');
-const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const common = require('../../build/webpack/common');
 const path = require('path');
 const constants = require('../../build/constants');
 const outDir = path.join(__dirname, '..', '..', 'out', 'ipywidgets');
-const version = require(path.join(
-    __dirname,
-    'node_modules',
-    '@jupyter-widgets',
-    'jupyterlab-manager',
-    'package.json'
-)).version;
+const version = require(path.join(__dirname, 'node_modules', '@jupyter-widgets', 'jupyterlab-manager', 'package.json'))
+    .version;
 const rootDir = __dirname;
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -25,12 +19,11 @@ const publicPath = 'https://unpkg.com/@jupyter-widgets/jupyterlab-manager@' + ve
 const rules = [
     { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     // jquery-ui loads some images
-    { test: /\.(jpg|png|gif)$/, use: ['cache-loader', 'thread-loader', 'file-loader'] },
+    { test: /\.(jpg|png|gif)$/, use: ['thread-loader', 'file-loader'] },
     // required to load font-awesome
     {
         test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            'cache-loader',
             'thread-loader',
             {
                 loader: 'url-loader',
@@ -44,7 +37,6 @@ const rules = [
     {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            'cache-loader',
             'thread-loader',
             {
                 loader: 'url-loader',
@@ -58,7 +50,6 @@ const rules = [
     {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            'cache-loader',
             'thread-loader',
             {
                 loader: 'url-loader',
@@ -73,7 +64,6 @@ const rules = [
     {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         use: [
-            'cache-loader',
             'thread-loader',
             {
                 loader: 'url-loader',
@@ -90,6 +80,7 @@ module.exports = [
         mode: isProdBuild ? 'production' : 'development',
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
         entry: path.join(outDir, 'index.js'),
+        cache: true,
         output: {
             filename: 'ipywidgets.js',
             path: path.resolve(outDir, 'dist'),
@@ -97,10 +88,7 @@ module.exports = [
             pathinfo: false
         },
         resolve: {
-            modules: [
-                path.resolve(__dirname, 'node_modules'),
-                path.resolve(__dirname, './'),
-            ]
+            modules: [path.resolve(__dirname, 'node_modules'), path.resolve(__dirname, './')]
         },
         plugins: [...common.getDefaultPlugins('ipywidgets')],
         module: {
@@ -108,7 +96,6 @@ module.exports = [
                 {
                     test: /\.css$/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         'style-loader',
                         'css-loader',
@@ -125,18 +112,20 @@ module.exports = [
                                     }),
                                     postcss.plugin('prepend', function () {
                                         return function (css) {
-                                            css.prepend("@import 'src/ipywidgets/node_modules/@jupyter-widgets/controls/css/labvariables.css';");
+                                            css.prepend(
+                                                "@import 'src/ipywidgets/node_modules/@jupyter-widgets/controls/css/labvariables.css';"
+                                            );
                                         };
                                     }),
                                     require('postcss-import')(),
-                                    require('postcss-cssnext')()    
+                                    require('postcss-cssnext')()
                                 ]
                             }
                         }
                     ]
                 },
                 // jquery-ui loads some images
-                { test: /\.(jpg|png|gif)$/, use: ['cache-loader', 'thread-loader', 'file-loader'] },
+                { test: /\.(jpg|png|gif)$/, use: ['thread-loader', 'file-loader'] },
                 // required to load font-awesome
                 {
                     test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
@@ -168,7 +157,7 @@ module.exports = [
                         }
                     }
                 },
-                { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: ['cache-loader', 'thread-loader', 'file-loader'] },
+                { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: ['thread-loader', 'file-loader'] },
                 {
                     test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
                     use: {

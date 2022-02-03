@@ -15,10 +15,10 @@ After that we need to load slickgrid, and then the jQuery plugin from slickgrid 
 // the one currently in node-modules
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+require('expose-loader?exposes=jQuery!slickgrid/lib/jquery-1.11.2.min');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 require('slickgrid/lib/jquery-1.11.2.min');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-require('expose-loader?jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');
+require('expose-loader?exposes=jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');

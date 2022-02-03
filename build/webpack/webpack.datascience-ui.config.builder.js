@@ -8,13 +8,11 @@
 const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const EsmWebpackPlugin = require('@purtuga/esm-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -107,7 +105,6 @@ function getPlugins(bundle) {
         case 'ipywidgetsRenderer':
         case 'errorRenderer': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
-            plugins.push(new EsmWebpackPlugin());
             break;
         }
         default:
@@ -166,7 +163,6 @@ function buildConfiguration(bundle) {
         });
     }
     const plugins = [
-        new FixDefaultImportPlugin(),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 100
         }),
@@ -182,6 +178,7 @@ function buildConfiguration(bundle) {
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
+        cache: true,
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
@@ -192,14 +189,16 @@ function buildConfiguration(bundle) {
         mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? undefined : 'inline-source-map',
         optimization: undefined,
-        node: {
-            fs: 'empty'
-        },
         plugins,
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
-            extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
+            extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
+            fallback: {
+                fs: false,
+                path: false,
+                os: false
+            }
         },
 
         module: {
@@ -207,7 +206,6 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.tsx?$/,
                     use: [
-                        { loader: 'cache-loader' },
                         {
                             loader: 'thread-loader',
                             options: {
@@ -235,17 +233,16 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.svg$/,
-                    use: ['cache-loader', 'thread-loader', 'svg-inline-loader']
+                    use: ['thread-loader', 'svg-inline-loader']
                 },
                 {
                     test: /\.css$/,
-                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader']
+                    use: ['thread-loader', 'style-loader', 'css-loader']
                 },
                 {
                     test: /\.js$/,
                     include: /node_modules.*remark.*default.*js/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
@@ -258,7 +255,6 @@ function buildConfiguration(bundle) {
                     type: 'javascript/auto',
                     include: /node_modules.*remark.*/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
@@ -269,7 +265,6 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         {
                             loader: 'url-loader?limit=100000',
@@ -279,7 +274,7 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.less$/,
-                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader', 'less-loader']
+                    use: ['thread-loader', 'style-loader', 'css-loader', 'less-loader']
                 }
             ]
         }

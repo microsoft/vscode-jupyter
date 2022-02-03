@@ -32,7 +32,7 @@ exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
     // Only run the analyzer on a local machine or if required
-    if (!constants.isCI || process.env.VSC_JUPYTER_FORCE_ANALYZER) {
+    if (process.env.VSC_JUPYTER_FORCE_ANALYZER) {
         plugins.push(
             new webpack_bundle_analyzer.BundleAnalyzerPlugin({
                 analyzerMode: 'static',
