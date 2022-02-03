@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens author:amunger\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens -author:amunger\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff assignee:amunger assignee:minsa110 assignee:ronglums"
   },
   {
     "kind": 1,
