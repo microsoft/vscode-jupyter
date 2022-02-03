@@ -19,60 +19,24 @@ const publicPath = 'https://unpkg.com/@jupyter-widgets/jupyterlab-manager@' + ve
 const rules = [
     { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     // jquery-ui loads some images
-    { test: /\.(jpg|png|gif)$/, use: ['thread-loader', 'file-loader'] },
+    { test: /\.(jpg|png|gif)$/, type: 'asset/inline' },
     // required to load font-awesome
     {
         test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-            'thread-loader',
-            {
-                loader: 'url-loader',
-                options: {
-                    limit: 10000,
-                    mimetype: 'application/font-woff'
-                }
-            }
-        ]
+        type: 'asset/inline'
     },
     {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-            'thread-loader',
-            {
-                loader: 'url-loader',
-                options: {
-                    limit: 10000,
-                    mimetype: 'application/font-woff'
-                }
-            }
-        ]
+        type: 'asset/inline'
     },
     {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-            'thread-loader',
-            {
-                loader: 'url-loader',
-                options: {
-                    limit: 10000,
-                    mimetype: 'application/octet-stream'
-                }
-            }
-        ]
+        type: 'asset/inline'
     },
-    { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: 'file-loader' },
+    { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, type: 'asset/resource' },
     {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-            'thread-loader',
-            {
-                loader: 'url-loader',
-                options: {
-                    limit: 10000,
-                    mimetype: 'image/svg+xml'
-                }
-            }
-        ]
+        type: 'asset/inline'
     }
 ];
 module.exports = [
@@ -96,77 +60,54 @@ module.exports = [
                 {
                     test: /\.css$/,
                     use: [
-                        'thread-loader',
                         'style-loader',
                         'css-loader',
                         {
                             loader: 'postcss-loader',
                             options: {
-                                plugins: [
-                                    postcss.plugin('delete-tilde', function () {
-                                        return function (css) {
-                                            css.walkAtRules('import', function (rule) {
-                                                rule.params = rule.params.replace('~', '');
-                                            });
-                                        };
-                                    }),
-                                    postcss.plugin('prepend', function () {
-                                        return function (css) {
-                                            css.prepend(
-                                                "@import 'src/ipywidgets/node_modules/@jupyter-widgets/controls/css/labvariables.css';"
-                                            );
-                                        };
-                                    }),
-                                    require('postcss-import')(),
-                                    require('postcss-cssnext')()
-                                ]
+                                postcssOptions: {
+                                    plugins: [
+                                        postcss.plugin('delete-tilde', function () {
+                                            return function (css) {
+                                                css.walkAtRules('import', function (rule) {
+                                                    rule.params = rule.params.replace('~', '');
+                                                });
+                                            };
+                                        }),
+                                        postcss.plugin('prepend', function () {
+                                            return function (css) {
+                                                css.prepend(
+                                                    "@import 'src/ipywidgets/node_modules/@jupyter-widgets/controls/css/labvariables.css';"
+                                                );
+                                            };
+                                        }),
+                                        require('postcss-import')(),
+                                        require('postcss-cssnext')()
+                                    ]
+                                }
                             }
                         }
                     ]
                 },
                 // jquery-ui loads some images
-                { test: /\.(jpg|png|gif)$/, use: ['thread-loader', 'file-loader'] },
+                { test: /\.(jpg|png|gif)$/, type: 'asset/resource' },
                 // required to load font-awesome
                 {
                     test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-                    use: {
-                        loader: 'url-loader',
-                        options: {
-                            limit: 10000,
-                            mimetype: 'application/font-woff'
-                        }
-                    }
+                    type: 'asset/inline'
                 },
                 {
                     test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-                    use: {
-                        loader: 'url-loader',
-                        options: {
-                            limit: 10000,
-                            mimetype: 'application/font-woff'
-                        }
-                    }
+                    type: 'asset/inline'
                 },
                 {
                     test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-                    use: {
-                        loader: 'url-loader',
-                        options: {
-                            limit: 10000,
-                            mimetype: 'application/octet-stream'
-                        }
-                    }
+                    type: 'asset/inline'
                 },
-                { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: ['thread-loader', 'file-loader'] },
+                { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, type: 'asset/resource' },
                 {
                     test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-                    use: {
-                        loader: 'url-loader',
-                        options: {
-                            limit: 10000,
-                            mimetype: 'image/svg+xml'
-                        }
-                    }
+                    type: 'asset/inline'
                 }
             ]
         }

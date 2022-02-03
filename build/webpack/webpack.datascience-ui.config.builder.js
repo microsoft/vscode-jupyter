@@ -264,17 +264,31 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
-                    use: [
-                        'thread-loader',
-                        {
-                            loader: 'url-loader?limit=100000',
-                            options: { esModule: false }
-                        }
-                    ]
+                    type: 'asset/inline'
                 },
                 {
                     test: /\.less$/,
                     use: ['thread-loader', 'style-loader', 'css-loader', 'less-loader']
+                },
+                {
+                    test: require.resolve('slickgrid/lib/jquery-1.11.2.min'),
+                    loader: 'expose-loader',
+                    options: {
+                        exposes: {
+                            globalName: 'jQuery',
+                            override: true
+                        }
+                    }
+                },
+                {
+                    test: require.resolve('slickgrid/lib/jquery.event.drag-2.3.0'),
+                    loader: 'expose-loader',
+                    options: {
+                        exposes: {
+                            globalName: 'jQuery.fn.drag',
+                            override: true
+                        }
+                    }
                 }
             ]
         }
