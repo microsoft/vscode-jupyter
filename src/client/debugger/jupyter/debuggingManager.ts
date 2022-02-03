@@ -339,8 +339,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             this.notebookToDebugger.set(doc, dbg);
 
             try {
-                await dbg.session;
-                traceInfoIfCI(`Debugger session is ready. Should be debugging now`);
+                const session = await dbg.session;
+                traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
                 void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
@@ -351,6 +351,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async endSession(session: DebugSession) {
+        traceInfoIfCI(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
@@ -376,7 +377,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             if (debug) {
                 if (kernel?.session) {
-                    debug.resolve(session);
                     const adapter = new KernelDebugAdapter(
                         session,
                         debug.document,
@@ -405,6 +405,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
                     this.notebookToDebugAdapter.set(debug.document, adapter);
                     this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
+
+                    // Wait till we're attached before resolving the session
+                    debug.resolve(session);
                     return new DebugAdapterInlineImplementation(adapter);
                 } else {
                     void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
