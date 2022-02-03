@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2022-01-28"
+    "value": "$TODAYS_DATE=2022-02-03"
   },
   {
     "kind": 1,
@@ -52,6 +52,71 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Customer Entered"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:author-date"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Engineering Team Entered and Internal Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### VSCode Repo Notebook issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS label:notebook-triage"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Non Blocking Golden Scenario Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Closed before they hit formal triage"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "----\r\n## Quick Bug Queries\r\n\r\n[Basic Information](https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests)  \r\n[Number, Word, Date Qualifiers](https://docs.github.com/en/github/searching-for-information-on-github/getting-started-with-searching-on-github/understanding-the-search-syntax)\r\n\r\n\r\nSome interesting examples:  \r\n* Issues closed between 08/30/2021 and 09/03/2021 - ```$JUPYTER_ALL_REPOS is:issue closed:2021-08-30..2021-09-03```\r\n* Issues updated today by me that aren't part of a milestone - $ALL_REPOS is:issue updated:$TODAYS_DATE commenter:@me no:milestone\r\n"
   },
   {
@@ -88,71 +153,6 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$JUPYTER_ALL_REPOS is:open is:issue label:discuss-at-standup "
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Customer Entered"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:author-date"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Engineering Team Entered and Internal Issues"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### VSCode Repo Notebook issues"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS "
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Blocking Golden Scenario Issues"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Non Blocking Golden Scenario Issues"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open -label:important label:nb-golden sort:created-asc"
-  },
-  {
-    "kind": 1,
-    "language": "markdown",
-    "value": "### Closed before they hit formal triage"
-  },
-  {
-    "kind": 2,
-    "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
