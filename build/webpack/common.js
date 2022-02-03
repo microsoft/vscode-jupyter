@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
@@ -30,7 +31,7 @@ exports.nodeModulesToExternalize = [
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
-    const plugins = [];
+    const plugins = [NodePolyfillPlugin];
     // Only run the analyzer on a local machine or if required
     if (process.env.VSC_JUPYTER_FORCE_ANALYZER) {
         plugins.push(

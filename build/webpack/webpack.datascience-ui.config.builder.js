@@ -196,7 +196,7 @@ function buildConfiguration(bundle) {
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
             fallback: {
                 fs: false,
-                path: false,
+                path: require.resolve('path-browserify'),
                 os: false
             }
         },

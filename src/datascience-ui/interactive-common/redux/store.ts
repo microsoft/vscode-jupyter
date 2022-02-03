@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as path from 'path';
 import * as Redux from 'redux';
-import { createLogger } from 'redux-logger';
 
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
-import { CssMessages } from '../../../client/datascience/messages';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
@@ -48,7 +43,7 @@ function generateDefaultState(
                 size: 14,
                 family: "Consolas, 'Courier New', monospace"
             },
-            codeTheme: Identifiers.GeneratedThemeName,
+            codeTheme: 'ipython-theme',
             focusPending: 0,
             loaded: false,
             settings: testMode ? getDefaultSettings() : undefined // When testing, we don't send (or wait) for the real settings.
@@ -76,6 +71,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     };
 }
 
+/* TODO: Figure out a better way to do this. Cant use process.env anymore
 function createTestLogger() {
     const logFileEnv = process.env.VSC_JUPYTER_WEBVIEW_LOG_FILE;
     if (logFileEnv) {
@@ -89,6 +85,7 @@ function createTestLogger() {
         return log4js.getLogger();
     }
 }
+*/
 
 function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
@@ -159,6 +156,7 @@ function createMiddleWare(
     const testMiddleware =
         forceOnTestMiddleware || testMode || isUITest ? createTestMiddleware(transformLoad) : undefined;
 
+    /* Fixup this code if you need to debug redux
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
     const actionsWithLargePayload = [CssMessages.GetCssResponse];
@@ -193,23 +191,12 @@ function createMiddleWare(
         },
         logger: testMode ? createTestLogger() : window.console
     });
-
-    // Environment variables only work in functional tests (browser doesn't have access to env). In order for logging to be present in
-    // development, you have to hardcode this
-    const loggerMiddleware =
-        process.env.VSC_JUPYTER_FORCE_LOGGING !== undefined && !process.env.VSC_JUPYTER_DS_NO_REDUX_LOGGING
-            ? logger
-            : undefined;
-    // logger;
-
+    */
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);
     if (testMiddleware) {
         results.push(testMiddleware);
-    }
-    if (loggerMiddleware) {
-        results.push(loggerMiddleware);
     }
 
     return results;
