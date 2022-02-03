@@ -26,10 +26,6 @@ export class JupyterServerSelectorCommand implements IDisposable {
 
                     if (source instanceof Uri) {
                         traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
-                        console.log(`Setting Jupyter Server URI to remote: ${source}`)
-
-                        console.log(`Setting Jupyter Server URI to remote: ${source.toString(true)}`)
-
                         this.serverSelector.setJupyterURIToRemote(source.toString(true))
                         return
                     }

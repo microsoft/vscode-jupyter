@@ -41,8 +41,8 @@ suite('DataScience - Server Selector Command', () => {
 
     test(`Command Handler should set URI`, () => {
         serverSelectorCommand.register();
-
         let uri = Uri.parse("http://localhost:1234")
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
             serverSelectorCommand, false, uri
