@@ -9,6 +9,7 @@ import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { traceInfo } from '../../common/logger';
+import { Uri } from 'vscode'
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {
@@ -21,11 +22,15 @@ export class JupyterServerSelectorCommand implements IDisposable {
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.SelectJupyterURI,
-                (local: boolean = true, userUri: string | undefined, source: 'nativeNotebookStatusBar' | 'commandPalette' | 'toolbar' = 'commandPalette') => {
+                (local: boolean = true, source: Uri | 'nativeNotebookStatusBar' | 'commandPalette' | 'toolbar' = 'commandPalette') => {
 
-                    if (!local && userUri) {
-                        traceInfo(`Setting Jupyter Server URI to remote: ${userUri}`);
-                        this.serverSelector.setJupyterURIToRemote(userUri)
+                    if (source instanceof Uri) {
+                        traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
+                        console.log(`Setting Jupyter Server URI to remote: ${source}`)
+
+                        console.log(`Setting Jupyter Server URI to remote: ${source.toString(true)}`)
+
+                        this.serverSelector.setJupyterURIToRemote(source.toString(true))
                         return
                     }
 
