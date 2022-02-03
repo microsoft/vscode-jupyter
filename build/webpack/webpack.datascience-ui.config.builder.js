@@ -66,14 +66,16 @@ function getPlugins(bundle) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
     const definePlugin = new webpack.DefinePlugin({
-        'process.env': {
-            NODE_ENV: JSON.stringify('production')
+        process: {
+            env: {
+                NODE_ENV: JSON.stringify(isProdBuild ? 'production' : 'development')
+            }
         }
     });
     switch (bundle) {
         case 'viewers': {
             plugins.push(
-                ...(isProdBuild ? [definePlugin] : []),
+                ...[definePlugin],
                 ...[
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/plot/index.html',
@@ -98,13 +100,13 @@ function getPlugins(bundle) {
             break;
         }
         case 'widgetTester': {
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            plugins.push(definePlugin);
             break;
         }
         case 'ipywidgetsKernel':
         case 'ipywidgetsRenderer':
         case 'errorRenderer': {
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            plugins.push(definePlugin);
             break;
         }
         default:
@@ -142,13 +144,6 @@ function buildConfiguration(bundle) {
             ]
         );
     }
-    let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'ipywidgetsKernel'
-            ? {}
-            : {
-                  library: `LIB${bundle.toUpperCase()}`,
-                  libraryTarget: 'var'
-              };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
@@ -179,12 +174,17 @@ function buildConfiguration(bundle) {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
         cache: true,
+        experiments: {
+            outputModule: true
+        },
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
+            library: {
+                type: 'module'
+            },
             chunkFilename: `[name].bundle.js`,
-            pathinfo: false,
-            ...outputProps
+            pathinfo: false
         },
         mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? undefined : 'inline-source-map',
