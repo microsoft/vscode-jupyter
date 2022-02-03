@@ -37,4 +37,16 @@ suite('DataScience - Server Selector Command', () => {
 
         verify(serverSelector.selectJupyterURI(true, 'commandPalette')).once();
     });
+
+    test(`Command Handler should set URI`, () => {
+        serverSelectorCommand.register();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
+            serverSelectorCommand, false, "localhost"
+        );
+
+        handler();
+
+        verify(serverSelector.setJupyterURIToRemote("localhost")).once();
+    });
 });
