@@ -27,8 +27,6 @@ export class JupyterServerSelectorCommand implements IDisposable {
                         traceInfo(`Setting Jupyter Server URI to remote: ${userUri}`);
                         this.serverSelector.setJupyterURIToRemote(userUri)
                         return
-
-                        this.serverSelector.setJupyterURIToLocal
                     }
 
                     // Activate UI Selector
