@@ -33,6 +33,7 @@ import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
+import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     IDisplayOptions,
@@ -41,7 +42,12 @@ import {
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { selectKernel } from './kernelSelector';
-import { KernelConnectionMetadata } from './types';
+import {
+    IKernelProvider,
+    KernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from './types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -57,6 +63,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     /**
@@ -108,7 +115,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (token?.isCancellationRequested) {
                 return;
             }
-            await this.handleKernelDependencyResponse(result, kernelConnection.interpreter, resource);
+            await this.handleKernelDependencyResponse(result, kernelConnection, resource);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
@@ -157,27 +164,53 @@ export class KernelDependencyService implements IKernelDependencyService {
 
     private async handleKernelDependencyResponse(
         response: KernelInterpreterDependencyResponse,
-        interpreter: PythonEnvironment,
+        kernelConnection: PythonKernelConnectionMetadata | LocalKernelSpecConnectionMetadata,
         resource: Resource
     ) {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
         }
+        const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const kernel = kernelProvider.kernels.find(
+            (item) =>
+                item.kernelConnectionMetadata === kernelConnection &&
+                this.vscNotebook.activeNotebookEditor?.document &&
+                this.vscNotebook.activeNotebookEditor?.document === item.notebookDocument &&
+                (item.resourceUri || '')?.toString() === (resource || '').toString()
+        );
+        const firstQueuedCell = kernel && kernel.pendingCells.length > 0 ? kernel.pendingCells[0] : undefined;
+        let anotherKernelSelected = false;
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
+            if (kernel) {
+                // If user changes the kernel, then the next kernel must run the pending cells.
+                // Store it for the other kernel to pick them up.
+                VSCodeNotebookController.pendingCells.set(kernel.notebookDocument, kernel.pendingCells);
+            }
             await selectKernel(
                 resource,
                 this.notebooks,
                 this.serviceContainer.get(IInteractiveWindowProvider),
                 this.commandManager
             );
-            // If selecting a new kernel, the current code paths don't allow us to just change a kernel on the fly.
-            // We pass kernel connection information around, hence if ther'es a change we need to start all over again.
-            // Throwing this exception will get the user to start again.
+            if (kernel) {
+                VSCodeNotebookController.pendingCells.delete(kernel.notebookDocument);
+                // If the previous kernel has been disposed (or disposing),
+                // then this means the user selected a new kernel.
+                anotherKernelSelected = kernel.disposed || kernel.disposing;
+            }
         }
-        const message = interpreter.displayName
-            ? `${interpreter.displayName}:${getDisplayPath(interpreter.path)}`
-            : getDisplayPath(interpreter.path);
-        throw new IpyKernelNotInstalledError(DataScience.ipykernelNotInstalled().format(message), response);
+        // If selecting a new kernel, the current code paths don't allow us to just change a kernel on the fly.
+        // We pass kernel connection information around, hence if there's a change we need to start all over again.
+        // Throwing this exception will get the user to start again.
+        const message = kernelConnection.interpreter?.displayName
+            ? `${kernelConnection.interpreter?.displayName}:${getDisplayPath(kernelConnection.interpreter?.path)}`
+            : getDisplayPath(kernelConnection.interpreter?.path);
+        throw new IpyKernelNotInstalledError(
+            DataScience.ipykernelNotInstalled().format(message),
+            response,
+            anotherKernelSelected,
+            firstQueuedCell
+        );
     }
     private async runInstaller(
         resource: Resource,

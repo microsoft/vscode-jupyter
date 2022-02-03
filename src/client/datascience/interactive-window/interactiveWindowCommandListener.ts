@@ -46,6 +46,7 @@ import { getActiveInteractiveWindow } from './helpers';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { INotebookControllerManager } from '../notebook/types';
 import { JupyterNotebookView } from '../notebook/constants';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
 @injectable()
 export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -70,8 +71,9 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     ) {}
 
     public register(commandManager: ICommandManager): void {
-        let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
-            this.createNewInteractiveWindow()
+        let disposable = commandManager.registerCommand(
+            Commands.CreateNewInteractive,
+            (connection?: KernelConnectionMetadata) => this.createNewInteractiveWindow(connection)
         );
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
@@ -351,8 +353,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
-    private async createNewInteractiveWindow(): Promise<void> {
-        await this.interactiveWindowProvider.getOrCreate(undefined);
+    private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
+        await this.interactiveWindowProvider.getOrCreate(undefined, connection);
     }
 
     private waitForStatus<T>(

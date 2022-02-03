@@ -3,8 +3,17 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position, window } from 'vscode';
+import {
+    CancellationTokenSource,
+    CompletionContext,
+    CompletionTriggerKind,
+    ConfigurationTarget,
+    Position,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
@@ -30,6 +39,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     let vscodeNotebook: IVSCodeNotebook;
     let completionProvider: PythonKernelCompletionProvider;
     this.timeout(120_000);
+    let previousPythonCompletionTriggerCharactersValue: string | undefined;
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
@@ -38,6 +48,12 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
             // https://github.com/microsoft/vscode-jupyter/issues/6331
             return this.skip();
         }
+        previousPythonCompletionTriggerCharactersValue = workspace
+            .getConfiguration('jupyter', undefined)
+            .get<string>('pythonCompletionTriggerCharacters');
+        await workspace
+            .getConfiguration('jupyter', undefined)
+            .update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
@@ -60,8 +76,32 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and get completions that require jupyter', async () => {
+    suiteTeardown(async () => {
+        await workspace
+            .getConfiguration('jupyter', undefined)
+            .update(
+                'pythonCompletionTriggerCharacters',
+                previousPythonCompletionTriggerCharactersValue,
+                ConfigurationTarget.Global
+            );
+
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
+    /**
+     * Test completions.
+     * @param {string} cellCode e.g. `df.`
+     * @param {string} itemToExistInCompletion E.g. `Name`, `Age`
+     * @param {string} textToFilterCompletions The text typed to filter the list, e.g. `N`.
+     * @param {string} itemToExistInCompletionAfterFilter The filtered list, e.g. if user types `N`, then `Age` will not show up, but `Name` will.
+     */
+    async function testCompletions(
+        cellCode: string,
+        triggerCharacter: string | undefined,
+        itemToNotExistInCompletion?: string,
+        itemToExistInCompletion?: string,
+        textToFilterCompletions?: string,
+        itemToExistInCompletionAfterFilter?: string
+    ) {
         await insertCodeCell('%pip install pandas', {
             index: 0
         });
@@ -91,14 +131,18 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`last cell output: ${getCellOutputs(cell3)}`);
 
         // Now add the cell to check intellisense.
-        await insertCodeCell('df.');
+        await insertCodeCell(cellCode);
         const cell4 = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         const token = new CancellationTokenSource().token;
-        let position = new Position(0, 3);
-        const context: CompletionContext = {
-            triggerKind: CompletionTriggerKind.TriggerCharacter,
-            triggerCharacter: '.'
+        // If we're testing string completions, ensure the cursor position is inside the string quotes.
+        let position = new Position(
+            0,
+            cellCode.includes('"') || cellCode.includes("'") ? cellCode.length - 1 : cellCode.length
+        );
+        let context: CompletionContext = {
+            triggerKind: triggerCharacter ? CompletionTriggerKind.TriggerCharacter : CompletionTriggerKind.Invoke,
+            triggerCharacter
         };
         traceInfo('Get completions in test');
         let completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
@@ -108,26 +152,81 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         let items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(items.find((item) => (typeof item === 'string' ? item.includes('Age') : item.label.includes('Age'))));
-
+        if (itemToExistInCompletion) {
+            assert.ok(
+                items.find((item) =>
+                    typeof item === 'string'
+                        ? item.includes(itemToExistInCompletion)
+                        : item.label.includes(itemToExistInCompletion)
+                )
+            );
+        } else {
+            return;
+        }
+        if (itemToNotExistInCompletion) {
+            assert.isUndefined(
+                items.find((item) =>
+                    typeof item === 'string'
+                        ? item.includes(itemToNotExistInCompletion)
+                        : item.label.includes(itemToNotExistInCompletion)
+                )
+            );
+        }
         // Make sure it is skipping items that are already provided by pylance (no dupes)
         // Pylance isn't returning them right now: https://github.com/microsoft/vscode-jupyter/issues/8842
         // assert.notOk(
         //     items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
         // );
 
+        if (!textToFilterCompletions || !itemToExistInCompletionAfterFilter) {
+            return;
+        }
         // Add some text after the . and make sure we still get completions
-        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell4.document.uri);
-        await editor?.edit((b) => {
-            b.insert(new Position(3, 0), 'N');
-        });
-
-        position = new Position(0, 4);
+        const edit = new WorkspaceEdit();
+        edit.insert(cell4.document.uri, new Position(cellCode.length, 0), textToFilterCompletions);
+        await workspace.applyEdit(edit);
+        position = new Position(0, cellCode.length + textToFilterCompletions.length);
         completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
         items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.ok(
-            items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
+        assert.isUndefined(
+            // Since we've filtered the completion the old item will no longer exist.
+            items.find((item) =>
+                typeof item === 'string'
+                    ? item.includes(itemToExistInCompletion)
+                    : item.label.includes(itemToExistInCompletion)
+            )
         );
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string'
+                    ? item.includes(itemToExistInCompletionAfterFilter)
+                    : item.label.includes(itemToExistInCompletionAfterFilter)
+            )
+        );
+    }
+    test('Dataframe completions', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions('df.', '.', fileName, 'Age', 'N', 'Name');
+    });
+    test('Dataframe column completions', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions('df.Name.', '.', fileName, 'add_prefix', 'add_s', 'add_suffix');
+    });
+    test('Dataframe assignment completions', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions('var_name = df.', '.', fileName, 'Age', 'N', 'Name');
+    });
+    test('Dataframe assignment column completions', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions(fileName.substring(0, 1), fileName);
+    });
+    test('File path completions with double quotes', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions(`"${fileName.substring(0, 1)}"`, undefined, fileName);
+    });
+    test('File path completions with single quotes', async () => {
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
     });
 });

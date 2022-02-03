@@ -86,7 +86,7 @@ export class KernelExecution implements IDisposable {
     public async interrupt(sessionPromise?: Promise<IJupyterSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
-        if (!executionQueue) {
+        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             return InterruptResult.Success;
         }
         // Possible we don't have a notebook.
@@ -96,7 +96,9 @@ export class KernelExecution implements IDisposable {
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
-        const pendingCells = executionQueue.cancel().then(() => executionQueue.waitForCompletion());
+        const pendingCells = executionQueue
+            ? executionQueue.cancel().then(() => executionQueue.waitForCompletion())
+            : Promise.resolve();
 
         if (!session) {
             traceInfo('No notebook to interrupt');

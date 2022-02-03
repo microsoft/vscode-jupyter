@@ -1949,7 +1949,7 @@
                 "jupyter.pylanceHandlesNotebooks": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Determines if pylance's experimental notebook support is used or not",
+                    "description": "Determines if pylance's experimental notebook support is used or not.",
                     "scope": "machine",
                     "tags": [
                         "experimental"
@@ -1958,7 +1958,13 @@
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%",
-                    "description": "Characters which trigger auto completion on a python jupyter kernel (requires reload of VS code)",
+                    "description": "Characters which trigger auto completion on a python jupyter kernel.",
+                    "scope": "machine"
+                },
+                "jupyter.logKernelOutputSeparately": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Creates separate output panels for kernels/jupyter server console output",
                     "scope": "machine"
                 }
             }

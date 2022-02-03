@@ -472,8 +472,8 @@ export class CellExecution implements IDisposable {
         // Generate metadata from our cell (some kernels expect this.)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
-            ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
-            ...{ cellId: this.cell.document.uri.toString() }
+            ...{ cellId: this.cell.document.uri.toString() },
+            ...(this.cell.metadata?.custom?.metadata || {}) // Send the Cell Metadata
         };
 
         try {

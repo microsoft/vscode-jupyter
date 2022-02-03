@@ -8,7 +8,6 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import {
     IAsyncDisposableRegistry,
-    IConfigurationService,
     IDisposable,
     IDisposableRegistry,
     IOutputChannel,
@@ -47,7 +46,6 @@ export class HostJupyterServer implements INotebookServer {
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
@@ -72,7 +70,6 @@ export class HostJupyterServer implements INotebookServer {
     private async createNotebookInstance(
         resource: Resource,
         sessionManager: JupyterSessionManager,
-        configService: IConfigurationService,
         kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken,
         ui: IDisplayOptions
@@ -106,14 +103,7 @@ export class HostJupyterServer implements INotebookServer {
             if (session) {
                 // Create our notebook
                 const notebook = new JupyterNotebook(session, connection);
-
-                // Wait for it to be ready
-                traceInfo(`Waiting for idle (session) kernel ${kernelConnection.id}`);
-                const idleTimeout = configService.getSettings().jupyterLaunchTimeout;
-                await notebook.session.waitForIdle(idleTimeout);
-
                 traceInfo(`Finished connecting kernel ${kernelConnection.id}`);
-
                 notebookPromise.resolve(notebook);
             } else {
                 notebookPromise.reject(this.getDisposedError());
@@ -177,7 +167,6 @@ export class HostJupyterServer implements INotebookServer {
             const notebook = await this.createNotebookInstance(
                 resource,
                 this.sessionManager,
-                this.configService,
                 kernelConnection,
                 cancelToken,
                 ui

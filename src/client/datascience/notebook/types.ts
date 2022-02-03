@@ -15,14 +15,21 @@ export interface INotebookControllerManager {
     readonly onNotebookControllerSelectionChanged: Event<void>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
     readonly remoteRefreshed: Event<LiveKernelConnectionMetadata[]>;
-    loadNotebookControllers(): Promise<void>;
+    /**
+     * @param {boolean} [refresh] Optionally forces a refresh of all local/remote kernels.
+     */
+    loadNotebookControllers(refresh?: boolean): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers
     registeredNotebookControllers(): VSCodeNotebookController[];
     getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
-        resoruce: Resource
+        resource: Resource
     ): Promise<VSCodeNotebookController | undefined>;
+    getControllerForConnection(
+        connection: KernelConnectionMetadata,
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): VSCodeNotebookController | undefined;
     getPreferredNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {

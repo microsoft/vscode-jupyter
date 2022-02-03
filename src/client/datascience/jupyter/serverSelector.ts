@@ -42,7 +42,7 @@ export type SelectJupyterUriCommandSource =
     | 'prompt';
 @injectable()
 export class JupyterServerSelector {
-    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
+    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel()}`;
     private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
     private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel()}`;
     constructor(
@@ -97,7 +97,7 @@ export class JupyterServerSelector {
         );
         const currentValue =
             currentUri === Settings.JupyterServerLocalLaunch
-                ? DataScience.jupyterSelectURILocalLabel()
+                ? DataScience.jupyterSelectURINoneLabel()
                 : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
             ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
@@ -217,7 +217,7 @@ export class JupyterServerSelector {
         // Always have 'local' and 'add new'
         let items: ISelectUriQuickPickItem[] = [];
         if (allowLocal) {
-            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail(), newChoice: false });
             items = items.concat(providerItems);
             items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
         } else {

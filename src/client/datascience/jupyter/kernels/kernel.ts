@@ -33,8 +33,6 @@ import {
 } from '../../telemetry/telemetry';
 import {
     IDataScienceErrorHandler,
-    IJupyterConnection,
-    IJupyterServerUriStorage,
     IJupyterSession,
     INotebook,
     INotebookProvider,
@@ -72,7 +70,7 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { INotebookControllerManager } from '../../notebook/types';
 import { getResourceType } from '../../common';
-import { Deferred } from '../../../common/utils/async';
+import { Deferred, sleep } from '../../../common/utils/async';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { WrappedError } from '../../../common/errors/types';
 import { DisplayOptions } from '../../displayOptions';
@@ -106,11 +104,18 @@ export class Kernel implements IKernel {
     get onPreExecute(): Event<NotebookCell> {
         return this._onPreExecute.event;
     }
+    get startedAtLeastOnce() {
+        return this._startedAtLeastOnce;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
+    private _startedAtLeastOnce?: boolean;
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
     get status(): KernelMessage.Status {
+        if (this._notebookPromise && !this.notebook) {
+            return 'starting';
+        }
         return this.notebook?.session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
@@ -133,8 +138,8 @@ export class Kernel implements IKernel {
     public get session(): IJupyterSession | undefined {
         return this.notebook?.session;
     }
-    public get hasPendingCells() {
-        return this.kernelExecution.queue.length > 0;
+    public get pendingCells() {
+        return this.kernelExecution.queue;
     }
     private _disposed?: boolean;
     private _disposing?: boolean;
@@ -166,7 +171,6 @@ export class Kernel implements IKernel {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
-        private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
@@ -301,10 +305,10 @@ export class Kernel implements IKernel {
             if (this.notebook) {
                 promises.push(this.notebook.session.dispose().catch(noop));
                 this.notebook = undefined;
-                this._disposed = true;
-                this._onDisposed.fire();
-                this._onStatusChanged.fire('dead');
             }
+            this._disposed = true;
+            this._onDisposed.fire();
+            this._onStatusChanged.fire('dead');
             this.kernelExecution.dispose();
             await Promise.all(promises);
         };
@@ -385,6 +389,7 @@ export class Kernel implements IKernel {
         }
     }
     private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
+        this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
@@ -426,6 +431,7 @@ export class Kernel implements IKernel {
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.isKernelDead = false;
+                        this._onStatusChanged.fire('starting');
                         this.notebook = await this.notebookProvider.createNotebook({
                             document: this.notebookDocument,
                             resource: this.resourceUri,
@@ -462,9 +468,6 @@ export class Kernel implements IKernel {
                         Telemetry.PerceivedJupyterStartupNotebook,
                         stopWatch.elapsedTime
                     );
-                    if (this.notebook?.connection) {
-                        this.updateRemoteUriList(this.notebook.connection).catch(noop);
-                    }
                     resolve(this.notebook);
                     this._onStarted.fire();
                     disposeAllDisposables(disposables);
@@ -533,20 +536,6 @@ export class Kernel implements IKernel {
             );
         }
     }
-
-    private async updateRemoteUriList(serverConnection: INotebookProviderConnection) {
-        if (isLocalConnection(this.kernelConnectionMetadata)) {
-            return;
-        }
-        const remoteConnection = serverConnection as IJupyterConnection;
-        // Log this remote URI into our MRU list
-        await this.serverStorage.addToUriList(
-            remoteConnection.url || serverConnection.displayName,
-            Date.now(),
-            serverConnection.displayName
-        );
-    }
-
     private async populateStartKernelInfoForInteractive(
         notebookDocument: NotebookDocument,
         kernelConnection: KernelConnectionMetadata
@@ -665,7 +654,14 @@ export class Kernel implements IKernel {
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
             // Request completions to warm up the completion engine (first call always takes a lot longer)
-            await this.requestEmptyCompletions();
+            const completionPromise = this.requestEmptyCompletions();
+
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+                // No need to wait for this to complete when connecting to a live kernel.
+                completionPromise.catch(noop);
+            } else {
+                await completionPromise;
+            }
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -677,23 +673,54 @@ export class Kernel implements IKernel {
             }
         }
 
-        // Gather all of the startup code at one time and execute as one cell
-        const startupCode = await this.gatherStartupCode(notebookDocument);
-        await this.executeSilently(startupCode.join('\n'));
+        // If this is a live kernel, we shouldn't be changing anything by running startup code.
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+            // Gather all of the startup code at one time and execute as one cell
+            const startupCode = await this.gatherStartupCode(notebookDocument);
+            await this.executeSilently(startupCode);
+        }
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
             traceInfoIfCI('Requesting Kernel info');
-            const info = await notebook.session.requestKernelInfo();
-            traceInfoIfCI('Got Kernel info');
-            this._info = info?.content;
+
+            const promises: Promise<
+                | KernelMessage.IReplyErrorContent
+                | KernelMessage.IReplyAbortContent
+                | KernelMessage.IInfoReply
+                | undefined
+            >[] = [];
+
+            const defaultResponse: KernelMessage.IInfoReply = {
+                banner: '',
+                help_links: [],
+                implementation: '',
+                implementation_version: '',
+                language_info: { name: '', version: '' },
+                protocol_version: '',
+                status: 'ok'
+            };
+            promises.push(notebook.session.requestKernelInfo().then((item) => item?.content));
+            // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+                promises.push(sleep(5_000).then(() => defaultResponse));
+            }
+            const content = await Promise.race(promises);
+            if (content === defaultResponse) {
+                traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
+            } else {
+                traceInfoIfCI('Got Kernel info');
+            }
+            this._info = content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
-        traceInfoIfCI('End running kernel initialization, now waiting for idle');
-        await notebook.session.waitForIdle(this.launchTimeout);
-        traceInfoIfCI('End running kernel initialization, session is idle');
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+            traceInfoIfCI('End running kernel initialization, now waiting for idle');
+            await notebook.session.waitForIdle(this.launchTimeout);
+            traceInfoIfCI('End running kernel initialization, session is idle');
+        }
     }
 
     private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
@@ -935,11 +962,11 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(code: string) {
-        if (!this.notebook) {
+    private async executeSilently(code: string[]) {
+        if (!this.notebook || code.join('').trim().length === 0) {
             return;
         }
-        await executeSilently(this.notebook.session, code);
+        await executeSilently(this.notebook.session, code.join('\n'));
     }
 }
 

@@ -9,13 +9,13 @@ import * as path from 'path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
 import {
     isLocalConnection,
@@ -32,6 +32,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { swallowExceptions } from '../../common/utils/decorators';
+import * as localize from '../../common/utils/localize';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -54,7 +55,8 @@ export class KernelLauncher implements IKernelLauncher {
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     public static async cleanupStartPort() {
@@ -188,6 +190,15 @@ export class KernelLauncher implements IKernelLauncher {
         if (!connection || cancelToken?.isCancellationRequested) {
             throw new CancellationError();
         }
+
+        // Create a new output channel for this kernel
+        const baseName = resource ? path.basename(resource.fsPath) : '';
+        const outputChannel = this.configService.getSettings(resource).logKernelOutputSeparately
+            ? window.createOutputChannel(localize.DataScience.kernelConsoleOutputChannel().format(baseName))
+            : undefined;
+        outputChannel?.clear();
+
+        // Create the process
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             connection,
@@ -196,7 +207,8 @@ export class KernelLauncher implements IKernelLauncher {
             resource,
             this.extensionChecker,
             this.kernelEnvVarsService,
-            this.pythonExecFactory
+            this.pythonExecFactory,
+            outputChannel
         );
 
         try {

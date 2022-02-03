@@ -41,8 +41,6 @@
     "DataScience.jupyterSelectURIQuickPickTitle": "選擇如何連線到 Jupyter",
     "Datascience.currentlySelectedJupyterInterpreterForPlaceholder": "目前: {0}",
     "DataScience.jupyterSelectURIQuickPickCurrent": "目前: {0}",
-    "DataScience.jupyterSelectURILocalLabel": "預設",
-    "DataScience.jupyterSelectURILocalDetail": "VS Code 將會自動為您在本機啟動伺服器",
     "DataScience.jupyterSelectURIQuickPickPlaceholder": "選擇一個選項",
     "DataScience.jupyterSelectURINewLabel": "現有",
     "DataScience.jupyterSelectURINewDetail": "指定現有伺服器的 URI",
