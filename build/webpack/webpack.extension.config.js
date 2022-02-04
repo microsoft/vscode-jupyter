@@ -51,12 +51,45 @@ const config = {
                     }
                 ]
             },
-            { enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs' },
-            { enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs' },
-            { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
+            {
+                enforce: 'post',
+                test: /unicode-properties[\/\\]index.js$/,
+                use: [
+                    {
+                        loader: 'transform-loader',
+                        options: {
+                            brfs: true
+                        }
+                    }
+                ]
+            },
+            {
+                enforce: 'post',
+                test: /fontkit[\/\\]index.js$/,
+                use: [
+                    {
+                        loader: 'transform-loader',
+                        options: {
+                            brfs: true
+                        }
+                    }
+                ]
+            },
+            {
+                enforce: 'post',
+                test: /linebreak[\/\\]src[\/\\]linebreaker.js/,
+                use: [
+                    {
+                        loader: 'transform-loader',
+                        options: {
+                            brfs: true
+                        }
+                    }
+                ]
+            }
         ]
     },
-    externals: ['vscode', 'commonjs', 'electron', ...existingModulesInOutDir], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron', './node_modules/zeromq', ...existingModulesInOutDir], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
         new copyWebpackPlugin({
@@ -84,7 +117,10 @@ const config = {
             pdfkit: path.resolve(__dirname, 'pdfkit.js')
         },
         extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
+        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
+        fallback: {
+            util: require.resolve('util/')
+        }
     },
     output: {
         filename: '[name].js',

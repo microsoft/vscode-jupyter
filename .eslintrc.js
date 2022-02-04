@@ -250,7 +250,6 @@ module.exports = {
         'src/datascience-ui/common/main.ts',
         'src/datascience-ui/startPage/index.tsx',
         'src/datascience-ui/startPage/startPage.tsx',
-        'src/datascience-ui/data-explorer/globalJQueryImports.ts',
         'src/datascience-ui/data-explorer/emptyRowsView.tsx',
         'src/datascience-ui/data-explorer/progressBar.tsx',
         'src/client/interpreter/interpreterService.ts',

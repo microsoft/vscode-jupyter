@@ -36,7 +36,7 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { IKernel, IKernelProvider, NotebookCellRunState } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
@@ -122,7 +122,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly exportDialog: IExportDialog,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
-        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger
+        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger,
+        public readonly originalConnection?: KernelConnectionMetadata
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -132,7 +133,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Request creation of the interactive window from VS Code
-        this._editorReadyPromise = this.createEditorReadyPromise();
+        this._editorReadyPromise = this.createEditorReadyPromise(originalConnection);
 
         // Wait for a controller to get selected
         this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
@@ -191,11 +192,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async createEditorReadyPromise(): Promise<NotebookEditor> {
-        const preferredController = await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
-            InteractiveWindowView,
-            this.owner
-        );
+    private async createEditorReadyPromise(connection?: KernelConnectionMetadata): Promise<NotebookEditor> {
+        const preferredController = connection
+            ? this.notebookControllerManager.getControllerForConnection(connection, 'interactive')
+            : await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
+                  InteractiveWindowView,
+                  this.owner
+              );
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;

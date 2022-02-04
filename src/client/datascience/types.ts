@@ -366,9 +366,10 @@ export interface IInteractiveWindowProvider {
     readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
     /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
-     * @param owner file that started this interactive window
+     * @param {Resource} owner File that started this interactive window
+     * @param {KernelConnectionMetadata} [connection] The kernel connection to be used when starting/connecting to the kernel.
      */
-    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    getOrCreate(owner: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow>;
     /**
      * Given a text document, return the associated interactive window if one exists.
      * @param owner The URI of a text document which may be associated with an interactive window.
@@ -432,6 +433,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookDocument?: NotebookDocument;
     readonly readyPromise: Promise<void>;
     readonly kernelPromise: Promise<IKernel | undefined>;
+    readonly originalConnection?: KernelConnectionMetadata;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;

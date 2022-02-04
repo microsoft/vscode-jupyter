@@ -28,7 +28,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -79,7 +79,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         asyncRegistry.push(this);
     }
 
-    public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+    public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
@@ -89,10 +89,10 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const mode = await this.getInteractiveMode(resource);
 
         // See if we already have a match
-        let result = this.getExisting(resource, mode) as IInteractiveWindow;
+        let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            result = this.create(resource, mode);
+            result = this.create(resource, mode, connection);
         }
 
         await result.readyPromise;
@@ -116,7 +116,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     // the interactive window ctor and adding the interactive window to the provider's list of known windows.
     // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
     // instantiating multiples.
-    private create(resource: Resource, mode: InteractiveWindowMode) {
+    private create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new InteractiveWindow(
@@ -132,7 +132,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IExportDialog>(IExportDialog),
             this.notebookControllerManager,
             this.kernelProvider,
-            this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger)
+            this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
+            connection
         );
         this._windows.push(result);
 
@@ -187,7 +188,11 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         return result;
     }
 
-    public getExisting(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
+    public getExisting(
+        owner: Resource,
+        interactiveMode: InteractiveWindowMode,
+        connection?: KernelConnectionMetadata
+    ): IInteractiveWindow | undefined {
         // Single mode means there's only ever one.
         if (interactiveMode === 'single') {
             return this._windows.length > 0 ? this._windows[0] : undefined;
@@ -196,18 +201,18 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // Multiple means use last active window or create a new one
         // if not owned.
         if (interactiveMode === 'multiple') {
-            // Owner being undefined means create a new window, othewise use
+            // Owner being undefined means create a new window, otherwise use
             // the last active window.
             return owner ? this.activeWindow || this.lastActiveInteractiveWindow || this._windows[0] : undefined;
         }
 
         // Otherwise match the owner.
         return this._windows.find((w) => {
-            if (!owner && !w.owner) {
+            if (!owner && !w.owner && !connection) {
                 return true;
             }
             if (owner && w.owner && this.fs.areLocalPathsSame(owner.fsPath, w.owner.fsPath)) {
-                return true;
+                return !connection || w.originalConnection?.id === connection.id;
             }
             return false;
         });
