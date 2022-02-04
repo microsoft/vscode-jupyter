@@ -12,8 +12,7 @@ import {
     Extension,
     ExtensionContext,
     OutputChannel,
-    Uri,
-    WorkspaceEdit
+    Uri
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { BannerType } from '../datascience/dataScienceSurveyBanner';
@@ -369,11 +368,6 @@ export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
 export interface IFeatureDeprecationManager extends Disposable {
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
-}
-
-export const IEditorUtils = Symbol('IEditorUtils');
-export interface IEditorUtils {
-    getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }
 
 export interface IDisposable {
