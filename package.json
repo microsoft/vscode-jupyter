@@ -2306,7 +2306,6 @@
         "node-gyp-build": "^4.2.3",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
-        "node-loader": "^2.0.0",
         "nyc": "^15.0.0",
         "path-browserify": "^1.0.1",
         "postcss": "^8.4.6",
