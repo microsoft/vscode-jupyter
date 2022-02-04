@@ -170,7 +170,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // This might happen if VS Code or the extension host crashes
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
             await this.debugInfo();
-            void this.dumpAllCells();
         }
 
         if (message.type === 'request') {
@@ -217,16 +216,18 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return this.session.customRequest('setBreakpoints', args);
     }
 
-    private dumpAllCells() {
-        this.notebookDocument.getCells().forEach(async (cell) => {
-            if (cell.kind === NotebookCellKind.Code) {
-                await this.dumpCell(cell.index);
-            }
-        });
+    public async dumpAllCells() {
+        await Promise.all(
+            this.notebookDocument.getCells().map(async (cell) => {
+                if (cell.kind === NotebookCellKind.Code) {
+                    await this.dumpCell(cell.index);
+                }
+            })
+        );
     }
 
     // Dump content of given cell into a tmp file and return path to file.
-    public async dumpCell(index: number): Promise<void> {
+    private async dumpCell(index: number): Promise<void> {
         const cell = this.notebookDocument.cellAt(index);
         if (cell) {
             try {

@@ -18,7 +18,7 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
     disconnect(): void;
     onDidEndSession: Event<DebugSession>;
-    dumpCell(index: number): Promise<void>;
+    dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
 }
 
