@@ -2243,7 +2243,7 @@
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.10.1",
         "@typescript-eslint/eslint-plugin-tslint": "^4.13.0",
-        "@typescript-eslint/parser": "^5.10.2",
+        "@typescript-eslint/parser": "^3.10.1",
         "@vscode/test-electron": "^1.6.1",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
