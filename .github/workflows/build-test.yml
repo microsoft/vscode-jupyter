@@ -76,7 +76,6 @@ jobs:
         run: |
           echo "package_command=package" >> $GITHUB_ENV
 
-
       - name: pr
         if: github.event_name == 'pull_request'
         run: |
@@ -97,12 +96,12 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name: pre-release channel
-    #     # Scheduled builds will publish pre-release builds.
-    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-    #     run: |
-    #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-    #       echo "release_channel=pre-release" >> $GITHUB_ENV
+      #   - name: pre-release channel
+      #     # Scheduled builds will publish pre-release builds.
+      #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+      #     run: |
+      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
+      #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
@@ -353,7 +352,7 @@ jobs:
             python: noPython
             os: ubuntu-latest
         exclude:
-          - python: conda  # Conda does't seem to support 3.10 yet.
+          - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
         #   - pythonVersion: '3.9'
         #     python: nonConda
@@ -377,8 +376,7 @@ jobs:
         if: matrix.python == 'conda'
         with:
           path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{
+          key: ${{ runner.os }}-conda-${{
             hashFiles('./build/conda-test-requirements.yml') }}
 
       - name: Use Conda Python ${{matrix.pythonVersion}}
@@ -587,7 +585,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          VSC_JUPYTER_LOG_IPYWIDGETS: 1
         id: test_notebook_vscode
         if: matrix.python != 'noPython'
 

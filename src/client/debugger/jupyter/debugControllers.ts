@@ -6,7 +6,7 @@ import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { parseForComments } from '../../../datascience-ui/common';
 import { ICommandManager } from '../../common/application/types';
-import { traceVerbose } from '../../common/logger';
+import { traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../../datascience/constants';
@@ -65,6 +65,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public stop(): void {
+        traceInfoIfCI(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
         void this.kernel.executeHidden('pass');
         this.debugAdapter.disconnect();
@@ -91,6 +92,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+        traceInfoIfCI(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
