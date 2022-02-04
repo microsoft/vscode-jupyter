@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as ansiRegex from 'ansi-regex';
+import ansiRegex from 'ansi-regex';
 
 /* Generate a RegExp from a "verbose" pattern.
  *
