@@ -3,6 +3,8 @@
 
 'use strict';
 
+import ansiRegex from 'ansi-regex';
+
 /* Generate a RegExp from a "verbose" pattern.
  *
  * All whitespace in the pattern is removed, including newlines.  This
@@ -45,4 +47,18 @@ export function buildDataViewerFilterRegex(filter: string): RegExp {
 
     // Otherwise let the user type a normal regex
     return new RegExp(filter, flags);
+}
+
+/**
+ * This code was copied from strip-ansi (https://github.com/chalk/strip-ansi/blob/main/index.js)
+ * because it wasn't loading in mocha. Since it was so simple, we just moved it here.
+ * @param str
+ * @returns
+ */
+export function stripAnsi(str: string) {
+    if (typeof str !== 'string') {
+        throw new TypeError(`Expected a \`string\`, got \`${typeof str}\``);
+    }
+
+    return str.replace(ansiRegex(), '');
 }
