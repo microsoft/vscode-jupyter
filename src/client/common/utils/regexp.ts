@@ -3,7 +3,7 @@
 
 'use strict';
 
-import ansiRegex from 'ansi-regex';
+import * as ansiRegex from 'ansi-regex';
 
 /* Generate a RegExp from a "verbose" pattern.
  *
@@ -60,5 +60,12 @@ export function stripAnsi(str: string) {
         throw new TypeError(`Expected a \`string\`, got \`${typeof str}\``);
     }
 
-    return str.replace(ansiRegex(), '');
+    // Special case ansiregex for running on test machines. Seems to not have a 'default'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ansiRegexFunc = ansiRegex as any;
+    if (ansiRegexFunc.default) {
+        ansiRegexFunc = ansiRegexFunc.default;
+    }
+
+    return str.replace(ansiRegexFunc(), '');
 }
