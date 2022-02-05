@@ -89,12 +89,6 @@ export class Kernel implements IKernel {
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
     }
-    get onWillRestart(): Event<void> {
-        return this._onWillRestart.event;
-    }
-    get onWillInterrupt(): Event<void> {
-        return this._onWillInterrupt.event;
-    }
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
@@ -140,13 +134,12 @@ export class Kernel implements IKernel {
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
-    private readonly _onWillRestart = new EventEmitter<void>();
-    private readonly _onWillInterrupt = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
+    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
@@ -200,6 +193,15 @@ export class Kernel implements IKernel {
         }
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
+
+    public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+        this.eventHooks.push(hook);
+    }
+
+    public removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+        this.eventHooks = this.eventHooks.filter((h) => h !== hook);
+    }
+
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         // If this kernel is still active & status is dead or dying, then notify the user of this dead kernel.
         if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
@@ -229,7 +231,7 @@ export class Kernel implements IKernel {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
-        this._onWillInterrupt.fire();
+        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
@@ -312,7 +314,7 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        this._onWillRestart.fire();
+        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
         // Set our status

@@ -21,7 +21,7 @@ import {
     notebooks
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
@@ -53,6 +53,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
     private disconected: boolean = false;
+    private kernelEventHook = (_event: 'willRestart' | 'willInterrupt') => this.disconnect();
 
     constructor(
         private session: DebugSession,
@@ -86,18 +87,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         );
 
         if (this.kernel) {
-            this.disposables.push(
-                this.kernel.onWillRestart(() => {
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onARestart' });
-                    this.disconnect();
-                })
-            );
-            this.disposables.push(
-                this.kernel.onWillInterrupt(() => {
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onAnInterrupt' });
-                    this.disconnect();
-                })
-            );
+            this.kernel.addEventHook(this.kernelEventHook);
             this.disposables.push(
                 this.kernel.onDisposed(() => {
                     void debug.stopDebugging(this.session);
@@ -117,7 +107,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                         !this.disconected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        this.disconnect();
+                        void this.disconnect();
                     }
                 },
                 this,
@@ -131,7 +121,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     e.changes.forEach((change) => {
                         change.deletedItems.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
-                                this.disconnect();
+                                void this.disconnect();
                             }
                         });
                     });
@@ -151,33 +141,37 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
-        traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
-        // intercept 'setBreakpoints' request
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
-            const args = (message as DebugProtocol.Request).arguments;
-            if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
-                const cell = this.notebookDocument
-                    .getCells()
-                    .find((c) => c.document.uri.toString() === args.source.path);
-                if (cell) {
-                    await this.dumpCell(cell.index);
+        try {
+            traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
+            // intercept 'setBreakpoints' request
+            if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
+                const args = (message as DebugProtocol.Request).arguments;
+                if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
+                    const cell = this.notebookDocument
+                        .getCells()
+                        .find((c) => c.document.uri.toString() === args.source.path);
+                    if (cell) {
+                        await this.dumpCell(cell.index);
+                    }
                 }
             }
-        }
 
-        // after attaching, send a 'debugInfo' request
-        // reset breakpoints and continue stopped threads if there are any
-        // we do this in case the kernel is stopped when we attach
-        // This might happen if VS Code or the extension host crashes
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
-            await this.debugInfo();
-        }
+            // after attaching, send a 'debugInfo' request
+            // reset breakpoints and continue stopped threads if there are any
+            // we do this in case the kernel is stopped when we attach
+            // This might happen if VS Code or the extension host crashes
+            if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
+                await this.debugInfo();
+            }
 
-        if (message.type === 'request') {
-            await this.delegate?.willSendRequest(message as DebugProtocol.Request);
-        }
+            if (message.type === 'request') {
+                await this.delegate?.willSendRequest(message as DebugProtocol.Request);
+            }
 
-        this.sendRequestToJupyterSession(message);
+            return this.sendRequestToJupyterSession(message);
+        } catch (e) {
+            traceError(`KernelDebugAdapter::handleMessage failure: ${e}`);
+        }
     }
 
     public getConfiguration(): IKernelDebugAdapterConfig {
@@ -188,10 +182,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return this.session.customRequest('stepIn', { threadId });
     }
 
-    public disconnect() {
-        void this.session.customRequest('disconnect', { restart: false });
+    public async disconnect() {
+        await this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
         this.disconected = true;
+        this.kernel?.removeEventHook(this.kernelEventHook);
     }
 
     dispose() {
@@ -275,7 +270,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return undefined;
     }
 
-    private sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+    private async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+        if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
+            traceInfo(`Skipping sending message ${message.type} because session is disposed`);
+            return;
+        }
         // map Source paths from VS Code to Ipykernel temp files
         getMessageSourceAndHookIt(message, (source) => {
             if (source && source.path) {
@@ -317,10 +316,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 this.trace('response', JSON.stringify(message));
                 this.sendMessage.fire(message);
             };
+            return control.done;
         } else if (message.type === 'response') {
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
-            this.jupyterSession.requestDebug(
+            const control = this.jupyterSession.requestDebug(
                 {
                     seq: response.seq,
                     type: 'request',
@@ -328,6 +328,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 },
                 true
             );
+            return control.done;
         } else {
             // cannot send via iopub, no way to handle events even if they existed
             traceError(`Unknown message type to send ${message.type}`);

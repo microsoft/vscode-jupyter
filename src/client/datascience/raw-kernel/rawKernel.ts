@@ -161,13 +161,9 @@ export class RawKernel implements Kernel.IKernelConnection {
         throw new Error('Reconnect is not supported.');
     }
     public async interrupt(): Promise<void> {
-        // Send a kernel interrupt request to the real process only for our python kernels.
-
         // Send this directly to our kernel process. Don't send it through the real kernel. The
         // real kernel will send a goofy API request to the websocket.
         if (this.kernelProcess.canInterrupt) {
-            return this.kernelProcess.interrupt();
-        } else if (this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
             traceInfo(`Interrupting kernel with a shell message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             const msg = (jupyterLab.KernelMessage.createMessage({
