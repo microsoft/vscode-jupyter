@@ -3,7 +3,6 @@
 'use strict';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import stripAnsi from 'strip-ansi';
 import {
     Disposable,
     Event,
@@ -31,6 +30,7 @@ import { getInteractiveCellMetadata } from '../interactive-window/interactiveWin
 import { IKernel } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
+import { stripAnsi } from '../../common/utils/regexp';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR

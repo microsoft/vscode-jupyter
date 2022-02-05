@@ -20,7 +20,6 @@ exports.nodeModulesToExternalize = [
     '@jupyterlab/services',
     'request',
     'request-progress',
-    'diff-match-patch',
     'node-stream-zip',
     'pdfkit/js/pdfkit.standalone',
     'crypto-js',

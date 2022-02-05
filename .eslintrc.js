@@ -466,7 +466,6 @@ module.exports = {
         'src/client/common/net/socket/socketServer.ts',
         'src/client/common/net/socket/SocketStream.ts',
         'src/client/common/asyncDisposableRegistry.ts',
-        'src/client/common/editor.ts',
         'src/client/common/contextKey.ts',
         'src/client/common/markdown/restTextConverter.ts',
         'src/client/common/featureDeprecationManager.ts',

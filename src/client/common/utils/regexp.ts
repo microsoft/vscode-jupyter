@@ -46,3 +46,26 @@ export function buildDataViewerFilterRegex(filter: string): RegExp {
     // Otherwise let the user type a normal regex
     return new RegExp(filter, flags);
 }
+
+/**
+ * This code was copied from strip-ansi (https://github.com/chalk/strip-ansi/blob/main/index.js)
+ * because it wasn't loading in mocha. Since it was so simple, we just moved it here.
+ * @param str
+ * @returns
+ */
+export function stripAnsi(str: string) {
+    if (typeof str !== 'string') {
+        throw new TypeError(`Expected a \`string\`, got \`${typeof str}\``);
+    }
+
+    var ansiRegex = require('ansi-regex');
+
+    // Special case ansiregex for running on test machines. Seems to not have a 'default'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ansiRegexFunc = ansiRegex as any;
+    if (ansiRegexFunc.default) {
+        ansiRegexFunc = ansiRegexFunc.default;
+    }
+
+    return str.replace(ansiRegexFunc(), '');
+}
