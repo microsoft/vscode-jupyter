@@ -836,7 +836,7 @@ export interface IEventNamePropertyMapping {
          */
         language: string;
     };
-    [Telemetry.PythonModuleInstal]: {
+    [Telemetry.PythonModuleInstall]: {
         moduleName: string;
         /**
          * Whether the module was already (once before) installed into the python environment or

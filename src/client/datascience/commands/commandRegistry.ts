@@ -20,10 +20,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUri, noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { LogLevel } from '../../logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { DataViewerDependencyService } from '../data-viewing/dataViewerDependencyService';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
@@ -73,7 +75,9 @@ export class CommandRegistry implements IDisposable {
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(DataViewerDependencyService) private readonly dataViewerDependencyService: DataViewerDependencyService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -542,6 +546,15 @@ export class CommandRegistry implements IDisposable {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {
             try {
+                // First find out the current python environment that we are working with
+                if (this.debugService.activeDebugSession.configuration.python) {
+                    const pythonEnv = await this.interpreterService.getInterpreterDetails(
+                        this.debugService.activeDebugSession.configuration.python
+                    );
+                    // Check that we have dependencies installed for data viewer
+                    pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
+                }
+
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
                     request.variable as DebugProtocol.Variable
                 );
