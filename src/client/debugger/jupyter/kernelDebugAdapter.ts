@@ -151,6 +151,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
+        traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
         // intercept 'setBreakpoints' request
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
             const args = (message as DebugProtocol.Request).arguments;
@@ -288,12 +289,15 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
             const request = message as DebugProtocol.Request;
-            const control = this.jupyterSession.requestDebug({
-                seq: request.seq,
-                type: 'request',
-                command: request.command,
-                arguments: request.arguments
-            });
+            const control = this.jupyterSession.requestDebug(
+                {
+                    seq: request.seq,
+                    type: 'request',
+                    command: request.command,
+                    arguments: request.arguments
+                },
+                true
+            );
 
             control.onReply = (msg) => {
                 const message = msg.content as DebugProtocol.ProtocolMessage;
@@ -316,11 +320,14 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         } else if (message.type === 'response') {
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
-            this.jupyterSession.requestDebug({
-                seq: response.seq,
-                type: 'request',
-                command: response.command
-            });
+            this.jupyterSession.requestDebug(
+                {
+                    seq: response.seq,
+                    type: 'request',
+                    command: response.command
+                },
+                true
+            );
         } else {
             // cannot send via iopub, no way to handle events even if they existed
             traceError(`Unknown message type to send ${message.type}`);
