@@ -3,8 +3,6 @@
 
 'use strict';
 
-import ansiRegex from 'ansi-regex';
-
 /* Generate a RegExp from a "verbose" pattern.
  *
  * All whitespace in the pattern is removed, including newlines.  This
@@ -59,6 +57,8 @@ export function stripAnsi(str: string) {
     if (typeof str !== 'string') {
         throw new TypeError(`Expected a \`string\`, got \`${typeof str}\``);
     }
+
+    var ansiRegex = require('ansi-regex');
 
     // Special case ansiregex for running on test machines. Seems to not have a 'default'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
