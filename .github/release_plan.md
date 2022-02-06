@@ -80,7 +80,6 @@
         * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 
 # Day of VS Code publishing (Wednesday, XXX XX)
--   Note: Doing this after the next VS Code insiders is available makes development easier (else the extension will not load).
 -   [ ] Update `main` after the release is published.
     -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0` to `1.59.0`
     -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
