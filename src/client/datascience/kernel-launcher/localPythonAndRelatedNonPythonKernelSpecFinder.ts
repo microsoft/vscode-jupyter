@@ -12,7 +12,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { createInterpreterKernelSpec, getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
+import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
@@ -104,7 +104,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 // If there are any kernels that we registered (then don't return them).
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
                 // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-                .filter((item) => (includeKernelsRegisteredByUs ? true : !isKernelRegisteredByUs(item.kernelSpec)))
+                .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
                 .map((item) => <LocalKernelSpecConnectionMetadata>item)
         );
     }
@@ -130,7 +130,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         ]);
 
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
-            isKernelRegisteredByUs(item.kernelSpec)
+            getKernelRegistrationInfo(item.kernelSpec)
         );
         // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
         // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
@@ -174,7 +174,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             globalKernelSpecs
                 .filter(
                     (item) =>
-                        !isKernelRegisteredByUs(item.kernelSpec) &&
+                        !getKernelRegistrationInfo(item.kernelSpec) &&
                         (usingNonIpyKernelLauncher(item) || Object.keys(item.kernelSpec.env || {}).length > 0)
                 )
                 .map(async (item) => {
@@ -234,8 +234,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         // Hide the interpreters from list of kernels unless the user created this kernelspec.
                         // Users can create their own kernels with custom environment variables, in such cases, we should list that
                         // kernel as well as the interpreter (so they can use both).
-                        const kernelSpecKind = isKernelRegisteredByUs(result.kernelSpec);
-                        if (kernelSpecKind === 'newVersion' || kernelSpecKind === 'oldVersion') {
+                        const kernelSpecKind = getKernelRegistrationInfo(result.kernelSpec);
+                        if (
+                            kernelSpecKind === 'registeredByNewVersionOfExt' ||
+                            kernelSpecKind === 'registeredByOldVersionOfExt'
+                        ) {
                             filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
                         }
 

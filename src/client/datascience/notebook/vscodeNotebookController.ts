@@ -50,7 +50,7 @@ import {
     getRemoteKernelSessionInformation,
     isPythonKernelConnection,
     getKernelConnectionPath,
-    isKernelRegisteredByUs
+    getKernelRegistrationInfo
 } from '../jupyter/kernels/helpers';
 import {
     IKernel,
@@ -525,7 +525,10 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
-            if (isKernelRegisteredByUs(kernelConnection.kernelSpec) === 'newVersionUserKernelSpec') {
+            if (
+                getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
+                'registeredByNewVersionOfExtForCustomKernelSpec'
+            ) {
                 return DataScience.kernelCategoryForJupyterKernel();
             }
             switch (kernelConnection.interpreter.envType) {

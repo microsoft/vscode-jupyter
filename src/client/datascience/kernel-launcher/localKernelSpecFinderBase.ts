@@ -15,7 +15,7 @@ import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
 import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterKernelSpecName, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
+import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
@@ -132,7 +132,6 @@ export abstract class LocalKernelSpecFinderBase {
             if (value) {
                 return value;
             }
-
             // If we failed to get a kernelspec full path from our cache and loaded list
             this.pathToKernelSpec.delete(specPath);
             this.cache = this.cache?.filter((itempath) => itempath.kernelSpecFile !== specPath);
@@ -148,76 +147,7 @@ export abstract class LocalKernelSpecFinderBase {
         interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
-        // This is a backup folder for old kernels created by us.
-        if (specPath.includes(oldKernelsSpecFolderName)) {
-            return;
-        }
-        let kernelJson: ReadWrite<IJupyterKernelSpec>;
-        try {
-            traceVerbose(
-                `Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`
-            );
-            kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
-        } catch {
-            traceError(`Failed to parse kernelspec ${specPath}`);
-            return undefined;
-        }
-        if (cancelToken?.isCancellationRequested) {
-            return undefined;
-        }
-
-        // Special case. If we have an interpreter path this means this spec file came
-        // from an interpreter location (like a conda environment). Modify the name to make sure it fits
-        // the kernel instead
-        // kernelJson.originalName = kernelJson.name;
-        kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
-
-        // Update the display name too if we have an interpreter.
-        const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);
-        if (!isDefaultPythonName && kernelJson.language === PYTHON_LANGUAGE && kernelJson.argv.length > 2) {
-            // Default kernel spec argv for Python kernels is `"python","-m","ipykernel_launcher","-f","{connection_file}"`
-            // Some older versions had `ipykernel` instead of `ipykernel_launcher`
-            // If its different, then use that as an identifier for the kernel name.
-            const argv = kernelJson.argv
-                .slice(1) // ignore python
-                .map((arg) => arg.toLowerCase())
-                .filter((arg) => !['-m', 'ipykernel', 'ipykernel_launcher', '-f', '{connection_file}'].includes(arg));
-            if (argv.length) {
-                kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
-            }
-        }
-        kernelJson.metadata = kernelJson.metadata || {};
-        kernelJson.metadata.jupyter = kernelJson.metadata.jupyter || {};
-        if (!kernelJson.metadata.jupyter.originalSpecFile) {
-            kernelJson.metadata.jupyter.originalSpecFile = specPath;
-        }
-        if (!kernelJson.metadata.jupyter.originalDisplayName) {
-            kernelJson.metadata.jupyter.originalDisplayName = kernelJson.display_name;
-        }
-        if (kernelJson.metadata.originalSpecFile){
-            kernelJson.metadata.jupyter.originalSpecFile = kernelJson.metadata.originalSpecFile;
-            delete kernelJson.metadata.originalSpecFile;
-        }
-
-        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            kernelJson as any,
-            specPath,
-            // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-            interpreter?.path || kernelJson?.metadata?.interpreter?.path,
-            isKernelRegisteredByUs(kernelJson)
-        );
-
-        // Some registered kernel specs do not have a name, in this case use the last part of the path
-        kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
-
-        // Possible user deleted the underlying kernel.
-        const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
-        if (interpreterPath && !(await this.fs.localFileExists(interpreterPath))) {
-            return;
-        }
-
-        return kernelSpec;
+        return loadKernelSpec(specPath, this.fs, interpreter, cancelToken);
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     protected async findKernelSpecsInPaths(
@@ -250,4 +180,83 @@ export abstract class LocalKernelSpecFinderBase {
 
         return kernelSpecFiles;
     }
+}
+
+/**
+ * Load kernelspec json from disk
+ */
+export async function loadKernelSpec(
+    specPath: string,
+    fs: IFileSystem,
+    interpreter?: PythonEnvironment,
+    cancelToken?: CancellationToken
+): Promise<IJupyterKernelSpec | undefined> {
+    // This is a backup folder for old kernels created by us.
+    if (specPath.includes(oldKernelsSpecFolderName)) {
+        return;
+    }
+    let kernelJson: ReadWrite<IJupyterKernelSpec>;
+    try {
+        traceVerbose(`Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`);
+        kernelJson = JSON.parse(await fs.readLocalFile(specPath));
+    } catch (ex) {
+        traceError(`Failed to parse kernelspec ${specPath}`, ex);
+        return;
+    }
+    if (cancelToken?.isCancellationRequested) {
+        return;
+    }
+
+    // Special case. If we have an interpreter path this means this spec file came
+    // from an interpreter location (like a conda environment). Modify the name to make sure it fits
+    // the kernel instead
+    // kernelJson.originalName = kernelJson.name;
+    kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
+
+    // Update the display name too if we have an interpreter.
+    const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);
+    if (!isDefaultPythonName && kernelJson.language === PYTHON_LANGUAGE && kernelJson.argv.length > 2) {
+        // Default kernel spec argv for Python kernels is `"python","-m","ipykernel_launcher","-f","{connection_file}"`
+        // Some older versions had `ipykernel` instead of `ipykernel_launcher`
+        // If its different, then use that as an identifier for the kernel name.
+        const argv = kernelJson.argv
+            .slice(1) // ignore python
+            .map((arg) => arg.toLowerCase())
+            .filter((arg) => !['-m', 'ipykernel', 'ipykernel_launcher', '-f', '{connection_file}'].includes(arg));
+        if (argv.length) {
+            kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
+        }
+    }
+    kernelJson.metadata = kernelJson.metadata || {};
+    kernelJson.metadata.jupyter = kernelJson.metadata.jupyter || {};
+    if (!kernelJson.metadata.jupyter.originalSpecFile) {
+        kernelJson.metadata.jupyter.originalSpecFile = specPath;
+    }
+    if (!kernelJson.metadata.jupyter.originalDisplayName) {
+        kernelJson.metadata.jupyter.originalDisplayName = kernelJson.display_name;
+    }
+    if (kernelJson.metadata.originalSpecFile) {
+        kernelJson.metadata.jupyter.originalSpecFile = kernelJson.metadata.originalSpecFile;
+        delete kernelJson.metadata.originalSpecFile;
+    }
+
+    const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        kernelJson as any,
+        specPath,
+        // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
+        interpreter?.path || kernelJson?.metadata?.interpreter?.path,
+        getKernelRegistrationInfo(kernelJson)
+    );
+
+    // Some registered kernel specs do not have a name, in this case use the last part of the path
+    kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
+
+    // Possible user deleted the underlying kernel.
+    const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
+    if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
+        return;
+    }
+
+    return kernelSpec;
 }

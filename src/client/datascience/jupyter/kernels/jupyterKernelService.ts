@@ -22,7 +22,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
-import { cleanEnvironment } from './helpers';
+import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
@@ -158,7 +158,9 @@ export class JupyterKernelService {
             contents.metadata = {
                 ...contents.metadata,
                 jupyter: {
-                    originalSpecFile: kernel.kernelSpec.specFile
+                    ...(contents.metadata!.jupyter || {}),
+                    originalSpecFile:
+                        kernel.kernelSpec.metadata?.jupyter?.originalSpecFile || kernel.kernelSpec.specFile
                 }
             };
         }
@@ -263,6 +265,13 @@ export class JupyterKernelService {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
+
+                // Ensure we inherit env variables from the original kernelspec file.
+                const envInKernelSpecJson =
+                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
+                        ? specModel.env || {}
+                        : {};
+                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
 
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...

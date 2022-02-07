@@ -17,8 +17,10 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { InterpreterService, PythonExtensionChecker } from '../../../client/api/pythonApi';
 import {
+    createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
-    getInterpreterKernelSpecName
+    getInterpreterKernelSpecName,
+    getKernelId
 } from '../../../client/datascience/jupyter/kernels/helpers';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -40,6 +42,8 @@ import {
 } from '../../../client/pythonEnvironments/info/interpreter';
 import { OSType } from '../../../client/common/utils/platform';
 import { disposeAllDisposables } from '../../../client/common/helpers';
+import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/localKernelSpecFinderBase';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -991,6 +995,307 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
                 assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
                 assert.deepEqual(kernel?.interpreter, pyEnvInterpreter2, 'Should start using PyEnv');
             });
+        });
+    });
+});
+
+[false, true].forEach((isWindows) => {
+    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+        let kernelFinder: ILocalKernelFinder;
+        let interpreterService: IInterpreterService;
+        let platformService: IPlatformService;
+        let fs: IFileSystem;
+        let extensionChecker: IPythonExtensionChecker;
+        const disposables: IDisposable[] = [];
+        let globalSpecPath: string;
+        type kernelName = string;
+        type TestData = {
+            interpreters: { interpreter: PythonEnvironment; kernelSpecs?: Record<kernelName, KernelSpec.ISpecModel> }[];
+            globalKernelSpecs: Record<kernelName, KernelSpec.ISpecModel>;
+        };
+
+        async function initialize(testData: TestData) {
+            const getRealPathStub = sinon.stub(fsExtra, 'realpath');
+            getRealPathStub.returnsArg(0);
+            interpreterService = mock(InterpreterService);
+            when(interpreterService.getInterpreters(anything())).thenResolve(
+                testData.interpreters.map((item) => item.interpreter)
+            );
+            when(interpreterService.getInterpreterDetails(anything())).thenResolve();
+            platformService = mock(PlatformService);
+            when(platformService.isWindows).thenReturn(isWindows);
+            when(platformService.isLinux).thenReturn(!isWindows);
+            when(platformService.isMac).thenReturn(false);
+            fs = mock(FileSystem);
+            when(fs.deleteLocalFile(anything())).thenResolve();
+            when(fs.localFileExists(anything())).thenResolve(true);
+            const pathUtils = new PathUtils(isWindows);
+            const workspaceService = mock(WorkspaceService);
+            const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+
+            when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall((_a, b) => {
+                return Promise.resolve(b);
+            });
+            when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+            const envVarsProvider = mock(EnvironmentVariablesProvider);
+            when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
+            const event = new EventEmitter<Uri | undefined>();
+            disposables.push(event);
+            when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(event.event);
+            extensionChecker = mock(PythonExtensionChecker);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+            const memento = mock<Memento>();
+            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.update(anything(), anything())).thenResolve();
+            const jupyterPaths = new JupyterPaths(
+                instance(platformService),
+                pathUtils,
+                instance(envVarsProvider),
+                disposables,
+                instance(memento)
+            );
+
+            const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
+            testData.interpreters.forEach((interpreter) => {
+                if (!interpreter.kernelSpecs) {
+                    return;
+                }
+                Object.keys(interpreter.kernelSpecs).forEach((kernelSpecName) => {
+                    const jsonFile = [
+                        interpreter.interpreter.sysPrefix,
+                        'share',
+                        'jupyter',
+                        'kernels',
+                        kernelSpecName,
+                        'kernel.json'
+                    ].join('/');
+                    kernelSpecsBySpecFile.set(jsonFile, interpreter.kernelSpecs![kernelSpecName]);
+                });
+            });
+            globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
+            await Promise.all(
+                Object.keys(testData.globalKernelSpecs).map(async (kernelSpecName) => {
+                    const jsonFile = [globalSpecPath!, kernelSpecName, 'kernel.json'].join('/');
+                    kernelSpecsBySpecFile.set(jsonFile, testData.globalKernelSpecs[kernelSpecName]);
+                })
+            );
+            when(fs.readLocalFile(anything())).thenCall((f) => {
+                return kernelSpecsBySpecFile.has(f)
+                    ? Promise.resolve(JSON.stringify(kernelSpecsBySpecFile.get(f)!))
+                    : Promise.reject(`File "${f}" not found.`);
+            });
+            when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
+                if (c === globalSpecPath && globalSpecPath) {
+                    return Object.keys(testData.globalKernelSpecs).map((kernelSpecName) =>
+                        [kernelSpecName, 'kernel.json'].join('/')
+                    );
+                }
+                const interpreter = testData.interpreters.find((item) => c.includes(item.interpreter.sysPrefix));
+                if (interpreter && interpreter.kernelSpecs) {
+                    return Object.keys(interpreter.kernelSpecs).map((kernelSpecName) =>
+                        [kernelSpecName, 'kernel.json'].join('/')
+                    );
+                }
+                return [];
+            });
+            when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => {
+                return arePathsSame(a, b);
+            });
+            when(fs.localDirectoryExists(anything())).thenResolve(true);
+            const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
+                instance(fs),
+                instance(workspaceService),
+                jupyterPaths,
+                instance(extensionChecker),
+                instance(memento)
+            );
+            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY', anything())).thenReturn([]);
+            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
+            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
+            kernelFinder = new LocalKernelFinder(
+                instance(interpreterService),
+                instance(extensionChecker),
+                nonPythonKernelSpecFinder,
+                new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    jupyterPaths,
+                    instance(extensionChecker),
+                    nonPythonKernelSpecFinder
+                ),
+                jupyterPaths,
+                instance(memento),
+                instance(fs)
+            );
+        }
+        teardown(() => {
+            disposeAllDisposables(disposables);
+            sinon.restore();
+        });
+
+        const juliaKernelSpec: KernelSpec.ISpecModel = {
+            argv: ['julia', 'start', 'kernel'],
+            display_name: 'Julia Kernel',
+            language: 'julia',
+            name: 'julia',
+            resources: {}
+        };
+        const defaultPython3Kernel: KernelSpec.ISpecModel = {
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            display_name: 'Python 3',
+            language: 'python',
+            name: 'python3',
+            resources: {}
+        };
+        // const defaultPython3KernelWithEnvVars: KernelSpec.ISpecModel = {
+        //     argv: ['python', '-m', 'ipykernel_launcher'],
+        //     display_name: 'Python 3',
+        //     language: 'python',
+        //     name: 'python3',
+        //     resources: {},
+        //     env: {
+        //         HELLO: 'WORLD'
+        //     }
+        // };
+        const customPythonKernelWithCustomArgv: KernelSpec.ISpecModel = {
+            argv: ['python', '-m', 'customKernel'],
+            display_name: 'Custom Python Kernel',
+            language: 'python',
+            name: 'customPythonKernel',
+            resources: {}
+        };
+        const python36Global: PythonEnvironment = {
+            path: isWindows ? 'C:/Python/Python3.6/bin/python.exe' : '/usr/bin/python36',
+            sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
+            displayName: 'Python 3.6',
+            envType: EnvironmentType.Global,
+            sysVersion: '3.6.0',
+            version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+        };
+        const python37Global: PythonEnvironment = {
+            path: isWindows ? 'C:/Python/Python3.7/bin/python.exe' : '/usr/bin/python37',
+            sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
+            displayName: 'Python 3.7',
+            envType: EnvironmentType.Global,
+            sysVersion: '3.7.0',
+            version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+        };
+        const python39PyEnv_HelloWorld: PythonEnvironment = {
+            path: isWindows ? 'C:/pyenv/envs/temp/bin/python.exe' : '/users/username/pyenv/envs/temp/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
+            displayName: 'Temporary Python 3.9',
+            envName: 'temp',
+            envType: EnvironmentType.Pyenv,
+            sysVersion: '3.9.0',
+            version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
+        };
+
+        async function generateExpectedKernels(
+            expectedGlobalKernelSpecs: KernelSpec.ISpecModel[],
+            expectedInterpreterKernelSpecFiles: { interpreter: PythonEnvironment; kernelspec: KernelSpec.ISpecModel }[],
+            expectedInterpreters: PythonEnvironment[]
+        ) {
+            const expectedKernelSpecs: KernelConnectionMetadata[] = [];
+            await Promise.all(
+                expectedGlobalKernelSpecs.map(async (kernelSpec) => {
+                    const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join('/');
+                    const spec = await loadKernelSpec(kernelspecFile, instance(fs));
+                    if (spec) {
+                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                            id: getKernelId(spec!),
+                            kernelSpec: spec,
+                            interpreter: undefined,
+                            kind: 'startUsingLocalKernelSpec'
+                        });
+                    }
+                })
+            );
+            await Promise.all(
+                expectedInterpreterKernelSpecFiles.map(async ({ interpreter, kernelspec }) => {
+                    const kernelSpecFile = [
+                        interpreter.sysPrefix,
+                        'share',
+                        'jupyter',
+                        'kernels',
+                        kernelspec.name,
+                        'kernel.json'
+                    ].join('/');
+                    const spec = await loadKernelSpec(kernelSpecFile, instance(fs), interpreter);
+                    if (spec) {
+                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                            id: getKernelId(spec!, interpreter),
+                            kernelSpec: spec,
+                            interpreter,
+                            kind: 'startUsingPythonInterpreter'
+                        });
+                    }
+                })
+            );
+            await Promise.all(
+                expectedInterpreters.map(async (interpreter) => {
+                    const spec = createInterpreterKernelSpec(interpreter, globalSpecPath);
+                    expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                        id: getKernelId(spec!, interpreter),
+                        kernelSpec: spec,
+                        interpreter,
+                        kind: 'startUsingPythonInterpreter'
+                    });
+                })
+            );
+            return expectedKernelSpecs;
+        }
+
+        test('Kernels found on disk with Python extension installed & no python interpreters discovered', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: {
+                    [juliaKernelSpec.name]: juliaKernelSpec
+                },
+                interpreters: [
+                    {
+                        interpreter: python39PyEnv_HelloWorld,
+                        kernelSpecs: {
+                            [defaultPython3Kernel.name]: defaultPython3Kernel,
+                            [customPythonKernelWithCustomArgv.name]: customPythonKernelWithCustomArgv
+                        }
+                    },
+                    {
+                        interpreter: python36Global
+                    },
+                    {
+                        interpreter: python37Global,
+                        kernelSpecs: {
+                            [defaultPython3Kernel.name]: defaultPython3Kernel
+                        }
+                    }
+                ]
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            const expectedKernels = await generateExpectedKernels(
+                [juliaKernelSpec],
+                [
+                    {
+                        interpreter: python39PyEnv_HelloWorld,
+                        kernelspec: defaultPython3Kernel
+                    },
+                    {
+                        interpreter: python39PyEnv_HelloWorld,
+                        kernelspec: customPythonKernelWithCustomArgv
+                    }
+                ],
+                [python36Global, python37Global]
+            );
+
+            const kernels = await kernelFinder.listKernels(undefined);
+            assert.equal(kernels.length, expectedKernels.length, 'Incorrect # of kernels');
+
+            const keyedKernels = new Map<string, KernelConnectionMetadata>();
+            kernels.forEach((item) => keyedKernels.set(item.id, item));
+            kernels.sort((a, b) => a.id.localeCompare(b.id));
+            expectedKernels.sort((a, b) => a.id.localeCompare(b.id));
+            assert.deepEqual(kernels, expectedKernels, 'Incorrect kernels');
         });
     });
 });

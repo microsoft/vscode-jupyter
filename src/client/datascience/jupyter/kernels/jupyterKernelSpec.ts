@@ -21,7 +21,10 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         specModel: KernelSpec.ISpecModel,
         public readonly specFile?: string,
         public readonly interpreterPath?: string,
-        public readonly isRegisteredByVSC?: 'newVersion' | 'oldVersion' | 'newVersionUserKernelSpec'
+        public readonly isRegisteredByVSC?:
+            | 'registeredByNewVersionOfExt'
+            | 'registeredByOldVersionOfExt'
+            | 'registeredByNewVersionOfExtForCustomKernelSpec'
     ) {
         this.name = specModel.name;
         this.argv = specModel.argv;

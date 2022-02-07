@@ -346,7 +346,10 @@ export interface IJupyterKernelSpec {
     /**
      * Whether the kernelspec is registered by VS Code
      */
-    readonly isRegisteredByVSC?: 'newVersion' | 'oldVersion' | 'newVersionUserKernelSpec';
+    readonly isRegisteredByVSC?:
+        | 'registeredByNewVersionOfExt'
+        | 'registeredByOldVersionOfExt'
+        | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
