@@ -1011,7 +1011,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
         type kernelName = string;
         type TestData = {
             interpreters: { interpreter: PythonEnvironment; kernelSpecs?: Record<kernelName, KernelSpec.ISpecModel> }[];
-            globalKernelSpecs: Record<kernelName, KernelSpec.ISpecModel>;
+            globalKernelSpecs: KernelSpec.ISpecModel[];
         };
 
         async function initialize(testData: TestData) {
@@ -1074,9 +1074,9 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             });
             globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
             await Promise.all(
-                Object.keys(testData.globalKernelSpecs).map(async (kernelSpecName) => {
-                    const jsonFile = [globalSpecPath!, kernelSpecName, 'kernel.json'].join('/');
-                    kernelSpecsBySpecFile.set(jsonFile, testData.globalKernelSpecs[kernelSpecName]);
+                testData.globalKernelSpecs.map(async (kernelSpec) => {
+                    const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join('/');
+                    kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
                 })
             );
             when(fs.readLocalFile(anything())).thenCall((f) => {
@@ -1085,10 +1085,8 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     : Promise.reject(`File "${f}" not found.`);
             });
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
-                if (c === globalSpecPath && globalSpecPath) {
-                    return Object.keys(testData.globalKernelSpecs).map((kernelSpecName) =>
-                        [kernelSpecName, 'kernel.json'].join('/')
-                    );
+                if (c === globalSpecPath) {
+                    return testData.globalKernelSpecs.map((kernelSpec) => [kernelSpec.name, 'kernel.json'].join('/'));
                 }
                 const interpreter = testData.interpreters.find((item) => c.includes(item.interpreter.sysPrefix));
                 if (interpreter && interpreter.kernelSpecs) {
@@ -1166,7 +1164,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             }
         };
         const python36Global: PythonEnvironment = {
-            path: isWindows ? 'C:/Python/Python3.6/bin/python.exe' : '/usr/bin/python36',
+            path: isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36',
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
             envType: EnvironmentType.Global,
@@ -1174,7 +1172,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python37Global: PythonEnvironment = {
-            path: isWindows ? 'C:/Python/Python3.7/bin/python.exe' : '/usr/bin/python37',
+            path: isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37',
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
             envType: EnvironmentType.Global,
@@ -1182,7 +1180,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python39PyEnv_HelloWorld: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp/bin/python.exe' : '/users/username/pyenv/envs/temp/python',
+            path: isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python',
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
             displayName: 'Temporary Python 3.9',
             envName: 'temp',
@@ -1190,15 +1188,24 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             sysVersion: '3.9.0',
             version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
         };
+        const python38VenvEnv: PythonEnvironment = {
+            path: isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
+            displayName: 'Virtual Env Python 3.8',
+            envName: 'temp',
+            envType: EnvironmentType.VirtualEnv,
+            sysVersion: '3.8.0',
+            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+        };
         const condaEnv1: PythonEnvironment = {
-            path: isWindows ? 'C:/conda/envs/env1/bin/python.exe' : '/conda/envs/env1/bin/python',
+            path: isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python',
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             displayName: 'Conda Env1 3.6',
             envType: EnvironmentType.Conda,
             sysVersion: '3.6.0',
             version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
-        const javaKernelInsideConda: KernelSpec.ISpecModel = {
+        const javaKernelSpec: KernelSpec.ISpecModel = {
             argv: ['java', 'xyz.jar', '{connection_file}', 'moreargs'],
             display_name: 'Java Kernel',
             language: 'java',
@@ -1206,6 +1213,23 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             resources: {},
             env: {
                 HELLO: 'Java'
+            }
+        };
+        const fullyQualifiedPythonKernelSpec: KernelSpec.ISpecModel = {
+            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            display_name: 'Custom .venv Kernel',
+            language: 'python',
+            name: 'fullyQualifiedPythonKernelSpec',
+            resources: {}
+        };
+        const fullyQualifiedPythonKernelSpecWithEnv: KernelSpec.ISpecModel = {
+            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            display_name: 'Custom .venv Kernel with Env Vars',
+            language: 'python',
+            name: 'fullyQualifiedPythonKernelSpecWithEnv',
+            resources: {},
+            env: {
+                FOO: 'BAR'
             }
         };
 
@@ -1218,12 +1242,15 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
                     const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join('/');
+                    const interpreter = expectedInterpreters.find(
+                        (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path === kernelSpec.argv[0]
+                    );
                     const spec = await loadKernelSpec(kernelspecFile, instance(fs));
                     if (spec) {
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
-                            id: getKernelId(spec!),
+                            id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
-                            interpreter: undefined,
+                            interpreter,
                             kind: 'startUsingLocalKernelSpec'
                         });
                     }
@@ -1275,14 +1302,15 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             }[];
             expectedInterpreters?: PythonEnvironment[];
         };
-        async function verifyKernels(actualKernels: KernelConnectionMetadata[], expectations: ExpectedKernels) {
+        async function verifyKernels(expectations: ExpectedKernels) {
+            const actualKernels = await kernelFinder.listKernels(undefined);
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
                 expectations.expectedInterpreters || []
             );
-            assert.equal(actualKernels.length, expectedKernels.length, 'Incorrect # of kernels');
 
+            assert.equal(actualKernels.length, expectedKernels.length, 'Incorrect # of kernels');
             actualKernels.sort((a, b) => a.id.localeCompare(b.id));
             expectedKernels.sort((a, b) => a.id.localeCompare(b.id));
             try {
@@ -1295,25 +1323,83 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                 });
             }
         }
-        test('Discover global kernelspecs', async () => {
+        test('Discover global kernelspecs (without Python)', async () => {
             const testData: TestData = {
-                globalKernelSpecs: {
-                    [juliaKernelSpec.name]: juliaKernelSpec
-                },
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
                 interpreters: []
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec]
+            });
+        });
+        test('Discover global custom Python kernelspecs (without Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                interpreters: []
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                expectedInterpreters: []
+            });
+        });
+        test('Discover global custom Python kernelspecs (with Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                interpreters: [{ interpreter: python38VenvEnv }]
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-            const kernels = await kernelFinder.listKernels(undefined);
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                expectedInterpreters: [python38VenvEnv]
+            });
+        });
+        test('Discover multiple global custom Python kernelspecs (with Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
+                interpreters: [{ interpreter: python38VenvEnv }]
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-            await verifyKernels(kernels, { expectedGlobalKernelSpecs: [juliaKernelSpec] });
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
+                expectedInterpreters: [python38VenvEnv]
+            });
+        });
+        test('Discover multiple global custom Python kernelspecs with env vars (with Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [
+                    juliaKernelSpec,
+                    javaKernelSpec,
+                    fullyQualifiedPythonKernelSpec,
+                    fullyQualifiedPythonKernelSpecWithEnv
+                ],
+                interpreters: [{ interpreter: python38VenvEnv }]
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [
+                    juliaKernelSpec,
+                    javaKernelSpec,
+                    fullyQualifiedPythonKernelSpec,
+                    fullyQualifiedPythonKernelSpecWithEnv
+                ],
+                expectedInterpreters: [python38VenvEnv]
+            });
         });
         test('Kernels found on disk with Python extension installed & no python interpreters discovered', async () => {
             const testData: TestData = {
-                globalKernelSpecs: {
-                    [juliaKernelSpec.name]: juliaKernelSpec
-                },
+                globalKernelSpecs: [juliaKernelSpec],
                 interpreters: [
                     {
                         interpreter: python39PyEnv_HelloWorld,
@@ -1335,7 +1421,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     {
                         interpreter: condaEnv1,
                         kernelSpecs: {
-                            [javaKernelInsideConda.name]: javaKernelInsideConda
+                            [javaKernelSpec.name]: javaKernelSpec
                         }
                     }
                 ]
@@ -1360,14 +1446,13 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     },
                     {
                         interpreter: condaEnv1,
-                        kernelspec: javaKernelInsideConda
+                        kernelspec: javaKernelSpec
                     }
                 ],
                 expectedInterpreters: [python36Global, python37Global, condaEnv1]
             };
 
-            const kernels = await kernelFinder.listKernels(undefined);
-            await verifyKernels(kernels, expectedKernels);
+            await verifyKernels(expectedKernels);
         });
     });
 });

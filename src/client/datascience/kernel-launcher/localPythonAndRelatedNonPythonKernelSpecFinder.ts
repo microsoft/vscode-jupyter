@@ -128,10 +128,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             activeInterpreterPromise,
             this.listGlobalPythonKernelSpecs(true, cancelToken)
         ]);
-
-        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
-            getKernelRegistrationInfo(item.kernelSpec)
-        );
+        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) => {
+            const info = getKernelRegistrationInfo(item.kernelSpec);
+            return info && info !== 'registeredByNewVersionOfExtForCustomKernelSpec';
+        });
         // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
         // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
         const usingNonIpyKernelLauncher = (
@@ -172,11 +172,26 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
             globalKernelSpecs
-                .filter(
-                    (item) =>
-                        !getKernelRegistrationInfo(item.kernelSpec) &&
+                .filter((item) => {
+                    const registrationInfo = getKernelRegistrationInfo(item.kernelSpec);
+                    if (
+                        !registrationInfo &&
                         (usingNonIpyKernelLauncher(item) || Object.keys(item.kernelSpec.env || {}).length > 0)
-                )
+                    ) {
+                        return true;
+                    }
+
+                    // If the user has created a non-default Python kernelspec without any custom env variables,
+                    // Then don't hide it.
+                    if (
+                        !registrationInfo &&
+                        item.kernelSpec.language === PYTHON_LANGUAGE &&
+                        !isDefaultKernelSpec(item.kernelSpec)
+                    ) {
+                        return true;
+                    }
+                    return false;
+                })
                 .map(async (item) => {
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
