@@ -1148,22 +1148,22 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             name: 'python3',
             resources: {}
         };
-        // const defaultPython3KernelWithEnvVars: KernelSpec.ISpecModel = {
-        //     argv: ['python', '-m', 'ipykernel_launcher'],
-        //     display_name: 'Python 3',
-        //     language: 'python',
-        //     name: 'python3',
-        //     resources: {},
-        //     env: {
-        //         HELLO: 'WORLD'
-        //     }
-        // };
         const customPythonKernelWithCustomArgv: KernelSpec.ISpecModel = {
             argv: ['python', '-m', 'customKernel'],
             display_name: 'Custom Python Kernel',
             language: 'python',
             name: 'customPythonKernel',
             resources: {}
+        };
+        const customPythonKernelWithCustomEnv: KernelSpec.ISpecModel = {
+            argv: ['python', '-m', 'ipykernel', '-f', '{connection_file}'],
+            display_name: 'Custom Python Kernel with Env Vars',
+            language: 'python',
+            name: 'customPythonKernelWithCustomEnv',
+            resources: {},
+            env: {
+                HELLO: 'WORLD'
+            }
         };
         const python36Global: PythonEnvironment = {
             path: isWindows ? 'C:/Python/Python3.6/bin/python.exe' : '/usr/bin/python36',
@@ -1189,6 +1189,24 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.9.0',
             version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
+        };
+        const condaEnv1: PythonEnvironment = {
+            path: isWindows ? 'C:/conda/envs/env1/bin/python.exe' : '/conda/envs/env1/bin/python',
+            sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
+            displayName: 'Conda Env1 3.6',
+            envType: EnvironmentType.Conda,
+            sysVersion: '3.6.0',
+            version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+        };
+        const javaKernelInsideConda: KernelSpec.ISpecModel = {
+            argv: ['java', 'xyz.jar', '{connection_file}', 'moreargs'],
+            display_name: 'Java Kernel',
+            language: 'java',
+            name: 'javaKernelInsideConda',
+            resources: {},
+            env: {
+                HELLO: 'Java'
+            }
         };
 
         async function generateExpectedKernels(
@@ -1226,8 +1244,11 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
-                            interpreter,
-                            kind: 'startUsingPythonInterpreter'
+                            interpreter: spec.language === PYTHON_LANGUAGE ? interpreter : undefined,
+                            kind:
+                                spec.language === PYTHON_LANGUAGE
+                                    ? 'startUsingPythonInterpreter'
+                                    : 'startUsingLocalKernelSpec'
                         });
                     }
                 })
@@ -1243,9 +1264,24 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     });
                 })
             );
+            expectedKernelSpecs.sort((a, b) => a.id.localeCompare(b.id));
             return expectedKernelSpecs;
         }
+        function verifyKernels(actualKernels: KernelConnectionMetadata[], expectedKernels: KernelConnectionMetadata[]) {
+            assert.equal(actualKernels.length, expectedKernels.length, 'Incorrect # of kernels');
 
+            actualKernels.sort((a, b) => a.id.localeCompare(b.id));
+            expectedKernels.sort((a, b) => a.id.localeCompare(b.id));
+            try {
+                assert.deepEqual(actualKernels, expectedKernels, 'Incorrect kernels');
+            } catch (ex) {
+                // Compare them one by one for better errors.
+                actualKernels.forEach((actual, index) => {
+                    const expected = expectedKernels[index];
+                    assert.deepEqual(actual, expected);
+                });
+            }
+        }
         test('Kernels found on disk with Python extension installed & no python interpreters discovered', async () => {
             const testData: TestData = {
                 globalKernelSpecs: {
@@ -1256,7 +1292,8 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                         interpreter: python39PyEnv_HelloWorld,
                         kernelSpecs: {
                             [defaultPython3Kernel.name]: defaultPython3Kernel,
-                            [customPythonKernelWithCustomArgv.name]: customPythonKernelWithCustomArgv
+                            [customPythonKernelWithCustomArgv.name]: customPythonKernelWithCustomArgv,
+                            [customPythonKernelWithCustomEnv.name]: customPythonKernelWithCustomEnv
                         }
                     },
                     {
@@ -1266,6 +1303,12 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                         interpreter: python37Global,
                         kernelSpecs: {
                             [defaultPython3Kernel.name]: defaultPython3Kernel
+                        }
+                    },
+                    {
+                        interpreter: condaEnv1,
+                        kernelSpecs: {
+                            [javaKernelInsideConda.name]: javaKernelInsideConda
                         }
                     }
                 ]
@@ -1283,19 +1326,21 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     {
                         interpreter: python39PyEnv_HelloWorld,
                         kernelspec: customPythonKernelWithCustomArgv
+                    },
+                    {
+                        interpreter: python39PyEnv_HelloWorld,
+                        kernelspec: customPythonKernelWithCustomEnv
+                    },
+                    {
+                        interpreter: condaEnv1,
+                        kernelspec: javaKernelInsideConda
                     }
                 ],
-                [python36Global, python37Global]
+                [python36Global, python37Global, condaEnv1]
             );
 
             const kernels = await kernelFinder.listKernels(undefined);
-            assert.equal(kernels.length, expectedKernels.length, 'Incorrect # of kernels');
-
-            const keyedKernels = new Map<string, KernelConnectionMetadata>();
-            kernels.forEach((item) => keyedKernels.set(item.id, item));
-            kernels.sort((a, b) => a.id.localeCompare(b.id));
-            expectedKernels.sort((a, b) => a.id.localeCompare(b.id));
-            assert.deepEqual(kernels, expectedKernels, 'Incorrect kernels');
+            verifyKernels(kernels, expectedKernels);
         });
     });
 });
