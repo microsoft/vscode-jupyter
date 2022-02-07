@@ -155,6 +155,7 @@ export class JupyterKernelService {
         if (kernel.kernelSpec.specFile && !this.fs.areLocalPathsSame(kernelSpecFilePath, kernel.kernelSpec.specFile)) {
             // Add extra metadata onto the contents. We'll use this
             // when searching for kernels later to remove duplicates.
+            contents.metadata = contents.metadata || {};
             contents.metadata = {
                 ...contents.metadata,
                 jupyter: {
