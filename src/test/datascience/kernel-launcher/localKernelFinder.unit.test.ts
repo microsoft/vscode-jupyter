@@ -1267,7 +1267,20 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             expectedKernelSpecs.sort((a, b) => a.id.localeCompare(b.id));
             return expectedKernelSpecs;
         }
-        function verifyKernels(actualKernels: KernelConnectionMetadata[], expectedKernels: KernelConnectionMetadata[]) {
+        type ExpectedKernels = {
+            expectedGlobalKernelSpecs?: KernelSpec.ISpecModel[];
+            expectedInterpreterKernelSpecFiles?: {
+                interpreter: PythonEnvironment;
+                kernelspec: KernelSpec.ISpecModel;
+            }[];
+            expectedInterpreters?: PythonEnvironment[];
+        };
+        async function verifyKernels(actualKernels: KernelConnectionMetadata[], expectations: ExpectedKernels) {
+            const expectedKernels = await generateExpectedKernels(
+                expectations.expectedGlobalKernelSpecs || [],
+                expectations.expectedInterpreterKernelSpecFiles || [],
+                expectations.expectedInterpreters || []
+            );
             assert.equal(actualKernels.length, expectedKernels.length, 'Incorrect # of kernels');
 
             actualKernels.sort((a, b) => a.id.localeCompare(b.id));
@@ -1282,6 +1295,20 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                 });
             }
         }
+        test('Discover global kernelspecs', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: {
+                    [juliaKernelSpec.name]: juliaKernelSpec
+                },
+                interpreters: []
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            const kernels = await kernelFinder.listKernels(undefined);
+
+            await verifyKernels(kernels, { expectedGlobalKernelSpecs: [juliaKernelSpec] });
+        });
         test('Kernels found on disk with Python extension installed & no python interpreters discovered', async () => {
             const testData: TestData = {
                 globalKernelSpecs: {
@@ -1316,9 +1343,9 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-            const expectedKernels = await generateExpectedKernels(
-                [juliaKernelSpec],
-                [
+            const expectedKernels: ExpectedKernels = {
+                expectedGlobalKernelSpecs: [juliaKernelSpec],
+                expectedInterpreterKernelSpecFiles: [
                     {
                         interpreter: python39PyEnv_HelloWorld,
                         kernelspec: defaultPython3Kernel
@@ -1336,11 +1363,11 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                         kernelspec: javaKernelInsideConda
                     }
                 ],
-                [python36Global, python37Global, condaEnv1]
-            );
+                expectedInterpreters: [python36Global, python37Global, condaEnv1]
+            };
 
             const kernels = await kernelFinder.listKernels(undefined);
-            verifyKernels(kernels, expectedKernels);
+            await verifyKernels(kernels, expectedKernels);
         });
     });
 });
