@@ -42,7 +42,8 @@ export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
     // The expectation is for users to use unique names & display names for their kernelspecs.
     if (
         name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
-        displayName.toLowerCase() === 'python 3 (ipykernel)'
+        displayName.toLowerCase() === 'python 3 (ipykernel)' ||
+        displayName.toLowerCase() === 'python 3'
     ) {
         return true;
     }

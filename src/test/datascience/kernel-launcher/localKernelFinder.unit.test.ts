@@ -196,7 +196,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             resources: {}
         };
         const python3spec: KernelSpec.ISpecModel = {
-            display_name: 'Python 3 on Disk',
+            display_name: 'Python 3',
             name: defaultPython3Name,
             argv: ['/usr/bin/python3'],
             language: 'python',
@@ -206,7 +206,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             }
         };
         const python3DupeSpec: KernelSpec.ISpecModel = {
-            display_name: 'Python 3 on Disk',
+            display_name: 'Python 3',
             name: defaultPython3Name,
             argv: ['/usr/bin/python3'],
             language: 'python',
@@ -480,7 +480,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             };
             when(fs.searchLocal(anything(), anything(), true)).thenCall(async (_p, dir, _d) => {
                 if (dir == '/usr/share/jupyter/kernels') {
-                    return ['globalPython3.json'];
+                    return [['python3', 'globalPython3.json'].join('/')];
                 }
                 return [];
             });
@@ -564,12 +564,11 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                 when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                 const kernels = await kernelFinder.listKernels(undefined);
-
                 // All the python3 kernels should not be listed
                 const python3Kernels = kernels.filter((k) => k.kernelSpec && k.kernelSpec.name === defaultPython3Name);
                 assert.equal(python3Kernels.length, 0, 'python 3 kernels should not be displayed');
 
-                // No other kernels should have the python 3 inteprreter
+                // No other kernels should have the python 3 interpreter
                 const nonPython3Kernels = kernels.filter(
                     (k) => k.kernelSpec && k.kernelSpec.name !== defaultPython3Name
                 );
@@ -948,19 +947,21 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated using the new algorightm)', async () => {
                 when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
                     if (c.startsWith('python')) {
-                        return Promise.resolve(['interpreter.json']);
+                        return Promise.resolve([['interpreter', 'interpreter.json'].join('/')]);
                     }
                     if (c.startsWith('conda')) {
-                        return Promise.resolve(['interpreter.json']);
+                        return Promise.resolve([['conda', 'interpreter.json'].join('/')]);
                     }
-                    return Promise.resolve([
-                        'python.json',
-                        'pythonPyEnvNew.json',
-                        'python3.json',
-                        'python3dupe.json',
-                        'julia.json',
-                        'python2.json'
-                    ]);
+                    return Promise.resolve(
+                        [
+                            'python.json',
+                            'pythonPyEnvNew.json',
+                            'python3.json',
+                            'python3dupe.json',
+                            'julia.json',
+                            'python2.json'
+                        ].map((name) => [path.basename(name, '.json'), name].join('/'))
+                    );
                 });
                 when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
                 when(interpreterService.getInterpreters(anything())).thenResolve(
