@@ -8,9 +8,12 @@ ipykernel.parentpoller.ParentPollerWindows for a Python implementation.
 """
 
 import ctypes
+import argparse
+import winapi
+import os
 
 
-def create_interrupt_event():
+def create_interrupt_event(ppid):
     """Create an interrupt event handle.
 
     The parent process should call this to create the
@@ -34,9 +37,54 @@ def create_interrupt_event():
     sa.lpSecurityDescriptor = 0
     sa.bInheritHandle = 1
 
-    return ctypes.windll.kernel32.CreateEventA(sa_p, False, False, "")
+    # Create the event in the child process
+    interrupt_handle = ctypes.windll.kernel32.CreateEventA(sa_p, False, False, 0)
+
+    # Duplicate the handle for the parent process
+    child_proc_handle = winapi.OpenProcess(
+        winapi.PROCESS_ALL_ACCESS, False, os.getpid()
+    )
+    parent_proc_handle = winapi.OpenProcess(winapi.PROCESS_ALL_ACCESS, False, ppid)
+    dupe_handle = winapi.DuplicateHandle(
+        child_proc_handle,
+        interrupt_handle,
+        parent_proc_handle,
+        0,
+        True,
+        winapi.DUPLICATE_SAME_ACCESS,
+    )
+    child_proc_handle.Close()
+    parent_proc_handle.Close()
+    winapi.CloseHandle(interrupt_handle)
+    return dupe_handle.value
 
 
 def send_interrupt(interrupt_handle):
     """Sends an interrupt event using the specified handle."""
-    ctypes.windll.kernel32.SetEvent(interrupt_handle)
+    winapi.SetEvent(interrupt_handle)
+
+
+def close_handle(interrupt_handle):
+    """Closes a handle"""
+    ctypes.windll.kernel32.CloseHandle(interrupt_handle)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ppid", help="Parent process id")
+    parser.add_argument("--signal", help="Handle to signal an event on")
+    parser.add_argument("--close", help="Handle to close")
+    args = parser.parse_args()
+    if args.ppid:
+        handle = create_interrupt_event(int(args.ppid))
+        print(handle)
+    elif args.signal:
+        send_interrupt(int(args.signal))
+    elif args.close:
+        close_handle(int(args.close))
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
