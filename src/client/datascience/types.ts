@@ -314,7 +314,21 @@ export interface IJupyterKernelSpec {
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment>; originalSpecFile?: string };
+    readonly metadata?: Record<string, any> & {
+        jupyter?: {
+            /**
+             * Optionally where the original user-created kernel spec json is located on the local FS.
+             * Remember when using non-raw we create kernelspecs from the original spec.
+             */
+            originalSpecFile?: string;
+            originalDisplayName?: string;
+        };
+        interpreter?: Partial<PythonEnvironment>;
+        /**
+         * @deprecated (use metadata.jupyter.originalSpecFile)
+         */
+        originalSpecFile?: string;
+    };
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
@@ -329,6 +343,10 @@ export interface IJupyterKernelSpec {
      */
     interpreterPath?: string;
     readonly interrupt_mode?: 'message' | 'signal';
+    /**
+     * Whether the kernelspec is registered by VS Code
+     */
+    readonly isRegisteredByVSC?: 'newVersion' | 'oldVersion' | 'newVersionUserKernelSpec';
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

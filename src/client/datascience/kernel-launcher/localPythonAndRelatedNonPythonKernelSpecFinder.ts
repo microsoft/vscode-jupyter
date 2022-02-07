@@ -26,6 +26,17 @@ import { getDisplayPath } from '../../common/platform/fs-paths';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
+export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
+    const name = kernelspec.name || '';
+    const displayName = kernelspec.metadata?.jupyter?.originalDisplayName || kernelspec.display_name || '';
+    if (
+        name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
+        displayName.toLowerCase() === 'python 3 (ipykernel)'
+    ) {
+        return true;
+    }
+    return false;
+}
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
  * If Python extension is not installed, this will return all Python kernels registered globally.
@@ -194,8 +205,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
                         hideDefaultKernelSpecs &&
-                        (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
-                            kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
+                        // Hide default kernelspecs only if env variables are empty.
+                        // If not empty, then user has modified them.
+                        (!kernelspec.env || Object.keys(kernelspec.env).length === 0) &&
+                        isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
                             `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
@@ -218,13 +231,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                             id: getKernelId(k, matchingInterpreter)
                         };
 
-                        // Hide the interpreters from list of kernels only if this kernel is not something the user created.
+                        // Hide the interpreters from list of kernels unless the user created this kernelspec.
                         // Users can create their own kernels with custom environment variables, in such cases, we should list that
                         // kernel as well as the interpreter (so they can use both).
-                        const isUserCreatedKernel =
-                            !isKernelRegisteredByUs(result.kernelSpec) &&
-                            Object.keys(result.kernelSpec.env || {}).length > 0;
-                        if (!isUserCreatedKernel) {
+                        const kernelSpecKind = isKernelRegisteredByUs(result.kernelSpec);
+                        if (kernelSpecKind === 'newVersion' || kernelSpecKind === 'oldVersion') {
                             filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
                         }
 

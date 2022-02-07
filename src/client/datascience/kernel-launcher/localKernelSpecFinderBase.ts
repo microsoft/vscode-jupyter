@@ -15,7 +15,7 @@ import { ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
 import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
+import { getInterpreterKernelSpecName, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
@@ -169,6 +169,7 @@ export abstract class LocalKernelSpecFinderBase {
         // Special case. If we have an interpreter path this means this spec file came
         // from an interpreter location (like a conda environment). Modify the name to make sure it fits
         // the kernel instead
+        // kernelJson.originalName = kernelJson.name;
         kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
 
         // Update the display name too if we have an interpreter.
@@ -185,17 +186,26 @@ export abstract class LocalKernelSpecFinderBase {
                 kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
             }
         }
-        kernelJson.display_name =
-            kernelJson.language === PYTHON_LANGUAGE && isDefaultPythonName
-                ? interpreter?.displayName || kernelJson.display_name
-                : kernelJson.display_name;
+        kernelJson.metadata = kernelJson.metadata || {};
+        kernelJson.metadata.jupyter = kernelJson.metadata.jupyter || {};
+        if (!kernelJson.metadata.jupyter.originalSpecFile) {
+            kernelJson.metadata.jupyter.originalSpecFile = specPath;
+        }
+        if (!kernelJson.metadata.jupyter.originalDisplayName) {
+            kernelJson.metadata.jupyter.originalDisplayName = kernelJson.display_name;
+        }
+        if (kernelJson.metadata.originalSpecFile){
+            kernelJson.metadata.jupyter.originalSpecFile = kernelJson.metadata.originalSpecFile;
+            delete kernelJson.metadata.originalSpecFile;
+        }
 
         const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             kernelJson as any,
             specPath,
             // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-            interpreter?.path || kernelJson?.metadata?.interpreter?.path
+            interpreter?.path || kernelJson?.metadata?.interpreter?.path,
+            isKernelRegisteredByUs(kernelJson)
         );
 
         // Some registered kernel specs do not have a name, in this case use the last part of the path

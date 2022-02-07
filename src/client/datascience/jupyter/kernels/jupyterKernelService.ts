@@ -157,7 +157,9 @@ export class JupyterKernelService {
             // when searching for kernels later to remove duplicates.
             contents.metadata = {
                 ...contents.metadata,
-                originalSpecFile: kernel.kernelSpec.specFile
+                jupyter: {
+                    originalSpecFile: kernel.kernelSpec.specFile
+                }
             };
         }
         // Make sure interpreter is in the metadata
@@ -183,8 +185,9 @@ export class JupyterKernelService {
         }
 
         // Copy any other files over from the original directory (images most likely)
-        if (contents.metadata?.originalSpecFile) {
-            const originalSpecDir = path.dirname(contents.metadata?.originalSpecFile);
+        const originalSpecFile = contents.metadata?.jupyter?.originalSpecFile || contents.metadata?.originalSpecFile;
+        if (originalSpecFile) {
+            const originalSpecDir = path.dirname(originalSpecFile);
             const newSpecDir = path.dirname(kernelSpecFilePath);
             const otherFiles = await this.fs.searchLocal('*.*[^json]', originalSpecDir);
             await Promise.all(
@@ -211,9 +214,10 @@ export class JupyterKernelService {
         const specedKernel = kernel as JupyterKernelSpec;
         if (specFile && kernelSpecRootPath) {
             // Spec file may not be the same as the original spec file path.
-            const kernelSpecFilePath = specFile.includes(kernel.name)
-                ? specFile
-                : path.join(kernelSpecRootPath, kernel.name, 'kernel.json');
+            const kernelSpecFilePath =
+                path.basename(specFile).toLowerCase() === kernel.name.toLowerCase()
+                    ? specFile
+                    : path.join(kernelSpecRootPath, kernel.name, 'kernel.json');
 
             // Make sure the file exists
             if (!(await this.fs.localFileExists(kernelSpecFilePath))) {

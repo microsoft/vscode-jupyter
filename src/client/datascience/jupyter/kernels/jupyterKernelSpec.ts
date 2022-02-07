@@ -2,17 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import type { KernelSpec } from '@jupyterlab/services';
-import * as path from 'path';
-import { CancellationToken } from 'vscode';
-import { createPromiseFromCancellation } from '../../../common/cancellation';
-import { traceInfo } from '../../../common/logger';
-
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
-import { tryGetRealPath } from '../../common';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
+    public originalName?: string;
     public language: string;
     public path: string;
     public readonly env: NodeJS.ProcessEnv | undefined;
@@ -25,7 +20,8 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     constructor(
         specModel: KernelSpec.ISpecModel,
         public readonly specFile?: string,
-        public readonly interpreterPath?: string
+        public readonly interpreterPath?: string,
+        public readonly isRegisteredByVSC?: 'newVersion' | 'oldVersion' | 'newVersionUserKernelSpec'
     ) {
         this.name = specModel.name;
         this.argv = specModel.argv;
@@ -38,41 +34,4 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.interrupt_mode = specModel.interrupt_mode as any;
     }
-}
-
-/**
- * Given the stdout contents from the command `python -m jupyter kernelspec list --json` this will parser that and build a list of kernelspecs.
- *
- * @export
- * @param {string} stdout
- * @param {IFileSystem} fs
- * @param {CancellationToken} [token]
- * @returns
- */
-export async function parseKernelSpecs(stdout: string, token?: CancellationToken) {
-    traceInfo('Parsing kernelspecs from jupyter');
-    // This should give us back a key value pair we can parse
-    const jsOut = JSON.parse(stdout.trim()) as {
-        kernelspecs: Record<string, { resource_dir: string; spec: Omit<KernelSpec.ISpecModel, 'name'> }>;
-    };
-    const kernelSpecs = jsOut.kernelspecs;
-
-    const specs = await Promise.race([
-        Promise.all(
-            Object.keys(kernelSpecs).map(async (kernelName) => {
-                const spec = kernelSpecs[kernelName].spec as KernelSpec.ISpecModel;
-                // Add the missing name property.
-                const model = {
-                    ...spec,
-                    name: kernelName
-                };
-                const specFile = await tryGetRealPath(path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json'));
-                if (specFile) {
-                    return new JupyterKernelSpec(model as KernelSpec.ISpecModel, specFile);
-                }
-            })
-        ),
-        createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token })
-    ]);
-    return specs.filter((item) => !!item).map((item) => item as JupyterKernelSpec);
 }

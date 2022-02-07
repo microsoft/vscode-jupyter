@@ -49,7 +49,8 @@ import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
     isPythonKernelConnection,
-    getKernelConnectionPath
+    getKernelConnectionPath,
+    isKernelRegisteredByUs
 } from '../jupyter/kernels/helpers';
 import {
     IKernel,
@@ -524,6 +525,9 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
+            if (isKernelRegisteredByUs(kernelConnection.kernelSpec) === 'newVersionUserKernelSpec') {
+                return DataScience.kernelCategoryForJupyterKernel();
+            }
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
                     return DataScience.kernelCategoryForConda();
