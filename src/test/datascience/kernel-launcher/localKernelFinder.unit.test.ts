@@ -1000,7 +1000,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
 });
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
