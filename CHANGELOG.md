@@ -19,8 +19,6 @@
    ([#8475](https://github.com/Microsoft/vscode-jupyter/issues/8475))
 1. Display both local and remote kernels together in the kernel picker.
    ([#8489](https://github.com/Microsoft/vscode-jupyter/issues/8489))
-1. Update README.md.
-   ([#8548](https://github.com/Microsoft/vscode-jupyter/issues/8548))
 
 ### Fixes
 
@@ -124,6 +122,8 @@
    ([#8544](https://github.com/Microsoft/vscode-jupyter/issues/8544))
 1. Improvements to progress message displayed when starting kernels. The messages now attempt to provide more information about the progress and hopefully make it easier to understand what is going on (or what is slow when starting a kernel).
    ([#8583](https://github.com/Microsoft/vscode-jupyter/issues/8583))
+1. Update README.md to remove insiders specific references.
+   ([#8548](https://github.com/Microsoft/vscode-jupyter/issues/8548))
 
 ### Thanks
 
