@@ -18,6 +18,7 @@ import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {
@@ -89,7 +90,7 @@ export abstract class Webview implements IWebview {
             .asWebviewUri(
                 Uri.file(
                     path.join(
-                        this.options.rootPath,
+                        EXTENSION_ROOT_DIR,
                         'out',
                         'fontAwesome',
                         'node_modules',

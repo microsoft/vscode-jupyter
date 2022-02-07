@@ -28,7 +28,6 @@ import {
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
-import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
@@ -44,7 +43,6 @@ import {
     IAsyncDisposableRegistry,
     IBrowserService,
     ICryptoUtils,
-    IEditorUtils,
     IExtensions,
     IFeatureDeprecationManager,
     IInstaller,
@@ -76,7 +74,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
-    serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 

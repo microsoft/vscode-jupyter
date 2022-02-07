@@ -8,7 +8,6 @@ import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
 import '../../../client/common/extensions';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { noop } from '../../../client/common/utils/misc';
 import {
     IInteractiveWindowMapping,
     IPyWidgetMessages
@@ -70,7 +69,9 @@ export class ScriptManager extends EventEmitter {
             widgetsRegisteredInRequireJs: this.widgetsRegisteredInRequireJs,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             errorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) =>
-                this.handleLoadError(className, moduleName, moduleVersion, error).catch(noop),
+                this.handleLoadError(className, moduleName, moduleVersion, error).catch(() => {
+                    /* do nothing (this is so we don't pull in noop in misc.ts which will pull stuff that uses process.env) */
+                }),
             loadWidgetScript: (moduleName: string, moduleVersion: string) =>
                 this.loadWidgetScript(moduleName, moduleVersion),
             successHandler: (className: string, moduleName: string, moduleVersion: string) =>

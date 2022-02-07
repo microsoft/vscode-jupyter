@@ -65,7 +65,7 @@ export class DataViewerDependencyService {
         interpreter?: PythonEnvironment,
         token?: CancellationToken
     ): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.pandas)!,
             pythonEnvType: interpreter?.envType

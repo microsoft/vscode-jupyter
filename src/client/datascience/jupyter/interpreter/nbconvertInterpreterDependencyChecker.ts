@@ -21,12 +21,15 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
     ) {}
 
-    // Check to see if nbconvert is installed in the given interpreter
+    // Check to see if nbconvert is installed in the given interpreter, note that we also need jupyter since that supplies the needed
+    // template files for conversion
     public async isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
             return true;
         }
-        const isInstalled: boolean = !!(await this.installer.isInstalled(Product.nbconvert, interpreter));
+        const isInstalled: boolean =
+            !!(await this.installer.isInstalled(Product.nbconvert, interpreter)) &&
+            !!(await this.installer.isInstalled(Product.jupyter, interpreter));
         if (isInstalled === true) {
             this.nbconvertInstalledInInterpreter.add(interpreter.path);
         }

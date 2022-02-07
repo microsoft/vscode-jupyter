@@ -5,7 +5,6 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
-import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import {
     ILoadIPyWidgetClassFailureAction,
@@ -27,6 +26,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { stripAnsi } from '../../common/utils/regexp';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ConsoleForegroundColors } from '../../logging/_global';

@@ -241,4 +241,7 @@ function attemptInitialize(context?: KernelMessagingApi) {
     }
 }
 
-export const activate = attemptInitialize;
+// Has to be this form for VS code to load it correctly
+export function activate(context?: KernelMessagingApi) {
+    return attemptInitialize(context);
+}
