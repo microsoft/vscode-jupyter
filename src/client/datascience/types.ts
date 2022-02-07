@@ -315,7 +315,7 @@ export interface IJupyterKernelSpec {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readonly metadata?: Record<string, any> & {
-        jupyter?: {
+        vscode?: {
             /**
              * Optionally where the original user-created kernel spec json is located on the local FS.
              * Remember when using non-raw we create kernelspecs from the original spec.

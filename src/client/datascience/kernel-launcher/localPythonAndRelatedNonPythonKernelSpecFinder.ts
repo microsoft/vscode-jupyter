@@ -33,9 +33,9 @@ export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
     // // However we give this a completely different name, and at that point its not possible to determine
     // // whether this is a default kernel or not.
     // // Hence determine the original name baesed on the original kernelspec file.
-    const originalSpecFile = kernelspec.metadata?.jupyter?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
+    const originalSpecFile = kernelspec.metadata?.vscode?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
     const name = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelspec.name || '';
-    const displayName = kernelspec.metadata?.jupyter?.originalDisplayName || kernelspec.display_name || '';
+    const displayName = kernelspec.metadata?.vscode?.originalDisplayName || kernelspec.display_name || '';
 
 
     // If the user creates a kernelspec with a name `python4` or changes the display

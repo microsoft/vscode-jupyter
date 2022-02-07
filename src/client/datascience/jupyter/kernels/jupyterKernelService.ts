@@ -158,12 +158,12 @@ export class JupyterKernelService {
             contents.metadata = contents.metadata || {};
             contents.metadata = {
                 ...contents.metadata,
-                jupyter: {
-                    ...(contents.metadata!.jupyter || {}),
+                vscode: {
+                    ...(contents.metadata!.vscode || {}),
                     originalSpecFile:
-                        kernel.kernelSpec.metadata?.jupyter?.originalSpecFile || kernel.kernelSpec.specFile,
+                        kernel.kernelSpec.metadata?.vscode?.originalSpecFile || kernel.kernelSpec.specFile,
                     originalDisplayName:
-                        kernel.kernelSpec.metadata?.jupyter?.originalDisplayName || kernel.kernelSpec.display_name
+                        kernel.kernelSpec.metadata?.vscode?.originalDisplayName || kernel.kernelSpec.display_name
                 }
             };
         }
@@ -190,7 +190,7 @@ export class JupyterKernelService {
         }
 
         // Copy any other files over from the original directory (images most likely)
-        const originalSpecFile = contents.metadata?.jupyter?.originalSpecFile || contents.metadata?.originalSpecFile;
+        const originalSpecFile = contents.metadata?.vscode?.originalSpecFile || contents.metadata?.originalSpecFile;
         if (originalSpecFile) {
             const originalSpecDir = path.dirname(originalSpecFile);
             const newSpecDir = path.dirname(kernelSpecFilePath);

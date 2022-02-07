@@ -228,15 +228,15 @@ export async function loadKernelSpec(
         }
     }
     kernelJson.metadata = kernelJson.metadata || {};
-    kernelJson.metadata.jupyter = kernelJson.metadata.jupyter || {};
-    if (!kernelJson.metadata.jupyter.originalSpecFile) {
-        kernelJson.metadata.jupyter.originalSpecFile = specPath;
+    kernelJson.metadata.vscode = kernelJson.metadata.vscode || {};
+    if (!kernelJson.metadata.vscode.originalSpecFile) {
+        kernelJson.metadata.vscode.originalSpecFile = specPath;
     }
-    if (!kernelJson.metadata.jupyter.originalDisplayName) {
-        kernelJson.metadata.jupyter.originalDisplayName = kernelJson.display_name;
+    if (!kernelJson.metadata.vscode.originalDisplayName) {
+        kernelJson.metadata.vscode.originalDisplayName = kernelJson.display_name;
     }
     if (kernelJson.metadata.originalSpecFile) {
-        kernelJson.metadata.jupyter.originalSpecFile = kernelJson.metadata.originalSpecFile;
+        kernelJson.metadata.vscode.originalSpecFile = kernelJson.metadata.originalSpecFile;
         delete kernelJson.metadata.originalSpecFile;
     }
 
