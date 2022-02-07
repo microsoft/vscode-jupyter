@@ -1008,7 +1008,6 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
         let globalSpecPath: string;
-        type kernelName = string;
         type TestData = {
             interpreters: {
                 interpreter: PythonEnvironment;
@@ -1017,7 +1016,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                  * Could be python or non-python kernlespecs.
                  * Could be default or custom kernelspecs.
                  */
-                kernelSpecs?: Record<kernelName, KernelSpec.ISpecModel>;
+                kernelSpecs?: KernelSpec.ISpecModel[];
             }[];
             /**
              * All of the globally installed KernelSpecs
@@ -1068,19 +1067,16 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
             testData.interpreters.forEach((interpreter) => {
-                if (!interpreter.kernelSpecs) {
-                    return;
-                }
-                Object.keys(interpreter.kernelSpecs).forEach((kernelSpecName) => {
+                (interpreter.kernelSpecs || []).forEach((kernelSpec) => {
                     const jsonFile = [
                         interpreter.interpreter.sysPrefix,
                         'share',
                         'jupyter',
                         'kernels',
-                        kernelSpecName,
+                        kernelSpec.name,
                         'kernel.json'
                     ].join('/');
-                    kernelSpecsBySpecFile.set(jsonFile, interpreter.kernelSpecs![kernelSpecName]);
+                    kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
                 });
             });
             globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
@@ -1102,9 +1098,9 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                     );
                 }
                 const interpreter = testData.interpreters.find((item) => c.includes(item.interpreter.sysPrefix));
-                if (interpreter && interpreter.kernelSpecs) {
-                    return Object.keys(interpreter.kernelSpecs).map((kernelSpecName) =>
-                        [kernelSpecName, 'kernel.json'].join('/')
+                if (interpreter) {
+                    return (interpreter.kernelSpecs || []).map((kernelSpec) =>
+                        [kernelSpec.name, 'kernel.json'].join('/')
                     );
                 }
                 return [];
@@ -1318,13 +1314,25 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             return expectedKernelSpecs;
         }
         type ExpectedKernels = {
+            /**
+             * Expected list of global kernelspecs.
+             */
             expectedGlobalKernelSpecs?: KernelSpec.ISpecModel[];
+            /**
+             * Expected list of kernlespecs that are associated with a Python interpreter.
+             */
             expectedInterpreterKernelSpecFiles?: {
                 interpreter: PythonEnvironment;
                 kernelspec: KernelSpec.ISpecModel;
             }[];
+            /**
+             * Expected list of kernlespecs used to start Python environments.
+             */
             expectedInterpreters?: PythonEnvironment[];
         };
+        /**
+         * Gets the list of kernels from the kernel provider and compares them against what's expected.
+         */
         async function verifyKernels(expectations: ExpectedKernels) {
             const actualKernels = await kernelFinder.listKernels(undefined);
             const expectedKernels = await generateExpectedKernels(
@@ -1389,9 +1397,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                 interpreters: [
                     {
                         interpreter: python38VenvEnv,
-                        kernelSpecs: {
-                            [defaultPython3KernelWithEnvVars.name]: defaultPython3KernelWithEnvVars
-                        }
+                        kernelSpecs: [defaultPython3KernelWithEnvVars]
                     }
                 ]
             };
@@ -1444,32 +1450,46 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                 expectedInterpreters: [python38VenvEnv]
             });
         });
+        test('Default Python kernlespecs should be ignored', async () => {
+            const testData: TestData = {
+                interpreters: [
+                    {
+                        interpreter: python39PyEnv_HelloWorld,
+                        kernelSpecs: [defaultPython3Kernel]
+                    }
+                ]
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            const expectedKernels: ExpectedKernels = {
+                expectedInterpreters: [python39PyEnv_HelloWorld]
+            };
+
+            await verifyKernels(expectedKernels);
+        });
         test('Kernels found on disk with Python extension installed & no python interpreters discovered', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec],
                 interpreters: [
                     {
                         interpreter: python39PyEnv_HelloWorld,
-                        kernelSpecs: {
-                            [defaultPython3Kernel.name]: defaultPython3Kernel,
-                            [customPythonKernelWithCustomArgv.name]: customPythonKernelWithCustomArgv,
-                            [customPythonKernelWithCustomEnv.name]: customPythonKernelWithCustomEnv
-                        }
+                        kernelSpecs: [
+                            defaultPython3Kernel,
+                            customPythonKernelWithCustomArgv,
+                            customPythonKernelWithCustomEnv
+                        ]
                     },
                     {
                         interpreter: python36Global
                     },
                     {
                         interpreter: python37Global,
-                        kernelSpecs: {
-                            [defaultPython3Kernel.name]: defaultPython3Kernel
-                        }
+                        kernelSpecs: [defaultPython3Kernel]
                     },
                     {
                         interpreter: condaEnv1,
-                        kernelSpecs: {
-                            [javaKernelSpec.name]: javaKernelSpec
-                        }
+                        kernelSpecs: [javaKernelSpec]
                     }
                 ]
             };
@@ -1479,10 +1499,6 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
             const expectedKernels: ExpectedKernels = {
                 expectedGlobalKernelSpecs: [juliaKernelSpec],
                 expectedInterpreterKernelSpecFiles: [
-                    {
-                        interpreter: python39PyEnv_HelloWorld,
-                        kernelspec: defaultPython3Kernel
-                    },
                     {
                         interpreter: python39PyEnv_HelloWorld,
                         kernelspec: customPythonKernelWithCustomArgv
@@ -1496,7 +1512,7 @@ import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/loca
                         kernelspec: javaKernelSpec
                     }
                 ],
-                expectedInterpreters: [python36Global, python37Global, condaEnv1]
+                expectedInterpreters: [python39PyEnv_HelloWorld, python36Global, python37Global, condaEnv1]
             };
 
             await verifyKernels(expectedKernels);

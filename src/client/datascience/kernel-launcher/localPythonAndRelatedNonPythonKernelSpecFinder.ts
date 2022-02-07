@@ -27,8 +27,20 @@ import { getDisplayPath } from '../../common/platform/fs-paths';
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
 export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
-    const name = kernelspec.name || '';
+    // // When we create kernlespecs, we change the name to include a unique id.
+    // // We need to look at the name of the original kernelspec that was created on disc.
+    // // E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+    // // However we give this a completely different name, and at that point its not possible to determine
+    // // whether this is a default kernel or not.
+    // // Hence determine the original name baesed on the original kernelspec file.
+    const originalSpecFile = kernelspec.metadata?.jupyter?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
+    const name = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelspec.name || '';
     const displayName = kernelspec.metadata?.jupyter?.originalDisplayName || kernelspec.display_name || '';
+
+
+    // If the user creates a kernelspec with a name `python4` or changes the display
+    // name of kernel `python3` to `Hello World`, then we'd still treat them as default kernelspecs,
+    // The expectation is for users to use unique names & display names for their kernelspecs.
     if (
         name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
         displayName.toLowerCase() === 'python 3 (ipykernel)'

@@ -161,7 +161,9 @@ export class JupyterKernelService {
                 jupyter: {
                     ...(contents.metadata!.jupyter || {}),
                     originalSpecFile:
-                        kernel.kernelSpec.metadata?.jupyter?.originalSpecFile || kernel.kernelSpec.specFile
+                        kernel.kernelSpec.metadata?.jupyter?.originalSpecFile || kernel.kernelSpec.specFile,
+                    originalDisplayName:
+                        kernel.kernelSpec.metadata?.jupyter?.originalDisplayName || kernel.kernelSpec.display_name
                 }
             };
         }

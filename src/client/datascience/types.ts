@@ -321,6 +321,12 @@ export interface IJupyterKernelSpec {
              * Remember when using non-raw we create kernelspecs from the original spec.
              */
             originalSpecFile?: string;
+            /**
+             * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+             * However we give this a completely different name, and at that point its not possible to determine
+             * whether this is a default kernel or not.
+             * Hence keep track of the original name in the metadata.
+             */
             originalDisplayName?: string;
         };
         interpreter?: Partial<PythonEnvironment>;
