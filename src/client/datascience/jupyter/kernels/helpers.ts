@@ -515,7 +515,6 @@ export function getInterpreterHashInMetadata(
 export function findPreferredKernel(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
-    languages: string[],
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
@@ -860,21 +859,6 @@ export function findPreferredKernel(
         }
     }
 
-    // If still not found, try languages
-    if (index < 0) {
-        index = kernels.findIndex((kernelSpecConnection) => {
-            if (
-                kernelSpecConnection.kind === 'startUsingLocalKernelSpec' ||
-                kernelSpecConnection.kind === 'startUsingRemoteKernelSpec'
-            ) {
-                return languages.find((l) => l === kernelSpecConnection.kernelSpec.language);
-            } else if (kernelSpecConnection.kind === 'connectToLiveKernel') {
-                return languages.find((l) => l === kernelSpecConnection.kernelModel.language);
-            } else {
-                return false;
-            }
-        });
-    }
     traceInfoIfCI(isCI && index >= 0, `Preferred kernel is ${JSON.stringify(kernels[index])}`);
     return index >= 0 ? kernels[index] : undefined;
 }
