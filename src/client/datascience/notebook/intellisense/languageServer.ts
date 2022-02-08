@@ -167,6 +167,10 @@ export class LanguageServer implements Disposable {
                 middleware,
                 connectionOptions: {
                     cancellationStrategy
+                },
+                initializationOptions: {
+                    // Let LSP server know that it is created for notebook.
+                    notebookServer: true
                 }
             };
 
