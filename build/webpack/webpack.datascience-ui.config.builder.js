@@ -8,13 +8,11 @@
 const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const EsmWebpackPlugin = require('@purtuga/esm-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -68,14 +66,16 @@ function getPlugins(bundle) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
     const definePlugin = new webpack.DefinePlugin({
-        'process.env': {
-            NODE_ENV: JSON.stringify('production')
+        process: {
+            env: {
+                NODE_ENV: JSON.stringify(isProdBuild ? 'production' : 'development')
+            }
         }
     });
     switch (bundle) {
         case 'viewers': {
             plugins.push(
-                ...(isProdBuild ? [definePlugin] : []),
+                ...[definePlugin],
                 ...[
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/plot/index.html',
@@ -100,14 +100,13 @@ function getPlugins(bundle) {
             break;
         }
         case 'widgetTester': {
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            plugins.push(definePlugin);
             break;
         }
         case 'ipywidgetsKernel':
         case 'ipywidgetsRenderer':
         case 'errorRenderer': {
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
-            plugins.push(new EsmWebpackPlugin());
+            plugins.push(definePlugin);
             break;
         }
         default:
@@ -145,13 +144,6 @@ function buildConfiguration(bundle) {
             ]
         );
     }
-    let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'ipywidgetsKernel'
-            ? {}
-            : {
-                  library: `LIB${bundle.toUpperCase()}`,
-                  libraryTarget: 'var'
-              };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
@@ -166,7 +158,6 @@ function buildConfiguration(bundle) {
         });
     }
     const plugins = [
-        new FixDefaultImportPlugin(),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 100
         }),
@@ -182,24 +173,33 @@ function buildConfiguration(bundle) {
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
+        cache: true,
+        experiments: {
+            outputModule: true
+        },
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
+            library: {
+                type: 'module'
+            },
             chunkFilename: `[name].bundle.js`,
             pathinfo: false,
-            ...outputProps
+            publicPath: 'built/'
         },
         mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? undefined : 'inline-source-map',
         optimization: undefined,
-        node: {
-            fs: 'empty'
-        },
         plugins,
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
-            extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
+            extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
+            fallback: {
+                fs: false,
+                path: require.resolve('path-browserify'),
+                os: false
+            }
         },
 
         module: {
@@ -207,7 +207,6 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.tsx?$/,
                     use: [
-                        { loader: 'cache-loader' },
                         {
                             loader: 'thread-loader',
                             options: {
@@ -235,17 +234,16 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.svg$/,
-                    use: ['cache-loader', 'thread-loader', 'svg-inline-loader']
+                    use: ['thread-loader', 'svg-inline-loader']
                 },
                 {
                     test: /\.css$/,
-                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader']
+                    use: ['thread-loader', 'style-loader', 'css-loader']
                 },
                 {
                     test: /\.js$/,
                     include: /node_modules.*remark.*default.*js/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
@@ -258,7 +256,6 @@ function buildConfiguration(bundle) {
                     type: 'javascript/auto',
                     include: /node_modules.*remark.*/,
                     use: [
-                        'cache-loader',
                         'thread-loader',
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
@@ -268,18 +265,31 @@ function buildConfiguration(bundle) {
                 },
                 {
                     test: /\.(png|woff|woff2|eot|gif|ttf)$/,
-                    use: [
-                        'cache-loader',
-                        'thread-loader',
-                        {
-                            loader: 'url-loader?limit=100000',
-                            options: { esModule: false }
-                        }
-                    ]
+                    type: 'asset/inline'
                 },
                 {
                     test: /\.less$/,
-                    use: ['cache-loader', 'thread-loader', 'style-loader', 'css-loader', 'less-loader']
+                    use: ['thread-loader', 'style-loader', 'css-loader', 'less-loader']
+                },
+                {
+                    test: require.resolve('slickgrid/lib/jquery-1.11.2.min'),
+                    loader: 'expose-loader',
+                    options: {
+                        exposes: {
+                            globalName: 'jQuery',
+                            override: true
+                        }
+                    }
+                },
+                {
+                    test: require.resolve('slickgrid/lib/jquery.event.drag-2.3.0'),
+                    loader: 'expose-loader',
+                    options: {
+                        exposes: {
+                            globalName: 'jQuery.fn.drag',
+                            override: true
+                        }
+                    }
                 }
             ]
         }

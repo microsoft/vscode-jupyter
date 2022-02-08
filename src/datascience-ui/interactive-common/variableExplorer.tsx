@@ -6,7 +6,7 @@ import './variableExplorer.css';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
-import { RegExpValues } from '../../client/datascience/constants';
+import { RegExpValues } from '../common/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';

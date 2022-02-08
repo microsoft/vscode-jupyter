@@ -20,13 +20,12 @@
         -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance and downloading the notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Update the `vscode` version number in the `engines` section of package.json. Update to the next upcoming major version. So if current stable VS Code is `1.54.3` and main is `1.55-insiders`, update the engine in the release branch to `^1.55.0`.
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
-    -   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds.
+    -   [ ] [Turn off automatic uploads for pre-release builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting pre-release builds.
     -   [ ] Ensure that the engine version and extension version in the `main` branch are **not changed**.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
@@ -81,14 +80,13 @@
         * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 
 # Day of VS Code publishing (Wednesday, XXX XX)
-
 -   [ ] Update `main` after the release is published.
-    -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0-insider` to `1.59.0-insider`
-    -   [ ] Bump the version number to the next monthly ("YYYY.MM.100") release in the `main` branch
+    -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0` to `1.59.0`
+    -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
-    -   [ ] Turn insiders daily builds back on
+    -   [ ] Turn pre-release daily builds back on
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release

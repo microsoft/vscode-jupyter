@@ -98,11 +98,18 @@ export class Kernel implements IKernel {
     get onPreExecute(): Event<NotebookCell> {
         return this._onPreExecute.event;
     }
+    get startedAtLeastOnce() {
+        return this._startedAtLeastOnce;
+    }
     private _info?: KernelMessage.IInfoReplyMsg['content'];
+    private _startedAtLeastOnce?: boolean;
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
     get status(): KernelMessage.Status {
+        if (this._notebookPromise && !this.notebook) {
+            return 'starting';
+        }
         return this.notebook?.session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
@@ -300,10 +307,10 @@ export class Kernel implements IKernel {
             if (this.notebook) {
                 promises.push(this.notebook.session.dispose().catch(noop));
                 this.notebook = undefined;
-                this._disposed = true;
-                this._onDisposed.fire();
-                this._onStatusChanged.fire('dead');
             }
+            this._disposed = true;
+            this._onDisposed.fire();
+            this._onStatusChanged.fire('dead');
             this.kernelExecution.dispose();
             await Promise.all(promises);
         };
@@ -384,6 +391,7 @@ export class Kernel implements IKernel {
         }
     }
     private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
+        this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
@@ -425,6 +433,7 @@ export class Kernel implements IKernel {
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.isKernelDead = false;
+                        this._onStatusChanged.fire('starting');
                         this.notebook = await this.notebookProvider.createNotebook({
                             document: this.notebookDocument,
                             resource: this.resourceUri,

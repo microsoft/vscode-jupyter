@@ -80,7 +80,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
       - name: pr release push
         if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
@@ -96,12 +96,13 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      #   - name: pre-release channel
-      #     # Scheduled builds will publish pre-release builds.
-      #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-      #     run: |
-      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-      #       echo "release_channel=pre-release" >> $GITHUB_ENV
+      - name:
+          pre-release channel
+          # Scheduled builds will publish pre-release builds.
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        run: |
+          echo "package_command=packagePreRelease" >> $GITHUB_ENV
+          echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
@@ -351,6 +352,10 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
+          - os: windows-latest # Only run windows on 3.10 and non conda
+            python: nonConda
+            pythonVersion: '3.10'
+            jupyter: raw
         exclude:
           - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'

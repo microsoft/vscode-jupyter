@@ -1,7 +1,6 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import stripAnsi from 'strip-ansi';
 import { CancellationToken, NotebookDocument } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -12,6 +11,7 @@ import { IJupyterVariable, IKernelVariableRequester } from '../types';
 import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
 import { IKernel } from './kernels/types';
 import { executeSilently } from './kernels/helpers';
+import { stripAnsi } from '../../common/utils/regexp';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
