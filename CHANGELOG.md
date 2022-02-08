@@ -1,5 +1,29 @@
 # Changelog
 
+## 2022.1.110 (January Release on 08 February 2022)
+
+### Fixes
+
+1. Fix kernel dying when interrupting on Windows.
+   ([#8945](https://github.com/Microsoft/vscode-jupyter/issues/8945))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.1.100 (January Release on 03 February 2022)
 
 ### Enhancements
@@ -146,12 +170,12 @@ VS Code Stable releases along with the minimum recommended version of the Jupyte
 
 | Release   | VS Code Stable | Recommended Jupyter Build |
 | --------- | -------------- | --------------------------|
-| November  | 1.63.0         | **2021.11.100**1550889        |
-| October   | 1.62.0         | **2021.10.100**1414422        |
-| September | 1.61.2         | **2021.9.110**1343141         |
-| August    | 1.60.2         | **2021.8.204**1215044         |
-| July      | 1.59.1         | **2021.8.123**6758218         |
-| June      | 1.58.2         | **2021.8.105**4968649         |
+| November  | 1.63.0         | **2021.11.100**1550889    |
+| October   | 1.62.0         | **2021.10.100**1414422    |
+| September | 1.61.2         | **2021.9.110**1343141     |
+| August    | 1.60.2         | **2021.8.204**1215044     |
+| July      | 1.59.1         | **2021.8.123**6758218     |
+| June      | 1.58.2         | **2021.8.105**4968649     |
 
 ## 2021.11.100 (November Release on 8 December 2021)
 
@@ -163,7 +187,7 @@ VS Code Stable releases along with the minimum recommended version of the Jupyte
    * Avoid starting default kernel when starting jupyter. ([#8185](https://github.com/microsoft/vscode-jupyter/issues/8185))
    * Avoid looking for IPyKernel when we've found it once before. ([#8196](https://github.com/microsoft/vscode-jupyter/issues/8196))
    * Avoid unnecessarily searching for `Jupyter` packages when `Jupyter` runtime isnt' rqeuired to start Kernels. ([#8350](https://github.com/microsoft/vscode-jupyter/issues/8350))
-   ([#8352](https://github.com/Microsoft/vscode-jupyter/issues/8352))
+      ([#8352](https://github.com/Microsoft/vscode-jupyter/issues/8352))
 1. Add diagnostics messages recommending the usage of `%pip install` & `%conda install` over `!pip install`.
    ([#6864](https://github.com/Microsoft/vscode-jupyter/issues/6864))
 1. Prompt and install `pip` if `pip` is not available when installing missing dependencies such as `ipykernel`.
@@ -458,7 +482,6 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-
 ## 2021.8.203 (August Release on 1 September 2021)
 
 ### Enhancements
@@ -539,7 +562,6 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-
 ## 2021.8.11 (July Release on 3 August 2021)
 
 ### Enhancements
@@ -596,7 +618,6 @@ make this extension useful:
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
 ### Code Health
-
 
 ## 2021.8.1 (June Release on 19 July 2021)
 
@@ -900,7 +921,6 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-
 ## 2021.5.1 (12 April 2021)
 
 ### Code Health
@@ -1017,7 +1037,6 @@ make this extension useful:
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
 
-
 ## 2021.3.0 (3 March 2021)
 
 ### Enhancements
@@ -1080,7 +1099,6 @@ make this extension useful:
     [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
-
 
 ## 2021.2.1 (28 February 2021)
 
@@ -1308,7 +1326,6 @@ make this extension useful:
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
 
-
 ## 2020.11.3 (03 December 2020)
 
 ### Fixes
@@ -1371,7 +1388,6 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
 
 ## 2020.11.0 (11 November 2020)
-
 
 ### Thanks
 
