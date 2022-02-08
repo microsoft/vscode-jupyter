@@ -68,7 +68,7 @@ export class RunByLineController implements IDebuggingDelegate {
         traceInfoIfCI(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
         void this.kernel.executeHidden('pass');
-        this.debugAdapter.disconnect();
+        void this.debugAdapter.disconnect();
     }
 
     public getMode(): KernelDebugMode {
