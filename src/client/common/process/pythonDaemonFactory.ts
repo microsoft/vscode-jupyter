@@ -125,7 +125,7 @@ export class PythonDaemonFactory {
         // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{ pong: string }>();
-        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 35_000);
+        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
         const request = new RequestType<{ data: string }, { pong: string }, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.
         const result = await Promise.race([fail.promise, connection.sendRequest(request, { data: 'hello' })]);
