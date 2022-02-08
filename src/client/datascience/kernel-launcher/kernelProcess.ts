@@ -7,7 +7,6 @@ import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import * as os from 'os';
-import * as path from 'path';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
@@ -28,7 +27,7 @@ import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { KernelInterruptDaemonModule, Telemetry } from '../constants';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
@@ -44,7 +43,7 @@ import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { KernelDiedError } from '../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { PythonKernelInterruptDaemon } from './pythonKernelInterruptDaemon';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -70,6 +69,7 @@ export class KernelProcess implements IKernelProcess {
         return true;
     }
     private _process?: ChildProcess;
+    private _interruptDaemon?: PythonKernelInterruptDaemon;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private launchedOnce?: boolean;
     private disposed?: boolean;
@@ -277,7 +277,7 @@ export class KernelProcess implements IKernelProcess {
         traceInfo('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
-            void this.closeWin32InterruptEvent();
+            void this._interruptDaemon?.kill();
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
@@ -429,10 +429,10 @@ export class KernelProcess implements IKernelProcess {
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
             if (os.platform() === 'win32') {
                 env = env || process.env;
-                await this.createWin32InterruptEvent();
+                const handle = await this.getWin32InterruptHandle();
 
                 // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
-                env.JPY_INTERRUPT_EVENT = `${this._interruptSignalHandle}`;
+                env.JPY_INTERRUPT_EVENT = `${handle}`;
             }
 
             // If we don't have a KernelDaemon here & we're not running a Python module either.
@@ -494,62 +494,28 @@ export class KernelProcess implements IKernelProcess {
         return exeObs;
     }
 
-    private async createWin32InterruptEvent() {
-        const executionService = await this.pythonExecFactory.createActivatedEnvironment({
-            resource: this.resource,
-            interpreter: this._kernelConnectionMetadata.interpreter!
-        });
-        // We need to execute some python code to create our interrupt handle.
-        const results = await executionService.exec(
-            [
-                path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'win_interrupt.py'),
-                '--ppid',
-                `${process.pid}`
-            ],
-            { encoding: 'utf-8' }
-        );
-        this._interruptSignalHandle = parseInt(results.stdout);
+    private async getWin32InterruptHandle(): Promise<number> {
+        if (!this._interruptSignalHandle) {
+            const interruptDaemon = await this.pythonExecFactory.createDaemon({
+                daemonModule: KernelInterruptDaemonModule,
+                resource: this.resource,
+                interpreter: this._kernelConnectionMetadata.interpreter!,
+                daemonClass: PythonKernelInterruptDaemon,
+                dedicated: true
+            });
+            if ('kill' in interruptDaemon) {
+                this._interruptDaemon = interruptDaemon;
+            }
+            if (this._interruptDaemon) {
+                this._interruptSignalHandle = await this._interruptDaemon.getInterruptHandle();
+            }
+        }
+        return this._interruptSignalHandle;
     }
 
     private async fireWin32InterruptEvent() {
-        const executionService = await this.pythonExecFactory.createActivatedEnvironment({
-            resource: this.resource,
-            interpreter: this._kernelConnectionMetadata.interpreter!
-        });
-        // We need to execute some python code to create our interrupt handle.
-        const results = await executionService.exec(
-            [
-                path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'win_interrupt.py'),
-                '--signal',
-                `${this._interruptSignalHandle}`
-            ],
-            { encoding: 'utf-8' }
-        );
-        if (results.stderr) {
-            traceError(`Error signaling the event ${results.stderr}`);
-        }
-    }
-
-    private async closeWin32InterruptEvent() {
-        const handle = this._interruptSignalHandle;
-        this._interruptSignalHandle = 0;
-        if (handle) {
-            const executionService = await this.pythonExecFactory.createActivatedEnvironment({
-                resource: this.resource,
-                interpreter: this._kernelConnectionMetadata.interpreter!
-            });
-            // We need to execute some python code to create our interrupt handle.
-            const results = await executionService.exec(
-                [
-                    path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'win_interrupt.py'),
-                    '--close',
-                    `${handle}`
-                ],
-                { encoding: 'utf-8' }
-            );
-            if (results.stderr) {
-                traceError(`Error closing the event ${results.stderr}`);
-            }
+        if (this._interruptDaemon) {
+            return this._interruptDaemon.interrupt();
         }
     }
 }

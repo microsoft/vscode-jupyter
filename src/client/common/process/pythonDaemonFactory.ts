@@ -52,10 +52,16 @@ export class PythonDaemonFactory {
     @traceDecorators.error('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
         // Add '--log-file=/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/daaemon.log' to log to a file.
-        const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
+        const loggingArgs: string[] = [
+            '-v',
+            '--log-file',
+            'C:\\Users\\aku91\\source\\repos\\vscode-jupyter-2\\tmp\\daemon.log'
+        ]; // Log information messages or greater (see daemon.__main__.py for options).
+        const processArgs: string[] = ['--ppid', `${process.pid}`];
 
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(
-            loggingArgs
+            loggingArgs,
+            processArgs
         );
         const env = this.envVariables;
         const daemonProc = this.pythonExecutionService!.execModuleObservable(
@@ -119,7 +125,7 @@ export class PythonDaemonFactory {
         // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{ pong: string }>();
-        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
+        const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 35_000);
         const request = new RequestType<{ data: string }, { pong: string }, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.
         const result = await Promise.race([fail.promise, connection.sendRequest(request, { data: 'hello' })]);
