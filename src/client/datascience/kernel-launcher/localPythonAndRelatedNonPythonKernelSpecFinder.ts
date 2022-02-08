@@ -24,7 +24,7 @@ import { Telemetry } from '../constants';
 import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 
-export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
+export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 
 export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
     // // When we create kernlespecs, we change the name to include a unique id.
@@ -140,10 +140,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             activeInterpreterPromise,
             this.listGlobalPythonKernelSpecs(true, cancelToken)
         ]);
-        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) => {
-            const info = getKernelRegistrationInfo(item.kernelSpec);
-            return info && info !== 'registeredByNewVersionOfExtForCustomKernelSpec';
-        });
+        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
+            getKernelRegistrationInfo(item.kernelSpec)
+        );
         // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
         // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
         const usingNonIpyKernelLauncher = (
@@ -238,9 +237,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
-                            `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
-                                kernelspec.argv[0]
-                            )}`
+                            `Hiding default kernel spec '${kernelspec.display_name}', '${
+                                kernelspec.name
+                            }', ${getDisplayPath(kernelspec.argv[0])}`
                         );
                         return false;
                     }
