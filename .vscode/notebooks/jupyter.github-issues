@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2022-02-03"
+    "value": "$TODAYS_DATE=2022-02-07"
   },
   {
     "kind": 1,
@@ -92,7 +92,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:issue is:open label:important label:nb-golden sort:created-asc"
+    "value": "$VSCODE_REPOS is:issue is:open label:important label:nb-golden,iw-golden sort:created-asc\r\n$JUPYTER_ALL_REPOS is:issue is:open label:important sort:created-asc"
   },
   {
     "kind": 1,
