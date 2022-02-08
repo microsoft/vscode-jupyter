@@ -45,6 +45,8 @@ def add_arguments(parser):
         help="Increase verbosity of log output, overrides log config file",
     )
 
+    parser.add_argument("--ppid", help="Parent process id", type=int)
+
 
 class TemporaryQueueHandler(logging.Handler):
     """Logger used to temporarily store everything into a queue.
@@ -125,7 +127,7 @@ def main():
     try:
         daemon_module = importlib.import_module(args.daemon_module)
         daemon_cls = daemon_module.PythonDaemon
-        daemon_cls.start_daemon(queue_handler)
+        daemon_cls.start_daemon(queue_handler, args.ppid)
     except Exception:
         import traceback
 
