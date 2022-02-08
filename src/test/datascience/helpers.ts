@@ -11,7 +11,7 @@ import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { waitForCondition } from '../common';
+import { arePathsSame, waitForCondition } from '../common';
 import {
     createTemporaryFile,
     defaultNotebookTestTimeout,
@@ -178,4 +178,37 @@ export async function waitForLastCellToComplete(
         await waitForExecutionCompletedSuccessfully(codeCell!);
     }
     return codeCell!;
+}
+
+export async function waitForCodeLenses(document: vscode.Uri, command: string) {
+    // First make sure the editor has focus
+    const selection = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
+    let editor = vscode.window.visibleTextEditors.find((e) => arePathsSame(e.document.uri.fsPath, document.fsPath));
+    if (editor) {
+        await vscode.window
+            .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
+            .then((e) => {
+                e.revealRange(selection, vscode.TextEditorRevealType.InCenter);
+            });
+    }
+
+    let codeLenses: vscode.CodeLens[] = [];
+    // Wait for the code lens to appear
+    await waitForCondition(
+        async () => {
+            codeLenses = (await vscode.commands.executeCommand(
+                'vscode.executeCodeLensProvider',
+                document
+            )) as vscode.CodeLens[];
+            return (
+                codeLenses &&
+                codeLenses.length > 0 &&
+                codeLenses.find((c) => c.command?.command === command) != undefined
+            );
+        },
+        defaultNotebookTestTimeout,
+        `Code lens with command ${command} not found`
+    );
+
+    return codeLenses;
 }
