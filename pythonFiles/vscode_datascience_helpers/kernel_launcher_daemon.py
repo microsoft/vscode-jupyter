@@ -23,7 +23,7 @@ from vscode_datascience_helpers.kernel_launcher import launch_kernel
 
 
 class PythonDaemon(JupyterDaemon):
-    def __init__(self, rx, tx):
+    def __init__(self, rx, tx, ppid):
         super().__init__(rx, tx)
         self.killing_kernel = False
         self.log.info("DataScience Kernel Launcher Daemon init")

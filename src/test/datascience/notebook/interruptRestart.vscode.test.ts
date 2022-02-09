@@ -201,10 +201,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // assert.equal(lastCell.outputs.length, 0, 'Last cell should not have run');
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
-        // Interrupts on windows doesn't work well, not as well as on Unix.
-        // This is how Python works, hence this test is better tested on Unix OS.
         // No need to test remote as this is a test of status (fewer slower tests is better).
-        if (getOSType() === OSType.Windows || IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
 

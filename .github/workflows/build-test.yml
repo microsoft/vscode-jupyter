@@ -356,7 +356,6 @@ jobs:
             python: nonConda
             pythonVersion: '3.10'
             jupyter: raw
-            container: python:3.10.2
         exclude:
           - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
@@ -560,6 +559,11 @@ jobs:
         run: |
           echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
           echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+
+      - name: Limit tests for windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
