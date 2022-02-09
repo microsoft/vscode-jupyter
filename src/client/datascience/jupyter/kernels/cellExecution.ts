@@ -167,7 +167,11 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
-                    this.request?.dispose(); // NOSONAR
+                    try {
+                        this.request?.dispose(); // NOSONAR
+                    } catch (e) {
+                        traceError(`Error during cell execution dispose: ${e}`);
+                    }
                     if (this.started && !this._completed) {
                         this.completedDueToCancellation();
                     }
@@ -538,7 +542,6 @@ export class CellExecution implements IDisposable {
             this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
-            traceError('Error in waiting for cell to complete', ex);
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (
@@ -549,6 +552,7 @@ export class CellExecution implements IDisposable {
                 this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
+                traceError('Error in waiting for cell to complete', ex);
                 traceCellMessage(this.cell, 'Some other execution error');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.completedWithErrors(ex as any);

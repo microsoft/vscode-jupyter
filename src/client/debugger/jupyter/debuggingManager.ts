@@ -26,7 +26,7 @@ import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
 import { EditorContexts } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -220,16 +220,20 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     }
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
+        traceInfoIfCI(`Starting debugging with mode ${mode}`);
+
         if (!editor) {
             void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
             return;
         }
 
         if (this.notebookInProgress.has(editor.document)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
 
         if (this.isDebugging(editor.document)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
             this.updateToolbar(true);
             if (mode === KernelDebugMode.RunByLine) {
                 this.updateCellToolbar(true);
@@ -284,6 +288,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         try {
             this.notebookInProgress.add(editor.document);
             await checkIpykernelAndStart();
+        } catch (e) {
+            traceInfo(`Error starting debugging: ${e}`);
         } finally {
             this.notebookInProgress.delete(editor.document);
         }
@@ -326,21 +332,26 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         config: IKernelDebugAdapterConfig,
         options?: DebugSessionOptions
     ) {
+        traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             dbg = new Debugger(doc, config, options);
             this.notebookToDebugger.set(doc, dbg);
 
             try {
-                await dbg.session;
+                const session = await dbg.session;
+                traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
                 void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
             }
+        } else {
+            traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);
         }
     }
 
     private async endSession(session: DebugSession) {
+        traceInfoIfCI(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
@@ -366,7 +377,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             if (debug) {
                 if (kernel?.session) {
-                    debug.resolve(session);
                     const adapter = new KernelDebugAdapter(
                         session,
                         debug.document,
@@ -395,6 +405,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
                     this.notebookToDebugAdapter.set(debug.document, adapter);
                     this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
+
+                    // Wait till we're attached before resolving the session
+                    debug.resolve(session);
                     return new DebugAdapterInlineImplementation(adapter);
                 } else {
                     void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
