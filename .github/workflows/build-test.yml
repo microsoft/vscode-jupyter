@@ -352,10 +352,11 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
-          - os: windows-latest # Only run windows on 3.10 and non conda
+          - os: windows-latest
             python: nonConda
             pythonVersion: '3.10'
             jupyter: raw
+            container: python:3.10.2
         exclude:
           - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
