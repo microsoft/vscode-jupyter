@@ -585,7 +585,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
-          echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithTestSuffix" >> $GITHUB_ENV
+          echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithoutTestSuffix" >> $GITHUB_ENV
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
