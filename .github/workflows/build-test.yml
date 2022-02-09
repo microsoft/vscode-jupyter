@@ -352,7 +352,7 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
-          - os: windows-latest # Only run windows on 3.10 and non conda
+          - os: windows-latest
             python: nonConda
             pythonVersion: '3.10'
             jupyter: raw
@@ -576,10 +576,21 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
+      - name: Set test script (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "TEST_SCRIPT=testNativeNotebooksInVSCode" >> $GITHUB_ENV
+
+      - name: Set test script (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
+          echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithoutTestSuffix" >> $GITHUB_ENV
+
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+          run: ${{ env.xvfbCommand }} npm run ${{ env.TEST_SCRIPT }}
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
