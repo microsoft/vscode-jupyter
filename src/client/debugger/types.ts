@@ -16,9 +16,9 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
     stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
-    disconnect(): void;
+    disconnect(): Promise<void>;
     onDidEndSession: Event<DebugSession>;
-    dumpCell(index: number): Promise<void>;
+    dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
 }
 

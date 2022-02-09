@@ -6,7 +6,7 @@ import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { parseForComments } from '../../../datascience-ui/common';
 import { ICommandManager } from '../../common/application/types';
-import { traceVerbose } from '../../common/logger';
+import { traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../../datascience/constants';
@@ -31,7 +31,7 @@ export class DebugCellController implements IDebuggingDelegate {
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
         if (request.command === 'configurationDone') {
-            await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
+            await cellDebugSetup(this.kernel, this.debugAdapter);
 
             void this.commandManager.executeCommand('notebook.cell.execute', {
                 ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
@@ -65,9 +65,10 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public stop(): void {
+        traceInfoIfCI(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
         void this.kernel.executeHidden('pass');
-        this.debugAdapter.disconnect();
+        void this.debugAdapter.disconnect();
     }
 
     public getMode(): KernelDebugMode {
@@ -91,6 +92,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+        traceInfoIfCI(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
@@ -123,7 +125,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     private async initializeExecute() {
-        await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
+        await cellDebugSetup(this.kernel, this.debugAdapter);
 
         // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
         // Its done to set the Run by Line breakpoint on the first code line
@@ -169,15 +171,11 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 }
 
-async function cellDebugSetup(
-    kernel: IKernel,
-    debugAdapter: IKernelDebugAdapter,
-    debugCell: NotebookCell
-): Promise<void> {
+async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     const code = 'import debugpy\ndebugpy.debug_this_thread()';
     await kernel.executeHidden(code);
 
-    await debugAdapter.dumpCell(debugCell.index);
+    await debugAdapter.dumpAllCells();
 }
