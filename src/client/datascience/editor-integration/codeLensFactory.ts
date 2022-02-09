@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { traceWarning } from '../../common/logger';
+import { traceWarning, traceInfoIfCI } from '../../common/logger';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -125,8 +125,9 @@ export class CodeLensFactory implements ICodeLensFactory {
 
         // Generate our code lenses if necessary
         if (cache.documentLenses.length === 0 && needUpdate && cache.cellRanges.length) {
+            traceInfoIfCI(`Generating new code lenses for version ${document.version} of document ${document.uri}`);
             // Enumerate the possible commands for the document based code lenses
-            const commands = needUpdate ? this.enumerateCommands(document.uri) : [];
+            const commands = this.enumerateCommands(document.uri);
 
             // Then iterate over all of the cell ranges and generate code lenses for each possible
             // commands

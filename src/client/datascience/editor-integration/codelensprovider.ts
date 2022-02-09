@@ -8,6 +8,7 @@ import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } f
 import { ContextKey } from '../../common/contextKey';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
+import { traceInfoIfCI } from '../../common/logger';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -90,7 +91,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
         const stopWatch = new StopWatch();
-        const result = this.getCodeLens(document);
+        const codeLenses = this.getCodeLens(document);
         this.totalExecutionTimeInMs += stopWatch.elapsedTime;
         this.totalGetCodeLensCalls += 1;
 
@@ -98,7 +99,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
         // shift+enter relies on this code context.
         const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
-        editorContext.set(result && result.length > 0).catch(noop);
+        editorContext.set(codeLenses && codeLenses.length > 0).catch(noop);
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);
@@ -111,7 +112,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return [];
         }
 
-        return this.adjustDebuggingLenses(document, result);
+        return this.adjustDebuggingLenses(document, codeLenses);
     }
 
     // Adjust what code lenses are visible or not given debug mode and debug context location
@@ -161,7 +162,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return codeWatcher.getCodeLenses();
         }
 
-        // Create a new watcher for this file
+        traceInfoIfCI(`Creating a new watcher for document ${document.uri}`);
         const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
@@ -186,6 +187,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
+            traceInfoIfCI(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 
