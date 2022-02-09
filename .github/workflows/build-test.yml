@@ -560,11 +560,6 @@ jobs:
           echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
           echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
 
-      - name: Limit tests for windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
-
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
       # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
@@ -581,10 +576,21 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
+      - name: Set test script (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "TEST_SCRIPT=testNativeNotebooksInVSCode" >> $GITHUB_ENV
+
+      - name: Set test script (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
+          echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithTestSuffix" >> $GITHUB_ENV
+
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+          run: ${{ env.xvfbCommand }} npm run ${{ env.TEST_SCRIPT }}
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
