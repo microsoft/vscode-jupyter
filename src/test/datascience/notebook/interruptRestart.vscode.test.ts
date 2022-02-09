@@ -17,15 +17,7 @@ import {
     hasErrorOutput,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
-import {
-    captureScreenShot,
-    createEventHandler,
-    getOSType,
-    IExtensionTestApi,
-    OSType,
-    sleep,
-    waitForCondition
-} from '../../common';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
