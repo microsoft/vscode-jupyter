@@ -66,7 +66,7 @@ class PythonDaemon(MethodDispatcher):
     To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `vscode_datascience_helpers.daemon`.
     """
 
-    def __init__(self, rx, tx):
+    def __init__(self, rx, tx, ppid):
         self.log = logging.getLogger(
             "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
         )

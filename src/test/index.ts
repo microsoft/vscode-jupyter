@@ -74,7 +74,7 @@ function configure(): SetupOptions {
     // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
     // So the solution is to run them separately and first on CI.
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
-    const testFilesSuffix = process.env.TEST_FILES_SUFFIX || 'test';
+    const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test';
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
@@ -165,13 +165,16 @@ export async function run(): Promise<void> {
             ignoreGlob.push('**/**.native.vscode.test.js');
             break;
         }
-        default: {
+        case '.test': {
             ignoreGlob.push('**/**.vscode.test.js');
+            break;
         }
+        default:
+            break;
     }
     const testFiles = await new Promise<string[]>((resolve, reject) => {
         glob(
-            `**/**.${options.testFilesSuffix}.js`,
+            `**/*${options.testFilesSuffix}.js`,
             { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {
