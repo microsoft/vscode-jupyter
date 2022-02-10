@@ -172,7 +172,6 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
                 )
             );
         }
-
         // Make sure it is skipping items that are already provided by pylance (no dupes)
         // Pylance isn't returning them right now: https://github.com/microsoft/vscode-jupyter/issues/8842
         // assert.notOk(
