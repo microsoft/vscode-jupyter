@@ -606,8 +606,16 @@ export function compareKernels(
 
     if (!notebookMetadata?.kernelspec) {
         if (nbMetadataLanguage) {
-            // Check if the kernels support this language.
-            if (a.kernelSpec.language === b.kernelSpec.language && a.kernelSpec.language === nbMetadataLanguage) {
+            if (
+                nbMetadataLanguage === PYTHON_LANGUAGE &&
+                a.kernelSpec.language === b.kernelSpec.language &&
+                a.kernelSpec.language === nbMetadataLanguage
+            ) {
+                // Fall back to returning the active interpreter (further below).
+            } else if (
+                a.kernelSpec.language === b.kernelSpec.language &&
+                a.kernelSpec.language === nbMetadataLanguage
+            ) {
                 return 0;
             } else if (a.kernelSpec.language === nbMetadataLanguage) {
                 return 1;
@@ -692,6 +700,17 @@ export function compareKernels(
     //
     // Everything from here on end, is Python.
     //
+
+    // Check if one of them is non-python.
+    if (a.kernelSpec.language && b.kernelSpec.language) {
+        if (a.kernelSpec.language === b.kernelSpec.language) {
+            if (a.kernelSpec.language !== PYTHON_LANGUAGE) {
+                return 0;
+            }
+        } else {
+            return a.kernelSpec.language === PYTHON_LANGUAGE ? 1 : -1;
+        }
+    }
 
     if (notebookMetadata?.kernelspec?.name) {
         // Check if the name matches against the names in the kernelspecs.
@@ -793,6 +812,29 @@ export function compareKernels(
     }
 }
 
+function givePreferenceToStartingWithoutCustomKernelSpec(a: KernelConnectionMetadata, b: KernelConnectionMetadata) {
+    if (a.kind === 'connectToLiveKernel' || b.kind === 'connectToLiveKernel') {
+        if (a.kind !== 'connectToLiveKernel') {
+            return 1;
+        } else if (b.kind !== 'connectToLiveKernel') {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+    const kernelRegA = getKernelRegistrationInfo(a.kernelSpec);
+    const kernelRegB = getKernelRegistrationInfo(b.kernelSpec);
+    if (kernelRegA === kernelRegB) {
+        return 0;
+    }
+    if (kernelRegB === 'registeredByNewVersionOfExtForCustomKernelSpec') {
+        return 1;
+    }
+    if (kernelRegA === 'registeredByNewVersionOfExtForCustomKernelSpec') {
+        return -1;
+    }
+    return 0;
+}
 function compareKernelSpecOrEnvNames(
     a: KernelConnectionMetadata,
     b: KernelConnectionMetadata,
@@ -807,6 +849,8 @@ function compareKernelSpecOrEnvNames(
     if (!notebookMetadata?.kernelspec?.name) {
         //
     } else if (notebookMetadata.kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)) {
+        const kernelRegA = a.kind !== 'connectToLiveKernel' ? getKernelRegistrationInfo(a.kernelSpec) : '';
+        const kernelRegB = b.kind !== 'connectToLiveKernel' ? getKernelRegistrationInfo(b.kernelSpec) : '';
         // Almost all Python kernels match kernel name `python`, `python2` or `python3`.
         // When we start kernels using Python interpreter, we store `python` or `python3` in the nb metadata.
         // Thus it could match any kernel.
@@ -826,7 +870,10 @@ function compareKernelSpecOrEnvNames(
             } else if (b === activeInterpreterConnection) {
                 return -1;
             } else {
-                return 0;
+                // We're dealing with default kernel (python3), hence start using Python interpreter, not custom kernlespecs.
+                // Thus iff user has interpreter & a custom kernel spec, then in this case give preference to
+                // starting with interpreter instead of custom kernelspec.
+                return givePreferenceToStartingWithoutCustomKernelSpec(a, b);
             }
         } else if (
             majorVersion &&
@@ -854,12 +901,34 @@ function compareKernelSpecOrEnvNames(
             // Kernel a matches the name and it has a better match for display names & interpreter.
             return 1;
         } else if (
+            a.kind === 'startUsingPythonInterpreter' &&
+            kernelRegA !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            nameOfA === a.kernelSpec.display_name &&
+            comparisonOfDisplayNames >= 0 &&
+            comparisonOfInterpreter >= 0
+        ) {
+            // Some times the kernel name might not match, as the name might default to the display name of the kernelspec.
+            // IN such cases check if this kernel a is a python interpreter and not mapping to a custom kernelspec.
+            // If that's the case then this matches default Python kernels.
+            return 1;
+        } else if (
             nameOfB === notebookMetadata.kernelspec.name &&
             comparisonOfDisplayNames <= 0 &&
             comparisonOfInterpreter <= 0
         ) {
             // Kernel b matches the name and it has a better match for display names & interpreter.
             return -1;
+        } else if (
+            b.kind === 'startUsingPythonInterpreter' &&
+            kernelRegB !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            nameOfA === b.kernelSpec.display_name &&
+            comparisonOfDisplayNames <= 0 &&
+            comparisonOfInterpreter <= 0
+        ) {
+            // Some times the kernel name might not match, as the name might default to the display name of the kernelspec.
+            // IN such cases check if this kernel a is a python interpreter and not mapping to a custom kernelspec.
+            // If that's the case then this matches default Python kernels.
+            return 1;
         } else if (comparisonOfInterpreter > 0) {
             // Clearly kernel a has a better match (at least the interpreter matches).
             return 1;
@@ -917,7 +986,6 @@ function compareKernelSpecOrEnvNames(
             return comparisonOfInterpreter;
         }
     }
-
     // None of them match the name.
 }
 /**
@@ -1019,7 +1087,59 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
     if (!notebookMetadata?.kernelspec?.display_name) {
         return 0;
     }
+    const metadataPointsToADefaultKernelSpec = isDefaultKernelSpec({
+        argv: [],
+        display_name: notebookMetadata.kernelspec.display_name,
+        name: notebookMetadata.kernelspec.name,
+        path: ''
+    });
+    if (metadataPointsToADefaultKernelSpec) {
+        // If we're dealing with default kernelspec names, then special handling.
+        // Sometimes if we have an interpreter a, then the kernelspec name might default to the
+        // interpreter display name (this is how we generate display names).
+        // In such cases don't compare the display names of these kernlespecs against the notebook metadata.
+        const kernelRegA = getKernelRegistrationInfo(a.kernelSpec);
+        const kernelRegB = getKernelRegistrationInfo(b.kernelSpec);
 
+        if (kernelRegA === kernelRegB && a.kind === b.kind) {
+            // Do nothing.
+        } else if (
+            kernelRegA !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            kernelRegB === 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            a.kind === 'startUsingPythonInterpreter'
+        ) {
+            // Give pref to a
+            return 1;
+        } else if (
+            kernelRegB !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            kernelRegA === 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+            b.kind === 'startUsingPythonInterpreter'
+        ) {
+            // Give pref to a
+            return -1;
+        }
+        // Possible the kernelspec of one of them matches exactly.
+        if (
+            a.kernelSpec.metadata?.vscode?.originalDisplayName &&
+            a.kernelSpec.metadata?.vscode?.originalDisplayName === b.kernelSpec.metadata?.vscode?.originalDisplayName
+        ) {
+            // Both match.
+            return 0;
+        } else if (
+            a.kernelSpec.metadata?.vscode?.originalDisplayName &&
+            a.kernelSpec.metadata?.vscode?.originalDisplayName === notebookMetadata.kernelspec.display_name
+        ) {
+            return 1;
+        } else if (
+            b.kernelSpec.metadata?.vscode?.originalDisplayName &&
+            b.kernelSpec.metadata?.vscode?.originalDisplayName === notebookMetadata.kernelspec.display_name
+        ) {
+            return -1;
+        } else {
+            // Ambiguous case.
+            return 0;
+        }
+    }
     if (
         a.kernelSpec.display_name === b.kernelSpec.display_name &&
         a.kernelSpec.metadata?.vscode?.originalDisplayName === b.kernelSpec.metadata?.vscode?.originalDisplayName
@@ -1049,15 +1169,13 @@ function findKernelSpecMatchingInterpreter(
     interpreter: PythonEnvironment | undefined,
     kernels: KernelConnectionMetadata[]
 ) {
-    if (!interpreter) {
+    if (!interpreter || kernels.length === 0) {
         return;
     }
 
     const result = kernels.filter((kernel) => {
         return (
             kernel.kind === 'startUsingPythonInterpreter' &&
-            !kernel.kernelSpec.metadata?.originalSpecFile &&
-            !kernel.kernelSpec.metadata?.vscode?.originalSpecFile &&
             getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
             getInterpreterHash(kernel.interpreter) === getInterpreterHash(interpreter) &&
             kernel.interpreter.envName === interpreter.envName

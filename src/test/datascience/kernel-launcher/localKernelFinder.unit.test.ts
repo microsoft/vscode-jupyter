@@ -20,7 +20,8 @@ import {
     createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
-    getKernelId
+    getKernelId,
+    getKernelRegistrationInfo
 } from '../../../client/datascience/jupyter/kernels/helpers';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -1026,15 +1027,18 @@ import { traceInfoIfCI } from '../../../client/common/logger';
         const disposables: IDisposable[] = [];
         let globalSpecPath: string;
         type TestData = {
-            interpreters?: {
-                interpreter: PythonEnvironment;
-                /**
-                 * These are all of the kernelspecs found within the Python environment.
-                 * Could be python or non-python kernlespecs.
-                 * Could be default or custom kernelspecs.
-                 */
-                kernelSpecs?: KernelSpec.ISpecModel[];
-            }[];
+            interpreters?: (
+                | PythonEnvironment
+                | {
+                      interpreter: PythonEnvironment;
+                      /**
+                       * These are all of the kernelspecs found within the Python environment.
+                       * Could be python or non-python kernlespecs.
+                       * Could be default or custom kernelspecs.
+                       */
+                      kernelSpecs?: KernelSpec.ISpecModel[];
+                  }
+            )[];
             /**
              * All of the globally installed KernelSpecs
              */
@@ -1045,9 +1049,17 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
             interpreterService = mock(InterpreterService);
-            when(interpreterService.getInterpreters(anything())).thenResolve(
-                (testData.interpreters || []).map((item) => item.interpreter)
+            // Ensure the active Interpreter is in the list of interpreters.
+            if (activeInterpreter) {
+                testData.interpreters = testData.interpreters || [];
+                testData.interpreters.push(activeInterpreter);
+            }
+            const distinctInterpreters = new Set<PythonEnvironment>();
+            (testData.interpreters || []).forEach((item) =>
+                'interpreter' in item ? distinctInterpreters.add(item.interpreter) : distinctInterpreters.add(item)
             );
+            testData.interpreters = Array.from(distinctInterpreters);
+            when(interpreterService.getInterpreters(anything())).thenResolve(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
             platformService = mock(PlatformService);
@@ -1085,17 +1097,19 @@ import { traceInfoIfCI } from '../../../client/common/logger';
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
             (testData.interpreters || []).forEach((interpreter) => {
-                (interpreter.kernelSpecs || []).forEach((kernelSpec) => {
-                    const jsonFile = [
-                        interpreter.interpreter.sysPrefix,
-                        'share',
-                        'jupyter',
-                        'kernels',
-                        kernelSpec.name,
-                        'kernel.json'
-                    ].join('/');
-                    kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
-                });
+                if ('interpreter' in interpreter) {
+                    (interpreter.kernelSpecs || []).forEach((kernelSpec) => {
+                        const jsonFile = [
+                            interpreter.interpreter.sysPrefix,
+                            'share',
+                            'jupyter',
+                            'kernels',
+                            kernelSpec.name,
+                            'kernel.json'
+                        ].join('/');
+                        kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
+                    });
+                }
             });
             globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
             await Promise.all(
@@ -1109,16 +1123,16 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     ? Promise.resolve(JSON.stringify(kernelSpecsBySpecFile.get(f)!))
                     : Promise.reject(`File "${f}" not found.`);
             });
-            when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
+            when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c: string, _d) => {
                 if (c === globalSpecPath) {
                     return (testData.globalKernelSpecs || []).map((kernelSpec) =>
                         [kernelSpec.name, 'kernel.json'].join('/')
                     );
                 }
                 const interpreter = (testData.interpreters || []).find((item) =>
-                    c.includes(item.interpreter.sysPrefix)
+                    'interpreter' in item ? c.includes(item.interpreter.sysPrefix) : c.includes(item.sysPrefix)
                 );
-                if (interpreter) {
+                if (interpreter && 'interpreter' in interpreter) {
                     return (interpreter.kernelSpecs || []).map((kernelSpec) =>
                         [kernelSpec.name, 'kernel.json'].join('/')
                     );
@@ -1168,6 +1182,20 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             name: 'julia',
             resources: {}
         };
+        const rKernelSpec: KernelSpec.ISpecModel = {
+            argv: ['r', 'start', 'kernel'],
+            display_name: 'R Kernel',
+            language: 'r',
+            name: 'r',
+            resources: {}
+        };
+        const rV1KernelSpec: KernelSpec.ISpecModel = {
+            argv: ['rv1', 'start', 'kernel'],
+            display_name: 'R Kernel',
+            language: 'r',
+            name: 'rv1',
+            resources: {}
+        };
         const defaultPython3Kernel: KernelSpec.ISpecModel = {
             argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Python 3',
@@ -1202,6 +1230,14 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 HELLO: 'WORLD'
             }
         };
+        const python2Global: PythonEnvironment = {
+            path: isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27',
+            sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
+            displayName: 'Python 2.7',
+            envType: EnvironmentType.Global,
+            sysVersion: '2.7.0',
+            version: { major: 2, minor: 7, patch: 0, build: [], prerelease: [], raw: '2.7.0' }
+        };
         const python36Global: PythonEnvironment = {
             path: isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36',
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
@@ -1227,11 +1263,52 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             sysVersion: '3.9.0',
             version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
         };
+        const python38PyEnv_temp1: PythonEnvironment = {
+            path: isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp1' : '/users/username/pyenv/envs/temp1',
+            displayName: 'Temporary Python 3.8 64bit Environment',
+            envName: 'temp1',
+            envType: EnvironmentType.Pyenv,
+            sysVersion: '3.8.0',
+            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+        };
+        const python38PyEnv_temp2_duplicateNameAsTemp1: PythonEnvironment = {
+            path: isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp2' : '/users/username/pyenv/envs/temp2',
+            displayName: 'Temporary Python 3.8 64bit Environment',
+            envName: 'temp2',
+            envType: EnvironmentType.Pyenv,
+            sysVersion: '3.8.0',
+            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+        };
+        const python38PyEnv_temp3_duplicateNameAsTemp1: PythonEnvironment = {
+            path: isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp3' : '/users/username/pyenv/envs/temp3',
+            displayName: 'Temporary Python 3.8 64bit Environment',
+            envName: 'temp3',
+            envType: EnvironmentType.Pyenv,
+            sysVersion: '3.8.11',
+            version: { major: 3, minor: 8, patch: 11, build: [], prerelease: [], raw: '3.8.11' }
+        };
+        /**
+         * Identical to python38PyEnv_temp2_duplicateNameAsTemp1 & python38PyEnv_temp2_duplicateNameAsTemp2
+         * Except on unix the executable is not in a bin folder.
+         */
+        const python38PyEnv_temp4_duplicateNameAsTemp1ButNoBin: PythonEnvironment = {
+            path: isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python',
+            sysPrefix: isWindows ? 'C:/pyenv/envs/temp4' : '/users/username/pyenv/envs/temp4',
+            displayName: 'Temporary Python 3.8 64bit Environment',
+            envName: 'temp4',
+            envType: EnvironmentType.Pyenv,
+            sysVersion: '3.8.0',
+            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+        };
+        const duplicate1OfPython38PyEnv_temp1 = python38PyEnv_temp1;
         const python38VenvEnv: PythonEnvironment = {
             path: isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python',
-            sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
+            sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
             displayName: 'Virtual Env Python 3.8',
-            envName: 'temp',
+            envName: '.venv',
             envType: EnvironmentType.VirtualEnv,
             sysVersion: '3.8.0',
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
@@ -1239,6 +1316,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
         const condaEnv1: PythonEnvironment = {
             path: isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python',
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
+            envName: 'env1',
             displayName: 'Conda Env1 3.6',
             envType: EnvironmentType.Conda,
             sysVersion: '3.6.0',
@@ -1254,6 +1332,14 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 HELLO: 'Java'
             }
         };
+        const python2spec: KernelSpec.ISpecModel = {
+            display_name: 'Python 2 on Disk',
+            name: 'python2Custom',
+            argv: [python2Global.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            language: 'python',
+            resources: {}
+        };
+
         const fullyQualifiedPythonKernelSpec: KernelSpec.ISpecModel = {
             argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Custom .venv Kernel',
@@ -1277,6 +1363,14 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             expectedInterpreterKernelSpecFiles: { interpreter: PythonEnvironment; kernelspec: KernelSpec.ISpecModel }[],
             expectedInterpreters: PythonEnvironment[]
         ) {
+            const duplicates = new Set<PythonEnvironment>();
+            expectedInterpreters = expectedInterpreters.filter((item) => {
+                if (duplicates.has(item)) {
+                    return false;
+                }
+                duplicates.add(item);
+                return true;
+            });
             const expectedKernelSpecs: KernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
@@ -1350,6 +1444,26 @@ import { traceInfoIfCI } from '../../../client/common/logger';
              */
             expectedInterpreters?: PythonEnvironment[];
         };
+        type ExpectedKernel =
+            | {
+                  /**
+                   * Expected global kernelspec.
+                   */
+                  expectedGlobalKernelSpec: KernelSpec.ISpecModel;
+              }
+            /**
+             * Expected list of kernlespecs that are associated with a Python interpreter.
+             */
+            | {
+                  expectedInterpreterKernelSpecFile: {
+                      interpreter: PythonEnvironment;
+                      kernelspec: KernelSpec.ISpecModel;
+                  };
+              }
+            /**
+             * Expected Python environment that will be used to start the kernel.
+             */
+            | { expectedInterpreter: PythonEnvironment };
         /**
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
@@ -1373,6 +1487,29 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     assert.deepEqual(actual, expected);
                 });
             }
+        }
+        async function verifyKernel(
+            actualKernel: KernelConnectionMetadata | undefined,
+            expectedKernelInfo: ExpectedKernel
+        ) {
+            const expectedGlobalKernelSpecs =
+                'expectedGlobalKernelSpec' in expectedKernelInfo ? [expectedKernelInfo.expectedGlobalKernelSpec] : [];
+
+            const expectedKernels = await generateExpectedKernels(
+                expectedGlobalKernelSpecs,
+                'expectedInterpreterKernelSpecFile' in expectedKernelInfo
+                    ? [expectedKernelInfo.expectedInterpreterKernelSpecFile]
+                    : [],
+                'expectedInterpreter' in expectedKernelInfo ? [expectedKernelInfo.expectedInterpreter] : []
+            );
+            const expectedKernel = expectedKernels.find((item) => {
+                // if we have a global kernel, then we are expected to start a kernelspec.
+                if (expectedGlobalKernelSpecs.length) {
+                    return item.kind === 'startUsingLocalKernelSpec';
+                }
+                return item.kind === 'startUsingPythonInterpreter';
+            });
+            assert.deepEqual(actualKernel, expectedKernel, 'Incorrect kernels');
         }
         test('Discover global kernelspecs (without Python)', async () => {
             const testData: TestData = {
@@ -1455,205 +1592,450 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 fullyQualifiedPythonKernelSpec
             );
         });
-        [undefined, python38VenvEnv, python36Global, python37Global, python39PyEnv_HelloWorld, condaEnv1].forEach(
-            (activePythonEnv) => {
-                suite(
-                    activePythonEnv ? `With active Python (${activePythonEnv.displayName})` : 'without active Python',
-                    () => {
-                        test('Discover global custom Python kernelspecs', async () => {
-                            const testData: TestData = {
-                                globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
-                                interpreters: [{ interpreter: python38VenvEnv }]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        [
+            undefined,
+            python2Global,
+            python38VenvEnv,
+            python36Global,
+            python37Global,
+            python39PyEnv_HelloWorld,
+            condaEnv1
+        ].forEach((activePythonEnv) => {
+            suite(
+                activePythonEnv ? `With active Python (${activePythonEnv.displayName})` : 'without active Python',
+                () => {
+                    test('Discover global custom Python kernelspecs', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                            interpreters: [{ interpreter: python38VenvEnv }]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                            await verifyKernels({
-                                expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
-                                expectedInterpreters: [python38VenvEnv]
-                            });
+                        await verifyKernels({
+                            expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
+                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
-                        test('Discover default Python kernelspecs with env vars', async () => {
-                            const testData: TestData = {
-                                interpreters: [
-                                    {
-                                        interpreter: python38VenvEnv,
-                                        kernelSpecs: [defaultPython3KernelWithEnvVars]
-                                    }
-                                ]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                    });
+                    test('Discover default Python kernelspecs with env vars', async () => {
+                        const testData: TestData = {
+                            interpreters: [
+                                {
+                                    interpreter: python38VenvEnv,
+                                    kernelSpecs: [defaultPython3KernelWithEnvVars]
+                                }
+                            ]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                            await verifyKernels({
-                                expectedInterpreterKernelSpecFiles: [
-                                    {
-                                        interpreter: python38VenvEnv,
-                                        kernelspec: defaultPython3KernelWithEnvVars
-                                    }
-                                ],
-                                expectedInterpreters: [python38VenvEnv]
-                            });
+                        await verifyKernels({
+                            expectedInterpreterKernelSpecFiles: [
+                                {
+                                    interpreter: python38VenvEnv,
+                                    kernelspec: defaultPython3KernelWithEnvVars
+                                }
+                            ],
+                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
-                        test('Discover multiple global kernelspecs and a custom Python kernelspecs', async () => {
-                            const testData: TestData = {
-                                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
-                                interpreters: [{ interpreter: python38VenvEnv }]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                    });
+                    test('Discover multiple global kernelspecs and a custom Python kernelspecs', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
+                            interpreters: [{ interpreter: python38VenvEnv }]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                            await verifyKernels({
-                                expectedGlobalKernelSpecs: [
-                                    juliaKernelSpec,
-                                    javaKernelSpec,
-                                    fullyQualifiedPythonKernelSpec
-                                ],
-                                expectedInterpreters: [python38VenvEnv]
-                            });
+                        await verifyKernels({
+                            expectedGlobalKernelSpecs: [
+                                juliaKernelSpec,
+                                javaKernelSpec,
+                                fullyQualifiedPythonKernelSpec
+                            ],
+                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
-                        test('Discover multiple global kernelspecs and a custom Python kernelspecs with env vars', async () => {
-                            const testData: TestData = {
-                                globalKernelSpecs: [
-                                    juliaKernelSpec,
-                                    javaKernelSpec,
-                                    fullyQualifiedPythonKernelSpec,
-                                    fullyQualifiedPythonKernelSpecWithEnv
-                                ],
-                                interpreters: [{ interpreter: python38VenvEnv }]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                    });
+                    test('Discover multiple global kernelspecs and a custom Python kernelspecs with env vars', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [
+                                juliaKernelSpec,
+                                javaKernelSpec,
+                                fullyQualifiedPythonKernelSpec,
+                                fullyQualifiedPythonKernelSpecWithEnv
+                            ],
+                            interpreters: [python38VenvEnv]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                            await verifyKernels({
-                                expectedGlobalKernelSpecs: [
-                                    juliaKernelSpec,
-                                    javaKernelSpec,
-                                    fullyQualifiedPythonKernelSpec,
-                                    fullyQualifiedPythonKernelSpecWithEnv
-                                ],
-                                expectedInterpreters: [python38VenvEnv]
-                            });
+                        await verifyKernels({
+                            expectedGlobalKernelSpecs: [
+                                juliaKernelSpec,
+                                javaKernelSpec,
+                                fullyQualifiedPythonKernelSpec,
+                                fullyQualifiedPythonKernelSpecWithEnv
+                            ],
+                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
-                        test('Default Python kernlespecs should be ignored', async () => {
-                            const testData: TestData = {
-                                interpreters: [
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelSpecs: [defaultPython3Kernel]
-                                    }
-                                ]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                    });
+                    test('Default Python kernlespecs should be ignored', async () => {
+                        const testData: TestData = {
+                            interpreters: [
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                }
+                            ]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                            const expectedKernels: ExpectedKernels = {
-                                expectedInterpreters: [python39PyEnv_HelloWorld]
-                            };
+                        const expectedKernels: ExpectedKernels = {
+                            expectedInterpreters: [python39PyEnv_HelloWorld].concat(
+                                activePythonEnv ? [activePythonEnv] : []
+                            )
+                        };
 
-                            await verifyKernels(expectedKernels);
+                        await verifyKernels(expectedKernels);
+                    });
+                    test('Custom Python Kernels with custom env variables are listed', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [juliaKernelSpec],
+                            interpreters: [
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelSpecs: [
+                                        defaultPython3Kernel,
+                                        defaultPython3KernelWithEnvVars,
+                                        customPythonKernelWithCustomArgv,
+                                        customPythonKernelWithCustomEnv
+                                    ]
+                                }
+                            ]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+                        const expectedKernels: ExpectedKernels = {
+                            expectedGlobalKernelSpecs: [juliaKernelSpec],
+                            expectedInterpreterKernelSpecFiles: [
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: defaultPython3KernelWithEnvVars
+                                },
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: customPythonKernelWithCustomArgv
+                                },
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: customPythonKernelWithCustomEnv
+                                }
+                            ],
+                            expectedInterpreters: [python39PyEnv_HelloWorld].concat(
+                                activePythonEnv ? [activePythonEnv] : []
+                            )
+                        };
+
+                        await verifyKernels(expectedKernels);
+                    });
+                    test('Multiple global & custom Python Kernels', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [juliaKernelSpec],
+                            interpreters: [
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelSpecs: [
+                                        defaultPython3Kernel,
+                                        defaultPython3KernelWithEnvVars,
+                                        customPythonKernelWithCustomArgv,
+                                        customPythonKernelWithCustomEnv
+                                    ]
+                                },
+                                python36Global,
+                                {
+                                    interpreter: python37Global,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                },
+                                {
+                                    interpreter: condaEnv1,
+                                    kernelSpecs: [javaKernelSpec]
+                                }
+                            ]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+                        const expectedKernels: ExpectedKernels = {
+                            expectedGlobalKernelSpecs: [juliaKernelSpec],
+                            expectedInterpreterKernelSpecFiles: [
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: defaultPython3KernelWithEnvVars
+                                },
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: customPythonKernelWithCustomArgv
+                                },
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelspec: customPythonKernelWithCustomEnv
+                                },
+                                {
+                                    interpreter: condaEnv1,
+                                    kernelspec: javaKernelSpec
+                                }
+                            ],
+                            expectedInterpreters: [
+                                python39PyEnv_HelloWorld,
+                                python36Global,
+                                python37Global,
+                                condaEnv1
+                            ].concat(activePythonEnv ? [activePythonEnv] : [])
+                        };
+
+                        await verifyKernels(expectedKernels);
+                    });
+                    test('Can match based on notebook metadata', async () => {
+                        const testData: TestData = {
+                            globalKernelSpecs: [juliaKernelSpec, rKernelSpec, rV1KernelSpec, python2spec],
+                            interpreters: [
+                                {
+                                    interpreter: python36Global,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                },
+                                {
+                                    interpreter: python39PyEnv_HelloWorld,
+                                    kernelSpecs: [
+                                        defaultPython3Kernel,
+                                        defaultPython3KernelWithEnvVars,
+                                        customPythonKernelWithCustomArgv,
+                                        customPythonKernelWithCustomEnv
+                                    ]
+                                },
+                                {
+                                    interpreter: python37Global,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                },
+                                {
+                                    interpreter: condaEnv1,
+                                    kernelSpecs: [javaKernelSpec]
+                                },
+                                {
+                                    interpreter: python38PyEnv_temp1,
+                                    kernelSpecs: [defaultPython3Kernel, customPythonKernelWithCustomEnv]
+                                },
+                                {
+                                    interpreter: python38PyEnv_temp2_duplicateNameAsTemp1,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                },
+                                {
+                                    interpreter: python38PyEnv_temp3_duplicateNameAsTemp1,
+                                    kernelSpecs: [defaultPython3Kernel]
+                                },
+                                {
+                                    interpreter: python38PyEnv_temp4_duplicateNameAsTemp1ButNoBin,
+                                    kernelSpecs: [defaultPython3Kernel, customPythonKernelWithCustomEnv]
+                                },
+                                {
+                                    interpreter: duplicate1OfPython38PyEnv_temp1
+                                },
+                                {
+                                    interpreter: python2Global
+                                }
+                            ]
+                        };
+                        await initialize(testData, activePythonEnv);
+                        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        const nbUri = Uri.file('test.ipynb');
+                        let kernel: KernelConnectionMetadata | undefined;
+
+                        // Try an empty python Notebook without any kernelspec in metadata.
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
                         });
-                        test('Custom Python Kernels with custom env variables are listed', async () => {
-                            const testData: TestData = {
-                                globalKernelSpecs: [juliaKernelSpec],
-                                interpreters: [
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelSpecs: [
-                                            defaultPython3Kernel,
-                                            defaultPython3KernelWithEnvVars,
-                                            customPythonKernelWithCustomArgv,
-                                            customPythonKernelWithCustomEnv
-                                        ]
-                                    }
-                                ]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        if (activePythonEnv) {
+                            await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
+                        }
 
-                            const expectedKernels: ExpectedKernels = {
-                                expectedGlobalKernelSpecs: [juliaKernelSpec],
-                                expectedInterpreterKernelSpecFiles: [
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: defaultPython3KernelWithEnvVars
-                                    },
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: customPythonKernelWithCustomArgv
-                                    },
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: customPythonKernelWithCustomEnv
-                                    }
-                                ],
-                                expectedInterpreters: [python39PyEnv_HelloWorld]
-                            };
-
-                            await verifyKernels(expectedKernels);
+                        // Generic Python 3 notebooks.
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Python 3',
+                                name: 'python3'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
                         });
-                        test('Multiple global & custom Python Kernels', async () => {
-                            const testData: TestData = {
-                                globalKernelSpecs: [juliaKernelSpec],
-                                interpreters: [
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelSpecs: [
-                                            defaultPython3Kernel,
-                                            defaultPython3KernelWithEnvVars,
-                                            customPythonKernelWithCustomArgv,
-                                            customPythonKernelWithCustomEnv
-                                        ]
-                                    },
-                                    {
-                                        interpreter: python36Global
-                                    },
-                                    {
-                                        interpreter: python37Global,
-                                        kernelSpecs: [defaultPython3Kernel]
-                                    },
-                                    {
-                                        interpreter: condaEnv1,
-                                        kernelSpecs: [javaKernelSpec]
-                                    }
-                                ]
-                            };
-                            await initialize(testData, activePythonEnv);
-                            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        if (activePythonEnv && activePythonEnv.version?.major && activePythonEnv.version?.major >= 3) {
+                            await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
+                        }
 
-                            const expectedKernels: ExpectedKernels = {
-                                expectedGlobalKernelSpecs: [juliaKernelSpec],
-                                expectedInterpreterKernelSpecFiles: [
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: defaultPython3KernelWithEnvVars
-                                    },
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: customPythonKernelWithCustomArgv
-                                    },
-                                    {
-                                        interpreter: python39PyEnv_HelloWorld,
-                                        kernelspec: customPythonKernelWithCustomEnv
-                                    },
-                                    {
-                                        interpreter: condaEnv1,
-                                        kernelspec: javaKernelSpec
-                                    }
-                                ],
-                                expectedInterpreters: [
-                                    python39PyEnv_HelloWorld,
-                                    python36Global,
-                                    python37Global,
-                                    condaEnv1
-                                ]
-                            };
-
-                            await verifyKernels(expectedKernels);
+                        // Generic Python 3 notebooks (kernels with IpyKernel installed).
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Python 3 (IPyKernel)',
+                                name: 'python3'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
                         });
-                    }
-                );
-            }
-        );
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        if (activePythonEnv && activePythonEnv.version?.major && activePythonEnv.version?.major >= 3) {
+                            await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
+                        }
+
+                        // Python 2
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Python 2 on Disk',
+                                name: 'python2'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        assert.equal(kernel?.kernelSpec?.display_name, 'Python 2 on Disk');
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingLocalKernelSpec');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        await verifyKernel(kernel, {
+                            expectedGlobalKernelSpec: python2spec,
+                            expectedInterpreter: python2Global
+                        });
+
+                        // Julia
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            language_info: { name: 'julia' },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedGlobalKernelSpec: juliaKernelSpec });
+
+                        // R (match a specific R kernel based on the display name & name)
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: rV1KernelSpec.display_name,
+                                name: rV1KernelSpec.name
+                            },
+                            language_info: { name: 'r' },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
+
+                        // R (match a specific R kernel based on the name)
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: '',
+                                name: rV1KernelSpec.name
+                            },
+                            language_info: { name: 'r' },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
+
+                        // R (match a specific R kernel based on the display_name)
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: rV1KernelSpec.display_name,
+                                name: ''
+                            },
+                            language_info: { name: 'r' },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
+
+                        // Python 2 based on name
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Some unknown name for Python 2',
+                                name: 'python2'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: python2Global });
+
+                        // Python 2 based on display name
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: python2Global.displayName || '',
+                                name: 'python2'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: python2Global });
+
+                        // Match conda environment based on env display name of conda env.
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: '',
+                                name: condaEnv1.envName || ''
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+
+                        // Match conda environment based on env display name of conda env.
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: condaEnv1.displayName || '',
+                                name: condaEnv1.envName || ''
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+
+                        // Match conda environment based on env name of conda env (even if name doesn't match).
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: condaEnv1.displayName || '',
+                                name: 'someUnknownNameThatWillNeverMatch'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+
+                        // Match based on interpreter hash even if name and display name do not match.
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Will never match',
+                                name: 'someUnknownNameThatWillNeverMatch'
+                            },
+                            interpreter: {
+                                hash: getInterpreterHash(condaEnv1)
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+                    });
+                }
+            );
+        });
     });
 });
