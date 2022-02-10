@@ -587,6 +587,11 @@ jobs:
           echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
           echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithoutTestSuffix" >> $GITHUB_ENV
 
+      - name: Echo variables
+        run: |
+          echo "TEST_FILES_SUFFIX = ${{ env.TEST_FILES_SUFFIX }}"
+          echo "TEST_SCRIPT = ${{ env.TEST_SCRIPT }}"
+
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
         with:
