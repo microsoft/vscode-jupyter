@@ -91,14 +91,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         // Allow slower timeouts for CI (testing).
         const timeout =
             parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
-        const pylanceTimeout = Math.min(1000, timeout);
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
             waitForPromise(
                 this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
                 timeout
             ),
-            waitForPromise(this.getPylanceCompletions(document, position, context, token), pylanceTimeout)
+            waitForPromise(this.getPylanceCompletions(document, position, context, token), timeout)
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);
