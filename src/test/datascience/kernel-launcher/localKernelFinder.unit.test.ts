@@ -1925,9 +1925,19 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                             expectedInterpreter: python2Global
                         });
 
-                        // Julia
+                        // Julia based on language
                         kernel = await kernelFinder.findKernel(nbUri, {
                             language_info: { name: 'julia' },
+                            orig_nbformat: 4
+                        });
+                        await verifyKernel(kernel, { expectedGlobalKernelSpec: juliaKernelSpec });
+
+                        // Julia based on kernelspec name & display name (without any language information)
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: juliaKernelSpec.display_name,
+                                name: juliaKernelSpec.name
+                            },
                             orig_nbformat: 4
                         });
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: juliaKernelSpec });
@@ -2033,6 +2043,13 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                             orig_nbformat: 4
                         });
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+
+                        // Unknown kernel language
+                        kernel = await kernelFinder.findKernel(nbUri, {
+                            language_info: { name: 'someunknownlanguage' },
+                            orig_nbformat: 4
+                        });
+                        assert.isUndefined(kernel, 'Should not return a kernel');
                     });
                 }
             );

@@ -562,15 +562,18 @@ export function findPreferredKernel(
         }
     }
 
-    const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
-    let nbMetadataLanguage: string | undefined;
+    notebookMetadata?.language_info?.name || (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
+    const actualNbMetadataLanguage: string | undefined =
+        notebookMetadata?.language_info?.name ||
+        (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
+    let possibleNbMetadataLanguage = actualNbMetadataLanguage;
     // Interactive window always defaults to Python kernels.
     if (getResourceType(resource) === 'interactive') {
         // TODO: Based on the resource, we should be able to find the language.
-        nbMetadataLanguage = PYTHON_LANGUAGE;
+        possibleNbMetadataLanguage = PYTHON_LANGUAGE;
     } else {
-        nbMetadataLanguage =
-            !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
+        possibleNbMetadataLanguage =
+            !notebookMetadata || isPythonNotebook(notebookMetadata) || !possibleNbMetadataLanguage
                 ? PYTHON_LANGUAGE
                 : (
                       ((notebookMetadata?.kernelspec as any)?.language as string) ||
@@ -579,15 +582,39 @@ export function findPreferredKernel(
     }
 
     kernels.sort((a, b) =>
-        compareKernels(resource, nbMetadataLanguage, notebookMetadata, preferredInterpreterKernelSpec, a, b)
+        compareKernels(
+            resource,
+            possibleNbMetadataLanguage,
+            actualNbMetadataLanguage,
+            notebookMetadata,
+            preferredInterpreterKernelSpec,
+            a,
+            b
+        )
     );
-    traceInfoIfCI(isCI, `Preferred kernel is ${JSON.stringify(kernels[0])}`);
-    return kernels[kernels.length - 1];
+
+    let preferredKernel: KernelConnectionMetadata | undefined = kernels[kernels.length - 1];
+    if (
+        possibleNbMetadataLanguage &&
+        possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
+        !notebookMetadata?.kernelspec &&
+        preferredKernel.kind !== 'connectToLiveKernel' &&
+        preferredKernel.kernelSpec.language &&
+        preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
+    ) {
+        // If we have a specific language & the preferred item is not of the same language then don't return anything.
+        // Remember, all we're doing is sorting the list, just because its sorted in order of preference doesn't mean we have a match.
+        preferredKernel = undefined;
+    } else {
+        traceInfoIfCI(isCI, `Preferred kernel is ${JSON.stringify(kernels[0])}`);
+    }
+    return preferredKernel;
 }
 
 export function compareKernels(
     _resource: Resource,
-    nbMetadataLanguage: string | undefined,
+    possibleNbMetadataLanguage: string | undefined,
+    actualNbMetadataLanguage: string | undefined,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     activeInterpreterConnection: KernelConnectionMetadata | undefined,
     a: KernelConnectionMetadata,
@@ -605,21 +632,21 @@ export function compareKernels(
     }
 
     if (!notebookMetadata?.kernelspec) {
-        if (nbMetadataLanguage) {
+        if (possibleNbMetadataLanguage) {
             if (
-                nbMetadataLanguage === PYTHON_LANGUAGE &&
+                possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
                 a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === nbMetadataLanguage
+                a.kernelSpec.language === possibleNbMetadataLanguage
             ) {
                 // Fall back to returning the active interpreter (further below).
             } else if (
                 a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === nbMetadataLanguage
+                a.kernelSpec.language === possibleNbMetadataLanguage
             ) {
                 return 0;
-            } else if (a.kernelSpec.language === nbMetadataLanguage) {
+            } else if (a.kernelSpec.language === possibleNbMetadataLanguage) {
                 return 1;
-            } else if (b.kernelSpec.language === nbMetadataLanguage) {
+            } else if (b.kernelSpec.language === possibleNbMetadataLanguage) {
                 return -1;
             }
         }
@@ -649,18 +676,24 @@ export function compareKernels(
         : b.kernelSpec?.display_name || '';
 
     // Special simple comparison algorithm for Non-Python notebooks.
-    if (nbMetadataLanguage && nbMetadataLanguage !== PYTHON_LANGUAGE) {
+    if (possibleNbMetadataLanguage && possibleNbMetadataLanguage !== PYTHON_LANGUAGE) {
         // If this isn't a python notebook, then just look at the name & display name.
         if (
             a.kernelSpec.language &&
             b.kernelSpec.language &&
-            a.kernelSpec.language !== nbMetadataLanguage &&
-            b.kernelSpec.language !== nbMetadataLanguage
+            a.kernelSpec.language !== possibleNbMetadataLanguage &&
+            b.kernelSpec.language !== possibleNbMetadataLanguage
         ) {
             return 0;
-        } else if (a.kernelSpec.language === nbMetadataLanguage && b.kernelSpec.language !== nbMetadataLanguage) {
+        } else if (
+            a.kernelSpec.language === possibleNbMetadataLanguage &&
+            b.kernelSpec.language !== possibleNbMetadataLanguage
+        ) {
             return 1;
-        } else if (a.kernelSpec.language !== nbMetadataLanguage && b.kernelSpec.language === nbMetadataLanguage) {
+        } else if (
+            a.kernelSpec.language !== possibleNbMetadataLanguage &&
+            b.kernelSpec.language === possibleNbMetadataLanguage
+        ) {
             return -1;
         } else if (
             kernelSpecNameOfA &&
@@ -694,6 +727,36 @@ export function compareKernels(
             return -1;
         } else {
             return 0;
+        }
+    }
+    // Sometimes we guess the language information.
+    // If notebook metadata doesn't have the language information we assume it is Python.
+    // However if we have a notebook that has kernel information without language information, then we treat them as Python and end up looking for Python kernels.
+    // Look for exact matches in kernelspecifications, and if found use that.
+    if (!actualNbMetadataLanguage && possibleNbMetadataLanguage) {
+        if (
+            kernelSpecNameOfA &&
+            kernelSpecDisplayNameOfA &&
+            kernelSpecNameOfA !== kernelSpecNameOfB &&
+            kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
+            a.kind === 'startUsingLocalKernelSpec' &&
+            a.kernelSpec.language !== PYTHON_LANGUAGE &&
+            kernelSpecNameOfA === notebookMetadata.kernelspec.name &&
+            kernelSpecDisplayNameOfA === notebookMetadata.kernelspec.display_name
+        ) {
+            // Prefect match.
+            return 1;
+        } else if (
+            kernelSpecNameOfB &&
+            kernelSpecDisplayNameOfB &&
+            kernelSpecNameOfA !== kernelSpecNameOfB &&
+            kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
+            b.kind === 'startUsingLocalKernelSpec' &&
+            b.kernelSpec.language !== PYTHON_LANGUAGE &&
+            kernelSpecNameOfB === notebookMetadata.kernelspec.name &&
+            kernelSpecDisplayNameOfB === notebookMetadata.kernelspec.display_name
+        ) {
+            return -1;
         }
     }
 
