@@ -616,7 +616,7 @@ jobs:
           github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+        if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
