@@ -576,31 +576,10 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
-      - name: Set test script (ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          echo "TEST_SCRIPT=testNativeNotebooksInVSCode" >> $GITHUB_ENV
-
-      - name: Set test script (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithoutTestSuffix" >> $GITHUB_ENV
-
-      # For some reason we cant set two environment variables at the same time on dinwos
-      - name: Set test files suffix (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
-
-      - name: Echo variables
-        run: |
-          echo "TEST_FILES_SUFFIX = ${{ env.TEST_FILES_SUFFIX }}"
-          echo "TEST_SCRIPT = ${{ env.TEST_SCRIPT }}"
-
-      - name: Run Native Notebook with VSCode & Jupyter
+      - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: ${{ env.xvfbCommand }} npm run ${{ env.TEST_SCRIPT }}
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -612,7 +591,25 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.python != 'noPython'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest'
+
+      - name: Run Native Notebook with VSCode & Jupyter (windows)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCodeWithoutTestSuffix
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test'
+        id: test_notebook_vscode
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
