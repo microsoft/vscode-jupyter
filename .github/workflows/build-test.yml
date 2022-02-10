@@ -577,7 +577,7 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
@@ -619,7 +619,7 @@ jobs:
         if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
@@ -732,7 +732,7 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testSmokeLogged
 
