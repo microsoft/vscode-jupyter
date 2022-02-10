@@ -584,8 +584,13 @@ jobs:
       - name: Set test script (windows)
         if: matrix.os == 'windows-latest'
         run: |
-          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
           echo "TEST_SCRIPT=testNativeNotebooksInVSCodeWithoutTestSuffix" >> $GITHUB_ENV
+
+      # For some reason we cant set two environment variables at the same time on dinwos
+      - name: Set test files suffix (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TEST_FILES_SUFFIX=+(interrupt|execut)*.vscode.test" >> $GITHUB_ENV
 
       - name: Echo variables
         run: |
