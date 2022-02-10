@@ -745,6 +745,11 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     'python',
                     'No python2 kernel found matching notebook metadata'
                 );
+                assert.equal(
+                    kernel?.kernelSpec?.display_name,
+                    'Python 2 on Disk',
+                    'No python2 kernel found matching notebook metadata'
+                );
 
                 // Interpreter name
                 kernel = await kernelFinder.findKernel(nbUri, {
