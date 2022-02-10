@@ -752,7 +752,7 @@ export class Kernel implements IKernel {
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
             if (file) {
-                result.push(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
+                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
             result.push(CodeSnippets.disableJedi);
 
