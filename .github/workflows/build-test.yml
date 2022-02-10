@@ -590,13 +590,12 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-        id: test_notebook_vscode
+        id: test_notebook_vscode_ubuntu
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCodeWithoutTestSuffix
+        run: |
+          npm run testNativeNotebooksInVSCodeWithoutTestSuffix
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -608,7 +607,7 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test'
-        id: test_notebook_vscode
+        id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
 
       - name: Publish Notebook Test Report
