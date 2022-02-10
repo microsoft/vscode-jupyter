@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.1.110 (January Release on 08 February 2022)
+## 2022.1.110 (January Release on 09 February 2022)
 
 ### Fixes
 
