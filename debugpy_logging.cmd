@@ -1,0 +1,3 @@
+set PYDEVD_DEBUG=1
+set DEBUGPY_LOG_DIR=%~dp0\tmp
+set PYDEVD_DEBUG_FILE=%~dp0\tmp
