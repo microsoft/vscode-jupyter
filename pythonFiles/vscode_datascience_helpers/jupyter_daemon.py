@@ -16,8 +16,8 @@ from vscode_datascience_helpers.daemon.daemon_python import (
 
 
 class PythonDaemon(BasePythonDaemon):
-    def __init__(self, rx, tx):
-        super().__init__(rx, tx)
+    def __init__(self, rx, tx, ppid):
+        super().__init__(rx, tx, ppid)
         self.log.info("DataScience Daemon init")
 
     def __getitem__(self, item):
