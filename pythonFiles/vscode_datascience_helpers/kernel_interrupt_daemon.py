@@ -16,7 +16,7 @@ import vscode_datascience_helpers.winapi as winapi
 
 class PythonDaemon(JupyterDaemon):
     def __init__(self, rx, tx, ppid):
-        super().__init__(rx, tx)
+        super().__init__(rx, tx, ppid)
         self.log.info("DataScience Kernel Interrupt Daemon init: " + str(ppid))
         if sys.platform == "win32" and ppid != 0:
             self.initialize_interrupt(ppid)
