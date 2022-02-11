@@ -542,7 +542,7 @@ jobs:
 
       - name: Install Dot.net
         if: matrix.os != 'windows-latest'
-        uses: actions/setup-dotnet@v1.8.0
+        uses: actions/setup-dotnet@v1.9.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
