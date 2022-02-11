@@ -78,7 +78,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             const preferred = findPreferredKernel(
                 kernels,
                 resource,
-                [],
                 notebookMetadata,
                 undefined,
                 this.preferredRemoteKernelIdProvider
