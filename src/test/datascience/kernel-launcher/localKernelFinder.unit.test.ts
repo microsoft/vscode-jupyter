@@ -30,7 +30,7 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { arePathsSame } from '../../common';
+import { arePathsSame, getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
@@ -532,7 +532,8 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             condaEnvironmentBase,
             python3_8_11_Interpreter
         ].forEach((activeInterpreter) => {
-            test('No interpreters used when no python extension', async () => {
+            const testSuffix = `(interpreter = ${activeInterpreter.displayName})`;
+            test(`No interpreters used when no python extension ${testSuffix}`, async () => {
                 // Setup interpreters to match
                 when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
                 when(interpreterService.getInterpreters(anything())).thenResolve(
@@ -823,7 +824,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     'No python kernel found matching notebook metadata'
                 );
             });
-            test('Return active interpreter for blank notebooks (metadata only has language)', async () => {
+            test(`Return active interpreter for blank notebooks (metadata only has language) ${testSuffix}`, async () => {
                 when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
                 when(interpreterService.getInterpreters(anything())).thenResolve(
                     duplicateEnv.concat([
@@ -831,7 +832,8 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                         condaEnvironment,
                         python2Interpreter,
                         condaEnvironmentBase,
-                        python3_8_10_Interpreter
+                        python3_8_10_Interpreter,
+                        python3_8_11_Interpreter
                     ])
                 );
                 when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
@@ -1026,6 +1028,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
         let globalSpecPath: string;
+        const pathSeparator = getOSType() === OSType.Windows ? '\\' : '/';
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -1106,7 +1109,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                             'kernels',
                             kernelSpec.name,
                             'kernel.json'
-                        ].join('/');
+                        ].join(pathSeparator);
                         kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
                     });
                 }
@@ -1114,11 +1117,13 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
-                    const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join('/');
-                    kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
+                    const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
+                    kernelSpecsBySpecFile.set(jsonFile.replace(/\\/g, '/'), kernelSpec);
                 })
             );
             when(fs.readLocalFile(anything())).thenCall((f) => {
+                // These tests run on windows & linux, hence support both paths.
+                f = f.replace(/\\/g, '/');
                 return kernelSpecsBySpecFile.has(f)
                     ? Promise.resolve(JSON.stringify(kernelSpecsBySpecFile.get(f)!))
                     : Promise.reject(`File "${f}" not found.`);
@@ -1126,7 +1131,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c: string, _d) => {
                 if (c === globalSpecPath) {
                     return (testData.globalKernelSpecs || []).map((kernelSpec) =>
-                        [kernelSpec.name, 'kernel.json'].join('/')
+                        [kernelSpec.name, 'kernel.json'].join(pathSeparator)
                     );
                 }
                 const interpreter = (testData.interpreters || []).find((item) =>
@@ -1134,7 +1139,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 );
                 if (interpreter && 'interpreter' in interpreter) {
                     return (interpreter.kernelSpecs || []).map((kernelSpec) =>
-                        [kernelSpec.name, 'kernel.json'].join('/')
+                        [kernelSpec.name, 'kernel.json'].join(pathSeparator)
                     );
                 }
                 return [];
@@ -1374,7 +1379,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             const expectedKernelSpecs: KernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
-                    const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join('/');
+                    const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
                     const interpreter = expectedInterpreters.find(
                         (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path === kernelSpec.argv[0]
                     );
@@ -1398,7 +1403,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                         'kernels',
                         kernelspec.name,
                         'kernel.json'
-                    ].join('/');
+                    ].join(pathSeparator);
                     const spec = await loadKernelSpec(kernelSpecFile, instance(fs), interpreter);
                     if (spec) {
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
@@ -1542,7 +1547,10 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 throw new Error('Incorrect value');
             }
             assert.strictEqual(actual?.kind, 'startUsingLocalKernelSpec');
-            assert.strictEqual(actual?.kernelSpec.specFile, [globalSpecPath, expected.name, 'kernel.json'].join('/'));
+            assert.strictEqual(
+                actual?.kernelSpec.specFile,
+                [globalSpecPath, expected.name, 'kernel.json'].join(pathSeparator)
+            );
             Object.keys(expected).forEach((key) => {
                 // We always mess around with the names, hence don't compare names.
                 if (key === 'name') {
