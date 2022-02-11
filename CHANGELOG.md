@@ -6,6 +6,8 @@
 
 1. Fix daemon startup to work for non direct kernel cases
    ([#8995](https://github.com/Microsoft/vscode-jupyter/issues/8995))
+1. Fix our waiting for RequestKernelInfo (might have been hurting raw kernel start some).
+   ([#8989](https://github.com/Microsoft/vscode-jupyter/issues/8989))
 
 ### Thanks
 
