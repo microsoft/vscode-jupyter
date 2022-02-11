@@ -312,7 +312,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             try {
                 await Promise.race([
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 10)),
+                    sleep(Math.min(this.launchTimeout, 10_000)),
                     createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
                 ]);
             } catch (ex) {
