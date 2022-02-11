@@ -1085,7 +1085,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                         import time
                         import os.path
                         from os import path
-                        while os.path.exists('${tmpFile}'):
+                        while os.path.exists('${tmpFile.replace(/\\/g, '\\\\')}'):
                             time.sleep(0.1)
 
                         print("End Cell ${index}")`,
