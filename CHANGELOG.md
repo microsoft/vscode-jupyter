@@ -26,8 +26,6 @@ make this extension useful:
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
-# Changelog
-
 ## 2022.1.110 (January Release on 09 February 2022)
 
 ### Fixes
