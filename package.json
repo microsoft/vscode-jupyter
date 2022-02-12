@@ -106,7 +106,7 @@
                     {
                         "id": "jupyter.selectKernel",
                         "title": "Select a Jupyter kernel",
-                        "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
+                        "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
                         "media": {
                             "image": "resources/walkthroughs/KernelPicker.gif",
                             "altText": "Selecting or changing a notebook kernel"
