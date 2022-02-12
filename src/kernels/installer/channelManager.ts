@@ -3,16 +3,15 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { EnvironmentType } from '../../pythonEnvironments/info';
-import { IApplicationShell } from '../application/types';
-import { IPlatformService } from '../platform/types';
-import { Product } from '../types';
-import { Installer } from '../utils/localize';
-import { isResource } from '../utils/misc';
+import { EnvironmentType } from '../../client/api/extension';
+import { IApplicationShell } from '../../client/common/application/types';
+import { IPlatformService } from '../../client/common/platform/types';
+import { InterpreterUri } from '../../client/common/types';
+import { isResource } from '../../client/common/utils/misc';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { IServiceContainer } from '../../client/ioc/types';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from './types';
+import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
 
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
@@ -20,7 +19,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async getInstallationChannel(
         product: Product,
-        resource?: InterpreterUri,
+        resource?: InterpreterUri
     ): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(resource);
         if (channels.length === 1) {
@@ -39,13 +38,13 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             return {
                 label: `Install using ${installer.displayName}`,
                 description: '',
-                installer,
+                installer
             };
         });
         const selection = await appShell.showQuickPick<typeof options[0]>(options, {
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder,
+            placeHolder
         });
         return selection ? selection.installer : undefined;
     }
@@ -95,7 +94,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             appShell.openUrl(
                 `https://www.bing.com/search?q=Install Pip ${osName} ${
                     interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
-                }`,
+                }`
             );
         }
     }

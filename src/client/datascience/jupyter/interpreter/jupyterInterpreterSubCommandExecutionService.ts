@@ -14,7 +14,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../../common/process/types';
-import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
+import { IOutputChannel, IPathUtils } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -31,6 +31,7 @@ import {
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
+import { Product } from '../../../../kernels/installer/types';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

@@ -30,7 +30,6 @@ import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import { ProductInstaller } from './installer/productInstaller';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
@@ -45,7 +44,6 @@ import {
     ICryptoUtils,
     IExtensions,
     IFeatureDeprecationManager,
-    IInstaller,
     IPathUtils,
     IPersistentStateFactory,
     IsWindows
@@ -64,7 +62,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
-    serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);

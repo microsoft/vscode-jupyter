@@ -5,25 +5,18 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
+import {
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter,
+    isModulePresentInEnvironment
+} from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import {
-    isModulePresentInEnvironment,
-    isModulePresentInEnvironmentCache,
-    trackPackageInstalledIntoInterpreter
-} from '../../../common/installer/productInstaller';
-import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
-import {
-    GLOBAL_MEMENTO,
-    IInstaller,
-    IMemento,
-    InstallerResponse,
-    IsCodeSpace,
-    Product,
-    Resource
-} from '../../../common/types';
+import { GLOBAL_MEMENTO, IMemento, IsCodeSpace, Resource } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { ignoreLogging, TraceOptions } from '../../../logging/trace';

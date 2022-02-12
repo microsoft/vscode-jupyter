@@ -4,22 +4,22 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonInstaller, IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
-import { InterpreterUri } from '../../common/installer/types';
-import { IExtensions, IDisposableRegistry, Product } from '../../common/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
+import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../common/types';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { InterpreterPackages } from './interpreterPackages';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { trackKernelResourceInformation } from './telemetry';
+import { IInstaller, Product } from '../../../kernels/installer/types';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
     private activeInterpreterTrackedUponActivation?: boolean;
     constructor(
         @inject(InterpreterPackages) private readonly packages: InterpreterPackages,
-        @inject(IPythonInstaller) private readonly installer: IPythonInstaller,
+        @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

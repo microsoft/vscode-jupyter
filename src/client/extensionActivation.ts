@@ -13,7 +13,6 @@ import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './common/constants';
-import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -113,7 +112,6 @@ async function activateLegacy(
     commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
-    registerInstallerTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
@@ -131,7 +129,7 @@ async function activateLegacy(
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
-    installerRegisterTypes(serviceManager);
+    registerInstallerTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

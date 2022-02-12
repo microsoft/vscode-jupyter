@@ -9,7 +9,6 @@ import {
     IInstallationChannelManager,
     IInstaller,
     InstallerResponse,
-    InterpreterUri,
     IProductPathService,
     IProductService,
     ModuleInstallFlags,
@@ -29,7 +28,8 @@ import {
     IDisposable,
     GLOBAL_MEMENTO,
     IMemento,
-    IOutputChannel
+    IOutputChannel,
+    InterpreterUri
 } from '../../client/common/types';
 import { isResource } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -37,11 +37,11 @@ import { sendTelemetryEvent } from '../../client/telemetry';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 import { getInterpreterHash } from '../../client/pythonEnvironments/info/interpreter';
 import { noop, sleep } from '../../test/core';
-import { IPythonInstaller } from '../../client/api/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { IPlatformService } from '../../client/common/platform/types';
 import { BackupPipInstaller } from './backupPipInstaller';
 import { Telemetry } from '../../datascience-ui/common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.
@@ -91,8 +91,6 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
 }
 
 abstract class BaseInstaller {
-    private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
-
     protected readonly appShell: IApplicationShell;
 
     protected readonly configService: IConfigurationService;
@@ -254,7 +252,7 @@ export class DataScienceInstaller extends BaseInstaller {
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        const installer = this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
+        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
 
         // If we're on windows and user is using a shell other than cmd or powershell, then Python installer will fail to install
         // the packages in the terminal (gitbash, wsh are not supported by Python extension).
@@ -350,7 +348,8 @@ export class ProductInstaller implements IInstaller {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
         this.productService = serviceContainer.get<IProductService>(IProductService);
     }
@@ -420,7 +419,7 @@ export class ProductInstaller implements IInstaller {
         const productType = this.productService.getProductType(product);
         switch (productType) {
             case ProductType.DataScience:
-                return new DataScienceInstaller(this.serviceContainer);
+                return new DataScienceInstaller(this.serviceContainer, this.output);
             default:
                 break;
         }

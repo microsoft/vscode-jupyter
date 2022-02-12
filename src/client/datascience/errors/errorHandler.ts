@@ -40,7 +40,7 @@ import {
 } from '../../common/errors/errorUtils';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
+import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
@@ -50,10 +50,11 @@ import { sleep } from '../../common/utils/async';
 import { INotebookControllerManager } from '../notebook/types';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
-import { ProductNames } from '../../common/installer/productNames';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
-import { translateProductToModule } from '../../common/installer/productInstaller';
+import { translateProductToModule } from '../../../kernels/installer/moduleInstaller';
+import { ProductNames } from '../../../kernels/installer/productNames';
+import { Product } from '../../../kernels/installer/types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {

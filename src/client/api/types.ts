@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Disposable, Event, Uri } from 'vscode';
+import { Disposable, Event, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
-import { InterpreterUri } from '../common/installer/types';
-import { InstallerResponse, Product, Resource } from '../common/types';
+import { InterpreterUri, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import type { SemVer } from 'semver';
@@ -111,18 +110,6 @@ export type PythonApi = {
         interpreter?: PythonEnvironment
     ): Promise<string[] | undefined>;
 };
-
-export const IPythonInstaller = Symbol('IPythonInstaller');
-export interface IPythonInstaller {
-    readonly onInstalled: Event<{ product: Product; resource?: InterpreterUri }>;
-    install(
-        product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse>;
-}
 
 export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');
 export interface IPythonDebuggerPathProvider {

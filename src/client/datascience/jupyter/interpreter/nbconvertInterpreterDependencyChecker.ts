@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
-import { IInstaller, Product } from '../../../common/types';
+import { IInstaller, Product } from '../../../../kernels/installer/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { parseSemVer } from '../../common';
 import { JupyterCommands } from '../../constants';

@@ -7,9 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { ProductNames } from '../../../common/installer/productNames';
 import { traceError } from '../../../common/logger';
-import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -19,6 +17,8 @@ import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterCommandFactory } from '../../types';
 import { JupyterInstallError } from '../../errors/jupyterInstallError';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 
 export enum JupyterInterpreterDependencyResponse {
     ok,

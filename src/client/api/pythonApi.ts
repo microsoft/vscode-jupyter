@@ -11,29 +11,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri, workspace } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isCI } from '../common/constants';
-import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
-import { ProductNames } from '../common/installer/productNames';
-import { InterpreterUri } from '../common/installer/types';
 import { traceDecorators, traceInfo, traceInfoIfCI } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
-import {
-    GLOBAL_MEMENTO,
-    IDisposableRegistry,
-    IExtensions,
-    IMemento,
-    InstallerResponse,
-    Product,
-    Resource
-} from '../common/types';
+import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { isResource, noop } from '../common/utils/misc';
+import { noop } from '../common/utils/misc';
 import { PythonExtension, Telemetry } from '../datascience/constants';
-import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { TraceOptions } from '../logging/trace';
@@ -46,8 +34,6 @@ import {
     IPythonApiProvider,
     IPythonDebuggerPathProvider,
     IPythonExtensionChecker,
-    IPythonInstaller,
-    JupyterProductToInstall,
     PythonApi
 } from './types';
 
@@ -220,80 +206,6 @@ export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
 
     public getDebuggerPath(): Promise<string> {
         return this.apiProvider.getApi().then((api) => api.getDebuggerPath());
-    }
-}
-
-const ProductMapping: { [key in Product]: JupyterProductToInstall } = {
-    [Product.ipykernel]: JupyterProductToInstall.ipykernel,
-    [Product.jupyter]: JupyterProductToInstall.jupyter,
-    [Product.kernelspec]: JupyterProductToInstall.kernelspec,
-    [Product.nbconvert]: JupyterProductToInstall.nbconvert,
-    [Product.notebook]: JupyterProductToInstall.notebook,
-    [Product.pandas]: JupyterProductToInstall.pandas,
-    [Product.pip]: JupyterProductToInstall.pip
-};
-
-/* eslint-disable max-classes-per-file */
-@injectable()
-export class PythonInstaller implements IPythonInstaller {
-    private readonly _onInstalled = new EventEmitter<{ product: Product; resource?: InterpreterUri }>();
-    public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
-        return this._onInstalled.event;
-    }
-    constructor(
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
-    ) {}
-
-    @traceDecorators.verbose('Installing Product', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async install(
-        product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse> {
-        if (resource && !isResource(resource)) {
-            this.interpreterPackages.trackPackages(resource);
-        }
-        let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
-        try {
-            const api = await this.apiProvider.getApi();
-            const result = await api.install(
-                ProductMapping[product],
-                resource,
-                cancel,
-                reInstallAndUpdate,
-                installPipIfRequired
-            );
-            trackPackageInstalledIntoInterpreter(this.memento, product, resource).catch(noop);
-            if (result === InstallerResponse.Installed) {
-                this._onInstalled.fire({ product, resource });
-            }
-            switch (result) {
-                case InstallerResponse.Installed:
-                    action = 'installed';
-                    break;
-                case InstallerResponse.Ignore:
-                    action = 'ignored';
-                    break;
-                case InstallerResponse.Disabled:
-                    action = 'disabled';
-                    break;
-                default:
-                    break;
-            }
-            return result;
-        } catch (ex) {
-            action = 'failed';
-            throw ex;
-        } finally {
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-                action,
-                moduleName: ProductNames.get(product)!
-            });
-        }
     }
 }
 

@@ -2,20 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IServiceManager } from '../../ioc/types';
-import { ProductType } from '../types';
+import { IServiceManager } from '../../client/ioc/types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
 import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
-import {
-    DataScienceProductPathService,
-    FormatterProductPathService,
-    LinterProductPathService,
-    TestFrameworkProductPathService
-} from './productPath';
+import { DataScienceProductPathService } from './productPath';
 import { ProductService } from './productService';
 import {
     IExtensionBuildInstaller,
@@ -24,6 +18,7 @@ import {
     INSIDERS_INSTALLER,
     IProductPathService,
     IProductService,
+    ProductType,
     STABLE_INSTALLER
 } from './types';
 
@@ -45,17 +40,6 @@ export function registerInstallerTypes(serviceManager: IServiceManager) {
     );
 
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        FormatterProductPathService,
-        ProductType.Formatter
-    );
-    serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        TestFrameworkProductPathService,
-        ProductType.TestFramework
-    );
     serviceManager.addSingleton<IProductPathService>(
         IProductPathService,
         DataScienceProductPathService,

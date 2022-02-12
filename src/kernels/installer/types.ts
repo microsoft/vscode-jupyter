@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Uri } from 'vscode';
-import { PythonEnvironment } from '../../client/api/extension';
-import { Resource } from '../../client/common/types';
+import { CancellationToken, Event, Uri } from 'vscode';
+import { InterpreterUri } from '../../client/common/types';
 
 export enum InstallerResponse {
     Installed,
@@ -18,7 +17,8 @@ export enum Product {
     kernelspec = 21,
     nbconvert = 22,
     pandas = 23,
-    pip = 27
+    pip = 27,
+    ensurepip = 28
 }
 
 export enum ProductInstallStatus {
@@ -50,8 +50,6 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience'
 }
-
-export type InterpreterUri = Resource | PythonEnvironment;
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
@@ -134,6 +132,7 @@ export enum ModuleInstallFlags {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
+    readonly onInstalled: Event<{ product: Product; resource?: InterpreterUri }>;
     install(
         product: Product,
         resource: InterpreterUri,

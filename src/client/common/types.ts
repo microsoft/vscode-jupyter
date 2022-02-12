@@ -4,22 +4,13 @@
 
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
-import {
-    CancellationToken,
-    ConfigurationTarget,
-    Disposable,
-    Event,
-    Extension,
-    ExtensionContext,
-    OutputChannel,
-    Uri
-} from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
-import { InterpreterUri } from './installer/types';
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsPreRelease = Symbol('IsPreRelease');
@@ -371,3 +362,5 @@ export interface IExperimentService {
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
     logExperiments(): void;
 }
+
+export type InterpreterUri = Resource | PythonEnvironment;

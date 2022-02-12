@@ -6,12 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
+import { ProductNames } from '../../../kernels/installer/productNames';
+import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
-import { ProductNames } from '../../common/installer/productNames';
 import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../common/types';
+import { IsCodeSpace } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
