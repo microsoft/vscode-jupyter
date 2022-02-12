@@ -41,6 +41,7 @@ import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { registerLoggerTypes } from './logging/serviceRegistry';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
+import { registerInstallerTypes } from '../kernels/installer/serviceRegistry';
 
 export async function activateComponents(
     context: IExtensionContext,
@@ -112,6 +113,7 @@ async function activateLegacy(
     commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
+    registerInstallerTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);

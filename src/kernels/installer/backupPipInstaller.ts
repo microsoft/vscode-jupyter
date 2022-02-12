@@ -3,20 +3,21 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Disposable, OutputChannel, Progress, ProgressLocation, ProgressOptions } from 'vscode';
-import { Telemetry } from '../../datascience/constants';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { IApplicationShell, IWorkspaceService } from '../application/types';
-import { wrapCancellationTokens } from '../cancellation';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { disposeAllDisposables } from '../helpers';
-import { traceError, traceVerbose } from '../logger';
-import { getDisplayPath } from '../platform/fs-paths';
-import { IPythonExecutionFactory } from '../process/types';
-import { IDisposable, IOutputChannel, Product, Resource } from '../types';
-import { DataScience } from '../utils/localize';
-import { translateProductToModule } from './productInstaller';
+import { PythonEnvironment, EnvironmentType } from '../../client/api/extension';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { wrapCancellationTokens } from '../../client/common/cancellation';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { traceVerbose, traceError } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IDisposable, IOutputChannel, Resource } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
+import { Product } from './types';
 
 function isGlobalEnvironment(interpreter: PythonEnvironment): boolean {
     return (

@@ -49,54 +49,6 @@ export interface IPersistentStateFactory {
     createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
 }
 
-export type ExecutionInfo = {
-    execPath?: string;
-    moduleName?: string;
-    args: string[];
-    product?: Product;
-};
-
-export enum InstallerResponse {
-    Installed,
-    Disabled,
-    Ignore
-}
-
-export enum Product {
-    jupyter = 18,
-    ipykernel = 19,
-    notebook = 20,
-    kernelspec = 21,
-    nbconvert = 22,
-    pandas = 23,
-    pip = 27
-}
-
-export enum ProductInstallStatus {
-    Installed,
-    NotInstalled,
-    NeedsUpgrade
-}
-
-export enum ModuleNamePurpose {
-    install = 1,
-    run = 2
-}
-
-export const IInstaller = Symbol('IInstaller');
-
-export interface IInstaller {
-    install(
-        product: Product,
-        resource: InterpreterUri,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
-    translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
-}
-
 // eslint-disable-next-line
 // TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
 // See https://github.com/microsoft/vscode-python/issues/8542.

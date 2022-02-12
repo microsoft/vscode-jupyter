@@ -1,36 +1,47 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento, OutputChannel, Uri } from 'vscode';
-import { IPythonInstaller } from '../../api/types';
-import '../../common/extensions';
-import { InterpreterPackages } from '../../datascience/telemetry/interpreterPackages';
-import { IServiceContainer } from '../../ioc/types';
-import { logValue } from '../../logging/trace';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { disposeAllDisposables } from '../helpers';
-import { traceDecorators, traceError, traceInfo } from '../logger';
-import { IPlatformService } from '../platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
+import * as semver from 'semver';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, OutputChannel, Uri } from 'vscode';
+import { translateProductToModule } from './moduleInstaller';
+import { ProductNames } from './productNames';
 import {
-    IConfigurationService,
-    IDisposable,
+    IInstallationChannelManager,
     IInstaller,
     InstallerResponse,
-    IOutputChannel,
-    ModuleNamePurpose,
-    Product
-} from '../types';
-import { sleep } from '../utils/async';
-import { isResource } from '../utils/misc';
+    InterpreterUri,
+    IProductPathService,
+    IProductService,
+    ModuleInstallFlags,
+    Product,
+    ProductInstallStatus,
+    ProductType
+} from './types';
+import { traceDecorators } from '../../client/logging';
+import { logValue } from '../../client/logging/trace';
+import { PythonEnvironment } from '../../client/api/extension';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { traceError, traceInfo } from '../../client/common/logger';
+import { IPythonExecutionFactory, IProcessServiceFactory } from '../../client/common/process/types';
+import {
+    IConfigurationService,
+    IPersistentStateFactory,
+    IDisposable,
+    GLOBAL_MEMENTO,
+    IMemento,
+    IOutputChannel
+} from '../../client/common/types';
+import { isResource } from '../../client/common/utils/misc';
+import { IServiceContainer } from '../../client/ioc/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
+import { getInterpreterHash } from '../../client/pythonEnvironments/info/interpreter';
+import { noop, sleep } from '../../test/core';
+import { IPythonInstaller } from '../../client/api/types';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { IPlatformService } from '../../client/common/platform/types';
 import { BackupPipInstaller } from './backupPipInstaller';
-import { ProductNames } from './productNames';
-import { InterpreterUri, IProductPathService } from './types';
-
-export { Product } from '../types';
+import { Telemetry } from '../../datascience-ui/common/constants';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.
@@ -79,15 +90,25 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
     }
 }
 
-export abstract class BaseInstaller {
-    protected readonly appShell: IApplicationShell;
-    protected readonly configService: IConfigurationService;
-    protected readonly appEnv: IApplicationEnvironment;
+abstract class BaseInstaller {
+    private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
 
-    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
+    protected readonly appShell: IApplicationShell;
+
+    protected readonly configService: IConfigurationService;
+
+    protected readonly workspaceService: IWorkspaceService;
+
+    private readonly productService: IProductService;
+
+    protected readonly persistentStateFactory: IPersistentStateFactory;
+
+    constructor(protected serviceContainer: IServiceContainer, _outputChannel: IOutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.appEnv = serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.productService = serviceContainer.get<IProductService>(IProductService);
+        this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
     public async install(
@@ -97,17 +118,86 @@ export abstract class BaseInstaller {
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        return this.serviceContainer
-            .get<IPythonInstaller>(IPythonInstaller)
-            .install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
-    }
-    @traceDecorators.verbose('Checking if product is installed')
-    public async isInstalled(
-        product: Product,
-        @logValue('path') interpreter: PythonEnvironment
-    ): Promise<boolean | undefined> {
-        const executableName = this.getExecutableNameFromSettings(product, undefined);
+        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
+        const installer = await channels.getInstallationChannel(product, interpreter);
+        if (!installer) {
+            return InstallerResponse.Ignore;
+        }
+        let flags =
+            reInstallAndUpdate === true
+                ? ModuleInstallFlags.updateDependencies | ModuleInstallFlags.reInstall
+                : undefined;
+        if (installPipIfRequired === true) {
+            flags = flags ? flags | ModuleInstallFlags.installPipIfRequired : ModuleInstallFlags.installPipIfRequired;
+        }
+        await installer
+            .installModule(product, interpreter, cancel, flags)
+            .catch((ex) => traceError(`Error in installing the product '${ProductNames.get(product)}', ${ex}`));
 
+        return this.isInstalled(product, interpreter).then((isInstalled) => {
+            return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
+        });
+    }
+
+    /**
+     *
+     * @param product A product which supports SemVer versioning.
+     * @param semVerRequirement A SemVer version requirement.
+     * @param resource A URI or a PythonEnvironment.
+     */
+    public async isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        interpreter: PythonEnvironment
+    ): Promise<ProductInstallStatus> {
+        const version = await this.getProductSemVer(product, interpreter);
+        if (!version) {
+            return ProductInstallStatus.NotInstalled;
+        }
+        if (semver.satisfies(version, semVerRequirement)) {
+            return ProductInstallStatus.Installed;
+        }
+        return ProductInstallStatus.NeedsUpgrade;
+    }
+
+    /**
+     *
+     * @param product A product which supports SemVer versioning.
+     * @param resource A URI or a PythonEnvironment.
+     */
+    private async getProductSemVer(product: Product, interpreter: PythonEnvironment): Promise<semver.SemVer | null> {
+        const executableName = this.getExecutableNameFromSettings(product, undefined);
+        const isModule = this.isExecutableAModule(product, undefined);
+
+        let version;
+        if (isModule) {
+            const pythonProcess = await this.serviceContainer
+                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                .createActivatedEnvironment({ interpreter, allowEnvironmentFetchExceptions: true });
+            const args = ['-c', `import ${executableName}; print(${executableName}.__version__)`];
+            const result = await pythonProcess.exec(args, { mergeStdOutErr: true });
+            version = result.stdout.trim();
+        } else {
+            const process = await this.serviceContainer
+                .get<IProcessServiceFactory>(IProcessServiceFactory)
+                .create(undefined);
+            const result = await process.exec(executableName, ['--version'], { mergeStdOutErr: true });
+            version = result.stdout.trim();
+        }
+        if (!version) {
+            return null;
+        }
+        try {
+            return semver.coerce(version);
+        } catch (e) {
+            traceError(`Unable to parse version ${version} for product ${product}: `, e);
+            return null;
+        }
+    }
+
+    @traceDecorators.verbose('Checking if product is installed')
+    public async isInstalled(product: Product, @logValue('path') interpreter: PythonEnvironment): Promise<boolean> {
+        const executableName = this.getExecutableNameFromSettings(product, undefined);
         const isModule = this.isExecutableAModule(product, undefined);
         if (isModule) {
             const pythonProcess = await this.serviceContainer
@@ -130,22 +220,23 @@ export abstract class BaseInstaller {
     }
 
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService);
+        const productType = this.productService.getProductType(product);
+        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
         return productPathService.getExecutableNameFromSettings(product, resource);
     }
-    protected isExecutableAModule(product: Product, resource?: Uri): Boolean {
-        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService);
+
+    protected isExecutableAModule(product: Product, resource?: Uri): boolean {
+        const productType = this.productService.getProductType(product);
+        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
         return productPathService.isExecutableAModule(product, resource);
     }
 }
 
 export class DataScienceInstaller extends BaseInstaller {
     private readonly backupPipInstaller: BackupPipInstaller;
-    private readonly workspaceService: IWorkspaceService;
     private readonly isWindows: boolean;
     constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
         super(serviceContainer, outputChannel);
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.backupPipInstaller = new BackupPipInstaller(
             serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.workspaceService,
@@ -250,13 +341,24 @@ export class DataScienceInstaller extends BaseInstaller {
 
 @injectable()
 export class ProductInstaller implements IInstaller {
+    private readonly productService: IProductService;
+    private readonly _onInstalled = new EventEmitter<{ product: Product; resource?: InterpreterUri }>();
+    public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
+        return this._onInstalled.event;
+    }
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel
-    ) {}
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+    ) {
+        this.productService = serviceContainer.get<IProductService>(IProductService);
+    }
 
-    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    public dispose() {}
+    public dispose(): void {
+        /** Do nothing. */
+    }
+
     public async install(
         product: Product,
         interpreter: PythonEnvironment,
@@ -264,38 +366,64 @@ export class ProductInstaller implements IInstaller {
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
+        if (interpreter) {
+            this.interpreterPackages.trackPackages(interpreter);
+        }
+        let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
+        try {
+            const result = await this.createInstaller(product).install(
+                product,
+                interpreter,
+                cancel,
+                reInstallAndUpdate,
+                installPipIfRequired
+            );
+            trackPackageInstalledIntoInterpreter(this.memento, product, interpreter).catch(noop);
+            if (result === InstallerResponse.Installed) {
+                this._onInstalled.fire({ product, resource: interpreter });
+            }
+            switch (result) {
+                case InstallerResponse.Installed:
+                    action = 'installed';
+                    break;
+                case InstallerResponse.Ignore:
+                    action = 'ignored';
+                    break;
+                case InstallerResponse.Disabled:
+                    action = 'disabled';
+                    break;
+                default:
+                    break;
+            }
+            return result;
+        } catch (ex) {
+            action = 'failed';
+            throw ex;
+        } finally {
+            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                action,
+                moduleName: ProductNames.get(product)!
+            });
+        }
     }
-    public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean | undefined> {
-        return this.createInstaller().isInstalled(product, interpreter);
+
+    public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean> {
+        return this.createInstaller(product).isInstalled(product, interpreter);
     }
-    public translateProductToModuleName(product: Product, _purpose: ModuleNamePurpose): string {
+
+    // eslint-disable-next-line class-methods-use-this
+    public translateProductToModuleName(product: Product): string {
         return translateProductToModule(product);
     }
-    private createInstaller(): BaseInstaller {
-        return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
-    }
-}
 
-// eslint-disable-next-line complexity
-export function translateProductToModule(product: Product): string {
-    switch (product) {
-        case Product.jupyter:
-            return 'jupyter';
-        case Product.notebook:
-            return 'notebook';
-        case Product.pandas:
-            return 'pandas';
-        case Product.ipykernel:
-            return 'ipykernel';
-        case Product.nbconvert:
-            return 'nbconvert';
-        case Product.kernelspec:
-            return 'kernelspec';
-        case Product.pip:
-            return 'pip';
-        default: {
-            throw new Error(`Product ${product} cannot be installed as a Python Module.`);
+    private createInstaller(product: Product): BaseInstaller {
+        const productType = this.productService.getProductType(product);
+        switch (productType) {
+            case ProductType.DataScience:
+                return new DataScienceInstaller(this.serviceContainer);
+            default:
+                break;
         }
+        throw new Error(`Unknown product ${product}`);
     }
 }

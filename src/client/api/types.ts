@@ -85,16 +85,6 @@ export type PythonApi = {
      */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
-     * IInstaller
-     */
-    install(
-        product: JupyterProductToInstall,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse>;
-    /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */
     getInterpreterPathSelectedForJupyterServer(): string | undefined;
