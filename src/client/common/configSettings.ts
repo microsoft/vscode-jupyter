@@ -91,7 +91,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
-    public disablePythonDaemon: boolean = false;
+    public disablePythonDaemon: boolean = true;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
