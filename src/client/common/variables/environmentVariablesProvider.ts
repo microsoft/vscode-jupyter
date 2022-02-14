@@ -6,7 +6,7 @@ import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWa
 import { TraceOptions } from '../../logging/trace';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators, traceVerbose } from '../logger';
+import { traceDecorators, traceInfoIfCI, traceVerbose } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
@@ -59,6 +59,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
+            traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
             return;
         }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
