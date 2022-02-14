@@ -26,8 +26,8 @@ extends:
         inputs:
           versionSpec: '14.16'
 
-      - script: npm cache clean --force
-        displayName: Clean cache
+    #   - script: npm cache clean --force
+    #     displayName: Clean cache
 
       - script: npm ci
         displayName: Install dependencies
