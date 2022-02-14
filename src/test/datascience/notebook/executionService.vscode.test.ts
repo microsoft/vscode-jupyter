@@ -50,7 +50,7 @@ import {
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IPYTHON_VERSION_CODE } from '../../constants';
+import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -167,7 +167,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
     });
-    test('Verify loading of env variables form .env file', async () => {
+    test.only('Verify loading of env variables form .env file', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         await insertCodeCell('import sys\nimport os\nprint(sys.path)\nprint(os.getenv("ENV_VAR_TESTING_CI"))\n', {
             index: 0
         });
