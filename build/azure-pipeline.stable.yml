@@ -1,0 +1,32 @@
+trigger:
+  branches:
+    include:
+      - main
+  tags:
+    include: ['*']
+pr: none
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: microsoft/vscode-engineering
+      ref: main
+      endpoint: Monaco
+
+extends:
+  template: azure-pipelines/extension/stable.yml@templates
+  parameters:
+    buildSteps:
+      - script: npm ci
+        displayName: Install dependencies
+
+      - script: gulp clean
+        displayName: Clean
+
+      - script: gulp prePublishBundle
+        displayName: Build
+
+      # Deliberately causing this to fail.
+      - script: yarn run xyz
+        displayName: Compile
