@@ -99,7 +99,7 @@ jobs:
           echo "package_command=packagePreRelease" >> $GITHUB_ENV
 
       - name: pre-release
-        if: (github.event_name == 'schedule' || github.event.inputs.tag == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
@@ -109,7 +109,7 @@ jobs:
       - name:
           pre-release channel
           # Scheduled builds will publish pre-release builds.
-        if: (github.event_name == 'schedule' || github.event.inputs.tag == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
         run: |
           echo "package_command=packagePreRelease" >> $GITHUB_ENV
           echo "release_channel=pre-release" >> $GITHUB_ENV
