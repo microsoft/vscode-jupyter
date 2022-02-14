@@ -89,7 +89,15 @@ const config = {
             }
         ]
     },
-    externals: ['vscode', 'commonjs', 'electron', './node_modules/zeromq', ...existingModulesInOutDir], // Don't bundle these
+    externals: [
+        'vscode',
+        'commonjs',
+        'electron',
+        './node_modules/zeromq',
+        ...existingModulesInOutDir,
+        '@opentelemetry/tracing',
+        'applicationinsights-native-metrics'
+    ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
         new copyWebpackPlugin({

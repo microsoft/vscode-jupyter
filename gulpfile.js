@@ -286,6 +286,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
             ];
         case 'extension':
             return [
+                'WARNING in ./node_modules/cacheable-request/node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
