@@ -116,12 +116,12 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return mergedVars;
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
+        const workspaceFolders = this.workspaceService.workspaceFolders || [];
+        const defaultWorkspaceFolderUri = workspaceFolders.length === 1 ? workspaceFolders[0].uri : undefined;
         if (!resource) {
-            const workspaceFolders = this.workspaceService.workspaceFolders || [];
-            return workspaceFolders.length === 1 ? workspaceFolders[0].uri : undefined;
+            return defaultWorkspaceFolderUri;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
-        return workspaceFolder ? workspaceFolder.uri : undefined;
+        return this.workspaceService.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
     }
 
     private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
