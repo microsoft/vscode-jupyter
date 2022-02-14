@@ -27,9 +27,6 @@ extends:
         inputs:
           versionSpec: '14.16'
 
-    #   - script: npm cache clean --force
-    #     displayName: Clean cache
-
       - script: npm ci
         displayName: Install dependencies
 
@@ -45,9 +42,8 @@ extends:
       - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
         displayName: Install Python libs
 
+      - script: npm run updateBuildNumber
+        displayName: Update build number
+
       - script: gulp prePublishBundle
         displayName: Build
-
-      # Deliberately causing this to fail.
-    #   - script: yarn run xyz
-    #     displayName: Compile

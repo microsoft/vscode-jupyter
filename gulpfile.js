@@ -17,7 +17,6 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
-const { argv } = require('yargs');
 const os = require('os');
 const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
@@ -180,10 +179,10 @@ gulp.task('webpack', async () => {
 });
 
 gulp.task('updateBuildNumber', async () => {
-    await updateBuildNumber(argv);
+    await updateBuildNumber();
 });
 
-async function updateBuildNumber(args) {
+async function updateBuildNumber() {
     // Edit the version number from the package.json
     const packageJsonContents = await fs.readFile('package.json', 'utf-8');
     const packageJson = JSON.parse(packageJsonContents);
@@ -212,15 +211,6 @@ async function updateBuildNumber(args) {
 
     // Write back to the package json
     await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
-
-    // Update the changelog.md if we are told to (this should happen on the release branch)
-    if (args.updateChangelog) {
-        const changeLogContents = await fs.readFile('CHANGELOG.md', 'utf-8');
-        const fixedContents = changeLogContents.replace(/##\s*(\d+)\.(\d+)\.(\d+)\s*\(/, `## $1.$2.${buildNumber} (`);
-
-        // Write back to changelog.md
-        await fs.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
-    }
 }
 
 async function buildWebPack(webpackConfigName, args, env) {
