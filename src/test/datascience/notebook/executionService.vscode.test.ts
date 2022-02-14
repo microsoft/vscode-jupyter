@@ -171,10 +171,12 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        await insertCodeCell('import sys\nimport os\nprint(sys.path)\nprint(os.getenv("ENV_VAR_TESTING_CI"))\n', {
-            index: 0
-        });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = await insertCodeCell(
+            'import sys\nimport os\nprint(sys.path)\nprint(os.getenv("ENV_VAR_TESTING_CI"))\n',
+            {
+                index: 0
+            }
+        );
 
         await Promise.all([
             runCell(cell),
