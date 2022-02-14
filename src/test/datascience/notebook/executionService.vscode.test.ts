@@ -172,7 +172,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             return this.skip();
         }
         const cell = await insertCodeCell(
-            'import sys\nimport os\nprint(sys.path)\nprint(os.getenv("ENV_VAR_TESTING_CI"))\n',
+            dedent`
+                    import sys
+                    import os
+                    print(sys.path)
+                    print(os.getenv("ENV_VAR_TESTING_CI"))`,
             {
                 index: 0
             }
