@@ -31,35 +31,35 @@ stages:
           inputs:
           versionSpec: '14.16'
 
-extends:
-  template: azure-pipelines/extension/pre-release.yml@templates
-  parameters:
-    buildSteps:
-      - task: NodeTool@0
-        inputs:
-          versionSpec: '14.16'
+# extends:
+#   template: azure-pipelines/extension/pre-release.yml@templates
+#   parameters:
+#     buildSteps:
+#       - task: NodeTool@0
+#         inputs:
+#           versionSpec: '14.16'
 
-    #   - script: npm cache clean --force
-    #     displayName: Clean cache
+#     #   - script: npm cache clean --force
+#     #     displayName: Clean cache
 
-      - script: npm ci
-        displayName: Install dependencies
+#       - script: npm ci
+#         displayName: Install dependencies
 
-      - script: gulp clean
-        displayName: Clean
+#       - script: gulp clean
+#         displayName: Clean
 
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '3.8'
-          addToPath: true
-          architecture: 'x64'
+#       - task: UsePythonVersion@0
+#         inputs:
+#           versionSpec: '3.8'
+#           addToPath: true
+#           architecture: 'x64'
 
-      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        displayName: Install Python libs
+#       - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#         displayName: Install Python libs
 
-      - script: gulp prePublishBundle
-        displayName: Build
+#       - script: gulp prePublishBundle
+#         displayName: Build
 
-      # Deliberately causing this to fail.
-    #   - script: yarn run xyz
-    #     displayName: Compile
+#       # Deliberately causing this to fail.
+#     #   - script: yarn run xyz
+#     #     displayName: Compile
