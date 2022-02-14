@@ -121,6 +121,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         if (!resource) {
             return defaultWorkspaceFolderUri;
         }
+        // Possible user opens a file outside the workspace folder, in this case load .env file from workspace folder as the fallback.
         return this.workspaceService.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
     }
 
