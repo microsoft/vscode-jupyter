@@ -27,9 +27,9 @@ stages:
       - job: Compile
         displayName: Compile & Package
         steps:
-          - task: NodeTool@0
-            inputs:
-            versionSpec: '14.16'
+        - task: NodeTool@0
+          inputs:
+          versionSpec: '14.16'
 
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
