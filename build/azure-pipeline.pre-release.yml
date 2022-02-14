@@ -18,6 +18,19 @@ resources:
       ref: main
       endpoint: Monaco
 
+stages:
+  - stage: Tests
+    displayName: Tests
+    pool:
+      vmImage: ubuntu-latest
+    jobs:
+      - job: Compile
+        displayName: Compile & Package
+        steps:
+          - task: NodeTool@0
+            inputs:
+            versionSpec: '14.16'
+
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
