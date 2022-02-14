@@ -41,10 +41,8 @@ extends:
           addToPath: true
           architecture: 'x64'
 
-      - task: PythonScript@1
-        inputs:
-          script:
-          arguments: '-m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt'
+      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+        displayName: Install Python libs
 
       - script: gulp prePublishBundle
         displayName: Build
