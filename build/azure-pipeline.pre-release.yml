@@ -29,7 +29,7 @@ stages:
         steps:
         - task: NodeTool@0
           inputs:
-          versionSpec: '14.16'
+            versionSpec: '14.16'
 
 # extends:
 #   template: azure-pipelines/extension/pre-release.yml@templates
