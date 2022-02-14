@@ -4,7 +4,7 @@ import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import { TraceOptions } from '../../logging/trace';
-import { traceDecorators } from '../logger';
+import { traceDecorators, traceInfoIfCI } from '../logger';
 
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -63,6 +63,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
+        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`, options.env);
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {

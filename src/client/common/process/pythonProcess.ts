@@ -4,6 +4,7 @@
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
+import { traceInfoIfCI } from '../logger';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types';
 
@@ -32,6 +33,11 @@ class PythonProcessService {
         moduleArgs: string[],
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
+        traceInfoIfCI(
+            `Executing PythonProcessService.execModuleObservable ${moduleName}, ${moduleArgs.join(', ')}`,
+            options.env
+        );
+
         const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
         const executable = this.deps.getExecutionObservableInfo(args);

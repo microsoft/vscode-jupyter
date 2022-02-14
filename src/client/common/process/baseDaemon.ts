@@ -11,7 +11,7 @@ import { MessageConnection, NotificationType, RequestType, RequestType0 } from '
 import { IPlatformService } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../errors/types';
-import { traceError, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -205,6 +205,7 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
         const subject = new Subject<Output<string>>();
+        traceInfoIfCI(`Executing daemon.execAsObservable ${JSON.stringify(moduleOrFile)}`);
         const start = async () => {
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
