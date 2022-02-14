@@ -167,6 +167,18 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
     });
+    test('Verify loading of env variables form .env file', async () => {
+        await insertCodeCell('import sys\nimport os\nprint(sys.path)\nprint(os.getenv("ENV_VAR_TESTING_CI"))\n', {
+            index: 0
+        });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+
+        await Promise.all([
+            runCell(cell),
+            waitForTextOutput(cell, 'HelloWorldEnvVariable', 0, false),
+            waitForTextOutput(cell, 'dummyFolderForPythonPath', 0, false)
+        ]);
+    });
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
         await insertCodeCell('print("Hello World")');

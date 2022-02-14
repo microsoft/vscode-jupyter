@@ -116,7 +116,8 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
         if (!resource) {
-            return;
+            const workspaceFolders = this.workspaceService.workspaceFolders || [];
+            return workspaceFolders.length === 1 ? workspaceFolders[0].uri : undefined;
         }
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
         return workspaceFolder ? workspaceFolder.uri : undefined;
