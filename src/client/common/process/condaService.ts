@@ -15,6 +15,7 @@ const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 
 @injectable()
 export class CondaService {
+    private isAvailable: boolean | undefined;
     private _file?: string;
     private _version?: SemVer;
     private _previousVersionCall?: Promise<SemVer | undefined>;
@@ -74,6 +75,20 @@ export class CondaService {
         this._previousFileCall = promise();
         return this._previousFileCall;
     }
+
+    /**
+     * Is there a conda install to use?
+     */
+    public async isCondaAvailable(): Promise<boolean> {
+        if (typeof this.isAvailable === 'boolean') {
+            return this.isAvailable;
+        }
+        return this.getCondaVersion()
+
+            .then((version) => (this.isAvailable = version !== undefined)) // eslint-disable-line no-return-assign
+            .catch(() => (this.isAvailable = false)); // eslint-disable-line no-return-assign
+    }
+
     private async updateCache() {
         if (!this._file || !this._version) {
             return;

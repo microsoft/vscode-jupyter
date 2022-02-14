@@ -2,25 +2,18 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import * as path from 'path';
-import { CancellationToken, ProgressLocation, ProgressOptions } from 'vscode';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { traceError, traceLog } from '../../logging';
-import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { IApplicationShell } from '../application/types';
-import { wrapCancellationTokens } from '../cancellation';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IFileSystem } from '../platform/types';
-import * as internalPython from '../process/internal/python';
-import { ITerminalServiceFactory, TerminalCreationOptions } from '../terminal/types';
-import { ExecutionInfo, IConfigurationService, IOutputChannel, Product } from '../types';
-import { Products } from '../utils/localize';
-import { isResource } from '../utils/misc';
-import { ProductNames } from './productNames';
-import { IModuleInstaller, InterpreterUri, ModuleInstallFlags } from './types';
+import { CancellationToken, Progress, ProgressLocation, ProgressOptions } from 'vscode';
+import { IApplicationShell } from '../../client/common/application/types';
+import { wrapCancellationTokens } from '../../client/common/cancellation';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { traceError, traceInfo } from '../../client/common/logger';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IOutputChannel } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
+import { Products } from '../../client/common/utils/localize';
+import { IServiceContainer } from '../../client/ioc/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
@@ -33,57 +26,44 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     public async installModule(
         productOrModuleName: Product | string,
-        resource?: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
-        flags?: ModuleInstallFlags,
+        flags?: ModuleInstallFlags
     ): Promise<void> {
         const name =
             typeof productOrModuleName == 'string'
                 ? productOrModuleName
                 : translateProductToModule(productOrModuleName);
-        const productName = typeof productOrModuleName === 'string' ? name : ProductNames.get(productOrModuleName);
-        sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName, productName });
-        const uri = isResource(resource) ? resource : undefined;
-        const options: TerminalCreationOptions = {};
-        if (isResource(resource)) {
-            options.resource = uri;
-        } else {
-            options.interpreter = resource;
-        }
-        const executionInfo = await this.getExecutionInfo(name, resource, flags);
-        const terminalService = this.serviceContainer
-            .get<ITerminalServiceFactory>(ITerminalServiceFactory)
-            .getTerminalService(options);
-        const install = async (token?: CancellationToken) => {
-            const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
-            if (executionInfo.moduleName) {
-                const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-                const settings = configService.getSettings(uri);
-
-                const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-                const interpreter = isResource(resource)
-                    ? await interpreterService.getActiveInterpreter(resource)
-                    : resource;
-                const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
-                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
-                if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
-                    await terminalService.sendCommand(pythonPath, args, token);
-                } else if (settings.globalModuleInstallation) {
-                    const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
-                        this.elevatedInstall(pythonPath, args);
-                    } else {
-                        await terminalService.sendCommand(pythonPath, args, token);
+        const args = await this.getExecutionArgs(name, interpreter, flags);
+        const procFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const install = async (
+            progress?: Progress<{
+                message?: string | undefined;
+                increment?: number | undefined;
+            }>,
+            token?: CancellationToken
+        ) => {
+            const installArgs = await this.processInstallArgs(args, interpreter);
+            const proc = await procFactory.createActivatedEnvironment({ interpreter });
+            const deferred = createDeferred();
+            const observable = proc.execObservable(installArgs, {
+                encoding: 'utf-8',
+                token,
+                throwOnStdErr: true
+            });
+            if (observable) {
+                observable.out.subscribe({
+                    next: (output) => {
+                        if (output.source === 'stdout') {
+                            progress?.report({ message: output.out });
+                        }
+                    },
+                    complete: () => {
+                        deferred.resolve();
                     }
-                } else if (name === translateProductToModule(Product.pip)) {
-                    // Pip should always be installed into the specified environment.
-                    await terminalService.sendCommand(pythonPath, args, token);
-                } else {
-                    await terminalService.sendCommand(pythonPath, args.concat(['--user']), token);
-                }
-            } else {
-                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs, token);
+                });
             }
+            return deferred.promise;
         };
 
         // Display progress indicator if we have ability to cancel this operation from calling code.
@@ -94,25 +74,26 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,
                 cancellable: true,
-                title: Products.installingModule().format(name),
+                title: Products.installingModule().format(name)
             };
-            await shell.withProgress(options, async (_, token: CancellationToken) =>
-                install(wrapCancellationTokens(token, cancel)),
+            await shell.withProgress(options, async (progress, token: CancellationToken) =>
+                install(progress, wrapCancellationTokens(token, cancel))
             );
         } else {
-            await install(cancel);
+            await install(undefined, cancel);
         }
     }
-    public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
+    public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
 
+    // TODO: Figure out when to elevate
     protected elevatedInstall(execPath: string, args: string[]) {
         const options = {
-            name: 'VS Code Python',
+            name: 'VS Code Python'
         };
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
 
-        traceLog(`[Elevated] ${command}`);
+        traceInfo(`[Elevated] ${command}`);
 
         const sudo = require('sudo-prompt');
 
@@ -123,7 +104,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             } else {
                 outputChannel.show();
                 if (stdout) {
-                    traceLog(stdout);
+                    traceInfo(stdout);
                 }
                 if (stderr) {
                     traceError(`Warning: ${stderr}`);
@@ -131,18 +112,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
         });
     }
-    protected abstract getExecutionInfo(
+    protected abstract getExecutionArgs(
         moduleName: string,
-        resource?: InterpreterUri,
-        flags?: ModuleInstallFlags,
-    ): Promise<ExecutionInfo>;
-    private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
+        interpreter: PythonEnvironment,
+        flags?: ModuleInstallFlags
+    ): Promise<string[]>;
+    private processInstallArgs(args: string[], interpreter: PythonEnvironment): string[] {
         const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
             return args;
         }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
         // If installing pylint on python 2.x, then use pylint~=1.9.0
         if (interpreter && interpreter.version && interpreter.version.major === 2) {
             const newArgs = [...args];
@@ -156,32 +135,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
 export function translateProductToModule(product: Product): string {
     switch (product) {
-        case Product.mypy:
-            return 'mypy';
-        case Product.pylama:
-            return 'pylama';
-        case Product.prospector:
-            return 'prospector';
-        case Product.pylint:
-            return 'pylint';
-        case Product.pytest:
-            return 'pytest';
-        case Product.autopep8:
-            return 'autopep8';
-        case Product.black:
-            return 'black';
-        case Product.pycodestyle:
-            return 'pycodestyle';
-        case Product.pydocstyle:
-            return 'pydocstyle';
-        case Product.yapf:
-            return 'yapf';
-        case Product.flake8:
-            return 'flake8';
-        case Product.unittest:
-            return 'unittest';
-        case Product.bandit:
-            return 'bandit';
         case Product.jupyter:
             return 'jupyter';
         case Product.notebook:
@@ -194,12 +147,6 @@ export function translateProductToModule(product: Product): string {
             return 'nbconvert';
         case Product.kernelspec:
             return 'kernelspec';
-        case Product.tensorboard:
-            return 'tensorboard';
-        case Product.torchProfilerInstallName:
-            return 'torch-tb-profiler';
-        case Product.torchProfilerImportName:
-            return 'torch_tb_profiler';
         case Product.pip:
             return 'pip';
         case Product.ensurepip:

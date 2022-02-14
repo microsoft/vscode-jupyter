@@ -4,15 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { isPoetryEnvironmentRelatedToFolder } from '../../pythonEnvironments/common/environmentManagers/poetry';
-import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
-import { IWorkspaceService } from '../application/types';
-import { ExecutionInfo, IConfigurationService } from '../types';
-import { isResource } from '../utils/misc';
+import { EnvironmentType, PythonEnvironment } from '../../client/api/extension';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { IConfigurationService } from '../../client/common/types';
+import { getInterpreterWorkspaceFolder } from '../../client/datascience/jupyter/kernels/helpers';
+import { IServiceContainer } from '../../client/ioc/types';
 import { ModuleInstaller } from './moduleInstaller';
-import { InterpreterUri } from './types';
+import { isPoetryEnvironmentRelatedToFolder } from './poetry';
+import { ModuleInstallerType } from './types';
 
 export const poetryName = 'poetry';
 
@@ -41,42 +40,35 @@ export class PoetryInstaller extends ModuleInstaller {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         super(serviceContainer);
     }
 
-    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        if (!resource) {
+    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
+        if (interpreter.envType !== EnvironmentType.Poetry) {
             return false;
         }
-        if (!isResource(resource)) {
-            return false;
+
+        const folder = getInterpreterWorkspaceFolder(interpreter, this.workspaceService);
+        if (folder) {
+            // Install using poetry CLI only if the active poetry environment is related to the current folder.
+            return isPoetryEnvironmentRelatedToFolder(
+                interpreter.path,
+                folder,
+                this.configurationService.getSettings(undefined).poetryPath
+            );
         }
-        const interpreter = await this.serviceContainer
-            .get<IInterpreterService>(IInterpreterService)
-            .getActiveInterpreter(resource);
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        if (!interpreter || !workspaceFolder || interpreter.envType !== EnvironmentType.Poetry) {
-            return false;
-        }
-        // Install using poetry CLI only if the active poetry environment is related to the current folder.
-        return isPoetryEnvironmentRelatedToFolder(
-            interpreter.path,
-            workspaceFolder.uri.fsPath,
-            this.configurationService.getSettings(resource).poetryPath,
-        );
+
+        return false;
     }
 
-    protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
-        const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
+    protected async getExecutionArgs(moduleName: string, _interpreter: PythonEnvironment): Promise<string[]> {
+        const execPath = this.configurationService.getSettings(undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');
         }
-        return {
-            args,
-            execPath,
-        };
+        return [execPath, ...args];
     }
 }

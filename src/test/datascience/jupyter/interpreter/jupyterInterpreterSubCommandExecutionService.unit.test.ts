@@ -10,7 +10,6 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { ProductNames } from '../../../../client/common/installer/productNames';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import {
@@ -18,7 +17,6 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../../../client/common/process/types';
-import { Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
@@ -30,6 +28,8 @@ import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyte
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { Product } from '../../../../kernels/installer/types';
 use(chaiPromise);
 
 /* eslint-disable  */

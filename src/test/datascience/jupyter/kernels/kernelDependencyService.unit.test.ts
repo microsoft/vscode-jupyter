@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { getResourceType } from '../../../../client/datascience/common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
@@ -17,6 +16,7 @@ import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../cli
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
+import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

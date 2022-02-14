@@ -98,6 +98,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public pylanceHandlesNotebooks: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
+    public poetryPath: string = '';
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -176,7 +177,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return result;
     }
     // eslint-disable-next-line complexity,
-    protected update(jupyterConfig: WorkspaceConfiguration) {
+    protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);
 
@@ -206,15 +207,21 @@ export class JupyterSettings implements IWatchableJupyterSettings {
               };
 
         // The rest are all the same.
-        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
-        keys.forEach((k) => {
+        const replacer = (k: string, config: WorkspaceConfiguration) => {
             // Replace variables with their actual value.
-            const val = systemVariables.resolveAny(jupyterConfig.get(k));
+            const val = systemVariables.resolveAny(config.get(k));
             if (k !== 'variableTooltipFields' || val) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }
-        });
+        };
+        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
+        keys.forEach((k) => replacer(k, jupyterConfig));
+
+        // Special case poetryPath. It actually comes from the python settings
+        if (pythonConfig) {
+            replacer('poetryPath', pythonConfig);
+        }
     }
 
     protected onWorkspaceFoldersChanged() {
@@ -231,7 +238,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     protected initialize(): void {
         const onDidChange = () => {
             const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
-            this.update(currentConfig);
+            const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
+            this.update(currentConfig, pythonConfig);
 
             // If workspace config changes, then we could have a cascading effect of on change events.
             // Let's defer the change notification.
@@ -247,8 +255,9 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         );
 
         const initialConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
+        const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
-            this.update(initialConfig);
+            this.update(initialConfig, pythonConfig);
         }
     }
     @debounceSync(1)

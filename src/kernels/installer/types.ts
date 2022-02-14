@@ -3,6 +3,7 @@
 
 import { CancellationToken, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../client/common/types';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 export enum InstallerResponse {
     Installed,
@@ -70,7 +71,7 @@ export interface IModuleInstaller {
      */
     installModule(
         product: string,
-        resource?: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags
     ): Promise<void>;
@@ -87,7 +88,7 @@ export interface IModuleInstaller {
      */
     installModule(
         product: Product,
-        resource?: InterpreterUri,
+        interpreter: PythonEnvironment,
         cancel?: CancellationToken,
         flags?: ModuleInstallFlags
     ): Promise<void>;
@@ -101,8 +102,8 @@ export interface IPythonInstallation {
 
 export const IInstallationChannelManager = Symbol('IInstallationChannelManager');
 export interface IInstallationChannelManager {
-    getInstallationChannel(product: Product, resource?: InterpreterUri): Promise<IModuleInstaller | undefined>;
-    getInstallationChannels(resource?: InterpreterUri): Promise<IModuleInstaller[]>;
+    getInstallationChannel(product: Product, interpreter: PythonEnvironment): Promise<IModuleInstaller | undefined>;
+    getInstallationChannels(interpreter: PythonEnvironment): Promise<IModuleInstaller[]>;
     showNoInstallersMessage(): void;
 }
 export const IProductService = Symbol('IProductService');
@@ -113,13 +114,6 @@ export const IProductPathService = Symbol('IProductPathService');
 export interface IProductPathService {
     getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     isExecutableAModule(product: Product, resource?: Uri): boolean;
-}
-
-export const INSIDERS_INSTALLER = 'INSIDERS_INSTALLER';
-export const STABLE_INSTALLER = 'STABLE_INSTALLER';
-export const IExtensionBuildInstaller = Symbol('IExtensionBuildInstaller');
-export interface IExtensionBuildInstaller {
-    install(): Promise<void>;
 }
 
 export enum ModuleInstallFlags {

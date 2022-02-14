@@ -7,8 +7,6 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
-import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
-import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
 import {
     InterpreterJupyterKernelSpecCommand,
@@ -20,6 +18,8 @@ import {
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
+import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

@@ -3,13 +3,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { ModuleInstallerType } from '../../pythonEnvironments/info';
-import { ExecutionInfo, IConfigurationService, Product } from '../types';
-import { isResource } from '../utils/misc';
+import { PythonEnvironment } from '../../client/api/extension';
+import { CondaService } from '../../client/common/process/condaService';
+import { IServiceContainer } from '../../client/ioc/types';
+import { isCondaEnvironment } from '../../test/interpreters/condaLocator';
+import { getCondaEnvironment } from '../../test/interpreters/condaService';
 import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
-import { InterpreterUri, ModuleInstallFlags } from './types';
+import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 
 /**
  * A Python module installer for a conda environment.
@@ -49,49 +49,37 @@ export class CondaInstaller extends ModuleInstaller {
      * @param {InterpreterUri} [resource=] Resource used to identify the workspace.
      * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
      */
-    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
+    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
         if (this._isCondaAvailable === false) {
             return false;
         }
-        const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaLocator = this.serviceContainer.get<CondaService>(CondaService);
         this._isCondaAvailable = await condaLocator.isCondaAvailable();
         if (!this._isCondaAvailable) {
             return false;
         }
         // Now we need to check if the current environment is a conda environment or not.
-        return this.isCurrentEnvironmentACondaEnvironment(resource);
+        return isCondaEnvironment(interpreter.path);
     }
 
     /**
      * Return the commandline args needed to install the module.
      */
-    protected async getExecutionInfo(
+    protected async getExecutionArgs(
         moduleName: string,
-        resource?: InterpreterUri,
-        flags: ModuleInstallFlags = 0,
-    ): Promise<ExecutionInfo> {
-        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        interpreter: PythonEnvironment,
+        flags: ModuleInstallFlags = 0
+    ): Promise<string[]> {
+        const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
-
-        const pythonPath = isResource(resource)
-            ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
-        const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-        const info = await condaLocatorService.getCondaEnvironment(pythonPath);
+        const info = await getCondaEnvironment(interpreter.path);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
         // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
         // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
         // Do this just for the datascience packages.
         if (
-            [
-                Product.tensorboard,
-                Product.ipykernel,
-                Product.pandas,
-                Product.nbconvert,
-                Product.jupyter,
-                Product.notebook,
-            ]
+            [Product.ipykernel, Product.pandas, Product.nbconvert, Product.jupyter, Product.notebook]
                 .map(translateProductToModule)
                 .includes(moduleName)
         ) {
@@ -114,20 +102,6 @@ export class CondaInstaller extends ModuleInstaller {
         }
         args.push(moduleName);
         args.push('-y');
-        return {
-            args,
-            execPath: condaFile,
-        };
-    }
-
-    /**
-     * Is the provided interprter a conda environment
-     */
-    private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
-        const pythonPath = isResource(resource)
-            ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
-        return condaService.isCondaEnvironment(pythonPath);
+        return [condaFile || '', ...args];
     }
 }

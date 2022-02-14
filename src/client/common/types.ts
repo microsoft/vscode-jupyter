@@ -123,6 +123,7 @@ export interface IJupyterSettings {
     readonly pylanceHandlesNotebooks?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
+    readonly poetryPath: string;
 }
 
 export interface IVariableTooltipFields {

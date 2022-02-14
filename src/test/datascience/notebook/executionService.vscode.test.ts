@@ -13,7 +13,7 @@ import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, N
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposable, Product } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
@@ -41,7 +41,6 @@ import {
     defaultNotebookTestTimeout,
     waitForCellExecutionState
 } from './helper';
-import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
 import {
@@ -51,6 +50,8 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { IPYTHON_VERSION_CODE } from '../../constants';
+import { ProductNames } from '../../../kernels/installer/productNames';
+import { Product } from '../../../kernels/installer/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;

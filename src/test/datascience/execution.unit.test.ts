@@ -31,13 +31,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IOutputChannel,
-    IPathUtils,
-    Product
-} from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, IPathUtils } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
@@ -60,6 +54,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
+import { Product } from '../../kernels/installer/types';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';

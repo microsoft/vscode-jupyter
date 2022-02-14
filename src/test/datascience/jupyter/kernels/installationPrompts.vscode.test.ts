@@ -7,25 +7,23 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { Memento } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
-import { ProductNames } from '../../../../client/common/installer/productNames';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposable,
-    IInstaller,
     IMemento,
-    InstallerResponse,
     IWatchableJupyterSettings,
-    Product,
     ReadWrite
 } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
+import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';

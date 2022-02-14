@@ -562,5 +562,11 @@
     "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter extension is recommended when running on VS Code Insiders. Would you like to switch?",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
-    "DataScience.kernelConsoleOutputChannel": "{0} Kernel Console Output"
+    "DataScience.kernelConsoleOutputChannel": "{0} Kernel Console Output",
+    "Installer.noCondaOrPipInstaller": "There is no Conda or Pip installer available in the selected environment.",
+    "Installer.noPipInstaller": "There is no Pip installer available in the selected environment.",
+    "Installer.searchForHelp": "Search for help",
+    "Installer.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
+    "Installer.dataScienceInstallPrompt": "Data Science library {0} is not installed. Install?",
+    "Products.installingModule": "Installing {0}"
 }

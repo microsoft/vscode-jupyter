@@ -1108,6 +1108,30 @@ export namespace DataScience {
     );
 }
 
+export namespace Installer {
+    export const noCondaOrPipInstaller = localize(
+        'Installer.noCondaOrPipInstaller',
+        'There is no Conda or Pip installer available in the selected environment.'
+    );
+    export const noPipInstaller = localize(
+        'Installer.noPipInstaller',
+        'There is no Pip installer available in the selected environment.'
+    );
+    export const searchForHelp = localize('Installer.searchForHelp', 'Search for help');
+    export const couldNotInstallLibrary = localize(
+        'Installer.couldNotInstallLibrary',
+        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+    );
+    export const dataScienceInstallPrompt = localize(
+        'Installer.dataScienceInstallPrompt',
+        'Data Science library {0} is not installed. Install?'
+    );
+}
+
+export namespace Products {
+    export const installingModule = localize('products.installingModule', 'Installing {0}');
+}
+
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: Record<string, string> | undefined;

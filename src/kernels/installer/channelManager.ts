@@ -3,11 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { EnvironmentType } from '../../client/api/extension';
+import { EnvironmentType, PythonEnvironment } from '../../client/api/extension';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
-import { InterpreterUri } from '../../client/common/types';
-import { isResource } from '../../client/common/utils/misc';
+import { Installer } from '../../client/common/utils/localize';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ProductNames } from './productNames';
@@ -19,9 +18,9 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async getInstallationChannel(
         product: Product,
-        resource?: InterpreterUri
+        interpreter: PythonEnvironment
     ): Promise<IModuleInstaller | undefined> {
-        const channels = await this.getInstallationChannels(resource);
+        const channels = await this.getInstallationChannels(interpreter);
         if (channels.length === 1) {
             return channels[0];
         }
@@ -29,7 +28,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const productName = ProductNames.get(product)!;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
-            await this.showNoInstallersMessage(isResource(resource) ? resource : undefined);
+            await this.showNoInstallersMessage(undefined);
             return;
         }
 
@@ -49,7 +48,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         return selection ? selection.installer : undefined;
     }
 
-    public async getInstallationChannels(resource?: InterpreterUri): Promise<IModuleInstaller[]> {
+    public async getInstallationChannels(interpreter: PythonEnvironment): Promise<IModuleInstaller[]> {
         const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const supportedInstallers: IModuleInstaller[] = [];
         if (installers.length === 0) {
@@ -66,7 +65,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 // If none supported, try next priority group
                 currentPri = mi.priority;
             }
-            if (await mi.isSupported(resource)) {
+            if (await mi.isSupported(interpreter)) {
                 supportedInstallers.push(mi);
             }
         }

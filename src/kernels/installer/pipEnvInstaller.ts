@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { isPipenvEnvironmentRelatedToFolder } from '../../pythonEnvironments/common/environmentManagers/pipenv';
-import { EnvironmentType, ModuleInstallerType } from '../../pythonEnvironments/info';
-import { IWorkspaceService } from '../application/types';
-import { ExecutionInfo } from '../types';
-import { isResource } from '../utils/misc';
+import { injectable } from 'inversify';
+import { EnvironmentType, PythonEnvironment } from '../../client/api/extension';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { isPipenvEnvironmentRelatedToFolder } from '../../client/common/process/pipenv';
+import { InterpreterUri } from '../../client/common/types';
+import { isResource } from '../../client/common/utils/misc';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ModuleInstaller } from './moduleInstaller';
-import { InterpreterUri, ModuleInstallFlags } from './types';
+import { ModuleInstallerType, ModuleInstallFlags } from './types';
 
 export const pipenvName = 'pipenv';
 
@@ -31,9 +30,6 @@ export class PipEnvInstaller extends ModuleInstaller {
         return 10;
     }
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (isResource(resource)) {
             const interpreter = await this.serviceContainer
@@ -51,11 +47,11 @@ export class PipEnvInstaller extends ModuleInstaller {
             return resource.envType === EnvironmentType.Pipenv;
         }
     }
-    protected async getExecutionInfo(
+    protected async getExecutionArgs(
         moduleName: string,
-        _resource?: InterpreterUri,
-        flags: ModuleInstallFlags = 0,
-    ): Promise<ExecutionInfo> {
+        _interpreter: PythonEnvironment,
+        flags: ModuleInstallFlags = 0
+    ): Promise<string[]> {
         // In pipenv the only way to update/upgrade or re-install is update (apart from a complete uninstall and re-install).
         const update =
             flags & ModuleInstallFlags.reInstall ||
@@ -65,9 +61,6 @@ export class PipEnvInstaller extends ModuleInstaller {
         if (moduleName === 'black') {
             args.push('--pre');
         }
-        return {
-            args: args,
-            execPath: pipenvName,
-        };
+        return [pipenvName, ...args];
     }
 }
