@@ -7,7 +7,7 @@ import { CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
