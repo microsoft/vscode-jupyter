@@ -199,7 +199,7 @@ async function updateBuildNumber() {
     // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
 
     const versionParts = packageJson.version.split('.');
-    // New build is of the form `DDDHHMM` (day of year, hours, minute) (7 digits, as out of the 10 digits first three are reserved for `100` or `100` for patches).
+    // New build is of the form `DDDHHMM` (day of year, hours, minute) (7 digits, as out of the 10 digits first three are reserved for `100` or `101` for patches).
     // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
     // Example build for 3Jan 12:45 will be `0031245`, and 16 Feb 8:50 will be `0470845`
     const today = new Date();
