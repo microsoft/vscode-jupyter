@@ -24,7 +24,7 @@
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
-    -   [ ] [Turn off automatic uploads for pre-release builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting pre-release builds.
+    -   [ ] Turn off automatic uploads for pre-release builds from main by commenting out the schedules section in the build file (https://github.com/microsoft/vscode-jupyter/blob/main/build/azure-pipeline.pre-release.yml#L5). This prevents stable customers from getting pre-release builds.
     -   [ ] Ensure that the engine version and extension version in the `main` branch are **not changed**.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
