@@ -19,7 +19,7 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -684,7 +684,7 @@ export class Kernel implements IKernel {
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
-            traceInfoIfCI('Requesting Kernel info');
+            traceVerbose('Requesting Kernel info');
 
             const promises: Promise<
                 | KernelMessage.IReplyErrorContent
@@ -711,7 +711,7 @@ export class Kernel implements IKernel {
             if (content === defaultResponse) {
                 traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
             } else {
-                traceInfoIfCI('Got Kernel info');
+                traceVerbose('Got Kernel info');
             }
             this._info = content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
@@ -719,9 +719,9 @@ export class Kernel implements IKernel {
             traceWarning('Failed to request KernelInfo', ex);
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
-            traceInfoIfCI('End running kernel initialization, now waiting for idle');
+            traceVerbose('End running kernel initialization, now waiting for idle');
             await notebook.session.waitForIdle(this.launchTimeout);
-            traceInfoIfCI('End running kernel initialization, session is idle');
+            traceVerbose('End running kernel initialization, session is idle');
         }
     }
 
