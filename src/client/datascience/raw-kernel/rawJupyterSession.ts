@@ -297,12 +297,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Attempt to get kernel to respond to requests (this is what jupyter does today).
         // Kinda warms up the kernel communication & ensure things are in the right state.
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
-        // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
-        // Try again (twice, jupyter tries this a couple f times).
-        // However in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
-        // For now, lets try just twice.
+        // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
+        // Lets not wait for full timeout, we don't want to slow kernel startup.
+        // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
+        // Hence we'll try for a max of 3 seconds (1.5s for first try & then another 1.5s for the second attempt),
+        // Note: jupyter (python code) tries this a couple f times).
         // Note: We don't yet want to do what Jupyter does today, it could slow the startup of kernels.
         // Lets try this and see (hence the telemetry to see the cost of this check).
+        // We know 10s is way too slow, see https://github.com/microsoft/vscode-jupyter/issues/8917
         const stopWatch = new StopWatch();
         let gotIoPubMessage = createDeferred<boolean>();
         let attempts = 1;
