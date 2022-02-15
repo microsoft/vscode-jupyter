@@ -6,9 +6,10 @@ import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
 import { traceError, traceVerbose, traceWarning } from '../../client/common/logger';
+import { arePathsSame } from '../../client/common/platform/fileUtils';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
-import { arePathsSame, getOSType, OSType } from '../common';
+import { getOSType, OSType } from '../common';
 import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator';
 

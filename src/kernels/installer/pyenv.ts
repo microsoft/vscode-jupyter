@@ -1,7 +1,6 @@
-import { pathExists } from 'fs-extra';
 import * as path from 'path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../client/common/utils/platform';
-import { arePathsSame, isParentPath } from './fileUtils';
+import { arePathsSame, isParentPath, pathExists } from '../../client/common/platform/fileUtils';
 
 export function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.

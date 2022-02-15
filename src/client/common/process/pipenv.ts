@@ -3,8 +3,8 @@
 
 import { pathExists, readFile } from 'fs-extra';
 import * as path from 'path';
-import { arePathsSame, normCasePath } from '../../../datascience-ui/react-common/arePathsSame';
 import { traceError } from '../logger';
+import { arePathsSame, normCasePath } from '../platform/fileUtils';
 import { getEnvironmentVariable } from '../utils/platform';
 
 function getSearchHeight() {

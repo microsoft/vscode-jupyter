@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as pathModule from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../client/common/utils/platform';
-import * as fileUtils from './fileUtils';
+import * as fileUtils from '../../client/common/platform/fileUtils';
 import { isPipenvEnvironment, isPipenvEnvironmentRelatedToFolder, _getAssociatedPipfile } from './pipenv';
 import { TEST_LAYOUT_ROOT } from '../../test/pythonEnvironments/constants';
 
@@ -30,6 +30,10 @@ suite('Pipenv helper', () => {
         });
 
         test('Global pipenv environment is associated with a project whose Pipfile lies at 3 levels above the project', async () => {
+            // Don't actually want to stub these two here.
+            pathExists.restore();
+            arePathsSame.restore();
+
             getEnvVar.withArgs('PIPENV_MAX_DEPTH').returns('5');
             const expectedDotProjectFile = path.join(
                 TEST_LAYOUT_ROOT,

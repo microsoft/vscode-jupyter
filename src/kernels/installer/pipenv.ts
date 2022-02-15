@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { pathExists, readFile } from 'fs-extra';
 import * as path from 'path';
 import { traceError } from '../../client/common/logger';
 import { getEnvironmentVariable } from '../../client/common/utils/platform';
-import { normCasePath } from '../../datascience-ui/react-common/arePathsSame';
-import { arePathsSame } from '../../test/common';
+import { pathExists, readFile, arePathsSame, normCasePath } from '../../client/common/platform/fileUtils';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for
@@ -31,7 +29,7 @@ function getSearchHeight() {
  */
 export async function _getAssociatedPipfile(
     searchDir: string,
-    options: { lookIntoParentDirectories: boolean },
+    options: { lookIntoParentDirectories: boolean }
 ): Promise<string | undefined> {
     const pipFileName = getEnvironmentVariable('PIPENV_PIPFILE') || 'Pipfile';
     let heightToSearch = options.lookIntoParentDirectories ? getSearchHeight() : 1;
@@ -85,10 +83,10 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
     if (!(await pathExists(dotProjectFile))) {
         return undefined;
     }
-    const projectDir = await readFile(dotProjectFile, { encoding: 'utf-8'});
+    const projectDir = await readFile(dotProjectFile);
     if (!(await pathExists(projectDir))) {
         traceError(
-            `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`,
+            `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`
         );
         return undefined;
     }

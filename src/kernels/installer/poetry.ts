@@ -19,7 +19,7 @@ import {
     getEnvironmentDirFromPath,
     isVirtualenvEnvironment,
     pathExists
-} from './fileUtils';
+} from '../../client/common/platform/fileUtils';
 
 /**
  * Global virtual env dir for a project is named as:

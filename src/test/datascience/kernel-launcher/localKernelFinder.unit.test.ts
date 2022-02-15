@@ -30,7 +30,7 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { arePathsSame, getOSType } from '../../common';
+import { getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
@@ -46,6 +46,7 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
 import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
 import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/localKernelSpecFinderBase';
 import { traceInfoIfCI } from '../../../client/common/logger';
+import { arePathsSame } from '../../../client/common/platform/fileUtils';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {

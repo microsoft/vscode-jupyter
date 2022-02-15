@@ -5,11 +5,11 @@ import { IDisposable } from '@fluentui/react';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../client/common/process/types';
-import { IConfigurationService } from '../../client/common/types';
-import { chain, iterable } from '../../client/common/utils/async';
-import { IServiceContainer } from '../../client/ioc/types';
-import { getOSType, OSType } from '../../test/common';
+import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types';
+import { IConfigurationService } from '../types';
+import { chain, iterable } from '../utils/async';
+import { IServiceContainer } from '../../ioc/types';
+import { getOSType, OSType } from '../../../test/common';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {

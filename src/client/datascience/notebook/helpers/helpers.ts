@@ -35,7 +35,7 @@ import { Uri } from 'vscode';
 import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
-import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
+import { arePathsSame } from '../../../common/platform/fileUtils';
 
 /**
  * Whether this is a Notebook we created/manage/use.
