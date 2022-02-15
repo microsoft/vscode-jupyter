@@ -6,7 +6,7 @@ import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWa
 import { TraceOptions } from '../../logging/trace';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators, traceVerbose } from '../logger';
+import { traceDecorators, traceInfoIfCI, traceVerbose } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
@@ -59,6 +59,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
+            traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
             return;
         }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
@@ -115,11 +116,13 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return mergedVars;
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {
+        const workspaceFolders = this.workspaceService.workspaceFolders || [];
+        const defaultWorkspaceFolderUri = workspaceFolders.length === 1 ? workspaceFolders[0].uri : undefined;
         if (!resource) {
-            return;
+            return defaultWorkspaceFolderUri;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
-        return workspaceFolder ? workspaceFolder.uri : undefined;
+        // Possible user opens a file outside the workspace folder, in this case load .env file from workspace folder as the fallback.
+        return this.workspaceService.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
     }
 
     private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {

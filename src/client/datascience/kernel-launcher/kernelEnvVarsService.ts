@@ -22,7 +22,7 @@ export class KernelEnvironmentVariablesService {
     /**
      * If the kernel belongs to a conda environment, then use the env variables of the conda environment and merge that with the env variables of the kernel spec.
      * In the case of some kernels such as java, the kernel spec contains the cli as such `argv = ['java', 'xyz']`.
-     * The first argument is an executable, and it is not in the current path.
+     * The first item in the kernelspec argv is an kernel executable, and it might not in the current path (e.g. `java`).
      * However, when activating the conda env, the path variables are updated to set path to the location where the java executable is located.
      */
     public async getEnvironmentVariables(
@@ -48,22 +48,23 @@ export class KernelEnvironmentVariablesService {
                 });
         }
 
-        if (interpreter?.envType !== EnvironmentType.Conda) {
-            traceInfo(`No custom variables for Kernel as interpreter is not conda, but is ${interpreter?.envType}`);
-            return kernelEnv;
-        }
         let [customEditVars, interpreterEnv] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
-            this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, false).catch<undefined>((ex) => {
-                traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
-                return undefined;
-            })
+            interpreter && interpreter.envType == EnvironmentType.Conda
+                ? this.envActivation
+                      .getActivatedEnvironmentVariables(resource, interpreter, false)
+                      .catch<undefined>((ex) => {
+                          traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                          return undefined;
+                      })
+                : undefined
         ]);
-        if (!interpreterEnv) {
-            traceInfo('No custom variables for Kernel even thought interpreter is conda');
+        if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
+            traceInfo('No custom variables nor do we have a conda environment');
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
+        interpreterEnv = interpreterEnv || {};
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
         customEditVars = customEditVars || {};
