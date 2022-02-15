@@ -167,7 +167,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
     });
-    test.only('Verify loading of env variables form .env file', async function () {
+    test('Verify loading of env variables form .env file', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
