@@ -201,9 +201,8 @@ async function updateBuildNumber() {
     const versionParts = packageJson.version.split('.');
     // New build is of the form `MMDDHHM` (7 digits, as first three are reserved for `100` or `100` for patches).
     // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
-    const buildNumberSuffix = `${(new Date().getMonth() + 1).toString().padStart(2, '0')}${(new Date().getHours() + 1)
-        .toString()
-        .padStart(2, '0')}${(new Date().getMinutes() + 1).toString().substring(0, 1)}`;
+    const parts = [new Date().getMonth() + 1, new Date().getHours() + 1, new Date().getMinutes() + 1];
+    const buildNumberSuffix = `${parts.map((item) => item.toString().padStart(2, '0')).join('')}0`;
     const buildNumber = `${versionParts[2].substring(0, 3)}${buildNumberSuffix}`;
     const newVersion =
         versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumber}` : packageJson.version;
