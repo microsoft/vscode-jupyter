@@ -203,7 +203,7 @@ async function updateBuildNumber() {
     // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
     // Example build for 3Jan 12:45 will be `0031245`, and 16 Feb 8:50 will be `0470845`
     const today = new Date();
-    const dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const dayCount = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
     const dayOfYear = dayCount[today.getMonth()] + today.getDate() + 1;
     const buildNumberSuffix = `${dayOfYear.toString().padStart(3, '0')}${(today.getHours() + 1)
         .toString()
