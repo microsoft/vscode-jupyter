@@ -18,14 +18,13 @@
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-jupyter/blob/main/requirements.txt))
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
-    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance and downloading the notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
-    -   [ ] [Turn off automatic uploads for pre-release builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting pre-release builds.
+    -   [ ] Turn off automatic uploads for pre-release builds from main by commenting out the schedules section in the build file (https://github.com/microsoft/vscode-jupyter/blob/main/build/azure-pipeline.pre-release.yml#L5). This prevents stable customers from getting pre-release builds.
     -   [ ] Ensure that the engine version and extension version in the `main` branch are **not changed**.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
