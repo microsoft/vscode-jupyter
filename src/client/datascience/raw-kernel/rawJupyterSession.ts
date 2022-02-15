@@ -299,6 +299,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
         // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
         // Try again (twice, jupyter tries this a couple f times).
+        // However in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
         // For now, lets try just twice.
         // Note: We don't yet want to do what Jupyter does today, it could slow the startup of kernels.
         // Lets try this and see (hence the telemetry to see the cost of this check).
@@ -312,7 +313,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             try {
                 await Promise.race([
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 10_000)),
+                    sleep(Math.min(this.launchTimeout, 1_500)),
                     createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
                 ]);
             } catch (ex) {
