@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { EnvironmentType, PythonEnvironment } from '../../client/api/extension';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { Installer } from '../../client/common/utils/localize';

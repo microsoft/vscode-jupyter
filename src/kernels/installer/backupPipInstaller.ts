@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Disposable, OutputChannel, Progress, ProgressLocation, ProgressOptions } from 'vscode';
-import { PythonEnvironment, EnvironmentType } from '../../client/api/extension';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { wrapCancellationTokens } from '../../client/common/cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
@@ -13,6 +12,7 @@ import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IDisposable, IOutputChannel, Resource } from '../../client/common/types';
 import { DataScience } from '../../client/common/utils/localize';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { translateProductToModule } from './moduleInstaller';

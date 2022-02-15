@@ -8,7 +8,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { _SCRIPTS_DIR } from '../../client/common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
-import { PythonEnvironment } from '../../client/api/extension';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {

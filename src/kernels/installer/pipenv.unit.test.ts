@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as platformApis from '../../client/common/utils/platform';
 import * as fileUtils from './fileUtils';
 import { isPipenvEnvironment, isPipenvEnvironmentRelatedToFolder, _getAssociatedPipfile } from './pipenv';
-import { TEST_LAYOUT_ROOT } from '../../../test/constants';
+import { TEST_LAYOUT_ROOT } from '../../test/pythonEnvironments/constants';
 
 const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 

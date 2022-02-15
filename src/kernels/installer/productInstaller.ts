@@ -18,7 +18,7 @@ import {
 } from './types';
 import { traceDecorators } from '../../client/logging';
 import { logValue } from '../../client/logging/trace';
-import { PythonEnvironment } from '../../client/api/extension';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IPythonExecutionFactory, IProcessServiceFactory } from '../../client/common/process/types';

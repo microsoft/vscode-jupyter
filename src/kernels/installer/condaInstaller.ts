@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { PythonEnvironment } from '../../client/api/extension';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { CondaService } from '../../client/common/process/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { isCondaEnvironment } from '../../test/interpreters/condaLocator';

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { EnvironmentType, PythonEnvironment } from '../../client/api/extension';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { isPipenvEnvironmentRelatedToFolder } from '../../client/common/process/pipenv';
 import { InterpreterUri } from '../../client/common/types';

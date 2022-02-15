@@ -4,13 +4,13 @@
 import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
-import { PythonEnvironment, EnvironmentType } from '../../client/api/extension';
 import { IApplicationShell } from '../../client/common/application/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { InstallationChannelManager } from './channelManager';
 import { IModuleInstaller, Product } from './types';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
