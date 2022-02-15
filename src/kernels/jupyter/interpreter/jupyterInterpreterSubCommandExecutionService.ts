@@ -115,9 +115,9 @@ export class JupyterInterpreterSubCommandExecutionService
                 notebookArgs.join(' ')
             )
         );
-        const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
-            interpreter: interpreter
+        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
+            interpreter: interpreter,
+            allowEnvironmentFetchExceptions: true
         });
         // We should never set token for long running processes.
         // We don't want the process to die when the token is cancelled.
@@ -139,15 +139,14 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
-            interpreter: interpreter
+        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
+            interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
-        const serverInfoString = await daemon.exec([file], newOptions);
+        const serverInfoString = await executionService.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {

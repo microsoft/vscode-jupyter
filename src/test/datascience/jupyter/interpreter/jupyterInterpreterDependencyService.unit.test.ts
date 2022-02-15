@@ -41,9 +41,9 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         command = mock(InterpreterJupyterKernelSpecCommand);
         instance(commandFactory as any).then = undefined;
         instance(command as any).then = undefined;
-        when(
-            commandFactory.createInterpreterCommand(anything(), anything(), anything(), anything(), anything())
-        ).thenReturn(instance(command));
+        when(commandFactory.createInterpreterCommand(anything(), anything(), anything(), anything())).thenReturn(
+            instance(command)
+        );
         when(command.exec(anything(), anything())).thenResolve({ stdout: '' });
 
         configuration = new JupyterInterpreterDependencyService(
