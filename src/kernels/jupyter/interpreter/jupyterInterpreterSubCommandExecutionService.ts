@@ -10,8 +10,7 @@ import { traceWarning } from '../../../platform/common/logger';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
-    ObservableExecutionResult,
-    IPythonDaemonExecutionService
+    ObservableExecutionResult
 } from '../../../platform/common/process/types';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -25,7 +24,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths';
