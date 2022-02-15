@@ -350,7 +350,6 @@ export class KernelProcess implements IKernelProcess {
             // a different process tries to open it.
             const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
-            await tempFile.dispose();
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
