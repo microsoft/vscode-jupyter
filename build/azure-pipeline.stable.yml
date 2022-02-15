@@ -18,15 +18,27 @@ extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
     buildSteps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '14.16'
+
       - script: npm ci
         displayName: Install dependencies
 
       - script: gulp clean
         displayName: Clean
 
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.8'
+          addToPath: true
+          architecture: 'x64'
+
+      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+        displayName: Install Python libs
+
+      - script: npm run updateBuildNumber
+        displayName: Update build number
+
       - script: gulp prePublishBundle
         displayName: Build
-
-      # Deliberately causing this to fail.
-      - script: yarn run xyz
-        displayName: Compile
