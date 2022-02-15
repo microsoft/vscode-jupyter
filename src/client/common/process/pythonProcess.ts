@@ -33,11 +33,6 @@ class PythonProcessService {
         moduleArgs: string[],
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
-        traceInfoIfCI(
-            `Executing PythonProcessService.execModuleObservable ${moduleName}, ${moduleArgs.join(', ')}`,
-            options.env
-        );
-
         const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
         const executable = this.deps.getExecutionObservableInfo(args);

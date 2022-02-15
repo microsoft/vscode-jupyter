@@ -205,7 +205,6 @@ export abstract class BasePythonDaemon {
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
         const subject = new Subject<Output<string>>();
-        traceInfoIfCI(`Executing daemon.execAsObservable ${JSON.stringify(moduleOrFile)}`);
         const start = async () => {
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
