@@ -199,10 +199,15 @@ async function updateBuildNumber() {
     // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
 
     const versionParts = packageJson.version.split('.');
-    // New build is of the form `MMDDHHM` (7 digits, as first three are reserved for `100` or `100` for patches).
+    // New build is of the form `DDDHHMM` (day of year, hours, minute) (7 digits, as out of the 10 digits first three are reserved for `100` or `100` for patches).
     // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
-    const parts = [new Date().getMonth() + 1, new Date().getHours() + 1, new Date().getMinutes() + 1];
-    const buildNumberSuffix = `${parts.map((item) => item.toString().padStart(2, '0')).join('')}0`;
+    // Example build for 3Jan 12:45 will be `0031245`, and 16 Feb 8:50 will be `0470845`
+    const today = new Date();
+    const dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const dayOfYear = dayCount[today.getMonth()] + today.getDate() + 1;
+    const buildNumberSuffix = `${dayOfYear.toString().padStart('0')}${(today.getHours() + 1)
+        .toString()
+        .padStart(2, '0')}${(today.getMinutes() + 1).toString().padStart(2, '0')}`;
     const buildNumber = `${versionParts[2].substring(0, 3)}${buildNumberSuffix}`;
     const newVersion =
         versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumber}` : packageJson.version;
