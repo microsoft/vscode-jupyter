@@ -19,7 +19,14 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
+import {
+    traceDecorators,
+    traceError,
+    traceInfo,
+    traceInfoIfCI,
+    traceVerbose,
+    traceWarning
+} from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -610,10 +617,10 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
-        traceInfoIfCI('Started running kernel initialization');
+        traceVerbose('Started running kernel initialization');
         const notebook = this.notebook;
         if (!notebook) {
-            traceInfoIfCI('Not running kernel initialization');
+            traceVerbose('Not running kernel initialization');
             return;
         }
         if (!this.hookedNotebookForEvents.has(notebook)) {
@@ -645,7 +652,7 @@ export class Kernel implements IKernel {
                 }
             });
             const statusChangeHandler = (status: KernelMessage.Status) => {
-                traceInfoIfCI(`IKernel Status change to ${status}`);
+                traceVerbose(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
@@ -662,7 +669,9 @@ export class Kernel implements IKernel {
                 // No need to wait for this to complete when connecting to a live kernel.
                 completionPromise.catch(noop);
             } else {
+                traceVerbose('Waiting for completions request to complete');
                 await completionPromise;
+                traceVerbose('Completions request completed');
             }
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
@@ -767,6 +776,7 @@ export class Kernel implements IKernel {
         return result;
     }
 
+    @traceDecorators.verbose('Requesting completions')
     private async requestEmptyCompletions() {
         await this.session?.requestComplete({
             code: '__file__.',
@@ -966,6 +976,7 @@ export class Kernel implements IKernel {
 
     private async executeSilently(code: string[]) {
         if (!this.notebook || code.join('').trim().length === 0) {
+            traceVerbose(`Not executing startup notebook: ${this.notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
         await executeSilently(this.notebook.session, code.join('\n'));

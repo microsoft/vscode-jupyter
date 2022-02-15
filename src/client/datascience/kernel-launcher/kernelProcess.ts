@@ -22,7 +22,7 @@ import {
     IPythonExecutionFactory,
     ObservableExecutionResult
 } from '../../common/process/types';
-import { IOutputChannel, Resource } from '../../common/types';
+import { IJupyterSettings, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
@@ -88,7 +88,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         private readonly pythonExecFactory: IPythonExecutionFactory,
-        private readonly outputChannel: IOutputChannel | undefined
+        private readonly outputChannel: IOutputChannel | undefined,
+        private readonly jupyterSettings: IJupyterSettings
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -437,7 +438,11 @@ export class KernelProcess implements IKernelProcess {
 
             // If we don't have a KernelDaemon here & we're not running a Python module either.
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            exeObs = executionService.execObservable(this.launchKernelSpec.argv.slice(1), {
+            const args = this.launchKernelSpec.argv.slice(1);
+            if (this.jupyterSettings.enablePythonKernelLogging) {
+                args.push('--debug');
+            }
+            exeObs = executionService.execObservable(args, {
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
