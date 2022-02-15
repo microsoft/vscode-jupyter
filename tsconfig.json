@@ -10,7 +10,7 @@
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
         "jsx": "react",
         "sourceMap": true,
-        "rootDirs": ["./test", "./src"],
+        "rootDir": "src",
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,
