@@ -2075,7 +2075,7 @@
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js && cd src/ipywidgets && npm install",
         "installPythonLibs": "gulp installPythonLibs",
-        "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
+        "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
