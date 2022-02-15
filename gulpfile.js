@@ -205,7 +205,7 @@ async function updateBuildNumber() {
     const today = new Date();
     const dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
     const dayOfYear = dayCount[today.getMonth()] + today.getDate() + 1;
-    const buildNumberSuffix = `${dayOfYear.toString().padStart('0')}${(today.getHours() + 1)
+    const buildNumberSuffix = `${dayOfYear.toString().padStart(3, '0')}${(today.getHours() + 1)
         .toString()
         .padStart(2, '0')}${(today.getMinutes() + 1).toString().padStart(2, '0')}`;
     const buildNumber = `${versionParts[2].substring(0, 3)}${buildNumberSuffix}`;
