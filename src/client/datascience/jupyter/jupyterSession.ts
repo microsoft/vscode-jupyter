@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { BaseError } from '../../common/errors/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataScience } from '../../common/utils/localize';
@@ -139,7 +139,7 @@ export class JupyterSession extends BaseJupyterSession {
                     100
                 );
             } else {
-                traceInfoIfCI(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
+                traceVerbose(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
                 newSession.resource = this.resource;
 
@@ -176,7 +176,7 @@ export class JupyterSession extends BaseJupyterSession {
         while (tryCount < 3) {
             const ui = new DisplayOptions(true);
             try {
-                traceInfoIfCI(
+                traceVerbose(
                     `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
                 );
                 result = await this.createSession({ token: cancelToken, ui });

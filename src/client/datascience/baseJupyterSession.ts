@@ -9,7 +9,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../common/errors/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -291,6 +291,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const deferred = createDeferred<string>();
                 const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
+                    traceVerbose(`Got status ${status} in waitForIdleOnSession`);
                     if (status == 'idle') {
                         deferred.resolve(status);
                     }
@@ -307,6 +308,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 if (result.toString() == 'idle') {
                     return;
                 }
+                traceError(
+                    `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
+                );
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                 this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
                 throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
