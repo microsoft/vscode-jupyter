@@ -11,7 +11,7 @@ import { MessageConnection, NotificationType, RequestType, RequestType0 } from '
 import { IPlatformService } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../errors/types';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';

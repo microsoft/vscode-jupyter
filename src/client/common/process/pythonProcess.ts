@@ -4,7 +4,6 @@
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
-import { traceInfoIfCI } from '../logger';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types';
 
