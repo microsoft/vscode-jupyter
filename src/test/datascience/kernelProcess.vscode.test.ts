@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
-import { IDisposable } from '../../client/common/types';
+import { IDisposable, IJupyterSettings } from '../../client/common/types';
 import rewiremock from 'rewiremock';
 import {
     IProcessService,
@@ -86,6 +86,8 @@ suite('DataScience - Kernel Process', () => {
         when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
+        const settings = mock<IJupyterSettings>();
+        when(settings.enablePythonKernelLogging).thenReturn(false);
         return new KernelProcess(
             instance(processExecutionFactory),
             instance(connection),
@@ -95,7 +97,8 @@ suite('DataScience - Kernel Process', () => {
             instance(extensionChecker),
             instance(kernelEnvVarsService),
             instance(pythonExecFactory),
-            undefined
+            undefined,
+            instance(settings)
         );
     }
     test('Launch from kernelspec (linux)', async function () {
