@@ -104,7 +104,7 @@ export const IInstallationChannelManager = Symbol('IInstallationChannelManager')
 export interface IInstallationChannelManager {
     getInstallationChannel(product: Product, interpreter: PythonEnvironment): Promise<IModuleInstaller | undefined>;
     getInstallationChannels(interpreter: PythonEnvironment): Promise<IModuleInstaller[]>;
-    showNoInstallersMessage(): void;
+    showNoInstallersMessage(interpreter: PythonEnvironment): void;
 }
 export const IProductService = Symbol('IProductService');
 export interface IProductService {

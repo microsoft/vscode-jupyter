@@ -118,7 +118,7 @@ suite('Module Installer - Poetry', () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
-            path: 'foobar',
+            path: path.join(project1, '.venv', 'scripts', 'python.exe'),
             sysPrefix: '0'
         };
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,10 +6,10 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { PythonEnvironment, EnvironmentType } from '../../../client/api/extension';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { DataScienceInstaller } from '../productInstaller';
 import {
     Product,
@@ -90,8 +91,9 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve());
 
         installationChannelManager
-            .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve([testInstaller.object]));
+            .setup((c) => c.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isValue(testEnvironment)))
+            .returns(() => Promise.resolve(testInstaller.object));
+        testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
         const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
@@ -120,8 +122,9 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve());
 
         installationChannelManager
-            .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve([testInstaller.object]));
+            .setup((c) => c.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isValue(testEnvironment)))
+            .returns(() => Promise.resolve(testInstaller.object));
+        testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
         const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
@@ -150,8 +153,9 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve());
 
         installationChannelManager
-            .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve([testInstaller.object]));
+            .setup((c) => c.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isValue(testEnvironment)))
+            .returns(() => Promise.resolve(testInstaller.object));
+        testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
         const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
@@ -180,8 +184,9 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve());
 
         installationChannelManager
-            .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve([testInstaller.object]));
+            .setup((c) => c.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isValue(testEnvironment)))
+            .returns(() => Promise.resolve(testInstaller.object));
+        testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
         const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');

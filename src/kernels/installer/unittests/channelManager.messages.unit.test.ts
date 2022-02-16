@@ -166,7 +166,7 @@ suite('Installation - channel messages', () => {
                 url = s;
             });
         if (methodType === 'showNoInstallersMessage') {
-            await channels.showNoInstallersMessage();
+            await channels.showNoInstallersMessage(activeInterpreter);
         } else {
             await channels.getInstallationChannel(Product.jupyter, info);
         }

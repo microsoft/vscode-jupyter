@@ -40,7 +40,7 @@ suite('Pip installer', async () => {
         pythonExecutionFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
             .callback((options) => {
-                assert.deepEqual(options, { resource: undefined, pythonPath: interpreter.path });
+                assert.deepEqual(options, { resource: undefined, interpreter });
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
             .verifiable(TypeMoq.Times.once());

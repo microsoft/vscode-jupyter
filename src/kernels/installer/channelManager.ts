@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { Installer } from '../../client/common/utils/localize';
-import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
@@ -28,7 +26,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const productName = ProductNames.get(product)!;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
-            await this.showNoInstallersMessage(undefined);
+            await this.showNoInstallersMessage(interpreter);
             return;
         }
 
@@ -72,13 +70,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         return supportedInstallers;
     }
 
-    public async showNoInstallersMessage(resource?: Uri): Promise<void> {
-        const interpreters = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = await interpreters.getActiveInterpreter(resource);
-        if (!interpreter) {
-            return; // Handled in the Python installation check.
-        }
-
+    public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const search = 'Search for help';
         let result: string | undefined;

@@ -3,13 +3,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { CondaService } from '../../client/common/process/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { isCondaEnvironment } from '../../test/interpreters/condaLocator';
-import { getCondaEnvironment } from '../../test/interpreters/condaService';
 import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
+import * as path from 'path';
 
 /**
  * A Python module installer for a conda environment.
@@ -59,7 +58,7 @@ export class CondaInstaller extends ModuleInstaller {
             return false;
         }
         // Now we need to check if the current environment is a conda environment or not.
-        return isCondaEnvironment(interpreter.path);
+        return interpreter.envType === EnvironmentType.Conda;
     }
 
     /**
@@ -72,7 +71,8 @@ export class CondaInstaller extends ModuleInstaller {
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
-        const info = await getCondaEnvironment(interpreter.path);
+        const name = interpreter.envName;
+        const envPath = this.getEnvironmentPath(interpreter);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
         // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
@@ -85,14 +85,14 @@ export class CondaInstaller extends ModuleInstaller {
         ) {
             args.push('-c', 'conda-forge');
         }
-        if (info && info.name) {
+        if (name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info.name.toCommandArgument());
-        } else if (info && info.path) {
+            args.push(name.toCommandArgument());
+        } else if (envPath) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(info.path.fileToCommandArgument());
+            args.push(envPath.fileToCommandArgument());
         }
         if (flags & ModuleInstallFlags.updateDependencies) {
             args.push('--update-deps');
@@ -106,5 +106,14 @@ export class CondaInstaller extends ModuleInstaller {
             exe: condaFile,
             args
         };
+    }
+
+    private getEnvironmentPath(interpreter: PythonEnvironment) {
+        const dir = path.dirname(interpreter.path);
+
+        // If interpreter is in bin or Scripts, then go up one level
+        const subDirName = path.basename(dir);
+        const goUpOnLevel = ['BIN', 'SCRIPTS'].indexOf(subDirName.toUpperCase()) !== -1;
+        return goUpOnLevel ? path.join(dir, '..') : dir;
     }
 }
