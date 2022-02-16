@@ -26,7 +26,6 @@ import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
-import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
@@ -72,11 +71,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
-        if (
-            (IS_CI_SERVER && getOSType() !== OSType.OSX) ||
-            !fs.pathExistsSync(venvPythonPath) ||
-            !fs.pathExistsSync(venvNoRegPath)
-        ) {
+        if (!fs.pathExistsSync(venvPythonPath) || !fs.pathExistsSync(venvNoRegPath)) {
             // Virtual env does not exist.
             return this.skip();
         }
