@@ -222,7 +222,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         // Allows us to say "Loading" initially versus "No Variables Defined"
         // We have to handle this with two different React components as the grid emptyRowsView takes a component
         // not an element as a property and internally calls createElement without properties for the view
-        const emptyRowsView = this.props.requestInProgress ? VariableExplorerLoadingRowsView : VariableExplorerEmptyRowsView;
+        const emptyRowsView = this.props.requestInProgress
+            ? VariableExplorerLoadingRowsView
+            : VariableExplorerEmptyRowsView;
 
         return (
             <div
