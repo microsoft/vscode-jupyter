@@ -19,14 +19,7 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import {
-    traceDecorators,
-    traceError,
-    traceInfo,
-    traceInfoIfCI,
-    traceVerbose,
-    traceWarning
-} from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -662,17 +655,8 @@ export class Kernel implements IKernel {
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-            // Request completions to warm up the completion engine (first call always takes a lot longer)
-            const completionPromise = this.requestEmptyCompletions();
-
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
-                // No need to wait for this to complete when connecting to a live kernel.
-                completionPromise.catch(noop);
-            } else {
-                traceVerbose('Waiting for completions request to complete');
-                await completionPromise;
-                traceVerbose('Completions request completed');
-            }
+            // Request completions to warm up the completion engine.
+            this.requestEmptyCompletions();
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -776,9 +760,14 @@ export class Kernel implements IKernel {
         return result;
     }
 
-    @traceDecorators.verbose('Requesting completions')
-    private async requestEmptyCompletions() {
-        await this.session?.requestComplete({
+    /**
+     * Do not wait for completions,
+     * If the completions request crashes then we don't get a response for this request,
+     * Hence we end up waiting indefinitely.
+     * https://github.com/microsoft/vscode-jupyter/issues/9014
+     */
+    private requestEmptyCompletions() {
+        void this.session?.requestComplete({
             code: '__file__.',
             cursor_pos: 9
         });
