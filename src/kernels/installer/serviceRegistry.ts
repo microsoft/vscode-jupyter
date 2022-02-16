@@ -8,10 +8,12 @@ import { CondaInstaller } from './condaInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
+import { ProductInstaller } from './productInstaller';
 import { DataScienceProductPathService } from './productPath';
 import { ProductService } from './productService';
 import {
     IInstallationChannelManager,
+    IInstaller,
     IModuleInstaller,
     IProductPathService,
     IProductService,
@@ -25,6 +27,7 @@ export function registerInstallerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
+    serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
     serviceManager.addSingleton<IProductPathService>(
         IProductPathService,
         DataScienceProductPathService,

@@ -1,19 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { CancellationToken, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { wrapCancellationTokens } from '../../client/common/cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult
+} from '../../client/common/process/types';
 import { IOutputChannel } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Products } from '../../client/common/utils/localize';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
+
+export type ExecutionInstallArgs = {
+    args: string[];
+    exe?: string;
+};
 
 @injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
@@ -22,7 +31,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get displayName(): string;
     public abstract get type(): ModuleInstallerType;
 
-    constructor(protected serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) protected serviceContainer: IServiceContainer) {}
 
     public async installModule(
         productOrModuleName: Product | string,
@@ -35,7 +44,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 ? productOrModuleName
                 : translateProductToModule(productOrModuleName);
         const args = await this.getExecutionArgs(name, interpreter, flags);
-        const procFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const procFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const install = async (
             progress?: Progress<{
                 message?: string | undefined;
@@ -43,23 +53,39 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }>,
             token?: CancellationToken
         ) => {
-            const installArgs = await this.processInstallArgs(args, interpreter);
-            const proc = await procFactory.createActivatedEnvironment({ interpreter });
+            // Args can be for a specific exe or for the interpreter. If for the
+            // interpreter create an activated environment and launch from there.
             const deferred = createDeferred();
-            const observable = proc.execObservable(installArgs, {
-                encoding: 'utf-8',
-                token,
-                throwOnStdErr: true
-            });
+            let observable: ObservableExecutionResult<string> | undefined;
+            if (args.exe) {
+                const proc = await procFactory.create(undefined);
+                observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token });
+            } else {
+                const proc = await pythonFactory.createActivatedEnvironment({ interpreter });
+                observable = proc.execObservable(args.args, {
+                    encoding: 'utf-8',
+                    token
+                });
+            }
+            let lastStdErr: string | undefined;
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
-                        if (output.source === 'stdout') {
-                            progress?.report({ message: output.out });
+                        progress?.report({ message: output.out });
+                        traceInfo(output.out);
+                        if (output.source === 'stderr') {
+                            lastStdErr = output.out;
                         }
                     },
                     complete: () => {
-                        deferred.resolve();
+                        if (observable?.proc?.exitCode !== 0 && lastStdErr) {
+                            deferred.reject(lastStdErr);
+                        } else {
+                            deferred.resolve();
+                        }
+                    },
+                    error: (err: unknown) => {
+                        deferred.reject(err);
                     }
                 });
             }
@@ -116,21 +142,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         moduleName: string,
         interpreter: PythonEnvironment,
         flags?: ModuleInstallFlags
-    ): Promise<string[]>;
-    private processInstallArgs(args: string[], interpreter: PythonEnvironment): string[] {
-        const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
-        if (indexOfPylint === -1) {
-            return args;
-        }
-        // If installing pylint on python 2.x, then use pylint~=1.9.0
-        if (interpreter && interpreter.version && interpreter.version.major === 2) {
-            const newArgs = [...args];
-            // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
-            newArgs[indexOfPylint] = '"pylint<2.0.0"';
-            return newArgs;
-        }
-        return args;
-    }
+    ): Promise<ExecutionInstallArgs>;
 }
 
 export function translateProductToModule(product: Product): string {

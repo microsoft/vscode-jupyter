@@ -1966,12 +1966,6 @@
                     "default": false,
                     "description": "Creates separate output panels for kernels/jupyter server console output",
                     "scope": "machine"
-                },
-                "python.poetryPath": {
-                    "default": "poetry",
-                    "description": "Path to the poetry executable.",
-                    "scope": "machine-overridable",
-                    "type": "string"
                 }
             }
         },

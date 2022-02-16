@@ -338,7 +338,8 @@ export class CellExecution implements IDisposable {
                     (error as unknown) as Error,
                     'execution',
                     this.kernelConnection,
-                    this.cell.document.uri
+                    this.cell.document.uri,
+                    () => this.cell
                 )
                 .ignoreErrors();
         }

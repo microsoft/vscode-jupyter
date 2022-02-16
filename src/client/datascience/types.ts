@@ -420,7 +420,7 @@ export interface IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
+        getCellToDisplayErrors: () => NotebookCell | undefined
     ): Promise<void>;
 }
 

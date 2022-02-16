@@ -8,7 +8,7 @@ import { isPipenvEnvironmentRelatedToFolder } from '../../client/common/process/
 import { InterpreterUri } from '../../client/common/types';
 import { isResource } from '../../client/common/utils/misc';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { ModuleInstaller } from './moduleInstaller';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 
 export const pipenvName = 'pipenv';
@@ -51,7 +51,7 @@ export class PipEnvInstaller extends ModuleInstaller {
         moduleName: string,
         _interpreter: PythonEnvironment,
         flags: ModuleInstallFlags = 0
-    ): Promise<string[]> {
+    ): Promise<ExecutionInstallArgs> {
         // In pipenv the only way to update/upgrade or re-install is update (apart from a complete uninstall and re-install).
         const update =
             flags & ModuleInstallFlags.reInstall ||
@@ -61,6 +61,9 @@ export class PipEnvInstaller extends ModuleInstaller {
         if (moduleName === 'black') {
             args.push('--pre');
         }
-        return [pipenvName, ...args];
+        return {
+            exe: pipenvName,
+            args
+        };
     }
 }

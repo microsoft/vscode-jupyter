@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService } from '../../client/common/types';
 import { getInterpreterWorkspaceFolder } from '../../client/datascience/jupyter/kernels/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
-import { ModuleInstaller } from './moduleInstaller';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { isPoetryEnvironmentRelatedToFolder } from './poetry';
 import { ModuleInstallerType } from './types';
 
@@ -63,12 +63,18 @@ export class PoetryInstaller extends ModuleInstaller {
         return false;
     }
 
-    protected async getExecutionArgs(moduleName: string, _interpreter: PythonEnvironment): Promise<string[]> {
+    protected async getExecutionArgs(
+        moduleName: string,
+        _interpreter: PythonEnvironment
+    ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');
         }
-        return [execPath, ...args];
+        return {
+            exe: execPath,
+            args
+        };
     }
 }

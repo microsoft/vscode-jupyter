@@ -8,7 +8,7 @@ import { CondaService } from '../../client/common/process/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { isCondaEnvironment } from '../../test/interpreters/condaLocator';
 import { getCondaEnvironment } from '../../test/interpreters/condaService';
-import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
+import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 
 /**
@@ -69,7 +69,7 @@ export class CondaInstaller extends ModuleInstaller {
         moduleName: string,
         interpreter: PythonEnvironment,
         flags: ModuleInstallFlags = 0
-    ): Promise<string[]> {
+    ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
         const info = await getCondaEnvironment(interpreter.path);
@@ -102,6 +102,9 @@ export class CondaInstaller extends ModuleInstaller {
         }
         args.push(moduleName);
         args.push('-y');
-        return [condaFile || '', ...args];
+        return {
+            exe: condaFile,
+            args
+        };
     }
 }

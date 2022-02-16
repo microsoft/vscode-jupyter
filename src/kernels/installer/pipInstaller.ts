@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
+import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import * as path from 'path';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { _SCRIPTS_DIR } from '../../client/common/process/internal/scripts';
@@ -33,16 +33,20 @@ export class PipInstaller extends ModuleInstaller {
         moduleName: string,
         interpreter: PythonEnvironment,
         flags: ModuleInstallFlags = 0
-    ): Promise<string[]> {
+    ): Promise<ExecutionInstallArgs> {
         if (moduleName === translateProductToModule(Product.pip)) {
             // If `ensurepip` is available, if not, then install pip using the script file.
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
             if (await installer.isInstalled(Product.ensurepip, interpreter)) {
-                return [interpreter.path, '-m', 'ensurepip'];
+                return {
+                    args: ['-m', 'ensurepip']
+                };
             }
 
             // Return script to install pip.
-            return [interpreter.path, path.join(_SCRIPTS_DIR, 'get-pip.py')];
+            return {
+                args: [path.join(_SCRIPTS_DIR, 'get-pip.py')]
+            };
         }
 
         const args: string[] = [];
@@ -56,7 +60,9 @@ export class PipInstaller extends ModuleInstaller {
         if (flags & ModuleInstallFlags.reInstall) {
             args.push('--force-reinstall');
         }
-        return [interpreter.path, '-m', 'pip', ...args];
+        return {
+            args: ['-m', 'pip', ...args, moduleName]
+        };
     }
     private isPipAvailable(interpreter: PythonEnvironment): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);

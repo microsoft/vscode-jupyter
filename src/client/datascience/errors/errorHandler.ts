@@ -71,7 +71,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
-        await this.handleErrorImplementation(err);
+        await this.handleErrorImplementation(err, undefined, () => undefined);
     }
 
     public async handleKernelError(
@@ -79,13 +79,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
+        getCellToDisplayErrors: () => NotebookCell | undefined
     ): Promise<void> {
         traceWarning('Kernel Error', err);
         await this.handleErrorImplementation(
             err,
             purpose,
-            cellToDisplayErrors,
+            getCellToDisplayErrors,
             async (error: BaseError, defaultErrorMessage?: string) => {
                 const failureInfo = analyzeKernelErrors(
                     error.stdErr || '',
@@ -118,19 +118,26 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     err instanceof IpyKernelNotInstalledError &&
                     (purpose === 'start' || purpose === 'restart')
                 ) {
-                    cellToDisplayErrors = err.firstQueuedCell || cellToDisplayErrors;
+                    const cellToDisplayErrors = err.firstQueuedCell || getCellToDisplayErrors();
                     if (!err.anotherKernelSelected) {
-                        void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
+                        void this.displayIPyKernelMissingErrorInCell(
+                            kernelConnection,
+                            cellToDisplayErrors,
+                            err.toString()
+                        );
                     }
                     return;
                 } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
+                    const cellToDisplayErrors = getCellToDisplayErrors();
                     void this.displayJupyterMissingErrorInCell(err, kernelConnection, cellToDisplayErrors);
                     return;
                 } else if (err instanceof JupyterConnectError) {
+                    const cellToDisplayErrors = getCellToDisplayErrors();
                     void this.handleJupyterStartupError(failureInfo, err, kernelConnection, cellToDisplayErrors);
                     return;
                 }
 
+                let cellToDisplayErrors = getCellToDisplayErrors();
                 switch (failureInfo?.reason) {
                     case KernelFailureReason.overridingBuiltinModules: {
                         await this.showMessageWithMoreInfo(
@@ -164,9 +171,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             } catch (ex) {
                                 // Handle instances where installation failed or or cancelled it.
                                 if (ex instanceof IpyKernelNotInstalledError) {
+                                    // Try again for a cell to display into if not set yet.
+                                    cellToDisplayErrors = cellToDisplayErrors || getCellToDisplayErrors();
+
+                                    // Display the error in this cell.
                                     await this.displayIPyKernelMissingErrorInCell(
                                         kernelConnection,
-                                        cellToDisplayErrors
+                                        cellToDisplayErrors,
+                                        ex.toString()
                                     );
                                 } else {
                                     throw ex;
@@ -329,8 +341,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     }
     private async handleErrorImplementation(
         err: Error,
-        purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
-        cellToDisplayErrors?: NotebookCell,
+        purpose: 'start' | 'restart' | 'interrupt' | 'execution' | undefined,
+        getCellToDisplayErrors: () => NotebookCell | undefined,
         handler?: (error: BaseError, defaultErrorMessage?: string) => Promise<void>
     ): Promise<void> {
         const errorPrefix = getErrorMessagePrefix(purpose);
@@ -373,6 +385,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
+            const cellToDisplayErrors = getCellToDisplayErrors();
             void this.displayErrorsInCell(err.message, cellToDisplayErrors);
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
@@ -389,19 +402,22 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             if ((purpose === 'restart' || purpose === 'start') && handler) {
                 await handler(err, defaultErrorMessage);
             } else {
+                const cellToDisplayErrors = getCellToDisplayErrors();
                 void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
                 this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
             }
         } else {
             // Some errors have localized and/or formatted error messages.
             const message = getCombinedErrorMessage(errorPrefix, err.message || err.toString());
+            const cellToDisplayErrors = getCellToDisplayErrors();
             void this.displayErrorsInCell(message, cellToDisplayErrors);
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
     private async displayIPyKernelMissingErrorInCell(
         kernelConnection: KernelConnectionMetadata,
-        cellToDisplayErrors?: NotebookCell
+        cellToDisplayErrors?: NotebookCell,
+        message?: string
     ) {
         if (!cellToDisplayErrors) {
             return;
@@ -431,7 +447,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         ) {
             installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
         }
-        const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
+        const formatted = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
             displayNameOfKernel,
             ProductNames.get(Product.ipykernel)!
         );
@@ -439,7 +455,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             ipyKernelName,
             installerCommand
         );
-        await this.displayErrorsInCell(message + '\n' + installationInstructions, cellToDisplayErrors);
+        await this.displayErrorsInCell(`${formatted}\n${message}\n${installationInstructions}`, cellToDisplayErrors);
     }
     private async displayJupyterMissingErrorInCell(
         err: JupyterInstallError,

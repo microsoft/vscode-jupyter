@@ -2,7 +2,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as semver from 'semver';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
 import {
@@ -20,12 +20,11 @@ import { traceDecorators } from '../../client/logging';
 import { logValue } from '../../client/logging/trace';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { traceError, traceInfo } from '../../client/common/logger';
+import { traceError } from '../../client/common/logger';
 import { IPythonExecutionFactory, IProcessServiceFactory } from '../../client/common/process/types';
 import {
     IConfigurationService,
     IPersistentStateFactory,
-    IDisposable,
     GLOBAL_MEMENTO,
     IMemento,
     IOutputChannel,
@@ -37,9 +36,6 @@ import { sendTelemetryEvent } from '../../client/telemetry';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 import { getInterpreterHash } from '../../client/pythonEnvironments/info/interpreter';
 import { noop, sleep } from '../../test/core';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IPlatformService } from '../../client/common/platform/types';
-import { BackupPipInstaller } from './backupPipInstaller';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 
@@ -128,9 +124,7 @@ abstract class BaseInstaller {
         if (installPipIfRequired === true) {
             flags = flags ? flags | ModuleInstallFlags.installPipIfRequired : ModuleInstallFlags.installPipIfRequired;
         }
-        await installer
-            .installModule(product, interpreter, cancel, flags)
-            .catch((ex) => traceError(`Error in installing the product '${ProductNames.get(product)}', ${ex}`));
+        await installer.installModule(product, interpreter, cancel, flags);
 
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
@@ -230,112 +224,7 @@ abstract class BaseInstaller {
     }
 }
 
-export class DataScienceInstaller extends BaseInstaller {
-    private readonly backupPipInstaller: BackupPipInstaller;
-    private readonly isWindows: boolean;
-    constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
-        super(serviceContainer, outputChannel);
-        this.backupPipInstaller = new BackupPipInstaller(
-            serviceContainer.get<IApplicationShell>(IApplicationShell),
-            this.workspaceService,
-            outputChannel,
-            serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory),
-            this.isInstalled.bind(this)
-        );
-        this.isWindows = serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-    }
-    // Override base installer to support a more DS-friendly streamlined installation.
-    public async install(
-        product: Product,
-        interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse> {
-        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-
-        // If we're on windows and user is using a shell other than cmd or powershell, then Python installer will fail to install
-        // the packages in the terminal (gitbash, wsh are not supported by Python extension).
-        let result = InstallerResponse.Ignore;
-        let attemptedToInstallUsingOurInstaller = false;
-        if (this.isWindows) {
-            attemptedToInstallUsingOurInstaller = true;
-            const installedInternally = await this.installWithPipWithoutTerminal(
-                product,
-                interpreter,
-                cancel,
-                reInstallAndUpdate
-            );
-            if (installedInternally) {
-                traceInfo(`Successfully installed with Jupyter extension`);
-                result = InstallerResponse.Installed;
-            }
-        }
-        traceInfo(`Got result from python installer for ${ProductNames.get(product)}, result = ${result}`);
-        if (cancel?.isCancellationRequested) {
-            return InstallerResponse.Ignore;
-        }
-        // If we weren't able to install ourselves, then fall back to the base installer (which uses the Python extension).
-        // We'll try this option even if we know things might not work for non-default terminla profiles (possible it has been fixed or the like)
-        // Basically try all options..
-        if (result !== InstallerResponse.Installed) {
-            result = await installer.install(product, interpreter, cancel, reInstallAndUpdate, installPipIfRequired);
-            traceInfo(`Got result from python installer for ${ProductNames.get(product)}, result = ${result}`);
-        }
-        if (cancel?.isCancellationRequested) {
-            return InstallerResponse.Ignore;
-        }
-        if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
-            // If we have failed to install with Python and haven't tried our installer, then try it.
-            if (this.isWindows && !attemptedToInstallUsingOurInstaller) {
-                const installedInternally = await this.installWithPipWithoutTerminal(
-                    product,
-                    interpreter,
-                    cancel,
-                    reInstallAndUpdate
-                );
-                if (installedInternally) {
-                    traceInfo(`Successfully installed with Jupyter extension`);
-                    result = InstallerResponse.Installed;
-                }
-            }
-
-            return result;
-        }
-
-        return this.isInstalled(product, interpreter).then(async (isInstalled) => {
-            return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
-        });
-    }
-    private async installWithPipWithoutTerminal(
-        product: Product,
-        interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
-    ): Promise<boolean> {
-        const disposables: IDisposable[] = [];
-        if (!cancel) {
-            const token = new CancellationTokenSource();
-            disposables.push(token);
-            cancel = token.token;
-        }
-        try {
-            const result = await this.backupPipInstaller.install(
-                product,
-                interpreter,
-                undefined,
-                reInstallAndUpdate === true,
-                cancel!
-            );
-            return result;
-        } catch (ex) {
-            traceError(`Failed to install Pip`);
-            return false;
-        } finally {
-            disposeAllDisposables(disposables);
-        }
-    }
-}
+export class DataScienceInstaller extends BaseInstaller {}
 
 @injectable()
 export class ProductInstaller implements IInstaller {

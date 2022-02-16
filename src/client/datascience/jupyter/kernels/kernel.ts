@@ -270,7 +270,8 @@ export class Kernel implements IKernel {
                     err,
                     errorContext,
                     this.kernelConnectionMetadata,
-                    this.resourceUri
+                    this.resourceUri,
+                    () => undefined
                 );
             }
             if (result === InterruptResult.TimedOut) {
@@ -354,7 +355,13 @@ export class Kernel implements IKernel {
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
             await notebook?.session.dispose().catch(noop);
             this._ignoreNotebookDisposedErrors = false;
-            void this.errorHandler.handleKernelError(ex, 'restart', this.kernelConnectionMetadata, this.resourceUri);
+            void this.errorHandler.handleKernelError(
+                ex,
+                'restart',
+                this.kernelConnectionMetadata,
+                this.resourceUri,
+                () => undefined
+            );
             throw ex;
         } finally {
             status.dispose();
@@ -490,16 +497,22 @@ export class Kernel implements IKernel {
                         // errors about startup failures.
                         traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
                     } else {
-                        const cellForErrorDisplay = this.kernelExecution.queue.length
-                            ? this.kernelExecution.queue[0]
-                            : undefined;
                         void this.errorHandler.handleKernelError(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             ex as any,
                             'start',
                             this.kernelConnectionMetadata,
                             this.resourceUri,
-                            cellForErrorDisplay
+                            () => {
+                                // Ask for the cell to stick the error in when we get the error
+                                const cellForErrorDisplay = this.kernelExecution.queue.length
+                                    ? this.kernelExecution.queue[0]
+                                    : this.notebookDocument
+                                          .getCells()
+                                          .filter((c) => c.kind === NotebookCellKind.Code)
+                                          .reverse()[0];
+                                return cellForErrorDisplay;
+                            }
                         ); // Just a notification, so don't await this
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);

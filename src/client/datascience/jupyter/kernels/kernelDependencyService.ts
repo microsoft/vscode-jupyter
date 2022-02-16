@@ -109,6 +109,14 @@ export class KernelDependencyService implements IKernelDependencyService {
                 return;
             }
             await this.handleKernelDependencyResponse(result, kernelConnection, resource);
+        } catch (ex) {
+            traceError(`Error installing dependencies: `, ex);
+            await this.handleKernelDependencyResponse(
+                KernelInterpreterDependencyResponse.failed,
+                kernelConnection,
+                resource,
+                ex.toString()
+            );
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
@@ -158,7 +166,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     private async handleKernelDependencyResponse(
         response: KernelInterpreterDependencyResponse,
         kernelConnection: PythonKernelConnectionMetadata | LocalKernelSpecConnectionMetadata,
-        resource: Resource
+        resource: Resource,
+        ex?: string | undefined
     ) {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
@@ -199,7 +208,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             ? `${kernelConnection.interpreter?.displayName}:${getDisplayPath(kernelConnection.interpreter?.path)}`
             : getDisplayPath(kernelConnection.interpreter?.path);
         throw new IpyKernelNotInstalledError(
-            DataScience.ipykernelNotInstalled().format(message),
+            ex || DataScience.ipykernelNotInstalled().format(message),
             response,
             anotherKernelSelected,
             firstQueuedCell
