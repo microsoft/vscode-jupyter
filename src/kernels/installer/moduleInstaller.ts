@@ -15,6 +15,7 @@ import {
 import { IOutputChannel } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Products } from '../../client/common/utils/localize';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
@@ -46,6 +47,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const args = await this.getExecutionArgs(name, interpreter, flags);
         const pythonFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const procFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const activationHelper = this.serviceContainer.get<IEnvironmentActivationService>(
+            IEnvironmentActivationService
+        );
         const install = async (
             progress?: Progress<{
                 message?: string | undefined;
@@ -53,13 +57,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }>,
             token?: CancellationToken
         ) => {
-            // Args can be for a specific exe or for the interpreter. If for the
-            // interpreter create an activated environment and launch from there.
+            // Args can be for a specific exe or for the interpreter. Both need to
+            // use an activated environment though
             const deferred = createDeferred();
             let observable: ObservableExecutionResult<string> | undefined;
             if (args.exe) {
+                // For the exe, just figure out the environment variables.
+                const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
+                const env = { ...process.env, ...envVars };
                 const proc = await procFactory.create(undefined);
-                observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token });
+                observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token, env });
             } else {
                 const proc = await pythonFactory.createActivatedEnvironment({ interpreter });
                 observable = proc.execObservable(args.args, {
