@@ -25,6 +25,16 @@ on:
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
   workflow_dispatch:
+    inputs:
+      publishPreRelease:
+        description: 'Publish Pre-Release'
+        required: false
+        default: 'Do not publish'
+        type: choice
+        options:
+        - Do not publish
+        - Yes, publish pre-release
+
 env:
   NODE_VERSION: 14.16.0
   PYTHON_VERSION: 3.8
@@ -89,20 +99,20 @@ jobs:
           echo "package_command=packagePreRelease" >> $GITHUB_ENV
 
       - name: pre-release
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      - name:
-          pre-release channel
-          # Scheduled builds will publish pre-release builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-        run: |
-          echo "package_command=packagePreRelease" >> $GITHUB_ENV
-          echo "release_channel=pre-release" >> $GITHUB_ENV
+    #   - name:
+    #       pre-release channel
+    #       # Scheduled builds will publish pre-release builds.
+    #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+    #     run: |
+    #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
+    #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')

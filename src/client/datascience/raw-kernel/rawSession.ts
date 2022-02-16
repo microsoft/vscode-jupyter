@@ -5,7 +5,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import '../../common/extensions';
-import { traceError, traceInfoIfCI } from '../../common/logger';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -135,22 +135,27 @@ export class RawSession implements ISessionWithSocket {
 
     // Provide a way to wait for connected status
     public async waitForReady(): Promise<void> {
+        traceVerbose(`Waiting for Raw session to be ready, currently ${this.connectionStatus}`);
         // When our kernel connects and gets a status message it triggers the ready promise
         const deferred = createDeferred<string>();
         const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
             if (status == 'connected') {
-                traceInfoIfCI('Raw session connected');
+                traceVerbose('Raw session connected');
                 deferred.resolve(status);
+            } else {
+                traceVerbose(`Raw session not connected, status: ${status}`);
             }
         };
         this.connectionStatusChanged.connect(handler);
         if (this.connectionStatus === 'connected') {
-            traceInfoIfCI('Raw session connected');
+            traceVerbose('Raw session connected');
             deferred.resolve(this.connectionStatus);
         }
 
+        traceVerbose('Waiting for Raw session to be ready for 30s');
         const result = await Promise.race([deferred.promise, sleep(30_000)]);
         this.connectionStatusChanged.disconnect(handler);
+        traceVerbose(`Waited for Raw session to be ready & got ${result}`);
 
         if (result.toString() !== 'connected') {
             throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);

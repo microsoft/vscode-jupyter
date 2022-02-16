@@ -19,7 +19,7 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -623,10 +623,10 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
-        traceInfoIfCI('Started running kernel initialization');
+        traceVerbose('Started running kernel initialization');
         const notebook = this.notebook;
         if (!notebook) {
-            traceInfoIfCI('Not running kernel initialization');
+            traceVerbose('Not running kernel initialization');
             return;
         }
         if (!this.hookedNotebookForEvents.has(notebook)) {
@@ -658,7 +658,7 @@ export class Kernel implements IKernel {
                 }
             });
             const statusChangeHandler = (status: KernelMessage.Status) => {
-                traceInfoIfCI(`IKernel Status change to ${status}`);
+                traceVerbose(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
@@ -668,15 +668,8 @@ export class Kernel implements IKernel {
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-            // Request completions to warm up the completion engine (first call always takes a lot longer)
-            const completionPromise = this.requestEmptyCompletions();
-
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
-                // No need to wait for this to complete when connecting to a live kernel.
-                completionPromise.catch(noop);
-            } else {
-                await completionPromise;
-            }
+            // Request completions to warm up the completion engine.
+            this.requestEmptyCompletions();
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -697,7 +690,7 @@ export class Kernel implements IKernel {
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
-            traceInfoIfCI('Requesting Kernel info');
+            traceVerbose('Requesting Kernel info');
 
             const promises: Promise<
                 | KernelMessage.IReplyErrorContent
@@ -724,7 +717,7 @@ export class Kernel implements IKernel {
             if (content === defaultResponse) {
                 traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
             } else {
-                traceInfoIfCI('Got Kernel info');
+                traceVerbose('Got Kernel info');
             }
             this._info = content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
@@ -732,9 +725,9 @@ export class Kernel implements IKernel {
             traceWarning('Failed to request KernelInfo', ex);
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
-            traceInfoIfCI('End running kernel initialization, now waiting for idle');
+            traceVerbose('End running kernel initialization, now waiting for idle');
             await notebook.session.waitForIdle(this.launchTimeout);
-            traceInfoIfCI('End running kernel initialization, session is idle');
+            traceVerbose('End running kernel initialization, session is idle');
         }
     }
 
@@ -780,8 +773,14 @@ export class Kernel implements IKernel {
         return result;
     }
 
-    private async requestEmptyCompletions() {
-        await this.session?.requestComplete({
+    /**
+     * Do not wait for completions,
+     * If the completions request crashes then we don't get a response for this request,
+     * Hence we end up waiting indefinitely.
+     * https://github.com/microsoft/vscode-jupyter/issues/9014
+     */
+    private requestEmptyCompletions() {
+        void this.session?.requestComplete({
             code: '__file__.',
             cursor_pos: 9
         });
@@ -979,6 +978,7 @@ export class Kernel implements IKernel {
 
     private async executeSilently(code: string[]) {
         if (!this.notebook || code.join('').trim().length === 0) {
+            traceVerbose(`Not executing startup notebook: ${this.notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
         await executeSilently(this.notebook.session, code.join('\n'));

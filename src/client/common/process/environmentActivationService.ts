@@ -194,7 +194,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         void this.envVarsService.getEnvironmentVariables(resource);
 
         // Check cache.
-        const [env, customEnvVars] = await Promise.all([
+        let [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false)),
             this.envVarsService.getCustomEnvironmentVariables(resource)
         ]);
@@ -224,6 +224,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         } else if (this.memento.get(key)) {
             // Remove it from cache (if it exists).
             void this.memento.update(key, undefined);
+        }
+        if (env && customEnvVars) {
+            env = {
+                ...env,
+                ...customEnvVars
+            };
         }
         return env;
     }
@@ -274,7 +280,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
         if (cachedVariables) {
             traceVerbose(`Got activation Env Vars from cache`);
-            return cachedVariables;
+            return cachedVariables && customEnvVars
+                ? { ...cachedVariables, ...customEnvVars }
+                : cachedVariables || customEnvVars;
         }
 
         if (this.activatedEnvVariablesCache.has(key)) {
@@ -338,6 +346,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.getEnvironmentVariables(resource)
             ]);
             const processService = await processServicePromise;
+            const hasCustomEnvVars = Object.keys(customEnvVars).length;
             if (!activationCommands || activationCommands.length === 0) {
                 sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
                     envType,
@@ -346,14 +355,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     failed: true,
                     reason: 'noActivationCommands'
                 });
-                return;
+                return hasCustomEnvVars ? { ...this.currentProcess.env, ...customEnvVars } : undefined;
             }
             traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
             isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
-            const hasCustomEnvVars = Object.keys(customEnvVars).length;
-            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+            const env = hasCustomEnvVars
+                ? { ...this.currentProcess.env, ...customEnvVars }
+                : { ...this.currentProcess.env };
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
@@ -587,7 +597,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.envVarsService.getEnvironmentVariables(resource)
         ]);
         const hasCustomEnvVars = Object.keys(customEnvVars).length;
-        const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+        const env = hasCustomEnvVars
+            ? { ...this.currentProcess.env, ...customEnvVars }
+            : { ...this.currentProcess.env };
 
         try {
             if (!condaExec) {

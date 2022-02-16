@@ -84,6 +84,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public themeMatplotlibPlots: boolean = false;
     public variableQueries: IVariableQuery[] = [];
     public disableJupyterAutoStart: boolean = false;
+    public enablePythonKernelLogging: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public alwaysScrollOnNewCell: boolean = false;

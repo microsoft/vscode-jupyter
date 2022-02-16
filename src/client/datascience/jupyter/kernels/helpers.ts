@@ -1653,7 +1653,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     try {
-        traceInfoIfCI('Begin sendTelemetryForPythonKernelExecutable');
+        traceVerbose('Begin sendTelemetryForPythonKernelExecutable');
         const outputs = await executeSilently(kernel.session, 'import sys\nprint(sys.executable)');
         if (outputs.length === 0) {
             return;
@@ -1710,7 +1710,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     } catch (ex) {
         traceError('Failed to compare interpreters', ex);
     }
-    traceInfoIfCI('End sendTelemetryForPythonKernelExecutable');
+    traceVerbose('End sendTelemetryForPythonKernelExecutable');
 }
 
 export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {

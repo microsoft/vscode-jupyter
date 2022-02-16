@@ -17,7 +17,6 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
-const { argv } = require('yargs');
 const os = require('os');
 const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
@@ -180,55 +179,42 @@ gulp.task('webpack', async () => {
 });
 
 gulp.task('updateBuildNumber', async () => {
-    await updateBuildNumber(argv);
+    await updateBuildNumber();
 });
 
-async function updateBuildNumber(args) {
-    if (args && args.buildNumber) {
-        // Edit the version number from the package.json
-        const packageJsonContents = await fs.readFile('package.json', 'utf-8');
-        const packageJson = JSON.parse(packageJsonContents);
+async function updateBuildNumber() {
+    // Edit the version number from the package.json
+    const packageJsonContents = await fs.readFile('package.json', 'utf-8');
+    const packageJson = JSON.parse(packageJsonContents);
 
-        // Change version number
-        // 3rd part of version is limited to Max Int32 numbers (in VSC Marketplace).
-        // Hence build numbers can only be YYYY.MMM.2147483647
-        // NOTE: For each of the following strip the first 3 characters from the build number.
-        //  E.g. if we have build number of `build number = 3264527301, then take 4527301
+    // Change version number
+    // 3rd part of version is limited to Max Int32 numbers (in VSC Marketplace).
+    // Hence build numbers can only be YYYY.MMM.2147483647
+    // NOTE: For each of the following strip the first 3 characters from the build number.
+    //  E.g. if we have build number of `build number = 3264527301, then take 4527301
 
-        // To ensure we can have point releases & insider builds, we're going with the following format:
-        // Insider & Release builds will be YYYY.MMM.100<build number>
-        // When we have a hot fix, we update the version to YYYY.MMM.110<build number>
-        // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
+    // To ensure we can have point releases & insider builds, we're going with the following format:
+    // Insider & Release builds will be YYYY.MMM.100<build number>
+    // When we have a hot fix, we update the version to YYYY.MMM.110<build number>
+    // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
 
-        const versionParts = packageJson.version.split('.');
-        const buildNumberPortion =
-            versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
-        const newVersion =
-            versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2].substring(
-                      0,
-                      3
-                  )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
-                : packageJson.version;
-        packageJson.version = newVersion;
+    const versionParts = packageJson.version.split('.');
+    // New build is of the form `DDDHHMM` (day of year, hours, minute) (7 digits, as out of the 10 digits first three are reserved for `100` or `101` for patches).
+    // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
+    // Example build for 3Jan 12:45 will be `0031245`, and 16 Feb 8:50 will be `0470845`
+    const today = new Date();
+    const dayCount = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+    const dayOfYear = dayCount[today.getMonth()] + today.getDate() + 1;
+    const buildNumberSuffix = `${dayOfYear.toString().padStart(3, '0')}${(today.getHours() + 1)
+        .toString()
+        .padStart(2, '0')}${(today.getMinutes() + 1).toString().padStart(2, '0')}`;
+    const buildNumber = `${versionParts[2].substring(0, 3)}${buildNumberSuffix}`;
+    const newVersion =
+        versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumber}` : packageJson.version;
+    packageJson.version = newVersion;
 
-        // Write back to the package json
-        await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
-
-        // Update the changelog.md if we are told to (this should happen on the release branch)
-        if (args.updateChangelog) {
-            const changeLogContents = await fs.readFile('CHANGELOG.md', 'utf-8');
-            const fixedContents = changeLogContents.replace(
-                /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
-                `## $1.$2.${buildNumberPortion} (`
-            );
-
-            // Write back to changelog.md
-            await fs.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
-        }
-    } else {
-        throw Error('buildNumber argument required for updateBuildNumber task');
-    }
+    // Write back to the package json
+    await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
 
 async function buildWebPack(webpackConfigName, args, env) {
@@ -286,6 +272,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
             ];
         case 'extension':
             return [
+                'WARNING in ./node_modules/cacheable-request/node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',

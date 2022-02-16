@@ -79,6 +79,7 @@ export interface IJupyterSettings {
     readonly showCellInputCode: boolean;
     readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
+    readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
