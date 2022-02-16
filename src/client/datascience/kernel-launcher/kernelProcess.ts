@@ -5,7 +5,6 @@
 import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
-import * as tmp from 'tmp';
 import * as os from 'os';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
