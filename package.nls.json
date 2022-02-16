@@ -345,6 +345,7 @@
     "Common.notNow": "Not now",
     "Common.gotIt": "Got it!",
     "DataScience.noRowsInVariableExplorer": "No variables defined",
+    "DataScience.loadingRowsInVariableExplorer": "Loading variables",
     "DataScience.tooManyColumnsMessage": "Variables with over a 1000 columns may take a long time to display. Are you sure you wish to continue?",
     "DataScience.tooManyColumnsYes": "Yes",
     "DataScience.tooManyColumnsNo": "No",
