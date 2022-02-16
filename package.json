@@ -159,7 +159,7 @@
             },
             {
                 "key": "shift+enter",
-                "when": "resourceScheme == 'vscode-interactive'",
+                "when": "resourceScheme == 'vscode-interactive' && notebookKernel =~ /^ms-toolsai.jupyter\\// || resourceScheme == 'vscode-interactive' && !notebookKernel",
                 "command": "interactive.execute"
             },
             {
@@ -970,59 +970,59 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "group": "navigation@0",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.restartkernel",
                     "group": "navigation@1",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@3",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.interactive.exportasnotebook",
                     "group": "navigation@4",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.interactive.exportas",
                     "group": "navigation@5",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.expandallcells",
                     "group": "navigation@6",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.collapseallcells",
                     "group": "navigation@7",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 }
             ],
             "interactive/cell/title": [
                 {
                     "command": "jupyter.interactive.copyCell",
                     "group": "inline@0",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.interactive.goToCode",
                     "group": "inline@1",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
                     "command": "jupyter.interactive.removeCell",
                     "group": "inline@2",
-                    "when": "isWorkspaceTrusted"
+                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 }
             ],
             "explorer/context": [
