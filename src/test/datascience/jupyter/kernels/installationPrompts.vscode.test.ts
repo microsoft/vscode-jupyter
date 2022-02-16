@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Memento } from 'vscode';
+import { commands, Memento } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../../client/common/installer/productNames';
@@ -24,6 +24,7 @@ import {
 } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
+import { hasErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
@@ -35,10 +36,11 @@ import {
     createTemporaryNotebook,
     runAllCellsInActiveNotebook,
     hijackPrompt,
-    waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToChange,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    defaultNotebookTestTimeout,
+    assertVSCCellIsNotRunning
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
@@ -52,7 +54,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
-    const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
+    const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} package.`;
 
     let api: IExtensionTestApi;
     let installer: IInstaller;
@@ -138,12 +140,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     [true, false].forEach((which, i) => {
         // Use index on test name as it messes up regex matching
         test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
-            if (IS_REMOTE_NATIVE_TEST) {
-                return this.skip();
-            }
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
-                'showErrorMessage',
+                'showInformationMessage',
                 { endsWith: expectedPromptMessageSuffix },
                 { text: Common.install(), clickImmediately: true },
                 disposables
@@ -172,7 +171,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 await waitForKernelToChange({ interpreterPath });
 
                 // Run all cells
-                this.commandManager.executeCommand('notebook.execute');
+                void commands.executeCommand('notebook.execute');
 
                 // The prompt should be displayed.
                 await waitForCondition(
@@ -205,7 +204,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         const prompt = await hijackPrompt(
-            'showErrorMessage',
+            'showInformationMessage',
             { endsWith: expectedPromptMessageSuffix },
             { dismissPrompt: true },
             disposables
@@ -221,7 +220,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
-        await waitForCellExecutionToComplete(cell);
+        await waitForCondition(
+            async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
+            defaultNotebookTestTimeout,
+            'No errors in cell'
+        );
 
         // Execute notebook once again & we should get another prompted to install ipykernel.
         let previousPromptDisplayCount = prompt.getDisplayCount();
@@ -233,7 +236,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
-        await waitForCellExecutionToComplete(cell);
+        await waitForCondition(
+            async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
+            defaultNotebookTestTimeout,
+            'No errors in cell'
+        );
 
         // Execute a cell this time & we should get yet another prompted to install ipykernel.
         previousPromptDisplayCount = prompt.getDisplayCount();
@@ -245,6 +252,10 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
-        await waitForCellExecutionToComplete(cell);
+        await waitForCondition(
+            async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
+            defaultNotebookTestTimeout,
+            'No errors in cell'
+        );
     });
 });
