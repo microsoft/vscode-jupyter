@@ -23,6 +23,7 @@ make this extension useful:
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.1.120 (January Release on 11 February 2022)
 
 ### Fixes
