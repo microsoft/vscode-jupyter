@@ -23,7 +23,7 @@ import {
     ObservableExecutionResult
 } from '../../common/process/types';
 import { IJupyterSettings, IOutputChannel, Resource } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
+import { createDeferred, waitForCondition } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
@@ -220,6 +220,7 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
+            traceVerbose('Waiting for ports to be used');
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
@@ -235,6 +236,7 @@ export class KernelProcess implements IKernelProcess {
                 // Throw an error we recognize.
                 return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
+            traceVerbose('Waiting for ports to be used');
             await Promise.race([
                 portsUsed,
                 deferred.promise,
@@ -243,6 +245,17 @@ export class KernelProcess implements IKernelProcess {
                     cancelAction: 'reject'
                 })
             ]);
+            traceVerbose('Successfully waited for ports to be used');
+            traceVerbose('Waiting for connection file to get created');
+            if (this.isPythonKernel) {
+                await waitForCondition(() => this.fileSystem.localFileExists(this.connectionFile!), 5_000, 100);
+                if ((await this.fileSystem.localFileExists(this.connectionFile!))) {
+                    traceVerbose('Connection file got created');
+                } else {
+                    traceVerbose('Connection file not created');
+                }
+            }
+            traceVerbose('Successfully waited for file to be created');
         } catch (e) {
             traceError('Disposing kernel process due to an error', e);
             traceError(stderrProc || stderr);
@@ -336,6 +349,16 @@ export class KernelProcess implements IKernelProcess {
             );
         }
 
+        // For non-python kernels, just write to the connection file.
+        // Note: We have to dispose the temp file and recreate it because otherwise the file
+        // system will hold onto the file with an open handle. THis doesn't work so well when
+        // a different process tries to open it.
+        const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
+        await tempFile.dispose();
+        // Wait for file to get deleted, we don't want it getting deleted later.
+        await waitForCondition(() => this.fileSystem.localFileExists(tempFile.filePath), 1_000, 100);
+        this.connectionFile = tempFile.filePath;
+
         // Python kernels are special. Handle the extra arguments.
         if (this.isPythonKernel) {
             // Slice out -f and the connection file from the args
@@ -344,14 +367,7 @@ export class KernelProcess implements IKernelProcess {
             // Add in our connection command line args
             this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
         } else {
-            // For other kernels, just write to the connection file.
-            // Note: We have to dispose the temp file and recreate it because otherwise the file
-            // system will hold onto the file with an open handle. THis doesn't work so well when
-            // a different process tries to open it.
-            const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
-            this.connectionFile = tempFile.filePath;
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
-
             // Then replace the connection file argument with this file
             // Remmeber, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
@@ -394,9 +410,8 @@ export class KernelProcess implements IKernelProcess {
         //     newConnectionArgs.push(`--log-level=10`);
         // }
 
-        // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
-        // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
-        newConnectionArgs.push(`--f=${tmp.tmpNameSync({ postfix: '.json' })}`);
+        // IPython will update the connection file with the necessary information.
+        newConnectionArgs.push(`--f=${this.connectionFile}`);
 
         return newConnectionArgs;
     }

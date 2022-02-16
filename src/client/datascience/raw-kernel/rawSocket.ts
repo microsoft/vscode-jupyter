@@ -5,7 +5,7 @@ import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
-import { traceError } from '../../common/logger';
+import { traceError, traceVerbose } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IKernelConnection } from '../kernel-launcher/types';
@@ -139,12 +139,14 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         channel: 'iopub' | 'shell' | 'control' | 'stdin',
         readable: Subscriber | Dealer
     ) {
+        traceVerbose(`Starting to read messages from channel ${channel}`);
         // eslint-disable-next-line @typescript-eslint/await-thenable
         for await (const msg of readable) {
             // Make sure to quit if we are disposed.
             if (this.closed) {
                 break;
             } else {
+                traceVerbose(`Got messages from channel ${channel}`);
                 this.onIncomingMessage(channel, msg);
             }
         }
@@ -243,10 +245,12 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         } else {
             this.msgChain = this.msgChain.then(() => this.fireOnMessage(message));
         }
+        this.msgChain.catch((ex) => traceError(`Failed(1) to fireOnMessage`, ex));
     }
 
     private fireOnMessage(message: any) {
         if (!this.closed) {
+            traceVerbose(`Fire incoming message`);
             this.onmessage({ data: message, type: 'message', target: this });
         }
     }
@@ -254,7 +258,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
         // First encode the message.
         const data = wireProtocol.encode(msg as any, this.connection.key, this.connection.signature_scheme);
-
+        traceVerbose(`Sending message on channel ${msg.channel}`);
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
@@ -268,6 +272,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 this.postToSocket(msg.channel, data);
             });
         }
+        this.sendChain.catch((ex) => traceError(`Failed(1) to send message on channel ${msg.channel}`, ex));
     }
 
     private postToSocket(channel: string, data: any) {
