@@ -4,12 +4,12 @@
 import { injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { isPipenvEnvironmentRelatedToFolder } from '../../client/common/process/pipenv';
 import { InterpreterUri } from '../../client/common/types';
 import { isResource } from '../../client/common/utils/misc';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
+import { isPipenvEnvironmentRelatedToFolder } from './pipenv';
 
 export const pipenvName = 'pipenv';
 

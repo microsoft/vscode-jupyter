@@ -4,9 +4,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../client/common/utils/platform';
-import * as fileUtils from '../../client/common/platform/fileUtils';
-import { IPyenvVersionStrings, isPyenvEnvironment, isPyenvShimDir, parsePyenvVersion } from './pyenv';
+import * as platformUtils from '../../../client/common/utils/platform';
+import * as fileUtils from '../../../client/common/platform/fileUtils';
+import { IPyenvVersionStrings, isPyenvEnvironment, isPyenvShimDir, parsePyenvVersion } from '../pyenv';
 
 suite('Pyenv Identifier Tests', () => {
     const home = platformUtils.getUserHomeDir() || '';

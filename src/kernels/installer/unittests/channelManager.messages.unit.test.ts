@@ -5,15 +5,15 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { IApplicationShell } from '../../client/common/application/types';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { ServiceContainer } from '../../client/ioc/container';
-import { ServiceManager } from '../../client/ioc/serviceManager';
-import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { InstallationChannelManager } from './channelManager';
-import { IModuleInstaller, Product } from './types';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { ServiceManager } from '../../../client/ioc/serviceManager';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { InstallationChannelManager } from '../channelManager';
+import { IModuleInstaller, Product } from '../types';
 
 const info: PythonEnvironment = {
     displayName: '',

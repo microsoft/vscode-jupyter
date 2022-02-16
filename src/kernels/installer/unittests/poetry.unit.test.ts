@@ -4,11 +4,11 @@
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { TEST_LAYOUT_ROOT } from '../../test/pythonEnvironments/constants';
-import { ShellOptions, ExecutionResult } from '../../client/common/process/types';
-import * as platformApis from '../../client/common/utils/platform';
-import * as fileUtils from '../../client/common/platform/fileUtils';
-import { isPoetryEnvironment, Poetry } from './poetry';
+import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
+import { ShellOptions, ExecutionResult } from '../../../client/common/process/types';
+import * as platformApis from '../../../client/common/utils/platform';
+import * as fileUtils from '../../../client/common/platform/fileUtils';
+import { isPoetryEnvironment, Poetry } from '../poetry';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
 const project1 = path.join(testPoetryDir, 'project1');
