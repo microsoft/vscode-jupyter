@@ -813,7 +813,7 @@ export async function runAllCellsInActiveNotebook() {
  * We can confirm prompt was displayed & invoke a button click.
  */
 export async function hijackPrompt(
-    promptType: 'showErrorMessage',
+    promptType: 'showErrorMessage' | 'showInformationMessage',
     message: { exactMatch: string } | { endsWith: string },
     buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
     disposables: IDisposable[] = []
@@ -847,7 +847,7 @@ export async function hijackPrompt(
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
-    });
+    } as any);
     const disposable = { dispose: () => stub.restore() };
     if (disposables) {
         disposables.push(disposable);
