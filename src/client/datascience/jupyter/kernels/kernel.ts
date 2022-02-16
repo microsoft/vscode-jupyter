@@ -19,14 +19,7 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import {
-    traceDecorators,
-    traceError,
-    traceInfo,
-    traceInfoIfCI,
-    traceVerbose,
-    traceWarning
-} from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
