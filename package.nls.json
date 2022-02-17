@@ -522,6 +522,7 @@
     "DataScience.interactiveWindowModeBannerSwitchAlways": "Always",
     "DataScience.interactiveWindowModeBannerSwitchNo": "No",
     "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}",
+    "DataScience.ipykernelNotInstalledBecauseCanceled": "IPyKernel not installed into interpreter. Installation canceled.",
     "DataScience.needIpykernel6": "Ipykernel setup required for this feature",
     "DataScience.setup": "Setup",
     "DataScience.startingRunByLine": "Starting Run by Line",

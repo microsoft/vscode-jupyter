@@ -32,6 +32,8 @@ import {
     trackKernelResourceInformation
 } from '../../telemetry/telemetry';
 import {
+    DisplayErrorFunc,
+    HandleKernelErrorResult,
     IDataScienceErrorHandler,
     IJupyterSession,
     INotebook,
@@ -78,6 +80,8 @@ import { JupyterConnectError } from '../../errors/jupyterConnectError';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { disposeAllDisposables } from '../../../common/helpers';
+import { displayErrorsInCell } from '../../../common/errors/errorUtils';
+import { IServiceContainer } from '../../../ioc/types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -173,7 +177,8 @@ export class Kernel implements IKernel {
         notebookControllerManager: INotebookControllerManager,
         private statusProvider: IStatusProvider,
         private commandManager: ICommandManager,
-        pythonChecker: IPythonExtensionChecker
+        pythonChecker: IPythonExtensionChecker,
+        private serviceContainer: IServiceContainer
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -234,7 +239,7 @@ export class Kernel implements IKernel {
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
-    public async start(options?: { disableUI?: boolean }): Promise<void> {
+    public async start(options?: { disableUI?: boolean; displayError?: DisplayErrorFunc }): Promise<void> {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
@@ -397,7 +402,9 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
+    private async startNotebook(
+        options: { disableUI?: boolean; displayError?: DisplayErrorFunc } = { disableUI: false }
+    ): Promise<INotebook> {
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
@@ -431,99 +438,128 @@ export class Kernel implements IKernel {
                 const stopWatch = new StopWatch();
                 const disposables: IDisposable[] = [];
                 this.createProgressIndicator(disposables);
-                try {
-                    try {
-                        // No need to block kernel startup on UI updates.
-                        const placeholderCellPromise = this.populateStartKernelInfoForInteractive(
-                            this.notebookDocument,
-                            this.kernelConnectionMetadata
-                        );
-                        traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
-                        this.isKernelDead = false;
-                        this._onStatusChanged.fire('starting');
-                        this.notebook = await this.notebookProvider.createNotebook({
-                            document: this.notebookDocument,
-                            resource: this.resourceUri,
-                            ui: this.startupUI,
-                            kernelConnection: this.kernelConnectionMetadata,
-                            token: this.startCancellation.token
-                        });
-                        if (!this.notebook) {
-                            // This is an unlikely case.
-                            // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
-                            throw new Error('Kernel has not been started');
-                        }
-                        await this.initializeAfterStart(
-                            SysInfoReason.Start,
-                            this.notebookDocument,
-                            placeholderCellPromise
-                        );
-                    } catch (ex) {
-                        traceError(
-                            `failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`,
-                            ex
-                        );
-                        if (ex instanceof JupyterConnectError) {
-                            throw ex;
-                        }
-                        // Provide a user friendly message in case `ex` is some error thats not throw by us.
-                        const message = DataScience.sessionStartFailedWithKernel().format(
-                            getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                        );
-                        throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
-                    }
-                    sendKernelTelemetryEvent(
-                        this.resourceUri,
-                        Telemetry.PerceivedJupyterStartupNotebook,
-                        stopWatch.elapsedTime
-                    );
-                    resolve(this.notebook);
-                    this._onStarted.fire();
-                    disposeAllDisposables(disposables);
-                } catch (ex) {
-                    disposeAllDisposables(disposables);
-                    sendKernelTelemetryEvent(
-                        this.resourceUri,
-                        Telemetry.NotebookStart,
-                        stopWatch.elapsedTime,
-                        undefined,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        ex as any
-                    );
-                    if (this.startupUI.disableUI) {
-                        sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
-                    } else if (this._disposing) {
-                        // If the kernel was killed for any reason, then no point displaying
-                        // errors about startup failures.
-                        traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
+                let retryState = 'retry';
+                const errorDisplay = (ex: Error | string, moreInfoLink?: string) => {
+                    if (options.displayError) {
+                        options.displayError(ex, moreInfoLink);
                     } else {
-                        void this.errorHandler.handleKernelError(
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            ex as any,
-                            'start',
-                            this.kernelConnectionMetadata,
-                            this.resourceUri,
-                            () => {
-                                // Ask for the cell to stick the error in when we get the error
-                                const cellForErrorDisplay = this.kernelExecution.queue.length
-                                    ? this.kernelExecution.queue[0]
-                                    : this.notebookDocument
-                                          .getCells()
-                                          .filter((c) => c.kind === NotebookCellKind.Code)
-                                          .reverse()[0];
-                                return cellForErrorDisplay;
-                            }
-                        ); // Just a notification, so don't await this
+                        this.displayErrorInLastCell(ex, moreInfoLink);
                     }
-                    traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
-                    this.startCancellation.cancel();
-                    this._notebookPromise = undefined;
-                    reject(ex);
+                };
+
+                // Loop while the user handles kernel errors
+                while (retryState === 'retry') {
+                    try {
+                        const notebook = await this.createNotebook(stopWatch);
+                        disposeAllDisposables(disposables);
+                        retryState = 'stop';
+                        resolve(notebook);
+                        this._onStarted.fire();
+                    } catch (ex) {
+                        retryState = await this.handleKernelStartFailure(ex, stopWatch, errorDisplay);
+                        if (retryState !== 'retry') {
+                            this.startCancellation.cancel();
+                            this._notebookPromise = undefined;
+                            disposeAllDisposables(disposables);
+                            reject(ex);
+                        }
+                    }
                 }
             });
         }
         return this._notebookPromise;
     }
+
+    private displayErrorInLastCell(ex: Error | string, moreInfoLink?: string) {
+        // Ask for the cell to stick the error in when we get the error
+        const cellForErrorDisplay = this.kernelExecution.queue.length
+            ? this.kernelExecution.queue[0]
+            : this.notebookDocument
+                  .getCells()
+                  .filter((c) => c.kind === NotebookCellKind.Code)
+                  .reverse()[0];
+
+        void displayErrorsInCell(this.serviceContainer, ex.toString(), cellForErrorDisplay, moreInfoLink);
+    }
+
+    private async createNotebook(stopWatch: StopWatch): Promise<INotebook> {
+        try {
+            // No need to block kernel startup on UI updates.
+            const placeholderCellPromise = this.populateStartKernelInfoForInteractive(
+                this.notebookDocument,
+                this.kernelConnectionMetadata
+            );
+            traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
+            this.isKernelDead = false;
+            this._onStatusChanged.fire('starting');
+            const notebook = await this.notebookProvider.createNotebook({
+                document: this.notebookDocument,
+                resource: this.resourceUri,
+                ui: this.startupUI,
+                kernelConnection: this.kernelConnectionMetadata,
+                token: this.startCancellation.token
+            });
+            if (!notebook) {
+                // This is an unlikely case.
+                // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
+                throw new Error('Kernel has not been started');
+            }
+            await this.initializeAfterStart(SysInfoReason.Start, this.notebookDocument, placeholderCellPromise);
+
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.PerceivedJupyterStartupNotebook,
+                stopWatch.elapsedTime
+            );
+            return notebook;
+        } catch (ex) {
+            traceError(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+            if (ex instanceof JupyterConnectError) {
+                throw ex;
+            }
+            // Provide a user friendly message in case `ex` is some error thats not throw by us.
+            const message = DataScience.sessionStartFailedWithKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            );
+            throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async handleKernelStartFailure(
+        ex: Error,
+        stopWatch: StopWatch,
+        displayError: DisplayErrorFunc
+    ): Promise<HandleKernelErrorResult> {
+        sendKernelTelemetryEvent(
+            this.resourceUri,
+            Telemetry.NotebookStart,
+            stopWatch.elapsedTime,
+            undefined,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ex as any
+        );
+        traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+        if (this.startupUI.disableUI) {
+            sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+        } else if (this._disposing) {
+            // If the kernel was killed for any reason, then no point displaying
+            // errors about startup failures.
+            traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
+        } else {
+            return this.errorHandler.handleKernelError(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any,
+                'start',
+                this.kernelConnectionMetadata,
+                this.resourceUri,
+                displayError
+            );
+        }
+
+        return 'stop';
+    }
+
     private createProgressIndicator(disposables: IDisposable[]) {
         // Even if we're not supposed to display the progress indicator,
         // create it and keep it hidden.

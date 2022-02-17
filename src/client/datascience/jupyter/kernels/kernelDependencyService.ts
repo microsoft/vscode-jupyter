@@ -109,14 +109,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                 return;
             }
             await this.handleKernelDependencyResponse(result, kernelConnection, resource);
-        } catch (ex) {
-            traceError(`Error installing dependencies: `, ex);
-            await this.handleKernelDependencyResponse(
-                KernelInterpreterDependencyResponse.failed,
-                kernelConnection,
-                resource,
-                ex.toString()
-            );
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
@@ -180,7 +172,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                 this.vscNotebook.activeNotebookEditor?.document === item.notebookDocument &&
                 (item.resourceUri || '')?.toString() === (resource || '').toString()
         );
-        const firstQueuedCell = kernel && kernel.pendingCells.length > 0 ? kernel.pendingCells[0] : undefined;
         let anotherKernelSelected = false;
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
             if (kernel) {
@@ -210,8 +201,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         throw new IpyKernelNotInstalledError(
             ex || DataScience.ipykernelNotInstalled().format(message),
             response,
-            anotherKernelSelected,
-            firstQueuedCell
+            anotherKernelSelected
         );
     }
     private async runInstaller(

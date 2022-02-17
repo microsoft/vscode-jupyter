@@ -126,7 +126,8 @@ export class KernelProvider implements IKernelProvider {
             this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
             this.statusProvider,
             this.commandManager,
-            this.pythonChecker
+            this.pythonChecker,
+            this.serviceContainer
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

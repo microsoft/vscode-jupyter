@@ -404,6 +404,8 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
+export type HandleKernelErrorResult = 'retry' | 'stop';
+export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     /**
@@ -420,8 +422,8 @@ export interface IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        getCellToDisplayErrors: () => NotebookCell | undefined
-    ): Promise<void>;
+        displayError: DisplayErrorFunc
+    ): Promise<HandleKernelErrorResult>;
 }
 
 /**

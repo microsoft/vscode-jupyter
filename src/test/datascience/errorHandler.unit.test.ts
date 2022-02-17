@@ -16,7 +16,6 @@ import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
-import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -29,7 +28,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
-    let svcContainer: IServiceContainer;
     let jupyterInterpreterService: JupyterInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
@@ -43,7 +41,6 @@ suite('DataScience Error Handler Unit Tests', () => {
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
-        svcContainer = mock<IServiceContainer>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
@@ -55,8 +52,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(jupyterInterpreterService),
-            instance(svcContainer)
+            instance(jupyterInterpreterService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();

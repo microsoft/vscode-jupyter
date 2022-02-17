@@ -972,6 +972,10 @@ export namespace DataScience {
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
     );
+    export const ipykernelNotInstalledBecauseCanceled = localize(
+        'DataScience.ipykernelNotInstalledBecauseCanceled',
+        'IPyKernel not installed into interpreter. Installation canceled.'
+    );
     export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
     export const setup = localize('DataScience.setup', 'Setup');
     export const startingRunByLine = localize('DataScience.startingRunByLine', 'Starting Run by Line');

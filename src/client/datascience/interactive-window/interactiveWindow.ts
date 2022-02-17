@@ -19,7 +19,9 @@ import {
     NotebookEditor,
     Disposable,
     window,
-    ThemeColor
+    ThemeColor,
+    NotebookCellOutput,
+    NotebookCellOutputItem
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
@@ -104,6 +106,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _editorReadyPromise: Promise<NotebookEditor>;
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private _kernelReadyException: any;
     private _notebookDocument: NotebookDocument | undefined;
     private _notebookEditor: NotebookEditor | undefined;
     private _inputUri: Uri | undefined;
@@ -163,7 +167,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             async () => {
                 traceInfoIfCI('Restart event handled in IW');
                 this.fileInKernel = undefined;
-                const promise = this.runIntialization(kernel, this.owner);
+                const promise = this.runInitialization(kernel, this.owner);
                 this._kernelReadyPromise = promise.then(() => kernel);
                 await promise;
             },
@@ -171,9 +175,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.internalDisposables
         );
         this.internalDisposables.push(kernel);
-        await kernel.start();
+        await kernel.start({
+            displayError: (ex) => {
+                this._kernelReadyException = ex;
+            }
+        });
         this.fileInKernel = undefined;
-        await this.runIntialization(kernel, this.owner);
+        await this.runInitialization(kernel, this.owner);
         return kernel;
     }
 
@@ -404,12 +412,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         isDebug: boolean
     ) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
-        const [kernel, { cell, wasScrolled }, editor] = await Promise.all([
+        const [kernel, { cell, wasScrolled }, editor, controller] = await Promise.all([
             this._kernelReadyPromise,
             notebookCellPromise,
-            this._editorReadyPromise
+            this._editorReadyPromise,
+            this._controllerReadyPromise.promise
         ]);
         if (!kernel) {
+            // If there was a failure connecting, we should display something to the user inside the IW
+            if (this._kernelReadyException && controller) {
+                this.displayErrorInCell(this._kernelReadyException, cell, controller);
+                this._kernelReadyException = undefined;
+            }
             return false;
         }
         let result = true;
@@ -463,7 +477,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return result;
     }
-    private async runIntialization(kernel: IKernel, fileUri: Resource) {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private displayErrorInCell(error: any, cell: NotebookCell, controller: VSCodeNotebookController) {
+        const execution = controller.controller.createNotebookCellExecution(cell);
+        execution.start();
+        void execution.clearOutput(cell);
+        const output = new NotebookCellOutput([
+            NotebookCellOutputItem.error({
+                message: '',
+                name: '',
+                stack: `\u001b[1;31m${error.toString().trim()}`
+            })
+        ]);
+        void execution.appendOutput(output);
+        execution.end(undefined);
+    }
+
+    private async runInitialization(kernel: IKernel, fileUri: Resource) {
         if (!fileUri) {
             traceInfoIfCI('Unable to run initialization for IW');
             return;
