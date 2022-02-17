@@ -6,6 +6,7 @@ import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
+import * as os from 'os';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
@@ -21,12 +22,12 @@ import {
     IPythonExecutionFactory,
     ObservableExecutionResult
 } from '../../common/process/types';
-import { IOutputChannel, Resource } from '../../common/types';
+import { IJupyterSettings, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { KernelInterruptDaemonModule, Telemetry } from '../constants';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
@@ -42,6 +43,7 @@ import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { KernelDiedError } from '../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { PythonKernelInterruptDaemon } from './pythonKernelInterruptDaemon';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -67,11 +69,13 @@ export class KernelProcess implements IKernelProcess {
         return true;
     }
     private _process?: ChildProcess;
+    private _interruptDaemon?: PythonKernelInterruptDaemon;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private launchedOnce?: boolean;
     private disposed?: boolean;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
+    private _interruptSignalHandle = 0;
     private readonly _kernelConnectionMetadata: Readonly<
         LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     >;
@@ -84,16 +88,28 @@ export class KernelProcess implements IKernelProcess {
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         private readonly pythonExecFactory: IPythonExecutionFactory,
-        private readonly outputChannel: IOutputChannel | undefined
+        private readonly outputChannel: IOutputChannel | undefined,
+        private readonly jupyterSettings: IJupyterSettings
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
     public async interrupt(): Promise<void> {
         if (!this.canInterrupt) {
             throw new Error('Kernel interrupt not supported in KernelProcess.ts');
-        } else if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' && this._process) {
-            traceInfo('Interrupting kernel via Signals');
+        } else if (
+            this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
+            this._process &&
+            !this._interruptSignalHandle
+        ) {
+            traceInfo('Interrupting kernel via SIGINT');
             kill(this._process.pid, 'SIGINT');
+        } else if (
+            this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
+            this._process &&
+            this._interruptSignalHandle
+        ) {
+            traceInfo('Interrupting kernel via custom event (Win32)');
+            return this.fireWin32InterruptEvent();
         } else {
             traceError('No process to interrupt in KernleProcess.ts');
         }
@@ -262,6 +278,7 @@ export class KernelProcess implements IKernelProcess {
         traceInfo('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
+            void this._interruptDaemon?.kill();
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
@@ -333,7 +350,6 @@ export class KernelProcess implements IKernelProcess {
             // a different process tries to open it.
             const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
-            await tempFile.dispose();
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
@@ -400,7 +416,7 @@ export class KernelProcess implements IKernelProcess {
                 interpreter: this._kernelConnectionMetadata.interpreter
             });
 
-            const [executionService, wdExists, env] = await Promise.all([
+            let [executionService, wdExists, env] = await Promise.all([
                 executionServicePromise,
                 fs.pathExists(workingDirectory),
                 this.kernelEnvVarsService.getEnvironmentVariables(
@@ -410,9 +426,22 @@ export class KernelProcess implements IKernelProcess {
                 )
             ]);
 
+            // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
+            if (os.platform() === 'win32') {
+                env = env || process.env;
+                const handle = await this.getWin32InterruptHandle();
+
+                // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
+                env.JPY_INTERRUPT_EVENT = `${handle}`;
+            }
+
             // If we don't have a KernelDaemon here & we're not running a Python module either.
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            exeObs = executionService.execObservable(this.launchKernelSpec.argv.slice(1), {
+            const args = this.launchKernelSpec.argv.slice(1);
+            if (this.jupyterSettings.enablePythonKernelLogging) {
+                args.push('--debug');
+            }
+            exeObs = executionService.execObservable(args, {
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
@@ -467,5 +496,30 @@ export class KernelProcess implements IKernelProcess {
 
         this._process = exeObs.proc;
         return exeObs;
+    }
+
+    private async getWin32InterruptHandle(): Promise<number> {
+        if (!this._interruptSignalHandle) {
+            const interruptDaemon = await this.pythonExecFactory.createDaemon({
+                daemonModule: KernelInterruptDaemonModule,
+                resource: this.resource,
+                interpreter: this._kernelConnectionMetadata.interpreter!,
+                daemonClass: PythonKernelInterruptDaemon,
+                dedicated: true
+            });
+            if ('kill' in interruptDaemon) {
+                this._interruptDaemon = interruptDaemon;
+            }
+            if (this._interruptDaemon) {
+                this._interruptSignalHandle = await this._interruptDaemon.getInterruptHandle();
+            }
+        }
+        return this._interruptSignalHandle;
+    }
+
+    private async fireWin32InterruptEvent() {
+        if (this._interruptDaemon) {
+            return this._interruptDaemon.interrupt();
+        }
     }
 }

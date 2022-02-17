@@ -50,7 +50,7 @@ import {
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IPYTHON_VERSION_CODE } from '../../constants';
+import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -166,6 +166,27 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await Promise.all([runCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
+    });
+    test('Verify loading of env variables form .env file', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        const cell = await insertCodeCell(
+            dedent`
+                    import sys
+                    import os
+                    print(sys.path)
+                    print(os.getenv("ENV_VAR_TESTING_CI"))`,
+            {
+                index: 0
+            }
+        );
+
+        await Promise.all([
+            runCell(cell),
+            waitForTextOutput(cell, 'HelloWorldEnvVariable', 0, false),
+            waitForTextOutput(cell, 'dummyFolderForPythonPath', 0, false)
+        ]);
     });
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
@@ -1085,7 +1106,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                         import time
                         import os.path
                         from os import path
-                        while os.path.exists('${tmpFile}'):
+                        while os.path.exists('${tmpFile.replace(/\\/g, '\\\\')}'):
                             time.sleep(0.1)
 
                         print("End Cell ${index}")`,

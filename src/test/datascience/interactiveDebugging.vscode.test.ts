@@ -14,7 +14,12 @@ import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
-import { submitFromPythonFile, submitFromPythonFileUsingCodeWatcher, waitForLastCellToComplete } from './helpers';
+import {
+    submitFromPythonFile,
+    submitFromPythonFileUsingCodeWatcher,
+    waitForCodeLenses,
+    waitForLastCellToComplete
+} from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
@@ -88,20 +93,7 @@ suite('Interactive window debugging', async function () {
             b.insert(new vscode.Position(1, 0), '\n# %%\n\n\nprint(43)');
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
-
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         let stoppedOnLine5 = false;
         debugAdapterTracker = {
@@ -157,19 +149,7 @@ suite('Interactive window debugging', async function () {
             b.insert(new vscode.Position(2, 0), '\n# %%\nfoo()');
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
 
         // Insert a breakpoint on line 2
         vscode.debug.addBreakpoints([
@@ -204,21 +184,7 @@ suite('Interactive window debugging', async function () {
             `Never hit stop event when waiting for debug cell`
         );
 
-        // Now we should have a continue command (first one)
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return (
-                    codeLenses && codeLenses.length == 3 && codeLenses[0].command?.command == 'jupyter.debugcontinue'
-                );
-            },
-            defaultNotebookTestTimeout,
-            `Couldn't find continue command`
-        );
-
+        codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugContinue);
         stopped = false;
         // Continue and wait for stopped.
         args = codeLenses[0].command!.arguments || [];
@@ -249,20 +215,7 @@ suite('Interactive window debugging', async function () {
             b.insert(new vscode.Position(1, 0), '\n# %%\nx = 1\nx = 2\nx = 3\nx');
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
-
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         debugAdapterTracker = {
             onDidSendMessage: (message) => {
@@ -288,20 +241,7 @@ suite('Interactive window debugging', async function () {
         );
 
         // Wait to get the step over code lens
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return (
-                    codeLenses && codeLenses.length == 3 && codeLenses[2].command?.command == 'jupyter.debugstepover'
-                );
-            },
-            defaultNotebookTestTimeout,
-            `Couldn't find continue command`
-        );
-
+        codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugStepOver);
         // Step once
         stopped = false;
         // Continue and wait for stopped.
@@ -378,20 +318,7 @@ suite('Interactive window debugging', async function () {
             );
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
-
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         debugAdapterTracker = {
             onDidSendMessage: (message) => {
@@ -417,17 +344,7 @@ suite('Interactive window debugging', async function () {
         );
 
         // Now we should have a stop command (second one)
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3 && codeLenses[1].command?.command == 'jupyter.debugstop';
-            },
-            defaultNotebookTestTimeout,
-            `Couldn't find stop command`
-        );
+        codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugStop);
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, -1, true);
         const outputs = getCellOutputs(lastCell);
         assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
@@ -459,19 +376,7 @@ b = 200
             edit.insert(new vscode.Position(2, 0), leadingSpacesSource);
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         let stoppedOnLine = false;
         debugAdapterTracker = {
@@ -532,20 +437,7 @@ def foo():
             b.insert(new vscode.Position(8, 0), '\n# %%\nfoo()');
         });
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 3;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
-
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         let stoppedOnLine = false;
         let targetLine = 9;
@@ -625,20 +517,7 @@ foo()
         );
         await waitForLastCellToComplete(activeInteractiveWindow, 2);
 
-        let codeLenses: vscode.CodeLens[] = [];
-        // Wait for the debug cell code lens to appear
-        await waitForCondition(
-            async () => {
-                codeLenses = (await vscode.commands.executeCommand(
-                    'vscode.executeCodeLensProvider',
-                    untitledPythonFile.uri
-                )) as vscode.CodeLens[];
-                return codeLenses && codeLenses.length == 7;
-            },
-            defaultNotebookTestTimeout,
-            `Invalid number of code lenses returned`
-        );
-
+        let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;
         let stoppedOnLine = false;
         let targetLine = 7;

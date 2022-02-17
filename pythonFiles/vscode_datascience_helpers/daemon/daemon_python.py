@@ -66,7 +66,7 @@ class PythonDaemon(MethodDispatcher):
     To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `vscode_datascience_helpers.daemon`.
     """
 
-    def __init__(self, rx, tx):
+    def __init__(self, rx, tx, ppid):
         self.log = logging.getLogger(
             "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
         )
@@ -205,7 +205,7 @@ class PythonDaemon(MethodDispatcher):
             return False
 
     @classmethod
-    def start_daemon(cls, logging_queue_handler=None):
+    def start_daemon(cls, logging_queue_handler=None, ppid=0):
         """Starts the daemon."""
         if not issubclass(cls, PythonDaemon):
             raise ValueError("Handler class must be an instance of PythonDaemon")
@@ -218,7 +218,7 @@ class PythonDaemon(MethodDispatcher):
             server._endpoint.notify("output", {"source": "stderr", "out": output})
 
         stdin, stdout = get_io_buffers()
-        server = cls(stdin, stdout)
+        server = cls(stdin, stdout, ppid)
         redirect_output(on_write_stdout, on_write_stderr)
         # Set up the queue handler that'll send log messages over to the client.
         if logging_queue_handler is not None:

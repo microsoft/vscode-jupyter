@@ -25,6 +25,16 @@ on:
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
   workflow_dispatch:
+    inputs:
+      publishPreRelease:
+        description: 'Publish Pre-Release'
+        required: false
+        default: 'Do not publish'
+        type: choice
+        options:
+        - Do not publish
+        - Yes, publish pre-release
+
 env:
   NODE_VERSION: 14.16.0
   PYTHON_VERSION: 3.8
@@ -76,12 +86,11 @@ jobs:
         run: |
           echo "package_command=package" >> $GITHUB_ENV
 
-
       - name: pr
         if: github.event_name == 'pull_request'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
       - name: pr release push
         if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
@@ -90,19 +99,20 @@ jobs:
           echo "package_command=packagePreRelease" >> $GITHUB_ENV
 
       - name: pre-release
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      - name: pre-release channel
-         # Scheduled builds will publish pre-release builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-        run: |
-          echo "package_command=packagePreRelease" >> $GITHUB_ENV
-          echo "release_channel=pre-release" >> $GITHUB_ENV
+    #   - name:
+    #       pre-release channel
+    #       # Scheduled builds will publish pre-release builds.
+    #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+    #     run: |
+    #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
+    #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
@@ -147,6 +157,8 @@ jobs:
       - name: Install Python libs
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+
+      - run: npm i -g vsce
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
@@ -352,8 +364,12 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
+          - os: windows-latest
+            python: nonConda
+            pythonVersion: '3.10'
+            jupyter: raw
         exclude:
-          - python: conda  # Conda does't seem to support 3.10 yet.
+          - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
         #   - pythonVersion: '3.9'
         #     python: nonConda
@@ -377,8 +393,7 @@ jobs:
         if: matrix.python == 'conda'
         with:
           path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{
+          key: ${{ runner.os }}-conda-${{
             hashFiles('./build/conda-test-requirements.yml') }}
 
       - name: Use Conda Python ${{matrix.pythonVersion}}
@@ -524,11 +539,13 @@ jobs:
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
+        if: matrix.os != 'windows-latest'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
+        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           julia -e '
@@ -536,15 +553,18 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
+        if: matrix.os != 'windows-latest'
         uses: actions/setup-dotnet@v1.8.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
+        if: matrix.os != 'windows-latest'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
+        if: matrix.os != 'windows-latest'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
@@ -573,7 +593,7 @@ jobs:
           check_name: VSCode Test Report
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
-      - name: Run Native Notebook with VSCode & Jupyter
+      - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
@@ -587,9 +607,25 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          VSC_JUPYTER_LOG_IPYWIDGETS: 1
-        id: test_notebook_vscode
-        if: matrix.python != 'noPython'
+        id: test_notebook_vscode_ubuntu
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest'
+
+      - name: Run Native Notebook with VSCode & Jupyter (windows)
+        run: |
+          npm run testNativeNotebooksInVSCodeWithoutTestSuffix
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test'
+        id: test_notebook_vscode_windows
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -597,7 +633,7 @@ jobs:
           github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+        if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4

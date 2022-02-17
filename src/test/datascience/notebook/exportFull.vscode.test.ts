@@ -181,7 +181,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'${os.EOL}# To add a new markdown cell, type '# %% [markdown]'${os.EOL}# %%${os.EOL}from IPython import get_ipython${os.EOL}${os.EOL}# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}get_ipython().run_line_magic('whos', '')${os.EOL}get_ipython().system('shellcmd')${os.EOL}${os.EOL}`,
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n`,
             'Exported text does not match'
         );
 
@@ -256,7 +256,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'${os.EOL}# To add a new markdown cell, type '# %% [markdown]'${os.EOL}# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`,
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
             'Exported text does not match'
         );
 

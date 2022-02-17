@@ -83,12 +83,12 @@ suite('VSCode Notebook - Run By Line', function () {
 
     test('Stops at end of cell', async function () {
         // Run by line seems to end up on the second line of the function, not the first
-        await insertCodeCell('a=1\na', { index: 0 });
+        const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell = doc.getCells()[0];
+        traceInfo(`Inserted cell`);
 
-        void commandManager.executeCommand(Commands.RunByLine, cell);
-
+        await commandManager.executeCommand(Commands.RunByLine, cell);
+        traceInfo(`Executed run by line`);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!);
@@ -97,12 +97,14 @@ suite('VSCode Notebook - Run By Line', function () {
         });
         assert.isTrue(stack.stackFrames.length > 0, 'has frames');
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        traceInfo(`Got past first stop event`);
 
         const coreVariableView = await variableViewProvider.activeVariableView;
         const variableView = (coreVariableView as unknown) as ITestWebviewHost;
 
-        void commandManager.executeCommand(Commands.RunByLineNext, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
+        traceInfo(`Got past second stop event`);
 
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         await waitForVariablesToMatch(expectedVariables, variableView);
@@ -118,15 +120,16 @@ suite('VSCode Notebook - Run By Line', function () {
             defaultNotebookTestTimeout,
             'Cell should have output'
         );
+        traceInfo(`Got past third stop event`);
+
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
     test('Interrupt during debugging', async function () {
-        await insertCodeCell('a=1\na', { index: 0 });
+        const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell = doc.getCells()[0];
 
-        void commandManager.executeCommand(Commands.RunByLine, cell);
+        await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!);
@@ -141,11 +144,10 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Stops in same-cell function called from last line', async function () {
-        await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
+        const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell = doc.getCells()[0];
 
-        void commandManager.executeCommand(Commands.RunByLine, cell);
+        await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line
@@ -174,14 +176,12 @@ suite('VSCode Notebook - Run By Line', function () {
 
     test.skip('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
-        await insertCodeCell('def foo():\n    print(1)');
-        await insertCodeCell('foo()');
+        const cell0 = await insertCodeCell('def foo():\n    print(1)');
+        const cell1 = await insertCodeCell('foo()');
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell0 = doc.getCells()[0];
-        const cell1 = doc.getCells()[1];
 
         await runCell(cell0);
-        void commandManager.executeCommand(Commands.RunByLine, cell1);
+        await commandManager.executeCommand(Commands.RunByLine, cell1);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line

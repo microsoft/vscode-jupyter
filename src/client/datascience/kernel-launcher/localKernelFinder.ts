@@ -88,14 +88,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     : undefined;
 
             // Find the preferred kernel index from the list.
-            const preferred = findPreferredKernel(
-                kernels,
-                resource,
-                [],
-                notebookMetadata,
-                preferredInterpreter,
-                undefined
-            );
+            const preferred = findPreferredKernel(kernels, resource, notebookMetadata, preferredInterpreter, undefined);
             sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
                 result: preferred ? 'found' : 'notfound',
                 resourceType,

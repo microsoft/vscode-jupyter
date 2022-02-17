@@ -97,7 +97,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
                 timeout
             ),
-            this.getPylanceCompletions(document, position, context, token)
+            waitForPromise(this.getPylanceCompletions(document, position, context, token), timeout)
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);

@@ -53,9 +53,11 @@ export class PythonDaemonFactory {
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
         // Add '--log-file=/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/daaemon.log' to log to a file.
         const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
+        const processArgs: string[] = ['--ppid', `${process.pid}`];
 
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(
-            loggingArgs
+            loggingArgs,
+            processArgs
         );
         const env = this.envVariables;
         const daemonProc = this.pythonExecutionService!.execModuleObservable(

@@ -19,6 +19,7 @@ import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
 import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
+import { VariableExplorerLoadingRowsView } from './variableExplorerLoadingRows';
 
 interface IVariableExplorerProps {
     baseTheme: string;
@@ -37,6 +38,7 @@ interface IVariableExplorerProps {
     pageIn(startIndex: number, pageSize: number): void;
     sort(sortColumn: string, sortAscending: boolean): void;
     viewHeight: number;
+    requestInProgress: boolean;
 }
 
 const defaultColumnProperties = {
@@ -179,6 +181,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (prevState.containerHeight !== this.state.containerHeight) {
             return true;
         }
+        if (prevState.requestInProgress !== nextProps.requestInProgress) {
+            return true;
+        }
 
         // We need to update when height changes
         if (prevState.viewHeight !== nextProps.viewHeight) {
@@ -213,6 +218,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private renderGrid() {
         const newGridHeight = this.calculateGridHeight(this.props.viewHeight);
 
+        // Customize our empty rows views based on if we are in the act of requesting variables
+        // Allows us to say "Loading" initially versus "No Variables Defined"
+        // We have to handle this with two different React components as the grid emptyRowsView takes a component
+        // not an element as a property and internally calls createElement without properties for the view
+        const emptyRowsView = this.props.requestInProgress
+            ? VariableExplorerLoadingRowsView
+            : VariableExplorerEmptyRowsView;
+
         return (
             <div
                 id="variable-explorer-data-grid"
@@ -230,7 +243,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     headerRowHeight={this.getRowHeight()}
                     rowHeight={this.getRowHeight()}
                     onRowDoubleClick={this.rowDoubleClick}
-                    emptyRowsView={VariableExplorerEmptyRowsView}
+                    emptyRowsView={emptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
                     onGridSort={this.sortRows}
                     sortColumn="name"

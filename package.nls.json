@@ -345,6 +345,7 @@
     "Common.notNow": "Not now",
     "Common.gotIt": "Got it!",
     "DataScience.noRowsInVariableExplorer": "No variables defined",
+    "DataScience.loadingRowsInVariableExplorer": "Loading variables",
     "DataScience.tooManyColumnsMessage": "Variables with over a 1000 columns may take a long time to display. Are you sure you wish to continue?",
     "DataScience.tooManyColumnsYes": "Yes",
     "DataScience.tooManyColumnsNo": "No",
@@ -559,7 +560,7 @@
     "DataScience.usingNonPrereleaseYes": "Yes",
     "DataScience.usingNonPrereleaseNo": "No",
     "DataScience.usingNonPrereleaseNoAndDontAskAgain": "Don't ask again",
-    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter extension is recommended when running on VS code insiders. Would you like to switch?",
+    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter extension is recommended when running on VS Code Insiders. Would you like to switch?",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
     "DataScience.kernelConsoleOutputChannel": "{0} Kernel Console Output"

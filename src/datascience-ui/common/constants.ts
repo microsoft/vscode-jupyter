@@ -10,6 +10,8 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
+export const KernelInterruptDaemonModule = 'vscode_datascience_helpers.kernel_interrupt_daemon';
+
 export const PythonExtension = 'ms-python.python';
 export const PylanceExtension = 'ms-python.vscode-pylance';
 

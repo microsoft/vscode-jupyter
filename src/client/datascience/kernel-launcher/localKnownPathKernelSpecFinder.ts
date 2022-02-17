@@ -16,7 +16,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IMemento, GLOBAL_MEMENTO } from '../../common/types';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -81,15 +81,18 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         await Promise.all(
             searchResults.map(async (resultPath) => {
-                // Add these into our path cache to speed up later finds
-                const kernelspec = await this.getKernelSpec(
-                    resultPath.kernelSpecFile,
-                    resultPath.interpreter,
-                    cancelToken
-                );
-
-                if (kernelspec) {
-                    results.push(kernelspec);
+                try {
+                    // Add these into our path cache to speed up later finds
+                    const kernelspec = await this.getKernelSpec(
+                        resultPath.kernelSpecFile,
+                        resultPath.interpreter,
+                        cancelToken
+                    );
+                    if (kernelspec) {
+                        results.push(kernelspec);
+                    }
+                } catch (ex) {
+                    traceError(`Failed to load kernelspec for ${resultPath.kernelSpecFile}`, ex);
                 }
             })
         );

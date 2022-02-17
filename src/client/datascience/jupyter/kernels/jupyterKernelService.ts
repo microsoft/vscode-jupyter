@@ -22,7 +22,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
-import { cleanEnvironment } from './helpers';
+import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
@@ -155,9 +155,16 @@ export class JupyterKernelService {
         if (kernel.kernelSpec.specFile && !this.fs.areLocalPathsSame(kernelSpecFilePath, kernel.kernelSpec.specFile)) {
             // Add extra metadata onto the contents. We'll use this
             // when searching for kernels later to remove duplicates.
+            contents.metadata = contents.metadata || {};
             contents.metadata = {
                 ...contents.metadata,
-                originalSpecFile: kernel.kernelSpec.specFile
+                vscode: {
+                    ...(contents.metadata!.vscode || {}),
+                    originalSpecFile:
+                        kernel.kernelSpec.metadata?.vscode?.originalSpecFile || kernel.kernelSpec.specFile,
+                    originalDisplayName:
+                        kernel.kernelSpec.metadata?.vscode?.originalDisplayName || kernel.kernelSpec.display_name
+                }
             };
         }
         // Make sure interpreter is in the metadata
@@ -183,8 +190,9 @@ export class JupyterKernelService {
         }
 
         // Copy any other files over from the original directory (images most likely)
-        if (contents.metadata?.originalSpecFile) {
-            const originalSpecDir = path.dirname(contents.metadata?.originalSpecFile);
+        const originalSpecFile = contents.metadata?.vscode?.originalSpecFile || contents.metadata?.originalSpecFile;
+        if (originalSpecFile) {
+            const originalSpecDir = path.dirname(originalSpecFile);
             const newSpecDir = path.dirname(kernelSpecFilePath);
             const otherFiles = await this.fs.searchLocal('*.*[^json]', originalSpecDir);
             await Promise.all(
@@ -211,9 +219,10 @@ export class JupyterKernelService {
         const specedKernel = kernel as JupyterKernelSpec;
         if (specFile && kernelSpecRootPath) {
             // Spec file may not be the same as the original spec file path.
-            const kernelSpecFilePath = specFile.includes(kernel.name)
-                ? specFile
-                : path.join(kernelSpecRootPath, kernel.name, 'kernel.json');
+            const kernelSpecFilePath =
+                path.basename(specFile).toLowerCase() === kernel.name.toLowerCase()
+                    ? specFile
+                    : path.join(kernelSpecRootPath, kernel.name, 'kernel.json');
 
             // Make sure the file exists
             if (!(await this.fs.localFileExists(kernelSpecFilePath))) {
@@ -259,6 +268,13 @@ export class JupyterKernelService {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
+
+                // Ensure we inherit env variables from the original kernelspec file.
+                const envInKernelSpecJson =
+                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
+                        ? specModel.env || {}
+                        : {};
+                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
 
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...

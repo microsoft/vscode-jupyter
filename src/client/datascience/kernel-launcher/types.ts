@@ -3,9 +3,7 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
-import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import {
     KernelConnectionMetadata,
@@ -100,6 +98,4 @@ export interface IRemoteKernelFinder {
 export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;
     kill(): Promise<void>;
-    preWarm(): Promise<void>;
-    start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
 }

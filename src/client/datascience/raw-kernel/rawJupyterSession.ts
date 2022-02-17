@@ -7,7 +7,7 @@ import { CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -281,11 +281,14 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         try {
             // Wait for it to be ready
+            traceVerbose('Waiting for Raw Session to be ready in postStartRawSession');
             await Promise.race([
                 result.waitForReady(),
                 createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
             ]);
+            traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
+            traceError('Failed waiting for Raw Session to be ready', ex);
             void process.dispose();
             void result.dispose();
             if (ex instanceof CancellationError || options.token.isCancellationRequested) {
@@ -296,12 +299,15 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         // Attempt to get kernel to respond to requests (this is what jupyter does today).
         // Kinda warms up the kernel communication & ensure things are in the right state.
-        traceInfoIfCI(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
-        // Lets wait for the response (max of 10s), like jupyter does (lets not wait for full timeout, we don't want to slow kernel startup).
-        // Try again (twice, jupyter tries this a couple f times).
-        // For now, lets try just twice.
+        traceVerbose(`Kernel status before requesting kernel info and after ready is ${result.kernel.status}`);
+        // Lets wait for the response (max of 3s), like jupyter (python code) & jupyter client (jupyter lab npm) does.
+        // Lets not wait for full timeout, we don't want to slow kernel startup.
+        // Note: in node_modules/@jupyterlab/services/lib/kernel/default.js we only wait for 3s.
+        // Hence we'll try for a max of 3 seconds (1.5s for first try & then another 1.5s for the second attempt),
+        // Note: jupyter (python code) tries this a couple f times).
         // Note: We don't yet want to do what Jupyter does today, it could slow the startup of kernels.
         // Lets try this and see (hence the telemetry to see the cost of this check).
+        // We know 10s is way too slow, see https://github.com/microsoft/vscode-jupyter/issues/8917
         const stopWatch = new StopWatch();
         let gotIoPubMessage = createDeferred<boolean>();
         let attempts = 1;
@@ -310,26 +316,32 @@ export class RawJupyterSession extends BaseJupyterSession {
             const iopubHandler = () => gotIoPubMessage.resolve(true);
             result.iopubMessage.connect(iopubHandler);
             try {
+                traceVerbose('Sending request for kernelinfo');
                 await Promise.race([
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 10)),
+                    sleep(Math.min(this.launchTimeout, 1_500)),
                     createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
                 ]);
             } catch (ex) {
+                traceError('Failed to request kernel info', ex);
                 void process.dispose();
                 void result.dispose();
                 throw ex;
+            } finally {
+                result.iopubMessage.disconnect(iopubHandler);
             }
 
-            result.iopubMessage.disconnect(iopubHandler);
             if (gotIoPubMessage.completed) {
-                traceInfoIfCI(`Got response for requestKernelInfo`);
+                traceVerbose(`Got response for requestKernelInfo`);
                 break;
             } else {
+                traceVerbose(`Did not get a response for requestKernelInfo`);
                 continue;
             }
         }
-        if (!gotIoPubMessage.completed) {
+        if (gotIoPubMessage.completed) {
+            traceVerbose('Successfully compelted postStartRawSession');
+        } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
         sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {

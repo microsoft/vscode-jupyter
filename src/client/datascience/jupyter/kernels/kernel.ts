@@ -19,7 +19,7 @@ import {
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -89,12 +89,6 @@ export class Kernel implements IKernel {
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
     }
-    get onWillRestart(): Event<void> {
-        return this._onWillRestart.event;
-    }
-    get onWillInterrupt(): Event<void> {
-        return this._onWillInterrupt.event;
-    }
     get onStarted(): Event<void> {
         return this._onStarted.event;
     }
@@ -147,13 +141,12 @@ export class Kernel implements IKernel {
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
-    private readonly _onWillRestart = new EventEmitter<void>();
-    private readonly _onWillInterrupt = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
+    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
@@ -207,6 +200,15 @@ export class Kernel implements IKernel {
         }
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
+
+    public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+        this.eventHooks.push(hook);
+    }
+
+    public removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+        this.eventHooks = this.eventHooks.filter((h) => h !== hook);
+    }
+
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         // If this kernel is still active & status is dead or dying, then notify the user of this dead kernel.
         if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
@@ -236,7 +238,7 @@ export class Kernel implements IKernel {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
-        this._onWillInterrupt.fire();
+        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
@@ -319,7 +321,7 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        this._onWillRestart.fire();
+        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
         // Set our status
@@ -608,10 +610,10 @@ export class Kernel implements IKernel {
         notebookDocument: NotebookDocument,
         placeholderCellPromise?: Promise<NotebookCell | undefined>
     ) {
-        traceInfoIfCI('Started running kernel initialization');
+        traceVerbose('Started running kernel initialization');
         const notebook = this.notebook;
         if (!notebook) {
-            traceInfoIfCI('Not running kernel initialization');
+            traceVerbose('Not running kernel initialization');
             return;
         }
         if (!this.hookedNotebookForEvents.has(notebook)) {
@@ -643,7 +645,7 @@ export class Kernel implements IKernel {
                 }
             });
             const statusChangeHandler = (status: KernelMessage.Status) => {
-                traceInfoIfCI(`IKernel Status change to ${status}`);
+                traceVerbose(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
@@ -653,15 +655,8 @@ export class Kernel implements IKernel {
             // Restart sessions and retries might make this hard to do correctly otherwise.
             notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-            // Request completions to warm up the completion engine (first call always takes a lot longer)
-            const completionPromise = this.requestEmptyCompletions();
-
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
-                // No need to wait for this to complete when connecting to a live kernel.
-                completionPromise.catch(noop);
-            } else {
-                await completionPromise;
-            }
+            // Request completions to warm up the completion engine.
+            this.requestEmptyCompletions();
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 await sendTelemetryForPythonKernelExecutable(
@@ -682,7 +677,7 @@ export class Kernel implements IKernel {
 
         // Then request our kernel info (indicates kernel is ready to go)
         try {
-            traceInfoIfCI('Requesting Kernel info');
+            traceVerbose('Requesting Kernel info');
 
             const promises: Promise<
                 | KernelMessage.IReplyErrorContent
@@ -709,7 +704,7 @@ export class Kernel implements IKernel {
             if (content === defaultResponse) {
                 traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
             } else {
-                traceInfoIfCI('Got Kernel info');
+                traceVerbose('Got Kernel info');
             }
             this._info = content;
             this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
@@ -717,9 +712,9 @@ export class Kernel implements IKernel {
             traceWarning('Failed to request KernelInfo', ex);
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
-            traceInfoIfCI('End running kernel initialization, now waiting for idle');
+            traceVerbose('End running kernel initialization, now waiting for idle');
             await notebook.session.waitForIdle(this.launchTimeout);
-            traceInfoIfCI('End running kernel initialization, session is idle');
+            traceVerbose('End running kernel initialization, session is idle');
         }
     }
 
@@ -750,7 +745,7 @@ export class Kernel implements IKernel {
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
             if (file) {
-                result.push(`__vsc_ipynb_file__ = '${file.replace(/\\/g, '\\\\')}'`);
+                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
             result.push(CodeSnippets.disableJedi);
 
@@ -765,8 +760,14 @@ export class Kernel implements IKernel {
         return result;
     }
 
-    private async requestEmptyCompletions() {
-        await this.session?.requestComplete({
+    /**
+     * Do not wait for completions,
+     * If the completions request crashes then we don't get a response for this request,
+     * Hence we end up waiting indefinitely.
+     * https://github.com/microsoft/vscode-jupyter/issues/9014
+     */
+    private requestEmptyCompletions() {
+        void this.session?.requestComplete({
             code: '__file__.',
             cursor_pos: 9
         });
@@ -964,6 +965,7 @@ export class Kernel implements IKernel {
 
     private async executeSilently(code: string[]) {
         if (!this.notebook || code.join('').trim().length === 0) {
+            traceVerbose(`Not executing startup notebook: ${this.notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
         await executeSilently(this.notebook.session, code.join('\n'));

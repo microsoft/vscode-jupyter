@@ -12,7 +12,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { createInterpreterKernelSpec, getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
+import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
@@ -24,8 +24,31 @@ import { Telemetry } from '../constants';
 import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 
-export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
+export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 
+export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
+    // // When we create kernlespecs, we change the name to include a unique id.
+    // // We need to look at the name of the original kernelspec that was created on disc.
+    // // E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+    // // However we give this a completely different name, and at that point its not possible to determine
+    // // whether this is a default kernel or not.
+    // // Hence determine the original name baesed on the original kernelspec file.
+    const originalSpecFile = kernelspec.metadata?.vscode?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
+    const name = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelspec.name || '';
+    const displayName = kernelspec.metadata?.vscode?.originalDisplayName || kernelspec.display_name || '';
+
+    // If the user creates a kernelspec with a name `python4` or changes the display
+    // name of kernel `python3` to `Hello World`, then we'd still treat them as default kernelspecs,
+    // The expectation is for users to use unique names & display names for their kernelspecs.
+    if (
+        name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
+        displayName.toLowerCase() === 'python 3 (ipykernel)' ||
+        displayName.toLowerCase() === 'python 3'
+    ) {
+        return true;
+    }
+    return false;
+}
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
  * If Python extension is not installed, this will return all Python kernels registered globally.
@@ -93,7 +116,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 // If there are any kernels that we registered (then don't return them).
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
                 // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-                .filter((item) => (includeKernelsRegisteredByUs ? true : !isKernelRegisteredByUs(item.kernelSpec)))
+                .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
                 .map((item) => <LocalKernelSpecConnectionMetadata>item)
         );
     }
@@ -117,9 +140,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             activeInterpreterPromise,
             this.listGlobalPythonKernelSpecs(true, cancelToken)
         ]);
-
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
-            isKernelRegisteredByUs(item.kernelSpec)
+            getKernelRegistrationInfo(item.kernelSpec)
         );
         // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
         // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
@@ -161,11 +183,26 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
             globalKernelSpecs
-                .filter(
-                    (item) =>
-                        !isKernelRegisteredByUs(item.kernelSpec) &&
+                .filter((item) => {
+                    const registrationInfo = getKernelRegistrationInfo(item.kernelSpec);
+                    if (
+                        !registrationInfo &&
                         (usingNonIpyKernelLauncher(item) || Object.keys(item.kernelSpec.env || {}).length > 0)
-                )
+                    ) {
+                        return true;
+                    }
+
+                    // If the user has created a non-default Python kernelspec without any custom env variables,
+                    // Then don't hide it.
+                    if (
+                        !registrationInfo &&
+                        item.kernelSpec.language === PYTHON_LANGUAGE &&
+                        !isDefaultKernelSpec(item.kernelSpec)
+                    ) {
+                        return true;
+                    }
+                    return false;
+                })
                 .map(async (item) => {
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
@@ -194,13 +231,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
                         hideDefaultKernelSpecs &&
-                        (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
-                            kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
+                        // Hide default kernelspecs only if env variables are empty.
+                        // If not empty, then user has modified them.
+                        (!kernelspec.env || Object.keys(kernelspec.env).length === 0) &&
+                        isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
-                            `Hiding default kernel spec ${kernelspec.display_name}, ${getDisplayPath(
-                                kernelspec.argv[0]
-                            )}`
+                            `Hiding default kernel spec '${kernelspec.display_name}', '${
+                                kernelspec.name
+                            }', ${getDisplayPath(kernelspec.argv[0])}`
                         );
                         return false;
                     }
@@ -218,13 +257,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                             id: getKernelId(k, matchingInterpreter)
                         };
 
-                        // Hide the interpreters from list of kernels only if this kernel is not something the user created.
+                        // Hide the interpreters from list of kernels unless the user created this kernelspec.
                         // Users can create their own kernels with custom environment variables, in such cases, we should list that
                         // kernel as well as the interpreter (so they can use both).
-                        const isUserCreatedKernel =
-                            !isKernelRegisteredByUs(result.kernelSpec) &&
-                            Object.keys(result.kernelSpec.env || {}).length > 0;
-                        if (!isUserCreatedKernel) {
+                        const kernelSpecKind = getKernelRegistrationInfo(result.kernelSpec);
+                        if (
+                            kernelSpecKind === 'registeredByNewVersionOfExt' ||
+                            kernelSpecKind === 'registeredByOldVersionOfExt'
+                        ) {
                             filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
                         }
 
