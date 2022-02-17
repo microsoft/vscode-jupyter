@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2022-02-07"
+    "value": "$TODAYS_DATE=2022-02-17"
   },
   {
     "kind": 1,
@@ -83,6 +83,16 @@
     "kind": 2,
     "language": "github-issues",
     "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS label:notebook-triage"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Stragglers?"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage sort:created-asc"
   },
   {
     "kind": 1,
