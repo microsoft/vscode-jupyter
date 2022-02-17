@@ -12,6 +12,7 @@ import {
     NotebookEditorRevealType,
     NotebookRange,
     Uri,
+    Range,
     workspace,
     WorkspaceEdit,
     notebooks,
@@ -52,6 +53,7 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../te
 import { InteractiveWindowView } from '../notebook/constants';
 import { chainable } from '../../common/utils/decorators';
 import { InteractiveCellResultError } from '../errors/interactiveCellResultError';
+import { DataScience } from '../../common/utils/localize';
 
 type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -104,6 +106,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private internalDisposables: Disposable[] = [];
     private _editorReadyPromise: Promise<NotebookEditor>;
+    private _insertConnectingPromise: Promise<NotebookCell | undefined> | undefined;
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -175,14 +178,76 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.internalDisposables
         );
         this.internalDisposables.push(kernel);
-        await kernel.start({
-            displayError: (ex) => {
-                this._kernelReadyException = ex;
-            }
-        });
+        const cellPromise = this.insertConnectingMessage(kernel);
+        try {
+            await kernel.start({
+                displayError: (ex) => {
+                    this._kernelReadyException = ex;
+                }
+            });
+        } finally {
+            this.updateConnectingMessage(kernel, cellPromise);
+        }
         this.fileInKernel = undefined;
         await this.runInitialization(kernel, this.owner);
         return kernel;
+    }
+
+    private async insertConnectingMessage(kernel: IKernel): Promise<NotebookCell | undefined> {
+        if (!this._insertConnectingPromise) {
+            this._insertConnectingPromise = this._editorReadyPromise.then(async (editor) => {
+                if (editor) {
+                    const notebookDocument = editor.document;
+                    await chainWithPendingUpdates(notebookDocument, (edit) => {
+                        const markdownCell = new NotebookCellData(
+                            NotebookCellKind.Markup,
+                            kernel.kernelConnectionMetadata.interpreter?.displayName
+                                ? DataScience.startingNewKernelCustomHeader().format(
+                                      kernel.kernelConnectionMetadata.interpreter?.displayName
+                                  )
+                                : DataScience.startingNewKernelHeader(),
+                            MARKDOWN_LANGUAGE
+                        );
+                        markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
+                        edit.replaceNotebookCells(
+                            notebookDocument.uri,
+                            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+                            [markdownCell]
+                        );
+                    });
+                    // This should be the cell we just inserted into the document
+                    return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+                }
+            });
+        }
+        return this._insertConnectingPromise;
+    }
+
+    private updateConnectingMessage(kernel: IKernel, cellPromise: Promise<NotebookCell | undefined>) {
+        cellPromise
+            .then((cell) =>
+                chainWithPendingUpdates(this._notebookDocument!, (edit) => {
+                    if (cell !== undefined && cell.index >= 0 && kernel.info && kernel.info.status === 'ok') {
+                        if (
+                            cell.kind === NotebookCellKind.Markup &&
+                            cell.metadata.isInteractiveWindowMessageCell &&
+                            cell.metadata.isPlaceholder
+                        ) {
+                            edit.replace(
+                                cell.document.uri,
+                                new Range(0, 0, cell.document.lineCount, 0),
+                                kernel.info.banner.split('\n').join('  \n') // Add extra spacing on each line
+                            );
+                            edit.replaceNotebookCellMetadata(this._notebookDocument!.uri, cell.index, {
+                                isInteractiveWindowMessageCell: true,
+                                isPlaceholder: false
+                            });
+                            return;
+                        }
+                    }
+                })
+            )
+            .ignoreErrors();
     }
 
     private ensureKernelReadyPromise() {

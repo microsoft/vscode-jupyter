@@ -10,12 +10,9 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookCellData,
     NotebookCellKind,
     NotebookController,
     NotebookDocument,
-    NotebookRange,
-    Range,
     ColorThemeKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
@@ -46,7 +43,6 @@ import {
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
-    getSysInfoReasonHeader,
     isPythonKernelConnection,
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
@@ -58,10 +54,7 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from './types';
-import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
-import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
-import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { calculateWorkingDirectory } from '../../utils';
@@ -374,7 +367,7 @@ export class Kernel implements IKernel {
         }
 
         // Interactive window needs a restart sys info
-        await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
+        await this.initializeAfterStart(this.notebook, this.notebookDocument);
         traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
@@ -485,10 +478,6 @@ export class Kernel implements IKernel {
     private async createNotebook(stopWatch: StopWatch): Promise<INotebook> {
         try {
             // No need to block kernel startup on UI updates.
-            const placeholderCellPromise = this.populateStartKernelInfoForInteractive(
-                this.notebookDocument,
-                this.kernelConnectionMetadata
-            );
             traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
@@ -504,7 +493,7 @@ export class Kernel implements IKernel {
                 // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                 throw new Error('Kernel has not been started');
             }
-            await this.initializeAfterStart(SysInfoReason.Start, this.notebookDocument, placeholderCellPromise);
+            await this.initializeAfterStart(notebook, this.notebookDocument);
 
             sendKernelTelemetryEvent(
                 this.resourceUri,
@@ -587,31 +576,6 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async populateStartKernelInfoForInteractive(
-        notebookDocument: NotebookDocument,
-        kernelConnection: KernelConnectionMetadata
-    ) {
-        if (notebookDocument.notebookType === InteractiveWindowView) {
-            // add fake sys info
-            await chainWithPendingUpdates(notebookDocument, (edit) => {
-                const markdownCell = new NotebookCellData(
-                    NotebookCellKind.Markup,
-                    kernelConnection.interpreter?.displayName
-                        ? DataScience.startingNewKernelCustomHeader().format(kernelConnection.interpreter?.displayName)
-                        : DataScience.startingNewKernelHeader(),
-                    MARKDOWN_LANGUAGE
-                );
-                markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
-                edit.replaceNotebookCells(
-                    notebookDocument.uri,
-                    new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-                    [markdownCell]
-                );
-            });
-            // This should be the cell we just inserted into the document
-            return notebookDocument.cellAt(notebookDocument.cellCount - 1);
-        }
-    }
     private async notifyAndRestartDeadKernel(): Promise<boolean> {
         if (this.isPromptingForRestart) {
             return this.isPromptingForRestart;
@@ -654,13 +618,8 @@ export class Kernel implements IKernel {
         });
         return this.isPromptingForRestart;
     }
-    private async initializeAfterStart(
-        reason: SysInfoReason,
-        notebookDocument: NotebookDocument,
-        placeholderCellPromise?: Promise<NotebookCell | undefined>
-    ) {
+    private async initializeAfterStart(notebook: INotebook | undefined, notebookDocument: NotebookDocument) {
         traceVerbose('Started running kernel initialization');
-        const notebook = this.notebook;
         if (!notebook) {
             traceVerbose('Not running kernel initialization');
             return;
@@ -756,7 +715,6 @@ export class Kernel implements IKernel {
                 traceVerbose('Got Kernel info');
             }
             this._info = content;
-            this.addSysInfoForInteractive(reason, notebookDocument, placeholderCellPromise);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
@@ -822,85 +780,6 @@ export class Kernel implements IKernel {
         });
     }
 
-    /**
-     *
-     * After a kernel state change, update the interactive window with a sys info cell
-     * indicating the new connection info
-     * @param reason The reason for kernel state change
-     * @param notebookDocument The document to add a sys info Markdown cell to
-     * @param info The kernel info to include in the sys info message
-     * @param placeholderCell The target sys info cell to overwrite, if any
-     */
-    private addSysInfoForInteractive(
-        reason: SysInfoReason,
-        notebookDocument: NotebookDocument,
-        placeholderCellPromise: Promise<NotebookCell | undefined> = Promise.resolve(undefined)
-    ) {
-        if (
-            notebookDocument.notebookType !== InteractiveWindowView ||
-            this.notebook === undefined ||
-            !this._info ||
-            this._info.status !== 'ok'
-        ) {
-            return;
-        }
-
-        const message = getSysInfoReasonHeader(reason, this.kernelConnectionMetadata);
-        const sysInfoMessages = this._info.banner ? this._info.banner.split('\n') : [];
-        // TODO: This condition is wrong, it will always be true.
-        if (sysInfoMessages) {
-            // Connection string only for our initial start, not restart or interrupt
-            let connectionString: string = '';
-            if (reason === SysInfoReason.Start) {
-                connectionString = this.connection?.displayName || '';
-            }
-
-            // Update our sys info with our locally applied data.
-            sysInfoMessages.unshift(message);
-            if (connectionString && connectionString.length) {
-                sysInfoMessages.unshift(connectionString);
-            }
-
-            void chainWithPendingUpdates(notebookDocument, async (edit) => {
-                // Overwrite the given placeholder cell if any, or the most recent placeholder cell
-                if (notebookDocument.cellCount > 0) {
-                    const cell =
-                        (await placeholderCellPromise) ?? notebookDocument.cellAt(notebookDocument.cellCount - 1);
-                    if (cell !== undefined && cell.index >= 0) {
-                        if (
-                            cell.kind === NotebookCellKind.Markup &&
-                            cell.metadata.isInteractiveWindowMessageCell &&
-                            cell.metadata.isPlaceholder
-                        ) {
-                            edit.replace(
-                                cell.document.uri,
-                                new Range(0, 0, cell.document.lineCount, 0),
-                                sysInfoMessages.join('  \n')
-                            );
-                            edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
-                                isInteractiveWindowMessageCell: true,
-                                isPlaceholder: false
-                            });
-                            return;
-                        }
-                    }
-                }
-
-                // Append a markdown cell containing the sys info to the end of the NotebookDocument
-                const markdownCell = new NotebookCellData(
-                    NotebookCellKind.Markup,
-                    sysInfoMessages.join('  \n'),
-                    MARKDOWN_LANGUAGE
-                );
-                markdownCell.metadata = { isInteractiveWindowMessageCell: true };
-                edit.replaceNotebookCells(
-                    notebookDocument.uri,
-                    new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-                    [markdownCell]
-                );
-            });
-        }
-    }
     private getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
         const settings = this.configService.getSettings(this.resourceUri);
