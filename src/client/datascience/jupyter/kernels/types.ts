@@ -183,8 +183,8 @@ export interface IKernel extends IAsyncDisposable {
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
-    addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
-    removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    addEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    removeEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
 }
 
 export type KernelOptions = {

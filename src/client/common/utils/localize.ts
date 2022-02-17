@@ -444,6 +444,11 @@ export namespace DataScience {
         'Please reload the window for new settings to take effect.'
     );
     export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
+    export const restartingKernelCustomHeader = localize(
+        'DataScience.restartingKernelCustomHeader',
+        '_Restarting {0}..._'
+    );
+    export const restartingKernelHeader = localize('DataScience.restartingKernelHeader', '_Restarting kernel..._');
     export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
     export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');

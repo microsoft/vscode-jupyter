@@ -257,6 +257,8 @@
     "DataScience.redo": "Redo",
     "DataScience.clearAll": "Remove all cells",
     "DataScience.restartedKernelHeader": "Restarted '{0}' kernel",
+    "DataScience.restartingKernelCustomHeader": "_Restarting {0}..._",
+    "DataScience.restartingKernelHeader": "_Restarting kernel..._",
     "DataScience.startedNewKernelHeader": "Started '{0}' kernel",
     "DataScience.connectKernelHeader": "Connected to '{0}' kernel",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
