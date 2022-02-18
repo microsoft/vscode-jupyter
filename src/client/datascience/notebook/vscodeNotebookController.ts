@@ -25,6 +25,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { displayErrorsInCell } from '../../common/errors/errorUtils';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
@@ -38,6 +39,7 @@ import {
 } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
 import { TraceOptions } from '../../logging/trace';
 import { ConsoleForegroundColors, traceDecorators } from '../../logging/_global';
 import { EnvironmentType } from '../../pythonEnvironments/info';
@@ -133,7 +135,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
-        private readonly extensionChecker: IPythonExtensionChecker
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -511,7 +514,16 @@ export class VSCodeNotebookController implements Disposable {
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
             isLocalConnection(this.kernelConnection)
         ) {
-            await newKernel.start({ disableUI: true }).catch(noop);
+            await newKernel
+                .start({ disableUI: true, displayError: this.displayErrorInLastCell.bind(this, newKernel) })
+                .catch(noop);
+        }
+    }
+
+    private displayErrorInLastCell(kernel: IKernel, ex: Error | string, moreInfoLink?: string) {
+        const cellForErrorDisplay = kernel.pendingCells.length ? kernel.pendingCells[0] : undefined;
+        if (cellForErrorDisplay) {
+            displayErrorsInCell(this.serviceContainer, ex.toString(), cellForErrorDisplay, moreInfoLink).ignoreErrors();
         }
     }
 }

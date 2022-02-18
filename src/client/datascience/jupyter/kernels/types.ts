@@ -9,6 +9,7 @@ import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPi
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type {
+    DisplayErrorFunc,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -174,7 +175,7 @@ export interface IKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: { disableUI?: boolean }): Promise<void>;
+    start(options?: { disableUI?: boolean; displayError?: DisplayErrorFunc }): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
@@ -182,8 +183,8 @@ export interface IKernel extends IAsyncDisposable {
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
-    addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
-    removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    addEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    removeEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
 }
 
 export type KernelOptions = {

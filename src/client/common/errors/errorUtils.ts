@@ -1,7 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { WorkspaceFolder } from 'vscode';
+import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, WorkspaceFolder } from 'vscode';
+import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
+import { INotebookControllerManager } from '../../datascience/notebook/types';
+import { IServiceContainer } from '../../ioc/types';
+import { sleep } from '../utils/async';
+import { Common } from '../utils/localize';
+import { StopWatch } from '../utils/stopWatch';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -499,4 +505,57 @@ function isBuiltInModuleOverwritten(
         moduleName,
         telemetrySafeTags: ['import.error', 'override.modules']
     };
+}
+
+export async function displayErrorsInCell(
+    serviceContainer: IServiceContainer,
+    errorMessage: string,
+    cellToDisplayErrors?: NotebookCell,
+    moreInfoLink?: string
+) {
+    if (!cellToDisplayErrors || !errorMessage) {
+        return;
+    }
+    const associatedKernel = serviceContainer.get<IKernelProvider>(IKernelProvider).get(cellToDisplayErrors.notebook);
+    if (!associatedKernel) {
+        return;
+    }
+    // Sometimes the cells are still running, wait for 1s for cells to finish & get cleared,
+    // Then display the error in the cell.
+    const stopWatch = new StopWatch();
+    while (stopWatch.elapsedTime <= 1_000 && associatedKernel.pendingCells.length) {
+        await sleep(100);
+    }
+    if (associatedKernel.pendingCells.length) {
+        return;
+    }
+    const controllers = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+    const controller = controllers.getSelectedNotebookController(cellToDisplayErrors.notebook);
+    // Possible it changed.
+    if (!controller || controller.connection !== associatedKernel.kernelConnectionMetadata) {
+        return;
+    }
+    // If we have markdown links to run a command, turn that into a link.
+    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    let matches: RegExpExecArray | undefined | null;
+    while ((matches = regex.exec(errorMessage)) !== null) {
+        if (matches.length === 3) {
+            errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
+        }
+    }
+    if (moreInfoLink) {
+        errorMessage += `\n<a href='${moreInfoLink}'>${Common.learnMore()}</a>`;
+    }
+    const execution = controller.controller.createNotebookCellExecution(cellToDisplayErrors);
+    execution.start();
+    void execution.clearOutput(cellToDisplayErrors);
+    const output = new NotebookCellOutput([
+        NotebookCellOutputItem.error({
+            message: '',
+            name: '',
+            stack: `\u001b[1;31m${errorMessage.trim()}`
+        })
+    ]);
+    void execution.appendOutput(output);
+    execution.end(undefined);
 }

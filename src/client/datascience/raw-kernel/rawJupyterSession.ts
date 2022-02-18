@@ -257,13 +257,21 @@ export class RawJupyterSession extends BaseJupyterSession {
         traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`);
 
         this.terminatingStatus = undefined;
-        const process = await this.kernelLauncher.launch(
-            this.kernelConnectionMetadata,
+        const process = await KernelProgressReporter.wrapAndReportProgress(
+            this.resource,
+            localize.DataScience.connectingToKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            () =>
+                this.kernelLauncher.launch(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.kernelConnectionMetadata as any,
             this.launchTimeout,
             this.resource,
             this.workingDirectory,
             options.ui,
             options.token
+                )
         );
 
         return KernelProgressReporter.wrapAndReportProgress(

@@ -30,6 +30,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookCreator } from '../notebook/creation/notebookCreator';
 import {
     ICodeWatcher,
@@ -77,7 +78,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(DataViewerDependencyService) private readonly dataViewerDependencyService: DataViewerDependencyService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -365,8 +367,8 @@ export class CommandRegistry implements IDisposable {
         if (this.debugService.activeDebugSession) {
             // Attempt to get the interactive window for this file
             const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
-            if (iw) {
-                const kernel = await iw.kernelPromise;
+            if (iw && iw.notebookDocument) {
+                const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();

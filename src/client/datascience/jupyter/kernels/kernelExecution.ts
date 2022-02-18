@@ -20,6 +20,7 @@ import type { IKernel, KernelConnectionMetadata } from './types';
 import { NotebookCellRunState } from './types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { KernelMessage } from '@jupyterlab/services';
+import { IServiceContainer } from '../../../ioc/types';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -41,7 +42,8 @@ export class KernelExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory
+        cellHashProviderFactory: CellHashProviderFactory,
+        serviceContainer: IServiceContainer
     ) {
         this.executionFactory = new CellExecutionFactory(
             kernel,
@@ -50,7 +52,8 @@ export class KernelExecution implements IDisposable {
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory
+            cellHashProviderFactory,
+            serviceContainer
         );
     }
 

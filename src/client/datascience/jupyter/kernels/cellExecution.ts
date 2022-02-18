@@ -55,6 +55,8 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
 import { InteractiveWindowView } from '../../notebook/constants';
 import { BaseError } from '../../../common/errors/types';
 import * as localize from '../../../common/utils/localize';
+import { displayErrorsInCell } from '../../../common/errors/errorUtils';
+import { IServiceContainer } from '../../../ioc/types';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -78,7 +80,8 @@ export class CellExecutionFactory {
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProviderFactory: CellHashProviderFactory
+        private readonly cellHashProviderFactory: CellHashProviderFactory,
+        private readonly serviceContainer: IServiceContainer
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -91,7 +94,8 @@ export class CellExecutionFactory {
             this.disposables,
             this.controller,
             this.outputTracker,
-            this.cellHashProviderFactory.getOrCreate(this.kernel)
+            this.cellHashProviderFactory.getOrCreate(this.kernel),
+            this.serviceContainer
         );
     }
 }
@@ -159,7 +163,8 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProvider: ICellHashProvider
+        private readonly cellHashProvider: ICellHashProvider,
+        private readonly serviceContainer: IServiceContainer
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -214,7 +219,8 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProvider: ICellHashProvider
+        cellHashProvider: ICellHashProvider,
+        serviceContainer: IServiceContainer
     ) {
         return new CellExecution(
             cell,
@@ -224,7 +230,8 @@ export class CellExecution implements IDisposable {
             disposables,
             controller,
             outputTracker,
-            cellHashProvider
+            cellHashProvider,
+            serviceContainer
         );
     }
     public async start(session: IJupyterSession) {
@@ -338,7 +345,9 @@ export class CellExecution implements IDisposable {
                     (error as unknown) as Error,
                     'execution',
                     this.kernelConnection,
-                    this.cell.document.uri
+                    this.cell.document.uri,
+                    (ex, moreInfoLink) =>
+                        displayErrorsInCell(this.serviceContainer, ex.toString(), this.cell, moreInfoLink)
                 )
                 .ignoreErrors();
         }

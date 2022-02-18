@@ -60,6 +60,8 @@ import { getDisplayPath } from '../../common/platform/fs-paths';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
+import { IServiceContainer } from '../../ioc/types';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -135,7 +137,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(JupyterServerSelector) private readonly jupyterServerSelector: JupyterServerSelector,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -570,6 +573,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         document.uri
                     )}`
                 );
+
                 const targetController = Array.from(this.registeredControllers.values()).find(
                     (value) => preferredConnection?.id === value.connection.id
                 );
@@ -607,6 +611,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
                 );
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+                trackKernelResourceInformation(document.uri, {
+                    kernelConnection: preferredConnection,
+                    isPreferredKernel: true
+                });
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
@@ -701,7 +710,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.docManager,
                         this.appShell,
                         this.browser,
-                        this.extensionChecker
+                        this.extensionChecker,
+                        this.serviceContainer
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(

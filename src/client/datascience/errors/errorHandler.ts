@@ -13,19 +13,14 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
+    DisplayErrorFunc,
+    HandleKernelErrorResult,
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../types';
-import {
-    CancellationError as VscCancellationError,
-    CancellationTokenSource,
-    ConfigurationTarget,
-    NotebookCell,
-    NotebookCellOutput,
-    NotebookCellOutputItem
-} from 'vscode';
+import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -38,22 +33,18 @@ import {
     KernelFailure,
     KernelFailureReason
 } from '../../common/errors/errorUtils';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
-import { IServiceContainer } from '../../ioc/types';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { sleep } from '../../common/utils/async';
-import { INotebookControllerManager } from '../notebook/types';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
-import { ProductNames } from '../../common/installer/productNames';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
 import { translateProductToModule } from '../../common/installer/productInstaller';
+import { ProductNames } from '../../common/installer/productNames';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -65,12 +56,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
-        @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
-        await this.handleErrorImplementation(err);
+        await this.handleErrorImplementation(err, undefined, () => undefined);
     }
 
     public async handleKernelError(
@@ -78,13 +68,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
-    ): Promise<void> {
+        displayError: DisplayErrorFunc
+    ): Promise<HandleKernelErrorResult> {
         traceWarning('Kernel Error', err);
-        await this.handleErrorImplementation(
+        return this.handleErrorImplementation(
             err,
             purpose,
-            cellToDisplayErrors,
+            displayError,
             async (error: BaseError, defaultErrorMessage?: string) => {
                 const failureInfo = analyzeKernelErrors(
                     error.stdErr || '',
@@ -112,22 +102,18 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             true
                         )
                         .finally(() => token.dispose());
-                    return;
+                    return 'retry';
                 } else if (
                     err instanceof IpyKernelNotInstalledError &&
                     (purpose === 'start' || purpose === 'restart')
                 ) {
-                    cellToDisplayErrors = err.firstQueuedCell || cellToDisplayErrors;
                     if (!err.anotherKernelSelected) {
-                        void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
+                        this.displayIPyKernelMissingErrorInCell(kernelConnection, displayError, err);
                     }
-                    return;
                 } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
-                    void this.displayJupyterMissingErrorInCell(err, kernelConnection, cellToDisplayErrors);
-                    return;
+                    this.displayJupyterMissingErrorInCell(err, kernelConnection, displayError);
                 } else if (err instanceof JupyterConnectError) {
-                    void this.handleJupyterStartupError(failureInfo, err, kernelConnection, cellToDisplayErrors);
-                    return;
+                    void this.handleJupyterStartupError(failureInfo, err, kernelConnection, displayError);
                 }
 
                 switch (failureInfo?.reason) {
@@ -137,7 +123,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                 getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
                             ),
                             'https://aka.ms/kernelFailuresOverridingBuiltInModules',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
@@ -160,13 +146,12 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                         true
                                     )
                                     .finally(() => token.dispose());
+                                return 'retry';
                             } catch (ex) {
                                 // Handle instances where installation failed or or cancelled it.
                                 if (ex instanceof IpyKernelNotInstalledError) {
-                                    await this.displayIPyKernelMissingErrorInCell(
-                                        kernelConnection,
-                                        cellToDisplayErrors
-                                    );
+                                    // Display the error in this cell.
+                                    this.displayIPyKernelMissingErrorInCell(kernelConnection, displayError, ex);
                                 } else {
                                     throw ex;
                                 }
@@ -175,7 +160,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
                                 'https://aka.ms/kernelFailuresMissingModule',
-                                cellToDisplayErrors
+                                displayError
                             );
                         }
                         break;
@@ -191,13 +176,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                     fileName
                                 ),
                                 'https://aka.ms/kernelFailuresModuleImportErrFromFile',
-                                cellToDisplayErrors
+                                displayError
                             );
                         } else {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToImportFailure().format(failureInfo.moduleName),
                                 'https://aka.ms/kernelFailuresModuleImportErr',
-                                cellToDisplayErrors
+                                displayError
                             );
                         }
                         break;
@@ -209,7 +194,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             message,
                             'https://aka.ms/kernelFailuresDllLoad',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
@@ -217,7 +202,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToWin32APIFailure(),
                             'https://aka.ms/kernelFailuresWin32Api',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
@@ -225,7 +210,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToPyZmqFailure(),
                             'https://aka.ms/kernelFailuresPyzmq',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
@@ -233,7 +218,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToOldIPython(),
                             'https://aka.ms/kernelFailuresOldIPython',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
@@ -241,28 +226,29 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToOldIPyKernel(),
                             'https://aka.ms/kernelFailuresOldIPyKernel',
-                            cellToDisplayErrors
+                            displayError
                         );
                         break;
                     }
                     default:
                         if (defaultErrorMessage) {
-                            void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                            displayError(defaultErrorMessage);
                             await this.applicationShell.showErrorMessage(defaultErrorMessage);
                         }
                 }
+                return 'stop';
             }
         );
     }
     private async showMessageWithMoreInfo(
         message: string,
         moreInfoLink: string | undefined,
-        cellToDisplayErrors?: NotebookCell
+        displayError: DisplayErrorFunc
     ) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
             message = `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
         }
-        void this.displayErrorsInCell(message, cellToDisplayErrors, moreInfoLink);
+        displayError(message, moreInfoLink);
         const buttons = moreInfoLink ? [Common.learnMore()] : [];
         await this.applicationShell.showErrorMessage(message, ...buttons).then((selection) => {
             if (selection === Common.learnMore() && moreInfoLink) {
@@ -274,7 +260,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         failureInfo: KernelFailure | undefined,
         error: JupyterConnectError,
         kernelConnection: KernelConnectionMetadata,
-        cellToDisplayErrors?: NotebookCell
+        displayError: DisplayErrorFunc
     ) {
         const failureInfoFromMessage =
             failureInfo ||
@@ -317,21 +303,21 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             void this.showMessageWithMoreInfo(
                 DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(envDisplayName, pythonError || ''),
                 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated',
-                cellToDisplayErrors
+                displayError
             );
         } else {
             const message = pythonError
                 ? DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError)
                 : DataScience.failedToStartJupyter().format(envDisplayName);
-            void this.showMessageWithMoreInfo(message, undefined, cellToDisplayErrors);
+            void this.showMessageWithMoreInfo(message, undefined, displayError);
         }
     }
     private async handleErrorImplementation(
         err: Error,
-        purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
-        cellToDisplayErrors?: NotebookCell,
-        handler?: (error: BaseError, defaultErrorMessage?: string) => Promise<void>
-    ): Promise<void> {
+        purpose: 'start' | 'restart' | 'interrupt' | 'execution' | undefined,
+        displayError: DisplayErrorFunc,
+        handler?: (error: BaseError, defaultErrorMessage?: string) => Promise<HandleKernelErrorResult>
+    ): Promise<HandleKernelErrorResult> {
         const errorPrefix = getErrorMessagePrefix(purpose);
         // Unwrap the errors.
         err = WrappedError.unwrap(err);
@@ -342,7 +328,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 (purpose === 'start' || purpose === 'restart') &&
                 handler
             ) {
-                await handler(err);
+                return await handler(err);
             }
         } else if (err instanceof JupyterSelfCertsError) {
             // On a self cert error, warn the user and ask if they want to change the setting
@@ -365,14 +351,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 });
         } else if (err instanceof IpyKernelNotInstalledError) {
             if ((purpose === 'start' || purpose === 'restart') && handler) {
-                await handler(err);
+                return await handler(err);
             }
-            noop();
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
-            void this.displayErrorsInCell(err.message, cellToDisplayErrors);
+            displayError(err);
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
             err instanceof KernelDiedError ||
@@ -386,25 +371,24 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 'errorMessage' in err ? err.errorMessage : getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr
             );
             if ((purpose === 'restart' || purpose === 'start') && handler) {
-                await handler(err, defaultErrorMessage);
+                return await handler(err, defaultErrorMessage);
             } else {
-                void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                displayError(defaultErrorMessage);
                 this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
             }
         } else {
             // Some errors have localized and/or formatted error messages.
             const message = getCombinedErrorMessage(errorPrefix, err.message || err.toString());
-            void this.displayErrorsInCell(message, cellToDisplayErrors);
+            displayError(message);
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
+        return 'stop';
     }
-    private async displayIPyKernelMissingErrorInCell(
+    private displayIPyKernelMissingErrorInCell(
         kernelConnection: KernelConnectionMetadata,
-        cellToDisplayErrors?: NotebookCell
+        displayError: DisplayErrorFunc,
+        err: IpyKernelNotInstalledError
     ) {
-        if (!cellToDisplayErrors) {
-            return;
-        }
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
@@ -430,24 +414,25 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         ) {
             installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
         }
-        const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
-            displayNameOfKernel,
-            ProductNames.get(Product.ipykernel)!
-        );
-        const installationInstructions = DataScience.installPackageInstructions().format(
-            ipyKernelName,
-            installerCommand
-        );
-        await this.displayErrorsInCell(message + '\n' + installationInstructions, cellToDisplayErrors);
+        if (err.reason === KernelInterpreterDependencyResponse.cancel) {
+            displayError(DataScience.ipykernelNotInstalledBecauseCanceled());
+        } else {
+            const formatted = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
+                displayNameOfKernel,
+                ProductNames.get(Product.ipykernel)!
+            );
+            const installationInstructions = DataScience.installPackageInstructions().format(
+                ipyKernelName,
+                installerCommand
+            );
+            displayError(`${formatted}\n${err.message}\n${installationInstructions}`);
+        }
     }
-    private async displayJupyterMissingErrorInCell(
+    private displayJupyterMissingErrorInCell(
         err: JupyterInstallError,
         kernelConnection: KernelConnectionMetadata,
-        cellToDisplayErrors?: NotebookCell
+        displayError: DisplayErrorFunc
     ) {
-        if (!cellToDisplayErrors) {
-            return;
-        }
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
@@ -472,56 +457,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             productNames,
             installerCommand
         );
-        await this.displayErrorsInCell(err.message + '\n' + installationInstructions, cellToDisplayErrors);
-    }
-    private async displayErrorsInCell(errorMessage: string, cellToDisplayErrors?: NotebookCell, moreInfoLink?: string) {
-        if (!cellToDisplayErrors || !errorMessage) {
-            return;
-        }
-        const associatedKernel = this.serviceContainer
-            .get<IKernelProvider>(IKernelProvider)
-            .get(cellToDisplayErrors.notebook);
-        if (!associatedKernel) {
-            return;
-        }
-        // Sometimes the cells are still running, wait for 1s for cells to finish & get cleared,
-        // Then display the error in the cell.
-        const stopWatch = new StopWatch();
-        while (stopWatch.elapsedTime <= 1_000 && associatedKernel.pendingCells.length) {
-            await sleep(100);
-        }
-        if (associatedKernel.pendingCells.length) {
-            return;
-        }
-        const controllers = this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-        const controller = controllers.getSelectedNotebookController(cellToDisplayErrors.notebook);
-        // Possible it changed.
-        if (!controller || controller.connection !== associatedKernel.kernelConnectionMetadata) {
-            return;
-        }
-        // If we have markdown links to run a command, turn that into a link.
-        const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
-        let matches: RegExpExecArray | undefined | null;
-        while ((matches = regex.exec(errorMessage)) !== null) {
-            if (matches.length === 3) {
-                errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
-            }
-        }
-        if (moreInfoLink) {
-            errorMessage += `\n<a href='${moreInfoLink}'>${Common.learnMore()}</a>`;
-        }
-        const execution = controller.controller.createNotebookCellExecution(cellToDisplayErrors);
-        execution.start();
-        void execution.clearOutput(cellToDisplayErrors);
-        const output = new NotebookCellOutput([
-            NotebookCellOutputItem.error({
-                message: '',
-                name: '',
-                stack: `\u001b[1;31m${errorMessage.trim()}`
-            })
-        ]);
-        void execution.appendOutput(output);
-        execution.end(undefined);
+        displayError(err.message + '\n' + installationInstructions);
     }
 }
 function getCombinedErrorMessage(prefix?: string, message?: string) {

@@ -444,6 +444,11 @@ export namespace DataScience {
         'Please reload the window for new settings to take effect.'
     );
     export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
+    export const restartingKernelCustomHeader = localize(
+        'DataScience.restartingKernelCustomHeader',
+        '_Restarting {0}..._'
+    );
+    export const restartingKernelHeader = localize('DataScience.restartingKernelHeader', '_Restarting kernel..._');
     export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
     export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');
@@ -971,6 +976,10 @@ export namespace DataScience {
     export const ipykernelNotInstalled = localize(
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
+    );
+    export const ipykernelNotInstalledBecauseCanceled = localize(
+        'DataScience.ipykernelNotInstalledBecauseCanceled',
+        'IPyKernel not installed into interpreter. Installation canceled.'
     );
     export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
     export const setup = localize('DataScience.setup', 'Setup');

@@ -53,7 +53,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
     private disconected: boolean = false;
-    private kernelEventHook = (_event: 'willRestart' | 'willInterrupt') => this.disconnect();
+    private kernelEventHook = (_k: IKernel, _event: 'willRestart' | 'willInterrupt') => this.disconnect();
 
     constructor(
         private session: DebugSession,

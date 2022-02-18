@@ -95,7 +95,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             result = this.create(resource, mode, connection);
         }
 
-        await result.readyPromise;
         return result;
     }
 

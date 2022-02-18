@@ -8,9 +8,9 @@ import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import {
-    isModulePresentInEnvironment,
     isModulePresentInEnvironmentCache,
-    trackPackageInstalledIntoInterpreter
+    trackPackageInstalledIntoInterpreter,
+    isModulePresentInEnvironment
 } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
@@ -86,12 +86,12 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return;
         }
-        const result = await KernelProgressReporter.wrapAndReportProgress(
+        const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
             resource,
             DataScience.validatingKernelDependencies(),
             () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
         );
-        if (result) {
+        if (alreadyInstalled) {
             return;
         }
         if (token?.isCancellationRequested) {
@@ -110,16 +110,24 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Get the result of the question
+        let dependencyResponse: KernelInterpreterDependencyResponse = KernelInterpreterDependencyResponse.failed;
+        let error: Error | undefined;
         try {
-            const result = await promise;
+            // This can throw an exception (if say it fails to install) or it can cancel
+            dependencyResponse = await promise;
             if (token?.isCancellationRequested) {
-                return;
+                dependencyResponse = KernelInterpreterDependencyResponse.cancel;
             }
-            await this.handleKernelDependencyResponse(result, kernelConnection, resource);
+        } catch (ex) {
+            // Failure occurred
+            dependencyResponse = KernelInterpreterDependencyResponse.failed;
+            error = ex;
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
         }
+
+        return this.handleKernelDependencyResponse(dependencyResponse, kernelConnection, resource, error);
     }
     public async areDependenciesInstalled(
         kernelConnection: KernelConnectionMetadata,
@@ -165,7 +173,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     private async handleKernelDependencyResponse(
         response: KernelInterpreterDependencyResponse,
         kernelConnection: PythonKernelConnectionMetadata | LocalKernelSpecConnectionMetadata,
-        resource: Resource
+        resource: Resource,
+        ex?: Error | undefined
     ) {
         if (response === KernelInterpreterDependencyResponse.ok) {
             return;
@@ -178,7 +187,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                 this.vscNotebook.activeNotebookEditor?.document === item.notebookDocument &&
                 (item.resourceUri || '')?.toString() === (resource || '').toString()
         );
-        const firstQueuedCell = kernel && kernel.pendingCells.length > 0 ? kernel.pendingCells[0] : undefined;
         let anotherKernelSelected = false;
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
             if (kernel) {
@@ -206,10 +214,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             ? `${kernelConnection.interpreter?.displayName}:${getDisplayPath(kernelConnection.interpreter?.path)}`
             : getDisplayPath(kernelConnection.interpreter?.path);
         throw new IpyKernelNotInstalledError(
-            DataScience.ipykernelNotInstalled().format(message),
+            ex?.toString() || DataScience.ipykernelNotInstalled().format(message),
             response,
-            anotherKernelSelected,
-            firstQueuedCell
+            anotherKernelSelected
         );
     }
     private async runInstaller(

@@ -16,7 +16,6 @@ import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
-import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -29,7 +28,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
-    let svcContainer: IServiceContainer;
     let jupyterInterpreterService: JupyterInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
@@ -43,7 +41,6 @@ suite('DataScience Error Handler Unit Tests', () => {
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
-        svcContainer = mock<IServiceContainer>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
@@ -55,8 +52,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(jupyterInterpreterService),
-            instance(svcContainer)
+            instance(jupyterInterpreterService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
@@ -216,7 +212,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
@@ -239,7 +236,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
@@ -256,7 +254,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
@@ -283,7 +282,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
@@ -303,7 +303,8 @@ ImportError: No module named 'win32api'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToWin32APIFailure();
@@ -322,7 +323,8 @@ ImportError: No module named 'xyz'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailure().format('xyz');
@@ -337,7 +339,8 @@ ImportError: No module named 'xyz'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToPyZmqFailure();
@@ -349,7 +352,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError('Hello', `ImportError: DLL load failed`),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
@@ -361,7 +365,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToDllLoadFailure().format('XYZ');
@@ -376,7 +381,8 @@ ImportError: No module named 'xyz'
                 new JupyterConnectError(stdError, `xyz`),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                () => undefined
             );
 
             verifyErrorMessage(expectedMessage, expectedLink);

@@ -404,6 +404,8 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
+export type HandleKernelErrorResult = 'retry' | 'stop';
+export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     /**
@@ -420,8 +422,8 @@ export interface IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
-    ): Promise<void>;
+        displayError: DisplayErrorFunc
+    ): Promise<HandleKernelErrorResult>;
 }
 
 /**
@@ -458,8 +460,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookUri?: Uri;
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
-    readonly readyPromise: Promise<void>;
-    readonly kernelPromise: Promise<IKernel | undefined>;
     readonly originalConnection?: KernelConnectionMetadata;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;

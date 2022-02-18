@@ -5,7 +5,6 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IPythonExtensionChecker } from '../../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -26,7 +25,6 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
-import { INotebookControllerManager } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebookProvider, IStatusProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
@@ -64,10 +62,9 @@ export class KernelProvider implements IKernelProvider {
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.asyncDisposables.push(this);
     }
@@ -123,10 +120,9 @@ export class KernelProvider implements IKernelProvider {
             this.workspaceService,
             this.cellHashProviderFactory,
             this.pythonExecutionFactory,
-            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
             this.statusProvider,
             this.commandManager,
-            this.pythonChecker
+            this.serviceContainer
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
