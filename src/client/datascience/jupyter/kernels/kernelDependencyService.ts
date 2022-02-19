@@ -24,6 +24,7 @@ import {
     Product,
     Resource
 } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { ignoreLogging, TraceOptions } from '../../../logging/trace';
@@ -32,16 +33,17 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
+import { INotebookControllerManager } from '../../notebook/types';
 import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
+    HandleKernelErrorResult,
     IDisplayOptions,
     IInteractiveWindowProvider,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { selectKernel } from './kernelSelector';
+import { findNotebookEditor, selectKernel } from './kernelSelector';
 import {
     IKernelProvider,
     KernelConnectionMetadata,
@@ -77,25 +79,26 @@ export class KernelDependencyService implements IKernelDependencyService {
         ui: IDisplayOptions,
         @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<void> {
+    ): Promise<HandleKernelErrorResult> {
         traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.interpreter === undefined
         ) {
-            return;
+            return { kind: 'Installed' };
         }
         const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
             resource,
             DataScience.validatingKernelDependencies(),
-            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+            token,
+            (t) => this.areDependenciesInstalled(kernelConnection, t, ignoreCache)
         );
         if (alreadyInstalled) {
-            return;
+            return { kind: 'Installed' };
         }
         if (token?.isCancellationRequested) {
-            return;
+            return { kind: 'Canceled' };
         }
 
         // Cache the install run
@@ -104,7 +107,8 @@ export class KernelDependencyService implements IKernelDependencyService {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, token)
+                token,
+                (t) => this.runInstaller(resource, kernelConnection.interpreter!, ui, t)
             );
             this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
@@ -175,9 +179,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         kernelConnection: PythonKernelConnectionMetadata | LocalKernelSpecConnectionMetadata,
         resource: Resource,
         ex?: Error | undefined
-    ) {
+    ): Promise<HandleKernelErrorResult> {
         if (response === KernelInterpreterDependencyResponse.ok) {
-            return;
+            return { kind: 'Installed' };
         }
         const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const kernel = kernelProvider.kernels.find(
@@ -187,37 +191,68 @@ export class KernelDependencyService implements IKernelDependencyService {
                 this.vscNotebook.activeNotebookEditor?.document === item.notebookDocument &&
                 (item.resourceUri || '')?.toString() === (resource || '').toString()
         );
-        let anotherKernelSelected = false;
+        let controller: VSCodeNotebookController | undefined;
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
+            const editor = findNotebookEditor(
+                resource,
+                this.notebooks,
+                this.serviceContainer.get(IInteractiveWindowProvider)
+            );
             if (kernel) {
                 // If user changes the kernel, then the next kernel must run the pending cells.
                 // Store it for the other kernel to pick them up.
                 VSCodeNotebookController.pendingCells.set(kernel.notebookDocument, kernel.pendingCells);
             }
-            await selectKernel(
+
+            // Listen for selection change events (may not fire if user cancels)
+            const controllerManager = this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+            const waitForSelection = createDeferred<VSCodeNotebookController>();
+            const disposable = controllerManager.onNotebookControllerSelected((e) =>
+                waitForSelection.resolve(e.controller)
+            );
+
+            const selected = (await selectKernel(
                 resource,
                 this.notebooks,
                 this.serviceContainer.get(IInteractiveWindowProvider),
                 this.commandManager
-            );
+            )) as boolean;
             if (kernel) {
                 VSCodeNotebookController.pendingCells.delete(kernel.notebookDocument);
-                // If the previous kernel has been disposed (or disposing),
-                // then this means the user selected a new kernel.
-                anotherKernelSelected = kernel.disposed || kernel.disposing;
+            }
+            if (selected && editor) {
+                controller = await waitForSelection.promise;
+            }
+            disposable.dispose();
+
+            // Change response if we weren't successful in changing the kernel
+            if (!controller) {
+                response = KernelInterpreterDependencyResponse.failed;
+                ex = new Error(
+                    DataScience.rawKernelSessionFailed().format(
+                        kernel?.kernelConnectionMetadata.interpreter?.displayName || ''
+                    )
+                );
             }
         }
-        // If selecting a new kernel, the current code paths don't allow us to just change a kernel on the fly.
-        // We pass kernel connection information around, hence if there's a change we need to start all over again.
-        // Throwing this exception will get the user to start again.
-        const message = kernelConnection.interpreter?.displayName
-            ? `${kernelConnection.interpreter?.displayName}:${getDisplayPath(kernelConnection.interpreter?.path)}`
-            : getDisplayPath(kernelConnection.interpreter?.path);
-        throw new IpyKernelNotInstalledError(
-            ex?.toString() || DataScience.ipykernelNotInstalled().format(message),
-            response,
-            anotherKernelSelected
-        );
+
+        switch (response) {
+            case KernelInterpreterDependencyResponse.cancel:
+                return { kind: 'Canceled' };
+            case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                return { kind: 'Switched', metadata: controller?.connection!, controller: controller! };
+            case KernelInterpreterDependencyResponse.failed:
+                return {
+                    kind: 'Error',
+                    error:
+                        ex ||
+                        new Error(
+                            DataScience.ipykernelNotInstalled().format(kernelConnection.interpreter?.displayName || '')
+                        )
+                };
+            default:
+                return { kind: 'Installed' };
+        }
     }
     private async runInstaller(
         resource: Resource,

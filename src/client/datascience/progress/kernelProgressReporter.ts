@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Progress, ProgressLocation, window } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
+import { createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
@@ -29,6 +30,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
              * List of messages displayed in the progress UI.
              */
             progressList: string[];
+            tokenSources: CancellationTokenSource[];
             reporter?: Progress<{ message?: string; increment?: number }>;
         } & ProgressReporter
     >();
@@ -78,13 +80,20 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
      * If one exists for the same resource, then it will use the existing one, else it will just get queued as in `reportProgress`.
      * Behavior is identical to that of `reportProgress`
      */
-    public static wrapAndReportProgress<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
+    public static wrapAndReportProgress<T>(
+        resource: Resource,
+        title: string,
+        token: CancellationToken,
+        cb: (token: CancellationToken) => Promise<T>
+    ): Promise<T> {
         const key = resource ? resource.fsPath : '';
+        const tokenSource = new CancellationTokenSource();
+        const wrapped = wrapCancellationTokens(tokenSource.token, token);
         if (!KernelProgressReporter.instance) {
-            return cb();
+            return cb(wrapped);
         }
-        const progress = KernelProgressReporter.reportProgressInternal(key, title);
-        return cb().finally(() => progress?.dispose());
+        const progress = KernelProgressReporter.reportProgressInternal(key, title, tokenSource);
+        return cb(wrapped).finally(() => progress?.dispose());
     }
 
     /**
@@ -103,7 +112,11 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
 
         return KernelProgressReporter.reportProgressInternal(key, progressMessage || '');
     }
-    private static reportProgressInternal(key: string, title: string): IDisposable {
+    private static reportProgressInternal(
+        key: string,
+        title: string,
+        tokenSource?: CancellationTokenSource
+    ): IDisposable {
         if (!KernelProgressReporter.instance) {
             return new Disposable(noop);
         }
@@ -113,6 +126,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 title,
                 pendingProgress: [],
                 progressList: [],
+                tokenSources: [],
                 dispose: noop
             };
             KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, progressInfo);
@@ -133,6 +147,9 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 return new Disposable(noop);
             }
             progressInfo.pendingProgress.push(title);
+        }
+        if (tokenSource) {
+            progressInfo.tokenSources.push(tokenSource);
         }
         // Unwind the progress messages.
         return {
@@ -173,6 +190,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
             title,
             pendingProgress: [] as string[],
             progressList: [] as string[],
+            tokenSources: [],
             dispose: () => {
                 disposable.dispose();
             }
@@ -185,28 +203,38 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 return;
             }
             shownOnce = true;
-            void window.withProgress({ location: ProgressLocation.Notification, title }, async (progress) => {
-                const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
-                if (!info) {
-                    return;
-                }
-                info.reporter = progress;
-                // If we have any messages, then report them.
-                while (info.pendingProgress.length > 0) {
-                    const message = info.pendingProgress.shift();
-                    if (message === title) {
-                        info.progressList.push(message);
-                    } else if (message !== title && message) {
-                        info.progressList.push(message);
-                        progress.report({ message });
+            void window.withProgress(
+                { location: ProgressLocation.Notification, title },
+                async (progress, token: CancellationToken) => {
+                    const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
+                    if (!info) {
+                        return;
                     }
+                    info.reporter = progress;
+                    // If we have any messages, then report them.
+                    while (info.pendingProgress.length > 0) {
+                        const message = info.pendingProgress.shift();
+                        if (message === title) {
+                            info.progressList.push(message);
+                        } else if (message !== title && message) {
+                            info.progressList.push(message);
+                            progress.report({ message });
+                        }
+                    }
+                    await Promise.race([
+                        createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
+                        deferred.promise
+                    ]);
+                    if (token.isCancellationRequested) {
+                        deferred.resolve();
+                        info.tokenSources.forEach((t) => t.cancel());
+                    }
+                    if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
+                        KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
+                    }
+                    KernelProgressReporter.disposables.delete(disposable);
                 }
-                await deferred.promise;
-                if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
-                    KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
-                }
-                KernelProgressReporter.disposables.delete(disposable);
-            });
+            );
         };
 
         KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, {

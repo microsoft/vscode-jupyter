@@ -16,7 +16,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
-import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
@@ -120,19 +119,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                 );
                 sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
-                throw error;
-            } else if (error instanceof IpyKernelNotInstalledError) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartNoIpykernel, {
-                    reason: error.reason
-                });
-                traceError('Raw session failed to start because dependencies not installed');
                 throw error;
             } else {
                 // Send our telemetry event with the error included
@@ -262,22 +248,24 @@ export class RawJupyterSession extends BaseJupyterSession {
             localize.DataScience.connectingToKernel().format(
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
             ),
-            () =>
+            options.token,
+            (t) =>
                 this.kernelLauncher.launch(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     this.kernelConnectionMetadata as any,
-            this.launchTimeout,
-            this.resource,
-            this.workingDirectory,
-            options.ui,
-            options.token
+                    this.launchTimeout,
+                    this.resource,
+                    this.workingDirectory,
+                    options.ui,
+                    t
                 )
         );
 
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             localize.DataScience.waitingForJupyterSessionToBeIdle(),
-            () => this.postStartRawSession(options, process)
+            options.token,
+            (t) => this.postStartRawSession({ ...options, token: t }, process)
         );
     }
     private async postStartRawSession(

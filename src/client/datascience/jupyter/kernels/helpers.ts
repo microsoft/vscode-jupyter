@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IJupyterKernelSpec, IJupyterSession } from '../../types';
+import { IDataScienceErrorHandler, IJupyterKernelSpec, IJupyterSession } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -20,7 +20,8 @@ import {
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
-    PythonKernelConnectionMetadata
+    PythonKernelConnectionMetadata,
+    IKernelProvider
 } from './types';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
@@ -46,7 +47,10 @@ import {
 import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
-import { Uri } from 'vscode';
+import { NotebookDocument, Uri } from 'vscode';
+import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
+import { IServiceContainer } from '../../../ioc/types';
+import { CancellationError } from '../../../common/cancellation';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1784,4 +1788,56 @@ export async function executeSilently(session: IJupyterSession, code: string): P
     traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
 
     return outputs;
+}
+
+export async function connectToKernel(
+    serviceContainer: IServiceContainer,
+    resource: Resource,
+    notebook: NotebookDocument,
+    controller: VSCodeNotebookController
+): Promise<IKernel> {
+    const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
+    const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+    let kernel: IKernel | undefined;
+    let connection: KernelConnectionMetadata = controller.connection;
+    while (kernel === undefined) {
+        // Try to create the kernel (possibly again)
+        kernel = kernelProvider.getOrCreate(notebook, {
+            metadata: connection,
+            controller: controller.controller,
+            resourceUri: resource
+        });
+
+        try {
+            await kernel.start();
+        } catch (error) {
+            const handleResult = await errorHandler.handleKernelError(error, 'start', connection, resource);
+            switch (handleResult.kind) {
+                case 'Canceled':
+                    throw new CancellationError(
+                        DataScience.canceledKernelHeader().format(connection.interpreter?.displayName || '')
+                    );
+
+                case 'Error':
+                    throw error;
+
+                case 'Installed': {
+                    // Loop around
+                    kernel.dispose().ignoreErrors();
+                    kernel = undefined;
+                    break;
+                }
+
+                case 'Switched': {
+                    // Loop around and create the new one
+                    kernel.dispose().ignoreErrors();
+                    kernel = undefined;
+                    connection = handleResult.metadata;
+                    controller = handleResult.controller;
+                    break;
+                }
+            }
+        }
+    }
+    return kernel;
 }

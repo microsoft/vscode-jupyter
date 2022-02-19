@@ -52,7 +52,8 @@ import {
     getRemoteKernelSessionInformation,
     isPythonKernelConnection,
     getKernelConnectionPath,
-    getKernelRegistrationInfo
+    getKernelRegistrationInfo,
+    connectToKernel
 } from '../jupyter/kernels/helpers';
 import {
     IKernel,
@@ -136,7 +137,7 @@ export class VSCodeNotebookController implements Disposable {
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -363,15 +364,18 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    private executeCell(doc: NotebookDocument, cell: NotebookCell) {
+    private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
-            metadata: this.kernelConnection,
-            controller: this.controller,
-            resourceUri: doc.uri
-        });
-        this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-        return kernel.executeCell(cell);
+
+        // Connect to a matching kernel if possible (but user may pick a different one)
+        try {
+            const kernel = await connectToKernel(this.serviceContainer, doc.uri, doc, this);
+            this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            return kernel.executeCell(cell);
+        } catch (ex) {
+            // If there was a failure connecting to the kernel, stick it in this cell
+            return displayErrorsInCell(this.serviceContainer, ex.toString(), cell);
+        }
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
@@ -514,16 +518,7 @@ export class VSCodeNotebookController implements Disposable {
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
             isLocalConnection(this.kernelConnection)
         ) {
-            await newKernel
-                .start({ disableUI: true, displayError: this.displayErrorInLastCell.bind(this, newKernel) })
-                .catch(noop);
-        }
-    }
-
-    private displayErrorInLastCell(kernel: IKernel, ex: Error | string, moreInfoLink?: string) {
-        const cellForErrorDisplay = kernel.pendingCells.length ? kernel.pendingCells[0] : undefined;
-        if (cellForErrorDisplay) {
-            displayErrorsInCell(this.serviceContainer, ex.toString(), cellForErrorDisplay, moreInfoLink).ignoreErrors();
+            await newKernel.start({ disableUI: true }).catch(noop);
         }
     }
 }

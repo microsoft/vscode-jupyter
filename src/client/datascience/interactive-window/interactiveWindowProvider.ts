@@ -28,7 +28,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -73,7 +73,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
@@ -130,7 +129,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IExportDialog>(IExportDialog),
             this.notebookControllerManager,
-            this.kernelProvider,
+            this.serviceContainer,
             this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
             connection
         );

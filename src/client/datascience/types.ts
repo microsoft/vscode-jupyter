@@ -38,6 +38,7 @@ import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
+import { VSCodeNotebookController } from './notebook/vscodeNotebookController';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -404,7 +405,28 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
-export type HandleKernelErrorResult = 'retry' | 'stop';
+type CanceledKernelErrorResult = {
+    kind: 'Canceled';
+};
+type ErrorKernelErrorResult = {
+    kind: 'Error';
+    error: Error;
+};
+type InstalledKernelErrorResult = {
+    kind: 'Installed';
+};
+type SwitchedKernelErrorResult = {
+    kind: 'Switched';
+    metadata: KernelConnectionMetadata;
+    controller: VSCodeNotebookController;
+};
+
+export type HandleKernelErrorResult =
+    | CanceledKernelErrorResult
+    | ErrorKernelErrorResult
+    | InstalledKernelErrorResult
+    | SwitchedKernelErrorResult;
+
 export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
@@ -421,8 +443,7 @@ export interface IDataScienceErrorHandler {
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource,
-        displayError: DisplayErrorFunc
+        resource: Resource
     ): Promise<HandleKernelErrorResult>;
 }
 
@@ -1006,7 +1027,7 @@ export interface IKernelDependencyService {
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<void>;
+    ): Promise<HandleKernelErrorResult>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */

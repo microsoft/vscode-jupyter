@@ -9,7 +9,6 @@ import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPi
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type {
-    DisplayErrorFunc,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -175,7 +174,7 @@ export interface IKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: { disableUI?: boolean; displayError?: DisplayErrorFunc }): Promise<void>;
+    start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;

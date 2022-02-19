@@ -21,7 +21,7 @@ import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
 import { Telemetry } from '../../datascience/constants';
-import { Memento } from 'vscode';
+import { CancellationTokenSource, Memento } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -143,7 +143,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const title = DataScience.activatingPythonEnvironment().format(
             interpreter.displayName || getDisplayPath(interpreter.path)
         );
-        return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
+        const cancellationTokenSource = new CancellationTokenSource();
+        return KernelProgressReporter.wrapAndReportProgress(resource, title, cancellationTokenSource.token, (_t) =>
             this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
         );
     }

@@ -12,7 +12,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IDataScienceErrorHandler, IJupyterSession, InterruptResult } from '../../types';
+import { IJupyterSession, InterruptResult } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
@@ -20,7 +20,6 @@ import type { IKernel, KernelConnectionMetadata } from './types';
 import { NotebookCellRunState } from './types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { KernelMessage } from '@jupyterlab/services';
-import { IServiceContainer } from '../../../ioc/types';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -35,25 +34,21 @@ export class KernelExecution implements IDisposable {
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
         private readonly kernel: IKernel,
-        errorHandler: IDataScienceErrorHandler,
         appShell: IApplicationShell,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory,
-        serviceContainer: IServiceContainer
+        cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.executionFactory = new CellExecutionFactory(
             kernel,
-            errorHandler,
             appShell,
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory,
-            serviceContainer
+            cellHashProviderFactory
         );
     }
 
