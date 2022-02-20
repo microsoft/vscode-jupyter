@@ -140,7 +140,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
     [true, false].forEach((which) => {
         const interpreterPath = which ? venvPythonPath : venvNoRegPath;
-        test.skip(`Ensure prompt is displayed when ipykernel module is not found and it gets installed '${path.basename(interpreterPath)}'`, async function () {
+        test.skip(`Ensure prompt is displayed when ipykernel module is not found and it gets installed '${path.basename(
+            interpreterPath
+        )}'`, async function () {
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showInformationMessage',
