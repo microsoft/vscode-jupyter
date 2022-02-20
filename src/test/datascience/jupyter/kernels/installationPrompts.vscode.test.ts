@@ -61,7 +61,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let memento: Memento;
     let vscodeNotebook: IVSCodeNotebook;
     const delayForUITest = 30_000;
-    this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
+    this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
     let previousDisableJupyterAutoStartValue: boolean;
     /*
@@ -77,6 +77,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             // Virtual env does not exist.
             return this.skip();
         }
+        this.timeout(120_000);
         api = await initialize();
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
@@ -137,9 +138,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
 
-    [true, false].forEach((which, i) => {
-        // Use index on test name as it messes up regex matching
-        test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
+    [true, false].forEach((which) => {
+        const interpreterPath = which ? venvPythonPath : venvNoRegPath;
+        test.skip(`Ensure prompt is displayed when ipykernel module is not found and it gets installed '${path.basename(
+            interpreterPath
+        )}'`, async function () {
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showInformationMessage',
@@ -148,7 +151,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 disposables
             );
             const installed = createDeferred();
-            const interpreterPath = which ? venvPythonPath : venvNoRegPath;
             console.log(`Running ensure prompt and looking for kernel ${interpreterPath}`);
 
             // Confirm it is installed.
