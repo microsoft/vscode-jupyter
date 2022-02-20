@@ -8,6 +8,7 @@
         "clean": "rimraf out && rimraf tsconfig.tsbuildinfo && rimraf dist",
         "lint": "tslint --project tsconfig.json",
         "copyFile": "node scripts/copyBuild.js",
+        "preinstall": "npx npm-force-resolutions",
         "postinstall": "node scripts/postInstall.js"
     },
     "dependencies": {
@@ -23,5 +24,9 @@
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
         "timers-browserify": "^2.0.12"
-    }
+    },
+    "devDependencies": {
+        "npm-force-resolutions": "0.0.10"
+    },
+    "resolutions": {}
 }

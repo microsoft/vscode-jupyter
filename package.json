@@ -2067,6 +2067,7 @@
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
         "build-ipywidgets-webpack": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./src/ipywidgets/webpack.config.js",
         "checkDependencies": "gulp checkDependencies",
+        "preinstall": "npx npm-force-resolutions",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js && cd src/ipywidgets && npm install",
         "installPythonLibs": "gulp installPythonLibs",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
@@ -2300,6 +2301,7 @@
         "node-gyp-build": "^4.2.3",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
+        "npm-force-resolutions": "0.0.10",
         "nyc": "^15.0.0",
         "path-browserify": "^1.0.1",
         "postcss": "^8.4.6",
@@ -2341,5 +2343,6 @@
     },
     "optionalDependencies": {
         "canvas": "^2.7.0"
-    }
+    },
+    "resolutions": {}
 }
