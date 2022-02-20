@@ -2344,5 +2344,8 @@
     "optionalDependencies": {
         "canvas": "^2.7.0"
     },
-    "resolutions": {}
+    "resolutions": {
+        "tar": "4.4.18",
+        "simple-get": "3.1.1"
+    }
 }
