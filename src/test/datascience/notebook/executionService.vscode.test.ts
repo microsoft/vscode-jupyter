@@ -39,7 +39,8 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout,
-    waitForCellExecutionState
+    waitForCellExecutionState,
+    getCellOutputs
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -51,6 +52,7 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -375,6 +377,31 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([waitForTextOutput(cell, 'bar', 0, false), waitForTextOutput(cell, 'bar', 1, false)]);
 
         await waitForExecutionCompletedSuccessfully(cell);
+    });
+    test('Shell commands should give preference to executables in Python Environment', async () => {
+        await insertCodeCell('import sys', { index: 0 });
+        await insertCodeCell('import os', { index: 1 });
+        await insertCodeCell('print(os.getenv("PATH"))', { index: 2 });
+        await insertCodeCell('print(sys.executable)', { index: 3 });
+        const [, , cell3, cell4] = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
+
+        // Basically anything such as `!which python` and the like should point to the right executable.
+        // For that to work, the first directory in the PATH must be the Python environment.
+
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell4),
+            waitForCondition(async () => getCellOutputs(cell4).length > 0, defaultNotebookTestTimeout, 'No output')
+        ]);
+
+        const pathValue = getCellOutputs(cell3).split(path.delimiter);
+        const sysExecutable = getCellOutputs(cell4).trim().toLowerCase();
+
+        // First path in PATH must be the directory where executable is located.
+        assert.ok(
+            areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
+            `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
+        );
     });
     test('Testing streamed output', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
