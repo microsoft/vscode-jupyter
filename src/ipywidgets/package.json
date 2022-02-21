@@ -28,5 +28,9 @@
     "devDependencies": {
         "npm-force-resolutions": "0.0.10"
     },
-    "resolutions": {}
+    "resolutions": {
+        "marked": "4.0.10",
+        "node-fetch": "2.6.7",
+        "url-parse": "1.5.6"
+    }
 }
