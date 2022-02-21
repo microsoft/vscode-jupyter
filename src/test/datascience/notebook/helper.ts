@@ -736,7 +736,9 @@ export async function waitForTextOutput(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
         () =>
-            `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
+            `A after ${timeout}ms output does not contain provided text '${text}' for Cell ${
+                cell.index + 1
+            }, it is ${getCellOutputs(cell)}`
     );
 }
 export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
