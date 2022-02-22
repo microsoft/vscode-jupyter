@@ -56,6 +56,7 @@ import { InteractiveWindowView } from '../../notebook/constants';
 import { BaseError } from '../../../common/errors/types';
 import * as localize from '../../../common/utils/localize';
 import { analyzeKernelErrors } from '../../../common/errors/errorUtils';
+import { CellExecutionCreator } from './cellExecutionCreator';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -198,7 +199,7 @@ export class CellExecution implements IDisposable {
             // tempTask.executionOrder = undefined;
             // void tempTask.clearOutput();
             // void tempTask.end(undefined);
-            this.execution = controller.createNotebookCellExecution(this.cell);
+            this.execution = CellExecutionCreator.getOrCreate(cell, this.controller);
             NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
         }
     }
@@ -383,7 +384,7 @@ export class CellExecution implements IDisposable {
 
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
-        this.temporaryExecution = this.controller.createNotebookCellExecution(this.cell);
+        this.temporaryExecution = CellExecutionCreator.getOrCreate(this.cell, this.controller);
         this.temporaryExecution?.start();
         if (this.previousResultsToRestore?.executionOrder && this.execution) {
             this.execution.executionOrder = this.previousResultsToRestore.executionOrder;

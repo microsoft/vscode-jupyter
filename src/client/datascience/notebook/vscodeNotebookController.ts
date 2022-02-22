@@ -47,6 +47,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
+import { CellExecutionCreator } from '../jupyter/kernels/cellExecutionCreator';
 import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
@@ -367,15 +368,22 @@ export class VSCodeNotebookController implements Disposable {
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
 
+        // Start execution now (from the user's point of view)
+        const execution = CellExecutionCreator.getOrCreate(cell, this.controller);
+        execution.start(new Date().getTime());
+        void execution.clearOutput(cell);
+
         // Connect to a matching kernel if possible (but user may pick a different one)
         try {
             const kernel = await connectToKernel(this.serviceContainer, doc.uri, doc, this);
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-            return kernel.executeCell(cell);
+            return await kernel.executeCell(cell);
         } catch (ex) {
-            // If there was a failure connecting to the kernel, stick it in this cell
-            return displayErrorsInCell(this.serviceContainer, ex.toString(), cell);
+            // If there was a failure connecting or executing the kernel, stick it in this cell
+            return displayErrorsInCell(cell, execution, ex.toString());
         }
+
+        // Execution should be ended elsewhere
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

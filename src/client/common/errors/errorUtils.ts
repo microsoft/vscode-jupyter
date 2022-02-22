@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, workspace, WorkspaceFolder } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellExecution,
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    workspace,
+    WorkspaceFolder
+} from 'vscode';
 import { JupyterConnectError } from '../../datascience/errors/jupyterConnectError';
-import { INotebookControllerManager } from '../../datascience/notebook/types';
-import { IServiceContainer } from '../../ioc/types';
 import { getDisplayPath } from '../platform/fs-paths';
 import { DataScience } from '../utils/localize';
 import { BaseError } from './types';
@@ -557,18 +562,8 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export async function displayErrorsInCell(
-    serviceContainer: IServiceContainer,
-    errorMessage: string,
-    cellToDisplayErrors: NotebookCell
-) {
-    if (!cellToDisplayErrors || !errorMessage) {
-        return;
-    }
-    const controller = serviceContainer
-        .get<INotebookControllerManager>(INotebookControllerManager)
-        .getSelectedNotebookController(cellToDisplayErrors.notebook);
-    if (!controller) {
+export async function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellExecution, errorMessage: string) {
+    if (!errorMessage) {
         return;
     }
     // If we have markdown links to run a command, turn that into a link.
@@ -579,9 +574,7 @@ export async function displayErrorsInCell(
             errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
         }
     }
-    const execution = controller.controller.createNotebookCellExecution(cellToDisplayErrors);
-    execution.start();
-    void execution.clearOutput(cellToDisplayErrors);
+    void execution.clearOutput(cell);
     const output = new NotebookCellOutput([
         NotebookCellOutputItem.error({
             message: '',
@@ -590,5 +583,5 @@ export async function displayErrorsInCell(
         })
     ]);
     void execution.appendOutput(output);
-    execution.end(undefined);
+    execution.end(false);
 }
