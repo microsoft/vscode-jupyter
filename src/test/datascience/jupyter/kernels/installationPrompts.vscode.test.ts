@@ -258,4 +258,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell'
         );
     });
+    // TODO:
+    // - IPykernel not installed - cancel shows cancel error (interactive and notebook)
+    // - IPykernel not installed - switch moves to new kernel (interactive and notebook)
+    // - IPykernel not installed - installing works
+    // - IPykernel not installed with run all - switch moves to new kernel (interactive and notebook)
 });

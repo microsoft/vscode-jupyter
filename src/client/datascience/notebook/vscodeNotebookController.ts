@@ -37,6 +37,7 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
+import { chainable } from '../../common/utils/decorators';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -375,7 +376,7 @@ export class VSCodeNotebookController implements Disposable {
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         try {
-            const kernel = await connectToKernel(this.serviceContainer, doc.uri, doc, this);
+            const kernel = await this.connectToKernel(doc);
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             return await kernel.executeCell(cell);
         } catch (ex) {
@@ -384,6 +385,12 @@ export class VSCodeNotebookController implements Disposable {
         }
 
         // Execution should be ended elsewhere
+    }
+
+    @chainable()
+    private async connectToKernel(doc: NotebookDocument) {
+        // Make sure we don't have multiple cells trying to connect at the same time
+        return connectToKernel(this.serviceContainer, doc.uri, doc);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

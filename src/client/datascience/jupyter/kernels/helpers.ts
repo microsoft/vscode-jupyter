@@ -48,9 +48,9 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 import { NotebookDocument, Uri } from 'vscode';
-import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { IServiceContainer } from '../../../ioc/types';
 import { CancellationError } from '../../../common/cancellation';
+import { INotebookControllerManager } from '../../notebook/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1793,17 +1793,22 @@ export async function executeSilently(session: IJupyterSession, code: string): P
 export async function connectToKernel(
     serviceContainer: IServiceContainer,
     resource: Resource,
-    notebook: NotebookDocument,
-    controller: VSCodeNotebookController
+    notebook: NotebookDocument
 ): Promise<IKernel> {
+    const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
     let kernel: IKernel | undefined;
-    let connection: KernelConnectionMetadata = controller.connection;
     while (kernel === undefined) {
+        // Use the selected controller for this notebook
+        const controller = controllerManager.getSelectedNotebookController(notebook);
+        if (!controller) {
+            throw new Error('Connecting without a controller');
+        }
+
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook, {
-            metadata: connection,
+            metadata: controller.connection,
             controller: controller.controller,
             resourceUri: resource
         });
@@ -1811,11 +1816,11 @@ export async function connectToKernel(
         try {
             await kernel.start();
         } catch (error) {
-            const handleResult = await errorHandler.handleKernelError(error, 'start', connection, resource);
+            const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
             switch (handleResult.kind) {
                 case 'Canceled':
                     throw new CancellationError(
-                        DataScience.canceledKernelHeader().format(connection.interpreter?.displayName || '')
+                        DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
                     );
 
                 case 'Error':
@@ -1829,11 +1834,9 @@ export async function connectToKernel(
                 }
 
                 case 'Switched': {
-                    // Loop around and create the new one
+                    // Loop around and create the new one. The user switched
                     kernel.dispose().ignoreErrors();
                     kernel = undefined;
-                    connection = handleResult.metadata;
-                    controller = handleResult.controller;
                     break;
                 }
             }

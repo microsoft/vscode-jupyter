@@ -1121,9 +1121,4 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         return cellInfo;
     }
-
-    // TODO:
-    // - IPykernel not installed - cancel shows cancel error (interactive and notebook)
-    // - IPykernel not installed - switch moves to new kernel (interactive and notebook)
-    // - IPykernel not installed - installing works
 });
