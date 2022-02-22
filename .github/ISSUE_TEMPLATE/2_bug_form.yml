@@ -1,5 +1,5 @@
 name: Bug Report Form
-description: Friendlier bug report form
+description: Same as above, but friendlier. :)
 labels: [bug, needs-triage]
 assignees:
   - octocat
