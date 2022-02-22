@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceDecorators, traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -47,6 +47,7 @@ import {
     IPythonDebuggerPathProvider,
     IPythonExtensionChecker,
     IPythonInstaller,
+    IPythonProposedApi,
     JupyterProductToInstall,
     PythonApi
 } from './types';
@@ -95,7 +96,14 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }
-        this.api.resolve(api);
+        const pythonProposedApi = this.extensions.getExtension<IPythonProposedApi>(PythonExtension)!.exports;
+        // Merge the python proposed API into our Jupyter specific API.
+        // This way we deal with a single API instead of two.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const unifiedApi: PythonApi = {} as any;
+        Object.assign(unifiedApi, pythonProposedApi.environment);
+        Object.assign(unifiedApi, api);
+        this.api.resolve(unifiedApi);
 
         // Log experiment status here. Python extension is definitely loaded at this point.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -355,6 +363,16 @@ export class InterpreterService implements IInterpreterService {
         return this.interpreterListCachePromise;
     }
 
+    public async refreshInterpreters() {
+        const api = await this.apiProvider.getApi();
+        try {
+            const newItems = await api.refreshInterpreters({ clearCache: false });
+            this.interpreterListCachePromise = undefined;
+            traceVerbose(`Refreshed Environments and got ${newItems}`);
+        } catch (ex) {
+            traceError(`Failed to refresh the list of interpreters`);
+        }
+    }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     @traceDecorators.verbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
