@@ -378,7 +378,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await waitForExecutionCompletedSuccessfully(cell);
     });
-    test('Shell commands should give preference to executables in Python Environment', async () => {
+    test('Shell commands should give preference to executables in Python Environment', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         await insertCodeCell('import sys', { index: 0 });
         await insertCodeCell('import os', { index: 1 });
         await insertCodeCell('print(os.getenv("PATH"))', { index: 2 });
