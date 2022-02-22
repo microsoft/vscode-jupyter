@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { BaseError } from '../../common/errors/types';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataScience } from '../../common/utils/localize';
@@ -31,6 +31,7 @@ import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
 import { CancellationTokenSource } from 'vscode';
 import { waitForCondition } from '../../common/utils/async';
+import { IFileSystem } from '../../common/platform/types';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -71,7 +72,8 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number
+        interruptTimeout: number,
+        private readonly fs: IFileSystem
     ) {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
@@ -275,7 +277,11 @@ export class JupyterSession extends BaseJupyterSession {
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.path).ignoreErrors();
+                    void this.contentsManager
+                        .delete(backingFile.path)
+                        .catch((ex) => traceWarning(`Failed to delete ${backingFile.path} using Jupyter API`, ex))
+                        // Sometimes the files don't get deleted via Jupyter, delete them manually.
+                        .finally(() => this.fs.deleteLocalFile(backingFile.path));
                 }
                 throw ex;
             }
@@ -341,7 +347,13 @@ export class JupyterSession extends BaseJupyterSession {
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
                         if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                            void this.contentsManager
+                                .delete(backingFile.path)
+                                .catch((ex) =>
+                                    traceWarning(`Failed to delete ${backingFile.path} using Jupyter API`, ex)
+                                )
+                                // Sometimes the files don't get deleted via Jupyter, delete them manually.
+                                .finally(() => this.fs.deleteLocalFile(backingFile.path));
                         }
                     }),
             options.token

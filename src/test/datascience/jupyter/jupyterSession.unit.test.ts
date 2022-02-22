@@ -18,6 +18,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { ReadWrite, Resource } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
@@ -139,7 +140,8 @@ suite('DataScience - JupyterSession', () => {
             '',
             1,
             instance(kernelService),
-            1
+            1,
+            instance(mock<IFileSystem>())
         );
     }
     setup(() => createJupyterSession());

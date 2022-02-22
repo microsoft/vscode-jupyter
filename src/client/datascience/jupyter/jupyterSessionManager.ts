@@ -18,6 +18,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
     IOutputChannel,
@@ -76,7 +77,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly kernelService: JupyterKernelService
+        private readonly kernelService: JupyterKernelService,
+        private readonly fs: IFileSystem
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -201,7 +203,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
-            this.configService.getSettings(resource).jupyterInterruptTimeout
+            this.configService.getSettings(resource).jupyterInterruptTimeout,
+            this.fs
         );
         try {
             await session.connect({ token: cancelToken, ui });
