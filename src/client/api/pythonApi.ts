@@ -366,7 +366,7 @@ export class InterpreterService implements IInterpreterService {
     public async refreshInterpreters() {
         const api = await this.apiProvider.getApi();
         try {
-            const newItems = await api.refreshInterpreters({ clearCache: true });
+            const newItems = await api.refreshInterpreters({ clearCache: false });
             this.interpreterListCachePromise = undefined;
             traceVerbose(`Refreshed Environments and got ${newItems}`);
         } catch (ex) {
