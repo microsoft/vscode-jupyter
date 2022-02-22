@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -98,6 +99,13 @@ export class KernelEnvironmentVariablesService {
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
         }
+        // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+        // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+        // Also applies to `!java` where java could be an executable in the conda bin directory.
+        if (interpreter) {
+            this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.path));
+        }
+
         // Ensure global site_packages are not in the path.
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591

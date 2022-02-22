@@ -15,6 +15,7 @@ import { IFileSystem } from '../../../common/platform/types';
 
 import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { IEnvironmentVariablesService } from '../../../common/variables/types';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { ignoreLogging, logValue } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -38,7 +39,8 @@ export class JupyterKernelService {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder
+        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder,
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
     ) {}
 
     /**
@@ -256,6 +258,12 @@ export class JupyterKernelService {
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
+                // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+                // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+                // Also applies to `!java` where java could be an executable in the conda bin directory.
+                if (interpreter && specModel.env) {
+                    this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path));
+                }
 
                 // Ensure global site_packages are not in the path.
                 // The global site_packages will be added to the path later.

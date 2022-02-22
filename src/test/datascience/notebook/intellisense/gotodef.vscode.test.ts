@@ -89,7 +89,14 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
 
         // Verify we are in cell1
-        assert.equal(vscode.window.activeTextEditor?.document, cell1.document, 'Text editor did not switch');
+        await waitForCondition(
+            async () => {
+                assert.equal(vscode.window.activeTextEditor?.document, cell1.document, 'Text editor did not switch');
+                return true;
+            },
+            5_000,
+            'Text editor did not switch'
+        );
     });
 
     test('Import pandas and goto it', async () => {
