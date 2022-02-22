@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 'Help and Support'
+  - name: "Help and Support"
     url: https://github.com/microsoft/vscode-jupyter/discussions/categories/questions-and-answers
-    about: 'Need help getting something to work, but you're not sure it's worth of submitting an issue? Ask here.'
+    about: "Need help getting something to work, but you're not sure it's worth of submitting an issue? Ask here."
