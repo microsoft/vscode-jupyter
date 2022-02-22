@@ -20,6 +20,7 @@ import * as path from 'path';
 import { arePathsSame } from '../../../common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 import { CancellationTokenSource } from 'vscode';
+import { IEnvironmentVariablesService } from '../../../../client/common/variables/types';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
@@ -297,7 +298,8 @@ suite('DataScience - JupyterKernelService', () => {
             instance(kernelDependencyService),
             instance(fs),
             instance(appEnv),
-            instance(kernelFinder)
+            instance(kernelFinder),
+            instance(mock<IEnvironmentVariablesService>())
         );
     });
     test('Dependencies checked on all kernels with interpreters', async () => {

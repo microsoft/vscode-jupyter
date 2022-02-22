@@ -120,6 +120,32 @@ export type PythonApi = {
         resource: Resource,
         interpreter?: PythonEnvironment
     ): Promise<string[] | undefined>;
+    /**
+     * This API will re-trigger environment discovery. Extensions can wait on the returned
+     * promise to get the updated interpreters list. If there is a refresh already going on
+     * then it returns the promise for that refresh.
+     * @param options : [optional]
+     *     * clearCache : When true, this will clear the cache before interpreter refresh
+     *                    is triggered.
+     */
+    refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
+};
+
+type RefreshInterpretersOptions = {
+    clearCache?: boolean;
+};
+export type IPythonProposedApi = {
+    environment: {
+        /**
+         * This API will re-trigger environment discovery. Extensions can wait on the returned
+         * promise to get the updated interpreters list. If there is a refresh already going on
+         * then it returns the promise for that refresh.
+         * @param options : [optional]
+         *     * clearCache : When true, this will clear the cache before interpreter refresh
+         *                    is triggered.
+         */
+        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
+    };
 };
 
 export const IPythonInstaller = Symbol('IPythonInstaller');

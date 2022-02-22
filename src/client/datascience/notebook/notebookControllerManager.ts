@@ -51,7 +51,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -62,6 +62,9 @@ import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IServiceContainer } from '../../ioc/types';
+import { CondaService } from '../../common/process/condaService';
+import { waitForCondition } from '../../common/utils/async';
+import { debounceAsync } from '../../common/utils/decorators';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -136,6 +139,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IBrowserService) private readonly browser: IBrowserService,
+        @inject(CondaService) private readonly condaService: CondaService,
         @inject(JupyterServerSelector) private readonly jupyterServerSelector: JupyterServerSelector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
@@ -189,6 +193,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+        this.condaService.onCondaEnvironmentsChanged(this.onDidChangeCondaEnvironments, this, this.disposables);
     }
 
     // Function to expose currently registered controllers to test code only
@@ -291,6 +296,43 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // KernelConnectionMetadata.id should be the same as the one we just set up
                 controller.connection.id === result.id
         );
+    }
+
+    @debounceAsync(1_000)
+    private async onDidChangeCondaEnvironments() {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        // A new conda environment was added or removed, hence refresh the kernels.
+        // Wait for the new env to be discovered before refreshing the kernels.
+        const previousCondaEnvCount = (await this.interpreters.getInterpreters()).filter(
+            (item) => item.envType === EnvironmentType.Conda
+        ).length;
+
+        await this.interpreters.refreshInterpreters();
+        // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
+        await this.loadNotebookControllers(true);
+
+        // Possible discovering interpreters is slow, hence try for around 10s.
+        // I.e. just because we know a conda env was created doesn't necessarily mean its immediately discoverable and usable.
+        // Possible it takes some time.
+        // Wait for around 5s between each try, we know Python extension can be slow to discover interpreters.
+        await waitForCondition(
+            async () => {
+                const condaEnvCount = (await this.interpreters.getInterpreters()).filter(
+                    (item) => item.envType === EnvironmentType.Conda
+                ).length;
+                if (condaEnvCount > previousCondaEnvCount) {
+                    return true;
+                }
+                await this.interpreters.refreshInterpreters();
+                return false;
+            },
+            15_000,
+            5000
+        );
+
+        await this.loadNotebookControllers(true);
     }
 
     private async createActiveInterpreterController(
