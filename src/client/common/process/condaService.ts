@@ -3,27 +3,38 @@
 
 import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
-import { Memento } from 'vscode';
+import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/trace';
-import { traceDecorators } from '../logger';
+import { traceDecorators, traceError, traceVerbose } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { GLOBAL_MEMENTO, IMemento } from '../types';
+import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
+import * as path from 'path';
+import { swallowExceptions } from '../utils/decorators';
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const untildify = require('untildify');
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
-
+const condaEnvironmentsFile = path.join(untildify('~'), '.conda', 'environments.txt');
 @injectable()
 export class CondaService {
     private _file?: string;
     private _version?: SemVer;
     private _previousVersionCall?: Promise<SemVer | undefined>;
     private _previousFileCall?: Promise<string | undefined>;
+    private _previousCondaEnvs: string[] = [];
+    private readonly _onCondaEnvironmentsChanged = new EventEmitter<void>();
+    public readonly onCondaEnvironmentsChanged = this._onCondaEnvironmentsChanged.event;
     constructor(
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {}
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
+    ) {
+        void this.monitorCondaEnvFile();
+    }
+
     @traceDecorators.verbose('getCondaVersion', TraceOptions.BeforeCall)
     async getCondaVersion() {
         if (this._version) {
@@ -73,6 +84,38 @@ export class CondaService {
         };
         this._previousFileCall = promise();
         return this._previousFileCall;
+    }
+    @swallowExceptions('Failed to get conda information')
+    private async monitorCondaEnvFile() {
+        this._previousCondaEnvs = await this.getCondaEnvsFromEnvFile();
+        const watcher = workspace.createFileSystemWatcher(
+            new RelativePattern(Uri.file(path.dirname(condaEnvironmentsFile)), path.basename(condaEnvironmentsFile))
+        );
+        this.disposables.push(watcher);
+
+        const lookForChanges = async () => {
+            const newList = await this.getCondaEnvsFromEnvFile();
+            if (newList.join(',') !== this._previousCondaEnvs.join(',')) {
+                traceVerbose(`Detected a new conda environment, triggering a refresh`);
+                this._onCondaEnvironmentsChanged.fire();
+                this._previousCondaEnvs = newList;
+            }
+        };
+        watcher.onDidChange(lookForChanges, this, this.disposables);
+        watcher.onDidCreate(lookForChanges, this, this.disposables);
+        watcher.onDidDelete(lookForChanges, this, this.disposables);
+    }
+
+    private async getCondaEnvsFromEnvFile(): Promise<string[]> {
+        try {
+            const fileContents = await this.fs.readLocalFile(condaEnvironmentsFile);
+            return fileContents.split('\n').sort();
+        } catch (ex) {
+            if (await this.fs.localFileExists(condaEnvironmentsFile)) {
+                traceError(`Failed to read file ${condaEnvironmentsFile}`, ex);
+            }
+            return [];
+        }
     }
     private async updateCache() {
         if (!this._file || !this._version) {
