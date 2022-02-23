@@ -151,7 +151,9 @@ export class KernelProcess implements IKernelProcess {
                 });
                 exitEventFired = true;
             }
-            deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr));
+            if (!cancelToken.isCancellationRequested) {
+                deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr));
+            }
         });
 
         exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {

@@ -59,6 +59,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
+    let venvKernelPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
     const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} package.`;
 
     let api: IExtensionTestApi;
@@ -96,15 +97,17 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
         await pythonApi.refreshInterpreters({ clearCache: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [interpreter1, interpreter2] = await Promise.all([
+        const [interpreter1, interpreter2, interpreter3] = await Promise.all([
             interpreterService.getInterpreterDetails(venvPythonPath),
-            interpreterService.getInterpreterDetails(venvNoRegPath)
+            interpreterService.getInterpreterDetails(venvNoRegPath),
+            interpreterService.getInterpreterDetails(venvKernelPath)
         ]);
-        if (!interpreter1 || !interpreter2) {
+        if (!interpreter1 || !interpreter2 || !interpreter3) {
             throw new Error('Unable to get information for interpreter 1');
         }
         venvPythonPath = interpreter1.path;
         venvNoRegPath = interpreter2.path;
+        venvKernelPath = interpreter3.path;
     });
 
     setup(async function () {
@@ -128,10 +131,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvPythonPath),
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoRegPath)
         ]);
-
-        // Make sure venvPythonPath is the active interpreter (it does not have ipykernel installed)
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        await pythonApi.setActiveInterpreter(venvPythonPath);
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
     });
@@ -286,9 +285,15 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             { dismissPrompt: true },
             disposables
         );
-
+        const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const source = 'print(__file__)';
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
+        const { activeInteractiveWindow } = await submitFromPythonFile(
+            interactiveWindowProvider,
+            source,
+            disposables,
+            pythonApiProvider,
+            venvPythonPath
+        );
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
@@ -296,12 +301,12 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // The prompt should be displayed when we run a cell.
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
 
-        const cell = notebookDocument.cellAt(1)!;
+        const cell = notebookDocument.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
         await waitForCondition(
-            async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
+            async () => cell.document.getText().includes('Canceled') && assertVSCCellIsNotRunning(cell),
             defaultNotebookTestTimeout,
             'No errors in cell'
         );
@@ -321,8 +326,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         // Hijack the select kernel functionality so it selects the correct kernel
-        const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(function () {
-            return waitForKernelToChange({ interpreterPath: venvNoRegPath });
+        const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(async function () {
+            await waitForKernelToChange({ interpreterPath: venvKernelPath });
+            return true;
         } as any);
         const disposable = { dispose: () => stub.restore() };
         if (disposables) {
@@ -340,9 +346,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // The prompt should be displayed when we run a cell.
         const runPromise = runAllCellsInActiveNotebook();
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
-
-        // We should switch to the kernel that has ipykernel
-        await waitForKernelToChange({ interpreterPath: venvNoRegPath });
 
         // Now the run should finish
         await runPromise;

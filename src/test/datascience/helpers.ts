@@ -5,6 +5,7 @@
 import { assert } from 'chai';
 import { noop } from 'lodash';
 import * as vscode from 'vscode';
+import { IPythonApiProvider } from '../../client/api/types';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
@@ -106,12 +107,18 @@ export async function insertIntoInputEditor(source: string) {
 export async function submitFromPythonFile(
     interactiveWindowProvider: IInteractiveWindowProvider,
     source: string,
-    disposables: vscode.Disposable[]
+    disposables: vscode.Disposable[],
+    apiProvider?: IPythonApiProvider,
+    activeInterpreterPath?: string
 ) {
     const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
     disposables.push(tempFile);
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
+    if (apiProvider && activeInterpreterPath) {
+        const pythonApi = await apiProvider.getApi();
+        await pythonApi.setActiveInterpreter(activeInterpreterPath, untitledPythonFile.uri);
+    }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
     )) as InteractiveWindow;
