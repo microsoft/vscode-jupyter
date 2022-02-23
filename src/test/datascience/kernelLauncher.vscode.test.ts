@@ -22,7 +22,6 @@ import { PortAttributesProviders } from '../../client/common/net/portAttributePr
 import { IDisposable } from '../../client/common/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -68,7 +67,6 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
         kernel.exited(() => {
@@ -111,7 +109,6 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 
@@ -146,7 +143,6 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 
@@ -199,7 +195,6 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 

@@ -11,7 +11,7 @@ import {
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import { IDisplayOptions, INotebookProviderConnection } from '../types';
+import { INotebookProviderConnection } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
@@ -20,7 +20,6 @@ export interface IKernelLauncher {
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        ui: IDisplayOptions,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess>;
 }

@@ -256,7 +256,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     this.launchTimeout,
                     this.resource,
                     this.workingDirectory,
-                    options.ui,
                     t
                 )
         );

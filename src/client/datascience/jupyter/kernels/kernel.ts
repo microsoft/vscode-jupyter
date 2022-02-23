@@ -378,8 +378,8 @@ export class Kernel implements IKernel {
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
+                this.startCancellation.cancel();
                 this._notebookPromise = undefined;
-                this.startCancellation = new CancellationTokenSource();
                 throw ex;
             });
         }

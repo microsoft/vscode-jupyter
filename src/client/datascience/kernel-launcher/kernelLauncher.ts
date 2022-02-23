@@ -22,7 +22,6 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
-import { IDisplayOptions, IKernelDependencyService } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
@@ -53,7 +52,6 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
@@ -104,23 +102,9 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        ui: IDisplayOptions,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const promise = (async () => {
-            // If this is a python interpreter, make sure it has ipykernel
-            if (kernelConnectionMetadata.interpreter) {
-                await this.kernelDependencyService.installMissingDependencies(
-                    resource,
-                    kernelConnectionMetadata,
-                    ui,
-                    cancelToken
-                );
-                if (cancelToken.isCancellationRequested) {
-                    throw new CancellationError();
-                }
-            }
-
             void this.logIPyKernelPath(resource, kernelConnectionMetadata);
 
             // Should be available now, wait with a timeout

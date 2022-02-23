@@ -87,6 +87,7 @@ export async function openNotebook(ipynbFile: string) {
     const nb = await vscode.workspace.openNotebookDocument(uri);
     await vscode.window.showNotebookDocument(nb);
     traceInfo(`Opened notebook ${ipynbFile}`);
+    return nb;
 }
 
 export async function createStandaloneInteractiveWindow(interactiveWindowProvider: InteractiveWindowProvider) {

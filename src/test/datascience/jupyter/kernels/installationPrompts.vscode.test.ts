@@ -43,8 +43,10 @@ import {
     waitForKernelToChange,
     waitForKernelToGetAutoSelected,
     defaultNotebookTestTimeout,
-    assertVSCCellIsNotRunning
+    assertVSCCellIsNotRunning,
+    insertCodeCell
 } from '../../notebook/helper';
+import * as kernelSelector from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -91,6 +93,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         configSettings = configService.getSettings(undefined) as any;
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
         configSettings.disableJupyterAutoStart = true;
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        await pythonApi.refreshInterpreters({ clearCache: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [interpreter1, interpreter2] = await Promise.all([
             interpreterService.getInterpreterDetails(venvPythonPath),
@@ -125,8 +129,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvNoRegPath)
         ]);
 
-        // Make sure venv is the active interpreter
+        // Make sure venvPythonPath is the active interpreter (it does not have ipykernel installed)
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        await pythonApi.setActiveInterpreter(venvPythonPath);
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
     });
@@ -311,15 +316,37 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const prompt = await hijackPrompt(
             'showInformationMessage',
             { endsWith: expectedPromptMessageSuffix },
-            { dismissPrompt: true },
+            { text: DataScience.selectKernel(), clickImmediately: true },
             disposables
         );
 
-        // Create a dummy environment to make sure we have something that doesn't have ipykernel
+        // Hijack the select kernel functionality so it selects the correct kernel
+        const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(function () {
+            return waitForKernelToChange({ interpreterPath: venvNoRegPath });
+        } as any);
+        const disposable = { dispose: () => stub.restore() };
+        if (disposables) {
+            disposables.push(disposable);
+        }
+
+        await openNotebook(nbFile);
+        await waitForKernelToGetAutoSelected();
+        let cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        assert.equal(cell.outputs.length, 0);
+
+        // Insert another cell so we can test run all
+        await insertCodeCell('print("foo")');
+
+        // The prompt should be displayed when we run a cell.
+        const runPromise = runAllCellsInActiveNotebook();
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
+
+        // We should switch to the kernel that has ipykernel
+        await waitForKernelToChange({ interpreterPath: venvNoRegPath });
+
+        // Now the run should finish
+        await runPromise;
+        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await waitForExecutionCompletedSuccessfully(cell);
     });
-    // TODO:
-    // - IPykernel not installed - cancel shows cancel error (interactive and notebook)
-    // - IPykernel not installed - switch moves to new kernel (interactive and notebook)
-    // - IPykernel not installed - installing works
-    // - IPykernel not installed with run all - switch moves to new kernel (interactive and notebook)
 });

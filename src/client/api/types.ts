@@ -129,6 +129,12 @@ export type PythonApi = {
      *                    is triggered.
      */
     refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
+    /**
+     * Changes the active interpreter in use by the python extension
+     * @param interpreterPath
+     * @param resource
+     */
+    setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
 };
 
 type RefreshInterpretersOptions = {
