@@ -20,7 +20,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-jupyter/issues"
     },
-    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter",
+    "qna": "https://github.com/microsoft/vscode-jupyter/discussions",
     "icon": "icon.png",
     "galleryBanner": {
         "color": "#ffffff",
