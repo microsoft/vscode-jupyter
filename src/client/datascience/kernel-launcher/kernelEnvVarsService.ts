@@ -65,6 +65,7 @@ export class KernelEnvironmentVariablesService {
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
+        const hasInterpreterEnv = interpreterEnv != undefined;
         interpreterEnv = interpreterEnv || {};
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -106,11 +107,13 @@ export class KernelEnvironmentVariablesService {
             this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.path));
         }
 
-        // Ensure global site_packages are not in the path.
+        // Ensure global site_packages are not in the path for non global environments
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        mergedVars.PYTHONNOUSERSITE = 'True';
+        if (hasInterpreterEnv) {
+            mergedVars.PYTHONNOUSERSITE = 'True';
+        }
 
         return mergedVars;
     }
