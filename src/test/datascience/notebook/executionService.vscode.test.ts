@@ -184,7 +184,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             }
         );
 
-        await Promise.all([runCell(cell), waitForTextOutput(cell, 'HelloWorldEnvVariable', 0, false)]);
+        await Promise.all([
+            runCell(cell),
+            waitForTextOutput(cell, 'HelloWorldEnvVariable', 0, false),
+            waitForTextOutput(cell, 'dummyFolderForPythonPath', 0, false)
+        ]);
     });
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
