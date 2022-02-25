@@ -1,5 +1,83 @@
 # Changelog
 
+## 2022.2.101 (25 February 2022)
+
+### Enhancements
+
+1. When a new Conda Environment is created, refresh the list of kernels to include this new Conda environment.
+   ([#8508](https://github.com/Microsoft/vscode-jupyter/issues/8508))
+1. Modify command `jupyter.selectjupyteruri` to allow URI parameter.
+   (Thanks [C-SELLERS](https://github.com/C-SELLERS))
+   ([#8918](https://github.com/Microsoft/vscode-jupyter/issues/8918))
+
+### Fixes
+
+1. Add `jupyter.logKernelOutputSeparately` to expose the console logs of a kernel and or jupyter server (when we don't start a kernel directly ourselves). This option should make it easier to diagnose kernel only problems.
+   ([#4954](https://github.com/Microsoft/vscode-jupyter/issues/4954))
+1. Handle situations where nbconvert is installed but jupyter is not installed (our dependency installer will install both).
+   ([#6838](https://github.com/Microsoft/vscode-jupyter/issues/6838))
+1. Re-run the cells when changing kernels due to missing `ipykernel`.
+   ([#8381](https://github.com/Microsoft/vscode-jupyter/issues/8381))
+1. Support connecting to remote kernels that are busy.
+   ([#8414](https://github.com/Microsoft/vscode-jupyter/issues/8414))
+1. When using "Show in Data Viewer" from the python debug variables menu prompt to install pandas if it's not there already.
+   ([#8423](https://github.com/Microsoft/vscode-jupyter/issues/8423))
+1. Give preference to `cellId` in the cell metadata when sending cell metadata over for execution.
+   ([#8761](https://github.com/Microsoft/vscode-jupyter/issues/8761))
+1. Rename labels to match the new feature of allowing remote and local connections to exist simultaneously.
+   ([#8780](https://github.com/Microsoft/vscode-jupyter/issues/8780))
+1. Refresh the remote kernel connection count in kernels for Interactive Window.
+   ([#8798](https://github.com/Microsoft/vscode-jupyter/issues/8798))
+1. Do not execute startup code if there isn't any.
+   ([#8879](https://github.com/Microsoft/vscode-jupyter/issues/8879))
+1. Fix completions for dataframe columns.
+   ([#8888](https://github.com/Microsoft/vscode-jupyter/issues/8888))
+1. Provide a better message to indicate when we have no variables yet and are fetching them instead of saying no variables defined.
+   ([#8898](https://github.com/Microsoft/vscode-jupyter/issues/8898))
+1. Make autocomplete return faster regardless of how long pylance takes to return.
+   ([#8906](https://github.com/Microsoft/vscode-jupyter/issues/8906))
+1. Fix kernel dying when interrupting on Windows.
+   ([#8945](https://github.com/Microsoft/vscode-jupyter/issues/8945))
+1. Fix our waiting for RequestKernelInfo (might have been hurting raw kernel start some).
+   ([#8989](https://github.com/Microsoft/vscode-jupyter/issues/8989))
+1. Avoid waiting for completions during kernel startup (as completions request could fail without a response).
+   ([#9014](https://github.com/Microsoft/vscode-jupyter/issues/9014))
+1. Adopt new [`notebookKernel` contextkey](https://github.com/microsoft/vscode/pull/143163) (1.65) to prevent our interactive window toolbar from appearing on IWs belonging to other extensions.
+   (Thanks [gjsjohnmurray](https://github.com/gjsjohnmurray))
+   ([#9037](https://github.com/Microsoft/vscode-jupyter/issues/9037))
+1. Leverage new [`notebookKernel` contextkey](https://github.com/microsoft/vscode/pull/143163) and [IW placeholder text fix](https://github.com/microsoft/vscode/pull/143211) (1.65) to prevent our interactive window `Shift+Enter` keybinding from affecting IWs belonging to other extensions.
+   (Thanks [gjsjohnmurray](https://github.com/gjsjohnmurray))
+   ([#9038](https://github.com/Microsoft/vscode-jupyter/issues/9038))
+1. Correctly handle tilde in python traceback file path links.
+   ([#9058](https://github.com/Microsoft/vscode-jupyter/issues/9058))
+1. When running `shell commands`, ensure the kernel first looks for executables in Python Environment associated with the Kernel.
+   E.g. commands such as `!pip` and `!python` will point to the `pip` and `python` executable associated with the kernel.
+   ([#9089](https://github.com/Microsoft/vscode-jupyter/issues/9089))
+
+### Code Health
+
+1. Add 'goto definition' test from a notebook.
+   ([#5125](https://github.com/Microsoft/vscode-jupyter/issues/5125))
+1. Switch to building with webpack 5.
+   ([#7827](https://github.com/Microsoft/vscode-jupyter/issues/7827))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.1.120 (January Release on 11 February 2022)
 
 ### Fixes
