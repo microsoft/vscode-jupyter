@@ -1,4 +1,4 @@
-# Jupyter Extension for Visual Studio Code
+# Jupyter Extension for Visual Studio Code (with a checkin)
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
@@ -15,7 +15,7 @@ The Jupyter Extension uses the [built-in notebook support](https://code.visualst
 -   Includes a [notebook-friendly diff tool](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_custom-notebook-diffing), making it much easier to compare and see differences between code cells, output and metadata.
 -   Extensibility beyond what the Jupyter extension provides. Extensions can now add their own language or runtime-specific take on notebooks, such as the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) and [Gather](https://marketplace.visualstudio.com/items?itemName=ms-python.gather)
 -   While the Jupyter extension comes packaged with a large set of the most commonly used renderers for output, the marketplace supports [custom installable renderers](https://marketplace.visualstudio.com/search?term=tag%3Arenderer&target=VSCode&category=All%20categories&sortBy=Relevance) to make working with your notebooks even more productive. To get started writing your own, see [VS Code's renderer api documentation](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer).
-<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/notebookui.png?>
+    <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/notebookui.png?>
 
 ## Working with Python
 
@@ -68,7 +68,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 
 | Command                                          | Description                                                            |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `Jupyter: Create New Jupyter Notebook`             | Create a new blank Jupyter Notebook                                    |
+| `Jupyter: Create New Jupyter Notebook`           | Create a new blank Jupyter Notebook                                    |
 | `Notebook: Select Notebook Kernel`               | Select or switch kernels within your notebook                          |
 | `Notebook: Change Cell Language`                 | Change the language of the cell currently in focus                     |
 | `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF |
@@ -89,7 +89,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Discussions](https://github.com/microsoft/vscode-jupyter/discussions). Our [wiki](https://github.com/microsoft/vscode-jupyter/wiki) can be a source of information as well. 
+-   If you have a question about how to accomplish something with the extension, please [ask on Discussions](https://github.com/microsoft/vscode-jupyter/discussions). Our [wiki](https://github.com/microsoft/vscode-jupyter/wiki) can be a source of information as well.
 -   Any and all feedback is appreciated and welcome! If you come across a problem or bug with the extension, please [file an issue](https://github.com/microsoft/vscode-jupyter/issues/new/choose).
 
     -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-jupyter/issues) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
