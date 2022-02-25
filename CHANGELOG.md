@@ -53,7 +53,9 @@
 1. When running `shell commands`, ensure the kernel first looks for executables in Python Environment associated with the Kernel.
    E.g. commands such as `!pip` and `!python` will point to the `pip` and `python` executable associated with the kernel.
    ([#9089](https://github.com/Microsoft/vscode-jupyter/issues/9089))
-
+1. Fix 'ipykernel_launcher' not found when using a global python environment and '.env' file exists.
+   ([#9127](https://github.com/Microsoft/vscode-jupyter/issues/9127))
+   
 ### Code Health
 
 1. Add 'goto definition' test from a notebook.
