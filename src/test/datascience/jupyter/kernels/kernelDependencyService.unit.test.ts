@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { WrappedError } from '../../../../client/common/errors/types';
