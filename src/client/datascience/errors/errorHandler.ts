@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
-import { inject, injectable } from 'inversify';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { inject, injectable, named } from 'inversify';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
-import { traceWarning } from '../../common/logger';
+import { traceError, traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
+import { getLanguageInNotebookMetadata, isPythonKernelConnection } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
@@ -22,6 +23,8 @@ import {
     CancellationError as VscCancellationError,
     CancellationTokenSource,
     ConfigurationTarget,
+    EventEmitter,
+    Memento,
     NotebookCell,
     NotebookCellOutput,
     NotebookCellOutputItem
@@ -34,13 +37,20 @@ import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { PythonKernelDiedError } from './pythonKernelDiedError';
 import {
     analyzeKernelErrors,
-    getErrorMessageFromPythonTraceback,
+    getErrorMessageFromPythonTraceback as getErrorMessageFromPythonTraceBack,
     KernelFailure,
     KernelFailureReason
 } from '../../common/errors/errorUtils';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IBrowserService,
+    IConfigurationService,
+    IMemento,
+    Product,
+    Resource
+} from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
@@ -53,10 +63,20 @@ import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpr
 import { ProductNames } from '../../common/installer/productNames';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
-import { translateProductToModule } from '../../common/installer/productInstaller';
+import {
+    clearInstalledIntoInterpreterMemento,
+    translateProductToModule
+} from '../../common/installer/productInstaller';
+import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
+import { selectKernel } from '../jupyter/kernels/kernelSelector';
 
+function getFirstCell(cells?: NotebookCell[]) {
+    return cells?.length ? cells[0] : undefined;
+}
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
+    private readonly _onShouldRunCells = new EventEmitter<NotebookCell[]>();
+    public readonly onShouldRunCells = this._onShouldRunCells.event;
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IJupyterInterpreterDependencyManager)
@@ -66,7 +86,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
@@ -78,13 +99,21 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
+        pendingCells?: NotebookCell[]
     ): Promise<void> {
         traceWarning('Kernel Error', err);
-        await this.handleErrorImplementation(
+        if (kernelConnection.interpreter && purpose === 'start') {
+            // If we failed to start the kernel, then clear cache used to track
+            // whether we have dependencies installed or not.
+            // Possible something is missing.
+            void clearInstalledIntoInterpreterMemento(this.memento, undefined, kernelConnection.interpreter.path);
+        }
+        return this.handleErrorImplementation(
             err,
             purpose,
-            cellToDisplayErrors,
+            kernelConnection,
+            resource,
+            pendingCells,
             async (error: BaseError, defaultErrorMessage?: string) => {
                 const failureInfo = analyzeKernelErrors(
                     error.stdErr || '',
@@ -92,41 +121,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     kernelConnection.interpreter?.sysPrefix,
                     err instanceof JupyterConnectError
                 );
-                if (
-                    err instanceof IpyKernelNotInstalledError &&
-                    err.reason === KernelInterpreterDependencyResponse.uiHidden &&
-                    (purpose === 'start' || purpose === 'restart') &&
-                    kernelConnection.interpreter &&
-                    kernelConnection.kind !== 'connectToLiveKernel' &&
-                    kernelConnection.kind !== 'startUsingRemoteKernelSpec'
-                ) {
-                    // Its possible auto start ran and UI was disabled, but subsequently
-                    // user attempted to run a cell, & the prompt wasn't displayed to the user.
-                    const token = new CancellationTokenSource();
-                    await this.kernelDependency
-                        .installMissingDependencies(
-                            resource,
-                            kernelConnection,
-                            new DisplayOptions(false),
-                            token.token,
-                            true
-                        )
-                        .finally(() => token.dispose());
-                    return;
-                } else if (
-                    err instanceof IpyKernelNotInstalledError &&
-                    (purpose === 'start' || purpose === 'restart')
-                ) {
-                    cellToDisplayErrors = err.firstQueuedCell || cellToDisplayErrors;
-                    if (!err.anotherKernelSelected) {
-                        void this.displayIPyKernelMissingErrorInCell(kernelConnection, cellToDisplayErrors);
-                    }
+                if (err instanceof IpyKernelNotInstalledError && (purpose === 'start' || purpose === 'restart')) {
+                    void this.handleIPyKernelNotInstalledError(err, purpose, kernelConnection, resource, pendingCells);
                     return;
                 } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
-                    void this.displayJupyterMissingErrorInCell(err, kernelConnection, cellToDisplayErrors);
+                    void this.displayJupyterMissingErrorInCell(err, kernelConnection, getFirstCell(pendingCells));
                     return;
                 } else if (err instanceof JupyterConnectError) {
-                    void this.handleJupyterStartupError(failureInfo, err, kernelConnection, cellToDisplayErrors);
+                    void this.handleJupyterStartupError(failureInfo, err, kernelConnection, getFirstCell(pendingCells));
                     return;
                 }
 
@@ -137,7 +139,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                 getDisplayPath(failureInfo.fileName, this.workspace.workspaceFolders || [])
                             ),
                             'https://aka.ms/kernelFailuresOverridingBuiltInModules',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
@@ -163,9 +165,18 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             } catch (ex) {
                                 // Handle instances where installation failed or or cancelled it.
                                 if (ex instanceof IpyKernelNotInstalledError) {
+                                    if (ex.selectAnotherKernel) {
+                                        void this.displayKernelPickerAndReRunCells(
+                                            kernelConnection,
+                                            resource,
+                                            pendingCells
+                                        );
+                                        return;
+                                    }
+
                                     await this.displayIPyKernelMissingErrorInCell(
                                         kernelConnection,
-                                        cellToDisplayErrors
+                                        getFirstCell(pendingCells)
                                     );
                                 } else {
                                     throw ex;
@@ -175,7 +186,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToMissingModule().format(failureInfo.moduleName),
                                 'https://aka.ms/kernelFailuresMissingModule',
-                                cellToDisplayErrors
+                                getFirstCell(pendingCells)
                             );
                         }
                         break;
@@ -191,13 +202,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                     fileName
                                 ),
                                 'https://aka.ms/kernelFailuresModuleImportErrFromFile',
-                                cellToDisplayErrors
+                                getFirstCell(pendingCells)
                             );
                         } else {
                             await this.showMessageWithMoreInfo(
                                 DataScience.failedToStartKernelDueToImportFailure().format(failureInfo.moduleName),
                                 'https://aka.ms/kernelFailuresModuleImportErr',
-                                cellToDisplayErrors
+                                getFirstCell(pendingCells)
                             );
                         }
                         break;
@@ -209,7 +220,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             message,
                             'https://aka.ms/kernelFailuresDllLoad',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
@@ -217,7 +228,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToWin32APIFailure(),
                             'https://aka.ms/kernelFailuresWin32Api',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
@@ -225,7 +236,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToPyZmqFailure(),
                             'https://aka.ms/kernelFailuresPyzmq',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
@@ -233,7 +244,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToOldIPython(),
                             'https://aka.ms/kernelFailuresOldIPython',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
@@ -241,18 +252,163 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         await this.showMessageWithMoreInfo(
                             DataScience.failedToStartKernelDueToOldIPyKernel(),
                             'https://aka.ms/kernelFailuresOldIPyKernel',
-                            cellToDisplayErrors
+                            getFirstCell(pendingCells)
                         );
                         break;
                     }
                     default:
                         if (defaultErrorMessage) {
-                            void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                            void this.displayErrorsInCell(defaultErrorMessage, getFirstCell(pendingCells));
                             await this.applicationShell.showErrorMessage(defaultErrorMessage);
                         }
                 }
             }
         );
+    }
+    private async handleIPyKernelNotInstalledError(
+        err: Error,
+        purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
+        kernelConnection?: KernelConnectionMetadata,
+        resource?: Resource,
+        pendingCells?: NotebookCell[]
+    ) {
+        if (!kernelConnection || !(err instanceof IpyKernelNotInstalledError)) {
+            return;
+        }
+        if (purpose !== 'start' && purpose !== 'restart') {
+            return;
+        }
+        if (err.reason === KernelInterpreterDependencyResponse.uiHidden && kernelConnection.interpreter) {
+            if (err.selectAnotherKernel) {
+                return this.displayKernelPickerAndReRunCells(kernelConnection, resource, pendingCells);
+            }
+            // Its possible auto start ran and UI was disabled, but subsequently
+            // user attempted to run a cell, & the prompt wasn't displayed to the user.
+            const token = new CancellationTokenSource();
+            try {
+                await this.kernelDependency
+                    .installMissingDependencies(
+                        resource,
+                        kernelConnection,
+                        new DisplayOptions(false),
+                        token.token,
+                        true
+                    )
+                    .finally(() => token.dispose());
+            } catch (ex) {
+                if (ex instanceof IpyKernelNotInstalledError) {
+                    if (ex.selectAnotherKernel) {
+                        return this.displayKernelPickerAndReRunCells(kernelConnection, resource, pendingCells);
+                    } else {
+                        return this.displayIPyKernelMissingErrorInCell(
+                            kernelConnection,
+                            pendingCells ? pendingCells[0] : undefined
+                        );
+                    }
+                }
+                traceError(`IPyKernel not installed`, ex);
+            }
+            return;
+        } else if (purpose === 'start' || purpose === 'restart') {
+            if (err.selectAnotherKernel) {
+                return this.displayKernelPickerAndReRunCells(kernelConnection, resource, pendingCells);
+            } else {
+                return this.displayIPyKernelMissingErrorInCell(
+                    kernelConnection,
+                    pendingCells ? pendingCells[0] : undefined
+                );
+            }
+        }
+    }
+    private async displayKernelPickerAndReRunCells(
+        _kernelConnection: KernelConnectionMetadata,
+        resource: Resource,
+        pendingCells?: NotebookCell[]
+    ) {
+        if (
+            await selectKernel(
+                resource,
+                this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
+                this.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider),
+                this.serviceContainer.get<ICommandManager>(ICommandManager)
+            )
+        ) {
+            if (!pendingCells || pendingCells.length === 0) {
+                return;
+            }
+            // Display kernel picker & then trigger an execution of the cells.
+            this._onShouldRunCells.fire(Array.from(pendingCells || []));
+        }
+    }
+    /**
+     * Sometimes kernel execution fails as ipykernel or similar dependencies are not installed.
+     * This could happen when we assume its installed (based on some previous cache) & then attempt to start.
+     * E.g. user re-creates the virtual env, or re-installs python, in that case ipykernel is no longer available.
+     *
+     * In these cases, check if the dependencies are available or not, & if not, then prompt to install.
+     * If packages are found, then return an lets process the errors as usual.
+     */
+    private async handlePossibleDependencyError(
+        err: Error,
+        defaultErrorMessage: string,
+        kernelConnectionMetadata?: KernelConnectionMetadata,
+        resource?: Resource,
+        pendingCells?: NotebookCell[]
+    ): Promise<undefined | 'ErrorsHandledAndAddressed'> {
+        if (
+            !(err instanceof JupyterInvalidKernelError) &&
+            !(err instanceof KernelDiedError) &&
+            !(err instanceof KernelProcessExitedError)
+        ) {
+            return;
+        }
+        if (!kernelConnectionMetadata || !isPythonKernelConnection(kernelConnectionMetadata)) {
+            return;
+        }
+        if (err instanceof KernelDiedError && !err.message.includes('No module named ipykernel_launcher')) {
+            return;
+        }
+        // Possible ipykernel or other such dependencies is no longer installed in the environment.
+        // Look for the dependencies once again.
+        const installed = await this.kernelDependency.areDependenciesInstalled(
+            kernelConnectionMetadata,
+            undefined,
+            true
+        );
+        if (installed) {
+            return;
+        }
+        const startupUi = new DisplayOptions(false);
+        const token = new CancellationTokenSource();
+        try {
+            const response = await this.kernelDependency.installMissingDependencies(
+                resource,
+                kernelConnectionMetadata,
+                startupUi,
+                token.token,
+                true
+            );
+            // If we have successfully installed, then re-run the cells.
+            if (response === 'dependenciesInstalled' && pendingCells?.length) {
+                // Re-run the cells as dependencies were installed.
+                this._onShouldRunCells.fire(pendingCells);
+            }
+        } catch (ex) {
+            traceError(`Missing dependencies not installed`, ex);
+            const cellToDisplayErrors =
+                Array.isArray(pendingCells) && pendingCells.length ? pendingCells[0] : undefined;
+            if (ex instanceof IpyKernelNotInstalledError) {
+                if (ex.selectAnotherKernel) {
+                    void this.displayKernelPickerAndReRunCells(kernelConnectionMetadata, resource, pendingCells);
+                    return;
+                }
+                void this.displayIPyKernelMissingErrorInCell(kernelConnectionMetadata, cellToDisplayErrors);
+            } else {
+                void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
+            }
+        }
+        return 'ErrorsHandledAndAddressed';
     }
     private async showMessageWithMoreInfo(
         message: string,
@@ -329,7 +485,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     private async handleErrorImplementation(
         err: Error,
         purpose?: 'start' | 'restart' | 'interrupt' | 'execution',
-        cellToDisplayErrors?: NotebookCell,
+        kernelConnectionMetadata?: KernelConnectionMetadata,
+        resource?: Resource,
+        pendingCells?: NotebookCell[],
         handler?: (error: BaseError, defaultErrorMessage?: string) => Promise<void>
     ): Promise<void> {
         const errorPrefix = getErrorMessagePrefix(purpose);
@@ -364,15 +522,12 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     }
                 });
         } else if (err instanceof IpyKernelNotInstalledError) {
-            if ((purpose === 'start' || purpose === 'restart') && handler) {
-                await handler(err);
-            }
-            noop();
+            void this.handleIPyKernelNotInstalledError(err, purpose, kernelConnectionMetadata, resource, pendingCells);
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
-            void this.displayErrorsInCell(err.message, cellToDisplayErrors);
+            void this.displayErrorsInCell(err.message, getFirstCell(pendingCells));
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
             err instanceof KernelDiedError ||
@@ -383,18 +538,38 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             const defaultErrorMessage = getCombinedErrorMessage(
                 errorPrefix,
                 // PythonKernelDiedError has an `errorMessage` property, use that over `err.stdErr` for user facing error messages.
-                'errorMessage' in err ? err.errorMessage : getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr
+                'errorMessage' in err ? err.errorMessage : getErrorMessageFromPythonTraceBack(err.stdErr) || err.stdErr
             );
+            const result = await this.handlePossibleDependencyError(
+                err,
+                defaultErrorMessage,
+                kernelConnectionMetadata,
+                resource,
+                pendingCells
+            );
+            if (result === 'ErrorsHandledAndAddressed') {
+                return;
+            }
             if ((purpose === 'restart' || purpose === 'start') && handler) {
                 await handler(err, defaultErrorMessage);
             } else {
-                void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                void this.displayErrorsInCell(defaultErrorMessage, getFirstCell(pendingCells));
                 this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
             }
         } else {
             // Some errors have localized and/or formatted error messages.
             const message = getCombinedErrorMessage(errorPrefix, err.message || err.toString());
-            void this.displayErrorsInCell(message, cellToDisplayErrors);
+            const result = await this.handlePossibleDependencyError(
+                err,
+                message,
+                kernelConnectionMetadata,
+                resource,
+                pendingCells
+            );
+            if (result === 'ErrorsHandledAndAddressed') {
+                return;
+            }
+            void this.displayErrorsInCell(message, getFirstCell(pendingCells));
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }

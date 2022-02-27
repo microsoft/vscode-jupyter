@@ -816,7 +816,7 @@ export async function runAllCellsInActiveNotebook() {
  */
 export async function hijackPrompt(
     promptType: 'showErrorMessage' | 'showInformationMessage',
-    message: { exactMatch: string } | { endsWith: string },
+    message: { exactMatch: string } | { endsWith: string } | { contains: string },
     buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
     disposables: IDisposable[] = []
 ): Promise<{
@@ -838,6 +838,7 @@ export async function hijackPrompt(
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
+            ('contains' in message && msg.trim().includes(message.contains.trim())) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
             traceInfo(`Exact Message found '${msg}'`);

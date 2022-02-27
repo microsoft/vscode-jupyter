@@ -7,14 +7,21 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
+import { WrappedError } from '../../../../client/common/errors/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { getResourceType } from '../../../../client/datascience/common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
+import { IpyKernelNotInstalledError } from '../../../../client/datascience/errors/ipyKernelNotInstalledError';
 import { createInterpreterKernelSpec } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../../../client/datascience/types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IRawNotebookSupportedService,
+    KernelInterpreterDependencyResponse
+} from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -29,7 +36,6 @@ suite('DataScience - Kernel Dependency Service', () => {
     let cmdManager: ICommandManager;
     let installer: IInstaller;
     let serviceContainer: IServiceContainer;
-    let vscNotebooks: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
     let memento: Memento;
     let editor: NotebookEditor;
@@ -47,7 +53,6 @@ suite('DataScience - Kernel Dependency Service', () => {
         cmdManager = mock<ICommandManager>();
         serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
-        vscNotebooks = mock<IVSCodeNotebook>();
         kernelProvider = mock<IKernelProvider>();
         notebooks = mock<IVSCodeNotebook>();
         when(kernelProvider.kernels).thenReturn([]);
@@ -56,14 +61,14 @@ suite('DataScience - Kernel Dependency Service', () => {
         when(serviceContainer.get<IKernelProvider>(IKernelProvider)).thenReturn(instance(kernelProvider));
         when(cmdManager.executeCommand('notebook.selectKernel', anything())).thenResolve();
         when(notebooks.notebookDocuments).thenReturn([]);
+        const rawSupport = mock<IRawNotebookSupportedService>();
+        when(rawSupport.isSupported).thenReturn(true);
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),
             instance(memento),
             false,
-            instance(cmdManager),
-            instance(notebooks),
-            instance(vscNotebooks),
+            instance(rawSupport),
             instance(serviceContainer)
         );
     });
@@ -202,18 +207,19 @@ suite('DataScience - Kernel Dependency Service', () => {
                     DataScience.selectKernel() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(
-                    resource,
-                    metadata,
-                    new DisplayOptions(false),
-                    token.token
-                );
-
-                await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
-
-                verify(
-                    cmdManager.executeCommand('notebook.selectKernel', deepEqual({ notebookEditor: instance(editor) }))
-                ).once();
+                try {
+                    await dependencyService.installMissingDependencies(
+                        resource,
+                        metadata,
+                        new DisplayOptions(false),
+                        token.token
+                    );
+                    assert.fail('Should have failed with an exception');
+                } catch (ex) {
+                    const err = WrappedError.unwrap(ex) as IpyKernelNotInstalledError;
+                    assert.instanceOf(err, IpyKernelNotInstalledError, 'IPyKernel not installed error not thrown');
+                    assert.strictEqual(err.reason, KernelInterpreterDependencyResponse.selectDifferentKernel);
+                }
             });
             test('Throw an error if cancelling the prompt', async function () {
                 if (resource === undefined) {
