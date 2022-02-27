@@ -320,7 +320,6 @@ jobs:
         uses: scacap/action-surefire-report@v1
         if: steps.test_unittests.outcome == 'failure' && failure()
         with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
