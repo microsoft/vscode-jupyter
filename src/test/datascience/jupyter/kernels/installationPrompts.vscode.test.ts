@@ -70,7 +70,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let api: IExtensionTestApi;
     let installer: IInstaller;
     let memento: Memento;
-    let installerSpy: sinon.SinonSpy<[product: Product, resource: InterpreterUri, cancel?: CancellationToken | undefined, reInstallAndUpdate?: boolean | undefined, installPipIfRequired?: boolean | undefined], Promise<InstallerResponse>>;
+    let installerSpy: sinon.SinonSpy;
     let kernelProvider: IKernelProvider;
     let commandManager: ICommandManager;
     let vscodeNotebook: IVSCodeNotebook;
@@ -466,7 +466,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                     'Prompt not displayed'
                 ),
                 // ipykernel should get installed.
-                ipykernelInstallRequirement === 'DoNotInstallIPyKernel' ? Promise.resolve() : waitForIPyKernelToGetInstalled(),
+                ipykernelInstallRequirement === 'DoNotInstallIPyKernel'
+                    ? Promise.resolve()
+                    : waitForIPyKernelToGetInstalled(),
                 waitForExecutionCompletedSuccessfully(cell),
                 waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No cell output')
             ]);
