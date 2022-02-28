@@ -122,13 +122,20 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     err instanceof JupyterConnectError
                 );
                 if (err instanceof IpyKernelNotInstalledError && (purpose === 'start' || purpose === 'restart')) {
-                    void this.handleIPyKernelNotInstalledError(err, purpose, kernelConnection, resource, pendingCells);
+                    this.handleIPyKernelNotInstalledError(err, purpose, kernelConnection, resource, pendingCells).catch(
+                        noop
+                    );
                     return;
                 } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
                     void this.displayJupyterMissingErrorInCell(err, kernelConnection, getFirstCell(pendingCells));
                     return;
                 } else if (err instanceof JupyterConnectError) {
-                    void this.handleJupyterStartupError(failureInfo, err, kernelConnection, getFirstCell(pendingCells));
+                    this.handleJupyterStartupError(
+                        failureInfo,
+                        err,
+                        kernelConnection,
+                        getFirstCell(pendingCells)
+                    ).catch(noop);
                     return;
                 }
 
@@ -166,11 +173,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                 // Handle instances where installation failed or or cancelled it.
                                 if (ex instanceof IpyKernelNotInstalledError) {
                                     if (ex.selectAnotherKernel) {
-                                        void this.displayKernelPickerAndReRunCells(
+                                        this.displayKernelPickerAndReRunCells(
                                             kernelConnection,
                                             resource,
                                             pendingCells
-                                        );
+                                        ).catch(noop);
                                         return;
                                     }
 
@@ -258,7 +265,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     }
                     default:
                         if (defaultErrorMessage) {
-                            void this.displayErrorsInCell(defaultErrorMessage, getFirstCell(pendingCells));
+                            this.displayErrorsInCell(defaultErrorMessage, getFirstCell(pendingCells)).catch(noop);
                             await this.applicationShell.showErrorMessage(defaultErrorMessage);
                         }
                 }
@@ -402,12 +409,12 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 Array.isArray(pendingCells) && pendingCells.length ? pendingCells[0] : undefined;
             if (ex instanceof IpyKernelNotInstalledError) {
                 if (ex.selectAnotherKernel) {
-                    void this.displayKernelPickerAndReRunCells(kernelConnectionMetadata, resource, pendingCells);
+                    this.displayKernelPickerAndReRunCells(kernelConnectionMetadata, resource, pendingCells).catch(noop);
                     return;
                 }
-                void this.displayIPyKernelMissingErrorInCell(kernelConnectionMetadata, cellToDisplayErrors);
+                this.displayIPyKernelMissingErrorInCell(kernelConnectionMetadata, cellToDisplayErrors).catch(noop);
             } else {
-                void this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors);
+                this.displayErrorsInCell(defaultErrorMessage, cellToDisplayErrors).catch(noop);
                 this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
             }
         }
@@ -421,7 +428,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (!message.includes(Commands.ViewJupyterOutput)) {
             message = `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
         }
-        void this.displayErrorsInCell(message, cellToDisplayErrors, moreInfoLink);
+        this.displayErrorsInCell(message, cellToDisplayErrors, moreInfoLink).catch(noop);
         const buttons = moreInfoLink ? [Common.learnMore()] : [];
         await this.applicationShell.showErrorMessage(message, ...buttons).then((selection) => {
             if (selection === Common.learnMore() && moreInfoLink) {
@@ -525,7 +532,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     }
                 });
         } else if (err instanceof IpyKernelNotInstalledError) {
-            void this.handleIPyKernelNotInstalledError(err, purpose, kernelConnectionMetadata, resource, pendingCells);
+            this.handleIPyKernelNotInstalledError(err, purpose, kernelConnectionMetadata, resource, pendingCells).catch(
+                noop
+            );
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);
