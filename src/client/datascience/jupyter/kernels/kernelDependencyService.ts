@@ -156,7 +156,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {
             traceInfo(
-                `IPykernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
             );
             return true;
         }
