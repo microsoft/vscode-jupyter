@@ -151,7 +151,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (
             !ignoreCache &&
             // When dealing with Jupyter (non-raw), don't cache, always check.
-            // The reason is even if ipykernel isn't available, the kernel can still be started but doesnt notify a failure to start.
+            // The reason is even if ipykernel isn't available, the kernel will still be started (i.e. the process is started),
+            // However Jupyter doesn't notify a failure to start.
             this.rawSupport.isSupported &&
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {

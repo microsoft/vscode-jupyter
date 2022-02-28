@@ -4,7 +4,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { BaseError, WrappedError } from '../../common/errors/types';
-import { traceError, traceWarning } from '../../common/logger';
+import { traceError, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IpyKernelNotInstalledError } from './ipyKernelNotInstalledError';
@@ -325,6 +325,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         resource: Resource,
         pendingCells?: NotebookCell[]
     ) {
+        traceInfoIfCI(`Display kernel picker to select a different kernel`);
         if (
             await selectKernel(
                 resource,
@@ -334,8 +335,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             )
         ) {
             if (!pendingCells || pendingCells.length === 0) {
+                traceInfoIfCI(`No pending cells to trigger re-run of cells`);
                 return;
             }
+            traceInfoIfCI(`Triggering re-run of cells`);
             // Display kernel picker & then trigger an execution of the cells.
             this._onShouldRunCells.fire(Array.from(pendingCells || []));
         }
