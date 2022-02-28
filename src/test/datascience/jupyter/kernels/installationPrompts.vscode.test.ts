@@ -456,7 +456,11 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
             }
 
             if (interpreterOfNewKernelToSelect) {
-                const result = selectANewKernel(promptToInstall, interpreterOfNewKernelToSelect);
+                const result = selectANewKernel(
+                    promptToInstall,
+                    interpreterOfNewKernelToSelect,
+                    ipykernelInstallRequirement
+                );
                 selectADifferentKernelStub = result.selectADifferentKernelStub;
             }
             const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -524,7 +528,8 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
     type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
     function selectANewKernel(
         promptToInstall: Awaited<ReturnType<typeof selectKernelFromIPyKernelPrompt>>,
-        pythonPathToNewKernel: string
+        pythonPathToNewKernel: string,
+        ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
         traceInfoIfCI(`Switching to kernel that points to ${getDisplayPath(pythonPathToNewKernel)}`);
         // Get the controller that should be selected.
@@ -546,11 +551,13 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
             .stub(commandManager, 'executeCommand')
             .callsFake(async function (cmd: string) {
                 if (cmd === 'notebook.selectKernel') {
-                    // After we change the kernel, we should get a prompt to install ipykernel.
+                    // After we change the kernel, we might get a prompt to install ipykernel.
                     // Ensure we click ok to install.
                     if (promptToInstall.getDisplayCount() > 0) {
                         promptToInstall.dispose();
-                        await clickInstallFromIPyKernelPrompt();
+                        if (ipykernelInstallRequirement === 'ShouldInstallIPYKernel') {
+                            await clickInstallFromIPyKernelPrompt();
+                        }
                     }
                     const result = await commands.executeCommand('notebook.selectKernel', {
                         id: controller.controller.id,

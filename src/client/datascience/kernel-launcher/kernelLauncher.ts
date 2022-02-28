@@ -12,7 +12,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
@@ -110,6 +110,11 @@ export class KernelLauncher implements IKernelLauncher {
         const promise = (async () => {
             // If this is a python interpreter, make sure it has ipykernel
             if (kernelConnectionMetadata.interpreter) {
+                traceVerbose(
+                    `Check dependencies before launch kernel ${kernelConnectionMetadata.id} for ${getDisplayPath(
+                        kernelConnectionMetadata.interpreter.path
+                    )}`
+                );
                 await this.kernelDependencyService.installMissingDependencies(
                     resource,
                     kernelConnectionMetadata,
