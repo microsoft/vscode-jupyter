@@ -273,6 +273,7 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         await installIPyKernel(venvNoRegPath);
 
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
+        console.error('Step1');
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     test('Ensure ipykernel install prompt is displayed & we can install it, after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
@@ -450,13 +451,16 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
 
         try {
             if (!workspace.notebookDocuments.some((item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase())) {
+                console.error('StepA');
                 await openNotebook(nbFile);
+                console.error('StepB');
                 await waitForKernelToChange({ interpreterPath });
             }
 
             const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
             // The prompt should be displayed when we run a cell.
+            console.error('StepC');
             await Promise.all([
                 runAllCellsInActiveNotebook(),
                 waitForCondition(
@@ -482,7 +486,14 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
 
             // Verify ipykernel was not installed if not required.
             if (ipykernelInstallRequirement === 'DoNotInstallIPyKernel') {
-                assert.equal(installerSpy.callCount, 0, 'IPyKernel should not have been installed');
+                if (installerSpy.callCount > 0) {
+                    assert.fail(
+                        `IPyKernel was installed when it should not have been, here are the calls: ${installerSpy
+                            .getCalls()
+                            .map((call) => call.args.map((arg) => arg.toString()).join(', '))
+                            .join('\n')}`
+                    );
+                }
             }
         } finally {
             promptToInstall.dispose();
