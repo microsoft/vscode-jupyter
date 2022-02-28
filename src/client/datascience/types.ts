@@ -38,7 +38,6 @@ import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
-import { VSCodeNotebookController } from './notebook/vscodeNotebookController';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -417,8 +416,6 @@ type InstalledKernelErrorResult = {
 };
 type SwitchedKernelErrorResult = {
     kind: 'Switched';
-    metadata: KernelConnectionMetadata;
-    controller: VSCodeNotebookController;
 };
 
 export type HandleKernelErrorResult =

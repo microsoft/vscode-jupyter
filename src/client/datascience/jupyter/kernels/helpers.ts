@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IDataScienceErrorHandler, IJupyterKernelSpec, IJupyterSession } from '../../types';
+import { IDataScienceErrorHandler, IInteractiveWindowProvider, IJupyterKernelSpec, IJupyterSession } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -44,7 +44,7 @@ import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
 } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { IWorkspaceService } from '../../../common/application/types';
+import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 import { NotebookDocument, Uri } from 'vscode';
@@ -52,6 +52,8 @@ import { IServiceContainer } from '../../../ioc/types';
 import { CancellationError } from '../../../common/cancellation';
 import { INotebookControllerManager } from '../../notebook/types';
 import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
+import { findNotebookEditor, selectKernel } from './kernelSelector';
+import { createDeferred } from '../../../common/utils/async';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1790,6 +1792,32 @@ export async function executeSilently(session: IJupyterSession, code: string): P
 
     return outputs;
 }
+async function switchController(
+    resource: Resource,
+    serviceContainer: IServiceContainer
+): Promise<VSCodeNotebookController | undefined> {
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const editor = findNotebookEditor(resource, notebooks, serviceContainer.get(IInteractiveWindowProvider));
+
+    // Listen for selection change events (may not fire if user cancels)
+    const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+    let controller: VSCodeNotebookController | undefined;
+    const waitForSelection = createDeferred<VSCodeNotebookController>();
+    const disposable = controllerManager.onNotebookControllerSelected((e) => waitForSelection.resolve(e.controller));
+
+    const selected = (await selectKernel(
+        resource,
+        notebooks,
+        serviceContainer.get(IInteractiveWindowProvider),
+        commandManager
+    )) as boolean;
+    if (selected && editor) {
+        controller = await waitForSelection.promise;
+    }
+    disposable.dispose();
+    return controller;
+}
 
 export async function connectToKernel(
     initialController: VSCodeNotebookController,
@@ -1797,7 +1825,6 @@ export async function connectToKernel(
     resource: Resource,
     notebook: NotebookDocument
 ): Promise<IKernel> {
-    const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
     let kernel: IKernel | undefined;
@@ -1832,14 +1859,14 @@ export async function connectToKernel(
                 }
 
                 case 'Switched': {
-                    // Loop around and create the new one. The user switched
+                    // Loop around and create the new one. The user wants to switch
                     kernel.dispose().ignoreErrors();
                     kernel = undefined;
 
                     // Update to the selected controller
-                    controller = controllerManager.getSelectedNotebookController(notebook);
+                    controller = await switchController(resource, serviceContainer);
                     if (!controller) {
-                        throw new Error('Connecting without a controller');
+                        throw error;
                     }
                     break;
                 }

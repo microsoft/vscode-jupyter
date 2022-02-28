@@ -24,7 +24,6 @@ import {
     Product,
     Resource
 } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { ignoreLogging, logValue, TraceOptions } from '../../../logging/trace';
@@ -33,8 +32,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { INotebookControllerManager } from '../../notebook/types';
-import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     HandleKernelErrorResult,
@@ -43,13 +40,7 @@ import {
     IRawNotebookSupportedService,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { findNotebookEditor, selectKernel } from './kernelSelector';
-import {
-    IKernelProvider,
-    KernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from './types';
+import { KernelConnectionMetadata } from './types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -129,7 +120,23 @@ export class KernelDependencyService implements IKernelDependencyService {
             this.installPromises.delete(kernelConnection.interpreter.path);
         }
 
-        return this.handleKernelDependencyResponse(dependencyResponse, kernelConnection, resource, error);
+        switch (dependencyResponse) {
+            case KernelInterpreterDependencyResponse.cancel:
+                return { kind: 'Canceled' };
+            case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                return { kind: 'Switched' };
+            case KernelInterpreterDependencyResponse.failed:
+                return {
+                    kind: 'Error',
+                    error:
+                        error ||
+                        new Error(
+                            DataScience.ipykernelNotInstalled().format(kernelConnection.interpreter?.displayName || '')
+                        )
+                };
+            default:
+                return { kind: 'Installed' };
+        }
     }
     @traceDecorators.verbose('Are Dependencies Installed')
     public async areDependenciesInstalled(
@@ -177,86 +184,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         ]);
     }
 
-    private async handleKernelDependencyResponse(
-        response: KernelInterpreterDependencyResponse,
-        kernelConnection: PythonKernelConnectionMetadata | LocalKernelSpecConnectionMetadata,
-        resource: Resource,
-        ex?: Error | undefined
-    ): Promise<HandleKernelErrorResult> {
-        if (response === KernelInterpreterDependencyResponse.ok) {
-            return { kind: 'Installed' };
-        }
-        const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const kernel = kernelProvider.kernels.find(
-            (item) =>
-                item.kernelConnectionMetadata === kernelConnection &&
-                this.vscNotebook.activeNotebookEditor?.document &&
-                this.vscNotebook.activeNotebookEditor?.document === item.notebookDocument &&
-                (item.resourceUri || '')?.toString() === (resource || '').toString()
-        );
-        let controller: VSCodeNotebookController | undefined;
-        if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const editor = findNotebookEditor(
-                resource,
-                this.notebooks,
-                this.serviceContainer.get(IInteractiveWindowProvider)
-            );
-            if (kernel) {
-                // If user changes the kernel, then the next kernel must run the pending cells.
-                // Store it for the other kernel to pick them up.
-                VSCodeNotebookController.pendingCells.set(kernel.notebookDocument, kernel.pendingCells);
-            }
-
-            // Listen for selection change events (may not fire if user cancels)
-            const controllerManager = this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-            const waitForSelection = createDeferred<VSCodeNotebookController>();
-            const disposable = controllerManager.onNotebookControllerSelected((e) =>
-                waitForSelection.resolve(e.controller)
-            );
-
-            const selected = (await selectKernel(
-                resource,
-                this.notebooks,
-                this.serviceContainer.get(IInteractiveWindowProvider),
-                this.commandManager
-            )) as boolean;
-            if (kernel) {
-                VSCodeNotebookController.pendingCells.delete(kernel.notebookDocument);
-            }
-            if (selected && editor) {
-                controller = await waitForSelection.promise;
-            }
-            disposable.dispose();
-
-            // Change response if we weren't successful in changing the kernel
-            if (!controller) {
-                response = KernelInterpreterDependencyResponse.failed;
-                ex = new Error(
-                    DataScience.rawKernelSessionFailed().format(
-                        kernel?.kernelConnectionMetadata.interpreter?.displayName || ''
-                    )
-                );
-            }
-        }
-
-        switch (response) {
-            case KernelInterpreterDependencyResponse.cancel:
-                return { kind: 'Canceled' };
-            case KernelInterpreterDependencyResponse.selectDifferentKernel:
-                return { kind: 'Switched', metadata: controller?.connection!, controller: controller! };
-            case KernelInterpreterDependencyResponse.failed:
-                return {
-                    kind: 'Error',
-                    error:
-                        ex ||
-                        new Error(
-                            DataScience.ipykernelNotInstalled().format(kernelConnection.interpreter?.displayName || '')
-                        )
-                };
-            default:
-                return { kind: 'Installed' };
-        }
-    }
     private async runInstaller(
         resource: Resource,
         interpreter: PythonEnvironment,
