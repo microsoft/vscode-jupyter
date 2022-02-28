@@ -288,7 +288,6 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
         this.warnWhenUsingOutdatedPython();
-        traceInfoIfCI(`Notebook Controller set ${getDisplayPath(event.notebook.uri)}, ${this.id}`);
         const deferred = createDeferred<void>();
         this.associatedDocuments.set(event.notebook, deferred.promise);
         // Now actually handle the change

@@ -6,7 +6,7 @@ import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/ex
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
-import { traceError, traceInfo, traceInfoIfCI } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 import { compare, SemVer } from 'semver';
@@ -60,8 +60,7 @@ class PythonEnvironment {
         const info = this.getExecutionInfo(args);
         try {
             await this.deps.exec(info.command, info.args);
-        } catch (ex) {
-            traceInfoIfCI(`Module '${moduleName}' not installed ${info.command}`, ex.message);
+        } catch {
             return false;
         }
         return true;

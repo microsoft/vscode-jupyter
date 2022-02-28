@@ -10,7 +10,6 @@ import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/appl
 import { WrappedError } from '../../../../client/common/errors/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../../client/common/installer/productNames';
-import { traceInfoIfCI } from '../../../../client/common/logger';
 import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
@@ -233,16 +232,13 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         }
 
         // Verify we can open a notebook, run a cell and ipykernel prompt should be displayed.
-        console.error('Step1');
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath);
-        console.error('Step2');
         await closeNotebooksAndCleanUpAfterTests();
 
         // Un-install IpyKernel
         await uninstallIPyKernel(venvPythonPath);
 
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
-        console.error('Step3');
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath);
     });
     test('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
@@ -275,7 +271,6 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         await installIPyKernel(venvNoRegPath);
 
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
-        console.error('Step1');
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     test('Ensure ipykernel install prompt is displayed & we can install it, after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
@@ -432,7 +427,6 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
         const installed = createDeferred();
-        console.log(`Running ensure prompt and looking for kernel ${interpreterPath}`);
 
         // Confirm message is displayed.
         let promptToInstall = await (interpreterOfNewKernelToSelect
@@ -449,9 +443,7 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         let selectADifferentKernelStub: undefined | sinon.SinonStub<any[], any>;
         try {
             if (!workspace.notebookDocuments.some((item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase())) {
-                console.error('StepA');
                 await openNotebook(nbFile);
-                console.error('StepB');
                 await waitForKernelToChange({ interpreterPath });
             }
 
@@ -466,7 +458,6 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
             const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
             // The prompt should be displayed when we run a cell.
-            console.error('StepC');
             await Promise.all([
                 runAllCellsInActiveNotebook(),
                 waitForCondition(
@@ -535,7 +526,6 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         pythonPathToNewKernel: string,
         ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
-        traceInfoIfCI(`Switching to kernel that points to ${getDisplayPath(pythonPathToNewKernel)}`);
         // Get the controller that should be selected.
         const controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
         const controller = controllerManager

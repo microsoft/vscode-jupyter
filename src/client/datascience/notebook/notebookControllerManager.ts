@@ -206,7 +206,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // Fetch the list of kernels ignoring the cache.
             this.loadLocalNotebookControllersImpl('ignoreCache')
-                .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
+                .catch((ex) => traceError('Failed to fetch controllers without cache', ex))
                 .finally(() => {
                     this._controllersLoaded = true;
                     let timer: NodeJS.Timeout | number | undefined;
@@ -219,7 +219,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                             timer = setTimeout(
                                 () =>
                                     this.loadLocalNotebookControllersImpl('ignoreCache').catch((ex) =>
-                                        console.error(
+                                        traceError(
                                             'Failed to re-query python kernels after changes to list of interpreters',
                                             ex
                                         )

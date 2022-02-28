@@ -13,7 +13,7 @@ import {
     trackPackageInstalledIntoInterpreter
 } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -88,17 +88,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (token?.isCancellationRequested) {
             return;
         }
-        traceInfoIfCI(
-            `areDependenciesInstalled returned false for ${getDisplayPath(kernelConnection.interpreter.path)}`
-        );
 
         // Cache the install run
         let promise = this.installPromises.get(kernelConnection.interpreter.path);
-        if (promise) {
-            traceInfoIfCI(
-                `Reusing existing promise for installation of ${getDisplayPath(kernelConnection.interpreter.path)}`
-            );
-        } else {
+        if (!promise) {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
@@ -145,7 +138,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return true;
         }
-        traceInfoIfCI(`Looking for ipykernel in ${getDisplayPath(kernelConnection.interpreter.path)}`);
         // Check cache, faster than spawning process every single time.
         // Makes a big difference with conda on windows.
         if (
@@ -171,9 +163,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                     Product.ipykernel,
                     kernelConnection.interpreter
                 );
-                traceInfoIfCI(`ipykernel is installed in ${getDisplayPath(kernelConnection.interpreter!.path)}`);
-            } else {
-                traceInfoIfCI(`ipykernel not installed in ${getDisplayPath(kernelConnection.interpreter!.path)}`);
             }
         });
         return Promise.race([
@@ -254,7 +243,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
-            traceInfoIfCI(`Installation prompt response ${selection}`);
             if (selection === selectKernel) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
@@ -288,9 +276,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                     ),
                     cancellationPromise
                 ]);
-                traceInfoIfCI(
-                    `Installer.install response ${response} for IPyKernel in ${getDisplayPath(interpreter.path)}`
-                );
                 if (response === InstallerResponse.Installed) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                         action: 'installed',
