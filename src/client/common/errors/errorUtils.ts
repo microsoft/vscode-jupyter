@@ -6,7 +6,6 @@ import {
     NotebookCellExecution,
     NotebookCellOutput,
     NotebookCellOutputItem,
-    workspace,
     WorkspaceFolder
 } from 'vscode';
 import { JupyterConnectError } from '../../datascience/errors/jupyterConnectError';
@@ -261,12 +260,16 @@ export type KernelFailure =
     | JupyterStartFailure
     | OldIPythonFailure;
 
-export function analyzeKernelErrors(error: Error | string, pythonSysPrefix: string = ''): KernelFailure | undefined {
+export function analyzeKernelErrors(
+    workspaceFolders: readonly WorkspaceFolder[],
+    error: Error | string,
+    kernelDisplayName: string | undefined,
+    pythonSysPrefix: string = ''
+): KernelFailure | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || '' : '';
+    const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
     const lastTwolinesOfError = getLastTwoLinesFromPythonTracebackWithErrorMessage(stdErrOrStackTrace);
     const stdErr = stdErrOrStackTrace.toLowerCase();
-    const workspaceFolders = workspace.workspaceFolders || [];
 
     if (stdErr.includes("ImportError: No module named 'win32api'".toLowerCase())) {
         // force re-installing ipykernel worked.
@@ -405,7 +408,7 @@ export function analyzeKernelErrors(error: Error | string, pythonSysPrefix: stri
 
     if (lastTwolinesOfError && lastTwolinesOfError[1].toLowerCase().startsWith('importerror')) {
         const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
-        if (info) {
+        if (info && pythonSysPrefix) {
             // First check if we're overriding any built in modules.
             const error = isBuiltInModuleOverwritten(info.moduleName, info.fileName, workspaceFolders, pythonSysPrefix);
             if (error) {
@@ -462,37 +465,42 @@ export function analyzeKernelErrors(error: Error | string, pythonSysPrefix: stri
             .splitLines()
             .map((line) => line.trim())
             .reverse()
-            .find((line) => line.toLowerCase().includes('Error: '.toLowerCase()));
+            .find((line) => line.toLowerCase().includes('error: '));
         // https://github.com/microsoft/vscode-jupyter/issues/8295
         const errorMessageDueToOutdatedTraitlets = "AttributeError: 'Namespace' object has no attribute '_flags'";
         const telemetrySafeTags = ['jupyter.startup.failure'];
         let link: string | undefined;
         let reason = KernelFailureReason.jupyterStartFailure;
+        // Some times the error message is either in the message or the stderr.
+        let pythonError = error.message
+            .splitLines({ removeEmptyEntries: true, trim: true })
+            .reverse()
+            .find((item) => item.toLowerCase().includes('error: '));
+        pythonError =
+            pythonError ||
+            (error.stdErr || '')
+                .splitLines({ removeEmptyEntries: true, trim: true })
+                .reverse()
+                .find((item) => item.toLowerCase().includes('error: '));
         if (stdErr.includes(errorMessageDueToOutdatedTraitlets.toLowerCase())) {
             reason = KernelFailureReason.jupyterStartFailureOutdatedTraitlets;
-            errorMessage = errorMessageDueToOutdatedTraitlets;
+            errorMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
+                kernelDisplayName || '',
+                pythonError || ''
+            );
             telemetrySafeTags.push('outdated.traitlets');
             link = 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated';
-        } else if (!errorMessage) {
-            if (!errorMessage) {
-                // Some times the error message is either in the message or the stderr.
-                errorMessage = error.message
-                    .splitLines({ removeEmptyEntries: true, trim: true })
-                    .reverse()
-                    .find((item) => item.toLowerCase().includes('Error: '));
-                errorMessage =
-                    errorMessage ||
-                    (error.stdErr || '')
-                        .splitLines({ removeEmptyEntries: true, trim: true })
-                        .reverse()
-                        .find((item) => item.toLowerCase().includes('Error: '));
-            }
+        } else {
+            errorMessage = pythonError
+                ? DataScience.failedToStartJupyterWithErrorInfo().format(kernelDisplayName || '', pythonError)
+                : DataScience.failedToStartJupyter().format(kernelDisplayName || '');
+            link = undefined;
         }
         if (errorMessage) {
             return {
                 reason,
                 message: errorMessage,
-                pythonError: errorMessage,
+                pythonError: pythonError,
                 moreInfoLink: link,
                 telemetrySafeTags
             };

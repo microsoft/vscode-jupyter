@@ -51,7 +51,8 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(mock<Memento>())
+            instance(mock<Memento>()),
+            instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
@@ -111,7 +112,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
                     path: 'Hello There',
-                    sysPrefix: 'Something else'
+                    sysPrefix: 'Something else',
+                    displayName: 'Hello (Some Path)'
                 },
                 kernelSpec: {
                     argv: [],
@@ -324,7 +326,7 @@ ImportError: No module named 'xyz'
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailure().format('xyz');
 
-            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErr');
+            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
         });
         test('pyzmq errors', async () => {
             await dataScienceErrorHandler.handleKernelError(

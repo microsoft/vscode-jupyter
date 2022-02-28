@@ -46,7 +46,7 @@ import {
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
 import { ICellHash, ICellHashProvider, IJupyterSession } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -308,7 +308,12 @@ export class CellExecution implements IDisposable {
             this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
         } else {
             // Otherwise it's an error from the kernel itself. Put it into the cell
-            const failureInfo = analyzeKernelErrors(error, this.kernelConnection.interpreter?.sysPrefix);
+            const failureInfo = analyzeKernelErrors(
+                workspace.workspaceFolders || [],
+                error,
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
+                this.kernelConnection.interpreter?.sysPrefix
+            );
             if (failureInfo) {
                 this.execution
                     ?.appendOutput([translateErrorOutput(createErrorOutputFromFailureInfo(failureInfo))])

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { WrappedError } from '../../common/errors/types';
 import { traceWarning } from '../../common/logger';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     HandleKernelErrorResult,
@@ -51,7 +51,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
@@ -115,29 +116,35 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
 
         traceWarning('Kernel Error', err);
         err = WrappedError.unwrap(err);
-        const failureInfo = analyzeKernelErrors(err, kernelConnection.interpreter?.sysPrefix);
-        switch (failureInfo?.reason) {
-            case KernelFailureReason.moduleNotFoundFailure: {
-                if (
-                    failureInfo?.moduleName.toLowerCase().includes('ipykernel') &&
-                    kernelConnection.interpreter &&
-                    (purpose === 'start' || purpose === 'restart')
-                ) {
-                    const token = new CancellationTokenSource();
-                    return this.kernelDependency.installMissingDependencies(
-                        resource,
-                        kernelConnection,
-                        new DisplayOptions(false),
-                        token.token,
-                        true
-                    );
+        const failureInfo = analyzeKernelErrors(
+            this.workspaceService.workspaceFolders || [],
+            err,
+            getDisplayNameOrNameOfKernelConnection(kernelConnection),
+            kernelConnection.interpreter?.sysPrefix
+        );
+        if (failureInfo) {
+            switch (failureInfo?.reason) {
+                case KernelFailureReason.moduleNotFoundFailure: {
+                    if (
+                        failureInfo?.moduleName.toLowerCase().includes('ipykernel') &&
+                        kernelConnection.interpreter &&
+                        (purpose === 'start' || purpose === 'restart')
+                    ) {
+                        const token = new CancellationTokenSource();
+                        return this.kernelDependency.installMissingDependencies(
+                            resource,
+                            kernelConnection,
+                            new DisplayOptions(false),
+                            token.token,
+                            true
+                        );
+                    }
+                    break;
                 }
-                break;
-            }
-            default:
-                if (failureInfo) {
+                default:
                     void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
-                }
+                    break;
+            }
         }
         return { kind: 'Error', error: err };
     }
