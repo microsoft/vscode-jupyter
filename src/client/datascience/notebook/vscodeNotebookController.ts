@@ -312,7 +312,7 @@ export class VSCodeNotebookController implements Disposable {
         }
         // Run the cells after we've completed switching to this controller.
         await promise;
-        traceVerbose(`Re-Run pending cells for controller ${this.id} using ${this.connection.id}`);
+        traceInfoIfCI(`Re-Run pending cells for controller ${this.id} using ${this.connection.id}`);
         await this.handleExecution(cells, cells[0].notebook);
     }
     /**

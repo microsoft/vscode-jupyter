@@ -401,8 +401,11 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
     async function installIPyKernel(pythonExecPath: string) {
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());
-        await proc.exec(pythonExecPath, ['-m', 'pip', 'install', 'ipykernel', '--yes']);
-        const output = await proc.exec(pythonExecPath, ['-c', 'import ipykernel;print(ipykernel.__version__)']);
+        let output = await proc.exec(pythonExecPath, ['-m', 'pip', 'install', 'ipykernel', '--yes']);
+        traceInfoIfCI(
+            `IPyKernel installation response for ${pythonExecPath} is ${output.stdout.trim()}, ${output.stderr?.trim()}`
+        );
+        output = await proc.exec(pythonExecPath, ['-c', 'import ipykernel;print(ipykernel.__version__)']);
         traceInfoIfCI(`IPyKernel version for ${pythonExecPath} is ${output.stdout.trim()}, ${output.stderr?.trim()}`);
     }
     async function selectKernelFromIPyKernelPrompt() {
