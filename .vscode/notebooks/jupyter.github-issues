@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2022-02-17"
+    "value": "$TODAYS_DATE=2022-02-28"
   },
   {
     "kind": 1,
@@ -82,7 +82,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$VSCODE_REPOS is:issue is:open label:$VSCODE_FEATURE_AREAS label:notebook-triage"
+    "value": "$VSCODE_REPOS is:issue is:open label:notebook-triage"
   },
   {
     "kind": 1,
