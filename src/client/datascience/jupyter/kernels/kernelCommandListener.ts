@@ -5,15 +5,23 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { CancellationError } from '../../../common/cancellation';
+import { displayErrorsInCell } from '../../../common/errors/errorUtils';
 import { traceInfo } from '../../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IDataScienceCommandListener, IInteractiveWindowProvider, IStatusProvider } from '../../types';
+import {
+    IDataScienceCommandListener,
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    IStatusProvider
+} from '../../types';
 import { JupyterSession } from '../jupyterSession';
+import { CellExecutionCreator } from './cellExecutionCreator';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
@@ -29,7 +37,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configurationService: IConfigurationService
+        @inject(IConfigurationService) private configurationService: IConfigurationService,
+        @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -105,7 +114,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
         }
-        await kernel.interrupt();
+        await this.wrapKernelMethod('interrupt', document.uri, kernel, () => kernel.interrupt());
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
@@ -142,12 +151,47 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void kernel.restart();
+                    void this.wrapKernelMethod('restart', document.uri, kernel, () => kernel.restart());
                 } else if (response === yes) {
-                    void kernel.restart();
+                    void this.wrapKernelMethod('restart', document.uri, kernel, () => kernel.restart());
                 }
             } else {
-                void kernel.restart();
+                void this.wrapKernelMethod('restart', document.uri, kernel, () => kernel.restart());
+            }
+        }
+    }
+
+    private async wrapKernelMethod(
+        context: 'interrupt' | 'restart',
+        resource: Resource,
+        kernel: IKernel,
+        method: () => Promise<void>
+    ) {
+        // Get currently executing cell
+        const currentCell = kernel.pendingCells[0];
+        try {
+            await method();
+        } catch (ex) {
+            // Translate the result
+            const result = await this.errorHandler.handleKernelError(
+                ex,
+                context,
+                kernel.kernelConnectionMetadata,
+                resource
+            );
+
+            switch (result.kind) {
+                case 'Canceled':
+                    ex = new CancellationError(
+                        DataScience.canceledKernelHeader().format(
+                            kernel.kernelConnectionMetadata.interpreter?.displayName || ''
+                        )
+                    );
+                    break;
+            }
+            if (currentCell) {
+                const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
+                displayErrorsInCell(currentCell, cellExecution, ex).ignoreErrors();
             }
         }
     }

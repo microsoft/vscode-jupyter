@@ -152,7 +152,7 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
-        controller: NotebookController,
+        public readonly controller: NotebookController,
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
@@ -377,11 +377,24 @@ export class Kernel implements IKernel {
         }
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
-            this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
-                this.startCancellation.cancel();
-                this._notebookPromise = undefined;
-                throw ex;
-            });
+            this._notebookPromise = this.createNotebook(new StopWatch())
+                .then((n) => {
+                    // If notebook session is disposed, make sure to clear the promise
+                    n.session.onDidDispose(
+                        () => {
+                            this._notebookPromise = undefined;
+                        },
+                        this,
+                        this.disposables
+                    );
+                    return n;
+                })
+                .catch((ex) => {
+                    // If we fail also clear the promise.
+                    this.startCancellation.cancel();
+                    this._notebookPromise = undefined;
+                    throw ex;
+                });
         }
         return this._notebookPromise;
     }

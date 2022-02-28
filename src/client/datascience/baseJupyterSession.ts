@@ -377,6 +377,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                     traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     session.dispose();
+                    this._disposed.fire();
                     return;
                 }
                 try {
@@ -389,9 +390,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 } catch {
                     noop();
                 }
+                // If session.shutdown didn't work, just dispose
                 if (session && !session.isDisposed) {
                     session.dispose();
                 }
+                this._disposed.fire();
             } catch (e) {
                 // Ignore, just trace.
                 traceWarning(e);

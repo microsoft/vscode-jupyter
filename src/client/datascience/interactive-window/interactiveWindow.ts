@@ -181,7 +181,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             try {
                 // Try creating a kernel
                 initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller.connection);
-                const kernel = await connectToKernel(this.serviceContainer, this.owner, notebook);
+                const kernel = await connectToKernel(controller, this.serviceContainer, this.owner, notebook);
                 // Hook pre interrupt so we can stick in a message
                 kernel.addEventHook(this._kernelEventHook);
                 this.kernelDisposables.push({

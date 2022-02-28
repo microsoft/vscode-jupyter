@@ -390,7 +390,7 @@ export class VSCodeNotebookController implements Disposable {
     @chainable()
     private async connectToKernel(doc: NotebookDocument) {
         // Make sure we don't have multiple cells trying to connect at the same time
-        return connectToKernel(this.serviceContainer, doc.uri, doc);
+        return connectToKernel(this, this.serviceContainer, doc.uri, doc);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

@@ -51,6 +51,7 @@ import { NotebookDocument, Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { CancellationError } from '../../../common/cancellation';
 import { INotebookControllerManager } from '../../notebook/types';
+import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1791,6 +1792,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
 }
 
 export async function connectToKernel(
+    initialController: VSCodeNotebookController,
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument
@@ -1799,13 +1801,8 @@ export async function connectToKernel(
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
     let kernel: IKernel | undefined;
+    let controller: VSCodeNotebookController | undefined = initialController;
     while (kernel === undefined) {
-        // Use the selected controller for this notebook
-        const controller = controllerManager.getSelectedNotebookController(notebook);
-        if (!controller) {
-            throw new Error('Connecting without a controller');
-        }
-
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook, {
             metadata: controller.connection,
@@ -1824,6 +1821,7 @@ export async function connectToKernel(
                     );
 
                 case 'Error':
+                    kernel.dispose().ignoreErrors();
                     throw error;
 
                 case 'Installed': {
@@ -1837,6 +1835,12 @@ export async function connectToKernel(
                     // Loop around and create the new one. The user switched
                     kernel.dispose().ignoreErrors();
                     kernel = undefined;
+
+                    // Update to the selected controller
+                    controller = controllerManager.getSelectedNotebookController(notebook);
+                    if (!controller) {
+                        throw new Error('Connecting without a controller');
+                    }
                     break;
                 }
             }
