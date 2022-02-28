@@ -9,12 +9,12 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable } from 'vscode';
+import { CancellationToken, Disposable, ExtensionMode } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IDisposable, IOutputChannel, Resource } from '../../common/types';
+import { IDisposable, IExtensionContext, IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -48,6 +48,7 @@ export class NotebookStarter implements Disposable {
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
     ) {}
     public dispose() {
@@ -198,6 +199,12 @@ export class NotebookStarter implements Disposable {
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
         promisedArgs.push(Promise.resolve(this.getNotebookDirArgument(workingDirectory)));
+        if (this.context.extensionMode === ExtensionMode.Test) {
+            // When kernels fail to start, Jupyter will attempt to restart 5 times,
+            // & this is very slow in the tests.
+            // Hence disable automatic starts of failed kernels in tests.
+            promisedArgs.push(Promise.resolve('--KernelManager.autorestart=False'));
+        }
         if (useDefaultConfig) {
             promisedArgs.push(this.getConfigArgument(tempDirPromise));
         }

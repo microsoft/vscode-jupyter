@@ -10,19 +10,23 @@ import { traceError } from '../../../common/logger';
 import { KernelConnectionMetadata } from './types';
 import { JVSC_EXTENSION_ID } from '../../../common/constants';
 
+/**
+ * Return `true` if a new kernel has been selected.
+ */
 export async function selectKernel(
     resource: Resource,
     notebooks: IVSCodeNotebook,
     interactiveWindowProvider: IInteractiveWindowProvider | undefined,
     commandManager: ICommandManager
-) {
+): Promise<boolean> {
     const notebookEditor = findNotebookEditor(resource, notebooks, interactiveWindowProvider);
     if (notebookEditor) {
         return commandManager.executeCommand('notebook.selectKernel', {
             notebookEditor
-        });
+        }) as Promise<boolean>;
     }
     traceError(`Unable to select kernel as the Notebook document could not be identified`);
+    return false;
 }
 
 export async function switchKernel(

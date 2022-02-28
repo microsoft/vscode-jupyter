@@ -407,6 +407,11 @@ export interface IInteractiveWindowProvider {
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     /**
+     * Event raised when an error has been handled and the cells need to be
+     * executed with the currently active kernel (kernel associated with cells)
+     */
+    onShouldRunCells: Event<NotebookCell[]>;
+    /**
      * Handles the errors and if necessary displays an error message.
      * The value of `context` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
      * Thus based on the context the error message would be different.
@@ -420,7 +425,7 @@ export interface IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource,
-        cellToDisplayErrors?: NotebookCell
+        pendingCells?: readonly NotebookCell[]
     ): Promise<void>;
 }
 
@@ -1006,7 +1011,7 @@ export interface IKernelDependencyService {
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<void>;
+    ): Promise<void | 'dependenciesInstalled' | 'differentKernelSelected'>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
