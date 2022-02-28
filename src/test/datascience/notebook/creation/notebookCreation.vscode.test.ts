@@ -74,7 +74,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         );
     }
     test('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
-        await creationOptions.registerNewNotebookContent('julia');
+        await creationOptions.registerNewNotebookContent('javascript');
         assert.equal(creationOptions.registrations.length, 1);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
 
@@ -83,7 +83,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
             traceInfo(`Quick Pick displayed to user`);
             assert.isAtLeast(items.length, 2);
 
-            // If this is the first time this prompt was displayed, then select the second item (julia).
+            // If this is the first time this prompt was displayed, then select the second item (javascript).
             if (stub.callCount === 1) {
                 return items[1];
             }
@@ -93,8 +93,8 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         });
         disposables.push({ dispose: () => stub.restore() });
 
-        // Create a blank notebook & we should have a julia cell.
-        await createNotebookAndValidateLanguageOfFirstCell('julia');
+        // Create a blank notebook & we should have a javascript cell.
+        await createNotebookAndValidateLanguageOfFirstCell('javascript');
         assert.equal(stub.callCount, 1);
 
         await closeActiveWindows();
@@ -110,23 +110,23 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         // Create a blank notebook & it should just work.
         await createNotebookAndValidateLanguageOfFirstCell(PYTHON_LANGUAGE.toLowerCase());
     });
-    test('Create Java & Julia Notebook using API', async function () {
-        await api.createBlankNotebook({ defaultCellLanguage: 'java' });
+    test('Create javascript & powershell Notebook using API', async function () {
+        await api.createBlankNotebook({ defaultCellLanguage: 'javascript' });
 
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
         assert.strictEqual(
             vscodeNotebook.activeNotebookEditor!.document.cellAt(0).document.languageId.toLowerCase(),
-            'java'
+            'javascript'
         );
 
         await closeActiveWindows();
 
-        await api.createBlankNotebook({ defaultCellLanguage: 'julia' });
+        await api.createBlankNotebook({ defaultCellLanguage: 'powershell' });
 
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
         assert.strictEqual(
             vscodeNotebook.activeNotebookEditor!.document.cellAt(0).document.languageId.toLowerCase(),
-            'julia'
+            'powershell'
         );
     });
 });
