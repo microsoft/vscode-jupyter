@@ -98,6 +98,7 @@ mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
 mockedVSCode.Hover = vscodeMocks.vscMock.Hover;
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;
 mockedVSCode.ExtensionKind = vscodeMocks.vscMock.ExtensionKind;
+mockedVSCode.ExtensionMode = vscodeMocks.vscMock.ExtensionMode;
 mockedVSCode.CodeAction = vscodeMocks.vscMock.CodeAction;
 mockedVSCode.EventEmitter = vscodeMocks.vscMock.EventEmitter;
 mockedVSCode.CancellationError = vscodeMocks.vscMock.CancellationError;

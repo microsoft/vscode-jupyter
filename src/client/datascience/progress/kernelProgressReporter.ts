@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { disposeAllDisposables } from '../../common/helpers';
+import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -160,7 +161,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                         progressInfo.dispose();
                     }
                 } catch (ex) {
-                    console.error(`Failed to dispose Progress reporter for ${key}`, ex);
+                    traceError(`Failed to dispose Progress reporter for ${key}`, ex);
                 }
             }
         };

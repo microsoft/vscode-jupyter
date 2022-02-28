@@ -36,7 +36,7 @@ use(chaiPromise);
 
 suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
-    let interperterService: IInterpreterService;
+    let interpreterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;
     let execService: IPythonDaemonExecutionService;
     let jupyterInterpreterExecutionService: JupyterInterpreterSubCommandExecutionService;
@@ -44,7 +44,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
     const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
     let notebookStartResult: ObservableExecutionResult<string>;
     setup(() => {
-        interperterService = mock<IInterpreterService>();
+        interpreterService = mock<IInterpreterService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
         const getRealPathStub = sinon.stub(fsExtra, 'realpath');
@@ -68,7 +68,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         };
         jupyterInterpreterExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreter),
-            instance(interperterService),
+            instance(interpreterService),
             instance(jupyterDependencyService),
             instance(execFactory),
             output,
@@ -79,8 +79,8 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             notebookStartResult as any
         );
-        when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
-        when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
+        when(interpreterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
+        when(interpreterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
     teardown(() => {
         sinon.restore();
@@ -100,7 +100,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             assert.isFalse(isSupported);
         });
         test('Jupyter cannot be started because no interpreter has been selected', async () => {
-            when(interperterService.getActiveInterpreter(undefined)).thenResolve(undefined);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(undefined);
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(
                 undefined
             );
