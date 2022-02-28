@@ -26,7 +26,7 @@ import {
 } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import {
     IBrowserService,
@@ -299,6 +299,7 @@ export class VSCodeNotebookController implements Disposable {
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire();
+        traceVerbose(`Controller selection change completed`);
         deferred.resolve();
     }
     private async onShouldRunCells(cells: NotebookCell[]) {
@@ -311,6 +312,7 @@ export class VSCodeNotebookController implements Disposable {
         }
         // Run the cells after we've completed switching to this controller.
         await promise;
+        traceVerbose(`Re-Rune pending cells for controller ${this.id} using ${this.connection.id}`);
         await this.handleExecution(cells, cells[0].notebook);
     }
     /**
