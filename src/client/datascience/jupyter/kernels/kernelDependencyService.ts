@@ -13,7 +13,7 @@ import {
     trackPackageInstalledIntoInterpreter
 } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -94,7 +94,11 @@ export class KernelDependencyService implements IKernelDependencyService {
 
         // Cache the install run
         let promise = this.installPromises.get(kernelConnection.interpreter.path);
-        if (!promise) {
+        if (promise) {
+            traceInfoIfCI(
+                `Reusing existing promise for installation of ${getDisplayPath(kernelConnection.interpreter.path)}`
+            );
+        } else {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
