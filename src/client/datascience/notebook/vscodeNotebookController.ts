@@ -318,13 +318,13 @@ export class VSCodeNotebookController implements Disposable {
     /**
      * Scenario 1:
      * Assume user opens a notebook and language is C++ or .NET Interactive, they start writing python code.
-     * Next users hits the run button, next user will be promtped to select a kernel.
+     * Next users hits the run button, next user will be prompted to select a kernel.
      * User now selects a Python kernel.
      * Nothing happens, that's right nothing happens.
-     * This is because C++ is not a lanaugage supported by the python kernel.
+     * This is because C++ is not a languages supported by the python kernel.
      * Hence VS Code will not send the execution call to the extension.
      *
-     * Solution, go through the cells and change the languges to something that's supported.
+     * Solution, go through the cells and change the language to something that's supported.
      *
      * Scenario 2:
      * User has .NET extension installed.
