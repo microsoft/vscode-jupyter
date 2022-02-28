@@ -55,7 +55,7 @@ import {
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite.only('DataScience Install IPyKernel (slow) (install)', function () {
+suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
     const templateIPynbFile = path.join(
@@ -257,7 +257,7 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath);
     });
-    test.only('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
+    test('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
