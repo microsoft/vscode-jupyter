@@ -20,6 +20,7 @@
         "out": true, // set this to false to include "out" folder in search results
         "**/node_modules": true,
         "coverage": true,
+        "**/.venv/**": true,
         "languageServer*/**": true,
         ".vscode-test": true,
         ".vscode test": true

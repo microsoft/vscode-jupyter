@@ -1,7 +1,7 @@
 trigger: none
 #   branches:
 #     include:
-#       - release*
+#       - release/*
 #   tags:
 #     include: ['*']
 pr: none

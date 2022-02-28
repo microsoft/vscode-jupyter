@@ -1,5 +1,5 @@
-name: Bug Report Form (Beta)
-description: Bug report for the Jupyter Extension for VS Code
+name: Bug Report Form
+description: Same as above, but friendlier. :)
 labels: [bug, needs-triage]
 assignees:
   - octocat
