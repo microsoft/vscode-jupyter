@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
 import { WrappedError } from '../../common/errors/types';
 import { traceWarning } from '../../common/logger';
@@ -17,7 +17,12 @@ import {
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService
 } from '../types';
-import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
+import {
+    CancellationError as VscCancellationError,
+    CancellationTokenSource,
+    ConfigurationTarget,
+    Memento
+} from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -30,11 +35,12 @@ import {
     KernelFailureReason
 } from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
+import { GLOBAL_MEMENTO, IBrowserService, IConfigurationService, IMemento, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterConnectError } from './jupyterConnectError';
+import { clearInstalledIntoInterpreterMemento } from '../../common/installer/productInstaller';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -44,7 +50,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
@@ -99,6 +106,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<HandleKernelErrorResult> {
+        if (kernelConnection.interpreter && purpose === 'start') {
+            // If we failed to start the kernel, then clear cache used to track
+            // whether we have dependencies installed or not.
+            // Possible something is missing.
+            void clearInstalledIntoInterpreterMemento(this.memento, undefined, kernelConnection.interpreter.path);
+        }
+
         traceWarning('Kernel Error', err);
         err = WrappedError.unwrap(err);
         const failureInfo = analyzeKernelErrors(err, kernelConnection.interpreter?.sysPrefix);

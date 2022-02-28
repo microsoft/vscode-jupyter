@@ -27,7 +27,7 @@ import {
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { displayErrorsInCell } from '../../common/errors/errorUtils';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
+import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import {
     IBrowserService,
@@ -37,6 +37,7 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { chainable } from '../../common/utils/decorators';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -55,14 +56,17 @@ import {
     isPythonKernelConnection,
     getKernelConnectionPath,
     getKernelRegistrationInfo,
-    connectToKernel
+    connectToKernel,
+    getDisplayNameOrNameOfKernelConnection
 } from '../jupyter/kernels/helpers';
 import {
     IKernel,
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
-    LiveKernelConnectionMetadata
+    LiveKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
 } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
@@ -83,7 +87,6 @@ export class VSCodeNotebookController implements Disposable {
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
-    public static pendingCells = new WeakMap<NotebookDocument, readonly NotebookCell[]>();
     public readonly controller: NotebookController;
     /**
      * Used purely for testing purposes.
@@ -118,7 +121,7 @@ export class VSCodeNotebookController implements Disposable {
         return this.associatedDocuments.has(doc);
     }
 
-    private readonly associatedDocuments = new WeakSet<NotebookDocument>();
+    private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -168,6 +171,11 @@ export class VSCodeNotebookController implements Disposable {
     }
     public updateRemoteKernelDetails(kernelConnection: LiveKernelConnectionMetadata) {
         this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
+    }
+    public updateInterpreterDetails(
+        kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    ) {
+        this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
     }
     public asWebviewUri(localResource: Uri): Uri {
         return this.controller.asWebviewUri(localResource);
@@ -259,9 +267,6 @@ export class VSCodeNotebookController implements Disposable {
             // Possible it gets called again in our tests (due to hacks for testing purposes).
             return;
         }
-        // Capture list of pending cells to execute.
-        // As we're in an async method these can be deleted by the time we got to the bottom of this method.
-        const pendingCells = VSCodeNotebookController.pendingCells.get(event.notebook);
 
         if (!event.selected) {
             // If user has selected another controller, then kill the current kernel.
@@ -287,9 +292,8 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
         this.warnWhenUsingOutdatedPython();
-        traceInfoIfCI(`Notebook Controller set ${getDisplayPath(event.notebook.uri)}, ${this.id}`);
-        this.associatedDocuments.add(event.notebook);
-
+        const deferred = createDeferred<void>();
+        this.associatedDocuments.set(event.notebook, deferred.promise);
         // Now actually handle the change
         this.widgetCoordinator.setActiveController(event.notebook, this);
         await this.onDidSelectController(event.notebook);
@@ -298,21 +302,20 @@ export class VSCodeNotebookController implements Disposable {
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire();
-
-        if (pendingCells?.length) {
-            await this.handleExecution([...pendingCells], event.notebook);
-        }
+        traceVerbose(`Controller selection change completed`);
+        deferred.resolve();
     }
+
     /**
      * Scenario 1:
      * Assume user opens a notebook and language is C++ or .NET Interactive, they start writing python code.
-     * Next users hits the run button, next user will be promtped to select a kernel.
+     * Next users hits the run button, next user will be prompted to select a kernel.
      * User now selects a Python kernel.
      * Nothing happens, that's right nothing happens.
-     * This is because C++ is not a lanaugage supported by the python kernel.
+     * This is because C++ is not a languages supported by the python kernel.
      * Hence VS Code will not send the execution call to the extension.
      *
-     * Solution, go through the cells and change the languges to something that's supported.
+     * Solution, go through the cells and change the language to something that's supported.
      *
      * Scenario 2:
      * User has .NET extension installed.
@@ -533,7 +536,8 @@ export class VSCodeNotebookController implements Disposable {
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
             isLocalConnection(this.kernelConnection)
         ) {
-            await newKernel.start({ disableUI: true }).catch(noop);
+            // Startup could fail due to missing dependencies or the like.
+            void newKernel.start({ disableUI: true });
         }
     }
 }

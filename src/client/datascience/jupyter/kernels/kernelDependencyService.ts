@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import {
     isModulePresentInEnvironmentCache,
@@ -27,7 +27,7 @@ import {
 import { createDeferred } from '../../../common/utils/async';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { ignoreLogging, TraceOptions } from '../../../logging/trace';
+import { ignoreLogging, logValue, TraceOptions } from '../../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
@@ -39,8 +39,8 @@ import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     HandleKernelErrorResult,
     IDisplayOptions,
-    IInteractiveWindowProvider,
     IKernelDependencyService,
+    IRawNotebookSupportedService,
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { findNotebookEditor, selectKernel } from './kernelSelector';
@@ -63,9 +63,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IRawNotebookSupportedService) private readonly rawSupport: IRawNotebookSupportedService,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     /**
@@ -133,8 +131,9 @@ export class KernelDependencyService implements IKernelDependencyService {
 
         return this.handleKernelDependencyResponse(dependencyResponse, kernelConnection, resource, error);
     }
+    @traceDecorators.verbose('Are Dependencies Installed')
     public async areDependenciesInstalled(
-        kernelConnection: KernelConnectionMetadata,
+        @logValue<KernelConnectionMetadata>('id') kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean> {
@@ -149,10 +148,14 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Makes a big difference with conda on windows.
         if (
             !ignoreCache &&
+            // When dealing with Jupyter (non-raw), don't cache, always check.
+            // The reason is even if ipykernel isn't available, the kernel will still be started (i.e. the process is started),
+            // However Jupyter doesn't notify a failure to start.
+            this.rawSupport.isSupported &&
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {
             traceInfo(
-                `IPykernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
             );
             return true;
         }
@@ -327,7 +330,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
-
             if (selection === selectKernel) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',

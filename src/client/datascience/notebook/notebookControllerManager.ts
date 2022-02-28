@@ -40,7 +40,7 @@ import {
 } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { IJupyterServerUriStorage, INotebookProvider } from '../types';
+import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -208,7 +208,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // Fetch the list of kernels ignoring the cache.
             this.loadLocalNotebookControllersImpl('ignoreCache')
-                .catch((ex) => console.error('Failed to fetch controllers without cache', ex))
+                .catch((ex) => traceError('Failed to fetch controllers without cache', ex))
                 .finally(() => {
                     this._controllersLoaded = true;
                     let timer: NodeJS.Timeout | number | undefined;
@@ -221,7 +221,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                             timer = setTimeout(
                                 () =>
                                     this.loadLocalNotebookControllersImpl('ignoreCache').catch((ex) =>
-                                        console.error(
+                                        traceError(
                                             'Failed to re-query python kernels after changes to list of interpreters',
                                             ex
                                         )
@@ -719,7 +719,26 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 [kernelConnection.id, JupyterNotebookView],
                 [`${kernelConnection.id}${this.interactiveControllerIdSuffix}`, InteractiveWindowView]
             ]
-                .filter(([id]) => !this.registeredControllers.has(id))
+                .filter(([id]) => {
+                    const controller = this.registeredControllers.get(id);
+                    if (controller) {
+                        // If we already have this controller, its possible the Python version information has changed.
+                        // E.g. we had a cached kernlespec, and since then the user updated their version of python,
+                        // Now we need to update the display name of the kernelspec.
+                        // Assume user created a venv with name `.venv` and points to Python 3.8
+                        // Tomorrow they delete this folder and re-create it with version Python 3.9.
+                        // Similarly they could re-create conda environments or just install a new version of Global Python env.
+                        if (
+                            isPythonKernelConnection(kernelConnection) &&
+                            (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                                kernelConnection.kind === 'startUsingPythonInterpreter')
+                        ) {
+                            controller.updateInterpreterDetails(kernelConnection);
+                        }
+                        return false;
+                    }
+                    return true;
+                })
                 .forEach(([id, viewType]) => {
                     let hideController = false;
                     if (kernelConnection.kind === 'connectToLiveKernel') {

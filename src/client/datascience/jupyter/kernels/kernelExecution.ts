@@ -76,6 +76,12 @@ export class KernelExecution implements IDisposable {
         const result = await executionQueue.waitForCompletion([cell]);
         return result[0];
     }
+    public async cancel() {
+        const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
+        if (executionQueue) {
+            await executionQueue.cancel(true);
+        }
+    }
 
     /**
      * Interrupts the execution of cells.
@@ -142,10 +148,14 @@ export class KernelExecution implements IDisposable {
         }
 
         // Restart the active execution
-        await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(session)));
-
-        // Done restarting, clear restart promise
-        this._restartPromise = undefined;
+        if (!this._restartPromise) {
+            this._restartPromise = this.restartExecution(session);
+            this._restartPromise.finally(() => {
+                // Done restarting, clear restart promise
+                this._restartPromise = undefined;
+            });
+        }
+        await this._restartPromise;
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
