@@ -121,15 +121,13 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install() as any);
 
-                await assert.isRejected(
-                    dependencyService.installMissingDependencies(
-                        Uri.file('one.ipynb'),
-                        metadata,
-                        new DisplayOptions(false),
-                        token.token
-                    ),
-                    'IPyKernel not installed into interpreter'
+                const result = await dependencyService.installMissingDependencies(
+                    Uri.file('one.ipynb'),
+                    metadata,
+                    new DisplayOptions(false),
+                    token.token
                 );
+                assert.strictEqual(result.kind, 'Canceled');
 
                 verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
@@ -184,14 +182,15 @@ suite('DataScience - Kernel Dependency Service', () => {
                     Common.install() as any
                 );
 
-                const promise = dependencyService.installMissingDependencies(
+                const result = await dependencyService.installMissingDependencies(
                     resource,
                     metadata,
                     new DisplayOptions(false),
                     token.token
                 );
 
-                await assert.isRejected(promise, 'Install failed - kaboom');
+                assert.equal(result.kind, 'Error');
+                assert.equal((result as any).error.toString(), 'Error: Install failed - kaboom');
             });
             test('Select kernel instead of installing', async function () {
                 if (resource === undefined) {
@@ -221,14 +220,14 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
 
-                const promise = dependencyService.installMissingDependencies(
+                const result = await dependencyService.installMissingDependencies(
                     resource,
                     metadata,
                     new DisplayOptions(false),
                     token.token
                 );
 
-                await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
+                assert.equal(result.kind, 'Canceled');
                 verify(cmdManager.executeCommand('notebook.selectKernel', anything())).never();
             });
         });
