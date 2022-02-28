@@ -520,7 +520,6 @@ module.exports = {
         'src/client/common/dotnet/services/linuxCompatibilityService.ts',
         'src/client/common/dotnet/services/windowsCompatibilityService.ts',
         'src/client/common/variables/serviceRegistry.ts',
-        'src/client/common/variables/types.ts',
         'src/client/common/variables/sysTypes.ts',
         'src/client/common/variables/systemVariables.ts',
         'src/client/common/nuget/azureBlobStoreNugetRepository.ts',

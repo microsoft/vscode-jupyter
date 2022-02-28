@@ -111,22 +111,26 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
     test('Quick pick MRU tests', async () => {
         const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
-
+        console.log('Step1');
         await selector.selectJupyterURI(true);
         // Verify initial default items
         assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
 
         // Add in a new server
         const serverA1 = { uri: 'ServerA', time: 1, date: new Date(1) };
+        console.log('Step2');
         await storage.addToUriList(serverA1.uri, serverA1.time, serverA1.uri);
 
+        console.log('Step3');
         await selector.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 3, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[2], serverA1);
 
         // Add in a second server, the newer server should be higher in the list due to newer time
         const serverB1 = { uri: 'ServerB', time: 2, date: new Date(2) };
+        console.log('Step4');
         await storage.addToUriList(serverB1.uri, serverB1.time, serverB1.uri);
+        console.log('Step5');
         await selector.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[2], serverB1);
@@ -134,7 +138,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Reconnect to server A with a new time, it should now be higher in the list
         const serverA3 = { uri: 'ServerA', time: 3, date: new Date(3) };
+        console.log('Step6');
         await storage.addToUriList(serverA3.uri, serverA3.time, serverA3.uri);
+        console.log('Step7');
         await selector.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[3], serverB1);
@@ -142,9 +148,11 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Verify that we stick to our settings limit
         for (let i = 0; i < Settings.JupyterServerUriListMax + 10; i = i + 1) {
+            console.log(`Step8 ${i} of ${Settings.JupyterServerUriListMax + 10}`);
             await storage.addToUriList(i.toString(), i, i.toString());
         }
 
+        console.log('Step9');
         await selector.selectJupyterURI(true);
         // Need a plus 2 here for the two default items
         assert.equal(

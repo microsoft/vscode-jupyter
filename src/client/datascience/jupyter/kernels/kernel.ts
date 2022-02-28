@@ -78,6 +78,7 @@ import { JupyterConnectError } from '../../errors/jupyterConnectError';
 import { IPythonExtensionChecker } from '../../../api/types';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { disposeAllDisposables } from '../../../common/helpers';
+import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -355,6 +356,10 @@ export class Kernel implements IKernel {
             await notebook?.session.dispose().catch(noop);
             this._ignoreNotebookDisposedErrors = false;
             void this.errorHandler.handleKernelError(ex, 'restart', this.kernelConnectionMetadata, this.resourceUri);
+            // If kernel restarts failed due to kernel dependency issues, then just kill the kernel.
+            if (WrappedError.unwrap(ex) instanceof IpyKernelNotInstalledError) {
+                void this.kernelExecution.cancel();
+            }
             throw ex;
         } finally {
             status.dispose();
@@ -490,17 +495,15 @@ export class Kernel implements IKernel {
                         // errors about startup failures.
                         traceWarning(`Ignoring kernel startup failure as kernel was disposed`, ex);
                     } else {
-                        const cellForErrorDisplay = this.kernelExecution.queue.length
-                            ? this.kernelExecution.queue[0]
-                            : undefined;
+                        // Just a notification, so don't await this
                         void this.errorHandler.handleKernelError(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             ex as any,
                             'start',
                             this.kernelConnectionMetadata,
                             this.resourceUri,
-                            cellForErrorDisplay
-                        ); // Just a notification, so don't await this
+                            this.kernelExecution.queue
+                        );
                     }
                     traceError(`failed to start INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
                     this.startCancellation.cancel();

@@ -20,6 +20,7 @@
         "out": true, // set this to false to include "out" folder in search results
         "**/node_modules": true,
         "coverage": true,
+        "**/.venv/**": true,
         "languageServer*/**": true,
         ".vscode-test": true,
         ".vscode test": true
@@ -55,5 +56,9 @@
         // Match what black does.
         "--max-line-length=88"
     ],
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "mochaExplorer.files": "./out/test/**/*.unit.test.js",
+    "mochaExplorer.require": ["ts-node/register", "./out/test/unittests.js"],
+    "mochaExplorer.ui": "tdd",
+    "mochaExplorer.nodeArgv": ["--enable-source-maps"]
 }

@@ -5,6 +5,7 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
+    refreshInterpreters(): Promise<void>;
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment>;
