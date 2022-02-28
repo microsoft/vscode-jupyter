@@ -4,7 +4,7 @@
 'use strict';
 import * as dedent from 'dedent';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Memento, Uri, WorkspaceFolder } from 'vscode';
+import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { Common, DataScience } from '../../client/common/utils/localize';
@@ -51,7 +51,6 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(mock<Memento>()),
             instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();

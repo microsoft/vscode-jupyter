@@ -13,7 +13,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
-import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IMemento, IPathUtils, Resource } from '../../../common/types';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     IKernel,
@@ -47,13 +47,14 @@ import {
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
-import { NotebookDocument, Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { CancellationError } from '../../../common/cancellation';
 import { INotebookControllerManager } from '../../notebook/types';
 import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { findNotebookEditor, selectKernel } from './kernelSelector';
 import { createDeferred } from '../../../common/utils/async';
+import { clearInstalledIntoInterpreterMemento } from '../../../common/installer/productInstaller';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1827,6 +1828,7 @@ export async function connectToKernel(
 ): Promise<IKernel> {
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+    const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     let kernel: IKernel | undefined;
     let controller: VSCodeNotebookController | undefined = initialController;
     while (kernel === undefined) {
@@ -1840,6 +1842,17 @@ export async function connectToKernel(
         try {
             await kernel.start();
         } catch (error) {
+            if (controller.connection.interpreter) {
+                // If we failed to start the kernel, then clear cache used to track
+                // whether we have dependencies installed or not.
+                // Possible something is missing.
+                clearInstalledIntoInterpreterMemento(
+                    memento,
+                    undefined,
+                    controller.connection.interpreter.path
+                ).ignoreErrors();
+            }
+
             const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
             switch (handleResult.kind) {
                 case 'Canceled':
