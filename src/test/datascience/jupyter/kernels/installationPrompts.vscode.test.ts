@@ -10,6 +10,7 @@ import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/appl
 import { WrappedError } from '../../../../client/common/errors/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../../client/common/installer/productNames';
+import { traceInfoIfCI } from '../../../../client/common/logger';
 import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
@@ -32,6 +33,7 @@ import { IKernelProvider } from '../../../../client/datascience/jupyter/kernels/
 import { JupyterNotebookView } from '../../../../client/datascience/notebook/constants';
 import { hasErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
+import { VSCodeNotebookController } from '../../../../client/datascience/notebook/vscodeNotebookController';
 import { KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
@@ -437,18 +439,14 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
             ? selectKernelFromIPyKernelPrompt()
             : clickInstallFromIPyKernelPrompt());
 
-        let selectADifferentKernelStub: undefined | sinon.SinonStub<any[], any>;
-        if (interpreterOfNewKernelToSelect) {
-            const result = selectANewKernel(promptToInstall, interpreterOfNewKernelToSelect);
-            selectADifferentKernelStub = result.selectADifferentKernelStub;
-        }
+        installerSpy = sinon.spy(installer, 'install');
 
         // Confirm it is installed or new kernel selected.
         if (ipykernelInstallRequirement === 'DoNotInstallIPyKernel') {
             installed.resolve();
         }
-        installerSpy = sinon.spy(installer, 'install');
 
+        let selectADifferentKernelStub: undefined | sinon.SinonStub<any[], any>;
         try {
             if (!workspace.notebookDocuments.some((item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase())) {
                 console.error('StepA');
@@ -457,6 +455,10 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
                 await waitForKernelToChange({ interpreterPath });
             }
 
+            if (interpreterOfNewKernelToSelect) {
+                const result = selectANewKernel(promptToInstall, interpreterOfNewKernelToSelect);
+                selectADifferentKernelStub = result.selectADifferentKernelStub;
+            }
             const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
             // The prompt should be displayed when we run a cell.
@@ -524,6 +526,7 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
         promptToInstall: Awaited<ReturnType<typeof selectKernelFromIPyKernelPrompt>>,
         pythonPathToNewKernel: string
     ) {
+        traceInfoIfCI(`Switching to kernel that points to ${getDisplayPath(pythonPathToNewKernel)}`);
         // Get the controller that should be selected.
         const controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
         const controller = controllerManager
@@ -549,10 +552,23 @@ suite.only('DataScience Install IPyKernel (slow) (install)', function () {
                         promptToInstall.dispose();
                         await clickInstallFromIPyKernelPrompt();
                     }
-                    await commands.executeCommand('notebook.selectKernel', {
+                    const result = await commands.executeCommand('notebook.selectKernel', {
                         id: controller.controller.id,
                         extension: JVSC_EXTENSION_ID_FOR_TESTS
                     });
+
+                    let selectedController: VSCodeNotebookController | undefined;
+                    await waitForCondition(
+                        async () => {
+                            selectedController = controllerManager.getSelectedNotebookController(
+                                window.activeNotebookEditor!.document
+                            );
+                            return controller.controller.id === selectedController?.controller.id;
+                        },
+                        defaultNotebookTestTimeout,
+                        () =>
+                            `Expected selection of ${controller.controller.id}, but selected controller ${selectedController?.controller.id} with result of ${result}`
+                    );
                     kernelSelected.resolve(true);
                     return Promise.resolve(true);
                 } else {

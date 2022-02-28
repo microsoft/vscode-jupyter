@@ -13,7 +13,7 @@ import {
     trackPackageInstalledIntoInterpreter
 } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import {
     GLOBAL_MEMENTO,
@@ -26,7 +26,7 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { ignoreLogging, TraceOptions } from '../../../logging/trace';
+import { ignoreLogging, logValue, TraceOptions } from '../../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
@@ -128,8 +128,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             this.installPromises.delete(kernelConnection.interpreter.path);
         }
     }
+    @traceDecorators.verbose('Are Dependencies Installed')
     public async areDependenciesInstalled(
-        kernelConnection: KernelConnectionMetadata,
+        @logValue<KernelConnectionMetadata>('id') kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean> {
@@ -140,6 +141,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return true;
         }
+        traceInfoIfCI(`Looking for ipykernel in ${getDisplayPath(kernelConnection.interpreter.path)}`);
         // Check cache, faster than spawning process every single time.
         // Makes a big difference with conda on windows.
         if (
@@ -164,6 +166,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     Product.ipykernel,
                     kernelConnection.interpreter
                 );
+                traceInfoIfCI(`ipykernel is installed in ${getDisplayPath(kernelConnection.interpreter!.path)}`);
             } else {
                 traceInfoIfCI(`ipykernel not installed in ${getDisplayPath(kernelConnection.interpreter!.path)}`);
             }
