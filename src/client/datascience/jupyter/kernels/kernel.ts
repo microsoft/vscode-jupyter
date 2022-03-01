@@ -377,17 +377,12 @@ export class Kernel implements IKernel {
         }
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
-            this._notebookPromise = this.createNotebook(new StopWatch())
-                .then((n) => {
-                    this.notebook = n;
-                    return n;
-                })
-                .catch((ex) => {
-                    // If we fail also clear the promise.
-                    this.startCancellation.cancel();
-                    this._notebookPromise = undefined;
-                    throw ex;
-                });
+            this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
+                // If we fail also clear the promise.
+                this.startCancellation.cancel();
+                this._notebookPromise = undefined;
+                throw ex;
+            });
         }
         return this._notebookPromise;
     }
@@ -419,6 +414,8 @@ export class Kernel implements IKernel {
                 Telemetry.PerceivedJupyterStartupNotebook,
                 stopWatch.elapsedTime
             );
+            this._onStarted.fire();
+            this.notebook = notebook;
             return notebook;
         } catch (ex) {
             traceError(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
