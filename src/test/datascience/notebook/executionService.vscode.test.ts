@@ -413,7 +413,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell(getOSType() === OSType.Windows ? '!where python' : '!which python', { index: 0 });
         await insertCodeCell('import sys', { index: 1 });
         await insertCodeCell('print(sys.executable)', { index: 2 });
-        const [cell1, _, cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
+        const [cell1, , cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
 
         // Basically anything such as `!which python` and the like should point to the right executable.
         // For that to work, the first directory in the PATH must be the Python environment.
