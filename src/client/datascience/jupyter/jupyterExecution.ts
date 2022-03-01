@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -107,7 +107,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     /* eslint-disable complexity,  */
     public connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         // eslint-disable-next-line
@@ -124,7 +124,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    connection = await this.startOrConnect(options, cancelToken);
+                    connection = await this.startOrConnect(options, cancelTokenSource);
 
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
                         sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
@@ -134,7 +134,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                     // eslint-disable-next-line no-constant-condition
                     traceInfo(`Connecting to process server`);
-                    await result.connect(connection, cancelToken);
+                    await result.connect(connection, cancelTokenSource.token);
                     traceInfo(`Connection complete server`);
 
                     sendTelemetryEvent(
@@ -192,7 +192,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 }
                 throw lastTryError;
             }
-        }, cancelToken);
+        }, cancelTokenSource.token);
     }
 
     public getServer(_options: INotebookServerOptions): Promise<INotebookServer | undefined> {
@@ -202,7 +202,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private async startOrConnect(
         options: INotebookServerOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
@@ -222,13 +222,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
                 workingDirectory,
-                cancelToken
+                cancelTokenSource.token
             );
             if (connection) {
                 return connection;
             } else {
                 // Throw a cancellation error if we were canceled.
-                Cancellation.throwIfCanceled(cancelToken);
+                Cancellation.throwIfCanceled(cancelTokenSource.token);
 
                 // Otherwise we can't connect
                 throw new Error(localize.DataScience.jupyterNotebookFailure().format(''));

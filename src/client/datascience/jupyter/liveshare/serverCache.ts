@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import { CancellationToken } from 'vscode';
+import { CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
@@ -38,10 +38,10 @@ export class ServerCache implements IAsyncDisposable {
     public async getOrCreate(
         createFunction: (
             options: INotebookServerOptions,
-            cancelToken: CancellationToken
+            cancelTokenSource: CancellationTokenSource
         ) => Promise<INotebookServer | undefined>,
         options: INotebookServerOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
@@ -53,7 +53,7 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelToken),
+                promise: createFunction(options, cancelTokenSource),
                 options: fixedOptions,
                 resolved: false
             };

@@ -70,7 +70,7 @@ suite('Jupyter CLI Tests', async () => {
         const server = await jupyterServerProvider.getOrCreateServer({
             localJupyter: true,
             resource: undefined,
-            token: tokenSource.token,
+            tokenSource: tokenSource,
             ui: new DisplayOptions(true)
         });
         if (!server) {

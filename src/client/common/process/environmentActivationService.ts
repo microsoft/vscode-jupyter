@@ -145,11 +145,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
         const cancellationTokenSource = new CancellationTokenSource();
         try {
-            return await KernelProgressReporter.wrapAndReportProgress(
-                resource,
-                title,
-                cancellationTokenSource.token,
-                (_t) => this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
+            return await KernelProgressReporter.wrapAndReportProgress(resource, title, cancellationTokenSource, (_t) =>
+                this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
             );
         } finally {
             cancellationTokenSource.dispose();

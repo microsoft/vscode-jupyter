@@ -306,7 +306,7 @@ suite('DataScience - JupyterKernelService', () => {
         const token = new CancellationTokenSource();
         await Promise.all(
             kernels.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token);
             })
         );
         token.dispose();
@@ -327,12 +327,7 @@ suite('DataScience - JupyterKernelService', () => {
         );
         when(fs.localFileExists(anything())).thenResolve(false);
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(
-            undefined,
-            kernelsWithInvalidName[0],
-            new DisplayOptions(true),
-            token.token
-        );
+        await kernelService.ensureKernelIsUsable(undefined, kernelsWithInvalidName[0], new DisplayOptions(true), token);
         token.dispose();
         verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });
@@ -354,7 +349,7 @@ suite('DataScience - JupyterKernelService', () => {
         const token = new CancellationTokenSource();
         await Promise.all(
             kernelsWithInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token);
             })
         );
         token.dispose();
@@ -377,7 +372,7 @@ suite('DataScience - JupyterKernelService', () => {
         const token = new CancellationTokenSource();
         await Promise.all(
             kernelsWithoutInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token.token);
+                await kernelService.ensureKernelIsUsable(undefined, k, new DisplayOptions(true), token);
             })
         );
         token.dispose();

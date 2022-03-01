@@ -158,7 +158,7 @@ suite('DataScience - JupyterSession', () => {
 
         const token = new CancellationTokenSource();
         try {
-            await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+            await jupyterSession.connect({ ui: new DisplayOptions(false), tokenSource: token });
         } finally {
             token.dispose();
         }

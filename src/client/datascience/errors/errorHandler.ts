@@ -103,14 +103,18 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             (purpose === 'start' || purpose === 'restart') &&
             !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
         ) {
-            const token = new CancellationTokenSource();
-            return this.kernelDependency.installMissingDependencies(
-                resource,
-                kernelConnection,
-                new DisplayOptions(false),
-                token.token,
-                true
-            );
+            const tokenSource = new CancellationTokenSource();
+            try {
+                return this.kernelDependency.installMissingDependencies(
+                    resource,
+                    kernelConnection,
+                    new DisplayOptions(false),
+                    tokenSource,
+                    true
+                );
+            } finally {
+                tokenSource.dispose();
+            }
         } else {
             err = WrappedError.unwrap(err);
             const failureInfo = analyzeKernelErrors(

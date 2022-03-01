@@ -9,6 +9,7 @@ import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
 import {
     CancellationToken,
+    CancellationTokenSource,
     CodeLens,
     CodeLensProvider,
     DebugConfiguration,
@@ -104,7 +105,7 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         ui: IDisplayOptions
     ): Promise<INotebook>;
     connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
@@ -127,7 +128,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<INotebook>;
 }
 
@@ -147,7 +148,7 @@ export interface INotebook {
 export type ConnectNotebookProviderOptions = {
     ui: IDisplayOptions;
     kind: 'localJupyter' | 'remoteJupyter';
-    token: CancellationToken;
+    tokenSource: CancellationTokenSource;
     resource: Resource;
 };
 
@@ -171,7 +172,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
@@ -270,7 +271,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
@@ -879,7 +880,7 @@ export type GetServerOptions = {
      * Whether we're only interested in local Jupyter Servers.
      */
     localJupyter: boolean;
-    token: CancellationToken;
+    tokenSource: CancellationTokenSource;
     resource: Resource;
 };
 
@@ -891,7 +892,7 @@ export type NotebookCreationOptions = {
     document: NotebookDocument;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
-    token: CancellationToken;
+    tokenSource: CancellationTokenSource;
 };
 
 export const INotebookProvider = Symbol('INotebookProvider');
@@ -1002,7 +1003,7 @@ export interface IKernelDependencyService {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        token: CancellationToken,
+        tokenSource: CancellationTokenSource,
         ignoreCache?: boolean
     ): Promise<KernelInterpreterDependencyResponse>;
     /**

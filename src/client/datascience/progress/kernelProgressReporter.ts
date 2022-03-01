@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { createPromiseFromCancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
@@ -84,17 +84,15 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     public static wrapAndReportProgress<T>(
         resource: Resource,
         title: string,
-        token: CancellationToken,
+        tokenSource: CancellationTokenSource,
         cb: (token: CancellationToken) => Promise<T>
     ): Promise<T> {
         const key = resource ? resource.fsPath : '';
-        const tokenSource = new CancellationTokenSource();
-        const wrapped = wrapCancellationTokens(tokenSource.token, token);
         if (!KernelProgressReporter.instance) {
-            return cb(wrapped);
+            return cb(tokenSource.token);
         }
         const progress = KernelProgressReporter.reportProgressInternal(key, title, tokenSource);
-        return cb(wrapped).finally(() => progress?.dispose());
+        return cb(tokenSource.token).finally(() => progress?.dispose());
     }
 
     /**

@@ -100,7 +100,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
 
                 verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
@@ -113,7 +113,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
 
                 verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
@@ -126,7 +126,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     Uri.file('one.ipynb'),
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
                 assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
 
@@ -148,7 +148,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
             });
             test('Install ipykernel second time should result in a re-install', async () => {
@@ -168,7 +168,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
             });
             test('Bubble installation errors', async () => {
@@ -187,7 +187,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
 
                 assert.equal(result, KernelInterpreterDependencyResponse.failed);
@@ -207,7 +207,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
                 assert.strictEqual(
                     result,
@@ -228,7 +228,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     resource,
                     metadata,
                     new DisplayOptions(false),
-                    token.token
+                    token
                 );
 
                 assert.equal(result, KernelInterpreterDependencyResponse.cancel, 'Wasnt sCanceled');

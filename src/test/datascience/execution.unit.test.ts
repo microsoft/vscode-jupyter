@@ -1021,10 +1021,7 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer(
-                    { ui, resource: undefined, localJupyter: true },
-                    token.token
-                ),
+                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token),
                 'Should be able to start a server'
             );
         } finally {
@@ -1048,10 +1045,7 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isFulfilled(
-                jupyterExecutionFactory.connectToNotebookServer(
-                    { ui, resource: undefined, localJupyter: true },
-                    token.token
-                ),
+                jupyterExecutionFactory.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token),
                 'Should be able to start a server'
             );
         } finally {
@@ -1067,7 +1061,7 @@ suite('Jupyter Execution', async () => {
         const token = new CancellationTokenSource();
         try {
             await assert.isRejected(
-                execution.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token.token),
+                execution.connectToNotebookServer({ ui, resource: undefined, localJupyter: true }, token),
                 'Running cells requires jupyter package.'
             );
         } finally {

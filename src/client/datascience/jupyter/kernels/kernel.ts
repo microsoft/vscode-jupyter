@@ -377,12 +377,17 @@ export class Kernel implements IKernel {
         }
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
-            this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
-                // If we fail also clear the promise.
-                this.startCancellation.cancel();
-                this._notebookPromise = undefined;
-                throw ex;
-            });
+            this._notebookPromise = this.createNotebook(new StopWatch())
+                .then((n) => {
+                    this.notebook = n;
+                    return n;
+                })
+                .catch((ex) => {
+                    // If we fail also clear the promise.
+                    this.startCancellation.cancel();
+                    this._notebookPromise = undefined;
+                    throw ex;
+                });
         }
         return this._notebookPromise;
     }
@@ -400,7 +405,7 @@ export class Kernel implements IKernel {
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token
+                tokenSource: this.startCancellation
             });
             if (!notebook) {
                 // This is an unlikely case.
@@ -561,7 +566,7 @@ export class Kernel implements IKernel {
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
             const startupCode = await this.gatherStartupCode(notebookDocument);
-            await this.executeSilently(startupCode);
+            await this.executeSilently(notebook, startupCode);
         }
 
         // Then request our kernel info (indicates kernel is ready to go)
@@ -772,12 +777,12 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(code: string[]) {
-        if (!this.notebook || code.join('').trim().length === 0) {
-            traceVerbose(`Not executing startup notebook: ${this.notebook ? 'Object' : 'undefined'}, code: ${code}`);
+    private async executeSilently(notebook: INotebook | undefined, code: string[]) {
+        if (!notebook || code.join('').trim().length === 0) {
+            traceVerbose(`Not executing startup notebook: ${notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
-        await executeSilently(this.notebook.session, code.join('\n'));
+        await executeSilently(notebook.session, code.join('\n'));
     }
 }
 

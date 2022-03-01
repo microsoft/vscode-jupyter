@@ -4,7 +4,6 @@
 import '../../../common/extensions';
 
 import * as vscode from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -97,7 +96,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelTokenSource: vscode.CancellationTokenSource
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
@@ -141,7 +140,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             traceVerbose(
                 `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
             );
-            await rawSession.connect({ token: cancelToken, ui });
+            await rawSession.connect({ tokenSource: cancelTokenSource, ui });
 
             if (rawSession.isConnected) {
                 // Create our notebook
