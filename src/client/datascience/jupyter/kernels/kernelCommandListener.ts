@@ -18,7 +18,8 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IInteractiveWindowProvider,
-    IStatusProvider
+    IStatusProvider,
+    KernelInterpreterDependencyResponse
 } from '../../types';
 import { JupyterSession } from '../jupyterSession';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -180,8 +181,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 resource
             );
 
-            switch (result.kind) {
-                case 'Canceled':
+            switch (result) {
+                case KernelInterpreterDependencyResponse.cancel:
                     ex = new CancellationError(
                         DataScience.canceledKernelHeader().format(
                             kernel.kernelConnectionMetadata.interpreter?.displayName || ''

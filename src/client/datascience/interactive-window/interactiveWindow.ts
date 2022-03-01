@@ -110,8 +110,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _notebookEditor: NotebookEditor | undefined;
     private _inputUri: Uri | undefined;
     private pendingNotebookScrolls: NotebookRange[] = [];
-    private _kernelEventHook = (kernel: IKernel, event: 'willRestart' | 'willInterrupt') =>
-        this.kernelEventHook(kernel, event);
+    private _kernelEventHook: ((event: 'willInterrupt' | 'willRestart') => Promise<void>) | undefined;
 
     constructor(
         private readonly documentManager: IDocumentManager,
@@ -178,10 +177,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller.connection);
                 const kernel = await connectToKernel(controller, this.serviceContainer, this.owner, notebook);
                 // Hook pre interrupt so we can stick in a message
+                this._kernelEventHook = this.kernelEventHook.bind(this, kernel);
                 kernel.addEventHook(this._kernelEventHook);
                 this.kernelDisposables.push({
                     dispose: () => {
-                        kernel.removeEventHook(this._kernelEventHook);
+                        if (this._kernelEventHook) {
+                            kernel.removeEventHook(this._kernelEventHook);
+                            this._kernelEventHook = undefined;
+                        }
                     }
                 });
 

@@ -135,7 +135,7 @@ export class Kernel implements IKernel {
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
-    private eventHooks: ((kernel: IKernel, ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
+    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
@@ -175,11 +175,11 @@ export class Kernel implements IKernel {
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
 
-    public addEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks.push(hook);
     }
 
-    public removeEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
@@ -212,7 +212,7 @@ export class Kernel implements IKernel {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
-        await Promise.all(this.eventHooks.map((h) => h(this, 'willInterrupt')));
+        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
@@ -280,7 +280,7 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        await Promise.all(this.eventHooks.map((h) => h(this, 'willRestart')));
+        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
         // Set our status

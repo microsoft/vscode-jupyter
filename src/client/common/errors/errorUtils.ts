@@ -422,7 +422,9 @@ export function analyzeKernelErrors(
                 message: info.fileName
                     ? DataScience.failedToStartKernelDueToImportFailureFromFile().format(info.moduleName, info.fileName)
                     : DataScience.failedToStartKernelDueToImportFailure().format(info.moduleName),
-                moreInfoLink: 'https://aka.ms/kernelFailuresModuleImportErrFromFile',
+                moreInfoLink: info.fileName
+                    ? 'https://aka.ms/kernelFailuresModuleImportErrFromFile'
+                    : 'https://aka.ms/kernelFailuresModuleImportErr',
                 telemetrySafeTags: ['import.error']
             };
         }

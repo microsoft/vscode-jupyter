@@ -139,6 +139,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     error as any
                 );
+
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
             }

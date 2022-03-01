@@ -12,10 +12,10 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { getDisplayNameOrNameOfKernelConnection, getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
-    HandleKernelErrorResult,
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
-    IKernelDependencyService
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
 } from '../types';
 import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
@@ -99,7 +99,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
-    ): Promise<HandleKernelErrorResult> {
+    ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning('Kernel Error', err);
         err = WrappedError.unwrap(err);
         const failureInfo = analyzeKernelErrors(
@@ -132,7 +132,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     break;
             }
         }
-        return { kind: 'Error', error: err };
+        return KernelInterpreterDependencyResponse.failed;
     }
     private async showMessageWithMoreInfo(message: string, moreInfoLink: string | undefined) {
         if (!message.includes(Commands.ViewJupyterOutput)) {

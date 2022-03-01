@@ -17,7 +17,8 @@ import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../cli
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    IRawNotebookSupportedService
+    IRawNotebookSupportedService,
+    KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -127,7 +128,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     new DisplayOptions(false),
                     token.token
                 );
-                assert.strictEqual(result.kind, 'Canceled');
+                assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
 
                 verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             });
@@ -189,8 +190,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     token.token
                 );
 
-                assert.equal(result.kind, 'Error');
-                assert.equal((result as any).error.toString(), 'Error: Install failed - kaboom');
+                assert.equal(result, KernelInterpreterDependencyResponse.failed);
             });
             test('Select kernel instead of installing', async function () {
                 if (resource === undefined) {
@@ -209,7 +209,11 @@ suite('DataScience - Kernel Dependency Service', () => {
                     new DisplayOptions(false),
                     token.token
                 );
-                assert.strictEqual(result.kind, 'Switched', 'Kernel was not switched');
+                assert.strictEqual(
+                    result,
+                    KernelInterpreterDependencyResponse.selectDifferentKernel,
+                    'Kernel was not switched'
+                );
             });
             test('Throw an error if cancelling the prompt', async function () {
                 if (resource === undefined) {
@@ -227,7 +231,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                     token.token
                 );
 
-                assert.equal(result.kind, 'Canceled');
+                assert.equal(result, KernelInterpreterDependencyResponse.cancel, 'Wasnt sCanceled');
                 verify(cmdManager.executeCommand('notebook.selectKernel', anything())).never();
             });
         });

@@ -404,26 +404,6 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
-type CanceledKernelErrorResult = {
-    kind: 'Canceled';
-};
-type ErrorKernelErrorResult = {
-    kind: 'Error';
-    error: Error;
-};
-type InstalledKernelErrorResult = {
-    kind: 'Installed';
-};
-type SwitchedKernelErrorResult = {
-    kind: 'Switched';
-};
-
-export type HandleKernelErrorResult =
-    | CanceledKernelErrorResult
-    | ErrorKernelErrorResult
-    | InstalledKernelErrorResult
-    | SwitchedKernelErrorResult;
-
 export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
@@ -441,7 +421,7 @@ export interface IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
-    ): Promise<HandleKernelErrorResult>;
+    ): Promise<KernelInterpreterDependencyResponse>;
 }
 
 /**
@@ -1024,7 +1004,7 @@ export interface IKernelDependencyService {
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<HandleKernelErrorResult>;
+    ): Promise<KernelInterpreterDependencyResponse>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */

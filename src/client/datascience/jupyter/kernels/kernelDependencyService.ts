@@ -34,7 +34,6 @@ import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
-    HandleKernelErrorResult,
     IDisplayOptions,
     IKernelDependencyService,
     IRawNotebookSupportedService,
@@ -68,14 +67,14 @@ export class KernelDependencyService implements IKernelDependencyService {
         ui: IDisplayOptions,
         @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<HandleKernelErrorResult> {
+    ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.interpreter === undefined
         ) {
-            return { kind: 'Installed' };
+            return KernelInterpreterDependencyResponse.ok;
         }
         const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
             resource,
@@ -84,10 +83,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             (t) => this.areDependenciesInstalled(kernelConnection, t, ignoreCache)
         );
         if (alreadyInstalled) {
-            return { kind: 'Installed' };
+            return KernelInterpreterDependencyResponse.ok;
         }
         if (token?.isCancellationRequested) {
-            return { kind: 'Canceled' };
+            return KernelInterpreterDependencyResponse.cancel;
         }
 
         // Cache the install run
@@ -104,7 +103,6 @@ export class KernelDependencyService implements IKernelDependencyService {
 
         // Get the result of the question
         let dependencyResponse: KernelInterpreterDependencyResponse = KernelInterpreterDependencyResponse.failed;
-        let error: Error | undefined;
         try {
             // This can throw an exception (if say it fails to install) or it can cancel
             dependencyResponse = await promise;
@@ -114,29 +112,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         } catch (ex) {
             // Failure occurred
             dependencyResponse = KernelInterpreterDependencyResponse.failed;
-            error = ex;
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
         }
-
-        switch (dependencyResponse) {
-            case KernelInterpreterDependencyResponse.cancel:
-                return { kind: 'Canceled' };
-            case KernelInterpreterDependencyResponse.selectDifferentKernel:
-                return { kind: 'Switched' };
-            case KernelInterpreterDependencyResponse.failed:
-                return {
-                    kind: 'Error',
-                    error:
-                        error ||
-                        new Error(
-                            DataScience.ipykernelNotInstalled().format(kernelConnection.interpreter?.displayName || '')
-                        )
-                };
-            default:
-                return { kind: 'Installed' };
-        }
+        return dependencyResponse;
     }
     @traceDecorators.verbose('Are Dependencies Installed')
     public async areDependenciesInstalled(

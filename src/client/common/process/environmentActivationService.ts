@@ -144,9 +144,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             interpreter.displayName || getDisplayPath(interpreter.path)
         );
         const cancellationTokenSource = new CancellationTokenSource();
-        return KernelProgressReporter.wrapAndReportProgress(resource, title, cancellationTokenSource.token, (_t) =>
-            this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
-        );
+        try {
+            return await KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                title,
+                cancellationTokenSource.token,
+                (_t) => this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
+            );
+        } finally {
+            cancellationTokenSource.dispose();
+        }
     }
     @traceDecorators.verbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariablesImpl(

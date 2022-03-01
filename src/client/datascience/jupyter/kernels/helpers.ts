@@ -5,7 +5,13 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IDataScienceErrorHandler, IInteractiveWindowProvider, IJupyterKernelSpec, IJupyterSession } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -36,7 +42,7 @@ import {
     getNormalizedInterpreterPath
 } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
@@ -1854,27 +1860,29 @@ export async function connectToKernel(
             }
 
             const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
-            switch (handleResult.kind) {
-                case 'Canceled':
+
+            // Send telemetry for handling the error (if raw)
+            if (kernel.connection?.type === 'raw') {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
+                    reason: handleResult
+                });
+            }
+
+            // Dispose the kernel no matter what happened as we need to go around again when there's an error
+            kernel.dispose().ignoreErrors();
+            kernel = undefined;
+
+            switch (handleResult) {
+                case KernelInterpreterDependencyResponse.cancel:
                     throw new CancellationError(
                         DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
                     );
 
-                case 'Error':
-                    kernel.dispose().ignoreErrors();
+                case KernelInterpreterDependencyResponse.failed:
                     throw error;
 
-                case 'Installed': {
-                    // Loop around
-                    kernel.dispose().ignoreErrors();
-                    kernel = undefined;
-                    break;
-                }
-
-                case 'Switched': {
+                case KernelInterpreterDependencyResponse.selectDifferentKernel: {
                     // Loop around and create the new one. The user wants to switch
-                    kernel.dispose().ignoreErrors();
-                    kernel = undefined;
 
                     // Update to the selected controller
                     controller = await switchController(resource, serviceContainer);

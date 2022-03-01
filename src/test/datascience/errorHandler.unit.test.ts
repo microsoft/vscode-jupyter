@@ -325,7 +325,7 @@ ImportError: No module named 'xyz'
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailure().format('xyz');
 
-            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
+            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErr');
         });
         test('pyzmq errors', async () => {
             await dataScienceErrorHandler.handleKernelError(
