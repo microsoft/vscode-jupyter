@@ -29,7 +29,7 @@ import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { hasErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
-import { IInteractiveWindowProvider, KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
+import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
@@ -76,7 +76,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let commandManager: ICommandManager;
     let vscodeNotebook: IVSCodeNotebook;
     let controllerManager: INotebookControllerManager;
-    const delayForUITest = 30_000;
+    const delayForUITest = 120_000;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
     let previousDisableJupyterAutoStartValue: boolean;
@@ -241,7 +241,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         const prompt = await hijackPrompt(
             'showInformationMessage',
-            { endsWith: expectedPromptMessageSuffix },
+            { contains: expectedPromptMessageSuffix },
             { dismissPrompt: true },
             disposables
         );
@@ -318,7 +318,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
-    test.only('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
+    test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -405,7 +405,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         const prompt = await hijackPrompt(
             'showInformationMessage',
-            { endsWith: expectedPromptMessageSuffix },
+            { contains: expectedPromptMessageSuffix },
             { text: DataScience.selectKernel(), clickImmediately: true },
             disposables
         );
@@ -463,7 +463,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             assert.fail('Did not fail as expected');
         } catch (ex) {
             const err = WrappedError.unwrap(ex);
-            assert.strictEqual(err.reason, KernelInterpreterDependencyResponse.uiHidden);
+            assert.strictEqual(err.category, 'kerneldied');
         }
 
         assert.strictEqual(promptToInstall.getDisplayCount(), 0, 'Prompt should not have been displayed');
