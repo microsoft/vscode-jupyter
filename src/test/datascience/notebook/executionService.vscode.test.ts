@@ -14,7 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -404,6 +404,34 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.ok(
             areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
+        );
+    });
+    test('!python should point to the Environment', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await insertCodeCell(getOSType() === OSType.Windows ? '!where python' : '!which python', { index: 0 });
+        await insertCodeCell('import sys', { index: 1 });
+        await insertCodeCell('print(sys.executable)', { index: 2 });
+        const [cell1, _, cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
+
+        // Basically anything such as `!which python` and the like should point to the right executable.
+        // For that to work, the first directory in the PATH must be the Python environment.
+
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell3),
+            waitForCondition(async () => getCellOutputs(cell3).length > 0, defaultNotebookTestTimeout, 'No output')
+        ]);
+
+        // On windows `!where python`, prints multiple items in the output (all executables found).
+        const shellExecutable = getCellOutputs(cell1).trim().split('\n')[0].trim();
+        const sysExecutable = getCellOutputs(cell3).trim();
+
+        // First path in PATH must be the directory where executable is located.
+        assert.ok(
+            areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
+            `Python paths do not match ${shellExecutable}, ${sysExecutable}`
         );
     });
     test('Testing streamed output', async () => {

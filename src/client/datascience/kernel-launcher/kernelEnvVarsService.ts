@@ -9,7 +9,7 @@ import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 @injectable()
