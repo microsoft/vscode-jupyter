@@ -24,11 +24,7 @@ import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { PythonKernelDiedError } from './pythonKernelDiedError';
-import {
-    analyzeKernelErrors,
-    getErrorMessageFromPythonTraceback,
-    KernelFailureReason
-} from '../../common/errors/errorUtils';
+import { analyzeKernelErrors, getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
@@ -101,38 +97,33 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning('Kernel Error', err);
-        err = WrappedError.unwrap(err);
-        const failureInfo = analyzeKernelErrors(
-            this.workspaceService.workspaceFolders || [],
-            err,
-            getDisplayNameOrNameOfKernelConnection(kernelConnection),
-            kernelConnection.interpreter?.sysPrefix
-        );
-        if (failureInfo) {
-            switch (failureInfo?.reason) {
-                case KernelFailureReason.moduleNotFoundFailure: {
-                    if (
-                        failureInfo?.moduleName.toLowerCase().includes('ipykernel') &&
-                        kernelConnection.interpreter &&
-                        (purpose === 'start' || purpose === 'restart')
-                    ) {
-                        const token = new CancellationTokenSource();
-                        return this.kernelDependency.installMissingDependencies(
-                            resource,
-                            kernelConnection,
-                            new DisplayOptions(false),
-                            token.token,
-                            true
-                        );
-                    }
-                    break;
-                }
-                default:
-                    void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
-                    break;
+
+        // Use the kernel dependency service to first determine if this is because dependencies are missing or not
+        if (
+            (purpose === 'start' || purpose === 'restart') &&
+            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
+        ) {
+            const token = new CancellationTokenSource();
+            return this.kernelDependency.installMissingDependencies(
+                resource,
+                kernelConnection,
+                new DisplayOptions(false),
+                token.token,
+                true
+            );
+        } else {
+            err = WrappedError.unwrap(err);
+            const failureInfo = analyzeKernelErrors(
+                this.workspaceService.workspaceFolders || [],
+                err,
+                getDisplayNameOrNameOfKernelConnection(kernelConnection),
+                kernelConnection.interpreter?.sysPrefix
+            );
+            if (failureInfo) {
+                void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
             }
+            return KernelInterpreterDependencyResponse.failed;
         }
-        return KernelInterpreterDependencyResponse.failed;
     }
     private async showMessageWithMoreInfo(message: string, moreInfoLink: string | undefined) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
