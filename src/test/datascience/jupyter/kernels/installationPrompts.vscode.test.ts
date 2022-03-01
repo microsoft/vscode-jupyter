@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Memento, workspace, window } from 'vscode';
+import { commands, Memento, workspace, window, Uri } from 'vscode';
 import { IPythonApiProvider } from '../../../../client/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
@@ -34,7 +34,6 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
-import { noop } from '../../../core';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook, submitFromPythonFile } from '../../helpers';
 import {
@@ -51,10 +50,10 @@ import {
     getCellOutputs
 } from '../../notebook/helper';
 import * as kernelSelector from '../../../../client/datascience/jupyter/kernels/kernelSelector';
-import { IKernelProvider } from '../../../../client/datascience/jupyter/kernels/types';
 import { JupyterNotebookView } from '../../../../client/datascience/notebook/constants';
 import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
 import { WrappedError } from '../../../../client/common/errors/types';
+import { Commands } from '../../../../client/datascience/constants';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -74,9 +73,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let installer: IInstaller;
     let memento: Memento;
     let installerSpy: sinon.SinonSpy;
-    let kernelProvider: IKernelProvider;
     let commandManager: ICommandManager;
     let vscodeNotebook: IVSCodeNotebook;
+    let controllerManager: INotebookControllerManager;
     const delayForUITest = 30_000;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
@@ -98,11 +97,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         this.timeout(120_000);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
@@ -334,18 +333,15 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Now that IPyKernel is missing, if we attempt to restart a kernel, we should get a prompt.
         // Previously things just hang at weird spots, its not a likely scenario, but this test ensures the code works as expected.
-        const notebook = workspace.notebookDocuments.find(
-            (item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase()
-        )!;
-        const kernel = kernelProvider.get(notebook)!;
 
         // Confirm message is displayed.
         installerSpy = sinon.spy(installer, 'install');
         console.log('Step3');
         const promptToInstall = await clickInstallFromIPyKernelPrompt();
-
-        kernel.restart().catch(noop);
-        console.log('Step4');
+        await commandManager.executeCommand(Commands.RestartKernel, {
+            notebookEditor: { notebookUri: Uri.file(nbFile) }
+        }),
+            console.log('Step4');
         await Promise.all([
             waitForCondition(
                 async () => promptToInstall.displayed.then(() => true),
@@ -367,17 +363,20 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Now that IPyKernel is missing, if we attempt to restart a kernel, we should get a prompt.
         // Previously things just hang at weird spots, its not a likely scenario, but this test ensures the code works as expected.
-        const notebook = workspace.notebookDocuments.find(
-            (item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase()
-        )!;
-        const kernel = kernelProvider.get(notebook)!;
+        const startController = controllerManager.getSelectedNotebookController(
+            vscodeNotebook.activeNotebookEditor?.document!
+        );
+        assert.ok(startController);
 
         // Confirm message is displayed.
         const promptToInstall = await selectKernelFromIPyKernelPrompt();
         const { kernelSelected } = hookupKernelSelected(promptToInstall, venvNoRegPath);
+        await commands.executeCommand(Commands.RestartKernel, nbFile);
 
         await Promise.all([
-            kernel.restart().catch(noop),
+            await commandManager.executeCommand(Commands.RestartKernel, {
+                notebookEditor: { notebookUri: Uri.file(nbFile) }
+            }),
             waitForCondition(
                 async () => promptToInstall.displayed.then(() => true),
                 delayForUITest,
@@ -387,8 +386,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             // Verify the new kernel associated with this notebook is different.
             waitForCondition(
                 async () => {
-                    assert.ok(kernelProvider.get(notebook));
-                    assert.notEqual(kernel, kernelProvider.get(notebook));
+                    const newController = controllerManager.getSelectedNotebookController(
+                        vscodeNotebook.activeNotebookEditor?.document!
+                    );
+                    assert.ok(newController);
+                    assert.notEqual(startController?.id, newController!.id);
                     return true;
                 },
                 delayForUITest,
