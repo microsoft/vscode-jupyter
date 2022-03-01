@@ -106,11 +106,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _insertSysInfoPromise: Promise<NotebookCell | undefined> | undefined;
     private _kernelPromise = createDeferred<IKernel>();
     private _kernelConnectionId: string | undefined;
+    private _kernelConnectMetadata: KernelConnectionMetadata | undefined;
     private _notebookDocument: NotebookDocument | undefined;
     private _notebookEditor: NotebookEditor | undefined;
     private _inputUri: Uri | undefined;
     private pendingNotebookScrolls: NotebookRange[] = [];
-    private _kernelEventHook: ((event: 'willInterrupt' | 'willRestart') => Promise<void>) | undefined;
+    private _kernelEventHook = this.kernelEventHook.bind(this);
 
     constructor(
         private readonly documentManager: IDocumentManager,
@@ -167,6 +168,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return editor;
     }
 
+    @chainable()
     private async startKernel(notebook: NotebookDocument, controller: VSCodeNotebookController): Promise<void> {
         if (controller.id !== this._kernelConnectionId) {
             this._kernelConnectionId = controller.id;
@@ -176,56 +178,77 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Try creating a kernel
                 initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller.connection);
                 const kernel = await connectToKernel(controller, this.serviceContainer, this.owner, notebook);
-                // Hook pre interrupt so we can stick in a message
-                this._kernelEventHook = this.kernelEventHook.bind(this, kernel);
-                kernel.addEventHook(this._kernelEventHook);
-                this.kernelDisposables.push({
-                    dispose: () => {
-                        if (this._kernelEventHook) {
-                            kernel.removeEventHook(this._kernelEventHook);
-                            this._kernelEventHook = undefined;
-                        }
-                    }
-                });
 
-                // When restart finishes, rerun our initialization code
-                kernel.onRestarted(
-                    async () => {
-                        traceInfoIfCI('Restart event handled in IW');
-                        this.fileInKernel = undefined;
-                        const cellPromise = Promise.resolve(notebook?.cellAt(notebook.cellCount - 1));
-                        try {
-                            await this.runInitialization(kernel, this.owner);
-                        } finally {
-                            this.updateSysInfoMessage(kernel, cellPromise, SysInfoReason.Restart);
-                        }
-                    },
-                    this,
-                    this.kernelDisposables
+                // Save connection metadata
+                this._kernelConnectMetadata = { ...kernel.kernelConnectionMetadata };
+
+                // Id may be different if the user switched controllers
+                this._kernelConnectionId = kernel.controller.id;
+
+                // After connecting, we need to update the sys info message. It may have changed because
+                // the controller may have changed
+                this.updateSysInfoMessage(
+                    this.getSysInfoMessage(kernel.kernelConnectionMetadata, SysInfoReason.Start),
+                    false,
+                    sysInfoCell
                 );
-                this.kernelDisposables.push(kernel);
+
+                if (!this._kernelPromise.resolved || this._kernelPromise.value !== kernel) {
+                    // Hook pre interrupt so we can stick in a message
+                    kernel.addEventHook(this._kernelEventHook);
+                    this.kernelDisposables.push({
+                        dispose: () => {
+                            kernel.removeEventHook(this._kernelEventHook);
+                        }
+                    });
+
+                    // When restart finishes, rerun our initialization code
+                    kernel.onRestarted(
+                        async () => {
+                            traceInfoIfCI('Restart event handled in IW');
+                            this.fileInKernel = undefined;
+                            const cellPromise = Promise.resolve(notebook?.cellAt(notebook.cellCount - 1));
+                            try {
+                                await this.runInitialization(kernel, this.owner);
+                            } finally {
+                                this.finishSysInfoMessage(kernel, cellPromise, SysInfoReason.Restart);
+                            }
+                        },
+                        this,
+                        this.kernelDisposables
+                    );
+                    this.kernelDisposables.push(kernel);
+                }
+
                 this.fileInKernel = undefined;
                 await this.runInitialization(kernel, this.owner);
-                this.updateSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
+                this.finishSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
                 this._kernelPromise.resolve(kernel);
             } catch (ex) {
-                this.updateSysInfoMessage(ex, sysInfoCell, SysInfoReason.Start);
+                this.finishSysInfoMessage(ex, sysInfoCell, SysInfoReason.Start);
                 this._kernelPromise.resolve(undefined);
                 this.disconnectKernel();
             }
         }
     }
 
-    private async kernelEventHook(kernel: IKernel, ev: 'willRestart' | 'willInterrupt') {
-        if (ev === 'willRestart' && this._notebookDocument) {
+    private async kernelEventHook(ev: 'willRestart' | 'willInterrupt') {
+        if (ev === 'willRestart' && this._notebookDocument && this._kernelConnectMetadata) {
             this._insertSysInfoPromise = undefined;
             // If we're about to restart, insert a 'restarting' message as it happens
-            void this.insertSysInfoMessage(
-                this._notebookDocument,
-                kernel.kernelConnectionMetadata,
-                SysInfoReason.Restart
-            );
+            void this.insertSysInfoMessage(this._notebookDocument, this._kernelConnectMetadata, SysInfoReason.Restart);
         }
+    }
+
+    private getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
+        const kernelName = kernelMetadata.interpreter?.displayName;
+        return reason === SysInfoReason.Restart
+            ? kernelName
+                ? DataScience.restartingKernelCustomHeader().format(kernelName)
+                : DataScience.restartingKernelHeader()
+            : kernelName
+            ? DataScience.startingNewKernelCustomHeader().format(kernelName)
+            : DataScience.startingNewKernelHeader();
     }
 
     private async insertSysInfoMessage(
@@ -235,15 +258,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     ): Promise<NotebookCell | undefined> {
         if (!this._insertSysInfoPromise) {
             const func = async () => {
-                const kernelName = kernelMetadata.interpreter?.displayName;
-                const message =
-                    reason === SysInfoReason.Restart
-                        ? kernelName
-                            ? DataScience.restartingKernelCustomHeader().format(kernelName)
-                            : DataScience.restartingKernelHeader()
-                        : kernelName
-                        ? DataScience.startingNewKernelCustomHeader().format(kernelName)
-                        : DataScience.startingNewKernelHeader();
+                const message = this.getSysInfoMessage(kernelMetadata, reason);
                 await chainWithPendingUpdates(notebookDocument, (edit) => {
                     const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
                     markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
@@ -261,11 +276,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._insertSysInfoPromise;
     }
 
-    private updateSysInfoMessage(
-        kernelOrError: IKernel | Error,
-        cellPromise: Promise<NotebookCell | undefined>,
-        reason: SysInfoReason
-    ) {
+    private updateSysInfoMessage(newMessage: string, finish: boolean, cellPromise: Promise<NotebookCell | undefined>) {
         cellPromise
             .then((cell) =>
                 chainWithPendingUpdates(this._notebookDocument!, (edit) => {
@@ -275,25 +286,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                             cell.metadata.isInteractiveWindowMessageCell &&
                             cell.metadata.isPlaceholder
                         ) {
-                            const kernelName =
-                                'info' in kernelOrError
-                                    ? kernelOrError.kernelConnectionMetadata.interpreter?.displayName
-                                    : '';
-                            const kernelInfo =
-                                'info' in kernelOrError && kernelOrError.info?.status === 'ok'
-                                    ? kernelOrError.info
-                                    : undefined;
-                            const banner = kernelInfo
-                                ? kernelInfo.banner.split('\n').join('  \n')
-                                : kernelOrError.toString();
-                            const message =
-                                reason == SysInfoReason.Restart
-                                    ? DataScience.restartedKernelHeader().format(kernelName || '')
-                                    : banner;
-                            edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), message);
+                            edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
                             edit.replaceNotebookCellMetadata(this._notebookDocument!.uri, cell.index, {
                                 isInteractiveWindowMessageCell: true,
-                                isPlaceholder: false
+                                isPlaceholder: !finish
                             });
                             return;
                         }
@@ -301,6 +297,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 })
             )
             .ignoreErrors();
+    }
+
+    private finishSysInfoMessage(
+        kernelOrError: IKernel | Error,
+        cellPromise: Promise<NotebookCell | undefined>,
+        reason: SysInfoReason
+    ) {
+        const kernelName =
+            'info' in kernelOrError ? kernelOrError.kernelConnectionMetadata.interpreter?.displayName : '';
+        const kernelInfo =
+            'info' in kernelOrError && kernelOrError.info?.status === 'ok' ? kernelOrError.info : undefined;
+        const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernelOrError.toString();
+        const message =
+            reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader().format(kernelName || '') : banner;
+        this.updateSysInfoMessage(message, true, cellPromise);
     }
 
     private async getPreferredController(
