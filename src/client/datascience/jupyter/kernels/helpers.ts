@@ -10,6 +10,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterKernelSpec,
     IJupyterSession,
+    IRawNotebookProvider,
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -27,7 +28,8 @@ import {
     LocalKernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
-    IKernelProvider
+    IKernelProvider,
+    isLocalConnection
 } from './types';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
@@ -1862,7 +1864,10 @@ export async function connectToKernel(
             const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
 
             // Send telemetry for handling the error (if raw)
-            if (kernel.connection?.type === 'raw') {
+            const isLocal = isLocalConnection(controller.connection);
+            const rawLocalKernel =
+                serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+            if (rawLocalKernel) {
                 sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                     reason: handleResult
                 });
