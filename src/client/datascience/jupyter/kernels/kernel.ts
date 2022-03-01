@@ -414,8 +414,8 @@ export class Kernel implements IKernel {
                 Telemetry.PerceivedJupyterStartupNotebook,
                 stopWatch.elapsedTime
             );
-            this._onStarted.fire();
             this.notebook = notebook;
+            this._onStarted.fire();
             return notebook;
         } catch (ex) {
             traceError(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
