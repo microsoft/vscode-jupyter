@@ -45,6 +45,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
+        when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
