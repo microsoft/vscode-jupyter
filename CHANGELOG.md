@@ -1,6 +1,6 @@
 # Changelog
 
-## 2022.2.101 (25 February 2022)
+## 2022.2.101 (3 March 2022)
 
 ### Enhancements
 
@@ -55,7 +55,7 @@
    ([#9089](https://github.com/Microsoft/vscode-jupyter/issues/9089))
 1. Fix 'ipykernel_launcher' not found when using a global python environment and '.env' file exists.
    ([#9127](https://github.com/Microsoft/vscode-jupyter/issues/9127))
-   
+
 ### Code Health
 
 1. Add 'goto definition' test from a notebook.
