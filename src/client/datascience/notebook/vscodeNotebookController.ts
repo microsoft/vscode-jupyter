@@ -392,7 +392,9 @@ export class VSCodeNotebookController implements Disposable {
 
     @chainable()
     private async connectToKernel(doc: NotebookDocument) {
-        // Make sure we don't have multiple cells trying to connect at the same time
+        // executeCell can get called multiple times before the first one is resolved. Since we only want
+        // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
+        // all of the cells if it fails.
         return connectToKernel(this, this.serviceContainer, doc.uri, doc);
     }
 
