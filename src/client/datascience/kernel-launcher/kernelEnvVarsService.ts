@@ -51,7 +51,7 @@ export class KernelEnvironmentVariablesService {
 
         let [customEditVars, interpreterEnv] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
-            interpreter && interpreter.envType == EnvironmentType.Conda
+            interpreter
                 ? this.envActivation
                       .getActivatedEnvironmentVariables(resource, interpreter, false)
                       .catch<undefined>((ex) => {
@@ -62,6 +62,14 @@ export class KernelEnvironmentVariablesService {
         ]);
         if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
+            // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            if (interpreter) {
+                const env = kernelEnv || process.env;
+                this.envVarsService.prependPath(env, path.dirname(interpreter.path));
+                return env;
+            }
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
