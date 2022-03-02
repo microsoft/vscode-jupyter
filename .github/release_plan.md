@@ -23,9 +23,12 @@
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
-    -   [ ] Update version in `package.json` branch to point to the next version,
+    -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
         - If latest is `2022.2.100`, them bump it to `2022.3.100`,
         - This ensures the new new pre-release targets the next version.
+        -   [ ] `package.json`
+        -   [ ] `package-lock.json`
+        -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -72,11 +75,6 @@
         * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 
 # Day of VS Code publishing (Wednesday, XXX XX)
--   [ ] Update `main` after the next insider version is made available.
-    -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
-        -   [ ] `package.json`
-        -   [ ] `package-lock.json`
-        -   [ ] Confirm the 3rd part of the version ends with `100`.
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
