@@ -56,7 +56,6 @@ module.exports = {
         'src/test/utils/fs.ts',
         'src/test/api.functional.test.ts',
         'src/test/common/exitCIAfterTestReporter.ts',
-        'src/test/common/crypto.unit.test.ts',
         'src/test/common/configuration/service.test.ts',
         'src/test/common/moduleInstaller.test.ts',
         'src/test/common/misc.test.ts',
