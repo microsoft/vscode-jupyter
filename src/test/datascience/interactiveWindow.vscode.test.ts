@@ -11,10 +11,11 @@ import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { IKernelProvider } from '../../client/datascience/jupyter/kernels/types';
 import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
@@ -152,13 +153,12 @@ suite('Interactive window', async function () {
         await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
 
         // Restart kernel
+        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const kernel = kernelProvider.get(notebookDocument);
+        const handler = createEventHandler(kernel!, 'onRestarted', disposables);
         await vscode.commands.executeCommand('jupyter.restartkernel');
-        // Wait for first cell to get output.
-        await waitForCondition(
-            async () => notebookDocument.cellCount > 0,
-            defaultNotebookTestTimeout,
-            'Kernel info not printed'
-        );
+        // Wait for restart to finish
+        await handler.assertFiredExactly(1, defaultNotebookTestTimeout);
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
