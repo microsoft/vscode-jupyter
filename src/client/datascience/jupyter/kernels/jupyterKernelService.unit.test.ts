@@ -453,7 +453,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         when(fs.writeLocalFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
@@ -476,7 +476,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         when(fs.writeLocalFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
@@ -503,7 +503,7 @@ suite('DataScience - JupyterKernelService', () => {
             return Promise.resolve();
         });
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
