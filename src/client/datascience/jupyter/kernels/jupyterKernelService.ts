@@ -118,7 +118,7 @@ export class JupyterKernelService {
      * The assumption is that `ipykernel` has been installed in the interpreter.
      * Kernel created will have following characteristics:
      * - display_name = Display name of the interpreter.
-     * - metadata.interperter = Interpreter information (useful in finding a kernel that matches a given interpreter)
+     * - metadata.interpreter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
      *
      * @param {PythonEnvironment} interpreter
@@ -211,7 +211,7 @@ export class JupyterKernelService {
     }
     private async updateKernelEnvironment(
         resource: Resource,
-        interpreter: PythonEnvironment | undefined,
+        interpreter: PythonEnvironment,
         kernel: IJupyterKernelSpec,
         specFile: string,
         cancelToken?: CancellationToken,
@@ -239,7 +239,7 @@ export class JupyterKernelService {
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
-            if (interpreter && (specModel.metadata?.interpreter || forceWrite)) {
+            if (specModel.metadata?.interpreter || forceWrite) {
                 // Ensure we use a fully qualified path to the python interpreter in `argv`.
                 if (specModel.argv[0].toLowerCase() === 'conda') {
                     // If conda is the first word, its possible its a conda activation command.
@@ -250,14 +250,30 @@ export class JupyterKernelService {
                     );
                     specModel.argv[0] = interpreter.path;
                 }
-
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
-                specModel.env = await this.activationHelper
+                const interpreterEnv = await this.activationHelper
                     .getActivatedEnvironmentVariables(resource, interpreter, true)
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
+
+                // Ensure we inherit env variables from the original kernelspec file.
+                let envInKernelSpecJson =
+                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
+                        ? specModel.env || {}
+                        : {};
+
+                // Give preferences to variables in the env file (except for `PATH`).
+                envInKernelSpecJson = Object.assign(interpreterEnv, envInKernelSpecJson);
+                if (interpreterEnv['PATH']) {
+                    envInKernelSpecJson['PATH'] = interpreterEnv['PATH'];
+                }
+                if (interpreterEnv['Path']) {
+                    envInKernelSpecJson['Path'] = interpreterEnv['Path'];
+                }
+                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
+
                 // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
                 // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
                 // Also applies to `!java` where java could be an executable in the conda bin directory.
@@ -276,13 +292,6 @@ export class JupyterKernelService {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
-
-                // Ensure we inherit env variables from the original kernelspec file.
-                const envInKernelSpecJson =
-                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
-                        ? specModel.env || {}
-                        : {};
-                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
 
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...
