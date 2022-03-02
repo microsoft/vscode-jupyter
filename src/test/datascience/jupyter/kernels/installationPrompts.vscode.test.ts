@@ -308,7 +308,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             waitForIPyKernelToGetInstalled()
         ]);
     });
-    test('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
+    test.skip('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
