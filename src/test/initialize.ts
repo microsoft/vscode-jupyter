@@ -24,6 +24,7 @@ export async function initializePython() {
     if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
         const extension = vscode.extensions.getExtension(PythonExtension)!;
         await extension.activate();
+        await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
 }
 
