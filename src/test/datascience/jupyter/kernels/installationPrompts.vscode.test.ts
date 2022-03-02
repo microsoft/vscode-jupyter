@@ -158,7 +158,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     });
     suiteTeardown(async function () {
         // Make sure to put ipykernel back
-        await installIPyKernel(venvPythonPath);
+        try {
+            await installIPyKernel(venvPythonPath);
+        } catch (ex) {
+            // Don't fail test
+        }
     });
 
     test('Test Install IPyKernel prompt message', async () => {
