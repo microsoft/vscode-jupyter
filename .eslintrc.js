@@ -792,7 +792,7 @@ module.exports = {
                 basePath: './src',
                 zones: [
                     {
-                        target: './client/**/*[!unit.].ts',
+                        target: './client',
                         from: './test',
                         message: 'Importing test modules from ./src/test into extension code in .src/client, is not allowed.'
                     }
