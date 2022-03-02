@@ -7,8 +7,7 @@ import { noop } from '../../client/common/utils/misc';
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';
 
-export function concatMultilineString(str: nbformat.MultilineString, trim?: boolean): string {
-    const nonLineFeedWhiteSpaceTrim = /(^[\t\f\v\r ]+|[\t\f\v\r ]+$)/g; // Local var so don't have to reset the lastIndex.
+export function concatMultilineString(str: nbformat.MultilineString): string {
     if (Array.isArray(str)) {
         let result = '';
         for (let i = 0; i < str.length; i += 1) {
@@ -19,11 +18,9 @@ export function concatMultilineString(str: nbformat.MultilineString, trim?: bool
                 result = result.concat(s);
             }
         }
-
-        // Just trim whitespace. Leave \n in place
-        return trim ? result.replace(nonLineFeedWhiteSpaceTrim, '') : result;
+        return result;
     }
-    return trim ? str.toString().replace(nonLineFeedWhiteSpaceTrim, '') : str.toString();
+    return str.toString();
 }
 
 export function splitMultilineString(source: nbformat.MultilineString): string[] {
