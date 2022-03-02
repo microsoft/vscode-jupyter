@@ -24,6 +24,7 @@ import {
     InteractiveWindowMode,
     Resource
 } from '../../common/types';
+import { chainable } from '../../common/utils/decorators';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -78,6 +79,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         asyncRegistry.push(this);
     }
 
+    @chainable()
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
@@ -93,6 +95,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // No match. Create a new item.
             result = this.create(resource, mode, connection);
         }
+
+        // wait for the notebook to show up
+        await result.ready;
 
         return result;
     }

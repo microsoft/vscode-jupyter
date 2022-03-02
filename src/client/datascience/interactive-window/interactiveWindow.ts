@@ -71,6 +71,11 @@ export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellM
     }
 }
 export class InteractiveWindow implements IInteractiveWindowLoadable {
+    public get ready() {
+        return this._editorReadyPromise.then((_n) => {
+            // Don't return anything
+        });
+    }
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }

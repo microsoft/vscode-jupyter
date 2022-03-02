@@ -460,6 +460,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     readonly originalConnection?: KernelConnectionMetadata;
+    readonly ready: Promise<void>;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;

@@ -23,6 +23,7 @@ import {
     runCurrentFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
+    waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers';
 import {
@@ -171,6 +172,7 @@ suite('Interactive window', async function () {
     test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
 
         // Add code to the input box
         await insertIntoInputEditor('print("foo")');
@@ -178,11 +180,16 @@ suite('Interactive window', async function () {
         // Run the code in the input box
         await vscode.commands.executeCommand('interactive.execute');
 
-        // Inspect notebookDocument for output
-        const notebook = vscode.workspace.notebookDocuments.find(
-            (notebookDocument) => notebookDocument.uri.toString() === activeInteractiveWindow.notebookUri?.toString()
-        );
         assert.ok(notebook !== undefined, 'No interactive window found');
+        await waitForCondition(
+            async () => {
+                return notebook.cellCount > 1;
+            },
+            defaultNotebookTestTimeout,
+            'Cell never added'
+        );
+
+        // Inspect notebookDocument for output
         const index = notebook!.cellCount - 1;
         const cell = notebook!.cellAt(index);
         await waitForTextOutput(cell, 'foo');
