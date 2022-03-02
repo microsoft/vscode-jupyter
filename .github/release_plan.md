@@ -3,7 +3,7 @@
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
 
-# Release candidate (Friday of VS Code endgame week, Feb 25)
+# Release candidate (Friday of VS Code endgame week, XXX XX)
 
 -   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876?_a=alerts&typeId=10819888&alerts-view-option=active) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the [OneNote](https://microsoft.sharepoint.com/teams/python/_layouts/15/Doc.aspx?sourcedoc=%7B30d33826-9f98-4d3e-890e-b7d198bbbcbe%7D&action=edit&wd=target(Python%20VS%20Code%2FDev%20Process.one%7C685f1141-e5eb-45a3-adcf-dd2504c21ca2%2FCG%5C%2FTPN%7Cbb1ca24f-7cd5-451f-b2b4-ef310ec8b903%2F)&share=IgEmONMwmJ8-TYkOt9GYu7y-AeCM6R8r8Myty0Lj8CeOs4E) under Python VS Code -> Dev Process -> Component Governance.
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
@@ -34,7 +34,7 @@
 -   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
 -   [ ] Ask CTI to test the release candidate
 
-# Testing (Monday of VS Code release week, Mar 03)
+# Testing (Monday of VS Code release week, XXX XX)
 
 -  [ ] Obtain VS Code [prebuild](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code prebuild
