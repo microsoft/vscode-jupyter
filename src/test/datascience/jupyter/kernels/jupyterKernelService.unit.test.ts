@@ -498,7 +498,7 @@ suite('DataScience - JupyterKernelService', () => {
     test('Verify registration of the kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
-        when(fs.localFileExists(anything())).thenCall((f) => Promise.resolve(filesCreated.has(f));
+        when(fs.localFileExists(anything())).thenCall((f) => Promise.resolve(filesCreated.has(f)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
