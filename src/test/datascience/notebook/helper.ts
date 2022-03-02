@@ -203,7 +203,11 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
-    await commands.executeCommand('python.clearWorkspaceInterpreter');
+    try {
+        await commands.executeCommand('python.clearWorkspaceInterpreter');
+    } catch (ex) {
+        // Python extension may not be installed. Don't fail the test
+    }
     sinon.restore();
 }
 
