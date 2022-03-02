@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import { IS_NON_RAW_NATIVE_TEST } from '../../../test/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -34,7 +35,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         if (typeof this._isSupported === 'boolean') {
             return this._isSupported;
         }
-        if ((process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true') {
+        if (IS_NON_RAW_NATIVE_TEST) {
             return false;
         }
         try {

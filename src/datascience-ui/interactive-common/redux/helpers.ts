@@ -54,7 +54,6 @@ export function queueIncomingAction<M extends IInteractiveWindowMapping & Common
 /**
  * Post a message to the extension (via dispatcher actions).
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(
     originalReducerArg: ReducerArg,
     message: T,
@@ -63,7 +62,7 @@ export function postActionToExtension<K, M extends IInteractiveWindowMapping, T 
 /**
  * Post a message to the extension (via dispatcher actions).
  */
-// eslint-disable-next-line  @typescript-eslint/no-unused-vars, @typescript-eslint/unified-signatures
+// eslint-disable-next-line @typescript-eslint/unified-signatures
 export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(
     originalReducerArg: ReducerArg,
     message: T,

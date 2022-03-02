@@ -8,7 +8,7 @@
  */
 
 // https://stackoverflow.com/questions/39877156/how-to-extend-string-prototype-and-use-it-next-in-typescript
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface String {
     /**
      * Split a string using the cr and lf characters and return them as an array.
@@ -92,7 +92,7 @@ String.prototype.trimQuotes = function (this: string): string {
     return this.replace(/(^['"])|(['"]$)/g, '');
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface Promise<T> {
     /**
      * Catches task error and ignores them.
