@@ -54,7 +54,7 @@ import {
 } from '../../notebook/helper';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('DataScience Install IPyKernel (slow) (install)', function () {
+suite.only('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
     const templateIPynbFile = path.join(
