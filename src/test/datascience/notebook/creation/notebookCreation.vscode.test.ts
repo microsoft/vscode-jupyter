@@ -110,7 +110,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         // Create a blank notebook & it should just work.
         await createNotebookAndValidateLanguageOfFirstCell(PYTHON_LANGUAGE.toLowerCase());
     });
-    test('Create javascript & powershell Notebook using API', async function () {
+    test.skip('Create javascript & powershell Notebook using API', async function () {
         await api.createBlankNotebook({ defaultCellLanguage: 'javascript' });
 
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
