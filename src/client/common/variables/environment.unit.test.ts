@@ -11,6 +11,8 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../platform/types';
 import { EnvironmentVariablesService, parseEnvFile } from './environment';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IEnvironmentVariablesService } from './types';
 
 use(chaiAsPromised);
 
@@ -601,6 +603,21 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
             });
 
             /* eslint-enable no-template-curly-in-string */
+        });
+    });
+});
+
+suite('Environment Variables Service', () => {
+    let variablesService: IEnvironmentVariablesService;
+    setup(() => {
+        const fs = new FileSystem();
+        variablesService = new EnvironmentVariablesService(fs);
+    });
+
+    suite('parseFile()', () => {
+        test('Custom variables should be undefined with no argument', async () => {
+            const vars = await variablesService.parseFile(undefined);
+            expect(vars).to.equal(undefined, 'Variables should be undefined');
         });
     });
 });

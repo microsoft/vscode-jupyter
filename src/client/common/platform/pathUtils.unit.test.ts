@@ -6,9 +6,9 @@
 /* eslint-disable  */
 
 import { expect } from 'chai';
-import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
-import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { WINDOWS as IS_WINDOWS } from './utils';
+import { FileSystemPathUtils } from './fs-paths';
+import { PathUtils } from './pathUtils';
+import { WINDOWS as IS_WINDOWS } from '../../../test/common/platform/utils';
 
 suite('FileSystem - PathUtils', () => {
     let utils: PathUtils;
