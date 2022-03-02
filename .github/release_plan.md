@@ -5,13 +5,12 @@
 
 # Release candidate (Friday of VS Code endgame week, XXX XX)
 
--   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
-    -   [ ] Provide details for any automatically detected npm dependencies
+-   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) (Click on "microsoft/vscode-jupyter" on that page) and resolve all High/Severe issues.
+
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
--   [ ] Create new release branch with format `release-YYYY.MM.100`
-    -   [ ] Mark release branch as not deletable (add it explicitly here, https://github.com/microsoft/vscode-jupyter/settings/branches)
-    -   [ ] Create a pull request against `release-YYYY.MM` for changes
-    -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
+-   [ ] Create new release branch with format `release/release-YYYY.MM.100`
+    -   [ ] Create a pull request against `release/release-YYYY.MM` for changes
+    -   [ ] Run `npm install` to verify `package-lock.json` did not get updated.
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
         -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
@@ -19,13 +18,11 @@
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Merge pull request into `release-YYYY.MM`
+    -   [ ] Merge pull request into `release/release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
-    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
+    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
-    -   [ ] Turn off automatic uploads for pre-release builds from main by commenting out the schedules section in the build file (https://github.com/microsoft/vscode-jupyter/blob/main/build/azure-pipeline.pre-release.yml#L5). This prevents stable customers from getting pre-release builds.
-    -   [ ] Ensure that the engine version and extension version in the `main` branch are **not changed**.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -42,7 +39,6 @@
 -  [ ] Obtain VS Code [prebuild](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code prebuild
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
--  [ ] Manually publish Monday's VS Code Insiders release from `main` branch to minimize gap in Insiders program
 
 # Release (Tuesday or day before VS Code publishes, whichever is later)
 
@@ -58,37 +54,32 @@
 ## Release
 
 -   [ ] Publish the release
-    -   [ ] Use the generated VSIX (from last build for the release branch) and sanity test the VSIX against VS Code prebuild
-    -   [ ] For an automated release
-        -   [ ] Create a commit which contains the words `publish` and `release` in it (you can use --allow-empty if needed)
-        -   [ ] Directly push (PR not required) the commit to the `release-xxxx.xx` branch
-        -   [ ] This commit will trigger the `release` stage to run after smoke tests. [Example run](https://github.com/microsoft/vscode-jupyter/actions/runs/702919634)
-        -   [ ] For release branches a mail will be sent to verify that the release should be published. Click the `Review pending deployments` button on the mail and deploy from the GitHub page. This will publish the release on the marketplace.
+    -   [ ] Verify the PR Pipeline on Github actions is green against the release branch.
+    -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-xxxx.xx` branch
+    -   [ ] Approve the `Publish` stage
     -   [ ] For manual (if needed as automatic should be tried first)
-        -   [ ] Download the [Release VSIX](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-        -   [ ] Go to https://marketplace.visualstudio.com/manage/publishers/ms-toolsai?noPrompt=true and upload the VSIX
-            -   [ ] If there's errors, try diffing against old vsix that worked
-        -   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
-            -   [ ] Tag is version number
-            -   [ ] Branch is release branch
-            -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
-            -   [ ] Save
+    -   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
+        -   [ ] Tag is version number
+        -   [ ] Branch is release branch
+        -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
+        -   [ ] Save
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
         * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
         * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 
 # Day of VS Code publishing (Wednesday, XXX XX)
--   [ ] Update `main` after the release is published.
-    -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0` to `1.59.0`
+-   [ ] Update `main` after the next insider version is made available.
     -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
-    -   [ ] Turn pre-release daily builds back on
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
+
+# Day of VS Code releasing the next insider version (Wednesday, XXX XX)
+-   [ ] Bump the engines.vscode version on the `main` branch to point to the next insider version. For example, from `1.58.0-insider` to `1.59.0-insider`
 
 ## Prep for the _next_ release
 
