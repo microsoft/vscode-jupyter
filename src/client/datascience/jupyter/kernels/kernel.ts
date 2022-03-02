@@ -863,15 +863,17 @@ export class Kernel implements IKernel {
             traceInfoIfCI(
                 `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
             );
-            const matplobInit =
-                !settings || settings.generateSVGPlots
-                    ? CodeSnippets.MatplotLibInitSvg
-                    : CodeSnippets.MatplotLibInitPng;
+            // const matplotInit =
+            // !settings || settings.generateSVGPlots
+            // ? CodeSnippets.MatplotLibInitSvg
+            // : CodeSnippets.MatplotLibInitPng;
+
+            const matplotInit = CodeSnippets.MatplotLibInit;
 
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
-            results.push(...matplobInit.splitLines({ trim: false }));
+            results.push(...matplotInit.splitLines({ trim: false }));
 
             // TODO: This must be joined with the previous request (else we send two seprate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
@@ -884,12 +886,19 @@ export class Kernel implements IKernel {
                 );
             }
         } else {
-            const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            traceInfoIfCI(
-                `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
-            );
-            results.push(...configInit.splitLines({ trim: false }));
+            // const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            // const configInit = `curr = %config InlineBackend.figure_formats\ncurr.add('svg')\n%config InlineBackend.figure_formats = curr`;
+            // traceInfoIfCI(
+            // `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
+            // );
+            // results.push(...configInit.splitLines({ trim: false }));
         }
+
+        // Add in SVG to the figure formats if needed
+        if (settings.generateSVGPlots) {
+            results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
+        }
+
         return results;
     }
 

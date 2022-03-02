@@ -557,6 +557,7 @@ export namespace Identifiers {
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const RawPurpose = 'raw';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
+    export const MatplotLibFigureFormats = '_VSCode_matplotLib_FigureFormats';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
     export const ALL_VARIABLES = 'ALL_VARIABLES';
@@ -584,8 +585,10 @@ export namespace CodeSnippets {
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['svg', 'png']`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['png']`;
+    // export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['svg', 'png']`;
+    // export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['png']`;
+    export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
+    export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
     export const ConfigSvg = `%config InlineBackend.figure_formats = ['svg', 'png']`;
     export const ConfigPng = `%config InlineBackend.figure_formats = ['png']`;
     export const UpdateCWDAndPath =

@@ -152,8 +152,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
 
         // Setup our default cells that happen for everything
-        this.addCell(CodeSnippets.MatplotLibInitSvg);
-        this.addCell(CodeSnippets.MatplotLibInitPng);
+        // this.addCell(CodeSnippets.MatplotLibInitSvg);
+        // this.addCell(CodeSnippets.MatplotLibInitPng);
         this.addCell(CodeSnippets.ConfigSvg);
         this.addCell(CodeSnippets.ConfigPng);
         this.addCell(CodeSnippets.UpdateCWDAndPath.format(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')));
