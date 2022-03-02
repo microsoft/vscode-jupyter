@@ -380,7 +380,9 @@ export class VSCodeNotebookController implements Disposable {
         // Connect to a matching kernel if possible (but user may pick a different one)
         try {
             const kernel = await this.connectToKernel(doc);
-            this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            if (kernel.controller.id === this.id) {
+                this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            }
             return await kernel.executeCell(cell);
         } catch (ex) {
             // If there was a failure connecting or executing the kernel, stick it in this cell

@@ -4,7 +4,7 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import {
     CancellationTokenSource,
     Event,
@@ -127,7 +127,7 @@ export class Kernel implements IKernel {
     private _disposed?: boolean;
     private _disposing?: boolean;
     private _ignoreNotebookDisposedErrors?: boolean;
-    private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
+    private readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
