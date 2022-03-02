@@ -795,7 +795,7 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
         }
         if (outputs[0].output_type === 'stream') {
             const stream = outputs[0] as nbformat.IStream;
-            return concatMultilineString(stream.text, true);
+            return concatMultilineString(stream.text);
         }
     }
     return;

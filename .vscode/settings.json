@@ -57,7 +57,7 @@
         "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
-    "mochaExplorer.files": "./out/test/**/*.unit.test.js",
+    "mochaExplorer.files": "./out/**/*.unit.test.js",
     "mochaExplorer.require": ["ts-node/register", "./out/test/unittests.js"],
     "mochaExplorer.ui": "tdd",
     "mochaExplorer.nodeArgv": ["--enable-source-maps"]

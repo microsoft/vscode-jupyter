@@ -786,6 +786,19 @@ module.exports = {
         ],
         'react/jsx-uses-vars': 'error',
         'react/jsx-uses-react': 'error',
+        'import/no-restricted-paths': [
+            'error',
+            {
+                basePath: './src',
+                zones: [
+                    {
+                        target: './client/**/*[!unit.].ts',
+                        from: './test',
+                        message: 'Importing test modules from ./src/test into extension code in .src/client, is not allowed.'
+                    }
+                ]
+            }
+        ],
         strict: 'off'
     },
     settings: {
