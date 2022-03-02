@@ -23,6 +23,9 @@
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
+    -   [ ] Update version in `package.json` branch to point to the next version,
+        - If latest is `2022.2.100`, them bump it to `2022.3.100`,
+        - This ensures the new new pre-release targets the next version.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
