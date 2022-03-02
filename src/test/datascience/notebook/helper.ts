@@ -203,6 +203,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
+    await commands.executeCommand('python.clearWorkspaceInterpreter');
     sinon.restore();
 }
 

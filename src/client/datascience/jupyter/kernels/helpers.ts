@@ -11,6 +11,7 @@ import {
     IJupyterKernelSpec,
     IJupyterSession,
     IRawNotebookProvider,
+    IStatusProvider,
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -34,7 +35,7 @@ import {
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { DataScience } from '../../../common/utils/localize';
-import { Settings, Telemetry } from '../../constants';
+import { Commands, Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
@@ -52,7 +53,12 @@ import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
 } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 import { Memento, NotebookDocument, Uri } from 'vscode';
@@ -1828,6 +1834,42 @@ async function switchController(
     return controller;
 }
 
+export async function notifyAndRestartDeadKernel(
+    kernel: IKernel,
+    serviceContainer: IServiceContainer
+): Promise<boolean> {
+    const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const statusProvider = serviceContainer.get<IStatusProvider>(IStatusProvider);
+
+    const selection = await appShell.showErrorMessage(
+        DataScience.cannotRunCellKernelIsDead().format(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        ),
+        { modal: true },
+        DataScience.showJupyterLogs(),
+        DataScience.restartKernel()
+    );
+    let restartedKernel = false;
+    switch (selection) {
+        case DataScience.restartKernel(): {
+            // Set our status
+            const status = statusProvider.set(DataScience.restartingKernelStatus());
+            try {
+                await kernel.restart();
+                restartedKernel = true;
+            } finally {
+                status.dispose();
+            }
+            break;
+        }
+        case DataScience.showJupyterLogs(): {
+            void commandManager.executeCommand(Commands.ViewJupyterOutput);
+        }
+    }
+    return restartedKernel;
+}
+
 export async function connectToKernel(
     initialController: VSCodeNotebookController,
     serviceContainer: IServiceContainer,
@@ -1849,6 +1891,14 @@ export async function connectToKernel(
 
         try {
             await kernel.start();
+
+            // If the kernel is dead, ask the user if they want to restart
+            if (
+                kernel.status === 'dead' ||
+                (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)
+            ) {
+                await notifyAndRestartDeadKernel(kernel, serviceContainer);
+            }
         } catch (error) {
             if (controller.connection.interpreter) {
                 // If we failed to start the kernel, then clear cache used to track
@@ -1898,6 +1948,17 @@ export async function connectToKernel(
                 }
             }
         }
+    }
+
+    // Before returning, but without disposing the kernel, double check it's still valid
+    // If a restart didn't happen, then we can't connect. Throw an error.
+    // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
+    if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
+        throw new Error(
+            DataScience.kernelDiedWithoutError().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            )
+        );
     }
     return kernel;
 }

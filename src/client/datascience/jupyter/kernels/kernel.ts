@@ -15,14 +15,14 @@ import {
     ColorThemeKind,
     Disposable
 } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { AddRunCellHook, CodeSnippets, Commands, Identifiers, Telemetry } from '../../constants';
+import { AddRunCellHook, CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent,
@@ -139,7 +139,6 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
-    private isPromptingForRestart?: Promise<boolean>;
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
     constructor(
@@ -158,8 +157,7 @@ export class Kernel implements IKernel {
         private readonly workspaceService: IWorkspaceService,
         readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        private statusProvider: IStatusProvider,
-        private commandManager: ICommandManager
+        private statusProvider: IStatusProvider
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -184,15 +182,6 @@ export class Kernel implements IKernel {
     }
 
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
-        // If this kernel is still active & status is dead or dying, then notify the user of this dead kernel.
-        if ((this.status === 'terminating' || this.status === 'dead') && !this.disposed && !this.disposing) {
-            const restartedKernel = await this.notifyAndRestartDeadKernel();
-            if (!restartedKernel) {
-                traceInfo(`Cell ${cell.index} executed with state ${NotebookCellRunState.Error} due to kernel state.`);
-                return NotebookCellRunState.Error;
-            }
-        }
-
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
@@ -459,48 +448,7 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async notifyAndRestartDeadKernel(): Promise<boolean> {
-        if (this.isPromptingForRestart) {
-            return this.isPromptingForRestart;
-        }
 
-        const checkWhetherToRestart = async () => {
-            const selection = await this.appShell.showErrorMessage(
-                DataScience.cannotRunCellKernelIsDead().format(
-                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                ),
-                { modal: true },
-                DataScience.showJupyterLogs(),
-                DataScience.restartKernel()
-            );
-            let restartedKernel = false;
-            switch (selection) {
-                case DataScience.restartKernel(): {
-                    // Set our status
-                    const status = this.statusProvider.set(DataScience.restartingKernelStatus());
-                    try {
-                        await this.restart();
-                        restartedKernel = true;
-                    } finally {
-                        status.dispose();
-                    }
-                    break;
-                }
-                case DataScience.showJupyterLogs(): {
-                    void this.commandManager.executeCommand(Commands.ViewJupyterOutput);
-                }
-            }
-            return restartedKernel;
-        };
-        // Ensure we don't display this prompt multiple times,
-        // if we are running multiple cells together.
-        // Also clear this once the prompt has been dismissed.
-        this.isPromptingForRestart = checkWhetherToRestart();
-        this.isPromptingForRestart.finally(() => {
-            this.isPromptingForRestart = undefined;
-        });
-        return this.isPromptingForRestart;
-    }
     private async initializeAfterStart(notebook: INotebook | undefined, notebookDocument: NotebookDocument) {
         traceVerbose('Started running kernel initialization');
         if (!notebook) {

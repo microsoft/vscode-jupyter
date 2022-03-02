@@ -5,12 +5,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceVerbose, traceWarning } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
@@ -60,8 +55,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         this.asyncDisposables.push(this);
     }
@@ -116,8 +110,7 @@ export class KernelProvider implements IKernelProvider {
             this.workspaceService,
             this.cellHashProviderFactory,
             this.pythonExecutionFactory,
-            this.statusProvider,
-            this.commandManager
+            this.statusProvider
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
