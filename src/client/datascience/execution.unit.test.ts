@@ -51,11 +51,7 @@ import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
 import { NotebookStarter } from './jupyter/notebookStarter';
 import { LocalKernelFinder } from './kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from './kernel-launcher/types';
-import {
-    IJupyterKernelSpec,
-    IJupyterSubCommandExecutionService,
-    INotebookServer
-} from './types';
+import { IJupyterKernelSpec, IJupyterSubCommandExecutionService, INotebookServer } from './types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { ServiceContainer } from '../ioc/container';

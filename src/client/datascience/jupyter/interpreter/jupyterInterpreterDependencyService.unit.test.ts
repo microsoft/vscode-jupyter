@@ -10,10 +10,7 @@ import { IApplicationShell } from '../../../common/application/types';
 import { ProductInstaller } from '../../../common/installer/productInstaller';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
-import {
-    InterpreterJupyterKernelSpecCommand,
-    JupyterCommandFactory
-} from './jupyterCommand';
+import { InterpreterJupyterKernelSpecCommand, JupyterCommandFactory } from './jupyterCommand';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
