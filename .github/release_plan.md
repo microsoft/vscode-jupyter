@@ -5,10 +5,10 @@
 
 # Release candidate (Friday of VS Code endgame week, XXX XX)
 
--   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876?_a=alerts&typeId=10819888&alerts-view-option=active) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the [OneNote](https://microsoft.sharepoint.com/teams/python/_layouts/15/Doc.aspx?sourcedoc=%7B30d33826-9f98-4d3e-890e-b7d198bbbcbe%7D&action=edit&wd=target(Python%20VS%20Code%2FDev%20Process.one%7C685f1141-e5eb-45a3-adcf-dd2504c21ca2%2FCG%5C%2FTPN%7Cbb1ca24f-7cd5-451f-b2b4-ef310ec8b903%2F)&share=IgEmONMwmJ8-TYkOt9GYu7y-AeCM6R8r8Myty0Lj8CeOs4E) under Python VS Code -> Dev Process -> Component Governance.
+-   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) (Click on "microsoft/vscode-jupyter" on that page) and resolve all High/Severe issues.
+
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`
-    -   [ ] Mark release branch as not deletable (add it explicitly here, https://github.com/microsoft/vscode-jupyter/settings/branches)
     -   [ ] Create a pull request against `release/release-YYYY.MM` for changes
     -   [ ] Run `npm install` to verify `package-lock.json` did not get updated.
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
@@ -20,7 +20,7 @@
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
     -   [ ] Merge pull request into `release/release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
-    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
+    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
     -   [ ] Create a pull request against `main`
