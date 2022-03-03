@@ -80,7 +80,6 @@ module.exports = {
         'src/test/common/dotnet/services/unknownOsCompatibilityService.unit.test.ts',
         'src/test/common/dotnet/services/macCompatibilityService.unit.test.ts',
         'src/test/common/serviceRegistry.unit.test.ts',
-        'src/test/common/extensions.unit.test.ts',
         'src/test/common/variables/environmentVariablesProvider.unit.test.ts',
         'src/test/common/nuget/nugetService.unit.test.ts',
         'src/test/common/nuget/azureBobStoreRepository.functional.test.ts',
