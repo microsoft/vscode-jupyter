@@ -732,7 +732,7 @@ export class Kernel implements IKernel {
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
                 // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(`import site\nsite.addsitedir(site.getusersitepackages())`);
+                result.push(...wrapPythonStartupBlock(CodeSnippets.AppendSitePackages.splitLines({ trim: false })));
             }
 
             const [changeDirScripts, debugCellScripts] = await Promise.all([
@@ -743,22 +743,23 @@ export class Kernel implements IKernel {
                 this.getDebugCellHook(notebookDocument)
             ]);
 
-            result.push(...changeDirScripts);
+            result.push(...wrapPythonStartupBlock(changeDirScripts));
 
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
             if (file) {
-                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
+                result.push(...wrapPythonStartupBlock([`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`]));
             }
-            result.push(CodeSnippets.disableJedi);
+            result.push(...wrapPythonStartupBlock([CodeSnippets.DisableJedi]));
 
             // For Python notebook initialize matplotlib
-            result.push(...this.getMatplotLibInitializeCode());
+            result.push(...wrapPythonStartupBlock(this.getMatplotLibInitializeCode()));
 
-            result.push(...debugCellScripts);
+            result.push(...wrapPythonStartupBlock(debugCellScripts));
         }
 
         // Run any startup commands that we have specified
+        // Don't wrap these as they are not python specific
         result.push(...this.getStartupCommands());
         return result;
     }
@@ -972,6 +973,24 @@ export class Kernel implements IKernel {
         }
         await executeSilently(this.notebook.session, code.join('\n'));
     }
+}
+
+// Wrap a block of python code in try except to make sure hat we have n
+function wrapPythonStartupBlock(inputCode: string[]): string[] {
+    if (!inputCode || inputCode.length === 0) {
+        return inputCode;
+    }
+
+    // First space in everything
+    inputCode = inputCode.map((codeLine) => {
+        return `    ${codeLine}`;
+    });
+
+    // Add the try except
+    inputCode.unshift(`try:`);
+    inputCode.push(`except:`, `    print('Error running Python startup code.')`);
+
+    return inputCode;
 }
 
 /**

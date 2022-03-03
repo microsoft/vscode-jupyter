@@ -589,7 +589,8 @@ export namespace CodeSnippets {
     export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
-    export const disableJedi = '%config Completer.use_jedi = False';
+    export const DisableJedi = '%config Completer.use_jedi = False';
+    export const AppendSitePackages = 'import site\nsite.addsitedir(site.getusersitepackages())';
 }
 
 export enum JupyterCommands {
