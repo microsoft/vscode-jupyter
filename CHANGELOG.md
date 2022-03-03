@@ -1,5 +1,13 @@
 # Changelog
 
+## 2022.2.102 (4 March 2022)
+
+### Fixes
+
+1. Ensure we detect and set the `site_packages` directory only for environments that can be activated.
+This ensures we can correctly start Python Kernels in the Python Windows Store Apps.
+   ([#9219](https://github.com/Microsoft/vscode-jupyter/issues/9212))
+
 ## 2022.2.101 (3 March 2022)
 
 ### Enhancements

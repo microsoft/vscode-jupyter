@@ -16,4 +16,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return getActivatedEnvVariables(interpreter?.path || process.env.CI_PYTHON_PATH || 'python');
     }
+    async hasActivationCommands(_resource: Resource, _interpreter?: PythonEnvironment): Promise<boolean> {
+        return false;
+    }
 }

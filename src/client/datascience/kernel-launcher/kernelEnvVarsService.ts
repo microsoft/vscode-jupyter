@@ -9,7 +9,7 @@ import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 @injectable()
@@ -49,19 +49,28 @@ export class KernelEnvironmentVariablesService {
                 });
         }
 
-        let [customEditVars, interpreterEnv] = await Promise.all([
+        let [customEditVars, interpreterEnv, hasActivationCommands] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
-            interpreter && interpreter.envType == EnvironmentType.Conda
+            interpreter
                 ? this.envActivation
                       .getActivatedEnvironmentVariables(resource, interpreter, false)
                       .catch<undefined>((ex) => {
                           traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                           return undefined;
                       })
-                : undefined
+                : undefined,
+            interpreter ? this.envActivation.hasActivationCommands(resource, interpreter) : false
         ]);
         if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
+            // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            if (interpreter) {
+                const env = kernelEnv || process.env;
+                this.envVarsService.prependPath(env, path.dirname(interpreter.path));
+                return env;
+            }
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
@@ -111,7 +120,7 @@ export class KernelEnvironmentVariablesService {
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        if (hasInterpreterEnv) {
+        if (hasInterpreterEnv && hasActivationCommands) {
             mergedVars.PYTHONNOUSERSITE = 'True';
         }
 
