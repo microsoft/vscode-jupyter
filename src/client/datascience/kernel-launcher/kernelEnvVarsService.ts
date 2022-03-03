@@ -49,7 +49,7 @@ export class KernelEnvironmentVariablesService {
                 });
         }
 
-        let [customEditVars, interpreterEnv] = await Promise.all([
+        let [customEditVars, interpreterEnv, hasActivationCommands] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
             interpreter
                 ? this.envActivation
@@ -58,7 +58,8 @@ export class KernelEnvironmentVariablesService {
                           traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                           return undefined;
                       })
-                : undefined
+                : undefined,
+            interpreter ? this.envActivation.hasActivationCommands(resource, interpreter) : false
         ]);
         if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
@@ -119,7 +120,7 @@ export class KernelEnvironmentVariablesService {
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        if (hasInterpreterEnv) {
+        if (hasInterpreterEnv && hasActivationCommands) {
             mergedVars.PYTHONNOUSERSITE = 'True';
         }
 
