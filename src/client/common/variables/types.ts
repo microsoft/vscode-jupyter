@@ -19,6 +19,7 @@ export interface IEnvironmentVariablesService {
     mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
     appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     appendPath(vars: EnvironmentVariables, ...paths: string[]): void;
+    prependPath(vars: EnvironmentVariables, ...paths: string[]): void;
 }
 
 /**

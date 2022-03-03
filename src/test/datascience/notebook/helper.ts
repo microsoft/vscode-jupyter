@@ -203,6 +203,11 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
+    try {
+        await commands.executeCommand('python.clearWorkspaceInterpreter');
+    } catch (ex) {
+        // Python extension may not be installed. Don't fail the test
+    }
     sinon.restore();
 }
 
@@ -736,7 +741,9 @@ export async function waitForTextOutput(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
         () =>
-            `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
+            `A after ${timeout}ms output does not contain provided text '${text}' for Cell ${
+                cell.index + 1
+            }, it is ${getCellOutputs(cell)}`
     );
 }
 export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
@@ -813,8 +820,8 @@ export async function runAllCellsInActiveNotebook() {
  * We can confirm prompt was displayed & invoke a button click.
  */
 export async function hijackPrompt(
-    promptType: 'showErrorMessage',
-    message: { exactMatch: string } | { endsWith: string },
+    promptType: 'showErrorMessage' | 'showInformationMessage',
+    message: { exactMatch: string } | { endsWith: string } | { contains: string },
     buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
     disposables: IDisposable[] = []
 ): Promise<{
@@ -836,6 +843,7 @@ export async function hijackPrompt(
         traceInfo(`Message displayed to user '${msg}', condition ${JSON.stringify(message)}`);
         if (
             ('exactMatch' in message && msg.trim() === message.exactMatch.trim()) ||
+            ('contains' in message && msg.trim().includes(message.contains.trim())) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
             traceInfo(`Exact Message found '${msg}'`);
@@ -847,7 +855,7 @@ export async function hijackPrompt(
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
-    });
+    } as any);
     const disposable = { dispose: () => stub.restore() };
     if (disposables) {
         disposables.push(disposable);

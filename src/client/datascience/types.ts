@@ -404,7 +404,10 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
+<<<<<<< HEAD
 export type HandleKernelErrorResult = 'retry' | 'stop';
+=======
+>>>>>>> origin/main
 export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
@@ -421,9 +424,8 @@ export interface IDataScienceErrorHandler {
         err: Error,
         context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource,
-        displayError: DisplayErrorFunc
-    ): Promise<HandleKernelErrorResult>;
+        resource: Resource
+    ): Promise<KernelInterpreterDependencyResponse>;
 }
 
 /**
@@ -461,6 +463,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     readonly originalConnection?: KernelConnectionMetadata;
+    readonly ready: Promise<void>;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;
@@ -1006,7 +1009,7 @@ export interface IKernelDependencyService {
         ui: IDisplayOptions,
         token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<void>;
+    ): Promise<KernelInterpreterDependencyResponse>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */

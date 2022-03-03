@@ -33,6 +33,9 @@ export class InterpreterService implements IInterpreterService {
         interpretersCache = getAllInterpreters();
         return interpretersCache;
     }
+    public async refreshInterpreters(): Promise<void> {
+        //
+    }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.validatePythonExtension();

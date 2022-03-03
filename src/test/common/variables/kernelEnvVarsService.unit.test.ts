@@ -73,7 +73,7 @@ suite('Kernel Environment Variables Service', () => {
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
             expect(processPath).to.not.be.undefined;
             expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal('foobar');
+            expect(vars![processPath!]).to.be.equal(`${path.dirname(interpreter.path)}${path.delimiter}foobar`);
         });
 
         test('Paths are merged', async () => {
@@ -90,7 +90,9 @@ suite('Kernel Environment Variables Service', () => {
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
             expect(processPath).to.not.be.undefined;
             expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal(`foobar${path.delimiter}foobaz`);
+            expect(vars![processPath!]).to.be.equal(
+                `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
+            );
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
@@ -113,7 +115,9 @@ suite('Kernel Environment Variables Service', () => {
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
             expect(processPath).to.not.be.undefined;
             expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal(`foobar${path.delimiter}foobaz`);
+            expect(vars![processPath!]).to.be.equal(
+                `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
+            );
         });
     });
 });

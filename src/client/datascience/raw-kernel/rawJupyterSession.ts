@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -16,7 +17,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
-import { IpyKernelNotInstalledError } from '../errors/ipyKernelNotInstalledError';
 import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
@@ -121,19 +121,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                 sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 throw error;
-            } else if (error instanceof IpyKernelNotInstalledError) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartNoIpykernel, {
-                    reason: error.reason
-                });
-                traceError('Raw session failed to start because dependencies not installed');
-                throw error;
             } else {
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(
@@ -152,6 +139,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     error as any
                 );
+
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
             }
@@ -229,18 +217,22 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.processExitHandler.set(session, disposable);
     }
 
-    protected startRestartSession() {
+    protected startRestartSession(disableUI: boolean) {
         if (!this.restartSessionPromise) {
             const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(token.token);
+            const promise = this.createRestartSession(disableUI, token.token);
             this.restartSessionPromise = { token, promise };
+            promise.finally(() => token.dispose());
         }
     }
-    protected async createRestartSession(cancelToken: CancellationToken): Promise<ISessionWithSocket> {
+    protected async createRestartSession(
+        disableUI: boolean,
+        cancelToken: CancellationToken
+    ): Promise<ISessionWithSocket> {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(true) });
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
@@ -254,7 +246,11 @@ export class RawJupyterSession extends BaseJupyterSession {
             );
         }
 
-        traceInfo(`Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`);
+        traceInfo(
+            `Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(
+                this.kernelConnectionMetadata
+            )} for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.path)}`
+        );
 
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
@@ -269,7 +265,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     this.launchTimeout,
                     this.resource,
                     this.workingDirectory,
-                    options.ui,
                     options.token
                 )
         );

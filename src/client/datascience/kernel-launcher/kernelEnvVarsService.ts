@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 @injectable()
@@ -50,7 +51,7 @@ export class KernelEnvironmentVariablesService {
 
         let [customEditVars, interpreterEnv] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
-            interpreter && interpreter.envType == EnvironmentType.Conda
+            interpreter
                 ? this.envActivation
                       .getActivatedEnvironmentVariables(resource, interpreter, false)
                       .catch<undefined>((ex) => {
@@ -61,9 +62,18 @@ export class KernelEnvironmentVariablesService {
         ]);
         if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
+            // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            if (interpreter) {
+                const env = kernelEnv || process.env;
+                this.envVarsService.prependPath(env, path.dirname(interpreter.path));
+                return env;
+            }
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
+        const hasInterpreterEnv = interpreterEnv != undefined;
         interpreterEnv = interpreterEnv || {};
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -98,11 +108,20 @@ export class KernelEnvironmentVariablesService {
         if (kernelEnv.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, kernelEnv.PYTHONPATH);
         }
-        // Ensure global site_packages are not in the path.
+        // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+        // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+        // Also applies to `!java` where java could be an executable in the conda bin directory.
+        if (interpreter) {
+            this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.path));
+        }
+
+        // Ensure global site_packages are not in the path for non global environments
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        mergedVars.PYTHONNOUSERSITE = 'True';
+        if (hasInterpreterEnv) {
+            mergedVars.PYTHONNOUSERSITE = 'True';
+        }
 
         return mergedVars;
     }

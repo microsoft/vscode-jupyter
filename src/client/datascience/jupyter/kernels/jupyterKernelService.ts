@@ -6,8 +6,8 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { CancellationToken } from 'vscode';
+import { Cancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -15,14 +15,21 @@ import { IFileSystem } from '../../../common/platform/types';
 
 import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { IEnvironmentVariablesService } from '../../../common/variables/types';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { ignoreLogging, logValue } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
-import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
+import {
+    IDisplayOptions,
+    IJupyterKernelSpec,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
@@ -38,7 +45,8 @@ export class JupyterKernelService {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder
+        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder,
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
     ) {}
 
     /**
@@ -54,17 +62,28 @@ export class JupyterKernelService {
         @ignoreLogging() ui: IDisplayOptions,
         @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
-        // If we wish to wait for installation to complete, we must provide a cancel token.
-        const tokenSource = new CancellationTokenSource();
-        const token = wrapCancellationTokens(cancelToken, tokenSource.token);
-
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (
             kernel.kind !== 'connectToLiveKernel' &&
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
+            const result = await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel,
+                ui,
+                cancelToken,
+                true
+            );
+            switch (result) {
+                case KernelInterpreterDependencyResponse.cancel:
+                case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                case KernelInterpreterDependencyResponse.failed:
+                case KernelInterpreterDependencyResponse.uiHidden:
+                    throw new JupyterKernelDependencyError(result, kernel);
+                default:
+                    break;
+            }
         }
 
         var specFile: string | undefined = undefined;
@@ -80,7 +99,7 @@ export class JupyterKernelService {
             specFile = kernel.kernelSpec.specFile;
 
             if (!specFile || !(await this.fs.localFileExists(specFile))) {
-                specFile = await this.registerKernel(kernel, token);
+                specFile = await this.registerKernel(kernel, cancelToken);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
             else if (kernel.interpreter && specFile) {
@@ -89,7 +108,7 @@ export class JupyterKernelService {
                 if (path.basename(path.dirname(specFile)).toLowerCase() != kernel.kernelSpec.name.toLowerCase()) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
-                    specFile = await this.registerKernel(kernel, token);
+                    specFile = await this.registerKernel(kernel, cancelToken);
                 }
             }
         }
@@ -107,7 +126,7 @@ export class JupyterKernelService {
                     kernel.interpreter.path
                 )} for ${kernel.id}`
             );
-            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, token);
+            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
         }
     }
 
@@ -116,7 +135,7 @@ export class JupyterKernelService {
      * The assumption is that `ipykernel` has been installed in the interpreter.
      * Kernel created will have following characteristics:
      * - display_name = Display name of the interpreter.
-     * - metadata.interperter = Interpreter information (useful in finding a kernel that matches a given interpreter)
+     * - metadata.interpreter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
      *
      * @param {PythonEnvironment} interpreter
@@ -209,7 +228,7 @@ export class JupyterKernelService {
     }
     private async updateKernelEnvironment(
         resource: Resource,
-        interpreter: PythonEnvironment | undefined,
+        interpreter: PythonEnvironment,
         kernel: IJupyterKernelSpec,
         specFile: string,
         cancelToken?: CancellationToken,
@@ -237,7 +256,7 @@ export class JupyterKernelService {
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
-            if (interpreter && (specModel.metadata?.interpreter || forceWrite)) {
+            if (specModel.metadata?.interpreter || forceWrite) {
                 // Ensure we use a fully qualified path to the python interpreter in `argv`.
                 if (specModel.argv[0].toLowerCase() === 'conda') {
                     // If conda is the first word, its possible its a conda activation command.
@@ -248,14 +267,36 @@ export class JupyterKernelService {
                     );
                     specModel.argv[0] = interpreter.path;
                 }
-
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
-                specModel.env = await this.activationHelper
+                const interpreterEnv = await this.activationHelper
                     .getActivatedEnvironmentVariables(resource, interpreter, true)
                     .catch(noop)
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .then((env) => (env || {}) as any);
+
+                // Ensure we inherit env variables from the original kernelspec file.
+                let envInKernelSpecJson =
+                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
+                        ? specModel.env || {}
+                        : {};
+
+                // Give preferences to variables in the env file (except for `PATH`).
+                envInKernelSpecJson = Object.assign(interpreterEnv, envInKernelSpecJson);
+                if (interpreterEnv['PATH']) {
+                    envInKernelSpecJson['PATH'] = interpreterEnv['PATH'];
+                }
+                if (interpreterEnv['Path']) {
+                    envInKernelSpecJson['Path'] = interpreterEnv['Path'];
+                }
+                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
+
+                // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
+                // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+                // Also applies to `!java` where java could be an executable in the conda bin directory.
+                if (interpreter && specModel.env) {
+                    this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path));
+                }
 
                 // Ensure global site_packages are not in the path.
                 // The global site_packages will be added to the path later.
@@ -268,13 +309,6 @@ export class JupyterKernelService {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
-
-                // Ensure we inherit env variables from the original kernelspec file.
-                const envInKernelSpecJson =
-                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
-                        ? specModel.env || {}
-                        : {};
-                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
 
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...

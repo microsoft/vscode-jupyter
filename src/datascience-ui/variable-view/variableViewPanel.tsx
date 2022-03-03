@@ -115,7 +115,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: 0, // No toolbar in variable view panel
-            viewHeight: this.props.variableState.viewHeight // Height to use for variable view mode
+            viewHeight: this.props.variableState.viewHeight, // Height to use for variable view mode
+            requestInProgress: this.props.variableState.requestInProgress
         };
     };
 

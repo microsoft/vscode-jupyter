@@ -82,6 +82,8 @@ suite('VSCode Notebook - Run By Line', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Stops at end of cell', async function () {
+        // See issue: https://github.com/microsoft/vscode-jupyter/issues/9130
+        this.skip();
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
@@ -144,6 +146,8 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Stops in same-cell function called from last line', async function () {
+        // See https://github.com/microsoft/vscode-jupyter/issues/9130
+        this.skip();
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
 

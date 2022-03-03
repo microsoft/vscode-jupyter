@@ -453,6 +453,7 @@ export namespace DataScience {
     export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');
     export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
+    export const canceledKernelHeader = localize('DataScience.canceledKernelHeader', 'Canceled connection to {0}');
 
     export const jupyterSelectURIPrompt = localize(
         'DataScience.jupyterSelectURIPrompt',

@@ -36,6 +36,7 @@ export type IVariableState = {
     refreshCount: number;
     showVariablesOnDebug: boolean;
     viewHeight: number;
+    requestInProgress: boolean;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -66,6 +67,7 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
         ...arg.prevState,
         sortColumn: arg.payload.data.sortColumn,
         sortAscending: arg.payload.data.sortAscending,
+        requestInProgress: true,
         pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize)
     };
 }
@@ -198,6 +200,7 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
             ...arg.prevState,
             currentExecutionCount: response.executionCount,
             refreshCount: response.refreshCount,
+            requestInProgress: false,
             variables
         };
     } else if (
@@ -220,6 +223,7 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
 
         return {
             ...arg.prevState,
+            requestInProgress: false,
             variables
         };
     }
@@ -246,6 +250,7 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
     return {
         ...result,
         currentExecutionCount: -1,
+        requestInProgress: false,
         variables: []
     };
 }
@@ -381,7 +386,8 @@ export function generateVariableReducer(
         gridHeight: 200,
         refreshCount: 0,
         showVariablesOnDebug,
-        viewHeight: 0
+        viewHeight: 0,
+        requestInProgress: false
     };
 
     // Then combine that with our map of state change message to reducer

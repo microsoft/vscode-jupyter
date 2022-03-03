@@ -12,7 +12,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IDataScienceErrorHandler, IJupyterSession, InterruptResult } from '../../types';
+import { IJupyterSession, InterruptResult } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
@@ -34,7 +34,6 @@ export class KernelExecution implements IDisposable {
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
         private readonly kernel: IKernel,
-        errorHandler: IDataScienceErrorHandler,
         appShell: IApplicationShell,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
@@ -45,7 +44,6 @@ export class KernelExecution implements IDisposable {
     ) {
         this.executionFactory = new CellExecutionFactory(
             kernel,
-            errorHandler,
             appShell,
             disposables,
             controller,
@@ -77,6 +75,12 @@ export class KernelExecution implements IDisposable {
         executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
         return result[0];
+    }
+    public async cancel() {
+        const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
+        if (executionQueue) {
+            await executionQueue.cancel(true);
+        }
     }
 
     /**
@@ -144,10 +148,14 @@ export class KernelExecution implements IDisposable {
         }
 
         // Restart the active execution
-        await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(session)));
-
-        // Done restarting, clear restart promise
-        this._restartPromise = undefined;
+        if (!this._restartPromise) {
+            this._restartPromise = this.restartExecution(session);
+            this._restartPromise.finally(() => {
+                // Done restarting, clear restart promise
+                this._restartPromise = undefined;
+            });
+        }
+        await this._restartPromise;
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());

@@ -13,8 +13,8 @@ import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, N
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
+import { IDisposable, Product } from '../../../client/common/types';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -39,7 +39,8 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout,
-    waitForCellExecutionState
+    waitForCellExecutionState,
+    getCellOutputs
 } from './helper';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
@@ -52,6 +53,7 @@ import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -376,6 +378,62 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([waitForTextOutput(cell, 'bar', 0, false), waitForTextOutput(cell, 'bar', 1, false)]);
 
         await waitForExecutionCompletedSuccessfully(cell);
+    });
+    test('Shell commands should give preference to executables in Python Environment', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await insertCodeCell('import sys', { index: 0 });
+        await insertCodeCell('import os', { index: 1 });
+        await insertCodeCell('print(os.getenv("PATH"))', { index: 2 });
+        await insertCodeCell('print(sys.executable)', { index: 3 });
+        const [, , cell3, cell4] = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
+
+        // Basically anything such as `!which python` and the like should point to the right executable.
+        // For that to work, the first directory in the PATH must be the Python environment.
+
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell4),
+            waitForCondition(async () => getCellOutputs(cell4).length > 0, defaultNotebookTestTimeout, 'No output')
+        ]);
+
+        const pathValue = getCellOutputs(cell3).split(path.delimiter);
+        const sysExecutable = getCellOutputs(cell4).trim().toLowerCase();
+
+        // First path in PATH must be the directory where executable is located.
+        assert.ok(
+            areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
+            `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
+        );
+    });
+    test('!python should point to the Environment', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await insertCodeCell(getOSType() === OSType.Windows ? '!where python' : '!which python', { index: 0 });
+        await insertCodeCell('import sys', { index: 1 });
+        await insertCodeCell('print(sys.executable)', { index: 2 });
+        const [cell1, , cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
+
+        // Basically anything such as `!which python` and the like should point to the right executable.
+        // For that to work, the first directory in the PATH must be the Python environment.
+
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell3),
+            waitForCondition(async () => getCellOutputs(cell3).length > 0, defaultNotebookTestTimeout, 'No output')
+        ]);
+
+        // On windows `!where python`, prints multiple items in the output (all executables found).
+        const shellExecutable = getCellOutputs(cell1).trim().split('\n')[0].trim();
+        const sysExecutable = getCellOutputs(cell3).trim();
+
+        // First path in PATH must be the directory where executable is located.
+        assert.ok(
+            areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
+            `Python paths do not match ${shellExecutable}, ${sysExecutable}`
+        );
     });
     test('Testing streamed output', async () => {
         // Assume you are executing a cell that prints numbers 1-100.

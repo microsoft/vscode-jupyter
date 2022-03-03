@@ -55,8 +55,15 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         }
 
         const settings = this.configService.getSettings(kernel.resourceUri);
+
+        // The python extension debugger tags the debug configuration with the python path used on the python property
+        // by tagging this here (if available) we can treat IW or python extension debug session the same in knowing
+        // which python launched them
+        const pythonPath = kernel.kernelConnectionMetadata.interpreter?.path;
+
         return this.startDebugSession((c) => this.debugService.startDebugging(undefined, c), kernel, {
-            justMyCode: settings.debugJustMyCode
+            justMyCode: settings.debugJustMyCode,
+            python: pythonPath
         });
     }
 

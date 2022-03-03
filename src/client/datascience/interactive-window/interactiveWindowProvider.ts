@@ -24,11 +24,12 @@ import {
     InteractiveWindowMode,
     Resource
 } from '../../common/types';
+import { chainable } from '../../common/utils/decorators';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -73,12 +74,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
     }
 
+    @chainable()
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
@@ -94,6 +95,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // No match. Create a new item.
             result = this.create(resource, mode, connection);
         }
+
+        // wait for the notebook to show up
+        await result.ready;
 
         return result;
     }
@@ -130,7 +134,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IExportDialog>(IExportDialog),
             this.notebookControllerManager,
-            this.kernelProvider,
+            this.serviceContainer,
             this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
             connection
         );

@@ -5,7 +5,15 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IJupyterKernelSpec, IJupyterSession } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    IRawNotebookProvider,
+    IStatusProvider,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -13,19 +21,21 @@ import type * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
-import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IMemento, IPathUtils, Resource } from '../../../common/types';
 import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     IKernel,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
-    PythonKernelConnectionMetadata
+    PythonKernelConnectionMetadata,
+    IKernelProvider,
+    isLocalConnection
 } from './types';
 import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
 import { isPythonNotebook } from '../../notebook/helpers/helpers';
 import { DataScience } from '../../../common/utils/localize';
-import { Settings, Telemetry } from '../../constants';
+import { Commands, Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
@@ -35,7 +45,7 @@ import {
     getNormalizedInterpreterPath
 } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
@@ -43,10 +53,22 @@ import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
 } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { IWorkspaceService } from '../../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
-import { Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
+import { IServiceContainer } from '../../../ioc/types';
+import { CancellationError } from '../../../common/cancellation';
+import { INotebookControllerManager } from '../../notebook/types';
+import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
+import { findNotebookEditor, selectKernel } from './kernelSelector';
+import { createDeferred } from '../../../common/utils/async';
+import { clearInstalledIntoInterpreterMemento } from '../../../common/installer/productInstaller';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -369,7 +391,6 @@ export function getInterpreterWorkspaceFolder(
     const folder = workspaceService.getWorkspaceFolder(Uri.file(interpreter.path));
     return folder?.uri.fsPath || workspaceService.rootPath;
 }
-
 /**
  * Gets information about the registered kernelspec.
  * Note: When dealing with non-raw kernels, we register kernelspecs in a global location.
@@ -1785,4 +1806,202 @@ export async function executeSilently(session: IJupyterSession, code: string): P
     traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
 
     return outputs;
+}
+async function switchController(
+    resource: Resource,
+    serviceContainer: IServiceContainer
+): Promise<VSCodeNotebookController | undefined> {
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const editor = findNotebookEditor(resource, notebooks, serviceContainer.get(IInteractiveWindowProvider));
+
+    // Listen for selection change events (may not fire if user cancels)
+    const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+    let controller: VSCodeNotebookController | undefined;
+    const waitForSelection = createDeferred<VSCodeNotebookController>();
+    const disposable = controllerManager.onNotebookControllerSelected((e) => waitForSelection.resolve(e.controller));
+
+    const selected = await selectKernel(
+        resource,
+        notebooks,
+        serviceContainer.get(IInteractiveWindowProvider),
+        commandManager
+    );
+    if (selected && editor) {
+        controller = await waitForSelection.promise;
+    }
+    disposable.dispose();
+    return controller;
+}
+
+export async function notifyAndRestartDeadKernel(
+    kernel: IKernel,
+    serviceContainer: IServiceContainer
+): Promise<boolean> {
+    const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+    const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    const statusProvider = serviceContainer.get<IStatusProvider>(IStatusProvider);
+
+    const selection = await appShell.showErrorMessage(
+        DataScience.cannotRunCellKernelIsDead().format(
+            getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+        ),
+        { modal: true },
+        DataScience.showJupyterLogs(),
+        DataScience.restartKernel()
+    );
+    let restartedKernel = false;
+    switch (selection) {
+        case DataScience.restartKernel(): {
+            // Set our status
+            const status = statusProvider.set(DataScience.restartingKernelStatus());
+            try {
+                await kernel.restart();
+                restartedKernel = true;
+            } finally {
+                status.dispose();
+            }
+            break;
+        }
+        case DataScience.showJupyterLogs(): {
+            void commandManager.executeCommand(Commands.ViewJupyterOutput);
+        }
+    }
+    return restartedKernel;
+}
+
+export async function handleKernelError(
+    serviceContainer: IServiceContainer,
+    error: Error,
+    context: 'start' | 'interrupt' | 'restart' | 'execution',
+    resource: Resource,
+    kernel: IKernel,
+    controller: VSCodeNotebookController
+) {
+    const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+    const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+    let resultController: VSCodeNotebookController = controller;
+
+    if (controller.connection.interpreter && context === 'start') {
+        // If we failed to start the kernel, then clear cache used to track
+        // whether we have dependencies installed or not.
+        // Possible something is missing.
+        clearInstalledIntoInterpreterMemento(memento, undefined, controller.connection.interpreter.path).ignoreErrors();
+    }
+
+    const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
+
+    // Send telemetry for handling the error (if raw)
+    const isLocal = isLocalConnection(controller?.connection);
+    const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+    if (rawLocalKernel && context === 'start') {
+        sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
+            reason: handleResult
+        });
+    }
+
+    // Dispose the kernel no matter what happened as we need to go around again when there's an error
+    kernel.dispose().ignoreErrors();
+
+    switch (handleResult) {
+        case KernelInterpreterDependencyResponse.cancel:
+            throw new CancellationError(
+                DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
+            );
+
+        case KernelInterpreterDependencyResponse.failed:
+            throw error;
+
+        case KernelInterpreterDependencyResponse.selectDifferentKernel: {
+            // Loop around and create the new one. The user wants to switch
+
+            // Update to the selected controller
+            const newController = await switchController(resource, serviceContainer);
+            if (!newController) {
+                throw error;
+            } else {
+                resultController = newController;
+            }
+            break;
+        }
+    }
+
+    return resultController;
+}
+
+function convertContextToFunction(context: 'start' | 'interrupt' | 'restart') {
+    switch (context) {
+        case 'start':
+            return (k: IKernel) => k.start();
+
+        case 'interrupt':
+            return (k: IKernel) => k.interrupt();
+
+        case 'restart':
+            return (k: IKernel) => k.restart();
+    }
+}
+
+export async function wrapKernelMethod(
+    initialController: VSCodeNotebookController,
+    initialContext: 'start' | 'interrupt' | 'restart',
+    serviceContainer: IServiceContainer,
+    resource: Resource,
+    notebook: NotebookDocument
+) {
+    const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
+    let kernel: IKernel | undefined;
+    let controller: VSCodeNotebookController = initialController;
+    let currentMethod = convertContextToFunction(initialContext);
+    let context = initialContext;
+    while (kernel === undefined) {
+        // Try to create the kernel (possibly again)
+        kernel = kernelProvider.getOrCreate(notebook, {
+            metadata: controller.connection,
+            controller: controller.controller,
+            resourceUri: resource
+        });
+
+        try {
+            await currentMethod(kernel);
+
+            // If the kernel is dead, ask the user if they want to restart
+            if (
+                kernel.status === 'dead' ||
+                (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)
+            ) {
+                await notifyAndRestartDeadKernel(kernel, serviceContainer);
+            }
+        } catch (error) {
+            controller = await handleKernelError(serviceContainer, error, context, resource, kernel, controller);
+
+            // When we wrap around, update the current method to start. This
+            // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
+            currentMethod = (k) => k.start();
+            context = 'start';
+
+            // Since an error occurred, we have to try again (controller may have switched so we have to pick a new kernel)
+            kernel = undefined;
+        }
+    }
+    // Before returning, but without disposing the kernel, double check it's still valid
+    // If a restart didn't happen, then we can't connect. Throw an error.
+    // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
+    if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
+        throw new Error(
+            DataScience.kernelDiedWithoutError().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            )
+        );
+    }
+    return kernel;
+}
+
+export async function connectToKernel(
+    initialController: VSCodeNotebookController,
+    serviceContainer: IServiceContainer,
+    resource: Resource,
+    notebook: NotebookDocument
+): Promise<IKernel> {
+    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook);
 }

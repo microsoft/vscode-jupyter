@@ -5,13 +5,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IPythonExtensionChecker } from '../../../api/types';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceVerbose, traceWarning } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { IFileSystem } from '../../../common/platform/types';
@@ -23,11 +17,9 @@ import {
     IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IServiceContainer } from '../../../ioc/types';
 import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
-import { INotebookControllerManager } from '../../notebook/types';
-import { IDataScienceErrorHandler, INotebookProvider, IStatusProvider } from '../../types';
+import { INotebookProvider, IStatusProvider } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
@@ -56,7 +48,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
@@ -64,10 +55,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         this.asyncDisposables.push(this);
     }
@@ -114,7 +102,6 @@ export class KernelProvider implements IKernelProvider {
             this.disposables,
             waitForIdleTimeout,
             interruptTimeout,
-            this.errorHandler,
             this.appShell,
             this.fs,
             options.controller,
@@ -123,11 +110,7 @@ export class KernelProvider implements IKernelProvider {
             this.workspaceService,
             this.cellHashProviderFactory,
             this.pythonExecutionFactory,
-            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
-            this.statusProvider,
-            this.commandManager,
-            this.pythonChecker,
-            this.serviceContainer
+            this.statusProvider
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

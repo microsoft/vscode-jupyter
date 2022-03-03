@@ -4,6 +4,7 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
+import { KernelFailure } from '../../client/common/errors/errorUtils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';
@@ -44,6 +45,15 @@ export function createErrorOutput(error: Partial<Error>): nbformat.IError {
         ename: error.name || error.message || 'Error',
         evalue: error.message || error.name || 'Error',
         traceback: (error.stack || '').splitLines()
+    };
+}
+
+export function createErrorOutputFromFailureInfo(info: KernelFailure): nbformat.IError {
+    return {
+        output_type: 'error',
+        ename: info.message || 'Error',
+        evalue: info.message || 'Error',
+        traceback: []
     };
 }
 export function createCodeCell(): nbformat.ICodeCell;

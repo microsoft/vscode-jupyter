@@ -93,12 +93,15 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public globalAlpha!: number;
-    public globalCompositeOperation!: string;
+    public globalCompositeOperation!: GlobalCompositeOperation;
     public imageSmoothingEnabled!: boolean;
     public imageSmoothingQuality!: ImageSmoothingQuality;
     public fillStyle!: string | CanvasGradient | CanvasPattern;
     public strokeStyle!: string | CanvasGradient | CanvasPattern;
     public createLinearGradient(_x0: number, _y0: number, _x1: number, _y1: number): CanvasGradient {
+        throw new Error('Method not implemented.');
+    }
+    public createConicGradient(_startAngle: number, _x: number, _y: number): CanvasGradient {
         throw new Error('Method not implemented.');
     }
     public createPattern(_image: CanvasImageSource, _repetition: string): CanvasPattern | null {

@@ -13,8 +13,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
-import { EventEmitter } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
+import { CancellationToken, EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';

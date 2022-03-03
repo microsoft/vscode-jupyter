@@ -46,19 +46,28 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     }
 
     public appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {
-        return this.appendPaths(vars, 'PYTHONPATH', ...pythonPaths);
+        return this.appendPaths(vars, 'PYTHONPATH', true, ...pythonPaths);
     }
 
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
-        return this.appendPaths(vars, 'PATH', ...paths);
+        return this.appendPaths(vars, 'PATH', true, ...paths);
     }
 
-    private appendPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'PYTHONPATH', ...pathsToAppend: string[]) {
-        const valueToAppend = pathsToAppend
+    public prependPath(vars: EnvironmentVariables, ...paths: string[]) {
+        return this.appendPaths(vars, 'PATH', false, ...paths);
+    }
+
+    private appendPaths(
+        vars: EnvironmentVariables,
+        variableName: 'PATH' | 'PYTHONPATH',
+        append: boolean,
+        ...pathsToAppend: string[]
+    ) {
+        const valueToAppendOrPrepend = pathsToAppend
             .filter((item) => typeof item === 'string' && item.trim().length > 0)
             .map((item) => item.trim())
             .join(path.delimiter);
-        if (valueToAppend.length === 0) {
+        if (valueToAppendOrPrepend.length === 0) {
             return vars;
         }
 
@@ -69,9 +78,13 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         const variable = vars && matchingKey ? vars[matchingKey] : undefined;
         const setKey = matchingKey || variableName;
         if (variable && typeof variable === 'string' && variable.length > 0) {
-            vars[setKey] = variable + path.delimiter + valueToAppend;
+            if (append) {
+                vars[setKey] = variable + path.delimiter + valueToAppendOrPrepend;
+            } else {
+                vars[setKey] = valueToAppendOrPrepend + path.delimiter + variable;
+            }
         } else {
-            vars[setKey] = valueToAppend;
+            vars[setKey] = valueToAppendOrPrepend;
         }
         return vars;
     }

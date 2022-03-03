@@ -10,6 +10,7 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
 import { IFileSystem } from '../platform/types';
+import * as stacktrace from 'stack-trace';
 
 @injectable()
 export class Extensions implements IExtensions {
@@ -40,6 +41,12 @@ export class Extensions implements IExtensions {
                     }
                 })
                 .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
+            stacktrace.parse(new Error('Ex')).forEach((item) => {
+                const fileName = item.getFileName();
+                if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
+                    frames.push(fileName);
+                }
+            });
             for (const frame of frames) {
                 // This file is from a different extension. Try to find its package.json
                 let dirName = path.dirname(frame);

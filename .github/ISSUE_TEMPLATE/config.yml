@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Stack Overflow
-    url: https://stackoverflow.com/questions/tagged/visual-studio-code+jupyter
-    about: Please ask questions here.
+  - name: "Help and Support"
+    url: https://github.com/microsoft/vscode-jupyter/discussions/categories/questions-and-answers
+    about: "Need help getting something to work, but you're not sure it's worth of submitting an issue? Ask here."
+  - name: "New Feature Ideas"
+    url: https://github.com/microsoft/vscode-jupyter/discussions/categories/new-ideas
+    about: "Have a great idea for a new feature or behavior? Tell us and the community about it."

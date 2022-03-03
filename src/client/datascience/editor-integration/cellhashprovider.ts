@@ -31,6 +31,8 @@ import { IKernel } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 import { stripAnsi } from '../../common/utils/regexp';
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const untildify = require('untildify');
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -535,7 +537,9 @@ export class CellHashProvider implements ICellHashProvider {
 
         const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
         if (fileMatch && fileMatch.length > 1) {
-            const fileUri = Uri.file(fileMatch[1]);
+            // We need to untilde the file path here for the link to work in VS Code
+            const detildePath = untildify(fileMatch[1]);
+            const fileUri = Uri.file(detildePath);
             // We have a match, replace source lines with hrefs
             return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                 const n = parseInt(num, 10);

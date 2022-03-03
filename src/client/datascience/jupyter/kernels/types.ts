@@ -175,7 +175,11 @@ export interface IKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: { disableUI?: boolean; displayError?: DisplayErrorFunc }): Promise<void>;
+    /**
+     * Controller associated with this kernel
+     */
+    readonly controller: NotebookController;
+    start(options?: { disableUI?: boolean }): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;

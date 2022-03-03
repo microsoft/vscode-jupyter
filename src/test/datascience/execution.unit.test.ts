@@ -11,7 +11,7 @@ import { anything, instance, match, mock, reset, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
+import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, ExtensionMode } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -31,7 +31,14 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, IPathUtils } from '../../client/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IExtensionContext,
+    IOutputChannel,
+    IPathUtils,
+    Product
+} from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
@@ -966,10 +973,13 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
             jupyterCmdExecutionService
         );
+        const context = mock<IExtensionContext>();
+        when(context.extensionMode).thenReturn(ExtensionMode.Production);
         notebookStarter = new NotebookStarter(
             jupyterCmdExecutionService,
             instance(fileSystem),
             instance(serviceContainer),
+            instance(context),
             instance(jupyterOutputChannel)
         );
         const kernelFinder = mock(LocalKernelFinder);

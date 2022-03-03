@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Progress, ProgressLocation, window } from 'vscode';
+import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
+import { createPromiseFromCancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
+import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -160,7 +162,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                         progressInfo.dispose();
                     }
                 } catch (ex) {
-                    console.error(`Failed to dispose Progress reporter for ${key}`, ex);
+                    traceError(`Failed to dispose Progress reporter for ${key}`, ex);
                 }
             }
         };
@@ -173,6 +175,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
             title,
             pendingProgress: [] as string[],
             progressList: [] as string[],
+            tokenSources: [],
             dispose: () => {
                 disposable.dispose();
             }
@@ -185,28 +188,34 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 return;
             }
             shownOnce = true;
-            void window.withProgress({ location: ProgressLocation.Notification, title }, async (progress) => {
-                const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
-                if (!info) {
-                    return;
-                }
-                info.reporter = progress;
-                // If we have any messages, then report them.
-                while (info.pendingProgress.length > 0) {
-                    const message = info.pendingProgress.shift();
-                    if (message === title) {
-                        info.progressList.push(message);
-                    } else if (message !== title && message) {
-                        info.progressList.push(message);
-                        progress.report({ message });
+            void window.withProgress(
+                { location: ProgressLocation.Notification, title },
+                async (progress, token: CancellationToken) => {
+                    const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
+                    if (!info) {
+                        return;
                     }
+                    info.reporter = progress;
+                    // If we have any messages, then report them.
+                    while (info.pendingProgress.length > 0) {
+                        const message = info.pendingProgress.shift();
+                        if (message === title) {
+                            info.progressList.push(message);
+                        } else if (message !== title && message) {
+                            info.progressList.push(message);
+                            progress.report({ message });
+                        }
+                    }
+                    await Promise.race([
+                        createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
+                        deferred.promise
+                    ]);
+                    if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
+                        KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
+                    }
+                    KernelProgressReporter.disposables.delete(disposable);
                 }
-                await deferred.promise;
-                if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
-                    KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
-                }
-                KernelProgressReporter.disposables.delete(disposable);
-            });
+            );
         };
 
         KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, {
