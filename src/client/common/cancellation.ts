@@ -11,8 +11,8 @@ import * as localize from './utils/localize';
  * Error type thrown when canceling.
  */
 export class CancellationError extends BaseError {
-    constructor() {
-        super('cancelled', localize.Common.canceled());
+    constructor(message?: string) {
+        super('cancelled', message || localize.Common.canceled());
     }
 }
 

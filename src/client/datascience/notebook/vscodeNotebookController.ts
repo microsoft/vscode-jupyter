@@ -25,6 +25,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { displayErrorsInCell } from '../../common/errors/errorUtils';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
@@ -37,8 +38,10 @@ import {
     IPathUtils
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
+import { chainable } from '../../common/utils/decorators';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
 import { TraceOptions } from '../../logging/trace';
 import { ConsoleForegroundColors, traceDecorators } from '../../logging/_global';
 import { EnvironmentType } from '../../pythonEnvironments/info';
@@ -46,12 +49,14 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
+import { CellExecutionCreator } from '../jupyter/kernels/cellExecutionCreator';
 import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
     isPythonKernelConnection,
     getKernelConnectionPath,
     getKernelRegistrationInfo,
+    connectToKernel,
     getDisplayNameOrNameOfKernelConnection
 } from '../jupyter/kernels/helpers';
 import {
@@ -68,7 +73,7 @@ import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
 } from '../telemetry/telemetry';
-import { IDataScienceErrorHandler, KernelSocketInformation } from '../types';
+import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
@@ -137,7 +142,7 @@ export class VSCodeNotebookController implements Disposable {
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly errorHandler: IDataScienceErrorHandler
+        private serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -163,7 +168,6 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
-        this.errorHandler.onShouldRunCells(this.onShouldRunCells, this, this.disposables);
     }
     public updateRemoteKernelDetails(kernelConnection: LiveKernelConnectionMetadata) {
         this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
@@ -301,19 +305,7 @@ export class VSCodeNotebookController implements Disposable {
         traceVerbose(`Controller selection change completed`);
         deferred.resolve();
     }
-    private async onShouldRunCells(cells: NotebookCell[]) {
-        if (cells.length === 0) {
-            return;
-        }
-        const promise = this.associatedDocuments.get(cells[0].notebook);
-        if (!promise) {
-            return;
-        }
-        // Run the cells after we've completed switching to this controller.
-        await promise;
-        traceInfoIfCI(`Re-Run pending cells for controller ${this.id} using ${this.connection.id}`);
-        await this.handleExecution(cells, cells[0].notebook);
-    }
+
     /**
      * Scenario 1:
      * Assume user opens a notebook and language is C++ or .NET Interactive, they start writing python code.
@@ -377,15 +369,35 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    private executeCell(doc: NotebookDocument, cell: NotebookCell) {
+    private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
-            metadata: this.kernelConnection,
-            controller: this.controller,
-            resourceUri: doc.uri
-        });
-        this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-        return kernel.executeCell(cell);
+
+        // Start execution now (from the user's point of view)
+        const execution = CellExecutionCreator.getOrCreate(cell, this.controller);
+        execution.start(new Date().getTime());
+        void execution.clearOutput(cell);
+
+        // Connect to a matching kernel if possible (but user may pick a different one)
+        try {
+            const kernel = await this.connectToKernel(doc);
+            if (kernel.controller.id === this.id) {
+                this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            }
+            return await kernel.executeCell(cell);
+        } catch (ex) {
+            // If there was a failure connecting or executing the kernel, stick it in this cell
+            return displayErrorsInCell(cell, execution, ex.toString());
+        }
+
+        // Execution should be ended elsewhere
+    }
+
+    @chainable()
+    private async connectToKernel(doc: NotebookDocument) {
+        // executeCell can get called multiple times before the first one is resolved. Since we only want
+        // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
+        // all of the cells if it fails.
+        return connectToKernel(this, this.serviceContainer, doc.uri, doc);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

@@ -46,7 +46,7 @@ export async function switchKernel(
     traceError(`Unable to select kernel as the Notebook document could not be identified`);
 }
 
-function findNotebookEditor(
+export function findNotebookEditor(
     resource: Resource,
     notebooks: IVSCodeNotebook,
     interactiveWindowProvider: IInteractiveWindowProvider | undefined

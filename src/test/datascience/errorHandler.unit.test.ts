@@ -4,7 +4,7 @@
 'use strict';
 import * as dedent from 'dedent';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Memento, Uri, WorkspaceFolder } from 'vscode';
+import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { Common, DataScience } from '../../client/common/utils/localize';
@@ -16,7 +16,6 @@ import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
-import { IServiceContainer } from '../../client/ioc/types';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -29,7 +28,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let kernelDependencyInstaller: IKernelDependencyService;
-    let svcContainer: IServiceContainer;
     let jupyterInterpreterService: JupyterInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
@@ -43,21 +41,18 @@ suite('DataScience Error Handler Unit Tests', () => {
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
-        svcContainer = mock<IServiceContainer>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
+        when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
-            instance(workspaceService),
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(jupyterInterpreterService),
-            instance(svcContainer),
-            instance(mock<Memento>())
+            instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
@@ -117,7 +112,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
                     path: 'Hello There',
-                    sysPrefix: 'Something else'
+                    sysPrefix: 'Something else',
+                    displayName: 'Hello (Some Path)'
                 },
                 kernelSpec: {
                     argv: [],

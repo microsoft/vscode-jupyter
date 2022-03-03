@@ -1,7 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { WorkspaceFolder } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellExecution,
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    WorkspaceFolder
+} from 'vscode';
+import { JupyterConnectError } from '../../datascience/errors/jupyterConnectError';
+import { getDisplayPath } from '../platform/fs-paths';
+import { DataScience } from '../utils/localize';
+import { BaseError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -167,13 +177,21 @@ export enum KernelFailureReason {
      */
     jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets'
 }
-type BaseFailure<Reason extends KernelFailureReason, MoreInfo = {}> = {
+type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
     reason: Reason;
     /**
      * Classifications of the errors that is safe for telemetry (no pii).
      */
     telemetrySafeTags: string[];
-} & MoreInfo;
+    /**
+     * Message to show to about this error
+     */
+    message: string;
+    /**
+     * Link to more information about the error
+     */
+    moreInfoLink: string | undefined;
+} & ExtraData;
 export type OverridingBuiltInModulesFailure = BaseFailure<
     KernelFailureReason.overridingBuiltinModules,
     {
@@ -222,7 +240,7 @@ export type JupyterStartFailure = BaseFailure<
         /**
          * Python error message displayed.
          */
-        errorMessage?: string;
+        pythonError?: string;
     }
 >;
 export type ImportWin32ApiFailure = BaseFailure<KernelFailureReason.importWin32apiFailure>;
@@ -243,11 +261,13 @@ export type KernelFailure =
     | OldIPythonFailure;
 
 export function analyzeKernelErrors(
-    stdErrOrStackTrace: string,
-    workspaceFolders: readonly WorkspaceFolder[] = [],
-    pythonSysPrefix: string = '',
-    isJupyterStartupError?: boolean
+    workspaceFolders: readonly WorkspaceFolder[],
+    error: Error | string,
+    kernelDisplayName: string | undefined,
+    pythonSysPrefix: string = ''
 ): KernelFailure | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
     const lastTwolinesOfError = getLastTwoLinesFromPythonTracebackWithErrorMessage(stdErrOrStackTrace);
     const stdErr = stdErrOrStackTrace.toLowerCase();
 
@@ -264,6 +284,8 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.importWin32apiFailure,
+            message: DataScience.failedToStartKernelDueToWin32APIFailure(),
+            moreInfoLink: 'https://aka.ms/kernelFailuresWin32Api',
             telemetrySafeTags: ['win32api']
         };
     }
@@ -276,6 +298,8 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.importWin32apiFailure,
+            message: DataScience.failedToStartKernelDueToWin32APIFailure(),
+            moreInfoLink: 'https://aka.ms/kernelFailuresWin32Api',
             telemetrySafeTags: ['dll.load.failed', 'win32api']
         };
     }
@@ -291,6 +315,10 @@ export function analyzeKernelErrors(
         return {
             reason: KernelFailureReason.dllLoadFailure,
             moduleName,
+            message: moduleName
+                ? DataScience.failedToStartKernelDueToDllLoadFailure().format(moduleName)
+                : DataScience.failedToStartKernelDueToUnknowDllLoadFailure(),
+            moreInfoLink: 'https://aka.ms/kernelFailuresDllLoad',
             telemetrySafeTags: ['dll.load.failed']
         };
     }
@@ -310,6 +338,8 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.oldIPythonFailure,
+            message: DataScience.failedToStartKernelDueToOldIPython(),
+            moreInfoLink: 'https://aka.ms/kernelFailuresOldIPython',
             telemetrySafeTags: ['oldipython']
         };
     }
@@ -331,6 +361,8 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.oldIPyKernelFailure,
+            message: DataScience.failedToStartKernelDueToOldIPyKernel(),
+            moreInfoLink: 'https://aka.ms/kernelFailuresOldIPyKernel',
             telemetrySafeTags: ['oldipykernel']
         };
     }
@@ -367,6 +399,8 @@ export function analyzeKernelErrors(
         if (tags.length) {
             return {
                 reason: KernelFailureReason.zmqModuleFailure,
+                message: DataScience.failedToStartKernelDueToPyZmqFailure(),
+                moreInfoLink: 'https://aka.ms/kernelFailuresPyzmq',
                 telemetrySafeTags: tags
             };
         }
@@ -374,7 +408,7 @@ export function analyzeKernelErrors(
 
     if (lastTwolinesOfError && lastTwolinesOfError[1].toLowerCase().startsWith('importerror')) {
         const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
-        if (info) {
+        if (info && pythonSysPrefix) {
             // First check if we're overriding any built in modules.
             const error = isBuiltInModuleOverwritten(info.moduleName, info.fileName, workspaceFolders, pythonSysPrefix);
             if (error) {
@@ -385,6 +419,12 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.importFailure,
                 moduleName: info.moduleName,
                 fileName: info.fileName,
+                message: info.fileName
+                    ? DataScience.failedToStartKernelDueToImportFailureFromFile().format(info.moduleName, info.fileName)
+                    : DataScience.failedToStartKernelDueToImportFailure().format(info.moduleName),
+                moreInfoLink: info.fileName
+                    ? 'https://aka.ms/kernelFailuresModuleImportErrFromFile'
+                    : 'https://aka.ms/kernelFailuresModuleImportErr',
                 telemetrySafeTags: ['import.error']
             };
         }
@@ -395,6 +435,8 @@ export function analyzeKernelErrors(
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName: info.moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
         }
@@ -413,30 +455,55 @@ export function analyzeKernelErrors(
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
         }
     }
-    if (isJupyterStartupError) {
+    if (error instanceof JupyterConnectError) {
         // Get the last error message in the stack trace.
         let errorMessage = stdErrOrStackTrace
             .splitLines()
             .map((line) => line.trim())
             .reverse()
-            .find((line) => line.toLowerCase().includes('Error: '.toLowerCase()));
+            .find((line) => line.toLowerCase().includes('error: '));
         // https://github.com/microsoft/vscode-jupyter/issues/8295
         const errorMessageDueToOutdatedTraitlets = "AttributeError: 'Namespace' object has no attribute '_flags'";
         const telemetrySafeTags = ['jupyter.startup.failure'];
+        let link: string | undefined;
         let reason = KernelFailureReason.jupyterStartFailure;
+        // Some times the error message is either in the message or the stderr.
+        let pythonError = error.message
+            .splitLines({ removeEmptyEntries: true, trim: true })
+            .reverse()
+            .find((item) => item.toLowerCase().includes('error: '));
+        pythonError =
+            pythonError ||
+            (error.stdErr || '')
+                .splitLines({ removeEmptyEntries: true, trim: true })
+                .reverse()
+                .find((item) => item.toLowerCase().includes('error: '));
         if (stdErr.includes(errorMessageDueToOutdatedTraitlets.toLowerCase())) {
             reason = KernelFailureReason.jupyterStartFailureOutdatedTraitlets;
-            errorMessage = errorMessageDueToOutdatedTraitlets;
+            errorMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
+                kernelDisplayName || '',
+                pythonError || ''
+            );
             telemetrySafeTags.push('outdated.traitlets');
+            link = 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated';
+        } else {
+            errorMessage = pythonError
+                ? DataScience.failedToStartJupyterWithErrorInfo().format(kernelDisplayName || '', pythonError)
+                : DataScience.failedToStartJupyter().format(kernelDisplayName || '');
+            link = undefined;
         }
         if (errorMessage) {
             return {
                 reason,
-                errorMessage,
+                message: errorMessage,
+                pythonError: pythonError,
+                moreInfoLink: link,
                 telemetrySafeTags
             };
         }
@@ -497,6 +564,34 @@ function isBuiltInModuleOverwritten(
         reason: KernelFailureReason.overridingBuiltinModules,
         fileName,
         moduleName,
+        message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+            getDisplayPath(fileName, workspaceFolders || [])
+        ),
+        moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
         telemetrySafeTags: ['import.error', 'override.modules']
     };
+}
+
+export async function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellExecution, errorMessage: string) {
+    if (!errorMessage) {
+        return;
+    }
+    // If we have markdown links to run a command, turn that into a link.
+    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    let matches: RegExpExecArray | undefined | null;
+    while ((matches = regex.exec(errorMessage)) !== null) {
+        if (matches.length === 3) {
+            errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
+        }
+    }
+    void execution.clearOutput(cell);
+    const output = new NotebookCellOutput([
+        NotebookCellOutputItem.error({
+            message: '',
+            name: '',
+            stack: `\u001b[1;31m${errorMessage.trim()}`
+        })
+    ]);
+    void execution.appendOutput(output);
+    execution.end(false);
 }

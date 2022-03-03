@@ -26,7 +26,7 @@ import {
     EventEmitter
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
+import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
@@ -45,8 +45,8 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { ICellHash, ICellHashProvider, IDataScienceErrorHandler, IJupyterSession } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { ICellHash, ICellHashProvider, IJupyterSession } from '../../types';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -55,6 +55,8 @@ import { CellHashProviderFactory } from '../../editor-integration/cellHashProvid
 import { InteractiveWindowView } from '../../notebook/constants';
 import { BaseError } from '../../../common/errors/types';
 import * as localize from '../../../common/utils/localize';
+import { analyzeKernelErrors } from '../../../common/errors/errorUtils';
+import { CellExecutionCreator } from './cellExecutionCreator';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -73,7 +75,6 @@ type DisplayData = nbformat.IDisplayData & {
 export class CellExecutionFactory {
     constructor(
         private readonly kernel: IKernel,
-        private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
@@ -85,7 +86,6 @@ export class CellExecutionFactory {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
             cell,
-            this.errorHandler,
             this.appShell,
             metadata,
             this.disposables,
@@ -150,10 +150,8 @@ export class CellExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
-    private session?: IJupyterSession;
     private constructor(
         public readonly cell: NotebookCell,
-        private readonly errorHandler: IDataScienceErrorHandler,
         private readonly applicationService: IApplicationShell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
@@ -201,14 +199,13 @@ export class CellExecution implements IDisposable {
             // tempTask.executionOrder = undefined;
             // void tempTask.clearOutput();
             // void tempTask.end(undefined);
-            this.execution = controller.createNotebookCellExecution(this.cell);
+            this.execution = CellExecutionCreator.getOrCreate(cell, this.controller);
             NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
         }
     }
 
     public static fromCell(
         cell: NotebookCell,
-        errorHandler: IDataScienceErrorHandler,
         appService: IApplicationShell,
         metadata: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
@@ -216,19 +213,9 @@ export class CellExecution implements IDisposable {
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProvider: ICellHashProvider
     ) {
-        return new CellExecution(
-            cell,
-            errorHandler,
-            appService,
-            metadata,
-            disposables,
-            controller,
-            outputTracker,
-            cellHashProvider
-        );
+        return new CellExecution(cell, appService, metadata, disposables, controller, outputTracker, cellHashProvider);
     }
     public async start(session: IJupyterSession) {
-        this.session = session;
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -316,32 +303,26 @@ export class CellExecution implements IDisposable {
         this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
-        // No need to append errors related to failures in Kernel execution in output.
-        // We will display messages for those.
+        // If the error doesn't derive from BaseError, it came from execution
         if (!(error instanceof BaseError)) {
             this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
+        } else {
+            // Otherwise it's an error from the kernel itself. Put it into the cell
+            const failureInfo = analyzeKernelErrors(
+                workspace.workspaceFolders || [],
+                error,
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
+                this.kernelConnection.interpreter?.sysPrefix
+            );
+            if (failureInfo) {
+                this.execution
+                    ?.appendOutput([translateErrorOutput(createErrorOutputFromFailureInfo(failureInfo))])
+                    .then(noop, noop);
+            }
         }
 
         this.endCellTask('failed');
         this._completed = true;
-
-        // If the kernel is dead, then no point handling errors.
-        // We have other code that deals with kernels dying.
-        // We're only concerned with failures in execution while kernel is still running.
-        let handleError = true;
-        if (this.session?.disposed || this.session?.status === 'terminating' || this.session?.status === 'dead') {
-            handleError = false;
-        }
-        if (handleError) {
-            this.errorHandler
-                .handleKernelError(
-                    (error as unknown) as Error,
-                    'execution',
-                    this.kernelConnection,
-                    this.cell.document.uri
-                )
-                .ignoreErrors();
-        }
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(NotebookCellRunState.Error);
     }
@@ -408,7 +389,7 @@ export class CellExecution implements IDisposable {
 
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
-        this.temporaryExecution = this.controller.createNotebookCellExecution(this.cell);
+        this.temporaryExecution = CellExecutionCreator.getOrCreate(this.cell, this.controller);
         this.temporaryExecution?.start();
         if (this.previousResultsToRestore?.executionOrder && this.execution) {
             this.execution.executionOrder = this.previousResultsToRestore.executionOrder;

@@ -25,7 +25,8 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForExecutionCompletedSuccessfully,
     runAllCellsInActiveNotebook,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    deleteCell
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
@@ -224,11 +225,9 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, dismiss the prompt.
-            // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
             await Promise.all([restartPrompt.displayed, runCell(cell3)]);
             await sleep(1_000);
             assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
-            assert.strictEqual(cell3.outputs.length, 0, 'Should not have any outputs');
         });
         test('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
             await runAndFailWithKernelCrash();
@@ -246,6 +245,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 { dismissPrompt: true, clickImmediately: true },
                 disposables
             );
+            // Delete the killing cell
+            await deleteCell(1);
             // Confirm we get a prompt to restart the kernel, dismiss the prompt.
             // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
             await Promise.all([restartPrompt.displayed, runAllCellsInActiveNotebook()]);
