@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -646,7 +645,8 @@ export class Kernel implements IKernel {
             );
             results.push(...configInit.splitLines({ trim: false }));
         }
-        return results;
+        // Wrap in try..except in case user doesn't have matplot lib installed.
+        return ['try:', ...results.map((line) => `    ${line}`), 'except:', '   pass'];
     }
 
     private async getDebugCellHook(notebookDocument: NotebookDocument): Promise<string[]> {
