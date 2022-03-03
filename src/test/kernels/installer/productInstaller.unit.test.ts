@@ -10,14 +10,14 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { DataScienceInstaller } from '../productInstaller';
+import { DataScienceInstaller } from '../../../kernels/installer/productInstaller';
 import {
     Product,
     IInstallationChannelManager,
     InstallerResponse,
     IModuleInstaller,
     ModuleInstallerType
-} from '../types';
+} from '../../../kernels/installer/types';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this

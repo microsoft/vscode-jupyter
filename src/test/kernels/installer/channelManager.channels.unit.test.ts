@@ -8,9 +8,9 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InstallationChannelManager } from '../channelManager';
-import { IModuleInstaller, Product } from '../types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { InstallationChannelManager } from '../../../kernels/installer/channelManager';
+import { Product, IModuleInstaller } from '../../../kernels/installer/types';
 
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;

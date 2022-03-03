@@ -16,12 +16,12 @@ import { ExecutionResult, ShellOptions } from '../../../client/common/process/ty
 import { IConfigurationService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { PoetryInstaller } from '../poetryInstaller';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
-import { ExecutionInstallArgs } from '../moduleInstaller';
-import { ModuleInstallFlags } from '../types';
 import * as fileUtils from '../../../client/common/platform/fileUtils';
 import { JupyterSettings } from '../../../client/common/configSettings';
+import { PoetryInstaller } from '../../../kernels/installer/poetryInstaller';
+import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller';
+import { ModuleInstallFlags } from '../../../kernels/installer/types';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {

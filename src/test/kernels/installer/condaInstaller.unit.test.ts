@@ -12,9 +12,9 @@ import { IConfigurationService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { CondaInstaller } from '../condaInstaller';
-import { ExecutionInstallArgs } from '../moduleInstaller';
-import { ModuleInstallFlags } from '../types';
+import { CondaInstaller } from '../../../kernels/installer/condaInstaller';
+import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller';
+import { ModuleInstallFlags } from '../../../kernels/installer/types';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;

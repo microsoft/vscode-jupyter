@@ -12,11 +12,11 @@ import '../../../client/common/extensions';
 import { IConfigurationService, IOutputChannel } from '../../../client/common/types';
 import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller';
+import { BaseProductPathsService } from '../../../kernels/installer/productPath';
+import { ProductService } from '../../../kernels/installer/productService';
+import { Product, ProductType, IInstaller, IProductService } from '../../../kernels/installer/types';
 import { getNamesAndValues } from '../../../test/utils/enum';
-import { ProductInstaller } from '../productInstaller';
-import { BaseProductPathsService } from '../productPath';
-import { ProductService } from '../productService';
-import { Product, ProductType, IInstaller, IProductService } from '../types';
 
 use(chaiAsPromised);
 

@@ -12,8 +12,8 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { InstallationChannelManager } from '../channelManager';
-import { IModuleInstaller, Product } from '../types';
+import { InstallationChannelManager } from '../../../kernels/installer/channelManager';
+import { IModuleInstaller, Product } from '../../../kernels/installer/types';
 
 const info: PythonEnvironment = {
     displayName: '',

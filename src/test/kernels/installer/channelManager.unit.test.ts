@@ -10,8 +10,8 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { Installer } from '../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { InstallationChannelManager } from '../channelManager';
-import { IModuleInstaller, Product } from '../types';
+import { InstallationChannelManager } from '../../../kernels/installer/channelManager';
+import { IModuleInstaller, Product } from '../../../kernels/installer/types';
 
 suite('InstallationChannelManager - getInstallationChannel()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
