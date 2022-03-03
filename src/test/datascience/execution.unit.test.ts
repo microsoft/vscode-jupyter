@@ -36,8 +36,7 @@ import {
     IConfigurationService,
     IExtensionContext,
     IOutputChannel,
-    IPathUtils,
-    Product
+    IPathUtils
 } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';

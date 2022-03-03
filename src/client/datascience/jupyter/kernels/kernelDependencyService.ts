@@ -5,14 +5,15 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import {
     isModulePresentInEnvironmentCache,
     trackPackageInstalledIntoInterpreter,
     isModulePresentInEnvironment
-} from '../../../common/installer/productInstaller';
-import { ProductNames } from '../../../common/installer/productNames';
+} from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { IInstaller, InstallerResponse, Product } from '../../../../kernels/installer/types';
+import { IApplicationShell } from '../../../common/application/types';
+import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { GLOBAL_MEMENTO, IMemento, IsCodeSpace, Resource } from '../../../common/types';

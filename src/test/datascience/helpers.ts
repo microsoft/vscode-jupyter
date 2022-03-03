@@ -16,7 +16,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowProvider
 } from '../../client/datascience/types';
-import { arePathsSame, waitForCondition } from '../common';
+import { waitForCondition } from '../common';
 import {
     createTemporaryFile,
     defaultNotebookTestTimeout,

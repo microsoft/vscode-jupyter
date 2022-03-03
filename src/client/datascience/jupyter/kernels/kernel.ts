@@ -67,8 +67,6 @@ import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnectError } from '../../errors/jupyterConnectError';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { disposeAllDisposables } from '../../../common/helpers';
-import { displayErrorsInCell } from '../../../common/errors/errorUtils';
-import { IServiceContainer } from '../../../ioc/types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -137,7 +135,7 @@ export class Kernel implements IKernel {
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
-    private eventHooks: ((kernel: IKernel, ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
+    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
@@ -175,11 +173,11 @@ export class Kernel implements IKernel {
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
 
-    public addEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks.push(hook);
     }
 
-    public removeEventHook(hook: (kernel: IKernel, event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
@@ -199,11 +197,11 @@ export class Kernel implements IKernel {
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
-    public async start(options?: { disableUI?: boolean; displayError?: DisplayErrorFunc }): Promise<void> {
+    public async start(options?: { disableUI?: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<void> {
-        await Promise.all(this.eventHooks.map((h) => h(this, 'willInterrupt')));
+        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
             traceInfo(
@@ -271,7 +269,7 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        await Promise.all(this.eventHooks.map((h) => h(this, 'willRestart')));
+        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
         traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
         // Set our status
@@ -339,9 +337,7 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async startNotebook(
-        options: { disableUI?: boolean; displayError?: DisplayErrorFunc } = { disableUI: false }
-    ): Promise<INotebook> {
+    private async startNotebook(options: { disableUI?: boolean } = { disableUI: false }): Promise<INotebook> {
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;

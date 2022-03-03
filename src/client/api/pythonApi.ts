@@ -15,7 +15,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isCI } from '../common/constants';
-import { traceDecorators, traceInfo, traceInfoIfCI } from '../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -34,6 +34,7 @@ import {
     IPythonApiProvider,
     IPythonDebuggerPathProvider,
     IPythonExtensionChecker,
+    IPythonProposedApi,
     PythonApi
 } from './types';
 

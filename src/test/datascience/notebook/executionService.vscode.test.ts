@@ -13,7 +13,7 @@ import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, N
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposable, Product } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {

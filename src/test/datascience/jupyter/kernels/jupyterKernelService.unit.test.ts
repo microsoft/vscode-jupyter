@@ -17,10 +17,11 @@ import { IKernelDependencyService } from '../../../../client/datascience/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import * as path from 'path';
-import { arePathsSame, getOSType, OSType } from '../../../common';
+import { getOSType, OSType } from '../../../common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 import { CancellationTokenSource } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../client/common/variables/environment';
+import { arePathsSame } from '../../../../client/common/platform/fileUtils';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {

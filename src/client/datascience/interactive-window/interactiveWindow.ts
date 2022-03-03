@@ -20,9 +20,7 @@ import {
     NotebookEditor,
     Disposable,
     window,
-    ThemeColor,
-    NotebookCellOutput,
-    NotebookCellOutputItem
+    ThemeColor
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
@@ -552,11 +550,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this._editorReadyPromise
         ]);
         if (!kernel) {
-            // If there was a failure connecting, we should display something to the user inside the IW
-            if (this._kernelReadyException && controller) {
-                this.displayErrorInCell(this._kernelReadyException, cell, controller);
-                this._kernelReadyException = undefined;
-            }
             return false;
         }
         let result = true;

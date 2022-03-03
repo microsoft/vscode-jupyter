@@ -12,8 +12,6 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { getDisplayNameOrNameOfKernelConnection, getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
-    DisplayErrorFunc,
-    HandleKernelErrorResult,
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
@@ -91,7 +89,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             const message = getCombinedErrorMessage(err.message || err.toString());
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
-        return 'stop';
     }
 
     public async handleKernelError(

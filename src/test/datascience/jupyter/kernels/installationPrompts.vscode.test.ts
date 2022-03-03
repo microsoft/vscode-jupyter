@@ -8,8 +8,6 @@ import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri } from 'vscode';
 import { IPythonApiProvider } from '../../../../client/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../client/common/installer/productInstaller';
-import { ProductNames } from '../../../../client/common/installer/productNames';
 import { Kernel } from '../../../../client/datascience/jupyter/kernels/kernel';
 import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
@@ -51,6 +49,9 @@ import { JupyterNotebookView } from '../../../../client/datascience/notebook/con
 import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
 import { WrappedError } from '../../../../client/common/errors/types';
 import { Commands } from '../../../../client/datascience/constants';
+import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

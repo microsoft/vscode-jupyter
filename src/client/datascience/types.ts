@@ -404,11 +404,6 @@ export interface IInteractiveWindowProvider {
     get(owner: Uri): IInteractiveWindow | undefined;
 }
 
-<<<<<<< HEAD
-export type HandleKernelErrorResult = 'retry' | 'stop';
-=======
->>>>>>> origin/main
-export type DisplayErrorFunc = (ex: Error | string, moreInfoLink?: string) => void;
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     /**
