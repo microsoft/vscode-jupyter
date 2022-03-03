@@ -1979,6 +1979,9 @@ export async function wrapKernelMethod(
             // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
             currentMethod = (k) => k.start();
             context = 'start';
+
+            // Since an error occurred, we have to try again (controller may have switched so we have to pick a new kernel)
+            kernel = undefined;
         }
     }
     // Before returning, but without disposing the kernel, double check it's still valid
