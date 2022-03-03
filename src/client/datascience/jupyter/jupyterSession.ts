@@ -161,6 +161,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     protected async createRestartSession(
+        disableUI: boolean,
         session: ISessionWithSocket,
         cancelTokenSource: CancellationTokenSource
     ): Promise<ISessionWithSocket> {
@@ -170,39 +171,33 @@ export class JupyterSession extends BaseJupyterSession {
         }
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let exception: any;
-        while (tryCount < 3) {
-            const ui = new DisplayOptions(true);
-            try {
-                traceVerbose(
-                    `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
-                );
-                result = await this.createSession({ tokenSource: cancelTokenSource, ui });
-                await this.waitForIdleOnSession(result, this.idleTimeout);
-                if (result.kernel) {
-                    this.restartSessionCreated(result.kernel);
-                }
-                return result;
-            } catch (exc) {
-                traceInfo(`Error waiting for restart session: ${exc}`);
-                tryCount += 1;
-                if (result) {
-                    this.shutdownSession(result, undefined, true).ignoreErrors();
-                }
-                result = undefined;
-                exception = exc;
-            } finally {
-                ui.dispose();
+        const ui = new DisplayOptions(disableUI);
+        try {
+            traceVerbose(
+                `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
+            );
+            result = await this.createSession({ tokenSource: cancelTokenSource, ui });
+            await this.waitForIdleOnSession(result, this.idleTimeout);
+            if (result.kernel) {
+                this.restartSessionCreated(result.kernel);
             }
+            return result;
+        } catch (exc) {
+            traceInfo(`Error waiting for restart session: ${exc}`);
+            if (result) {
+                this.shutdownSession(result, undefined, true).ignoreErrors();
+            }
+            result = undefined;
+            throw exc;
+        } finally {
+            ui.dispose();
         }
-        throw exception;
     }
 
-    protected startRestartSession() {
+    protected startRestartSession(disableUI: boolean) {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
             const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(this.session, token);
+            const promise = this.createRestartSession(disableUI, this.session, token);
             this.restartSessionPromise = { token, promise };
             promise.finally(() => token.dispose());
         }

@@ -217,19 +217,22 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.processExitHandler.set(session, disposable);
     }
 
-    protected startRestartSession() {
+    protected startRestartSession(disableUI: boolean) {
         if (!this.restartSessionPromise) {
             const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(token);
+            const promise = this.createRestartSession(disableUI, token);
             this.restartSessionPromise = { token, promise };
             promise.finally(() => token.dispose());
         }
     }
-    protected async createRestartSession(cancelTokenSource: CancellationTokenSource): Promise<ISessionWithSocket> {
+    protected async createRestartSession(
+        disableUI: boolean,
+        cancelTokenSource: CancellationTokenSource
+    ): Promise<ISessionWithSocket> {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession({ tokenSource: cancelTokenSource, ui: new DisplayOptions(true) });
+        return this.startRawSession({ tokenSource: cancelTokenSource, ui: new DisplayOptions(disableUI) });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)

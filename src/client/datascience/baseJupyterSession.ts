@@ -153,7 +153,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Start the restart session now in case it wasn't started
         if (!this.restartSessionPromise) {
-            this.startRestartSession();
+            this.startRestartSession(false);
         }
 
         // Just kill the current session and switch to the other
@@ -271,7 +271,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(): void;
+    protected abstract startRestartSession(disableUI: boolean): void;
 
     protected async waitForIdleOnSession(
         session: ISessionWithSocket | undefined,

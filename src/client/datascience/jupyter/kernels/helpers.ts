@@ -1870,17 +1870,90 @@ export async function notifyAndRestartDeadKernel(
     return restartedKernel;
 }
 
-export async function connectToKernel(
+export async function handleKernelError(
+    serviceContainer: IServiceContainer,
+    error: Error,
+    context: 'start' | 'interrupt' | 'restart' | 'execution',
+    resource: Resource,
+    kernel: IKernel,
+    controller: VSCodeNotebookController
+) {
+    const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+    const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+    let resultController: VSCodeNotebookController = controller;
+
+    if (controller.connection.interpreter && context === 'start') {
+        // If we failed to start the kernel, then clear cache used to track
+        // whether we have dependencies installed or not.
+        // Possible something is missing.
+        clearInstalledIntoInterpreterMemento(memento, undefined, controller.connection.interpreter.path).ignoreErrors();
+    }
+
+    const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
+
+    // Send telemetry for handling the error (if raw)
+    const isLocal = isLocalConnection(controller?.connection);
+    const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+    if (rawLocalKernel && context === 'start') {
+        sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
+            reason: handleResult
+        });
+    }
+
+    // Dispose the kernel no matter what happened as we need to go around again when there's an error
+    kernel.dispose().ignoreErrors();
+
+    switch (handleResult) {
+        case KernelInterpreterDependencyResponse.cancel:
+            throw new CancellationError(
+                DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
+            );
+
+        case KernelInterpreterDependencyResponse.failed:
+            throw error;
+
+        case KernelInterpreterDependencyResponse.selectDifferentKernel: {
+            // Loop around and create the new one. The user wants to switch
+
+            // Update to the selected controller
+            const newController = await switchController(resource, serviceContainer);
+            if (!newController) {
+                throw error;
+            } else {
+                resultController = newController;
+            }
+            break;
+        }
+    }
+
+    return resultController;
+}
+
+function convertContextToFunction(context: 'start' | 'interrupt' | 'restart') {
+    switch (context) {
+        case 'start':
+            return (k: IKernel) => k.start();
+
+        case 'interrupt':
+            return (k: IKernel) => k.interrupt();
+
+        case 'restart':
+            return (k: IKernel) => k.restart();
+    }
+}
+
+export async function wrapKernelMethod(
     initialController: VSCodeNotebookController,
+    initialContext: 'start' | 'interrupt' | 'restart',
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument
-): Promise<IKernel> {
+) {
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
-    const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-    const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     let kernel: IKernel | undefined;
-    let controller: VSCodeNotebookController | undefined = initialController;
+    let controller: VSCodeNotebookController = initialController;
+    let currentMethod = convertContextToFunction(initialContext);
+    let context = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook, {
@@ -1890,7 +1963,7 @@ export async function connectToKernel(
         });
 
         try {
-            await kernel.start();
+            await currentMethod(kernel);
 
             // If the kernel is dead, ask the user if they want to restart
             if (
@@ -1900,56 +1973,14 @@ export async function connectToKernel(
                 await notifyAndRestartDeadKernel(kernel, serviceContainer);
             }
         } catch (error) {
-            if (controller.connection.interpreter) {
-                // If we failed to start the kernel, then clear cache used to track
-                // whether we have dependencies installed or not.
-                // Possible something is missing.
-                clearInstalledIntoInterpreterMemento(
-                    memento,
-                    undefined,
-                    controller.connection.interpreter.path
-                ).ignoreErrors();
-            }
+            controller = await handleKernelError(serviceContainer, error, context, resource, kernel, controller);
 
-            const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
-
-            // Send telemetry for handling the error (if raw)
-            const isLocal = isLocalConnection(controller.connection);
-            const rawLocalKernel =
-                serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
-            if (rawLocalKernel) {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
-                    reason: handleResult
-                });
-            }
-
-            // Dispose the kernel no matter what happened as we need to go around again when there's an error
-            kernel.dispose().ignoreErrors();
-            kernel = undefined;
-
-            switch (handleResult) {
-                case KernelInterpreterDependencyResponse.cancel:
-                    throw new CancellationError(
-                        DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
-                    );
-
-                case KernelInterpreterDependencyResponse.failed:
-                    throw error;
-
-                case KernelInterpreterDependencyResponse.selectDifferentKernel: {
-                    // Loop around and create the new one. The user wants to switch
-
-                    // Update to the selected controller
-                    controller = await switchController(resource, serviceContainer);
-                    if (!controller) {
-                        throw error;
-                    }
-                    break;
-                }
-            }
+            // When we wrap around, update the current method to start. This
+            // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
+            currentMethod = (k) => k.start();
+            context = 'start';
         }
     }
-
     // Before returning, but without disposing the kernel, double check it's still valid
     // If a restart didn't happen, then we can't connect. Throw an error.
     // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
@@ -1961,4 +1992,13 @@ export async function connectToKernel(
         );
     }
     return kernel;
+}
+
+export async function connectToKernel(
+    initialController: VSCodeNotebookController,
+    serviceContainer: IServiceContainer,
+    resource: Resource,
+    notebook: NotebookDocument
+): Promise<IKernel> {
+    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook);
 }
