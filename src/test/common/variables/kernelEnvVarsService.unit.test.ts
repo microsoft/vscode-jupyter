@@ -43,6 +43,9 @@ suite('Kernel Environment Variables Service', () => {
     setup(() => {
         fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         envActivation = TypeMoq.Mock.ofType<IEnvironmentActivationService>(undefined, TypeMoq.MockBehavior.Strict);
+        envActivation
+            .setup((e) => e.hasActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false));
         customVariablesService = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>(
             undefined,
             TypeMoq.MockBehavior.Strict
