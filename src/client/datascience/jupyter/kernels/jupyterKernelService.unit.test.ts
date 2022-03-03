@@ -399,7 +399,13 @@ suite('DataScience - JupyterKernelService', () => {
         );
         token.dispose();
         verify(
-            kernelDependencyService.installMissingDependencies(anything(), anything(), anything(), anything())
+            kernelDependencyService.installMissingDependencies(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
         ).times(kernels.filter((k) => k.interpreter).length);
     });
     test('Kernel installed when spec comes from interpreter', async () => {
