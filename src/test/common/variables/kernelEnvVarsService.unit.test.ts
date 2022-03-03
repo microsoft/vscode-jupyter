@@ -5,9 +5,8 @@
 
 /* eslint-disable  */
 
-import { expect, use } from 'chai';
+import { assert, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
@@ -17,16 +16,17 @@ import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { anything, instance, mock, when } from 'ts-mockito';
 
 use(chaiAsPromised);
 
 suite('Kernel Environment Variables Service', () => {
-    let fs: TypeMoq.IMock<IFileSystem>;
-    let envActivation: TypeMoq.IMock<IEnvironmentActivationService>;
-    let customVariablesService: TypeMoq.IMock<IEnvironmentVariablesProvider>;
+    let fs: IFileSystem;
+    let envActivation: IEnvironmentActivationService;
+    let customVariablesService: IEnvironmentVariablesProvider;
     let variablesService: EnvironmentVariablesService;
     let kernelVariablesService: KernelEnvironmentVariablesService;
-    let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let interpreterService: IInterpreterService;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         path: 'foobar',
@@ -41,86 +41,118 @@ suite('Kernel Environment Variables Service', () => {
     };
 
     setup(() => {
-        fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        envActivation = TypeMoq.Mock.ofType<IEnvironmentActivationService>(undefined, TypeMoq.MockBehavior.Strict);
-        envActivation
-            .setup((e) => e.hasActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(false));
-        customVariablesService = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>(
-            undefined,
-            TypeMoq.MockBehavior.Strict
-        );
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
-        variablesService = new EnvironmentVariablesService(fs.object);
+        fs = mock<IFileSystem>();
+        envActivation = mock<IEnvironmentActivationService>();
+        when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(false);
+        customVariablesService = mock<IEnvironmentVariablesProvider>();
+        interpreterService = mock<IInterpreterService>();
+        variablesService = new EnvironmentVariablesService(instance(fs));
         kernelVariablesService = new KernelEnvironmentVariablesService(
-            interpreterService.object,
-            envActivation.object,
+            instance(interpreterService),
+            instance(envActivation),
             variablesService,
-            customVariablesService.object
+            instance(customVariablesService)
         );
     });
 
     suite(`getEnvironmentVariables()`, () => {
         test('Interpreter path trumps process', async () => {
-            envActivation
-                .setup((e) =>
-                    e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve({ PATH: 'foobar' }));
-            customVariablesService
-                .setup((c) => c.getCustomEnvironmentVariables(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(undefined));
+            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+                PATH: 'foobar'
+            });
+            when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve();
 
             const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
-            expect(processPath).to.not.be.undefined;
-            expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal(`${path.dirname(interpreter.path)}${path.delimiter}foobar`);
+            assert.isOk(processPath);
+            assert.isOk(vars);
+            assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.path)}${path.delimiter}foobar`);
         });
 
         test('Paths are merged', async () => {
-            envActivation
-                .setup((e) =>
-                    e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve({ pATh: 'foobar' }));
-            customVariablesService
-                .setup((c) => c.getCustomEnvironmentVariables(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve({ PATH: 'foobaz' }));
+            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+                PATH: 'foobar'
+            });
+            when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
 
             const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
-            expect(processPath).to.not.be.undefined;
-            expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal(
+            assert.isOk(processPath);
+            assert.isOk(vars);
+            assert.strictEqual(
+                vars![processPath!],
                 `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
-            interpreterService
-                .setup((e) => e.getInterpreterDetails('foobar'))
-                .returns(() =>
-                    Promise.resolve({ envType: EnvironmentType.Conda, path: 'foopath', sysPrefix: 'foosysprefix' })
-                );
-            envActivation
-                .setup((e) =>
-                    e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve({ PATH: 'foobar' }));
-            customVariablesService
-                .setup((c) => c.getCustomEnvironmentVariables(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve({ PATH: 'foobaz' }));
+            when(interpreterService.getInterpreterDetails('foobar')).thenResolve({
+                envType: EnvironmentType.Conda,
+                path: 'foopath',
+                sysPrefix: 'foosysprefix'
+            });
+            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+                PATH: 'foobar'
+            });
+            when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
 
             // undefined for interpreter here, interpreterPath from the spec should be used
             const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
-            expect(processPath).to.not.be.undefined;
-            expect(vars).to.not.be.undefined;
-            expect(vars![processPath!]).to.be.equal(
+            assert.isOk(processPath);
+            assert.isOk(vars);
+            assert.strictEqual(
+                vars![processPath!],
                 `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
+        });
+
+        async function testPYTHONNOUSERSITE(
+            envType: EnvironmentType,
+            hasActivatedEnvVariables: boolean,
+            hasActivationCommands: boolean
+        ) {
+            when(interpreterService.getInterpreterDetails('foobar')).thenResolve({
+                envType,
+                path: 'foopath',
+                sysPrefix: 'foosysprefix'
+            });
+            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(
+                hasActivatedEnvVariables
+                    ? {
+                          PATH: 'foobar'
+                      }
+                    : undefined
+            );
+            when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(hasActivationCommands);
+            when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
+
+            // undefined for interpreter here, interpreterPath from the spec should be used
+            const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
+            assert.isOk(vars);
+
+            if (hasActivatedEnvVariables && hasActivationCommands) {
+                assert.isOk(vars!['PYTHONNOUSERSITE'], 'PYTHONNOUSERSITE should be set');
+            } else {
+                assert.isUndefined(vars!['PYTHONNOUSERSITE'], 'PYTHONNOUSERSITE should not be set');
+            }
+        }
+
+        test('PYTHONNOUSERSITE should not be set for Global Interpreters', async () => {
+            await testPYTHONNOUSERSITE(EnvironmentType.Global, false, false);
+        });
+        test('PYTHONNOUSERSITE should be set for Conda Env', async () => {
+            await testPYTHONNOUSERSITE(EnvironmentType.Conda, true, true);
+        });
+        test('PYTHONNOUSERSITE should be set for Virtual Env', async () => {
+            await testPYTHONNOUSERSITE(EnvironmentType.VirtualEnv, true, true);
+        });
+        test('PYTHONNOUSERSITE should not be set for Conda Env if we fail to get env variables', async () => {
+            await testPYTHONNOUSERSITE(EnvironmentType.Conda, false, true);
+        });
+        test('PYTHONNOUSERSITE should not be set for Conda Env if we fail to get activation commands', async () => {
+            await testPYTHONNOUSERSITE(EnvironmentType.Conda, true, false);
         });
     });
 });
