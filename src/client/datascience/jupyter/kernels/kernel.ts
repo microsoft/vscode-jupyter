@@ -674,8 +674,11 @@ export class Kernel implements IKernel {
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherStartupCode(notebookDocument);
+            const startupCode = await this.gatherInternalStartupCode(notebookDocument);
             await this.executeSilently(startupCode);
+
+            // Run user specified startup commands
+            await this.executeSilently(this.getUserStartupCommands());
         }
 
         // Then request our kernel info (indicates kernel is ready to go)
@@ -721,20 +724,12 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
+    private async gatherInternalStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                // Append the global site_packages to the kernel's sys.path
-                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
-                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
-                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(...wrapPythonStartupBlock(CodeSnippets.AppendSitePackages.splitLines({ trim: false })));
-            }
-
             const [changeDirScripts, debugCellScripts] = await Promise.all([
                 // Change our initial directory and path
                 this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri),
@@ -742,6 +737,17 @@ export class Kernel implements IKernel {
                 // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
                 this.getDebugCellHook(notebookDocument)
             ]);
+
+            // Have our debug cell script run first for safety
+            result.push(...wrapPythonStartupBlock(debugCellScripts));
+
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                result.push(...wrapPythonStartupBlock(CodeSnippets.AppendSitePackages.splitLines({ trim: false })));
+            }
 
             result.push(...wrapPythonStartupBlock(changeDirScripts));
 
@@ -754,13 +760,8 @@ export class Kernel implements IKernel {
 
             // For Python notebook initialize matplotlib
             result.push(...wrapPythonStartupBlock(this.getMatplotLibInitializeCode()));
-
-            result.push(...wrapPythonStartupBlock(debugCellScripts));
         }
 
-        // Run any startup commands that we have specified
-        // Don't wrap these as they are not python specific
-        result.push(...this.getStartupCommands());
         return result;
     }
 
@@ -908,7 +909,7 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private getStartupCommands(): string[] {
+    private getUserStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
         let setting = settings.runStartupCommands;
