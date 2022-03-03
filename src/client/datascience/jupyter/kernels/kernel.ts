@@ -448,6 +448,7 @@ export class Kernel implements IKernel {
             );
         }
     }
+
     private async initializeAfterStart(notebook: INotebook | undefined, notebookDocument: NotebookDocument) {
         traceVerbose('Started running kernel initialization');
         if (!notebook) {
