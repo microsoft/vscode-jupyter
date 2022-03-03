@@ -38,7 +38,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Commands, Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import {
     areInterpreterPathsSame,
     getInterpreterHash,
@@ -1734,7 +1734,11 @@ export async function sendTelemetryForPythonKernelExecutable(
     traceVerbose('End sendTelemetryForPythonKernelExecutable');
 }
 
-export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+export async function executeSilently(
+    session: IJupyterSession,
+    code: string,
+    errorMessageForLogging: string = ''
+): Promise<nbformat.IOutput[]> {
     traceInfo(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -1750,6 +1754,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
         true
     );
     const outputs: nbformat.IOutput[] = [];
+    const errorMessages: string[] = [];
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
             traceInfoIfCI(`Got io pub message (stream), ${msg.content.text.substr(0, 100).splitLines().join('\\n')}`);
@@ -1791,6 +1796,11 @@ export async function executeSilently(session: IJupyterSession, code: string): P
                     msg.content.evalue
                 }, ${msg.content.traceback.join().substring(0, 100)}}`
             );
+            errorMessages.push(
+                `${msg.content.ename}: ${msg.content.evalue} \n    ${msg.content.traceback
+                    .map((line) => `    ${line}`)
+                    .join('\n')}`
+            );
             const output: nbformat.IError = {
                 ename: msg.content.ename,
                 evalue: msg.content.evalue,
@@ -1803,8 +1813,17 @@ export async function executeSilently(session: IJupyterSession, code: string): P
         }
     };
     await request.done;
-    traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
 
+    const codeForLogging = `(Code = ${code.substring(0, 100).splitLines().join('\\n')})`;
+    if (errorMessageForLogging && errorMessages.length) {
+        traceError(`${errorMessageForLogging}. ${codeForLogging} \n${errorMessages.join('\n')}`);
+    } else if (errorMessages.length) {
+        traceWarning(
+            `Executing execute code completed with a few errors. ${codeForLogging} \n${errorMessages.join('\n')}`
+        );
+    } else {
+        traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+    }
     return outputs;
 }
 async function switchController(

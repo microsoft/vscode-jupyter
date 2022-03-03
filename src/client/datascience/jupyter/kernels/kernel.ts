@@ -509,8 +509,15 @@ export class Kernel implements IKernel {
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherStartupCode(notebookDocument);
-            await this.executeSilently(notebook, startupCode);
+            const startupCode = await this.gatherInternalStartupCode(notebookDocument);
+            await this.executeSilently(notebook, startupCode, 'Failed to execute internal startup code');
+
+            // Run any user startup commands
+            await this.executeSilently(
+                notebook,
+                this.getUserStartupCommands(),
+                `Failed to execute startup code defined in 'jupyter.runStartupCommands'`
+            );
         }
 
         // Then request our kernel info (indicates kernel is ready to go)
@@ -555,7 +562,7 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
+    private async gatherInternalStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
@@ -579,21 +586,19 @@ export class Kernel implements IKernel {
 
             result.push(...changeDirScripts);
 
-            // Set the ipynb file
-            const file = this.resourceUri?.fsPath;
-            if (file) {
-                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
-            }
             result.push(CodeSnippets.disableJedi);
 
             // For Python notebook initialize matplotlib
             result.push(...this.getMatplotLibInitializeCode());
 
             result.push(...debugCellScripts);
-        }
 
-        // Run any startup commands that we have specified
-        result.push(...this.getStartupCommands());
+            // Set the ipynb file
+            const file = this.resourceUri?.fsPath;
+            if (file) {
+                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
+            }
+        }
         return result;
     }
 
@@ -664,7 +669,7 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private getStartupCommands(): string[] {
+    private getUserStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
         let setting = settings.runStartupCommands;
@@ -722,12 +727,12 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(notebook: INotebook | undefined, code: string[]) {
+    private async executeSilently(notebook: INotebook | undefined, code: string[], errorMessageForLogging: string) {
         if (!notebook || code.join('').trim().length === 0) {
             traceVerbose(`Not executing startup notebook: ${notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
-        await executeSilently(notebook.session, code.join('\n'));
+        return executeSilently(notebook.session, code.join('\n'), errorMessageForLogging);
     }
 }
 
