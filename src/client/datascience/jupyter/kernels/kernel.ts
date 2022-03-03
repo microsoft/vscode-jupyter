@@ -886,6 +886,7 @@ export class Kernel implements IKernel {
         // Add in SVG to the figure formats if needed
         if (settings.generateSVGPlots) {
             results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
+            traceInfo('Add SVG to matplotlib figure formats');
         }
 
         return results;
