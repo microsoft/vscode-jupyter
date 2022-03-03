@@ -31,6 +31,7 @@ import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterConnectError } from './jupyterConnectError';
+import { JupyterKernelDependencyError } from '../jupyter/kernels/jupyterKernelDependencyError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -97,11 +98,16 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning('Kernel Error', err);
+        err = WrappedError.unwrap(err);
 
-        // Use the kernel dependency service to first determine if this is because dependencies are missing or not
-        if (
-            (purpose === 'start' || purpose === 'restart') &&
-            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
+        // Jupyter kernels, non zmq actually do the dependency install themselves
+        if (err instanceof JupyterKernelDependencyError) {
+            return err.reason;
+            // Use the kernel dependency service to first determine if this is because dependencies are missing or not
+        } else if (
+            err instanceof JupyterInstallError ||
+            ((purpose === 'start' || purpose === 'restart') &&
+                !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true)))
         ) {
             const tokenSource = new CancellationTokenSource();
             try {
@@ -116,7 +122,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 tokenSource.dispose();
             }
         } else {
-            err = WrappedError.unwrap(err);
             const failureInfo = analyzeKernelErrors(
                 this.workspaceService.workspaceFolders || [],
                 err,

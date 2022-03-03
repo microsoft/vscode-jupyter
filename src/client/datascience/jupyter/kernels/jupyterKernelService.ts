@@ -22,8 +22,14 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
-import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
+import {
+    IDisplayOptions,
+    IJupyterKernelSpec,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
@@ -62,7 +68,22 @@ export class JupyterKernelService {
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, cancelTokenSource);
+            const result = await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel,
+                ui,
+                cancelTokenSource,
+                true
+            );
+            switch (result) {
+                case KernelInterpreterDependencyResponse.cancel:
+                case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                case KernelInterpreterDependencyResponse.failed:
+                case KernelInterpreterDependencyResponse.uiHidden:
+                    throw new JupyterKernelDependencyError(result, kernel);
+                default:
+                    break;
+            }
         }
 
         var specFile: string | undefined = undefined;

@@ -225,11 +225,9 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, dismiss the prompt.
-            // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
             await Promise.all([restartPrompt.displayed, runCell(cell3)]);
             await sleep(1_000);
             assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
-            assert.strictEqual(cell3.outputs.length, 0, 'Should not have any outputs');
         });
         test('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
             await runAndFailWithKernelCrash();
