@@ -98,7 +98,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         const uri = Uri.file('test.py');
-        document.setup((d) => d.fileName).returns(() => uri.fsPath);
+        document.setup((d) => d.uri).returns(() => uri);
         document.setup((d) => d.version).returns(() => 1);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
@@ -108,12 +108,13 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.exactly(2));
         targetCodeWatcher.setup((tc) => tc.uri).returns(() => uri);
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
+        targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 2);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(() => {
                 return targetCodeWatcher.object;
             })
-            .verifiable(TypeMoq.Times.atLeastOnce());
+            .verifiable(TypeMoq.Times.once());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
         await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
@@ -124,41 +125,49 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         serviceContainer.verifyAll();
     });
 
-    test('Initialize Code Lenses new name / version', async () => {
+    test('Initialize Code Lenses different documents', async () => {
         // Create our document
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup((d) => d.fileName).returns(() => 'test.py');
-        document.setup((d) => d.version).returns(() => 1);
+        const uri1 = Uri.file('test.py');
+        const document1 = TypeMoq.Mock.ofType<TextDocument>();
+        document1.setup((d) => d.uri).returns(() => uri1);
+        document1.setup((d) => d.version).returns(() => 1);
 
+        const uri2 = Uri.file('test2.py');
         const document2 = TypeMoq.Mock.ofType<TextDocument>();
-        document2.setup((d) => d.fileName).returns(() => 'test2.py');
+        document2.setup((d) => d.uri).returns(() => uri2);
         document2.setup((d) => d.version).returns(() => 1);
 
-        const document3 = TypeMoq.Mock.ofType<TextDocument>();
-        document3.setup((d) => d.fileName).returns(() => 'test.py');
-        document3.setup((d) => d.version).returns(() => 2);
-
-        const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
-        targetCodeWatcher
+        const targetCodeWatcher1 = TypeMoq.Mock.ofType<ICodeWatcher>();
+        targetCodeWatcher1
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
-            .verifiable(TypeMoq.Times.exactly(3));
-        targetCodeWatcher.setup((tc) => tc.uri).returns(() => Uri.file('test.py'));
-        targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
+            .verifiable(TypeMoq.Times.exactly(2));
+        const targetCodeWatcher2 = TypeMoq.Mock.ofType<ICodeWatcher>();
+        targetCodeWatcher1.setup((tc) => tc.uri).returns(() => uri1);
+        targetCodeWatcher1.setup((tc) => tc.getVersion()).returns(() => 1);
+        targetCodeWatcher2
+            .setup((tc) => tc.getCodeLenses())
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.once());
+        targetCodeWatcher2.setup((tc) => tc.uri).returns(() => uri2);
+        targetCodeWatcher2.setup((tc) => tc.getVersion()).returns(() => 1);
+
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => targetCodeWatcher.object)
-            .verifiable(TypeMoq.Times.exactly(3));
-        documentManager
-            .setup((d) => d.textDocuments)
-            .returns(() => [document.object, document2.object, document3.object]);
+            .returns(() => targetCodeWatcher1.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(() => targetCodeWatcher2.object);
 
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        documentManager.setup((d) => d.textDocuments).returns(() => [document1.object, document2.object]);
+
+        await codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document1.object, tokenSource.token);
         await codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
-        await codeLensProvider.provideCodeLenses(document3.object, tokenSource.token);
 
         // service container get should be called three times as the names and versions don't match
-        targetCodeWatcher.verifyAll();
+        targetCodeWatcher1.verifyAll();
+        targetCodeWatcher2.verifyAll();
         serviceContainer.verifyAll();
     });
 });
