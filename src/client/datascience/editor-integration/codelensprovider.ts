@@ -8,15 +8,15 @@ import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } f
 import { ContextKey } from '../../common/contextKey';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
-import { traceInfoIfCI } from '../../common/logger';
 
-import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../types';
+import { traceInfoIfCI } from '../../common/logger';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -71,7 +71,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.uri, document.version, this.configuration.getSettings(document.uri));
+        return this.matchWatcher(document.uri);
     }
 
     private onDebugLocationUpdated() {
@@ -104,11 +104,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);
         if (!settings.enableCellCodeLens) {
-            // Clear out any existing code watchers, providecodelenses is called on settings change
-            // so we don't need to watch the settings change specifically here
-            if (this.activeCodeWatchers.length > 0) {
-                this.activeCodeWatchers = [];
-            }
             return [];
         }
 
@@ -153,11 +148,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // See if we already have a watcher for this file and version
-        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(
-            document.uri,
-            document.version,
-            this.configuration.getSettings(document.uri)
-        );
+        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.uri);
         if (codeWatcher) {
             return codeWatcher.getCodeLenses();
         }
@@ -167,21 +158,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         return newCodeWatcher.getCodeLenses();
     }
 
-    private matchWatcher(uri: vscode.Uri, version: number, settings: IJupyterSettings): ICodeWatcher | undefined {
+    private matchWatcher(uri: vscode.Uri): ICodeWatcher | undefined {
         const index = this.activeCodeWatchers.findIndex((item) => item.uri && item.uri.toString() == uri.toString());
         if (index >= 0) {
-            const item = this.activeCodeWatchers[index];
-            if (item.getVersion() === version) {
-                // Also make sure the cached settings are the same. Otherwise these code lenses
-                // were created with old settings
-                const settingsStr = JSON.stringify(settings);
-                const itemSettings = JSON.stringify(item.getCachedSettings());
-                if (settingsStr === itemSettings) {
-                    return item;
-                }
-            }
-            // If we have an old version remove it from the active list
-            this.activeCodeWatchers.splice(index, 1);
+            return this.activeCodeWatchers[index];
         }
 
         // Create a new watcher for this file if we can find a matching document
