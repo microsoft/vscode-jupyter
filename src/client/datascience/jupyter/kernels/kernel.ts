@@ -863,10 +863,6 @@ export class Kernel implements IKernel {
             traceInfoIfCI(
                 `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
             );
-            // const matplotInit =
-            // !settings || settings.generateSVGPlots
-            // ? CodeSnippets.MatplotLibInitSvg
-            // : CodeSnippets.MatplotLibInitPng;
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
@@ -885,13 +881,6 @@ export class Kernel implements IKernel {
                         : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
                 );
             }
-        } else {
-            // const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            // const configInit = `curr = %config InlineBackend.figure_formats\ncurr.add('svg')\n%config InlineBackend.figure_formats = curr`;
-            // traceInfoIfCI(
-            // `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
-            // );
-            // results.push(...configInit.splitLines({ trim: false }));
         }
 
         // Add in SVG to the figure formats if needed
