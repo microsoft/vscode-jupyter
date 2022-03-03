@@ -66,7 +66,7 @@ export class NotebookProvider implements INotebookProvider {
             if (
                 !(await this.jupyterNotebookProvider.connect({
                     resource: options.resource,
-                    tokenSource: options.tokenSource,
+                    token: options.token,
                     ui: options.ui,
                     kind: isLocal ? 'localJupyter' : 'remoteJupyter'
                 }))
@@ -82,7 +82,7 @@ export class NotebookProvider implements INotebookProvider {
                   options.resource,
                   options.kernelConnection,
                   options.ui,
-                  options.tokenSource
+                  options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);
 

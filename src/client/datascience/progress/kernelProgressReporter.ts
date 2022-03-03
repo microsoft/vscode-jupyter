@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Disposable, Progress, ProgressLocation, window } from 'vscode';
+import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
@@ -31,7 +31,6 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
              * List of messages displayed in the progress UI.
              */
             progressList: string[];
-            tokenSources: CancellationTokenSource[];
             reporter?: Progress<{ message?: string; increment?: number }>;
         } & ProgressReporter
     >();
@@ -81,18 +80,13 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
      * If one exists for the same resource, then it will use the existing one, else it will just get queued as in `reportProgress`.
      * Behavior is identical to that of `reportProgress`
      */
-    public static wrapAndReportProgress<T>(
-        resource: Resource,
-        title: string,
-        tokenSource: CancellationTokenSource,
-        cb: (token: CancellationToken) => Promise<T>
-    ): Promise<T> {
+    public static wrapAndReportProgress<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
         const key = resource ? resource.fsPath : '';
         if (!KernelProgressReporter.instance) {
-            return cb(tokenSource.token);
+            return cb();
         }
-        const progress = KernelProgressReporter.reportProgressInternal(key, title, tokenSource);
-        return cb(tokenSource.token).finally(() => progress?.dispose());
+        const progress = KernelProgressReporter.reportProgressInternal(key, title);
+        return cb().finally(() => progress?.dispose());
     }
 
     /**
@@ -111,11 +105,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
 
         return KernelProgressReporter.reportProgressInternal(key, progressMessage || '');
     }
-    private static reportProgressInternal(
-        key: string,
-        title: string,
-        tokenSource?: CancellationTokenSource
-    ): IDisposable {
+    private static reportProgressInternal(key: string, title: string): IDisposable {
         if (!KernelProgressReporter.instance) {
             return new Disposable(noop);
         }
@@ -125,7 +115,6 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 title,
                 pendingProgress: [],
                 progressList: [],
-                tokenSources: [],
                 dispose: noop
             };
             KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, progressInfo);
@@ -146,9 +135,6 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 return new Disposable(noop);
             }
             progressInfo.pendingProgress.push(title);
-        }
-        if (tokenSource) {
-            progressInfo.tokenSources.push(tokenSource);
         }
         // Unwind the progress messages.
         return {
@@ -224,10 +210,6 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                         createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
                         deferred.promise
                     ]);
-                    if (token.isCancellationRequested) {
-                        info.tokenSources.forEach((t) => t.cancel());
-                        deferred.resolve();
-                    }
                     if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
                         KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
                     }

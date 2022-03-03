@@ -80,7 +80,7 @@ suite('DataScience - NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             resource: undefined,
             ui: new DisplayOptions(false),
-            tokenSource: source,
+            token: source.token,
             localJupyter: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
@@ -96,7 +96,7 @@ suite('DataScience - NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             ui: new DisplayOptions(true),
             resource: undefined,
-            tokenSource: source,
+            token: source.token,
             localJupyter: true
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');

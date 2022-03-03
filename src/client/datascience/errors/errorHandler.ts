@@ -115,7 +115,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     resource,
                     kernelConnection,
                     new DisplayOptions(false),
-                    tokenSource,
+                    tokenSource.token,
                     true
                 );
             } finally {

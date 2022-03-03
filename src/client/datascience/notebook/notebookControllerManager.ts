@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookControllerAffinity, Uri } from 'vscode';
+import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import {
@@ -252,7 +252,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 .finally(() => {
                     if (!this.isLocalLaunch) {
                         const cancellation = new CancellationTokenSource();
-                        this.updateRemoteConnections(cancellation)
+                        this.updateRemoteConnections(cancellation.token)
                             .catch(noop)
                             .finally(() => cancellation.dispose());
                     }
@@ -412,7 +412,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async loadRemoteNotebookControllersImpl(): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        let connections = await this.getRemoteKernelConnectionMetadata(cancelToken);
+        let connections = await this.getRemoteKernelConnectionMetadata(cancelToken.token);
 
         // Filter the connections.
         connections = connections.filter((item) => !this.kernelFilter.isKernelHidden(item));
@@ -488,8 +488,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
             wasLocal = false;
             const cancellation = new CancellationTokenSource();
-            let connections = await this.getRemoteKernelConnectionMetadata(cancellation);
-            await this.updateRemoteConnections(cancellation, connections);
+            let connections = await this.getRemoteKernelConnectionMetadata(cancellation.token);
+            await this.updateRemoteConnections(cancellation.token, connections);
             cancellation.dispose();
 
             // Indicate a refresh of the remote connections
@@ -578,14 +578,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     );
                 } else {
                     // For a remote connection check for new live kernel models before we find preferred
-                    await this.updateRemoteConnections(preferredSearchToken);
+                    await this.updateRemoteConnections(preferredSearchToken.token);
                     const ui = new DisplayOptions(false);
                     try {
                         const connection = await this.notebookProvider.connect({
                             resource: document.uri,
                             ui,
                             kind: 'remoteJupyter',
-                            tokenSource: preferredSearchToken
+                            token: preferredSearchToken.token
                         });
                         preferredConnection = await this.remoteKernelFinder.findKernel(
                             document.uri,
@@ -820,19 +820,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this._onNotebookControllerSelected.fire(event);
     }
 
-    private async getRemoteKernelConnectionMetadata(
-        tokenSource: CancellationTokenSource
-    ): Promise<KernelConnectionMetadata[]> {
+    private async getRemoteKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
         const ui = new DisplayOptions(false);
         try {
             const connection = await this.notebookProvider.connect({
                 resource: undefined,
                 ui,
                 kind: 'remoteJupyter',
-                tokenSource
+                token
             });
 
-            const kernels = await this.remoteKernelFinder.listKernels(undefined, connection, tokenSource.token);
+            const kernels = await this.remoteKernelFinder.listKernels(undefined, connection, token);
             this.failedToFetchRemoteKernels = false;
             return kernels;
         } catch (ex) {
@@ -846,18 +844,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Update any new or removed kernel connections, LiveKernelModels might be added or removed
     // during remote connections
-    private async updateRemoteConnections(
-        cancelTokenSource: CancellationTokenSource,
-        connections?: KernelConnectionMetadata[]
-    ) {
+    private async updateRemoteConnections(cancelToken: CancellationToken, connections?: KernelConnectionMetadata[]) {
         traceInfoIfCI('Updating remote connections');
         // Don't update until initial load is done
         await this.loadNotebookControllers();
 
         // We've connected and done the initial fetch, so this is speedy
-        connections = connections || (await this.getRemoteKernelConnectionMetadata(cancelTokenSource));
+        connections = connections || (await this.getRemoteKernelConnectionMetadata(cancelToken));
         traceInfoIfCI(`Current remote connections, ${JSON.stringify(connections)}`);
-        if (cancelTokenSource.token.isCancellationRequested || !connections) {
+        if (cancelToken.isCancellationRequested || !connections) {
             // Bail out on making the controllers if we are cancelling
             traceInfo('Cancelled loading notebook controllers');
             return [];

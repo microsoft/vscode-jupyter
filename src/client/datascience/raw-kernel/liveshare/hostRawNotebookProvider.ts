@@ -96,7 +96,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelTokenSource: vscode.CancellationTokenSource
+        cancelToken: vscode.CancellationToken
     ): Promise<INotebook> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
         const notebookPromise = createDeferred<INotebook>();
@@ -140,7 +140,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             traceVerbose(
                 `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
             );
-            await rawSession.connect({ tokenSource: cancelTokenSource, ui });
+            await rawSession.connect({ token: cancelToken, ui });
 
             if (rawSession.isConnected) {
                 // Create our notebook

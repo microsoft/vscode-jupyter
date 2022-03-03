@@ -28,7 +28,7 @@ import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { isLocalConnection, KernelConnectionMetadata } from './kernels/types';
 import { SessionDisposedError } from '../errors/sessionDisposedError';
 import { DisplayOptions } from '../displayOptions';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { waitForCondition } from '../../common/utils/async';
 
 const jvscIdentifier = '-jvsc-';
@@ -89,7 +89,7 @@ export class JupyterSession extends BaseJupyterSession {
         return this.session?.kernel?.id || '';
     }
 
-    public async connect(options: { tokenSource: CancellationTokenSource; ui: IDisplayOptions }): Promise<void> {
+    public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
 
@@ -101,7 +101,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(options: {
-        tokenSource: CancellationTokenSource;
+        token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
@@ -163,7 +163,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,
-        cancelTokenSource: CancellationTokenSource
+        cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
         if (!session || !this.contentsManager || !this.sessionManager) {
@@ -176,7 +176,7 @@ export class JupyterSession extends BaseJupyterSession {
             traceVerbose(
                 `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
             );
-            result = await this.createSession({ tokenSource: cancelTokenSource, ui });
+            result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout);
             if (result.kernel) {
                 this.restartSessionCreated(result.kernel);
@@ -197,7 +197,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected startRestartSession(disableUI: boolean) {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
             const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, this.session, token);
+            const promise = this.createRestartSession(disableUI, this.session, token.token);
             this.restartSessionPromise = { token, promise };
             promise.finally(() => token.dispose());
         }
@@ -250,7 +250,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     private async createSession(options: {
-        tokenSource: CancellationTokenSource;
+        token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
@@ -265,7 +265,7 @@ export class JupyterSession extends BaseJupyterSession {
                     this.resource,
                     this.kernelConnectionMetadata,
                     options.ui,
-                    options.tokenSource
+                    options.token
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
@@ -339,7 +339,7 @@ export class JupyterSession extends BaseJupyterSession {
                             this.contentsManager.delete(backingFile.path).ignoreErrors();
                         }
                     }),
-            options.tokenSource.token
+            options.token
         );
     }
 

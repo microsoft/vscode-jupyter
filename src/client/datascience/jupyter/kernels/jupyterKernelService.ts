@@ -6,7 +6,7 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
@@ -60,7 +60,7 @@ export class JupyterKernelService {
         resource: Resource,
         @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
         @ignoreLogging() ui: IDisplayOptions,
-        @ignoreLogging() cancelTokenSource: CancellationTokenSource
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (
@@ -72,7 +72,7 @@ export class JupyterKernelService {
                 resource,
                 kernel,
                 ui,
-                cancelTokenSource,
+                cancelToken,
                 true
             );
             switch (result) {
@@ -99,7 +99,7 @@ export class JupyterKernelService {
             specFile = kernel.kernelSpec.specFile;
 
             if (!specFile || !(await this.fs.localFileExists(specFile))) {
-                specFile = await this.registerKernel(kernel, cancelTokenSource);
+                specFile = await this.registerKernel(kernel, cancelToken);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
             else if (kernel.interpreter && specFile) {
@@ -108,7 +108,7 @@ export class JupyterKernelService {
                 if (path.basename(path.dirname(specFile)).toLowerCase() != kernel.kernelSpec.name.toLowerCase()) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
-                    specFile = await this.registerKernel(kernel, cancelTokenSource);
+                    specFile = await this.registerKernel(kernel, cancelToken);
                 }
             }
         }
@@ -126,13 +126,7 @@ export class JupyterKernelService {
                     kernel.interpreter.path
                 )} for ${kernel.id}`
             );
-            await this.updateKernelEnvironment(
-                resource,
-                kernel.interpreter,
-                kernel.kernelSpec,
-                specFile,
-                cancelTokenSource
-            );
+            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
         }
     }
 
@@ -157,13 +151,13 @@ export class JupyterKernelService {
     // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
-        cancelTokenSource: CancellationTokenSource
+        cancelToken: CancellationToken
     ): Promise<string | undefined> {
         // Get the global kernel location
         const root = await this.kernelFinder.getKernelSpecRootPath();
 
         // If that didn't work, we can't continue
-        if (!root || !kernel.kernelSpec || cancelTokenSource.token.isCancellationRequested || !kernel.kernelSpec.name) {
+        if (!root || !kernel.kernelSpec || cancelToken.isCancellationRequested || !kernel.kernelSpec.name) {
             return;
         }
 
@@ -210,7 +204,7 @@ export class JupyterKernelService {
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
             throw ex;
         }
-        if (cancelTokenSource.token.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested) {
             return;
         }
 
@@ -237,7 +231,7 @@ export class JupyterKernelService {
         interpreter: PythonEnvironment,
         kernel: IJupyterKernelSpec,
         specFile: string,
-        cancelTokenSource?: CancellationTokenSource,
+        cancelToken?: CancellationToken,
         forceWrite?: boolean
     ) {
         const kernelSpecRootPath = await this.kernelFinder.getKernelSpecRootPath();
@@ -312,7 +306,7 @@ export class JupyterKernelService {
                     specModel.env.PYTHONNOUSERSITE = 'True';
                 }
 
-                if (Cancellation.isCanceled(cancelTokenSource?.token)) {
+                if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
 

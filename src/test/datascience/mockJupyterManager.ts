@@ -10,7 +10,7 @@ import { Observable } from 'rxjs/Observable';
 import * as tmp from 'tmp';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource, EventEmitter, Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import type { Kernel, Session } from '@jupyterlab/services';
@@ -423,14 +423,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
         _kernelConnection: KernelConnectionMetadata,
         _workingDirectory: string,
         _ui: IDisplayOptions,
-        cancelTokenSource?: CancellationTokenSource
+        cancelToken?: CancellationToken
     ): Promise<JupyterSession> {
-        if (this.sessionTimeout && cancelTokenSource) {
+        if (this.sessionTimeout && cancelToken) {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {
                 await sleep(localTimeout);
                 return this.createNewSession();
-            }, cancelTokenSource.token);
+            }, cancelToken);
         } else {
             return Promise.resolve(this.createNewSession());
         }

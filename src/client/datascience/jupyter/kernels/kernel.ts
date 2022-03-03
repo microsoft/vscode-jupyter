@@ -389,7 +389,7 @@ export class Kernel implements IKernel {
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                tokenSource: this.startCancellation
+                token: this.startCancellation.token
             });
             if (!notebook) {
                 // This is an unlikely case.

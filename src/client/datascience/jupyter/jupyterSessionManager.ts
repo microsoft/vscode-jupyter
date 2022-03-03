@@ -13,7 +13,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
-import { CancellationTokenSource, EventEmitter } from 'vscode';
+import { CancellationToken, EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
@@ -175,7 +175,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelTokenSource: CancellationTokenSource
+        cancelToken: CancellationToken
     ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
@@ -203,7 +203,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.configService.getSettings(resource).jupyterInterruptTimeout
         );
         try {
-            await session.connect({ tokenSource: cancelTokenSource, ui });
+            await session.connect({ token: cancelToken, ui });
         } finally {
             if (!session.isConnected) {
                 await session.dispose();

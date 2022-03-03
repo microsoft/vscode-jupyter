@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -81,11 +81,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const property = options.localJupyter ? 'local' : 'remote';
         if (!this.serverPromise[property]) {
             // Start a server
-            this.serverPromise[property] = this.startServer(
-                options.resource,
-                options.tokenSource,
-                options.localJupyter
-            );
+            this.serverPromise[property] = this.startServer(options.resource, options.token, options.localJupyter);
         }
         try {
             const value = await this.serverPromise[property];
@@ -99,7 +95,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async startServer(
         resource: Resource,
-        tokenSource: CancellationTokenSource,
+        token: CancellationToken,
         forLocal: boolean
     ): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
@@ -143,13 +139,13 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceInfo(`Starting notebook server.`);
-            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, tokenSource);
+            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, token);
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
-            if (tokenSource.token.isCancellationRequested && e instanceof CancellationError) {
+            if (token.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
 

@@ -33,7 +33,6 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionManager } from '../jupyterSessionManager';
 import { SessionDisposedError } from '../../errors/sessionDisposedError';
-import { CancellationTokenSource } from 'vscode';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -72,7 +71,7 @@ export class HostJupyterServer implements INotebookServer {
         resource: Resource,
         sessionManager: JupyterSessionManager,
         kernelConnection: KernelConnectionMetadata,
-        cancelTokenSource: CancellationTokenSource,
+        cancelToken: CancellationToken,
         ui: IDisplayOptions
     ): Promise<INotebook> {
         // Compute launch information from the resource and the notebook metadata
@@ -92,7 +91,7 @@ export class HostJupyterServer implements INotebookServer {
                 kernelConnection,
                 workingDirectory,
                 ui,
-                cancelTokenSource
+                cancelToken
             );
             traceInfo(`Started session for kernel ${kernelConnection.id}`);
             return { connection, session };
@@ -156,7 +155,7 @@ export class HostJupyterServer implements INotebookServer {
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        cancelTokenSource: CancellationTokenSource,
+        cancelToken: CancellationToken,
         ui: IDisplayOptions
     ): Promise<INotebook> {
         if (!this.sessionManager || this.isDisposed) {
@@ -169,7 +168,7 @@ export class HostJupyterServer implements INotebookServer {
                 resource,
                 this.sessionManager,
                 kernelConnection,
-                cancelTokenSource,
+                cancelToken,
                 ui
             );
             const baseUrl = this.connection?.baseUrl || '';

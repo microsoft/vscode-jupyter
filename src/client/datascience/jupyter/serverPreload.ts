@@ -77,7 +77,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
                     resource: undefined,
                     ui,
                     kind: 'localJupyter',
-                    tokenSource: source
+                    token: source.token
                 });
             }
         } catch (exc) {

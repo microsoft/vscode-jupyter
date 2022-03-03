@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
+import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import {
@@ -65,7 +65,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        @ignoreLogging() tokenSource: CancellationTokenSource,
+        @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
@@ -79,13 +79,12 @@ export class KernelDependencyService implements IKernelDependencyService {
         const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
             resource,
             DataScience.validatingKernelDependencies(),
-            tokenSource,
-            (t) => this.areDependenciesInstalled(kernelConnection, t, ignoreCache)
+            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
         );
         if (alreadyInstalled) {
             return KernelInterpreterDependencyResponse.ok;
         }
-        if (tokenSource.token?.isCancellationRequested) {
+        if (token?.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
@@ -95,8 +94,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                tokenSource,
-                (t) => this.runInstaller(resource, kernelConnection.interpreter!, ui, t)
+                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, token)
             );
             this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
@@ -106,7 +104,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         try {
             // This can throw an exception (if say it fails to install) or it can cancel
             dependencyResponse = await promise;
-            if (tokenSource.token?.isCancellationRequested) {
+            if (token?.isCancellationRequested) {
                 dependencyResponse = KernelInterpreterDependencyResponse.cancel;
             }
         } catch (ex) {

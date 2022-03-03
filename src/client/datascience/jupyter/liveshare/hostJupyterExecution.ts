@@ -4,7 +4,7 @@
 import '../../../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
@@ -64,26 +64,19 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
 
     public async hostConnectToNotebookServer(
         options: INotebookServerOptions,
-        cancelTokenSource: CancellationTokenSource
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
-            return super.connectToNotebookServer(
-                await this.serverCache.generateDefaultOptions(options),
-                cancelTokenSource
-            );
+            return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
         }
     }
 
     public async connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelTokenSource: CancellationTokenSource
+        cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
-            return this.serverCache.getOrCreate(
-                this.hostConnectToNotebookServer.bind(this),
-                options,
-                cancelTokenSource
-            );
+            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
     }
     public async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {

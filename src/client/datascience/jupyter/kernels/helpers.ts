@@ -1821,12 +1821,12 @@ async function switchController(
     const waitForSelection = createDeferred<VSCodeNotebookController>();
     const disposable = controllerManager.onNotebookControllerSelected((e) => waitForSelection.resolve(e.controller));
 
-    const selected = (await selectKernel(
+    const selected = await selectKernel(
         resource,
         notebooks,
         serviceContainer.get(IInteractiveWindowProvider),
         commandManager
-    )) as boolean;
+    );
     if (selected && editor) {
         controller = await waitForSelection.promise;
     }
