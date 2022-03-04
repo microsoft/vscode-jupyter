@@ -340,18 +340,24 @@ export function clearPendingTimers() {
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
-    errorMessage: string | (() => string),
+    errorMessage: string | (() => string) | { rethrowLastFailure: true },
     intervalTimeoutMs: number = 10,
     throwOnError: boolean = false
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
+        const defaultErrorMessage =
+            typeof errorMessage === 'string'
+                ? errorMessage
+                : typeof errorMessage === 'function'
+                ? errorMessage()
+                : 'Timeout waiting for condition';
+        let timeoutError = new Error(defaultErrorMessage);
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearTimeout(timer);
-            errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
             console.log(`Test failing --- ${errorMessage}`);
-            reject(new Error(errorMessage));
+            reject(timeoutError);
         }, timeoutMs);
         let timer: NodeJS.Timer;
         const timerFunc = async () => {
@@ -361,6 +367,8 @@ export async function waitForCondition(
             } catch (exc) {
                 if (throwOnError) {
                     reject(exc);
+                } else if (typeof errorMessage === 'object' && errorMessage.rethrowLastFailure) {
+                    timeoutError = exc;
                 }
             }
             if (!success) {
