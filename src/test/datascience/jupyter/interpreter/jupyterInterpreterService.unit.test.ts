@@ -160,7 +160,6 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         );
         // First select our interpreter
         await jupyterInterpreterService.selectInterpreter();
-        await jupyterInterpreterService.installMissingDependencies(undefined);
         verify(interpreterConfiguration.installMissingDependencies(selectedJupyterInterpreter, undefined)).once();
     });
     test('Display picker if no interpreters are selected', async () => {

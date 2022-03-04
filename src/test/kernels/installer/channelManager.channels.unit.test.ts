@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -59,7 +60,7 @@ suite('Installation - installation channels', () => {
         assert.strictEqual(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
     });
 
-    test('Select installer', async () => {
+    test('Select installer should not happen', async () => {
         const installer1 = mockInstaller(true, '1');
         const installer2 = mockInstaller(true, '2');
 
@@ -79,14 +80,14 @@ suite('Installation - installation channels', () => {
 
         installer1.setup((x) => x.displayName).returns(() => 'Name 1');
         installer2.setup((x) => x.displayName).returns(() => 'Name 2');
+        installer1.setup((x) => (x as any).then).returns(() => undefined);
+        installer2.setup((x) => (x as any).then).returns(() => undefined);
 
         const cm = new InstallationChannelManager(serviceContainer);
-        await cm.getInstallationChannel(Product.ensurepip, interpreter);
+        const result = await cm.getInstallationChannel(Product.ensurepip, interpreter);
 
-        assert.notStrictEqual(items, undefined, 'showQuickPick not called');
-        assert.strictEqual(items!.length, 2, 'Incorrect number of installer shown');
-        assert.notStrictEqual(items![0]!.label!.indexOf('Name 1'), -1, 'Incorrect first installer name');
-        assert.notStrictEqual(items![1]!.label!.indexOf('Name 2'), -1, 'Incorrect second installer name');
+        assert.strictEqual(items, undefined, 'showQuickPick called');
+        assert.strictEqual(result, installer1.object);
     });
 
     function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {

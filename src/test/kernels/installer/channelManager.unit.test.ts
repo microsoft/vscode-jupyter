@@ -74,7 +74,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         appShell
             .setup((a) => a.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.never());
         getInstallationChannels = sinon.stub(InstallationChannelManager.prototype, 'getInstallationChannels');
         getInstallationChannels.resolves([moduleInstaller1.object, moduleInstaller2.object]);
         showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
@@ -84,7 +84,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         const channel = await installChannelManager.getInstallationChannel(Product.jupyter, interpreter);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
-        expect(channel).to.equal(undefined, 'Channel should not be set');
+        expect(channel).to.equal(moduleInstaller1.object, 'Channel should be set');
     });
 
     test('If multiple channels are returned by the resource, show quick pick of the channel names and return the selected channel installer', async () => {
