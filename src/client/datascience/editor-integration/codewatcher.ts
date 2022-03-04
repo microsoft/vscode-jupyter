@@ -21,7 +21,7 @@ import {
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposable, IJupyterSettings, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { chainable } from '../../common/utils/decorators';
 import * as localize from '../../common/utils/localize';
 import { isUri } from '../../common/utils/misc';
@@ -68,7 +68,6 @@ export class CodeWatcher implements ICodeWatcher {
     private version: number = -1;
     private codeLenses: CodeLens[] = [];
     private cells: ICellRange[] = [];
-    private cachedSettings: IJupyterSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
     private closeDocumentDisposable: IDisposable | undefined;
@@ -88,9 +87,6 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Cache the version, we don't want to pull an old version if the document is updated
         this.version = document.version;
-
-        // Get document cells here. Make a copy of our settings.
-        this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings(document.uri)));
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
@@ -115,11 +111,13 @@ export class CodeWatcher implements ICodeWatcher {
         return this.version;
     }
 
-    public getCachedSettings(): IJupyterSettings | undefined {
-        return this.cachedSettings;
-    }
-
     public getCodeLenses() {
+        const document = this.document;
+        if (document && document.version != this.version) {
+            this.codeLenses = this.codeLensFactory.createCodeLenses(document);
+            this.cells = this.codeLensFactory.getCellRanges(document);
+            this.version = document.version;
+        }
         return this.codeLenses;
     }
 
