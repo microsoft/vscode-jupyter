@@ -32,6 +32,7 @@ let rendererContext: RendererContext<unknown>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handlers = new Map<string, (data: any) => void>();
 handlers.set('queryInnerHTML', queryInnerHTMLHandler);
+handlers.set('clickElement', clickHandler);
 
 function initializeComms() {
     if (!rendererContext.onDidReceiveMessage || !rendererContext.postMessage) {
@@ -60,7 +61,7 @@ function initializeComms() {
     rendererContext.postMessage({ command: 'INIT' });
 }
 
-function queryInnerHTMLHandler({ requestId, id, selector }: { requestId: string; id: string; selector: string }) {
+function queryInnerHTMLHandler({ requestId, id, selector }: { requestId: string; id: string; selector?: string }) {
     try {
         const element = outputs.get(id);
         if (!element) {
@@ -69,8 +70,24 @@ function queryInnerHTMLHandler({ requestId, id, selector }: { requestId: string;
                 error: `No element for id ${id}`
             });
         }
-        const innerHTML = element.querySelector(selector)?.innerHTML;
+        const innerHTML = selector ? element.querySelector(selector)?.innerHTML : element.innerHTML;
         rendererContext.postMessage!({ requestId, innerHTML });
+    } catch (ex) {
+        rendererContext.postMessage!({ requestId, error: ex.message });
+    }
+}
+
+function clickHandler({ requestId, id, selector }: { requestId: string; id: string; selector: string }) {
+    try {
+        const element = outputs.get(id);
+        if (!element) {
+            return rendererContext.postMessage!({
+                requestId,
+                error: `No element for id ${id}`
+            });
+        }
+        (element.querySelector(selector) as HTMLButtonElement).click();
+        rendererContext.postMessage!({ requestId });
     } catch (ex) {
         rendererContext.postMessage!({ requestId, error: ex.message });
     }
