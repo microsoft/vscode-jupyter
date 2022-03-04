@@ -21,6 +21,7 @@ import {
     createTemporaryNotebook,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
+    runAllCellsInActiveNotebook,
     runCell,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
@@ -44,6 +45,15 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         'widgets',
         'notebooks',
         'standard_widgets.ipynb'
+    );
+    const ipySheetNbPath = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'widgets',
+        'notebooks',
+        'ipySheet_widgets.ipynb'
     );
 
     this.timeout(120_000);
@@ -131,6 +141,21 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executionCell(cell, comms);
         await assertOutputContainsHtml(comms, 1, ['<input type="text'], '.widget-text');
     });
+    test.only('Linking Widgets slider to textbox widget', async function () {
+        const comms = await initializeNotebook({ templateFile: templateNbPath });
+        const [, , , , , , , cell7, cell8, cell9] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
+        await executionCell(cell7, comms);
+        await executionCell(cell8, comms);
+        await executionCell(cell9, comms);
+        await assertOutputContainsHtml(comms, 8, ['0'], '.widget-readout');
+        await assertOutputContainsHtml(comms, 9, ['<input type="number>']);
+
+        // Update the textbox widget.
+        await comms.setValue('.widget-text input', cell9.outputs[0].id!, '60');
+
+        // Verify the slider has changed.
+        await assertOutputContainsHtml(comms, 8, ['60'], '.widget-readout');
+    });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(2)!;
@@ -162,6 +187,18 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executionCell(cell5, comms);
         await assertOutputContainsHtml(comms, 3, ['Click Me!', '<button']);
         await assertOutputContainsHtml(comms, 4, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in other cells
+        await click(comms, 4, 'button');
+        await assertOutputContainsHtml(comms, 3, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 4, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 5, ['Button clicked']);
+    });
+    test.only('Render IPySheets', async () => {
+        const comms = await initializeNotebook({ templateFile: ipySheetNbPath });
+        await runAllCellsInActiveNotebook();
+        await assertOutputContainsHtml(comms, 3, ['Hello', 'World', '42.000']);
+        await assertOutputContainsHtml(comms, 5, ['Search:', '<input type="text']);
 
         // Click the button and verify we have output in other cells
         await click(comms, 4, 'button');
