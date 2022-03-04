@@ -7,7 +7,7 @@ import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/trace';
 import { traceDecorators, traceError, traceVerbose } from '../logger';
-import { IFileSystem } from '../platform/types';
+import { IFileSystem, IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from 'path';
@@ -21,9 +21,11 @@ const condaEnvironmentsFile = path.join(untildify('~'), '.conda', 'environments.
 export class CondaService {
     private isAvailable: boolean | undefined;
     private _file?: string;
+    private _batchFile?: string;
     private _version?: SemVer;
     private _previousVersionCall?: Promise<SemVer | undefined>;
     private _previousFileCall?: Promise<string | undefined>;
+    private _previousBatchFileCall?: Promise<string | undefined>;
     private _previousCondaEnvs: string[] = [];
     private readonly _onCondaEnvironmentsChanged = new EventEmitter<void>();
     public readonly onCondaEnvironmentsChanged = this._onCondaEnvironmentsChanged.event;
@@ -31,6 +33,7 @@ export class CondaService {
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
         void this.monitorCondaEnvFile();
@@ -85,6 +88,32 @@ export class CondaService {
         };
         this._previousFileCall = promise();
         return this._previousFileCall;
+    }
+
+    @traceDecorators.verbose('getCondaFile', TraceOptions.BeforeCall)
+    async getCondaBatchFile() {
+        if (this._batchFile) {
+            return this._batchFile;
+        }
+        if (this._previousBatchFileCall) {
+            return this._previousBatchFileCall;
+        }
+        const promise = async () => {
+            const file = await this.getCondaFile();
+            if (file) {
+                const fileDir = path.dirname(file);
+                // Batch file depends upon OS
+                if (this.ps.isWindows) {
+                    const possibleBatch = path.join(fileDir, '..', 'condabin', 'conda.bat');
+                    if (await this.fs.localFileExists(possibleBatch)) {
+                        return possibleBatch;
+                    }
+                }
+            }
+            return file;
+        };
+        this._previousBatchFileCall = promise();
+        return this._previousBatchFileCall;
     }
 
     /**
