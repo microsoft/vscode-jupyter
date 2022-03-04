@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Progress, ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
-import { wrapCancellationTokens } from '../../client/common/cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import {
@@ -37,7 +36,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     public async installModule(
         productOrModuleName: Product | string,
         interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void> {
         const name =
@@ -51,12 +50,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             IEnvironmentActivationService
         );
         const install = async (
-            progress?: Progress<{
+            progress: Progress<{
                 message?: string | undefined;
                 increment?: number | undefined;
             }>,
-            token?: CancellationToken
+            token: CancellationToken
         ) => {
+            // When the progress is canceled notify caller
+            token.onCancellationRequested(() => {
+                cancelTokenSource.cancel();
+            });
             // Args can be for a specific exe or for the interpreter. Both need to
             // use an activated environment though
             const deferred = createDeferred();
@@ -102,26 +105,20 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         // Display progress indicator if we have ability to cancel this operation from calling code.
         // This is required as its possible the installation can take a long time.
         // (i.e. if installation takes a long time in terminal or like, a progress indicator is necessary to let user know what is being waited on).
-        if (cancel) {
-            const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            const options: ProgressOptions = {
-                location: ProgressLocation.Notification,
-                cancellable: true,
-                title: Products.installingModule().format(name)
-            };
-            await shell.withProgress(options, async (progress, token: CancellationToken) =>
-                install(progress, wrapCancellationTokens(token, cancel))
-            );
-        } else {
-            await install(undefined, cancel);
-        }
+        const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        const options: ProgressOptions = {
+            location: ProgressLocation.Notification,
+            cancellable: true,
+            title: Products.installingModule().format(name)
+        };
+        await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
     public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
 
     // TODO: Figure out when to elevate
     protected elevatedInstall(execPath: string, args: string[]) {
         const options = {
-            name: 'VS Code Python'
+            name: 'VS Code Jupyter'
         };
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;

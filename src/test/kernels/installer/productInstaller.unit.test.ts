@@ -6,6 +6,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import { CancellationTokenSource } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -18,6 +19,7 @@ import {
     IModuleInstaller,
     ModuleInstallerType
 } from '../../../kernels/installer/types';
+import { sleep } from '../../core';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
@@ -32,10 +34,12 @@ suite('DataScienceInstaller install', async () => {
     let dataScienceInstaller: DataScienceInstaller;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let tokenSource: CancellationTokenSource;
 
     const interpreterPath = 'path/to/interpreter';
 
     setup(() => {
+        tokenSource = new CancellationTokenSource();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         installationChannelManager = TypeMoq.Mock.ofType<IInstallationChannelManager>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -51,7 +55,7 @@ suite('DataScienceInstaller install', async () => {
     });
 
     teardown(() => {
-        // noop
+        tokenSource.dispose();
     });
 
     test('Will ignore with no installer modules', async () => {
@@ -65,7 +69,37 @@ suite('DataScienceInstaller install', async () => {
         installationChannelManager
             .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve([]));
-        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
+        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
+        expect(result).to.equal(InstallerResponse.Ignore, 'Should be InstallerResponse.Ignore');
+    });
+
+    test('Will cancel when signaled', async () => {
+        const testEnvironment: PythonEnvironment = {
+            envType: EnvironmentType.VirtualEnv,
+            envName: 'test',
+            envPath: interpreterPath,
+            path: interpreterPath,
+            sysPrefix: ''
+        };
+        const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+        testInstaller.setup((c) => c.type).returns(() => ModuleInstallerType.Conda);
+        testInstaller
+            .setup((c) =>
+                c.installModule(
+                    TypeMoq.It.isValue(Product.ipykernel),
+                    TypeMoq.It.isValue(testEnvironment),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve());
+
+        installationChannelManager
+            .setup((c) => c.getInstallationChannels(TypeMoq.It.isAny()))
+            .returns(() => sleep(5000).then(() => [testInstaller.object]));
+        const resultPromise = dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
+        tokenSource.cancel();
+        const result = await resultPromise;
         expect(result).to.equal(InstallerResponse.Ignore, 'Should be InstallerResponse.Ignore');
     });
 
@@ -95,7 +129,7 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve(testInstaller.object));
         testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
-        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
+        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
     });
 
@@ -126,7 +160,7 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve(testInstaller.object));
         testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
-        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
+        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
     });
 
@@ -157,7 +191,7 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve(testInstaller.object));
         testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
-        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
+        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
     });
 
@@ -188,7 +222,7 @@ suite('DataScienceInstaller install', async () => {
             .returns(() => Promise.resolve(testInstaller.object));
         testInstaller.setup((p) => (p as any).then).returns(() => undefined);
 
-        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment);
+        const result = await dataScienceInstaller.install(Product.ipykernel, testEnvironment, tokenSource);
         expect(result).to.equal(InstallerResponse.Installed, 'Should be Installed');
     });
 });

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationTokenSource, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../client/common/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
@@ -72,7 +72,7 @@ export interface IModuleInstaller {
     installModule(
         product: string,
         interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void>;
     /**
@@ -89,7 +89,7 @@ export interface IModuleInstaller {
     installModule(
         product: Product,
         interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void>;
     isSupported(resource?: InterpreterUri): Promise<boolean>;
@@ -130,7 +130,7 @@ export interface IInstaller {
     install(
         product: Product,
         resource: InterpreterUri,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse>;

@@ -2,7 +2,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as semver from 'semver';
-import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { translateProductToModule } from './moduleInstaller';
 import { ProductNames } from './productNames';
 import {
@@ -108,7 +108,7 @@ abstract class BaseInstaller {
     public async install(
         product: Product,
         interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
@@ -124,7 +124,7 @@ abstract class BaseInstaller {
         if (installPipIfRequired === true) {
             flags = flags ? flags | ModuleInstallFlags.installPipIfRequired : ModuleInstallFlags.installPipIfRequired;
         }
-        await installer.installModule(product, interpreter, cancel, flags);
+        await installer.installModule(product, interpreter, cancelTokenSource, flags);
 
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
@@ -250,7 +250,7 @@ export class ProductInstaller implements IInstaller {
     public async install(
         product: Product,
         interpreter: PythonEnvironment,
-        cancel?: CancellationToken,
+        cancelTokenSource: CancellationTokenSource,
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse> {
@@ -262,7 +262,7 @@ export class ProductInstaller implements IInstaller {
             const result = await this.createInstaller(product).install(
                 product,
                 interpreter,
-                cancel,
+                cancelTokenSource,
                 reInstallAndUpdate,
                 installPipIfRequired
             );

@@ -89,7 +89,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 disposables.push(
                     options.token.onCancellationRequested(() => {
                         if (!procExited && !proc.killed) {
-                            proc.kill();
+                            ProcessService.kill(proc.pid);
                             procExited = true;
                         }
                     })

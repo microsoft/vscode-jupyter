@@ -77,26 +77,17 @@ export class JupyterInterpreterService {
      * Validates and configures the interpreter.
      * Once completed, the interpreter is stored in settings, else user can select another interpreter.
      *
-     * @param {CancellationToken} [token]
      * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof JupyterInterpreterService
      */
-    public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
-        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token
-        });
-        const interpreter = await Promise.race([
-            this.jupyterInterpreterSelector.selectInterpreter(),
-            resolveToUndefinedWhenCancelled
-        ]);
+    public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
+        const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;
         }
 
-        const result = await this.interpreterConfiguration.installMissingDependencies(interpreter, undefined, token);
+        const result = await this.interpreterConfiguration.installMissingDependencies(interpreter, undefined);
         switch (result) {
             case JupyterInterpreterDependencyResponse.ok: {
                 await this.setAsSelectedInterpreter(interpreter);
@@ -106,7 +97,7 @@ export class JupyterInterpreterService {
                 sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'installationCancelled' });
                 return;
             default:
-                return this.selectInterpreter(token);
+                return this.selectInterpreter();
         }
     }
 

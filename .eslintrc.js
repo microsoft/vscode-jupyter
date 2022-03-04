@@ -131,7 +131,6 @@ module.exports = {
         'src/test/datascience/mountedWebViewFactory.ts',
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
         'src/test/datascience/mockPythonService.ts',
-        'src/test/datascience/testHelpersCore.ts',
         'src/test/datascience/executionServiceMock.ts',
         'src/test/datascience/mockInputBox.ts',
         'src/test/datascience/crossProcessLock.unit.test.ts',
@@ -150,10 +149,8 @@ module.exports = {
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/typings/python.d.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/serverPicker.ts',
         'src/test/datascience/mockLanguageServer.ts',
-        'src/test/datascience/remoteTestHelpers.ts',
         'src/test/datascience/mockWorkspaceFolder.ts',
         'src/test/datascience/jupyterHelpers.ts',
-        'src/test/datascience/mockJupyterManagerFactory.ts',
         'src/test/datascience/kernelFinder.unit.test.ts',
         'src/test/datascience/mockLanguageClient.ts',
         'src/test/datascience/notebook/notebookTrust.native.vscode.test.ts',
@@ -202,7 +199,6 @@ module.exports = {
         'src/datascience-ui/ipywidgets/kernel.ts',
         'src/datascience-ui/ipywidgets/requirejsRegistry.ts',
         'src/datascience-ui/ipywidgets/incompatibleWidgetHandler.ts',
-        'src/datascience-ui/react-common/arePathsSame.ts',
         'src/datascience-ui/react-common/imageButton.tsx',
         'src/datascience-ui/react-common/svgViewer.tsx',
         'src/datascience-ui/react-common/relativeImage.tsx',
@@ -443,7 +439,6 @@ module.exports = {
         'src/client/common/experiments/telemetry.ts',
         'src/client/common/refBool.ts',
         'src/client/common/open.ts',
-        'src/client/common/platform/serviceRegistry.ts',
         'src/client/common/platform/errors.ts',
         'src/client/common/platform/fs-temp.ts',
         'src/client/common/platform/constants.ts',
@@ -764,7 +759,8 @@ module.exports = {
                     {
                         target: './client/**/*.ts',
                         from: './test',
-                        message: 'Importing test modules from ./src/test into extension code in .src/client, is not allowed.'
+                        message:
+                            'Importing test modules from ./src/test into extension code in .src/client, is not allowed.'
                     }
                 ]
             }

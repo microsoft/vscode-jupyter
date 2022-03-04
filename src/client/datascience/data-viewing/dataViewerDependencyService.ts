@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../common/application/types';
-import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IsCodeSpace } from '../../common/types';
@@ -39,32 +39,34 @@ export class DataViewerDependencyService {
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
-    public async checkAndInstallMissingDependencies(
-        interpreter: PythonEnvironment,
-        token?: CancellationToken
-    ): Promise<void> {
-        const pandasVersion = await this.getVersionOfPandas(interpreter, token);
-        if (Cancellation.isCanceled(token)) {
-            return;
-        }
-
-        if (pandasVersion) {
-            if (isVersionOfPandasSupported(pandasVersion)) {
+    public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
+        const tokenSource = new CancellationTokenSource();
+        try {
+            const pandasVersion = await this.getVersionOfPandas(interpreter, tokenSource.token);
+            if (Cancellation.isCanceled(tokenSource.token)) {
                 return;
             }
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
-        }
 
-        sendTelemetryEvent(Telemetry.PandasNotInstalled);
-        await this.installMissingDependencies(interpreter, token);
+            if (pandasVersion) {
+                if (isVersionOfPandasSupported(pandasVersion)) {
+                    return;
+                }
+                sendTelemetryEvent(Telemetry.PandasTooOld);
+                // Warn user that we cannot start because pandas is too old.
+                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+            }
+
+            sendTelemetryEvent(Telemetry.PandasNotInstalled);
+            await this.installMissingDependencies(interpreter, tokenSource);
+        } finally {
+            tokenSource.dispose();
+        }
     }
 
     private async installMissingDependencies(
-        interpreter?: PythonEnvironment,
-        token?: CancellationToken
+        interpreter: PythonEnvironment,
+        tokenSource: CancellationTokenSource
     ): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
@@ -84,7 +86,7 @@ export class DataViewerDependencyService {
         const interpreterToInstallDependenciesInto =
             interpreter || (await this.interpreterService.getActiveInterpreter());
 
-        if (Cancellation.isCanceled(token)) {
+        if (Cancellation.isCanceled(tokenSource.token)) {
             return;
         }
 
@@ -92,15 +94,11 @@ export class DataViewerDependencyService {
             const cancellatonPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
-                token
+                token: tokenSource.token
             });
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
-                this.installer.install(
-                    Product.pandas,
-                    interpreterToInstallDependenciesInto,
-                    wrapCancellationTokens(token)
-                ),
+                this.installer.install(Product.pandas, interpreterToInstallDependenciesInto, tokenSource),
                 cancellatonPromise
             ]);
             if (response === InstallerResponse.Installed) {

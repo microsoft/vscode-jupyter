@@ -7,7 +7,6 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { Installer } from '../../client/common/utils/localize';
 import { IServiceContainer } from '../../client/ioc/types';
-import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
 
 @injectable()
@@ -15,35 +14,20 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async getInstallationChannel(
-        product: Product,
+        _product: Product,
         interpreter: PythonEnvironment
     ): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(interpreter);
-        if (channels.length === 1) {
+
+        // Always use the first one so we don't confuse the user.
+        if (channels.length >= 1) {
             return channels[0];
         }
 
-        const productName = ProductNames.get(product)!;
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
             await this.showNoInstallersMessage(interpreter);
             return;
         }
-
-        const placeHolder = `Select an option to install ${productName}`;
-        const options = channels.map((installer) => {
-            return {
-                label: `Install using ${installer.displayName}`,
-                description: '',
-                installer
-            };
-        });
-        const selection = await appShell.showQuickPick<typeof options[0]>(options, {
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeHolder
-        });
-        return selection ? selection.installer : undefined;
     }
 
     public async getInstallationChannels(interpreter: PythonEnvironment): Promise<IModuleInstaller[]> {
@@ -72,7 +56,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const search = 'Search for help';
+        const search = Installer.searchForHelp();
         let result: string | undefined;
         if (interpreter.envType === EnvironmentType.Conda) {
             result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
