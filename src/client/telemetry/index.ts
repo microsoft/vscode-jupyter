@@ -1514,4 +1514,16 @@ export interface IEventNamePropertyMapping {
         ename: string;
         evalue: string;
     };
+    [Telemetry.UserStartupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
+    [Telemetry.PythonVariableFetchingCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
+    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
 }

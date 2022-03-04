@@ -9,7 +9,7 @@ import { traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { Identifiers } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import {
     ICellHashListener,
     IFileHashes,
@@ -108,14 +108,22 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         if (!kernel.session) {
             return;
         }
-        executeSilently(kernel.session, this.tracingEnableCode).ignoreErrors();
+        executeSilently(kernel.session, this.tracingEnableCode, {
+            traceErrors: true,
+            traceErrorsMessage: 'Execute_request failure enabling tracing code for IW',
+            telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
+        }).ignoreErrors();
     }
 
     public disable(kernel: IKernel) {
         if (!kernel.session) {
             return;
         }
-        executeSilently(kernel.session, this.tracingDisableCode).ignoreErrors();
+        executeSilently(kernel.session, this.tracingDisableCode, {
+            traceErrors: true,
+            traceErrorsMessage: 'Execute_request failure disabling tracing code for IW',
+            telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
+        }).ignoreErrors();
     }
 
     private async startDebugSession(
@@ -140,7 +148,11 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
                 this.debugService.removeBreakpoints([]);
 
                 // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-                const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode);
+                const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode, {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Execute_request failure starting debug session for IW',
+                    telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
+                });
                 if (importResults.some((item) => item.output_type === 'error')) {
                     traceWarning(`${this.debuggerPackage} not found in path.`);
                 } else {
@@ -257,7 +269,12 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             const result = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
+                      `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`,
+                      {
+                          traceErrors: true,
+                          traceErrorsMessage: 'Execute_request failure appending debugger paths for IW',
+                          telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
+                      }
                   )
                 : [];
             traceInfo(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
@@ -281,7 +298,13 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     private async connectToLocal(kernel: IKernel): Promise<{ port: number; host: string }> {
-        const outputs = kernel.session ? await executeSilently(kernel.session, this.enableDebuggerCode) : [];
+        const outputs = kernel.session
+            ? await executeSilently(kernel.session, this.enableDebuggerCode, {
+                  traceErrors: true,
+                  traceErrorsMessage: 'Execute_request failure enabling debugging for IW',
+                  telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
+              })
+            : [];
 
         // Pull our connection info out from the cells returned by enable_attach
         if (outputs.length > 0) {

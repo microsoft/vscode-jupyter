@@ -514,14 +514,14 @@ export class Kernel implements IKernel {
             await this.executeSilently(notebook, startupCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-                logTelemetryErrors: true
+                telemetryName: Telemetry.KernelStartupCodeFailure
             });
 
             // Run user specified startup commands
             await this.executeSilently(notebook, this.getUserStartupCommands(), {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing user defined startup code',
-                logTelemetryErrors: false
+                telemetryName: Telemetry.UserStartupCodeFailure
             });
         }
 
@@ -789,7 +789,10 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
 
 // Options for error reporting from kernel silent execution
 export type SilentExecutionErrorOptions = {
+    // Setting this will log jupyter errors from silent execution as errors as opposed to warnings
     traceErrors?: boolean;
+    // This optional message will be displayed as a prefix for the error or warning message
     traceErrorsMessage?: string;
-    logTelemetryErrors?: boolean;
+    // Setting this will log telemetry on the given name
+    telemetryName?: Telemetry;
 };

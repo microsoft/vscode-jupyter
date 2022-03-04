@@ -500,8 +500,14 @@ export enum Telemetry {
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
     RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
-    // Send we we get a python error when running some part of our kernel startup code
-    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE'
+    // Sent when we get a jupyter execute_request error reply when running some part of our internal kernel startup code
+    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of our internal variable fetching code
+    PythonVariableFetchingCodeFailure = 'DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of user specified startup code
+    UserStartupCodeFailure = 'DATASCIENCE.USER_STARTUP_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
+    InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE'
 }
 
 export enum NativeKeyboardCommandTelemetry {
