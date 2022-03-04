@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError, traceInfo } from '../../common/logger';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
@@ -120,8 +121,12 @@ export class KernelEnvironmentVariablesService {
         // The global site_packages will be added to the path later.
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        if (hasInterpreterEnv && hasActivationCommands) {
+        if (interpreter && hasInterpreterEnv && hasActivationCommands) {
+            traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
             mergedVars.PYTHONNOUSERSITE = 'True';
+        } else {
+            // Ensure this is not set (nor should this be inherited).
+            delete mergedVars.PYTHONNOUSERSITE;
         }
 
         return mergedVars;
