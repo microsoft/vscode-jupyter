@@ -31,7 +31,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
+suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -124,7 +124,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executionCell(cell, comms);
         await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
     });
-    test('Checkbox Widget', async () => {
+    test('Textbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await executionCell(cell, comms);
@@ -147,7 +147,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(comms, 4, ['Click Me!', '<button']);
 
         // Click the button and verify we have output in other cells
-        await click(comms, 3, 'cell-output-ipywidget-background button');
+        await click(comms, 3, 'button');
         await assertOutputContainsHtml(comms, 3, ['Button clicked']);
         await assertOutputContainsHtml(comms, 4, ['Button clicked']);
         await assertOutputContainsHtml(comms, 5, ['Button clicked']);
