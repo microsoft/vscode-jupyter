@@ -91,4 +91,30 @@ export class Utils {
             this.disposables.push(disposable);
         });
     }
+    public async setValue(selector: string, outputId: string, value: string) {
+        // Verify the slider widget is created.
+        const request = {
+            requestId: Date.now().toString(),
+            id: outputId,
+            command: 'setElementValue',
+            selector,
+            value
+        };
+        const editor = await this.editorPromise;
+        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        void this.messageChannel.postMessage!(request, editor);
+        return new Promise<void>((resolve, reject) => {
+            const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
+                traceInfo(`Received message (setValue) from Widget renderer ${JSON.stringify(message)}`);
+                if (message && message.requestId === request.requestId) {
+                    disposable.dispose();
+                    if (message.error) {
+                        return reject(message.error);
+                    }
+                    resolve();
+                }
+            });
+            this.disposables.push(disposable);
+        });
+    }
 }

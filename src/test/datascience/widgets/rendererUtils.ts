@@ -33,6 +33,7 @@ let rendererContext: RendererContext<unknown>;
 const handlers = new Map<string, (data: any) => void>();
 handlers.set('queryInnerHTML', queryInnerHTMLHandler);
 handlers.set('clickElement', clickHandler);
+handlers.set('setElementValue', setElementValueHandler);
 
 function initializeComms() {
     if (!rendererContext.onDidReceiveMessage || !rendererContext.postMessage) {
@@ -87,6 +88,37 @@ function clickHandler({ requestId, id, selector }: { requestId: string; id: stri
             });
         }
         (element.querySelector(selector) as HTMLButtonElement).click();
+        rendererContext.postMessage!({ requestId });
+    } catch (ex) {
+        rendererContext.postMessage!({ requestId, error: ex.message });
+    }
+}
+
+function setElementValueHandler({
+    requestId,
+    id,
+    selector,
+    value
+}: {
+    requestId: string;
+    id: string;
+    selector: string;
+    value: string;
+}) {
+    try {
+        const element = outputs.get(id);
+        if (!element) {
+            return rendererContext.postMessage!({
+                requestId,
+                error: `No element for id ${id}`
+            });
+        }
+        const ele = element.querySelector(selector) as HTMLInputElement;
+        if (!ele) {
+            throw new Error(`Element not found ${selector}`);
+        }
+        ele.value = value;
+        ele.dispatchEvent(new Event('change', { bubbles: true }));
         rendererContext.postMessage!({ requestId });
     } catch (ex) {
         rendererContext.postMessage!({ requestId, error: ex.message });
