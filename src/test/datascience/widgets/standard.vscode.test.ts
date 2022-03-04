@@ -105,8 +105,9 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         // Verify the widget is created & rendered.
         await waitForCondition(
             async () => {
-                const innerHTML = await comms.queryHtml(cell.outputs[0].id, selector);
-                htmlFragmentsToLookFor.forEach((fragment) => assert.include(innerHTML, fragment));
+                const outputs = await Promise.all(cell.outputs.map((output) => comms.queryHtml(output.id, selector)));
+                const html = outputs.join('');
+                htmlFragmentsToLookFor.forEach((fragment) => assert.include(html, fragment));
                 return true;
             },
             WidgetRenderingTimeoutForTests,
@@ -126,13 +127,13 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     });
     test('Textbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
         await executionCell(cell, comms);
         await assertOutputContainsHtml(comms, 1, ['<input type="text'], '.widget-text');
     });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(2)!;
         await executionCell(cell, comms);
         await assertOutputContainsHtml(comms, 2, ['Check me', '<input type="checkbox'], '.widget-checkbox');
     });
@@ -163,7 +164,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(comms, 4, ['Click Me!', '<button']);
 
         // Click the button and verify we have output in other cells
-        await click(comms, 4, 'cell-output-ipywidget-background button');
+        await click(comms, 4, 'button');
         await assertOutputContainsHtml(comms, 3, ['Button clicked']);
         await assertOutputContainsHtml(comms, 4, ['Button clicked']);
         await assertOutputContainsHtml(comms, 5, ['Button clicked']);
