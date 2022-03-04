@@ -93,73 +93,87 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
             comms.ready
         ]);
     }
-    async function testWidget(comms: Utils, cellIndex: number, assertion: (cell: NotebookCell) => Promise<void>) {
+    async function assertOutputContainsHtml(
+        comms: Utils,
+        cellIndex: number,
+        htmlFragmentsToLookFor: string[],
+        selector?: string
+    ) {
         // Confirm we have execution order and output.
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(cellIndex)!;
-        await executionCell(cell, comms);
 
         // Verify the widget is created & rendered.
         await waitForCondition(
             async () => {
-                await assertion(cell);
+                const innerHTML = await comms.queryHtml(cell.outputs[0].id, selector);
+                htmlFragmentsToLookFor.forEach((fragment) => assert.include(innerHTML, fragment));
                 return true;
             },
             WidgetRenderingTimeoutForTests,
             { rethrowLastFailure: true }
         );
     }
-    async function testSliderWidget(comms: Utils) {
-        const assertion = async (cell: NotebookCell) => {
-            const innerHTML = await comms.queryHtml('.widget-readout', cell.outputs[0].id);
-            assert.strictEqual(innerHTML, '666', 'Slider not renderer with the right value.');
-        };
-        await testWidget(comms, 0, assertion);
-    }
-    async function testTextBox(comms: Utils) {
-        const assertion = async (cell: NotebookCell) => {
-            const innerHTML = await comms.queryHtml('.widget-text', cell.outputs[0].id);
-            assert.include(innerHTML, 'Check me');
-            assert.include(innerHTML, '<input type="text');
-        };
-        await testWidget(comms, 1, assertion);
-    }
-    async function testCheckboxWidget(comms: Utils) {
-        const assertion = async (cell: NotebookCell) => {
-            const innerHTML = await comms.queryHtml('.widget-checkbox', cell.outputs[0].id);
-            assert.include(innerHTML, 'Check me');
-            assert.include(innerHTML, '<input type="checkbox');
-        };
-        await testWidget(comms, 2, assertion);
-    }
-    async function testButton(comms: Utils) {
-        const assertion = async (cell: NotebookCell) => {
-            const innerHTML = await comms.queryHtml('.widget-button', cell.outputs[0].id);
-            assert.include(innerHTML, 'Click Me!');
-            assert.include(innerHTML, '<button');
-        };
-        await testWidget(comms, 3, assertion);
+    async function click(comms: Utils, cellIndex: number, selector: string) {
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(cellIndex)!;
+        await comms.click(selector, cell.outputs[0].id);
     }
 
     test('Slider Widget', async function () {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testSliderWidget(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
     });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testTextBox(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 1, ['<input type="text'], '.widget-text');
     });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testCheckboxWidget(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 2, ['Check me', '<input type="checkbox'], '.widget-checkbox');
     });
-    test('Button Widget', async () => {
+    test('Button Widget (click button)', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testButton(comms);
+        const [, , , cell3, cell4, cell5] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+
+        await executionCell(cell3, comms);
+        await executionCell(cell4, comms);
+        await executionCell(cell5, comms);
+        await assertOutputContainsHtml(comms, 3, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(comms, 4, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in other cells
+        await click(comms, 3, 'cell-output-ipywidget-background button');
+        await assertOutputContainsHtml(comms, 3, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 4, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 5, ['Button clicked']);
+    });
+    test('Button Widget (click button in output of another cell)', async () => {
+        const comms = await initializeNotebook({ templateFile: templateNbPath });
+        const [, , , cell3, cell4, cell5] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+
+        await executionCell(cell3, comms);
+        await executionCell(cell4, comms);
+        await executionCell(cell5, comms);
+        await assertOutputContainsHtml(comms, 3, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(comms, 4, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in other cells
+        await click(comms, 4, 'cell-output-ipywidget-background button');
+        await assertOutputContainsHtml(comms, 3, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 4, ['Button clicked']);
+        await assertOutputContainsHtml(comms, 5, ['Button clicked']);
     });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testSliderWidget(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const uri = vscodeNotebook.activeNotebookEditor!.document.uri;
@@ -170,44 +184,50 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         comms = await initializeNotebook({ notebookFile: uri.fsPath });
 
         // Verify we have output in the first cell.
-        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
 
-        await testSliderWidget(comms);
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
     });
     test.skip('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testSliderWidget(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.restart();
-        await testSliderWidget(comms);
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
 
         // Clear all cells and restart and test again.
         await kernel.restart();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
-        await testSliderWidget(comms);
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
     });
     test.skip('Widget renders after interrupting kernel', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        await testSliderWidget(comms);
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.interrupt();
-        await testSliderWidget(comms);
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
 
         // Clear all cells and restart and test again.
         await kernel.interrupt();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
-        await testSliderWidget(comms);
+        await executionCell(cell, comms);
+        await assertOutputContainsHtml(comms, 0, ['66'], '.widget-readout');
     });
 });

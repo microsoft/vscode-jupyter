@@ -41,7 +41,7 @@ export class Utils {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async queryHtml(selector: string, outputId: string) {
+    public async queryHtml(outputId: string, selector?: string) {
         // Verify the slider widget is created.
         const request = {
             requestId: Date.now().toString(),
@@ -54,13 +54,38 @@ export class Utils {
         void this.messageChannel.postMessage!(request, editor);
         return new Promise<string>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                traceInfo(`Received message (2) from Widget renderer ${JSON.stringify(message)}`);
+                traceInfo(`Received message (query) from Widget renderer ${JSON.stringify(message)}`);
                 if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {
                         return reject(message.error);
                     }
                     resolve(message.innerHTML);
+                }
+            });
+            this.disposables.push(disposable);
+        });
+    }
+    public async click(selector: string, outputId: string) {
+        // Verify the slider widget is created.
+        const request = {
+            requestId: Date.now().toString(),
+            id: outputId,
+            command: 'clickElement',
+            selector
+        };
+        const editor = await this.editorPromise;
+        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        void this.messageChannel.postMessage!(request, editor);
+        return new Promise<void>((resolve, reject) => {
+            const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
+                traceInfo(`Received message (click) from Widget renderer ${JSON.stringify(message)}`);
+                if (message && message.requestId === request.requestId) {
+                    disposable.dispose();
+                    if (message.error) {
+                        return reject(message.error);
+                    }
+                    resolve();
                 }
             });
             this.disposables.push(disposable);
