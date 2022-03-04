@@ -6,7 +6,7 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { DataFrameLoading, GetVariableInfo } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Telemetry } from '../constants';
 import { IJupyterVariable, IKernelVariableRequester } from '../types';
 import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
 import { IKernel } from './kernels/types';
@@ -54,7 +54,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
               )
             : [];
 
@@ -80,7 +85,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
               )
             : [];
 
@@ -108,7 +118,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributes = kernel.session
                     ? await executeSilently(
                           kernel.session,
-                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`
+                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                          {
+                              traceErrors: true,
+                              traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                              telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                          }
                       )
                     : [];
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
@@ -131,7 +146,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             const results = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`
+                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
+                      {
+                          traceErrors: true,
+                          traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                          telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                      }
                   )
                 : [];
 
@@ -169,7 +189,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`
+                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
               )
             : [];
 

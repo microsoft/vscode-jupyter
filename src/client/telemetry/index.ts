@@ -1510,4 +1510,20 @@ export interface IEventNamePropertyMapping {
         extensionId: string;
         allowed: 'yes' | 'no';
     };
+    [Telemetry.KernelStartupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
+    [Telemetry.UserStartupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
+    [Telemetry.PythonVariableFetchingCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
+    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
 }

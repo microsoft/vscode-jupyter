@@ -499,7 +499,15 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
-    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION'
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
+    // Sent when we get a jupyter execute_request error reply when running some part of our internal kernel startup code
+    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of our internal variable fetching code
+    PythonVariableFetchingCodeFailure = 'DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of user specified startup code
+    UserStartupCodeFailure = 'DATASCIENCE.USER_STARTUP_CODE_FAILURE',
+    // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
+    InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -557,6 +565,7 @@ export namespace Identifiers {
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const RawPurpose = 'raw';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
+    export const MatplotLibFigureFormats = '_VSCode_matplotLib_FigureFormats';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
     export const ALL_VARIABLES = 'ALL_VARIABLES';
@@ -584,13 +593,12 @@ export namespace CodeSnippets {
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['svg', 'png']`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['png']`;
-    export const ConfigSvg = `%config InlineBackend.figure_formats = ['svg', 'png']`;
-    export const ConfigPng = `%config InlineBackend.figure_formats = ['png']`;
+    export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
+    export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
-    export const disableJedi = '%config Completer.use_jedi = False';
+    export const DisableJedi = '%config Completer.use_jedi = False';
+    export const AppendSitePackages = 'import site\nsite.addsitedir(site.getusersitepackages())';
 }
 
 export enum JupyterCommands {
