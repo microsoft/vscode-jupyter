@@ -40,7 +40,7 @@ import {
 } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { IDataScienceErrorHandler, IJupyterServerUriStorage, INotebookProvider } from '../types';
+import { IJupyterServerUriStorage, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -60,6 +60,8 @@ import { getDisplayPath } from '../../common/platform/fs-paths';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
+import { IServiceContainer } from '../../ioc/types';
 import { CondaService } from '../../common/process/condaService';
 import { waitForCondition } from '../../common/utils/async';
 import { debounceAsync } from '../../common/utils/decorators';
@@ -140,7 +142,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(CondaService) private readonly condaService: CondaService,
         @inject(JupyterServerSelector) private readonly jupyterServerSelector: JupyterServerSelector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -613,6 +615,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         document.uri
                     )}`
                 );
+
                 const targetController = Array.from(this.registeredControllers.values()).find(
                     (value) => preferredConnection?.id === value.connection.id
                 );
@@ -650,6 +653,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
                 );
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+                trackKernelResourceInformation(document.uri, {
+                    kernelConnection: preferredConnection,
+                    isPreferredKernel: true
+                });
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
@@ -764,7 +772,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
-                        this.errorHandler
+                        this.serviceContainer
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(

@@ -6,8 +6,8 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { CancellationToken } from 'vscode';
+import { Cancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
@@ -22,8 +22,14 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { ILocalKernelFinder } from '../../kernel-launcher/types';
-import { IDisplayOptions, IJupyterKernelSpec, IKernelDependencyService } from '../../types';
+import {
+    IDisplayOptions,
+    IJupyterKernelSpec,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
@@ -56,17 +62,28 @@ export class JupyterKernelService {
         @ignoreLogging() ui: IDisplayOptions,
         @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
-        // If we wish to wait for installation to complete, we must provide a cancel token.
-        const tokenSource = new CancellationTokenSource();
-        const token = wrapCancellationTokens(cancelToken, tokenSource.token);
-
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (
             kernel.kind !== 'connectToLiveKernel' &&
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel, ui, token);
+            const result = await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel,
+                ui,
+                cancelToken,
+                true
+            );
+            switch (result) {
+                case KernelInterpreterDependencyResponse.cancel:
+                case KernelInterpreterDependencyResponse.selectDifferentKernel:
+                case KernelInterpreterDependencyResponse.failed:
+                case KernelInterpreterDependencyResponse.uiHidden:
+                    throw new JupyterKernelDependencyError(result, kernel);
+                default:
+                    break;
+            }
         }
 
         var specFile: string | undefined = undefined;
@@ -82,7 +99,7 @@ export class JupyterKernelService {
             specFile = kernel.kernelSpec.specFile;
 
             if (!specFile || !(await this.fs.localFileExists(specFile))) {
-                specFile = await this.registerKernel(kernel, token);
+                specFile = await this.registerKernel(kernel, cancelToken);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
             else if (kernel.interpreter && specFile) {
@@ -91,7 +108,7 @@ export class JupyterKernelService {
                 if (path.basename(path.dirname(specFile)).toLowerCase() != kernel.kernelSpec.name.toLowerCase()) {
                     // This means the specfile for the kernelspec will not be found by jupyter. We need to
                     // register it
-                    specFile = await this.registerKernel(kernel, token);
+                    specFile = await this.registerKernel(kernel, cancelToken);
                 }
             }
         }
@@ -109,7 +126,7 @@ export class JupyterKernelService {
                     kernel.interpreter.path
                 )} for ${kernel.id}`
             );
-            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, token);
+            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
         }
     }
 

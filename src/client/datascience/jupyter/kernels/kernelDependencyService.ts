@@ -8,9 +8,9 @@ import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import {
-    isModulePresentInEnvironment,
     isModulePresentInEnvironmentCache,
-    trackPackageInstalledIntoInterpreter
+    trackPackageInstalledIntoInterpreter,
+    isModulePresentInEnvironment
 } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
@@ -32,7 +32,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
-import { IpyKernelNotInstalledError } from '../../errors/ipyKernelNotInstalledError';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import {
     IDisplayOptions,
@@ -68,25 +67,25 @@ export class KernelDependencyService implements IKernelDependencyService {
         ui: IDisplayOptions,
         @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
-    ): Promise<void | 'dependenciesInstalled'> {
+    ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.interpreter === undefined
         ) {
-            return;
+            return KernelInterpreterDependencyResponse.ok;
         }
-        const result = await KernelProgressReporter.wrapAndReportProgress(
+        const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
             resource,
             DataScience.validatingKernelDependencies(),
             () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
         );
-        if (result) {
-            return;
+        if (alreadyInstalled) {
+            return KernelInterpreterDependencyResponse.ok;
         }
         if (token?.isCancellationRequested) {
-            return;
+            return KernelInterpreterDependencyResponse.cancel;
         }
 
         // Cache the install run
@@ -101,29 +100,21 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Get the result of the question
+        let dependencyResponse: KernelInterpreterDependencyResponse = KernelInterpreterDependencyResponse.failed;
         try {
-            const result = await promise;
+            // This can throw an exception (if say it fails to install) or it can cancel
+            dependencyResponse = await promise;
             if (token?.isCancellationRequested) {
-                return;
+                dependencyResponse = KernelInterpreterDependencyResponse.cancel;
             }
-            if (result === KernelInterpreterDependencyResponse.ok) {
-                return 'dependenciesInstalled';
-            }
-            const shouldSelectAnotherKernel = result === KernelInterpreterDependencyResponse.selectDifferentKernel;
-
-            // Throw an error so,to ensure it gets handled & displayed.
-            const message = kernelConnection.interpreter?.displayName
-                ? `${kernelConnection.interpreter?.displayName}:${getDisplayPath(kernelConnection.interpreter?.path)}`
-                : getDisplayPath(kernelConnection.interpreter?.path);
-            throw new IpyKernelNotInstalledError(
-                DataScience.ipykernelNotInstalled().format(message),
-                result,
-                shouldSelectAnotherKernel
-            );
+        } catch (ex) {
+            // Failure occurred
+            dependencyResponse = KernelInterpreterDependencyResponse.failed;
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(kernelConnection.interpreter.path);
         }
+        return dependencyResponse;
     }
     @traceDecorators.verbose('Are Dependencies Installed')
     public async areDependenciesInstalled(
@@ -170,6 +161,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })
         ]);
     }
+
     private async runInstaller(
         resource: Resource,
         interpreter: PythonEnvironment,

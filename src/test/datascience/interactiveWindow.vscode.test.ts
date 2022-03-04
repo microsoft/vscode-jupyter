@@ -11,10 +11,11 @@ import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { IKernelProvider } from '../../client/datascience/jupyter/kernels/types';
 import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
     createStandaloneInteractiveWindow,
@@ -22,6 +23,7 @@ import {
     runCurrentFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
+    waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers';
 import {
@@ -152,13 +154,12 @@ suite('Interactive window', async function () {
         await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
 
         // Restart kernel
+        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const kernel = kernelProvider.get(notebookDocument);
+        const handler = createEventHandler(kernel!, 'onRestarted', disposables);
         await vscode.commands.executeCommand('jupyter.restartkernel');
-        // Wait for first cell to get output.
-        await waitForCondition(
-            async () => notebookDocument.cellCount > 0,
-            defaultNotebookTestTimeout,
-            'Kernel info not printed'
-        );
+        // Wait for restart to finish
+        await handler.assertFiredExactly(1, defaultNotebookTestTimeout);
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
@@ -171,6 +172,7 @@ suite('Interactive window', async function () {
     test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
 
         // Add code to the input box
         await insertIntoInputEditor('print("foo")');
@@ -178,11 +180,16 @@ suite('Interactive window', async function () {
         // Run the code in the input box
         await vscode.commands.executeCommand('interactive.execute');
 
-        // Inspect notebookDocument for output
-        const notebook = vscode.workspace.notebookDocuments.find(
-            (notebookDocument) => notebookDocument.uri.toString() === activeInteractiveWindow.notebookUri?.toString()
-        );
         assert.ok(notebook !== undefined, 'No interactive window found');
+        await waitForCondition(
+            async () => {
+                return notebook.cellCount > 1;
+            },
+            defaultNotebookTestTimeout,
+            'Cell never added'
+        );
+
+        // Inspect notebookDocument for output
         const index = notebook!.cellCount - 1;
         const cell = notebook!.cellAt(index);
         await waitForTextOutput(cell, 'foo');

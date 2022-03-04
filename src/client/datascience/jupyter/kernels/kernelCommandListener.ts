@@ -3,18 +3,22 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, NotebookDocument, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { displayErrorsInCell } from '../../../common/errors/errorUtils';
 import { traceInfo } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
+import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
+import { INotebookControllerManager } from '../../notebook/types';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceCommandListener, IInteractiveWindowProvider, IStatusProvider } from '../../types';
 import { JupyterSession } from '../jupyterSession';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { CellExecutionCreator } from './cellExecutionCreator';
+import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
 @injectable()
@@ -29,7 +33,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configurationService: IConfigurationService
+        @inject(IConfigurationService) private configurationService: IConfigurationService,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -105,7 +111,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
         }
-        await kernel.interrupt();
+        await this.wrapKernelMethod('interrupt', document, kernel);
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
@@ -142,12 +148,29 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void kernel.restart();
+                    void this.wrapKernelMethod('restart', document, kernel);
                 } else if (response === yes) {
-                    void kernel.restart();
+                    void this.wrapKernelMethod('restart', document, kernel);
                 }
             } else {
-                void kernel.restart();
+                void this.wrapKernelMethod('restart', document, kernel);
+            }
+        }
+    }
+
+    private async wrapKernelMethod(context: 'interrupt' | 'restart', notebook: NotebookDocument, kernel: IKernel) {
+        // Get currently executing cell and controller
+        const currentCell = kernel.pendingCells[0];
+        const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
+        try {
+            // Wrap the restart/interrupt in a loop that allows the user to switch
+            await wrapKernelMethod(controller!, context, this.serviceContainer, notebook.uri, notebook);
+        } catch (ex) {
+            if (currentCell) {
+                const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
+                displayErrorsInCell(currentCell, cellExecution, ex).ignoreErrors();
+            } else {
+                void this.applicationShell.showErrorMessage(ex.toString());
             }
         }
     }
