@@ -86,35 +86,6 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         appShell.verifyAll();
         expect(channel).to.equal(moduleInstaller1.object, 'Channel should be set');
     });
-
-    test('If multiple channels are returned by the resource, show quick pick of the channel names and return the selected channel installer', async () => {
-        const moduleInstaller1 = TypeMoq.Mock.ofType<IModuleInstaller>();
-        moduleInstaller1.setup((m) => m.displayName).returns(() => 'moduleInstaller1');
-        moduleInstaller1.setup((m) => (m as any).then).returns(() => undefined);
-        const moduleInstaller2 = TypeMoq.Mock.ofType<IModuleInstaller>();
-        moduleInstaller2.setup((m) => m.displayName).returns(() => 'moduleInstaller2');
-        moduleInstaller2.setup((m) => (m as any).then).returns(() => undefined);
-        const selection = {
-            label: 'some label',
-            description: '',
-            installer: moduleInstaller2.object
-        };
-        appShell
-            .setup((a) => a.showQuickPick<typeof selection>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(selection))
-            .verifiable(TypeMoq.Times.once());
-        getInstallationChannels = sinon.stub(InstallationChannelManager.prototype, 'getInstallationChannels');
-        getInstallationChannels.resolves([moduleInstaller1.object, moduleInstaller2.object]);
-        showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
-        showNoInstallersMessage.resolves();
-        installChannelManager = new InstallationChannelManager(serviceContainer.object);
-
-        const channel = await installChannelManager.getInstallationChannel(Product.jupyter, interpreter);
-        assert.ok(showNoInstallersMessage.notCalled);
-        appShell.verifyAll();
-        expect(channel).to.not.equal(undefined, 'Channel should be set');
-        expect(channel!.displayName).to.equal('moduleInstaller2');
-    });
 });
 
 suite('InstallationChannelManager - getInstallationChannels()', () => {

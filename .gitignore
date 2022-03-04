@@ -45,3 +45,4 @@ vscode.proposed.*.d.ts
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 src/test/datascience/.venv*
+!src/test/pythonEnvironments/**/*.*
