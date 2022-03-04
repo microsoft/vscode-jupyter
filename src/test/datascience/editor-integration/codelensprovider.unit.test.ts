@@ -152,12 +152,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher2.setup((tc) => tc.uri).returns(() => uri2);
         targetCodeWatcher2.setup((tc) => tc.getVersion()).returns(() => 1);
 
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => targetCodeWatcher1.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => targetCodeWatcher2.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher1.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher2.object);
 
         documentManager.setup((d) => d.textDocuments).returns(() => [document1.object, document2.object]);
 
