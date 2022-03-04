@@ -9,7 +9,7 @@ import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } f
 import { IConfigurationService } from '../types';
 import { chain, iterable } from '../utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { getOSType, OSType } from '../../../test/common';
+import { getOSType, OSType } from '../utils/platform';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
