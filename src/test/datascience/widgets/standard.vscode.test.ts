@@ -93,21 +93,51 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
             comms.ready
         ]);
     }
-    async function testSliderWidget(comms: Utils) {
+    async function testWidget(comms: Utils, cellIndex: number, assertion: (cell: NotebookCell) => Promise<void>) {
         // Confirm we have execution order and output.
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(cellIndex)!;
         await executionCell(cell, comms);
 
-        // Verify the slider widget is created.
+        // Verify the widget is created & rendered.
         await waitForCondition(
             async () => {
-                const innerHTML = await comms.queryHtml('.widget-readout', cell.outputs[0].id);
-                assert.strictEqual(innerHTML, '666', 'Slider not renderer with the right value.');
+                await assertion(cell);
                 return true;
             },
             WidgetRenderingTimeoutForTests,
-            'Slider not rendered'
+            { rethrowLastFailure: true }
         );
+    }
+    async function testSliderWidget(comms: Utils) {
+        const assertion = async (cell: NotebookCell) => {
+            const innerHTML = await comms.queryHtml('.widget-readout', cell.outputs[0].id);
+            assert.strictEqual(innerHTML, '666', 'Slider not renderer with the right value.');
+        };
+        await testWidget(comms, 0, assertion);
+    }
+    async function testTextBox(comms: Utils) {
+        const assertion = async (cell: NotebookCell) => {
+            const innerHTML = await comms.queryHtml('.widget-text', cell.outputs[0].id);
+            assert.include(innerHTML, 'Check me');
+            assert.include(innerHTML, '<input type="text');
+        };
+        await testWidget(comms, 1, assertion);
+    }
+    async function testCheckboxWidget(comms: Utils) {
+        const assertion = async (cell: NotebookCell) => {
+            const innerHTML = await comms.queryHtml('.widget-checkbox', cell.outputs[0].id);
+            assert.include(innerHTML, 'Check me');
+            assert.include(innerHTML, '<input type="checkbox');
+        };
+        await testWidget(comms, 2, assertion);
+    }
+    async function testButton(comms: Utils) {
+        const assertion = async (cell: NotebookCell) => {
+            const innerHTML = await comms.queryHtml('.widget-button', cell.outputs[0].id);
+            assert.include(innerHTML, 'Click Me!');
+            assert.include(innerHTML, '<button');
+        };
+        await testWidget(comms, 3, assertion);
     }
 
     test('Slider Widget', async function () {
@@ -116,20 +146,15 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
-        // Confirm we have execution order and output.
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(2)!;
-        await executionCell(cell, comms);
-
-        await waitForCondition(
-            async () => {
-                const innerHTML = await comms.queryHtml('.widget-checkbox', cell.outputs[0].id);
-                assert.include(innerHTML, 'Check me');
-                assert.include(innerHTML, '<input type="checkbox');
-                return true;
-            },
-            WidgetRenderingTimeoutForTests,
-            'Checkbox not rendered'
-        );
+        await testTextBox(comms);
+    });
+    test('Checkbox Widget', async () => {
+        const comms = await initializeNotebook({ templateFile: templateNbPath });
+        await testCheckboxWidget(comms);
+    });
+    test('Button Widget', async () => {
+        const comms = await initializeNotebook({ templateFile: templateNbPath });
+        await testButton(comms);
     });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
