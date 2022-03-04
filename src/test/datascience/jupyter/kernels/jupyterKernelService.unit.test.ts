@@ -461,7 +461,7 @@ suite('DataScience - JupyterKernelService', () => {
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
-        assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
+        assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
         // Preserve kernelspec env variables.
@@ -484,7 +484,7 @@ suite('DataScience - JupyterKernelService', () => {
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
-        assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
+        assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
         // Preserve kernelspec env variables.
@@ -503,6 +503,35 @@ suite('DataScience - JupyterKernelService', () => {
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
+        when(fs.writeLocalFile(anything(), anything())).thenCall((f) => {
+            filesCreated.add(f);
+            return Promise.resolve();
+        });
+        const token = new CancellationTokenSource();
+        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        token.dispose();
+        const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
+        assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
+        // Preserve interpreter env variables.
+        assert.strictEqual(kernelJson.env['foo'], 'bar');
+        // Preserve kernelspec env variables.
+        assert.strictEqual(kernelJson.env['SOME_ENV_VARIABLE'], 'Hello World');
+        // Python path must be the first in PATH env variable.
+        assert.strictEqual(
+            kernelJson.env[pathVariable],
+            `${path.dirname(spec.interpreter!.path)}${path.delimiter}Path1${path.delimiter}Path2`
+        );
+        // capture(fs.localFileExists)
+    });
+    test('Verify registration of the kernelspec and value PYTHONNOUSERSITE should be true', async () => {
+        const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
+        const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
+        when(fs.localFileExists(anything())).thenCall((f) => Promise.resolve(filesCreated.has(f)));
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            foo: 'bar',
+            [pathVariable]: `Path1${path.delimiter}Path2`
+        });
+        when(appEnv.hasActivationCommands(anything(), anything())).thenResolve(true);
         when(fs.writeLocalFile(anything(), anything())).thenCall((f) => {
             filesCreated.add(f);
             return Promise.resolve();

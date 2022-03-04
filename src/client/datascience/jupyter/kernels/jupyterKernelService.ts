@@ -252,11 +252,14 @@ export class JupyterKernelService {
                 }
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
-                const interpreterEnv = await this.activationHelper
-                    .getActivatedEnvironmentVariables(resource, interpreter, true)
-                    .catch(noop)
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .then((env) => (env || {}) as any);
+                const [interpreterEnv, hasActivationCommands] = await Promise.all([
+                    this.activationHelper
+                        .getActivatedEnvironmentVariables(resource, interpreter, true)
+                        .catch(noop)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        .then((env) => (env || {}) as any),
+                    this.activationHelper.hasActivationCommands(resource, interpreter)
+                ]);
 
                 // Ensure we inherit env variables from the original kernelspec file.
                 let envInKernelSpecJson =
@@ -277,7 +280,7 @@ export class JupyterKernelService {
                 // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
                 // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
                 // Also applies to `!java` where java could be an executable in the conda bin directory.
-                if (interpreter && specModel.env) {
+                if (specModel.env) {
                     this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path));
                 }
 
@@ -285,8 +288,12 @@ export class JupyterKernelService {
                 // The global site_packages will be added to the path later.
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-                if (specModel.env && Object.keys(specModel.env).length > 0) {
+                if (specModel.env && Object.keys(specModel.env).length > 0 && hasActivationCommands) {
+                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
                     specModel.env.PYTHONNOUSERSITE = 'True';
+                } else {
+                    // We don't want to inherit any such env variables from Jupyter server or the like.
+                    delete specModel.env.PYTHONNOUSERSITE;
                 }
 
                 if (Cancellation.isCanceled(cancelToken)) {
