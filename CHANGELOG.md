@@ -1,5 +1,14 @@
 # Changelog
 
+## 2022.2.103 (5 March 2022)
+
+### Fixes
+
+1. Update display names of Python Environments in kernel picker if the Python version has changed.
+   ([#9104](https://github.com/Microsoft/vscode-jupyter/issues/9104))
+1. Support for detection of missing dependencies in scenarios where users re-create the Python Environments (virtual env or Conda env) or for some reason manually uninstall some of the dependencies.
+   ([#9135](https://github.com/Microsoft/vscode-jupyter/issues/9135))
+
 ## 2022.2.102 (4 March 2022)
 
 ### Fixes

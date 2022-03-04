@@ -47,13 +47,30 @@ export async function trackPackageInstalledIntoInterpreter(
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
     await memento.update(key, true);
 }
+/**
+ * Clears the cache of the fact that package has been successfully found in an interpreter.
+ * If a product isn't defined then clear the cache for all.
+ *
+ * E.g. if for some reason kernel startup fails, a number of packages could be missing, best to clear the cache for all packages.
+ * I.e. assume none of the packages are installed.
+ */
 export async function clearInstalledIntoInterpreterMemento(
     memento: Memento,
-    product: Product,
+    product: Product | undefined,
     interpreterPath: string
 ) {
-    const key = `${getInterpreterHash({ path: interpreterPath })}#${ProductNames.get(product)}`;
-    await memento.update(key, undefined);
+    const products = product
+        ? [product]
+        : Object.values(Product)
+              .filter((key) => typeof key === 'number')
+              .map((p) => p as Product);
+
+    await Promise.all(
+        products.map(async (prod) => {
+            const key = `${getInterpreterHash({ path: interpreterPath })}#${ProductNames.get(prod)}`;
+            await memento.update(key, undefined);
+        })
+    );
 }
 export function isModulePresentInEnvironmentCache(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
