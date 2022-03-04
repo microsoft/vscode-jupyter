@@ -9,7 +9,7 @@ import { IJupyterKernelSpec, IJupyterSession } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-import type * as nbformat from '@jupyterlab/nbformat';
+import * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
@@ -28,7 +28,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
 import {
     areInterpreterPathsSame,
     getInterpreterHash,
@@ -46,6 +46,7 @@ import {
 import { IWorkspaceService } from '../../../common/application/types';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
 import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
+import { SilentExecutionErrorOptions } from './kernel';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1701,7 +1702,11 @@ export async function sendTelemetryForPythonKernelExecutable(
     traceVerbose('End sendTelemetryForPythonKernelExecutable');
 }
 
-export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+export async function executeSilently(
+    session: IJupyterSession,
+    code: string,
+    errorOptions?: SilentExecutionErrorOptions
+): Promise<nbformat.IOutput[]> {
     traceInfo(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -1770,7 +1775,46 @@ export async function executeSilently(session: IJupyterSession, code: string): P
         }
     };
     await request.done;
-    traceInfo(`Executing silently Code (completed) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+
+    const codeForLogging = code.substring(0, 100).splitLines().join('\\n');
+
+    // Handle any errors logged in the output if needed
+    if (errorOptions) {
+        handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
+    }
+
+    traceInfo(`Executing silently Code (completed) = ${codeForLogging}`);
 
     return outputs;
+}
+
+function handleExecuteSilentErrors(
+    outputs: nbformat.IOutput[],
+    errorOptions: SilentExecutionErrorOptions,
+    codeForLogging: string
+) {
+    outputs
+        .filter((output) => {
+            return output.output_type === 'error';
+        })
+        .forEach((outputError) => {
+            const errorOutput = outputError as nbformat.IError;
+            const outputMessage = `${errorOutput.ename}: ${errorOutput.evalue} \n ${errorOutput.traceback
+                .map((line) => `    ${line}`)
+                .join('\n')}`;
+            const fullMessage = `${errorOptions.traceErrorsMessage || ''} ${codeForLogging} ${outputMessage}`;
+            if (errorOptions.traceErrors) {
+                traceError(fullMessage);
+            } else {
+                traceWarning(fullMessage);
+            }
+
+            // Send telemetry if requested, no traceback for PII
+            if (errorOptions.logTelemetryErrors) {
+                sendTelemetryEvent(Telemetry.KernelStartupCodeFailure, undefined, {
+                    ename: errorOutput.ename,
+                    evalue: errorOutput.evalue
+                });
+            }
+        });
 }

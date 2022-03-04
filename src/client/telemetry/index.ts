@@ -1510,4 +1510,8 @@ export interface IEventNamePropertyMapping {
         extensionId: string;
         allowed: 'yes' | 'no';
     };
+    [Telemetry.KernelStartupCodeFailure]: {
+        ename: string;
+        evalue: string;
+    };
 }

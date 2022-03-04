@@ -499,7 +499,9 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
-    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION'
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
+    // Send we we get a python error when running some part of our kernel startup code
+    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE'
 }
 
 export enum NativeKeyboardCommandTelemetry {

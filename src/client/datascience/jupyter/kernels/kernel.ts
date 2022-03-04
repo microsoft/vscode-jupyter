@@ -675,10 +675,18 @@ export class Kernel implements IKernel {
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
             const startupCode = await this.gatherInternalStartupCode(notebookDocument);
-            await this.executeSilently(startupCode);
+            await this.executeSilently(startupCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+                logTelemetryErrors: true
+            });
 
             // Run user specified startup commands
-            await this.executeSilently(this.getUserStartupCommands());
+            await this.executeSilently(this.getUserStartupCommands(), {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing user defined startup code',
+                logTelemetryErrors: false
+            });
         }
 
         // Then request our kernel info (indicates kernel is ready to go)
@@ -739,27 +747,33 @@ export class Kernel implements IKernel {
             ]);
 
             // Have our debug cell script run first for safety
-            result.push(...wrapPythonStartupBlock(debugCellScripts));
+            result.push(...debugCellScripts);
 
             if (isLocalConnection(this.kernelConnectionMetadata)) {
                 // Append the global site_packages to the kernel's sys.path
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
                 // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(...wrapPythonStartupBlock(CodeSnippets.AppendSitePackages.splitLines({ trim: false })));
+                result.push(...CodeSnippets.AppendSitePackages.splitLines({ trim: false }));
             }
 
-            result.push(...wrapPythonStartupBlock(changeDirScripts));
+            result.push(...changeDirScripts);
 
             // Set the ipynb file
             const file = this.resourceUri?.fsPath;
             if (file) {
-                result.push(...wrapPythonStartupBlock([`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`]));
+                result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            result.push(...wrapPythonStartupBlock([CodeSnippets.DisableJedi]));
+            result.push(CodeSnippets.DisableJedi);
 
             // For Python notebook initialize matplotlib
-            result.push(...wrapPythonStartupBlock(this.getMatplotLibInitializeCode()));
+            // Wrap this startup code in try except as it might fail
+            result.push(
+                ...wrapPythonStartupBlock(
+                    this.getMatplotLibInitializeCode(),
+                    'Failed to initialize matplotlib startup code. Matplotlib might be missing.'
+                )
+            );
         }
 
         return result;
@@ -859,6 +873,7 @@ export class Kernel implements IKernel {
     }
     private getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
+
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
@@ -967,17 +982,17 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(code: string[]) {
+    private async executeSilently(code: string[], errorOptions?: SilentExecutionErrorOptions) {
         if (!this.notebook || code.join('').trim().length === 0) {
             traceVerbose(`Not executing startup notebook: ${this.notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
-        await executeSilently(this.notebook.session, code.join('\n'));
+        await executeSilently(this.notebook.session, code.join('\n'), errorOptions);
     }
 }
 
 // Wrap a block of python code in try except to make sure hat we have n
-function wrapPythonStartupBlock(inputCode: string[]): string[] {
+function wrapPythonStartupBlock(inputCode: string[], pythonMessage: string): string[] {
     if (!inputCode || inputCode.length === 0) {
         return inputCode;
     }
@@ -989,7 +1004,7 @@ function wrapPythonStartupBlock(inputCode: string[]): string[] {
 
     // Add the try except
     inputCode.unshift(`try:`);
-    inputCode.push(`except:`, `    print('Error running Python startup code.')`);
+    inputCode.push(`except:`, `    print('${pythonMessage}')`);
 
     return inputCode;
 }
@@ -1011,3 +1026,10 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
     }
     return;
 }
+
+// Options for error reporting from kernel silent execution
+export type SilentExecutionErrorOptions = {
+    traceErrors?: boolean;
+    traceErrorsMessage?: string;
+    logTelemetryErrors?: boolean;
+};
