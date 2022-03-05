@@ -3,6 +3,7 @@
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
+import { CancellationError, Disposable } from 'vscode';
 import { TraceOptions } from '../../logging/trace';
 import { traceDecorators, traceInfoIfCI } from '../logger';
 
@@ -141,7 +142,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const disposable: IDisposable = {
             dispose: () => {
                 if (!proc.killed && !deferred.completed) {
-                    proc.kill();
+                    ProcessService.kill(proc.pid);
                 }
             }
         };
@@ -197,7 +198,9 @@ export class ProcessService extends EventEmitter implements IProcessService {
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {
+            let cancelDisposable: Disposable | undefined;
             const proc = exec(command, shellOptions, (e, stdout, stderr) => {
+                cancelDisposable?.dispose();
                 if (e && e !== null) {
                     reject(e);
                 } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
@@ -208,10 +211,19 @@ export class ProcessService extends EventEmitter implements IProcessService {
                     resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
+            if (options.token) {
+                cancelDisposable = options.token.onCancellationRequested(() => {
+                    if (proc.exitCode === null && !proc.killed) {
+                        reject(new CancellationError());
+                        ProcessService.kill(proc.pid);
+                    }
+                });
+            }
+
             const disposable: IDisposable = {
                 dispose: () => {
                     if (!proc.killed) {
-                        proc.kill();
+                        ProcessService.kill(proc.pid);
                     }
                 }
             };

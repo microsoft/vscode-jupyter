@@ -65,16 +65,17 @@ export class PoetryInstaller extends ModuleInstaller {
 
     protected async getExecutionArgs(
         moduleName: string,
-        _interpreter: PythonEnvironment
+        interpreter: PythonEnvironment
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
-        const args = ['add', '--dev', moduleName];
+        const args = [execPath, 'add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');
         }
         return {
-            exe: execPath,
-            args
+            useShellExec: true,
+            args,
+            cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
         };
     }
 }

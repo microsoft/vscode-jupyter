@@ -22,6 +22,8 @@ import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } fr
 export type ExecutionInstallArgs = {
     args: string[];
     exe?: string;
+    cwd?: string;
+    useShellExec?: boolean;
 };
 
 @injectable()
@@ -64,17 +66,27 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             // use an activated environment though
             const deferred = createDeferred();
             let observable: ObservableExecutionResult<string> | undefined;
-            if (args.exe) {
+            if (args.useShellExec) {
+                const proc = await procFactory.create(undefined);
+                try {
+                    const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
+                    traceInfo(results.stdout);
+                    deferred.resolve();
+                } catch (ex) {
+                    deferred.reject(ex);
+                }
+            } else if (args.exe) {
                 // For the exe, just figure out the environment variables.
                 const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
                 const env = { ...process.env, ...envVars };
                 const proc = await procFactory.create(undefined);
-                observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token, env });
+                observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token, env, cwd: args.cwd });
             } else {
                 const proc = await pythonFactory.createActivatedEnvironment({ interpreter });
                 observable = proc.execObservable(args.args, {
                     encoding: 'utf-8',
-                    token
+                    token,
+                    cwd: args.cwd
                 });
             }
             let lastStdErr: string | undefined;
@@ -88,8 +100,8 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         }
                     },
                     complete: () => {
-                        if (observable?.proc?.exitCode !== 0 && lastStdErr) {
-                            deferred.reject(lastStdErr);
+                        if (observable?.proc?.exitCode !== 0) {
+                            deferred.reject(lastStdErr || observable?.proc?.exitCode);
                         } else {
                             deferred.resolve();
                         }

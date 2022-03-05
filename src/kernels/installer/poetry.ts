@@ -186,16 +186,16 @@ export class Poetry {
      * Corresponds to "poetry env list --full-path". Swallows errors if any.
      */
     public async getEnvList(): Promise<string[] | undefined> {
-        return this.getEnvListCached(this.cwd);
+        return this.getEnvListCached(this.command, this.cwd);
     }
 
     /**
      * Method created to facilitate caching. The caching decorator uses function arguments as cache key,
-     * so pass in cwd on which we need to cache.
+     * so pass in cwd and command on which we need to cache.
      */
     @cache(30_000)
-    private async getEnvListCached(_cwd: string): Promise<string[] | undefined> {
-        const result = await this.safeShellExecute(`${this.command} env list --full-path`);
+    private async getEnvListCached(command: string, _cwd: string): Promise<string[] | undefined> {
+        const result = await this.safeShellExecute(`${command} env list --full-path`);
         if (!result) {
             return undefined;
         }
