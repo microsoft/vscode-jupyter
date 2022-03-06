@@ -259,6 +259,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 traceInfo(`Hiding xeus kernelspec`);
                 return false;
             }
+            if (kernelSpec.name.includes('VersionOfExtension')) {
+                console.error('WTF', getKernelRegistrationInfo(kernelSpec));
+            }
             // If we have registered this kernel, then don't display this.
             if (getKernelRegistrationInfo(kernelSpec)) {
                 traceInfo(
@@ -266,6 +269,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         kernelSpec.specFile
                     )}) because it was registered by an older version of the extension.`
                 );
+                console.error('WTF');
                 return false;
             }
 

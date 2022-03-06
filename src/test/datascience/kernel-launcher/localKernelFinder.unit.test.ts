@@ -1372,6 +1372,31 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 FOO: 'BAR'
             }
         };
+        const kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel = {
+            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            display_name: 'Kernelspec registered by older version of extension',
+            language: 'python',
+            // Most recent versions of extensions used a custom prefix in kernelnames.
+            name: `${getInterpreterKernelSpecName(python38VenvEnv)}kernelSpecRegisteredByOlderVersionOfExtension`,
+            resources: {},
+            env: {
+                HELLO: 'World'
+            }
+        };
+        const kernelspecRegisteredByVeryOldVersionOfExtension: KernelSpec.ISpecModel = {
+            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            display_name: 'Kernelspec registered by very old version of extension',
+            language: 'python',
+            // Initial versions of extensions used a GUID in kernelnames & contained the interpreter in metadata.
+            name: `aaaa1111222233334444555566667777kernelspecRegisteredByVeryOldVersionOfExtension`,
+            resources: {},
+            env: {
+                HELLO: 'World'
+            },
+            metadata: {
+                interpreter: { ...python38VenvEnv }
+            }
+        };
 
         async function generateExpectedKernels(
             expectedGlobalKernelSpecs: KernelSpec.ISpecModel[],
@@ -1610,6 +1635,32 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 fullyQualifiedPythonKernelSpec
             );
         });
+        test.only('Kernelspecs registered by older versions of extensions `should not` be displayed', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [
+                    juliaKernelSpec,
+                    javaKernelSpec,
+                    defaultPython3Kernel,
+                    fullyQualifiedPythonKernelSpec,
+                    kernelspecRegisteredByOlderVersionOfExtension,
+                    kernelspecRegisteredByVeryOldVersionOfExtension
+                ]
+            };
+            await initialize(testData);
+            const kernels = await kernelFinder.listKernels(undefined);
+            // console.error(kernels);
+            assert.isUndefined(
+                kernels.find(
+                    (item) =>
+                        item.kernelSpec.display_name === kernelspecRegisteredByOlderVersionOfExtension.display_name ||
+                        item.kernelSpec.name === kernelspecRegisteredByOlderVersionOfExtension.name ||
+                        item.kernelSpec.display_name === kernelspecRegisteredByVeryOldVersionOfExtension.display_name ||
+                        item.kernelSpec.name === kernelspecRegisteredByVeryOldVersionOfExtension.name
+                ),
+                'Should not list kernels registered by older version of extension'
+            );
+        });
+
         [
             undefined,
             python2Global,
