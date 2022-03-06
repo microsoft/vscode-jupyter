@@ -141,7 +141,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executionCell(cell, comms);
         await assertOutputContainsHtml(comms, 1, ['<input type="text'], '.widget-text');
     });
-    test.only('Linking Widgets slider to textbox widget', async function () {
+    test.skip('Linking Widgets slider to textbox widget', async function () {
         const comms = await initializeNotebook({ templateFile: templateNbPath });
         const [, , , , , , , cell7, cell8, cell9] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
         await executionCell(cell7, comms);
@@ -194,7 +194,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(comms, 4, ['Button clicked']);
         await assertOutputContainsHtml(comms, 5, ['Button clicked']);
     });
-    test.only('Render IPySheets', async () => {
+    test.skip('Render IPySheets', async () => {
         const comms = await initializeNotebook({ templateFile: ipySheetNbPath });
         await runAllCellsInActiveNotebook();
         await assertOutputContainsHtml(comms, 3, ['Hello', 'World', '42.000']);
