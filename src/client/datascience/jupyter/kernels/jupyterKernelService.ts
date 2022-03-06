@@ -285,7 +285,7 @@ export class JupyterKernelService {
                         : {};
 
                 // Give preferences to variables in the env file (except for `PATH`).
-                envInKernelSpecJson = Object.assign(interpreterEnv, envInKernelSpecJson);
+                envInKernelSpecJson = Object.assign({ ...interpreterEnv }, envInKernelSpecJson);
                 if (interpreterEnv['PATH']) {
                     envInKernelSpecJson['PATH'] = interpreterEnv['PATH'];
                 }
