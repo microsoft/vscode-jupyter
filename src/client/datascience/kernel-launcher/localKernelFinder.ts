@@ -16,6 +16,7 @@ import {
     findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterHashInMetadata,
+    getKernelRegistrationInfo,
     getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -31,6 +32,7 @@ import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
+import { getDisplayPath } from '../../common/platform/fs-paths';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';
@@ -257,6 +259,16 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 traceInfo(`Hiding xeus kernelspec`);
                 return false;
             }
+            // If we have registered this kernel, then don't display this.
+            if (getKernelRegistrationInfo(kernelSpec)) {
+                traceInfo(
+                    `Hiding kernel ${kernelSpec.display_name} (${getDisplayPath(
+                        kernelSpec.specFile
+                    )}) because it was registered by an older version of the extension.`
+                );
+                return false;
+            }
+
             return true;
         });
     }
