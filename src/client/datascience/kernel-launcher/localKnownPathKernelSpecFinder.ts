@@ -25,18 +25,14 @@ import { traceError, traceInfo } from '../../common/logger';
  */
 @injectable()
 export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
-    private _oldKernelSpecsFolder?: string;
-    private get oldKernelSpecsFolder() {
-        return this._oldKernelSpecsFolder || this.memento.get<string>('OLD_KERNEL_SPECS_FOLDER__', '');
-    }
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento
     ) {
-        super(fs, workspaceService, extensionChecker);
+        super(fs, workspaceService, extensionChecker, memento);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
                 `Old kernelspecs (created by Jupyter extension) stored in directory ${this.oldKernelSpecsFolder}`
@@ -51,33 +47,40 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         includePythonKernels: boolean,
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        return this.listKernelsWithCache(includePythonKernels ? 'IncludePython' : 'ExcludePython', false, async () => {
-            // First find the on disk kernel specs and interpreters
-            const kernelSpecs = await this.findKernelSpecs(cancelToken);
+        return this.listKernelsWithCache(
+            includePythonKernels ? 'IncludePythonV2' : 'ExcludePythonV2',
+            false,
+            async () => {
+                // First find the on disk kernel specs and interpreters
+                const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-            return kernelSpecs
-                .filter((item) => {
-                    if (includePythonKernels) {
-                        return true;
-                    }
-                    return item.language !== PYTHON_LANGUAGE;
-                })
-                .map(
-                    (k) =>
-                        <LocalKernelSpecConnectionMetadata>{
-                            kind: 'startUsingLocalKernelSpec',
-                            kernelSpec: k,
-                            interpreter: undefined,
-                            id: getKernelId(k)
+                return kernelSpecs
+                    .filter((item) => {
+                        if (includePythonKernels) {
+                            return true;
                         }
-                );
-        });
+                        return item.language !== PYTHON_LANGUAGE;
+                    })
+                    .map(
+                        (k) =>
+                            <LocalKernelSpecConnectionMetadata>{
+                                kind: 'startUsingLocalKernelSpec',
+                                kernelSpec: k,
+                                interpreter: undefined,
+                                id: getKernelId(k)
+                            }
+                    );
+            }
+        );
     }
     private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
-        const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
+        const [paths, globalKernelPath] = await Promise.all([
+            this.jupyterPaths.getKernelSpecRootPaths(cancelToken),
+            this.jupyterPaths.getKernelSpecRootPath()
+        ]);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         await Promise.all(
             searchResults.map(async (resultPath) => {
@@ -86,6 +89,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                     const kernelspec = await this.getKernelSpec(
                         resultPath.kernelSpecFile,
                         resultPath.interpreter,
+                        globalKernelPath,
                         cancelToken
                     );
                     if (kernelspec) {

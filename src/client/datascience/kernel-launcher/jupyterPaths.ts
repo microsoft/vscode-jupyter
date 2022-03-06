@@ -5,8 +5,8 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { IPlatformService } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IPathUtils } from '../../common/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, IPathUtils } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { traceDecorators } from '../../logging';
 import { tryGetRealPath } from '../common';
@@ -27,7 +27,9 @@ export class JupyterPaths {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
@@ -38,6 +40,15 @@ export class JupyterPaths {
         );
     }
 
+    /**
+     * Contains the name of the directory where the Jupyter extension will temporary register Kernels when using non-raw.
+     * (this way we don't register kernels in global path).
+     */
+    public async getKernelSpecTempRegistrationFolder() {
+        const dir = path.join(this.context.extensionUri.fsPath, 'temp', 'jupyter', 'kernels');
+        await this.fs.ensureLocalDir(dir);
+        return dir;
+    }
     /**
      * This should return a WRITABLE place that jupyter will look for a kernel as documented
      * here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs

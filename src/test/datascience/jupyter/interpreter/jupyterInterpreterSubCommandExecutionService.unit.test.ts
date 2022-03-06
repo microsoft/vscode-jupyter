@@ -30,6 +30,7 @@ import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyte
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -66,13 +67,15 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             proc: undefined,
             out: new Subject<Output<string>>().asObservable()
         };
+        const jupyterPaths = mock<JupyterPaths>();
         jupyterInterpreterExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreter),
             instance(interpreterService),
             instance(jupyterDependencyService),
             instance(execFactory),
             output,
-            instance(pathUtils)
+            instance(pathUtils),
+            instance(jupyterPaths)
         );
 
         when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(

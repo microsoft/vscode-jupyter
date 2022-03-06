@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IFileSystem } from '../../common/platform/types';
-import { ReadWrite } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento, ReadWrite } from '../../common/types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { noop } from '../../common/utils/misc';
 import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
@@ -26,6 +27,14 @@ export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
 @injectable()
 export abstract class LocalKernelSpecFinderBase {
+    private _oldKernelSpecsFolder?: string;
+    protected get oldKernelSpecsFolder() {
+        return this._oldKernelSpecsFolder || this.globalState.get<string>('OLD_KERNEL_SPECS_FOLDER__', '');
+    }
+    private set oldKernelSpecsFolder(value: string) {
+        this._oldKernelSpecsFolder = value;
+        void this.globalState.update('OLD_KERNEL_SPECS_FOLDER__', value);
+    }
     private cache?: KernelSpecFileWithContainingInterpreter[];
     // Store our results when listing all possible kernelspecs for a resource
     private kernelSpecCache = new Map<
@@ -43,7 +52,8 @@ export abstract class LocalKernelSpecFinderBase {
     constructor(
         @inject(IFileSystem) protected readonly fs: IFileSystem,
         @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService,
-        protected readonly extensionChecker: IPythonExtensionChecker
+        protected readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) protected readonly globalState: Memento
     ) {}
 
     @testOnlyMethod()
@@ -116,6 +126,7 @@ export abstract class LocalKernelSpecFinderBase {
     protected async getKernelSpec(
         specPath: string,
         interpreter?: PythonEnvironment,
+        globalSpecRootPath?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         // This is a backup folder for old kernels created by us.
@@ -126,19 +137,42 @@ export abstract class LocalKernelSpecFinderBase {
         if (!this.pathToKernelSpec.has(specPath)) {
             this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter, cancelToken));
         }
-
         // ! as the has and set above verify that we have a return here
-        return this.pathToKernelSpec.get(specPath)!.then((value) => {
-            if (value) {
-                return value;
+        return this.pathToKernelSpec.get(specPath)!.then((kernelSpec) => {
+            // Delete old kernelSpecs that we created in the global kernelSpecs folder.
+            const shouldDeleteKernelSpec =
+                kernelSpec &&
+                globalSpecRootPath &&
+                getKernelRegistrationInfo(kernelSpec) &&
+                kernelSpec.specFile &&
+                path.dirname(kernelSpec.specFile) === globalSpecRootPath;
+            if (kernelSpec && !shouldDeleteKernelSpec) {
+                return kernelSpec;
             }
-            // If we failed to get a kernelspec full path from our cache and loaded list
+            if (kernelSpec?.specFile && shouldDeleteKernelSpec) {
+                // If this kernelSpec was registered by us and is in the global kernels folder,
+                // then remove it.
+                this.deleteOldKernelSpec(kernelSpec.specFile).catch(noop);
+            }
+
+            // If we failed to get a kernelSpec full path from our cache and loaded list
             this.pathToKernelSpec.delete(specPath);
-            this.cache = this.cache?.filter((itempath) => itempath.kernelSpecFile !== specPath);
+            this.cache = this.cache?.filter((itemPath) => itemPath.kernelSpecFile !== specPath);
             return undefined;
         });
     }
 
+    private async deleteOldKernelSpec(kernelSpecFile: string) {
+        // Just copy this folder into a seprate location.
+        const kernelSpecFolderName = path.basename(path.dirname(kernelSpecFile));
+        const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), oldKernelsSpecFolderName);
+        this.oldKernelSpecsFolder = destinationFolder;
+        const destinationFile = path.join(destinationFolder, kernelSpecFolderName, path.basename(kernelSpecFile));
+        await this.fs.ensureLocalDir(path.dirname(destinationFile));
+        await this.fs.copyLocal(kernelSpecFile, destinationFile).catch(noop);
+        await this.fs.deleteLocalFile(kernelSpecFile);
+        traceInfo(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
+    }
     /**
      * Load kernelspec json from disk
      */

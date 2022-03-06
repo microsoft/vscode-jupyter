@@ -26,15 +26,14 @@ import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { JupyterPaths } from './jupyterPaths';
 import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 
-const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
-const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY';
+const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
+const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -47,7 +46,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
@@ -149,12 +147,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         sendKernelListTelemetry(resource, kernels);
         void this.cacheLocalKernelConnections(kernels);
         return kernels;
-    }
-
-    // This should return a WRITABLE place that jupyter will look for a kernel as documented
-    // here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
-    public async getKernelSpecRootPath(): Promise<string | undefined> {
-        return this.jupyterPaths.getKernelSpecRootPath();
     }
 
     private async cacheLocalKernelConnections(kernels: LocalKernelConnectionMetadata[]) {

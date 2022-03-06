@@ -49,6 +49,7 @@ import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import {
@@ -961,13 +962,15 @@ suite('Jupyter Execution', async () => {
         when(oldStore.getCachedInterpreterPath()).thenReturn();
         const jupyterInterpreterService = mock(JupyterInterpreterService);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(activeInterpreter);
+        const jupyterPaths = mock<JupyterPaths>();
         const jupyterCmdExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreterService),
             instance(interpreterService),
             instance(dependencyService),
             instance(executionFactory),
             instance(mock<IOutputChannel>()),
-            instance(mock<IPathUtils>())
+            instance(mock<IPathUtils>()),
+            instance(jupyterPaths)
         );
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
             jupyterCmdExecutionService

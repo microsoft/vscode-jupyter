@@ -32,7 +32,7 @@ import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame, getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, IExtensionContext } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
@@ -344,14 +344,18 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             });
             when(fs.localDirectoryExists(anything())).thenResolve(true);
             const memento = mock<Memento>();
+            const context = mock<IExtensionContext>();
             when(memento.get(anything(), anything())).thenReturn(false);
             when(memento.update(anything(), anything())).thenResolve();
+            when(context.extensionUri).thenReturn(Uri.file(EXTENSION_ROOT_DIR));
             const jupyterPaths = new JupyterPaths(
                 instance(platformService),
                 pathUtils,
                 instance(envVarsProvider),
                 disposables,
-                instance(memento)
+                instance(memento),
+                instance(fs),
+                instance(context)
             );
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
@@ -360,9 +364,9 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 instance(extensionChecker),
                 instance(memento)
             );
-            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY', anything())).thenReturn([]);
-            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
-            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
+            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
+            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
+            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
@@ -373,9 +377,9 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     instance(workspaceService),
                     jupyterPaths,
                     instance(extensionChecker),
-                    nonPythonKernelSpecFinder
+                    nonPythonKernelSpecFinder,
+                    instance(memento)
                 ),
-                jupyterPaths,
                 instance(memento),
                 instance(fs)
             );
@@ -1028,6 +1032,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
         let globalSpecPath: string;
+        let tempDirForKernelSpecs: string;
         const pathSeparator = getOSType() === OSType.Windows ? '\\' : '/';
         type TestData = {
             interpreters?: (
@@ -1088,6 +1093,8 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             extensionChecker = mock(PythonExtensionChecker);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
             const memento = mock<Memento>();
+            const context = mock<IExtensionContext>();
+            when(context.extensionUri).thenReturn(Uri.file(EXTENSION_ROOT_DIR));
             when(memento.get(anything(), anything())).thenReturn(false);
             when(memento.update(anything(), anything())).thenResolve();
             const jupyterPaths = new JupyterPaths(
@@ -1095,7 +1102,9 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 pathUtils,
                 instance(envVarsProvider),
                 disposables,
-                instance(memento)
+                instance(memento),
+                instance(fs),
+                instance(context)
             );
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();
@@ -1115,6 +1124,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 }
             });
             globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
+            tempDirForKernelSpecs = ((await jupyterPaths.getKernelSpecTempRegistrationFolder()) as unknown) as string;
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
                     const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
@@ -1155,9 +1165,9 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                 instance(extensionChecker),
                 instance(memento)
             );
-            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY', anything())).thenReturn([]);
-            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
-            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
+            when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
+            when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
+            when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
@@ -1168,9 +1178,9 @@ import { traceInfoIfCI } from '../../../client/common/logger';
                     instance(workspaceService),
                     jupyterPaths,
                     instance(extensionChecker),
-                    nonPythonKernelSpecFinder
+                    nonPythonKernelSpecFinder,
+                    instance(memento)
                 ),
-                jupyterPaths,
                 instance(memento),
                 instance(fs)
             );
@@ -1420,7 +1430,7 @@ import { traceInfoIfCI } from '../../../client/common/logger';
             );
             await Promise.all(
                 expectedInterpreters.map(async (interpreter) => {
-                    const spec = createInterpreterKernelSpec(interpreter, globalSpecPath);
+                    const spec = createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
                     expectedKernelSpecs.push(<KernelConnectionMetadata>{
                         id: getKernelId(spec!, interpreter),
                         kernelSpec: spec,

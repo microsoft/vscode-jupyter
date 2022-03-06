@@ -31,6 +31,7 @@ import {
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
+import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -49,7 +50,8 @@ export class JupyterInterpreterSubCommandExecutionService
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
 
     /**
@@ -116,6 +118,12 @@ export class JupyterInterpreterSubCommandExecutionService
         // We don't want the process to die when the token is cancelled.
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
+        const jupyterDataPaths = (process.env['JUPYTER_PATH'] || '').split(path.delimiter);
+        jupyterDataPaths.push(await this.jupyterPaths.getKernelSpecTempRegistrationFolder());
+        spawnOptions.env = {
+            ...process.env,
+            JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
+        };
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
 
