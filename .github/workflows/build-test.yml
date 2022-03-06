@@ -671,7 +671,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
+          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
@@ -679,7 +679,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}
+          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
