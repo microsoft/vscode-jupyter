@@ -119,10 +119,10 @@ export class JupyterInterpreterSubCommandExecutionService
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
         const jupyterDataPaths = (process.env['JUPYTER_PATH'] || '').split(path.delimiter);
-        jupyterDataPaths.push(await this.jupyterPaths.getKernelSpecTempRegistrationFolder());
+        jupyterDataPaths.push(path.dirname(await this.jupyterPaths.getKernelSpecTempRegistrationFolder()));
         spawnOptions.env = {
             ...process.env,
-            JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
+            JUPYTER_PATH: jupyterDataPaths.length === 1 ? jupyterDataPaths[0] : jupyterDataPaths.join(path.delimiter)
         };
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
