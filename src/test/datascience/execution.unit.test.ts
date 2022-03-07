@@ -63,6 +63,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
@@ -963,6 +964,9 @@ suite('Jupyter Execution', async () => {
         const jupyterInterpreterService = mock(JupyterInterpreterService);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(activeInterpreter);
         const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
+        );
         const jupyterCmdExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreterService),
             instance(interpreterService),
