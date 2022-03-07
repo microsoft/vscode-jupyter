@@ -74,7 +74,6 @@ export interface ILocalKernelFinder {
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<LocalKernelConnectionMetadata[]>;
-    getKernelSpecRootPath(): Promise<string | undefined>;
 }
 
 export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');

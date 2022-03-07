@@ -10,8 +10,6 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { JupyterKernelService } from '../../../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { LocalKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
-import { LocalKernelFinder } from '../../../../client/datascience/kernel-launcher/localKernelFinder';
-import { ILocalKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IKernelDependencyService } from '../../../../client/datascience/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -21,6 +19,7 @@ import { arePathsSame, getOSType, OSType } from '../../../common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 import { CancellationTokenSource } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../client/common/variables/environment';
+import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
@@ -28,7 +27,6 @@ suite('DataScience - JupyterKernelService', () => {
     let kernelDependencyService: IKernelDependencyService;
     let fs: IFileSystem;
     let appEnv: IEnvironmentActivationService;
-    let kernelFinder: ILocalKernelFinder;
     let testWorkspaceFolder: string;
     const pathVariable = getOSType() === OSType.Windows ? 'PATH' : 'Path';
 
@@ -379,15 +377,15 @@ suite('DataScience - JupyterKernelService', () => {
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
         appEnv = mock<IEnvironmentActivationService>();
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
-        kernelFinder = mock(LocalKernelFinder);
         testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        when(kernelFinder.getKernelSpecRootPath()).thenResolve(testWorkspaceFolder);
+        const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(testWorkspaceFolder);
         kernelService = new JupyterKernelService(
             instance(kernelDependencyService),
             instance(fs),
             instance(appEnv),
-            instance(kernelFinder),
-            new EnvironmentVariablesService(instance(fs))
+            new EnvironmentVariablesService(instance(fs)),
+            instance(jupyterPaths)
         );
     });
     test('Dependencies checked on all kernels with interpreters', async () => {

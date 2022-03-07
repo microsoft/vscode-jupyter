@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Memento } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { Resource } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
@@ -66,9 +66,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
-        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento
     ) {
-        super(fs, workspaceService, extensionChecker);
+        super(fs, workspaceService, extensionChecker, globalState);
     }
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
@@ -131,14 +132,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        const rootSpecPathPromise = this.jupyterPaths.getKernelSpecRootPath();
-        const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(resource);
         // First find the on disk kernel specs and interpreters
-        const [kernelSpecs, rootSpecPath, activeInterpreter, globalKernelSpecs] = await Promise.all([
+        const [kernelSpecs, activeInterpreter, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
-            rootSpecPathPromise,
-            activeInterpreterPromise,
-            this.listGlobalPythonKernelSpecs(true, cancelToken)
+            this.interpreterService.getActiveInterpreter(resource),
+            this.listGlobalPythonKernelSpecs(true, cancelToken),
+            this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             getKernelRegistrationInfo(item.kernelSpec)
@@ -326,7 +325,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             ...Array.from(distinctKernelMetadata.values()),
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
-                const spec = createInterpreterKernelSpec(i, rootSpecPath);
+                const spec = createInterpreterKernelSpec(i, tempDirForKernelSpecs);
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: spec,
@@ -434,9 +433,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     ): Promise<IJupyterKernelSpec[]> {
         traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`);
         // Find all the possible places to look for this resource
-        const [interpreterPaths, rootSpecPaths] = await Promise.all([
+        const [interpreterPaths, rootSpecPaths, globalSpecRootPath] = await Promise.all([
             this.findKernelPathsOfAllInterpreters(interpreters),
-            this.jupyterPaths.getKernelSpecRootPaths()
+            this.jupyterPaths.getKernelSpecRootPaths(),
+            this.jupyterPaths.getKernelSpecRootPath()
         ]);
         // Exclude the glbal paths from the list.
         // What could happens is, we could have a global python interpreter and that returns a global path.
@@ -460,6 +460,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 const kernelspec = await this.getKernelSpec(
                     resultPath.kernelSpecFile,
                     resultPath.interpreter,
+                    globalSpecRootPath,
                     cancelToken
                 );
 
