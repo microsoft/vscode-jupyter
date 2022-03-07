@@ -31,6 +31,7 @@ import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
+import { swallowExceptions } from '../../common/utils/decorators';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';
@@ -126,13 +127,19 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): Promise<LocalKernelConnectionMetadata[]> {
         const kernelsFromCachePromise =
             useCache === 'ignoreCache' ? Promise.resolve([]) : this.listValidKernelsFromGlobalCache(cancelToken);
+        let kernelsRetrievedFromCache: boolean | undefined;
         const kernelsWithoutCachePromise = this.listKernelsWithoutCache(resource, cancelToken);
         let kernels: LocalKernelConnectionMetadata[] = [];
         if (useCache === 'ignoreCache') {
             kernels = await kernelsWithoutCachePromise;
         } else {
             let kernelsFromCache: LocalKernelConnectionMetadata[] | undefined;
-            kernelsFromCachePromise.then((items) => (kernelsFromCache = items)).catch(noop);
+            kernelsFromCachePromise
+                .then((items) => {
+                    kernelsFromCache = items;
+                    kernelsRetrievedFromCache = true;
+                })
+                .catch(noop);
             await Promise.race([kernelsFromCachePromise, kernelsWithoutCachePromise]);
             // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
             if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
@@ -145,10 +152,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         //
         kernels = this.filterKernels(kernels);
         sendKernelListTelemetry(resource, kernels);
-        void this.cacheLocalKernelConnections(kernels);
+        // Do not update the cache if we got kernels from the cache.
+        if (!kernelsRetrievedFromCache) {
+            void this.cacheLocalKernelConnections(kernels);
+        }
         return kernels;
     }
 
+    @swallowExceptions('CacheLocalKernelConnections')
     private async cacheLocalKernelConnections(kernels: LocalKernelConnectionMetadata[]) {
         const items = this.globalState.get<LocalKernelConnectionMetadata[]>(LocalKernelSpecConnectionsCacheKey, []);
         const uniqueItems = new Map<string, LocalKernelConnectionMetadata>();
