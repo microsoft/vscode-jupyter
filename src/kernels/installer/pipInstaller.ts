@@ -8,7 +8,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { _SCRIPTS_DIR } from '../../client/common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {
@@ -26,7 +26,16 @@ export class PipInstaller extends ModuleInstaller {
     public get priority(): number {
         return 0;
     }
-    public isSupported(interpreter: PythonEnvironment): Promise<boolean> {
+    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
+        // Skip this on conda, poetry, and pipenv environments
+        switch (interpreter.envType) {
+            case EnvironmentType.Conda:
+            case EnvironmentType.Pipenv:
+            case EnvironmentType.Poetry:
+                return false;
+        }
+
+        // Otherwise pip has to be there.
         return this.isPipAvailable(interpreter);
     }
     protected async getExecutionArgs(

@@ -68,12 +68,14 @@ export class PoetryInstaller extends ModuleInstaller {
         interpreter: PythonEnvironment
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
-        const args = ['add', '--dev', moduleName];
-        if (moduleName === 'black') {
-            args.push('--allow-prereleases');
-        }
+        const args = [execPath, 'add', '--dev', moduleName];
+
+        // TODO: We have to shell exec this because child_process.spawn will die
+        // for poetry.
+        // See issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/9265
         return {
-            exe: execPath,
+            useShellExec: true,
             args,
             cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
         };

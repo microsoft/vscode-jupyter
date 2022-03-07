@@ -24,6 +24,7 @@ export type ExecutionInstallArgs = {
     args: string[];
     exe?: string;
     cwd?: string;
+    useShellExec?: boolean;
 };
 
 @injectable()
@@ -69,7 +70,18 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             // use an activated environment though
             const deferred = createDeferred();
             let observable: ObservableExecutionResult<string> | undefined;
-            if (args.exe) {
+
+            // Some installers only work with shellexec
+            if (args.useShellExec) {
+                const proc = await procFactory.create(undefined);
+                try {
+                    const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
+                    traceInfo(results.stdout);
+                    deferred.resolve();
+                } catch (ex) {
+                    deferred.reject(ex);
+                }
+            } else if (args.exe) {
                 // For the exe, just figure out the environment variables.
                 const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
                 const env = { ...process.env };

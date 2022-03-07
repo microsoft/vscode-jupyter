@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { InterpreterUri } from '../../client/common/types';
@@ -10,11 +10,19 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv';
+import { getInterpreterWorkspaceFolder } from '../../client/datascience/jupyter/kernels/helpers';
+import { IServiceContainer } from '../../client/ioc/types';
 
 export const pipenvName = 'pipenv';
 
 @injectable()
 export class PipEnvInstaller extends ModuleInstaller {
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {
+        super(serviceContainer);
+    }
     public get name(): string {
         return 'pipenv';
     }
@@ -49,7 +57,7 @@ export class PipEnvInstaller extends ModuleInstaller {
     }
     protected async getExecutionArgs(
         moduleName: string,
-        _interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment,
         flags: ModuleInstallFlags = 0
     ): Promise<ExecutionInstallArgs> {
         // In pipenv the only way to update/upgrade or re-install is update (apart from a complete uninstall and re-install).
@@ -57,13 +65,15 @@ export class PipEnvInstaller extends ModuleInstaller {
             flags & ModuleInstallFlags.reInstall ||
             flags & ModuleInstallFlags.updateDependencies ||
             flags & ModuleInstallFlags.upgrade;
-        const args = [update ? 'update' : 'install', moduleName, '--dev'];
-        if (moduleName === 'black') {
-            args.push('--pre');
-        }
+        const args = [pipenvName, update ? 'update' : 'install', moduleName, '--dev'];
+        // TODO: We have to shell exec this because child_process.spawn will die
+        // for pipenv.
+        // See issue:
+        // https://github.com/microsoft/vscode-jupyter/issues/9265
         return {
-            exe: pipenvName,
-            args
+            useShellExec: true,
+            args,
+            cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
         };
     }
 }

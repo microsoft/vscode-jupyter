@@ -39,7 +39,7 @@ suite('PipEnv installer', async () => {
             .callsFake((interpreter: string, folder: string) => {
                 return Promise.resolve(interpreterPath === interpreter && folder === workspaceFolder);
             });
-        pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
+        pipEnvInstaller = new PipEnvInstaller(serviceContainer.object, workspaceService.object);
     });
 
     teardown(() => {
