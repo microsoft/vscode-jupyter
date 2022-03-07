@@ -24,7 +24,8 @@
         "marked": "^4.0.10",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
-        "timers-browserify": "^2.0.12"
+        "timers-browserify": "^2.0.12",
+        "url-parse": "^1.5.8"
     },
     "devDependencies": {
         "npm-force-resolutions": "0.0.10"
