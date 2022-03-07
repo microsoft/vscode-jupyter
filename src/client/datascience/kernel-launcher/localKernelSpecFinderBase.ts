@@ -145,7 +145,7 @@ export abstract class LocalKernelSpecFinderBase {
                 globalSpecRootPath &&
                 getKernelRegistrationInfo(kernelSpec) &&
                 kernelSpec.specFile &&
-                path.dirname(kernelSpec.specFile) === globalSpecRootPath;
+                path.dirname(path.dirname(kernelSpec.specFile)) === globalSpecRootPath;
             if (kernelSpec && !shouldDeleteKernelSpec) {
                 return kernelSpec;
             }
