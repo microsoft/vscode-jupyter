@@ -14,6 +14,7 @@ import {
 import { IOutputChannel } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Products } from '../../client/common/utils/localize';
+import { IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -23,7 +24,6 @@ export type ExecutionInstallArgs = {
     args: string[];
     exe?: string;
     cwd?: string;
-    useShellExec?: boolean;
 };
 
 @injectable()
@@ -51,6 +51,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const activationHelper = this.serviceContainer.get<IEnvironmentActivationService>(
             IEnvironmentActivationService
         );
+        const environmentService = this.serviceContainer.get<IEnvironmentVariablesService>(
+            IEnvironmentVariablesService
+        );
         const install = async (
             progress: Progress<{
                 message?: string | undefined;
@@ -66,19 +69,12 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             // use an activated environment though
             const deferred = createDeferred();
             let observable: ObservableExecutionResult<string> | undefined;
-            if (args.useShellExec) {
-                const proc = await procFactory.create(undefined);
-                try {
-                    const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
-                    traceInfo(results.stdout);
-                    deferred.resolve();
-                } catch (ex) {
-                    deferred.reject(ex);
-                }
-            } else if (args.exe) {
+            if (args.exe) {
                 // For the exe, just figure out the environment variables.
                 const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
-                const env = { ...process.env, ...envVars };
+                const env = { ...process.env };
+                environmentService.mergeVariables(envVars || {}, env);
+                environmentService.mergePaths(envVars || {}, env);
                 const proc = await procFactory.create(undefined);
                 observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token, env, cwd: args.cwd });
             } else {
