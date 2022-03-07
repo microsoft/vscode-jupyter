@@ -32,6 +32,7 @@ import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -72,6 +73,8 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
         );
+        const envActivationService = mock<IEnvironmentActivationService>();
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         jupyterInterpreterExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreter),
             instance(interpreterService),
@@ -79,7 +82,8 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             instance(execFactory),
             output,
             instance(pathUtils),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(envActivationService)
         );
 
         when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(

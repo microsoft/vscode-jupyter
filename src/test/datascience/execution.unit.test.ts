@@ -967,6 +967,8 @@ suite('Jupyter Execution', async () => {
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
         );
+        const envActivationService = mock<IEnvironmentActivationService>();
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         const jupyterCmdExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreterService),
             instance(interpreterService),
@@ -974,7 +976,8 @@ suite('Jupyter Execution', async () => {
             instance(executionFactory),
             instance(mock<IOutputChannel>()),
             instance(mock<IPathUtils>()),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(envActivationService)
         );
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
             jupyterCmdExecutionService
