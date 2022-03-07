@@ -31,6 +31,7 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -68,6 +69,9 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             out: new Subject<Output<string>>().asObservable()
         };
         const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
+        );
         jupyterInterpreterExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreter),
             instance(interpreterService),
