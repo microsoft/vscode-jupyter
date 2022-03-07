@@ -118,11 +118,13 @@ export class JupyterInterpreterSubCommandExecutionService
         // We don't want the process to die when the token is cancelled.
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
-        const jupyterDataPaths = (process.env['JUPYTER_PATH'] || '').split(path.delimiter);
+        const jupyterDataPaths = (process.env['JUPYTER_PATH'] || '')
+            .split(path.delimiter)
+            .filter((item) => item.trim().length);
         jupyterDataPaths.push(path.dirname(await this.jupyterPaths.getKernelSpecTempRegistrationFolder()));
         spawnOptions.env = {
             ...process.env,
-            JUPYTER_PATH: jupyterDataPaths.length === 1 ? jupyterDataPaths[0] : jupyterDataPaths.join(path.delimiter)
+            JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
         };
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
