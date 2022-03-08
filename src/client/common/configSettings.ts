@@ -252,6 +252,9 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                 if (event.affectsConfiguration('jupyter')) {
                     onDidChange();
                 }
+                if (event.affectsConfiguration('python.poetryPath')) {
+                    onDidChange();
+                }
             })
         );
 

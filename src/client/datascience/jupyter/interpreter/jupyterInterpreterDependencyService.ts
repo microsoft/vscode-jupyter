@@ -137,12 +137,9 @@ export class JupyterInterpreterDependencyService {
                     : this.installer.isInstalled(Product.pip, interpreter);
 
             const [missingProducts, pipInstalledInNonCondaEnv] = await Promise.all([
-                this.getDependenciesNotInstalled(interpreter, tokenSource.token),
+                this.getDependenciesNotInstalled(interpreter, undefined),
                 pipInstalledInNonCondaEnvPromise
             ]);
-            if (Cancellation.isCanceled(tokenSource.token)) {
-                return JupyterInterpreterDependencyResponse.cancel;
-            }
             if (missingProducts.length === 0) {
                 return JupyterInterpreterDependencyResponse.ok;
             }
@@ -163,10 +160,6 @@ export class JupyterInterpreterDependencyService {
                 DataScience.jupyterInstall(),
                 DataScience.selectDifferentJupyterInterpreter()
             );
-
-            if (Cancellation.isCanceled(tokenSource.token)) {
-                return JupyterInterpreterDependencyResponse.cancel;
-            }
 
             switch (selection) {
                 case DataScience.jupyterInstall(): {
