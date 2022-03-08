@@ -14,10 +14,9 @@ import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
-    IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../types';
-import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
+import { CancellationError as VscCancellationError, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -42,7 +41,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
     public async handleError(err: Error): Promise<void> {
@@ -96,7 +94,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         err: Error,
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource
+        _resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning('Kernel Error', err);
         err = WrappedError.unwrap(err);
