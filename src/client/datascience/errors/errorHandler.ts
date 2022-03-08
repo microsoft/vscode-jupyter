@@ -280,6 +280,6 @@ function getJupyterMissingErrorMessageForCell(err: JupyterInstallError) {
         '\n' +
         installationInstructions +
         '\n' +
-        "Click <a href='https://aka.ms/installJupyterForVSCode'>here</a> for help on installing jupyter."
+        Common.clickHereForMoreInfoWithHtml().format('https://aka.ms/installJupyterForVSCode')
     );
 }
