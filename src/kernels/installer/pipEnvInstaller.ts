@@ -65,14 +65,10 @@ export class PipEnvInstaller extends ModuleInstaller {
             flags & ModuleInstallFlags.reInstall ||
             flags & ModuleInstallFlags.updateDependencies ||
             flags & ModuleInstallFlags.upgrade;
-        const args = [pipenvName, update ? 'update' : 'install', moduleName, '--dev'];
-        // TODO: We have to shell exec this because child_process.spawn will die
-        // for pipenv.
-        // See issue:
-        // https://github.com/microsoft/vscode-jupyter/issues/9265
+        const args = [update ? 'update' : 'install', moduleName, '--dev'];
         return {
-            useShellExec: true,
             args,
+            exe: pipenvName,
             cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
         };
     }
