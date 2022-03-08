@@ -56,6 +56,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(dependencyManager),
             instance(browser),
             instance(configuration),
+            instance(kernelDependencyInstaller),
             instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
