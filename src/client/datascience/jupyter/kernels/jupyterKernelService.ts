@@ -21,13 +21,13 @@ import { ignoreLogging, logValue } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { ILocalKernelFinder } from '../../kernel-launcher/types';
 import {
     IDisplayOptions,
     IJupyterKernelSpec,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../types';
+import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
 import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -45,8 +45,8 @@ export class JupyterKernelService {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder,
-        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
 
     /**
@@ -154,10 +154,9 @@ export class JupyterKernelService {
         cancelToken: CancellationToken
     ): Promise<string | undefined> {
         // Get the global kernel location
-        const root = await this.kernelFinder.getKernelSpecRootPath();
+        const root = await this.jupyterPaths.getKernelSpecTempRegistrationFolder();
 
-        // If that didn't work, we can't continue
-        if (!root || !kernel.kernelSpec || cancelToken.isCancellationRequested || !kernel.kernelSpec.name) {
+        if (!kernel.kernelSpec || cancelToken.isCancellationRequested || !kernel.kernelSpec.name) {
             return;
         }
 
@@ -194,7 +193,7 @@ export class JupyterKernelService {
             };
         }
 
-        traceInfo(`RegisterKernel for ${kernel.id}`);
+        traceInfo(`RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)}`);
 
         // Write out the contents into the new spec file
         try {
@@ -234,7 +233,7 @@ export class JupyterKernelService {
         cancelToken?: CancellationToken,
         forceWrite?: boolean
     ) {
-        const kernelSpecRootPath = await this.kernelFinder.getKernelSpecRootPath();
+        const kernelSpecRootPath = await this.jupyterPaths.getKernelSpecTempRegistrationFolder();
         const specedKernel = kernel as JupyterKernelSpec;
         if (specFile && kernelSpecRootPath) {
             // Spec file may not be the same as the original spec file path.
@@ -269,11 +268,14 @@ export class JupyterKernelService {
                 }
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
-                const interpreterEnv = await this.activationHelper
-                    .getActivatedEnvironmentVariables(resource, interpreter, true)
-                    .catch(noop)
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .then((env) => (env || {}) as any);
+                const [interpreterEnv, hasActivationCommands] = await Promise.all([
+                    this.activationHelper
+                        .getActivatedEnvironmentVariables(resource, interpreter, true)
+                        .catch(noop)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        .then((env) => (env || {}) as any),
+                    this.activationHelper.hasActivationCommands(resource, interpreter)
+                ]);
 
                 // Ensure we inherit env variables from the original kernelspec file.
                 let envInKernelSpecJson =
@@ -282,7 +284,7 @@ export class JupyterKernelService {
                         : {};
 
                 // Give preferences to variables in the env file (except for `PATH`).
-                envInKernelSpecJson = Object.assign(interpreterEnv, envInKernelSpecJson);
+                envInKernelSpecJson = Object.assign({ ...interpreterEnv }, envInKernelSpecJson);
                 if (interpreterEnv['PATH']) {
                     envInKernelSpecJson['PATH'] = interpreterEnv['PATH'];
                 }
@@ -294,7 +296,7 @@ export class JupyterKernelService {
                 // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
                 // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
                 // Also applies to `!java` where java could be an executable in the conda bin directory.
-                if (interpreter && specModel.env) {
+                if (specModel.env) {
                     this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path));
                 }
 
@@ -302,8 +304,12 @@ export class JupyterKernelService {
                 // The global site_packages will be added to the path later.
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-                if (specModel.env && Object.keys(specModel.env).length > 0) {
+                if (specModel.env && Object.keys(specModel.env).length > 0 && hasActivationCommands) {
+                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
                     specModel.env.PYTHONNOUSERSITE = 'True';
+                } else {
+                    // We don't want to inherit any such env variables from Jupyter server or the like.
+                    delete specModel.env.PYTHONNOUSERSITE;
                 }
 
                 if (Cancellation.isCanceled(cancelToken)) {

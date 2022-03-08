@@ -48,6 +48,7 @@ import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import {
@@ -62,6 +63,7 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
 import { Product } from '../../kernels/installer/types';
 import { getOSType, OSType } from '../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
@@ -961,13 +963,21 @@ suite('Jupyter Execution', async () => {
         when(oldStore.getCachedInterpreterPath()).thenReturn();
         const jupyterInterpreterService = mock(JupyterInterpreterService);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(activeInterpreter);
+        const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
+        );
+        const envActivationService = mock<IEnvironmentActivationService>();
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         const jupyterCmdExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreterService),
             instance(interpreterService),
             instance(dependencyService),
             instance(executionFactory),
             instance(mock<IOutputChannel>()),
-            instance(mock<IPathUtils>())
+            instance(mock<IPathUtils>()),
+            instance(jupyterPaths),
+            instance(envActivationService)
         );
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
             jupyterCmdExecutionService

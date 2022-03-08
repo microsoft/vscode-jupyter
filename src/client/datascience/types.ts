@@ -501,7 +501,6 @@ export interface ICodeWatcher extends IDisposable {
     setDocument(document: TextDocument): void;
     getVersion(): number;
     getCodeLenses(): CodeLens[];
-    getCachedSettings(): IJupyterSettings | undefined;
     runAllCells(): Promise<void>;
     runCell(range: Range): Promise<void>;
     debugCell(range: Range): Promise<void>;

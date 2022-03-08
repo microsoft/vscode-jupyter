@@ -471,6 +471,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
         );
     }
+    public async hasActivationCommands(resource: Resource, interpreter?: PythonEnvironment): Promise<boolean> {
+        const commands = await this.getActivationCommands(resource, interpreter);
+        return Array.isArray(commands) && commands.length > 0;
+    }
+
     /**
      * We cache activated environment variables.
      * When activating environments, all activation scripts update environment variables, nothing else (after all they don't start a process).

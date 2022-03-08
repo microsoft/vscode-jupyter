@@ -32,6 +32,8 @@ import {
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 import { Product } from '../../../../kernels/installer/types';
+import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -50,7 +52,9 @@ export class JupyterInterpreterSubCommandExecutionService
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
 
     /**
@@ -117,6 +121,17 @@ export class JupyterInterpreterSubCommandExecutionService
         // We don't want the process to die when the token is cancelled.
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
+        const envVars =
+            (await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)) || process.env;
+        const jupyterDataPaths = (process.env['JUPYTER_PATH'] || envVars['JUPYTER_PATH'] || '')
+            .split(path.delimiter)
+            .filter((item) => item.trim().length);
+        jupyterDataPaths.push(path.dirname(await this.jupyterPaths.getKernelSpecTempRegistrationFolder()));
+        spawnOptions.env = {
+            ...envVars,
+            JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
+        };
+
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
 

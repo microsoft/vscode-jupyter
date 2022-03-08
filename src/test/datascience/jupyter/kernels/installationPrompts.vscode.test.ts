@@ -633,7 +633,13 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                     areInterpreterPathsSame(item.connection.interpreter.path, pythonPathToNewKernel)
             );
         if (!controller) {
-            throw new Error(`Unable to find a controller for ${pythonPathToNewKernel}`);
+            const registeredControllers = controllerManager
+                .registeredNotebookControllers()
+                .map((item) => item.id)
+                .join(',');
+            throw new Error(
+                `Unable to find a controller for ${pythonPathToNewKernel}, registered controllers ids are ${registeredControllers}`
+            );
         }
 
         const kernelSelected = createDeferred<boolean>();

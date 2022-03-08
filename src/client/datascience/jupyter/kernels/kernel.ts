@@ -510,8 +510,19 @@ export class Kernel implements IKernel {
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherStartupCode(notebookDocument);
-            await this.executeSilently(notebook, startupCode);
+            const startupCode = await this.gatherInternalStartupCode(notebookDocument);
+            await this.executeSilently(notebook, startupCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+                telemetryName: Telemetry.KernelStartupCodeFailure
+            });
+
+            // Run user specified startup commands
+            await this.executeSilently(notebook, this.getUserStartupCommands(), {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing user defined startup code',
+                telemetryName: Telemetry.UserStartupCodeFailure
+            });
         }
 
         // Then request our kernel info (indicates kernel is ready to go)
@@ -556,20 +567,12 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async gatherStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
+    private async gatherInternalStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                // Append the global site_packages to the kernel's sys.path
-                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
-                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
-                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(`import site\nsite.addsitedir(site.getusersitepackages())`);
-            }
-
             const [changeDirScripts, debugCellScripts] = await Promise.all([
                 // Change our initial directory and path
                 this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri),
@@ -578,6 +581,17 @@ export class Kernel implements IKernel {
                 this.getDebugCellHook(notebookDocument)
             ]);
 
+            // Have our debug cell script run first for safety
+            result.push(...debugCellScripts);
+
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                // Append the global site_packages to the kernel's sys.path
+                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
+                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
+                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
+                result.push(...CodeSnippets.AppendSitePackages.splitLines({ trim: false }));
+            }
+
             result.push(...changeDirScripts);
 
             // Set the ipynb file
@@ -585,16 +599,18 @@ export class Kernel implements IKernel {
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            result.push(CodeSnippets.disableJedi);
+            result.push(CodeSnippets.DisableJedi);
 
             // For Python notebook initialize matplotlib
-            result.push(...this.getMatplotLibInitializeCode());
-
-            result.push(...debugCellScripts);
+            // Wrap this startup code in try except as it might fail
+            result.push(
+                ...wrapPythonStartupBlock(
+                    this.getMatplotLibInitializeCode(),
+                    'Failed to initialize matplotlib startup code. Matplotlib might be missing.'
+                )
+            );
         }
 
-        // Run any startup commands that we have specified
-        result.push(...this.getStartupCommands());
         return result;
     }
 
@@ -613,21 +629,20 @@ export class Kernel implements IKernel {
 
     private getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
+
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
             traceInfoIfCI(
                 `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
             );
-            const matplobInit =
-                !settings || settings.generateSVGPlots
-                    ? CodeSnippets.MatplotLibInitSvg
-                    : CodeSnippets.MatplotLibInitPng;
+
+            const matplotInit = CodeSnippets.MatplotLibInit;
 
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
-            results.push(...matplobInit.splitLines({ trim: false }));
+            results.push(...matplotInit.splitLines({ trim: false }));
 
             // TODO: This must be joined with the previous request (else we send two seprate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
@@ -639,13 +654,14 @@ export class Kernel implements IKernel {
                         : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
                 );
             }
-        } else {
-            const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            traceInfoIfCI(
-                `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
-            );
-            results.push(...configInit.splitLines({ trim: false }));
         }
+
+        // Add in SVG to the figure formats if needed
+        if (settings.generateSVGPlots) {
+            results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
+            traceInfo('Add SVG to matplotlib figure formats');
+        }
+
         return results;
     }
 
@@ -664,7 +680,7 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private getStartupCommands(): string[] {
+    private getUserStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
         let setting = settings.runStartupCommands;
@@ -722,13 +738,35 @@ export class Kernel implements IKernel {
         return [];
     }
 
-    private async executeSilently(notebook: INotebook | undefined, code: string[]) {
+    private async executeSilently(
+        notebook: INotebook | undefined,
+        code: string[],
+        errorOptions?: SilentExecutionErrorOptions
+    ) {
         if (!notebook || code.join('').trim().length === 0) {
             traceVerbose(`Not executing startup notebook: ${notebook ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
-        await executeSilently(notebook.session, code.join('\n'));
+        await executeSilently(notebook.session, code.join('\n'), errorOptions);
     }
+}
+
+// Wrap a block of python code in try except to make sure hat we have n
+function wrapPythonStartupBlock(inputCode: string[], pythonMessage: string): string[] {
+    if (!inputCode || inputCode.length === 0) {
+        return inputCode;
+    }
+
+    // First space in everything
+    inputCode = inputCode.map((codeLine) => {
+        return `    ${codeLine}`;
+    });
+
+    // Add the try except
+    inputCode.unshift(`try:`);
+    inputCode.push(`except:`, `    print('${pythonMessage}')`);
+
+    return inputCode;
 }
 
 /**
@@ -748,3 +786,13 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
     }
     return;
 }
+
+// Options for error reporting from kernel silent execution
+export type SilentExecutionErrorOptions = {
+    // Setting this will log jupyter errors from silent execution as errors as opposed to warnings
+    traceErrors?: boolean;
+    // This optional message will be displayed as a prefix for the error or warning message
+    traceErrorsMessage?: string;
+    // Setting this will log telemetry on the given name
+    telemetryName?: Telemetry;
+};
