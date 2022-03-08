@@ -110,6 +110,7 @@ suite('Common - Conda Installer', () => {
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
@@ -126,6 +127,7 @@ suite('Common - Conda Installer', () => {
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
@@ -145,6 +147,7 @@ suite('Common - Conda Installer', () => {
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 

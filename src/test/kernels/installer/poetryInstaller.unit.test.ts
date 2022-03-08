@@ -111,7 +111,7 @@ suite('Module Installer - Poetry', () => {
 
         const info = await poetryInstaller.getExecutionArgs('something', interpreter);
 
-        assert.deepEqual(info, { args: ['add', '--dev', 'something'], exe: 'poetry path' });
+        assert.deepEqual(info, { args: ['poetry path', 'add', '--dev', 'something'], cwd: null, useShellExec: true });
     });
     test('Is supported returns true if selected interpreter is related to the workspace', async () => {
         const uri = Uri.file(project1);
