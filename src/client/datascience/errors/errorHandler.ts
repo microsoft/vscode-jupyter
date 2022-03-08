@@ -100,16 +100,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-    public async getErrorMessageForDisplayInCell(
-        error: Error,
-        _purpose: 'start' | 'restart' | 'interrupt' | 'execution',
-        _resource: Resource,
-        _kernelConnection?: KernelConnectionMetadata
-    ) {
-        // err = WrappedError.unwrap(err);
-        // if (!kernelConnection && err && (err instanceof BaseKernelError || err instanceof WrappedKernelError)) {
-        //     kernelConnection = err.kernelConnectionMetadata;
-        // }
+    public async getErrorMessageForDisplayInCell(error: Error) {
         let message: string = error.message;
         error = WrappedError.unwrap(error);
         if (error instanceof JupyterKernelDependencyError) {

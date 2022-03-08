@@ -177,12 +177,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 displayErrorsInCell(
                     currentCell,
                     cellExecution,
-                    await this.errorHandler.getErrorMessageForDisplayInCell(
-                        ex,
-                        context,
-                        kernel.resourceUri,
-                        kernel.kernelConnectionMetadata
-                    )
+                    await this.errorHandler.getErrorMessageForDisplayInCell(ex)
                 );
             } else {
                 void this.applicationShell.showErrorMessage(ex.toString());

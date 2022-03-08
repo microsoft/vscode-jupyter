@@ -389,11 +389,7 @@ export class VSCodeNotebookController implements Disposable {
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(
-                cell,
-                execution,
-                await errorHandler.getErrorMessageForDisplayInCell(ex, 'start', doc.uri)
-            );
+            displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex));
             return NotebookCellExecutionState.Idle;
         }
 
