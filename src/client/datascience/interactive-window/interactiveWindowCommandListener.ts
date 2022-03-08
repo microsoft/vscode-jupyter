@@ -308,8 +308,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         } else {
             await this.dataScienceErrorHandler.handleError(
                 new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
                 )
             );
         }

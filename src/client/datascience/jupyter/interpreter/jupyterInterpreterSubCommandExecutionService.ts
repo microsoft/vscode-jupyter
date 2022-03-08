@@ -165,7 +165,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
+            throw new JupyterInstallError(reason);
         }
         return interpreter;
     }

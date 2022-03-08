@@ -29,9 +29,10 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
-import { DisplayOptions } from '../displayOptions';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterKernelDependencyError } from '../jupyter/kernels/jupyterKernelDependencyError';
+import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
+import { DisplayOptions } from '../displayOptions';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -104,10 +105,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterKernelDependencyError) {
             return err.reason;
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
+        } else if ((purpose === 'start' || purpose === 'restart') && err instanceof JupyterInstallError) {
+            const response = await this.dependencyManager.installMissingDependencies(err);
+            return response === JupyterInterpreterDependencyResponse.ok
+                ? KernelInterpreterDependencyResponse.ok
+                : KernelInterpreterDependencyResponse.cancel;
         } else if (
-            err instanceof JupyterInstallError ||
-            ((purpose === 'start' || purpose === 'restart') &&
-                !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true)))
+            (purpose === 'start' || purpose === 'restart') &&
+            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
         ) {
             const tokenSource = new CancellationTokenSource();
             try {

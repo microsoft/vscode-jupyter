@@ -133,8 +133,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 traceInfo('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
                 );
             }
             // Then actually start the server
@@ -179,8 +178,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 );
             } else {
                 throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
                 );
             }
         }

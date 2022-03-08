@@ -3,15 +3,9 @@
 'use strict';
 import { BaseError } from '../../common/errors/types';
 import '../../common/extensions';
-import { HelpLinks } from '../constants';
 
 export class JupyterInstallError extends BaseError {
-    public action: string;
-    public actionTitle: string;
-
-    constructor(message: string, actionFormatString: string) {
+    constructor(message: string) {
         super('jupyterinstall', message);
-        this.action = HelpLinks.PythonInteractiveHelpLink;
-        this.actionTitle = actionFormatString.format(HelpLinks.PythonInteractiveHelpLink);
     }
 }
