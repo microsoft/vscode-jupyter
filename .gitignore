@@ -32,6 +32,7 @@ obj/**
 .pytest_cache
 temp/**
 tmp/**
+temp/**
 .python-version
 .vs/
 test-results*.xml

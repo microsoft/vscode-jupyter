@@ -215,7 +215,12 @@ suite('DataScience Error Handler Unit Tests', () => {
         };
         test('Unable to import <name> from user overriding module (windows)', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -238,7 +243,12 @@ suite('DataScience Error Handler Unit Tests', () => {
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -255,7 +265,12 @@ suite('DataScience Error Handler Unit Tests', () => {
         });
         test('Unable to import <name> from user overriding module (linux)', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -282,7 +297,12 @@ suite('DataScience Error Handler Unit Tests', () => {
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -302,7 +322,8 @@ suite('DataScience Error Handler Unit Tests', () => {
 import win32api
 ImportError: No module named 'win32api'
 `,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -322,7 +343,8 @@ ImportError: No module named 'win32api'
 import xyz
 ImportError: No module named 'xyz'
 `,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -338,7 +360,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError(
                     'Hello',
                     `ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\\Users\\<user>\\AppData\\Roaming\\Python\\Python38\\site-packages\\zmq\\backend\\cython\\__init__.py)`,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -351,7 +374,7 @@ ImportError: No module named 'xyz'
         });
         test('Unknown Dll load failure', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', `ImportError: DLL load failed`, undefined),
+                new KernelDiedError('Hello', `ImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
                 undefined
@@ -363,7 +386,7 @@ ImportError: No module named 'xyz'
         });
         test('Dll load failure', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`, undefined),
+                new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
                 undefined

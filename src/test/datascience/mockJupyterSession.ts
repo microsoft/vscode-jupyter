@@ -103,7 +103,7 @@ export class MockJupyterSession implements IJupyterSession {
     public waitForIdle(_timeout: number): Promise<void> {
         if (this.pendingIdleFailure) {
             this.pendingIdleFailure = false;
-            return Promise.reject(new JupyterWaitForIdleError('Kernel is dead'));
+            return Promise.reject(new JupyterWaitForIdleError({} as KernelConnectionMetadata));
         }
         return sleep(this.timedelay);
     }

@@ -2,10 +2,22 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
+import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 
 export abstract class BaseError extends Error {
     public stdErr?: string;
     constructor(public readonly category: ErrorCategory, message: string) {
+        super(message);
+    }
+}
+
+export abstract class BaseKernelError extends Error {
+    public stdErr?: string;
+    constructor(
+        public readonly category: ErrorCategory,
+        message: string,
+        public readonly kernelConnectionMetadata: KernelConnectionMetadata
+    ) {
         super(message);
     }
 }
@@ -42,6 +54,15 @@ export class WrappedError extends BaseError {
             err = err.originalException;
         }
         return err;
+    }
+}
+export class WrappedKernelError extends WrappedError {
+    constructor(
+        message: string,
+        originalException: Error | undefined,
+        public readonly kernelConnectionMetadata: KernelConnectionMetadata
+    ) {
+        super(message, originalException);
     }
 }
 

@@ -12,6 +12,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
+import { getErrorMessageForDisplayInCell } from '../../errors/errorHandler';
 import { INotebookControllerManager } from '../../notebook/types';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
@@ -168,7 +169,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         } catch (ex) {
             if (currentCell) {
                 const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
-                displayErrorsInCell(currentCell, cellExecution, ex).ignoreErrors();
+                displayErrorsInCell(currentCell, cellExecution, getErrorMessageForDisplayInCell(ex));
             } else {
                 void this.applicationShell.showErrorMessage(ex.toString());
             }

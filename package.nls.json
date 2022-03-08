@@ -261,7 +261,6 @@
     "DataScience.restartingKernelHeader": "_Restarting kernel..._",
     "DataScience.startedNewKernelHeader": "Started '{0}' kernel",
     "DataScience.connectKernelHeader": "Connected to '{0}' kernel",
-    "DataScience.canceledKernelHeader": "Canceled connection to '{0}' kernel",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Type code here and press shift-enter to run",
     "DataScience.deleteButtonTooltip": "Remove cell",

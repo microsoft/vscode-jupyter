@@ -8,6 +8,7 @@ import {
     ExtensionMode,
     languages,
     NotebookCell,
+    NotebookCellExecutionState,
     NotebookCellKind,
     NotebookController,
     NotebookControllerAffinity,
@@ -47,6 +48,7 @@ import { ConsoleForegroundColors, traceDecorators } from '../../logging/_global'
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
+import { getErrorMessageForDisplayInCell } from '../errors/errorHandler';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { CellExecutionCreator } from '../jupyter/kernels/cellExecutionCreator';
@@ -386,7 +388,8 @@ export class VSCodeNotebookController implements Disposable {
             return await kernel.executeCell(cell);
         } catch (ex) {
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            return displayErrorsInCell(cell, execution, ex.toString());
+            displayErrorsInCell(cell, execution, getErrorMessageForDisplayInCell(ex));
+            return NotebookCellExecutionState.Idle;
         }
 
         // Execution should be ended elsewhere

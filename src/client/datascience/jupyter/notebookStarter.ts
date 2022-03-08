@@ -9,12 +9,12 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable, ExtensionMode } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IDisposable, IExtensionContext, IOutputChannel, Resource } from '../../common/types';
+import * as types from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -38,7 +38,7 @@ import { KernelProgressReporter } from '../progress/kernelProgressReporter';
  */
 @injectable()
 export class NotebookStarter implements Disposable {
-    private readonly disposables: IDisposable[] = [];
+    private readonly disposables: types.IDisposable[] = [];
     private static _usedPorts = new Set<number>();
     public static get usedPorts() {
         return Array.from(NotebookStarter._usedPorts);
@@ -48,8 +48,9 @@ export class NotebookStarter implements Disposable {
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
+        @inject(types.IOutputChannel)
+        @named(JUPYTER_OUTPUT_CHANNEL)
+        private readonly jupyterOutputChannel: types.IOutputChannel
     ) {}
     public dispose() {
         while (this.disposables.length > 0) {
@@ -64,7 +65,7 @@ export class NotebookStarter implements Disposable {
         }
     }
     public async start(
-        resource: Resource,
+        resource: types.Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
@@ -74,7 +75,7 @@ export class NotebookStarter implements Disposable {
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
-        const disposables: IDisposable[] = [];
+        const disposables: types.IDisposable[] = [];
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
@@ -198,12 +199,11 @@ export class NotebookStarter implements Disposable {
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
         promisedArgs.push(Promise.resolve(this.getNotebookDirArgument(workingDirectory)));
-        if (this.context.extensionMode === ExtensionMode.Test) {
-            // When kernels fail to start, Jupyter will attempt to restart 5 times,
-            // & this is very slow in the tests.
-            // Hence disable automatic starts of failed kernels in tests.
-            promisedArgs.push(Promise.resolve('--KernelManager.autorestart=False'));
-        }
+        // When kernels fail to start, Jupyter will attempt to restart 5 times,
+        // & this is very slow (we dont want users to wait because of kernel failures).
+        // Also when kernels die, we don't restart automatically with raw kernels,
+        // We should'nt do the same with jupyter (else startup code will not run).
+        promisedArgs.push(Promise.resolve('--KernelManager.autorestart=False'));
         if (useDefaultConfig) {
             promisedArgs.push(this.getConfigArgument(tempDirPromise));
         }
@@ -223,7 +223,15 @@ export class NotebookStarter implements Disposable {
 
     private async generateCustomArguments(customCommandLine: string[]): Promise<string[]> {
         // We still have a bunch of args we have to pass
-        const requiredArgs = ['--no-browser', '--NotebookApp.iopub_data_rate_limit=10000000000.0'];
+        const requiredArgs = [
+            '--no-browser',
+            '--NotebookApp.iopub_data_rate_limit=10000000000.0', // When kernels fail to start, Jupyter will attempt to restart 5 times,
+            // When kernels fail to start, Jupyter will attempt to restart 5 times,
+            // & this is very slow (we dont want users to wait because of kernel failures).
+            // Also when kernels die, we don't restart automatically with raw kernels,
+            // We should'nt do the same with jupyter (else startup code will not run).
+            '--KernelManager.autorestart=False'
+        ];
 
         return [...requiredArgs, ...customCommandLine];
     }

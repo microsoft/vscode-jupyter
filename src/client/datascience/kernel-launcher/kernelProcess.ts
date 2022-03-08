@@ -39,7 +39,6 @@ import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IKernelConnection, IKernelProcess } from './types';
 import { BaseError } from '../../common/errors/types';
 import { KernelProcessExitedError } from '../errors/kernelProcessExitedError';
-import { PythonKernelDiedError } from '../errors/pythonKernelDiedError';
 import { KernelDiedError } from '../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
@@ -152,7 +151,7 @@ export class KernelProcess implements IKernelProcess {
                 exitEventFired = true;
             }
             if (!cancelToken.isCancellationRequested) {
-                deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr));
+                deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata));
             }
         });
 
@@ -191,29 +190,7 @@ export class KernelProcess implements IKernelProcess {
                     return;
                 }
                 traceError('Kernel died', error, stderr);
-                if (error instanceof PythonKernelDiedError) {
-                    providedExitCode = error.exitCode;
-                    this.sendToOutput(`Exit - ${error.exitCode}, ${error.reason}`);
-                    if (this.disposed) {
-                        traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
-                        return;
-                    } else {
-                        traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
-                    }
-                    if (!stderrProc && (error.stdErr || error.reason || error.message)) {
-                        // This is used when process exits.
-                        stderrProc = error.stdErr || error.reason || error.message;
-                    }
-                    if (!exitEventFired) {
-                        let reason = error.reason || error.message;
-                        this.exitEvent.fire({
-                            exitCode: error.exitCode,
-                            reason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-                        });
-                        exitEventFired = true;
-                    }
-                    deferred.reject(error);
-                }
+                deferred.reject(error);
             },
             () => {
                 console.error('Completed');
@@ -267,7 +244,8 @@ export class KernelProcess implements IKernelProcess {
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    e as any
+                    e as any,
+                    this.kernelConnectionMetadata
                 );
             }
         }
