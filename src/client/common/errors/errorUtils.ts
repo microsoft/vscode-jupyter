@@ -9,15 +9,9 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { JupyterConnectError } from '../../datascience/errors/jupyterConnectError';
-// import { JupyterKernelDependencyError } from '../../datascience/jupyter/kernels/jupyterKernelDependencyError';
-// import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
-// import { EnvironmentType } from '../../pythonEnvironments/info';
-// import { Product, translateProductToModule } from '../installer/productInstaller';
-// import { ProductNames } from '../installer/productNames';
 import { getDisplayPath } from '../platform/fs-paths';
 import { DataScience } from '../utils/localize';
 import { BaseError } from './types';
-// import { BaseError, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
