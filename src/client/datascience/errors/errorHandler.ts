@@ -14,9 +14,10 @@ import { isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
+    IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../types';
-import { CancellationError as VscCancellationError, ConfigurationTarget } from 'vscode';
+import { CancellationError as VscCancellationError, CancellationTokenSource, ConfigurationTarget } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
@@ -31,6 +32,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterKernelDependencyError } from '../jupyter/kernels/jupyterKernelDependencyError';
 import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
+import { DisplayOptions } from '../displayOptions';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -40,6 +42,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
     public async handleError(err: Error): Promise<void> {
@@ -93,7 +96,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         err: Error,
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
-        _resource: Resource
+        resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning('Kernel Error', err);
         err = WrappedError.unwrap(err);
@@ -102,11 +105,27 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterKernelDependencyError) {
             return err.reason;
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
-        } else if (err instanceof JupyterInstallError && (purpose === 'start' || purpose === 'restart')) {
+        } else if ((purpose === 'start' || purpose === 'restart') && err instanceof JupyterInstallError) {
             const response = await this.dependencyManager.installMissingDependencies(err);
             return response === JupyterInterpreterDependencyResponse.ok
                 ? KernelInterpreterDependencyResponse.ok
                 : KernelInterpreterDependencyResponse.cancel;
+        } else if (
+            (purpose === 'start' || purpose === 'restart') &&
+            !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
+        ) {
+            const tokenSource = new CancellationTokenSource();
+            try {
+                return this.kernelDependency.installMissingDependencies(
+                    resource,
+                    kernelConnection,
+                    new DisplayOptions(false),
+                    tokenSource.token,
+                    true
+                );
+            } finally {
+                tokenSource.dispose();
+            }
         } else {
             const failureInfo = analyzeKernelErrors(
                 this.workspaceService.workspaceFolders || [],

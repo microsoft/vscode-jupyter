@@ -17,6 +17,7 @@ import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     IJupyterInterpreterDependencyManager,
+    IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
@@ -48,11 +49,14 @@ suite('DataScience Error Handler Unit Tests', () => {
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
+        const kernelDependencyInstaller = mock<IKernelDependencyService>();
+        when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
             instance(browser),
             instance(configuration),
+            instance(kernelDependencyInstaller),
             instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
