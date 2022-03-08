@@ -1,5 +1,60 @@
 # Changelog
 
+## 2022.2.103 (7 March 2022)
+
+### Fixes
+
+1. Load environment variables defined in kernelspecs.
+   ([#9171](https://github.com/Microsoft/vscode-jupyter/issues/9171))
+1. Do not inherit `PYTHONNOUSERSITE` from the process running Jupyter.
+   ([#9233](https://github.com/Microsoft/vscode-jupyter/issues/9233))
+1. Update display names of Python Environments in kernel picker if the Python version has changed.
+   ([#9104](https://github.com/Microsoft/vscode-jupyter/issues/9104))
+1. Support for detection of missing dependencies in scenarios where users re-create the Python Environments (virtual env or Conda env) or for some reason manually uninstall some of the dependencies.
+   ([#9135](https://github.com/Microsoft/vscode-jupyter/issues/9135))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.2.102 (4 March 2022)
+
+### Fixes
+
+1. Ensure we detect and set the `site_packages` directory only for environments that can be activated.
+This ensures we can correctly start Python Kernels in the Python Windows Store Apps.
+   ([#9219](https://github.com/Microsoft/vscode-jupyter/issues/9212))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.2.101 (3 March 2022)
 
 ### Enhancements
