@@ -28,7 +28,11 @@ import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { analyzeKernelErrors, getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import {
+    analyzeKernelErrors,
+    getErrorMessageFromPythonTraceback,
+    KernelFailureReason
+} from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
@@ -222,6 +226,13 @@ export function getErrorMessageForDisplayInCell(error: Error) {
             error.kernelConnectionMetadata.interpreter?.sysPrefix
         );
         if (failureInfo) {
+            // Special case for ipykernel module missing.
+            if (
+                failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
+                ['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
+            ) {
+                return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+            }
             const messageParts = [failureInfo.message];
             if (failureInfo.moreInfoLink) {
                 messageParts.push(Common.clickHereForMoreInfoWithHtml().format(failureInfo.moreInfoLink));
