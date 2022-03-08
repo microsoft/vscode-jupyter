@@ -129,7 +129,8 @@ export class JupyterInterpreterService {
 
         const response = await this.interpreterConfiguration.installMissingDependencies(interpreter, err);
         if (response === JupyterInterpreterDependencyResponse.selectAnotherInterpreter) {
-            await this.selectInterpreter();
+            interpreter = await this.selectInterpreter();
+            return interpreter ? JupyterInterpreterDependencyResponse.ok : JupyterInterpreterDependencyResponse.cancel;
         } else if (response === JupyterInterpreterDependencyResponse.ok) {
             // We might have installed jupyter in a new active interpreter here, if we did and the install
             // went ok we also want to select that interpreter as our jupyter selected interperter

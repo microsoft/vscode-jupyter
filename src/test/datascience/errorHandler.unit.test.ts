@@ -3,6 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as dedent from 'dedent';
+import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
@@ -14,11 +15,15 @@ import { JupyterInstallError } from '../../client/datascience/errors/jupyterInst
 import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
 import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
+import {
+    IJupyterInterpreterDependencyManager,
+    KernelInterpreterDependencyResponse
+} from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { JupyterInterpreterDependencyResponse } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -27,7 +32,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let workspaceService: IWorkspaceService;
     let browser: IBrowserService;
     let configuration: IConfigurationService;
-    let kernelDependencyInstaller: IKernelDependencyService;
     let jupyterInterpreterService: JupyterInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
@@ -42,16 +46,13 @@ suite('DataScience Error Handler Unit Tests', () => {
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
-        kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
-        when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
             instance(browser),
             instance(configuration),
-            instance(kernelDependencyInstaller),
             instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
@@ -95,7 +96,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             )
         ).thenResolve(DataScience.jupyterInstall() as any);
 
-        const err = new JupyterInstallError(message, 'test.com');
+        const err = new JupyterInstallError(message);
         await dataScienceErrorHandler.handleError(err);
 
         verify(dependencyManager.installMissingDependencies(err)).once();
@@ -438,7 +439,41 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated'
             );
         });
-
+        test('Check Jupyter dependencies when JupyterInstall error is thrown', async () => {
+            await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+        });
+        test('When JupyterInstall error is thrown and Jupyter dependencies are installed, then return ok', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.ok
+            );
+            const result = await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+            assert.strictEqual(result, KernelInterpreterDependencyResponse.ok);
+        });
+        test('When JupyterInstall error is thrown and Jupyter dependencies are not installed, then return cancel', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+            assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
+        });
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')
                 ? message

@@ -173,8 +173,7 @@ export class NotebookStarter implements Disposable {
             // Its possible jupyter isn't installed. Check the errors.
             if (!(await this.jupyterInterpreterService.isNotebookSupported())) {
                 throw new JupyterInstallError(
-                    await this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported(),
-                    localize.DataScience.pythonInteractiveHelpLink()
+                    await this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
                 );
             }
 
