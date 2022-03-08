@@ -230,6 +230,7 @@
     "CommonSurvey.remindMeLaterLabel": "Remind me later",
     "CommonSurvey.yesLabel": "Yes, take survey now",
     "CommonSurvey.noLabel": "No, thanks",
+    "Common.clickHereForMoreInfoWithHtml": "Click <a href='{0}'>here</a> for more info.",
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",

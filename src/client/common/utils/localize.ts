@@ -29,6 +29,10 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const clickHereForMoreInfoWithHtml = localize(
+        'Common.clickHereForMoreInfoWithHtml',
+        "Click <a href='{0}'>here</a> for more info."
+    );
 }
 
 export namespace CommonSurvey {
