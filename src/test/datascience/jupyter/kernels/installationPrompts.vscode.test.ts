@@ -23,7 +23,7 @@ import {
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
-import { getTextOutputValue, hasErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
+import { hasErrorOutput, translateCellErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
 import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
@@ -621,8 +621,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
     function verifyInstallIPyKernelInstructionsInOutput(cell: NotebookCell) {
         const textToLookFor = `Run the following command to install '${ProductNames.get(Product.ipykernel)!}'`;
-        const text = getTextOutputValue(cell.outputs[0]);
-        assert.include(text, textToLookFor);
+        const err = translateCellErrorOutput(cell.outputs[0]);
+        assert.include(err.traceback.join(''), textToLookFor);
         return true;
     }
     type Awaited<T> = T extends PromiseLike<infer U> ? U : T;

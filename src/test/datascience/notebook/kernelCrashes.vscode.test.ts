@@ -38,7 +38,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascie
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
+import { translateCellErrorOutput } from '../../../client/datascience/notebook/helpers/helpers';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -325,9 +325,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // Verify we have an output in the cell that contains the same information (about overirding built in modules).
             const cell = window.activeNotebookEditor!.document.cellAt(0);
             await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
-            const output = cell.outputs[0];
-            const text = getTextOutputValue(output);
-            assert.include(text, expectedErrorMessage);
+            const err = translateCellErrorOutput(cell.outputs[0]);
+            assert.include(err.traceback.join(''), 'random.py');
+            assert.include(err.traceback.join(''), 'seems to be overriding built in modules and interfering with the startup of the kernel');
+            assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
         }
         test('Display error about overriding builtin modules (without Python daemon', () =>
             displayErrorAboutOverriddenBuiltInModules());

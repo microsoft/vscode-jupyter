@@ -100,7 +100,59 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-
+    public async getErrorMessageForDisplayInCell(
+        error: Error,
+        _purpose: 'start' | 'restart' | 'interrupt' | 'execution',
+        _resource: Resource,
+        _kernelConnection?: KernelConnectionMetadata
+    ) {
+        // err = WrappedError.unwrap(err);
+        // if (!kernelConnection && err && (err instanceof BaseKernelError || err instanceof WrappedKernelError)) {
+        //     kernelConnection = err.kernelConnectionMetadata;
+        // }
+        let message: string = error.message;
+        error = WrappedError.unwrap(error);
+        if (error instanceof JupyterKernelDependencyError) {
+            message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+        } else if (error instanceof JupyterInstallError) {
+            message = getJupyterMissingErrorMessageForCell(error) || message;
+        } else if (
+            error instanceof KernelDiedError &&
+            (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
+                error.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') &&
+            error.kernelConnectionMetadata.interpreter &&
+            !(await this.kernelDependency.areDependenciesInstalled(error.kernelConnectionMetadata, undefined, true))
+        ) {
+            // We don't look for ipykernel dependencies before we start a kernel, hence
+            // its possible the kernel failed to start due to missing dependencies.
+            message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+        } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
+            const failureInfo = analyzeKernelErrors(
+                workspace.workspaceFolders || [],
+                error,
+                getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
+                error.kernelConnectionMetadata.interpreter?.sysPrefix
+            );
+            if (failureInfo) {
+                // Special case for ipykernel module missing.
+                if (
+                    failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
+                    ['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
+                ) {
+                    return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+                }
+                const messageParts = [failureInfo.message];
+                if (failureInfo.moreInfoLink) {
+                    messageParts.push(Common.clickHereForMoreInfoWithHtml().format(failureInfo.moreInfoLink));
+                }
+                return messageParts.join('\n');
+            }
+            return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
+        } else if (error instanceof BaseError) {
+            return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
+        }
+        return message;
+    }
     public async handleKernelError(
         err: Error,
         purpose: 'start' | 'restart' | 'interrupt' | 'execution',
@@ -209,41 +261,6 @@ export function getKernelNotInstalledErrorMessage(notebookMetadata?: nbformat.IN
         const kernelName = notebookMetadata?.kernelspec?.display_name || notebookMetadata?.kernelspec?.name || language;
         return DataScience.kernelNotInstalled().format(kernelName);
     }
-}
-
-export function getErrorMessageForDisplayInCell(error: Error) {
-    let message: string = error.message;
-    error = WrappedError.unwrap(error);
-    if (error instanceof JupyterKernelDependencyError) {
-        message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
-    } else if (error instanceof JupyterInstallError) {
-        message = getJupyterMissingErrorMessageForCell(error) || message;
-    } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
-        const failureInfo = analyzeKernelErrors(
-            workspace.workspaceFolders || [],
-            error,
-            getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
-            error.kernelConnectionMetadata.interpreter?.sysPrefix
-        );
-        if (failureInfo) {
-            // Special case for ipykernel module missing.
-            if (
-                failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
-                ['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
-            ) {
-                return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
-            }
-            const messageParts = [failureInfo.message];
-            if (failureInfo.moreInfoLink) {
-                messageParts.push(Common.clickHereForMoreInfoWithHtml().format(failureInfo.moreInfoLink));
-            }
-            return messageParts.join('\n');
-        }
-        return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
-    } else if (error instanceof BaseError) {
-        return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
-    }
-    return message;
 }
 
 function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnectionMetadata) {

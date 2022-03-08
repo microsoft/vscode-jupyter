@@ -48,7 +48,6 @@ import { ConsoleForegroundColors, traceDecorators } from '../../logging/_global'
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
-import { getErrorMessageForDisplayInCell } from '../errors/errorHandler';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { CellExecutionCreator } from '../jupyter/kernels/cellExecutionCreator';
@@ -75,7 +74,7 @@ import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
 } from '../telemetry/telemetry';
-import { KernelSocketInformation } from '../types';
+import { IDataScienceErrorHandler, KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
@@ -387,8 +386,14 @@ export class VSCodeNotebookController implements Disposable {
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
+            const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(cell, execution, getErrorMessageForDisplayInCell(ex));
+            displayErrorsInCell(
+                cell,
+                execution,
+                await errorHandler.getErrorMessageForDisplayInCell(ex, 'start', doc.uri)
+            );
             return NotebookCellExecutionState.Idle;
         }
 
