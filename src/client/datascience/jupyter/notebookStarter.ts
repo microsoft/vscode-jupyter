@@ -14,7 +14,6 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import * as types from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -27,6 +26,7 @@ import { JupyterInstallError } from '../errors/jupyterInstallError';
 import { disposeAllDisposables } from '../../common/helpers';
 import { JupyterConnectError } from '../errors/jupyterConnectError';
 import { KernelProgressReporter } from '../progress/kernelProgressReporter';
+import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 
 /**
  * Responsible for starting a notebook.
@@ -38,7 +38,7 @@ import { KernelProgressReporter } from '../progress/kernelProgressReporter';
  */
 @injectable()
 export class NotebookStarter implements Disposable {
-    private readonly disposables: types.IDisposable[] = [];
+    private readonly disposables: IDisposable[] = [];
     private static _usedPorts = new Set<number>();
     public static get usedPorts() {
         return Array.from(NotebookStarter._usedPorts);
@@ -48,9 +48,9 @@ export class NotebookStarter implements Disposable {
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(types.IOutputChannel)
+        @inject(IOutputChannel)
         @named(JUPYTER_OUTPUT_CHANNEL)
-        private readonly jupyterOutputChannel: types.IOutputChannel
+        private readonly jupyterOutputChannel: IOutputChannel
     ) {}
     public dispose() {
         while (this.disposables.length > 0) {
@@ -65,7 +65,7 @@ export class NotebookStarter implements Disposable {
         }
     }
     public async start(
-        resource: types.Resource,
+        resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: string,
@@ -75,7 +75,7 @@ export class NotebookStarter implements Disposable {
         // Now actually launch it
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
-        const disposables: types.IDisposable[] = [];
+        const disposables: IDisposable[] = [];
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
