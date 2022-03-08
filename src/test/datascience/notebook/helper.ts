@@ -559,6 +559,17 @@ export async function waitForExecutionCompletedSuccessfully(
         waitForCellExecutionToComplete(cell)
     ]);
 }
+
+export async function waitForCellHavingOutput(cell: NotebookCell) {
+    return waitForCondition(
+        async () => {
+            const cellOutputs = getCellOutputs(cell);
+            return cellOutputs.length > 0 && !cellOutputs[0].includes('No cell outputs');
+        },
+        defaultNotebookTestTimeout,
+        'No output'
+    );
+}
 /**
  * When a cell is running (in progress), the start time will be > 0.
  */

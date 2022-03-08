@@ -40,7 +40,8 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout,
     waitForCellExecutionState,
-    getCellOutputs
+    getCellOutputs,
+    waitForCellHavingOutput
 } from './helper';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
@@ -395,7 +396,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell4),
-            waitForCondition(async () => getCellOutputs(cell4).length > 0, defaultNotebookTestTimeout, 'No output')
+            waitForCellHavingOutput(cell4)
         ]);
 
         const pathValue = getCellOutputs(cell3).split(path.delimiter);
@@ -422,14 +423,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell3),
-            waitForCondition(
-                async () => {
-                    const cellOutputs = getCellOutputs(cell3);
-                    return cellOutputs.length > 0 && !cellOutputs[0].includes('No cell outputs');
-                },
-                defaultNotebookTestTimeout,
-                'No output'
-            )
+            waitForCellHavingOutput(cell3)
         ]);
 
         // On windows `!where python`, prints multiple items in the output (all executables found).
