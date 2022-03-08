@@ -224,7 +224,7 @@ export function getErrorMessageForDisplayInCell(error: Error) {
         if (failureInfo) {
             const messageParts = [failureInfo.message];
             if (failureInfo.moreInfoLink) {
-                messageParts.push(`Click <a href='${failureInfo.moreInfoLink}'>here for more info.</a>`);
+                messageParts.push(`Click <a href='${failureInfo.moreInfoLink}'>here</a> for more info.`);
             }
             return messageParts.join('\n');
         }
