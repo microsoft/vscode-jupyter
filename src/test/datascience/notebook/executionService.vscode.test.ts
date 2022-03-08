@@ -422,7 +422,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell3),
-            waitForCondition(async () => getCellOutputs(cell3).length > 0, defaultNotebookTestTimeout, 'No output')
+            waitForCondition(
+                async () => {
+                    const cellOutputs = getCellOutputs(cell3);
+                    return cellOutputs.length > 0 && !cellOutputs[0].includes('No cell outputs');
+                },
+                defaultNotebookTestTimeout,
+                'No output'
+            )
         ]);
 
         // On windows `!where python`, prints multiple items in the output (all executables found).
