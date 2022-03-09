@@ -6,6 +6,7 @@ import { noop } from 'lodash';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
 import { traceInfo } from '../../client/common/logger';
+import { arePathsSame } from '../../client/common/platform/fileUtils';
 import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -15,7 +16,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowProvider
 } from '../../client/datascience/types';
-import { arePathsSame, waitForCondition } from '../common';
+import { waitForCondition } from '../common';
 import {
     createTemporaryFile,
     defaultNotebookTestTimeout,

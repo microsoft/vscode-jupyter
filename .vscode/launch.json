@@ -172,7 +172,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "./out/test/**/*.unit.test.js",
+                "./out/**/*.unit.test.js",
                 "--require=out/test/unittests.js",
                 "--ui=tdd",
                 "--recursive",

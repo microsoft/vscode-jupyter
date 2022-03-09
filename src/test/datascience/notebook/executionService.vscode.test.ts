@@ -13,7 +13,7 @@ import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, N
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposable, Product } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
@@ -40,9 +40,9 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout,
     waitForCellExecutionState,
-    getCellOutputs
+    getCellOutputs,
+    waitForCellHavingOutput
 } from './helper';
-import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
 import {
@@ -51,6 +51,8 @@ import {
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { ProductNames } from '../../../kernels/installer/productNames';
+import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 
@@ -394,7 +396,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell4),
-            waitForCondition(async () => getCellOutputs(cell4).length > 0, defaultNotebookTestTimeout, 'No output')
+            waitForCellHavingOutput(cell4)
         ]);
 
         const pathValue = getCellOutputs(cell3).split(path.delimiter);
@@ -421,7 +423,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell3),
-            waitForCondition(async () => getCellOutputs(cell3).length > 0, defaultNotebookTestTimeout, 'No output')
+            waitForCellHavingOutput(cell3)
         ]);
 
         // On windows `!where python`, prints multiple items in the output (all executables found).

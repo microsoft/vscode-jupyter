@@ -9,14 +9,14 @@ import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { IInstaller, Product } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller';
+import { IInstaller, Product } from '../../../kernels/installer/types';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;

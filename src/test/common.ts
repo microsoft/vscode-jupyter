@@ -468,14 +468,6 @@ export function createEventHandler<T, K extends keyof T>(
     return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
 }
 
-export function arePathsSame(path1: string, path2: string) {
-    if (getOSType() === OSType.Windows) {
-        return path1.toLowerCase() === path2.toLowerCase();
-    } else {
-        return path1 === path2;
-    }
-}
-
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).

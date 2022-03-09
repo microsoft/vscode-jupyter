@@ -18,15 +18,13 @@ import {
     LanguageServerProvider,
     PythonApiProvider,
     PythonDebuggerPathProvider,
-    PythonExtensionChecker,
-    PythonInstaller
+    PythonExtensionChecker
 } from './pythonApi';
 import {
     ILanguageServerProvider,
     IPythonApiProvider,
     IPythonDebuggerPathProvider,
-    IPythonExtensionChecker,
-    IPythonInstaller
+    IPythonExtensionChecker
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -44,7 +42,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IEnvironmentActivationService,
         EnvironmentActivationService
     );
-    serviceManager.addSingleton<IPythonInstaller>(IPythonInstaller, PythonInstaller);
     serviceManager.addSingleton<JupyterKernelServiceFactory>(JupyterKernelServiceFactory, JupyterKernelServiceFactory);
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

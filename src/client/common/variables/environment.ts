@@ -41,8 +41,20 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
                 // upon the source so check all cases.
                 return;
             }
-            target[setting] = source[setting];
+            const targetSetting = Object.keys(target).find((k) => k.toLowerCase() === lowerCase) || setting;
+            target[targetSetting] = source[setting];
         });
+    }
+
+    public mergePaths(source: EnvironmentVariables, target: EnvironmentVariables) {
+        // Figure out path key for both
+        const sourcePathKey = Object.keys(source).find((k) => k.toLowerCase() === 'path');
+        const targetPathKey = Object.keys(target).find((k) => k.toLowerCase() === 'path') || sourcePathKey;
+
+        // Update the path on the target to match the source
+        if (sourcePathKey && targetPathKey) {
+            target[targetPathKey] = source[sourcePathKey];
+        }
     }
 
     public appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {

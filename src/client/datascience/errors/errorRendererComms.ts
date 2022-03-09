@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import { commands, NotebookRange, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
-import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { arePathsSame } from '../../common/platform/fileUtils';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';

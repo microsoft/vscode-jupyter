@@ -69,7 +69,8 @@ import { INotebookControllerManager } from '../../notebook/types';
 import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { findNotebookEditor, selectKernel } from './kernelSelector';
 import { createDeferred } from '../../../common/utils/async';
-import { clearInstalledIntoInterpreterMemento } from '../../../common/installer/productInstaller';
+import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
+import { Product } from '../../../../kernels/installer/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1931,7 +1932,11 @@ export async function handleKernelError(
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
-        clearInstalledIntoInterpreterMemento(memento, undefined, controller.connection.interpreter.path).ignoreErrors();
+        clearInstalledIntoInterpreterMemento(
+            memento,
+            Product.ipykernel,
+            controller.connection.interpreter.path
+        ).ignoreErrors();
     }
 
     const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);

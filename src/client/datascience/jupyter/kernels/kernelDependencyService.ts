@@ -4,26 +4,19 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import {
     isModulePresentInEnvironmentCache,
     trackPackageInstalledIntoInterpreter,
     isModulePresentInEnvironment
-} from '../../../common/installer/productInstaller';
-import { ProductNames } from '../../../common/installer/productNames';
+} from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
+import { IInstaller, InstallerResponse, Product } from '../../../../kernels/installer/types';
+import { IApplicationShell } from '../../../common/application/types';
+import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
 import { getDisplayPath } from '../../../common/platform/fs-paths';
-import {
-    GLOBAL_MEMENTO,
-    IInstaller,
-    IMemento,
-    InstallerResponse,
-    IsCodeSpace,
-    Product,
-    Resource
-} from '../../../common/types';
+import { GLOBAL_MEMENTO, IMemento, IsCodeSpace, Resource } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { ignoreLogging, logValue, TraceOptions } from '../../../logging/trace';
@@ -89,12 +82,13 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
+        const cancelTokenSource = new CancellationTokenSource();
         let promise = this.installPromises.get(kernelConnection.interpreter.path);
         if (!promise) {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, token)
+                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, cancelTokenSource)
             );
             this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
@@ -104,7 +98,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         try {
             // This can throw an exception (if say it fails to install) or it can cancel
             dependencyResponse = await promise;
-            if (token?.isCancellationRequested) {
+            if (cancelTokenSource.token?.isCancellationRequested || token.isCancellationRequested) {
                 dependencyResponse = KernelInterpreterDependencyResponse.cancel;
             }
         } catch (ex) {
@@ -166,20 +160,19 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        token?: CancellationToken
+        cancelTokenSource: CancellationTokenSource
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
         if (ui.disableUI) {
             return KernelInterpreterDependencyResponse.uiHidden;
         }
-        const installerToken = wrapCancellationTokens(token);
         const [isModulePresent, isPipAvailableForNonConda] = await Promise.all([
             isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter),
             interpreter.envType === EnvironmentType.Conda
                 ? undefined
                 : await this.installer.isInstalled(Product.pip, interpreter)
         ]);
-        if (installerToken.isCancellationRequested) {
+        if (cancelTokenSource.token.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const messageFormat = isModulePresent
@@ -203,7 +196,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: undefined,
-            token
+            token: cancelTokenSource.token
         });
         const selectKernel = DataScience.selectKernel();
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
@@ -225,7 +218,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                       this.appShell.showInformationMessage(message, { modal: true }, ...options),
                       promptCancellationPromise
                   ]);
-            if (installerToken.isCancellationRequested) {
+            if (cancelTokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
@@ -255,14 +248,14 @@ export class KernelDependencyService implements IKernelDependencyService {
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
                     defaultValue: InstallerResponse.Ignore,
-                    token
+                    token: cancelTokenSource.token
                 });
                 // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                 const response = await Promise.race([
                     this.installer.install(
                         Product.ipykernel,
                         interpreter,
-                        installerToken,
+                        cancelTokenSource,
                         isModulePresent === true,
                         isPipAvailableForNonConda === false
                     ),

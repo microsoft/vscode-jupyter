@@ -13,7 +13,6 @@ import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './common/constants';
-import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -41,6 +40,7 @@ import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { registerLoggerTypes } from './logging/serviceRegistry';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
+import { registerInstallerTypes } from '../kernels/installer/serviceRegistry';
 
 export async function activateComponents(
     context: IExtensionContext,
@@ -129,7 +129,7 @@ async function activateLegacy(
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
-    installerRegisterTypes(serviceManager);
+    registerInstallerTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

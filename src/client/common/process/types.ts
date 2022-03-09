@@ -36,7 +36,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
+export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean; token?: CancellationToken };
 
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;

@@ -36,8 +36,7 @@ import {
     IConfigurationService,
     IExtensionContext,
     IOutputChannel,
-    IPathUtils,
-    Product
+    IPathUtils
 } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';
@@ -62,6 +61,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
+import { Product } from '../../kernels/installer/types';
 import { getOSType, OSType } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';

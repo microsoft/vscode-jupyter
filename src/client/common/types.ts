@@ -4,22 +4,13 @@
 
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
-import {
-    CancellationToken,
-    ConfigurationTarget,
-    Disposable,
-    Event,
-    Extension,
-    ExtensionContext,
-    OutputChannel,
-    Uri
-} from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
-import { InterpreterUri } from './installer/types';
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsPreRelease = Symbol('IsPreRelease');
@@ -47,54 +38,6 @@ export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 export interface IPersistentStateFactory {
     createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
     createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
-}
-
-export type ExecutionInfo = {
-    execPath?: string;
-    moduleName?: string;
-    args: string[];
-    product?: Product;
-};
-
-export enum InstallerResponse {
-    Installed,
-    Disabled,
-    Ignore
-}
-
-export enum Product {
-    jupyter = 18,
-    ipykernel = 19,
-    notebook = 20,
-    kernelspec = 21,
-    nbconvert = 22,
-    pandas = 23,
-    pip = 27
-}
-
-export enum ProductInstallStatus {
-    Installed,
-    NotInstalled,
-    NeedsUpgrade
-}
-
-export enum ModuleNamePurpose {
-    install = 1,
-    run = 2
-}
-
-export const IInstaller = Symbol('IInstaller');
-
-export interface IInstaller {
-    install(
-        product: Product,
-        resource: InterpreterUri,
-        cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean,
-        installPipIfRequired?: boolean
-    ): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
-    translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
 // eslint-disable-next-line
@@ -181,6 +124,7 @@ export interface IJupyterSettings {
     readonly pylanceHandlesNotebooks?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
+    readonly poetryPath: string;
 }
 
 export interface IVariableTooltipFields {
@@ -420,3 +364,5 @@ export interface IExperimentService {
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
     logExperiments(): void;
 }
+
+export type InterpreterUri = Resource | PythonEnvironment;

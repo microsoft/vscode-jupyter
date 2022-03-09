@@ -3,8 +3,7 @@
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
-import { InterpreterUri } from '../installer/types';
-import { IAsyncDisposable, IDisposable, Resource } from '../types';
+import { IAsyncDisposable, IDisposable, InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
 
