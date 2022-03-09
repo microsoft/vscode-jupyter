@@ -34,7 +34,7 @@ import {
     KernelFailureReason
 } from '../../common/errors/errorUtils';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IBrowserService, IConfigurationService, Product, Resource } from '../../common/types';
+import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterConnectError } from './jupyterConnectError';
@@ -44,6 +44,7 @@ import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { translateProductToModule } from '../../../kernels/installer/moduleInstaller';
 import { ProductNames } from '../../../kernels/installer/productNames';
+import { Product } from '../../../kernels/installer/types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
