@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { IDisposable } from '@fluentui/react';
-import { WrappedError } from '@jupyter-widgets/base';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
@@ -10,6 +9,7 @@ import { noop } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { WrappedError } from '../../client/common/errors/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../client/common/logger';
 import { Resource } from '../../client/common/types';
