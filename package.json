@@ -55,7 +55,6 @@
         "onCommand:jupyter.exportToHTML",
         "onCommand:jupyter.exportToPDF",
         "onCommand:jupyter.notebookeditor.export",
-        "onCommand:jupyter.createnewnotebook",
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
@@ -89,15 +88,15 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "jupyter.createNewNotebook",
+                        "id": "ipynb.newUntitledIpynb",
                         "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
-                            "onCommand:jupyter.createnewnotebook",
+                            "onCommand:ipynb.newUntitledIpynb",
                             "onCommand:jupyter.createnewinteractive",
                             "onCommand:workbench.action.files.openFolder",
                             "onCommand:workbench.action.files.openFileFolder"
@@ -703,12 +702,6 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.createnewnotebook",
-                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
-                "shortTitle": "%jupyter.command.jupyter.createnewnotebook.shortTitle%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.scrolltocell",
                 "title": "%jupyter.command.jupyter.scrolltocell.title%",
                 "category": "Jupyter"
@@ -1035,11 +1028,6 @@
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
-                }
-            ],
-            "file/newFile": [
-                {
-                    "command": "jupyter.createnewnotebook"
                 }
             ],
             "commandPalette": [
@@ -1384,11 +1372,6 @@
                     "title": "%jupyter.command.jupyter.addcellbelow.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
-                },
-                {
-                    "command": "jupyter.createnewnotebook",
-                    "title": "%jupyter.command.jupyter.createnewnotebook.title%",
-                    "category": "Jupyter"
                 },
                 {
                     "command": "jupyter.runtoline",

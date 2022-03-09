@@ -52,7 +52,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
-    [DSCommands.CreateNewNotebook]: [];
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
