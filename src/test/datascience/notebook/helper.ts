@@ -39,7 +39,7 @@ import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../../client/datascience../../kernels/types';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import {
     getTextOutputValue,

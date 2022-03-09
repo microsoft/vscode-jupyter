@@ -9,7 +9,7 @@ import { Observable } from 'rxjs/Observable';
 import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/errors/jupyterWaitForIdleError';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../client/datascience../../kernels/types';
 import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';

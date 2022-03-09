@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { CancellationError } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -15,7 +16,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { Settings } from '../constants';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterInstallError } from '../errors/jupyterInstallError';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import {
     GetServerOptions,

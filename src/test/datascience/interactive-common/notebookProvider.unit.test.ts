@@ -10,7 +10,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { IJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../client/datascience../../kernels/types';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {

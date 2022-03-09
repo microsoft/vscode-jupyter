@@ -29,7 +29,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,

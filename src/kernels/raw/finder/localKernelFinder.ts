@@ -17,8 +17,8 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterHashInMetadata,
     getLanguageInNotebookMetadata
-} from '../jupyter/kernels/helpers';
-import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
+} from '../../../kernels/helpers';
+import { LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { ILocalKernelFinder } from './types';
 import { getResourceType } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';

@@ -26,7 +26,7 @@ import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { ILocalResourceUriConverter } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';

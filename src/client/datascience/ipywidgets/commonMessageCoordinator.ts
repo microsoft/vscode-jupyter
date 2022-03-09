@@ -34,7 +34,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher } from './types';

@@ -11,7 +11,7 @@ import { traceInfo } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 
 @injectable()
 export class NotebookDisposeService implements IExtensionSingleActivationService {

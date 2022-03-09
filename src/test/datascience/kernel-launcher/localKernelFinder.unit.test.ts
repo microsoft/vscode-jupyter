@@ -21,7 +21,7 @@ import {
     getInterpreterKernelSpecName,
     getKernelId,
     getKernelRegistrationInfo
-} from '../../../client/datascience/jupyter/kernels/helpers';
+} from '../../../client/datascience../../kernels/helpers';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -41,7 +41,7 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata
-} from '../../../client/datascience/jupyter/kernels/types';
+} from '../../../client/datascience../../kernels/types';
 import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/localKernelSpecFinderBase';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { arePathsSame } from '../../../client/common/platform/fileUtils';

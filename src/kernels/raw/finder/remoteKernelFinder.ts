@@ -11,12 +11,12 @@ import { IDisposableRegistry, Resource } from '../../common/types';
 import { traceDecorators } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
+import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
-} from '../jupyter/kernels/types';
+} from '../../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
     IJupyterKernelSpec,

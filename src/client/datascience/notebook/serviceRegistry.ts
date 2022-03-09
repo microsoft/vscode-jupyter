@@ -6,8 +6,8 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
-import { KernelProvider } from '../jupyter/kernels/kernelProvider';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { KernelProvider } from '../../../kernels/kernelProvider';
+import { IKernelProvider } from '../../../kernels/types';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -21,7 +21,7 @@ import { INotebookControllerManager, INotebookLanguageClientProvider } from './t
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
-import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../../../kernels/cellDisplayIdTracker';
 import { IntellisenseProvider } from './intellisense/intellisenseProvider';
 import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';

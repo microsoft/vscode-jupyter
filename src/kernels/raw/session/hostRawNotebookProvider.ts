@@ -21,8 +21,8 @@ import { noop } from '../../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { isPythonKernelConnection } from '../../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { isPythonKernelConnection } from '..//../../kernels/helpers';
+import { KernelConnectionMetadata } from '..//../../kernels/types';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import {
     ConnectNotebookProviderOptions,

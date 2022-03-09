@@ -24,7 +24,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { ILocalResourceUriConverter } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider';

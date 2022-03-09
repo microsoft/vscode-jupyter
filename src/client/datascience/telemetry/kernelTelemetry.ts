@@ -5,7 +5,7 @@ import { Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { Telemetry } from '../constants';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
 
 export function sendKernelListTelemetry(

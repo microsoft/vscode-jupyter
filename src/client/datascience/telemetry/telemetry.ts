@@ -5,7 +5,7 @@
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { getOSType } from '../../common/utils/platform';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { Resource } from '../../common/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../../telemetry';
 import { StopWatch } from '../../common/utils/stopWatch';

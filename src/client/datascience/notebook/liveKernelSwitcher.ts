@@ -7,8 +7,8 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { switchKernel } from '../jupyter/kernels/kernelSelector';
-import { IKernelProvider, LiveKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { switchKernel } from '../../../kernels/kernelSelector';
+import { IKernelProvider, LiveKernelConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from './types';
 
 const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';

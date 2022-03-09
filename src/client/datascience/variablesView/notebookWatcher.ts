@@ -16,7 +16,7 @@ import '../../common/extensions';
 import { IDisposableRegistry } from '../../common/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../notebook/constants';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { IInteractiveWindowProvider } from '../types';

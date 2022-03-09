@@ -11,7 +11,7 @@ import { commands, NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../../client/datascience../../kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';

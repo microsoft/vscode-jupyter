@@ -1,28 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { IDisposable } from '@fluentui/react';
+import { WrappedError } from '@jupyter-widgets/base';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
+import { noop } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
-import { WrappedError } from '../common/errors/types';
-import { disposeAllDisposables } from '../common/helpers';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../common/logger';
-import { IDisposable, Resource } from '../common/types';
-import { createDeferred, sleep, waitForPromise } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { sendTelemetryEvent } from '../telemetry';
-import { getResourceType } from './common';
-import { Telemetry } from './constants';
-import { JupyterInvalidKernelError } from './errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from './errors/jupyterWaitForIdleError';
-import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
-import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
-import { SessionDisposedError } from './errors/sessionDisposedError';
-import { KernelProgressReporter } from './progress/kernelProgressReporter';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../client/common/logger';
+import { Resource } from '../../client/common/types';
+import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
+import * as localize from '../../client/common/utils/localize';
+import { getResourceType } from '../../client/datascience/common';
+import { JupyterInvalidKernelError } from '../../client/datascience/errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../client/datascience/errors/jupyterWaitForIdleError';
+import { KernelInterruptTimeoutError } from '../../client/datascience/errors/kernelInterruptTimeoutError';
+import { SessionDisposedError } from '../../client/datascience/errors/sessionDisposedError';
+import { KernelProgressReporter } from '../../client/datascience/progress/kernelProgressReporter';
+import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { suppressShutdownErrors } from '../raw/session/rawKernel';
+import { KernelConnectionMetadata } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 
 /**

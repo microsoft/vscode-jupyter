@@ -10,7 +10,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+} from '../../../kernels/types';
 import { INotebookProviderConnection } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');

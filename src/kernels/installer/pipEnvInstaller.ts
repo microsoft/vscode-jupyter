@@ -10,7 +10,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv';
-import { getInterpreterWorkspaceFolder } from '../../client/datascience/jupyter/kernels/helpers';
+import { getInterpreterWorkspaceFolder } from '../../client/datascience../../kernels/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
 
 export const pipenvName = 'pipenv';

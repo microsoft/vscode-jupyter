@@ -11,7 +11,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../../client/datascience../../kernels/types';
 import {
     getTextOutputValue,
     hasErrorOutput,

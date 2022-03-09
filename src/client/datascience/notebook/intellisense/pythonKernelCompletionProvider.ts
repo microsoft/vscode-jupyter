@@ -24,7 +24,7 @@ import { isNotebookCell } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { Settings } from '../../constants';
 import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
-import { IKernelProvider } from '../../jupyter/kernels/types';
+import { IKernelProvider } from '..//../../kernels/types';
 import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 import { INotebookLanguageClientProvider } from '../types';

@@ -36,7 +36,7 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../../kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
@@ -53,7 +53,7 @@ import { InteractiveCellResultError } from '../errors/interactiveCellResultError
 import { DataScience } from '../../common/utils/localize';
 import { SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import { createDeferred } from '../../common/utils/async';
-import { connectToKernel } from '../jupyter/kernels/helpers';
+import { connectToKernel } from '../../../kernels/helpers';
 import { IServiceContainer } from '../../ioc/types';
 
 type InteractiveCellMetadata = {

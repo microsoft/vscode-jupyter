@@ -24,8 +24,8 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
-import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
+import { JupyterKernelService } from '../../../client/datascience../../kernels/jupyterKernelService';
+import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience../../kernels/types';
 import { IJupyterConnection, ISessionWithSocket } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 

@@ -31,10 +31,10 @@ import {
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../../client/datascience../../kernels/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../core';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience../../kernels/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';

@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 
 import { IServiceContainer } from '../../ioc/types';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from '../types';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 
 @injectable()
 export class JupyterVariableDataProviderFactory implements IJupyterVariableDataProviderFactory {

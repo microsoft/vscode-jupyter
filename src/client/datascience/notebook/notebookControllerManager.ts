@@ -30,14 +30,14 @@ import {
     getKernelId,
     isLocalLaunch,
     isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
+} from '../../../kernels/helpers';
 import {
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+} from '../../../kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage, INotebookProvider } from '../types';

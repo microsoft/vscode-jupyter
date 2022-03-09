@@ -38,8 +38,8 @@ import { JupyterInterpreterDependencyService } from '../../client/datascience/ju
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
-import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { getKernelId } from '../../client/datascience../../kernels/helpers';
+import { LocalKernelConnectionMetadata } from '../../client/datascience../../kernels/types';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';

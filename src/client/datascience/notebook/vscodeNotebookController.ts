@@ -53,7 +53,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
-import { CellExecutionCreator } from '../jupyter/kernels/cellExecutionCreator';
+import { CellExecutionCreator } from '../../../kernels/cellExecutionCreator';
 import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
@@ -62,7 +62,7 @@ import {
     getKernelRegistrationInfo,
     connectToKernel,
     getDisplayNameOrNameOfKernelConnection
-} from '../jupyter/kernels/helpers';
+} from '../../../kernels/helpers';
 import {
     IKernel,
     IKernelProvider,
@@ -71,7 +71,7 @@ import {
     LiveKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+} from '../../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,

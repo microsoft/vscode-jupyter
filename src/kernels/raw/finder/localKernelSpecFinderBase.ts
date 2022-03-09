@@ -16,9 +16,9 @@ import { testOnlyMethod } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { ignoreLogging } from '../../logging/trace';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../jupyter/kernels/helpers';
-import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
+import { JupyterKernelSpec } from '../../../kernels/jupyterKernelSpec';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IJupyterKernelSpec } from '../types';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };

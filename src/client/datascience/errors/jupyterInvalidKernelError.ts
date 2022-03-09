@@ -5,8 +5,8 @@ import { BaseKernelError } from '../../common/errors/types';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export class JupyterInvalidKernelError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

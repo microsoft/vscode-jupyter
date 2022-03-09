@@ -16,7 +16,7 @@ import { deserializeDataViews, serializeDataViews } from '../../common/utils/ser
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';

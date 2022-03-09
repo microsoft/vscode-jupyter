@@ -8,7 +8,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { IConfigurationService } from '../../common/types';
 import { Settings, Telemetry } from '../constants';
 import { DisplayOptions } from '../displayOptions';
-import { isLocalConnection } from '../jupyter/kernels/types';
+import { isLocalConnection } from '../../../kernels/types';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     ConnectNotebookProviderOptions,

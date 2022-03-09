@@ -7,9 +7,9 @@ import { assert } from 'chai';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { JupyterKernelService } from '../../../../client/datascience/jupyter/kernels/jupyterKernelService';
-import { LocalKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
+import { KernelDependencyService } from '../../../../client/datascience../../kernels/kernelDependencyService';
+import { JupyterKernelService } from '../../../../client/datascience../../kernels/jupyterKernelService';
+import { LocalKernelConnectionMetadata } from '../../../../client/datascience../../kernels/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IKernelDependencyService } from '../../../../client/datascience/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -259,7 +259,7 @@ suite('DataScience - JupyterKernelService', () => {
                 },
                 env: {},
                 specFile:
-                    '/usr/share/jupyter/kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json'
+                    '/usr/share../../kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json'
             },
             interpreter: {
                 displayName: 'Conda base environment',
@@ -272,7 +272,7 @@ suite('DataScience - JupyterKernelService', () => {
         {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share/jupyter/kernels/sampleEnv/kernel.json',
+                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnv/kernel.json',
                 name: 'sampleEnv',
                 argv: ['/usr/don/home/envs/sample/bin/python'],
                 language: 'python',
@@ -301,7 +301,7 @@ suite('DataScience - JupyterKernelService', () => {
         {
             kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share/jupyter/kernels/sampleEnvJulia/kernel.json',
+                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
                 name: 'sampleEnvJulia',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',
@@ -330,7 +330,7 @@ suite('DataScience - JupyterKernelService', () => {
         {
             kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share/jupyter/kernels/sampleEnvJulia/kernel.json',
+                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
                 name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',

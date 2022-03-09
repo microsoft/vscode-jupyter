@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience../../kernels/helpers';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 

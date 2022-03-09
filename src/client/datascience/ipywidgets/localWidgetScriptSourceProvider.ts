@@ -16,8 +16,8 @@ import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelPathFromKernelConnection,
     isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
-import { IKernel } from '../jupyter/kernels/types';
+} from '../../../kernels/helpers';
+import { IKernel } from '../../../kernels/types';
 import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 

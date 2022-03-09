@@ -13,7 +13,7 @@ import {
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import {
     ICell,

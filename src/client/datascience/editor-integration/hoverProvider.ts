@@ -17,7 +17,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { IInteractiveWindowProvider, IJupyterVariables } from '../types';
 @injectable()

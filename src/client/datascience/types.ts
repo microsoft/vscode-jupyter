@@ -36,7 +36,7 @@ import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
-import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
+import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

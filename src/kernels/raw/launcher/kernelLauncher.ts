@@ -21,7 +21,7 @@ import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
+} from '../../../kernels/types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';

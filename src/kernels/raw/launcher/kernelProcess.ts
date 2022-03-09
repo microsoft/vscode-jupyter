@@ -32,8 +32,8 @@ import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
     isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+} from '../../../kernels/helpers';
+import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IKernelConnection, IKernelProcess } from './types';

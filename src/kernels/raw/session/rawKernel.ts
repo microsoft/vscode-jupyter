@@ -9,7 +9,7 @@ import { isTestExecution } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/misc';
-import { getNameOfKernelConnection } from '../jupyter/kernels/helpers';
+import { getNameOfKernelConnection } from '../../../kernels/helpers';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';

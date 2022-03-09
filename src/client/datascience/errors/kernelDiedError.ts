@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { WrappedKernelError } from '../../common/errors/types';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export class KernelDiedError extends WrappedKernelError {
     constructor(

@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { KernelConnectionTimeoutError } from '../errors/kernelConnectionTimeoutError';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';

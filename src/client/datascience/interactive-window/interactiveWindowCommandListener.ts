@@ -46,7 +46,7 @@ import { getActiveInteractiveWindow } from './helpers';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { INotebookControllerManager } from '../notebook/types';
 import { JupyterNotebookView } from '../notebook/constants';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 @injectable()
 export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
