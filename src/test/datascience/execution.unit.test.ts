@@ -31,12 +31,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IOutputChannel,
-    IPathUtils
-} from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, IPathUtils } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
