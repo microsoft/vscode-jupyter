@@ -276,7 +276,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
         await waitForCondition(
-            async () => cell.document.getText().includes('Canceled') && assertVSCCellIsNotRunning(cell),
+            async () => assertVSCCellIsNotRunning(cell),
             defaultNotebookTestTimeout,
             'No errors in cell'
         );
