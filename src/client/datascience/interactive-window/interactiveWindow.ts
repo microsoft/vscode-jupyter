@@ -747,7 +747,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // since the notebook cell we're going to add is by definition not visible
         const shouldScroll =
             editor?.visibleRanges.find((r) => {
-                return r.end === editor.document.cellCount - 1;
+                return r.end === editor.document.cellCount;
             }) != undefined ||
             this.pendingNotebookScrolls.find((r) => r.end == editor.document.cellCount - 1) != undefined;
 
