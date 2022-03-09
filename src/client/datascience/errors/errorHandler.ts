@@ -41,9 +41,9 @@ import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import { ProductNames } from '../../common/installer/productNames';
-import { translateProductToModule } from '../../common/installer/productInstaller';
 import { EnvironmentType } from '../../pythonEnvironments/info';
+import * as prodNames from '../../common/installer/productNames';
+import * as productInstaller from '../../common/installer/productInstaller';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -263,8 +263,8 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         return;
     }
     const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
-    const ipyKernelName = ProductNames.get(Product.ipykernel)!;
-    const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
+    const ipyKernelName = prodNames.ProductNames.get(Product.ipykernel)!;
+    const ipyKernelModuleName = productInstaller.translateProductToModule(Product.ipykernel);
 
     let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
@@ -282,14 +282,14 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
         displayNameOfKernel,
-        ProductNames.get(Product.ipykernel)!
+        prodNames.ProductNames.get(Product.ipykernel)!
     );
     const installationInstructions = DataScience.installPackageInstructions().format(ipyKernelName, installerCommand);
     return message + '\n' + installationInstructions;
 }
 function getJupyterMissingErrorMessageForCell(err: JupyterInstallError) {
-    const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and()} ${ProductNames.get(Product.notebook)}`;
-    const moduleNames = [Product.jupyter, Product.notebook].map(translateProductToModule).join(' ');
+    const productNames = `${prodNames.ProductNames.get(Product.jupyter)} ${Common.and()} ${prodNames.ProductNames.get(Product.notebook)}`;
+    const moduleNames = [Product.jupyter, Product.notebook].map(productInstaller.translateProductToModule).join(' ');
 
     const installerCommand = `python -m pip install ${moduleNames} -U\nor\nconda install ${moduleNames} -U`;
     const installationInstructions = DataScience.installPackageInstructions().format(productNames, installerCommand);
