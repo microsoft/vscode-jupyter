@@ -23,7 +23,7 @@ import {
 import { getOSType, OSType } from '../common';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 
 suite('DataScience Error Handler Unit Tests', () => {
@@ -34,6 +34,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let browser: IBrowserService;
     let configuration: IConfigurationService;
     let jupyterInterpreterService: JupyterInterpreterService;
+    let kernelDependencyInstaller: IKernelDependencyService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         path: 'Some Path',
@@ -49,7 +50,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
-        const kernelDependencyInstaller = mock<IKernelDependencyService>();
+        kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
@@ -500,6 +501,102 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             );
             verify(dependencyManager.installMissingDependencies(anything())).once();
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
+        });
+        test('Verify error message for conda install of ipykernel', async () => {
+            when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(
+                false
+            );
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError('Kaboom', 'hello word does not have attribute named abc', undefined, {
+                    ...kernelConnection,
+                    interpreter: {
+                        ...kernelConnection.interpreter!,
+                        envType: EnvironmentType.Conda,
+                        envName: 'condaEnv1'
+                    }
+                }),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
+                ].join('\n')
+            );
+        });
+        test('Verify error message for pip install of ipykernel', async () => {
+            when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(
+                false
+            );
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    `Command: '"Hello There" -m pip install ipykernel -U --force-reinstall'`
+                ].join('\n')
+            );
+        });
+        test('Ensure we provide some context to startup failures', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    'Failed to start the Kernel. ',
+                    'hello word does not have attribute named abc. ',
+                    'View Jupyter [log](command:jupyter.viewOutput) for further details.'
+                ].join('\n')
+            );
+        });
+        test('Ensure we provide some context to re-start failures', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'restart'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    'Failed to restart the Kernel. ',
+                    'hello word does not have attribute named abc. ',
+                    'View Jupyter [log](command:jupyter.viewOutput) for further details.'
+                ].join('\n')
+            );
         });
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')
