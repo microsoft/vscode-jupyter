@@ -107,6 +107,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
         } else if (error instanceof JupyterInstallError) {
             message = getJupyterMissingErrorMessageForCell(error) || message;
+        } else if (error instanceof VscCancellationError || error instanceof CancellationError) {
+            // Don't show the message for cancellation errors
+            traceWarning(`Cancelled by user`, error);
+            return '';
         } else if (
             error instanceof KernelDiedError &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
@@ -138,9 +142,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 }
                 return messageParts.join('\n');
             }
-            return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
+            return getCombinedErrorMessage(
+                getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
+            );
         } else if (error instanceof BaseError) {
-            return getCombinedErrorMessage(getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr);
+            return getCombinedErrorMessage(
+                getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
+            );
         }
         return message;
     }
@@ -212,7 +220,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             if (failureInfo) {
                 void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
             } else if (err instanceof BaseError) {
-                const message = getCombinedErrorMessage(getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr);
+                const message = getCombinedErrorMessage(
+                    getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr || err.message
+                );
                 void this.showMessageWithMoreInfo(message);
             } else {
                 void this.showMessageWithMoreInfo(err.message);

@@ -179,6 +179,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     cellExecution,
                     await this.errorHandler.getErrorMessageForDisplayInCell(ex)
                 );
+                cellExecution.end(false);
             } else {
                 void this.applicationShell.showErrorMessage(ex.toString());
             }

@@ -67,6 +67,7 @@ import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnectError } from '../../errors/jupyterConnectError';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { disposeAllDisposables } from '../../../common/helpers';
+import { CancellationError } from '../../../common/cancellation';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -391,6 +392,9 @@ export class Kernel implements IKernel {
                 kernelConnection: this.kernelConnectionMetadata,
                 token: this.startCancellation.token
             });
+            if (this.startCancellation.token.isCancellationRequested) {
+                throw new CancellationError();
+            }
             if (!notebook) {
                 // This is an unlikely case.
                 // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
@@ -408,6 +412,9 @@ export class Kernel implements IKernel {
             return notebook;
         } catch (ex) {
             traceError(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+            if (this.startCancellation.token.isCancellationRequested) {
+                throw new CancellationError();
+            }
             if (ex instanceof JupyterConnectError) {
                 throw ex;
             }

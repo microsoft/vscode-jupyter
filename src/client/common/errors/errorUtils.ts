@@ -593,5 +593,4 @@ export function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellE
         })
     ]);
     void execution.appendOutput(output);
-    execution.end(false);
 }

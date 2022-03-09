@@ -85,6 +85,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
         try {
             const value = await this.serverPromise[property];
+            // If we cancelled starting of the server, then don't cache the result.
+            if (!value && options.token.isCancellationRequested) {
+                delete this.serverPromise[property];
+            }
             return value;
         } catch (e) {
             // Don't cache the error

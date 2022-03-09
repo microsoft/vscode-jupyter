@@ -3,6 +3,7 @@
 
 import { join } from 'path';
 import {
+    CancellationError as VscCancellationError,
     Disposable,
     EventEmitter,
     ExtensionMode,
@@ -25,8 +26,10 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../common/application/types';
+import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { displayErrorsInCell } from '../../common/errors/errorUtils';
+import { WrappedError } from '../../common/errors/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { getDisplayPath } from '../../common/platform/fs-paths';
@@ -390,6 +393,11 @@ export class VSCodeNotebookController implements Disposable {
 
             // If there was a failure connecting or executing the kernel, stick it in this cell
             displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex));
+            const isCancelled =
+                (WrappedError.unwrap(ex) || ex) instanceof CancellationError ||
+                (WrappedError.unwrap(ex) || ex) instanceof VscCancellationError;
+            // If user cancels the execution, then don't show error status against cell.
+            execution.end(isCancelled ? undefined : false);
             return NotebookCellExecutionState.Idle;
         }
 
