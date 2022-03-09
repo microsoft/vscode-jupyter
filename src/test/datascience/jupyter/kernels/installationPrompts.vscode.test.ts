@@ -180,7 +180,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed for '${path.basename(
         venvNoRegPath
     )}'`, async () => openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath));
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -244,7 +244,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (Interactive)', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
