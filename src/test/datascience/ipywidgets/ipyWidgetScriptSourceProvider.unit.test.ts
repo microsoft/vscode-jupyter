@@ -18,7 +18,7 @@ import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywi
 import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/remoteWidgetScriptSourceProvider';
-import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/datascience../../kernels/types';
+import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 

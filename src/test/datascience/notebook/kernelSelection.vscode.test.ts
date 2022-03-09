@@ -11,7 +11,7 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
-import { IKernelProvider } from '../../../client/datascience../../kernels/types';
+import { IKernelProvider } from '../../../client/../kernels/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';

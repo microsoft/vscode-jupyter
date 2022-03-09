@@ -34,10 +34,10 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
-import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
-import { JupyterInterpreterDependencyResponse } from './jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterServerInfo } from '../../kernels/jupyter/launcher/jupyterConnection';
+import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;

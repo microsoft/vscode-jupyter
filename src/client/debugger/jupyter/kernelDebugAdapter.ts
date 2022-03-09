@@ -24,7 +24,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
-import { IKernel } from '../../datascience../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { IJupyterSession } from '../../datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';

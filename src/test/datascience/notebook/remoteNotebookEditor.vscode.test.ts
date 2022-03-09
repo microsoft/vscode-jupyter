@@ -34,7 +34,7 @@ import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/not
 import { Settings } from '../../../client/datascience/constants';
 import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import { RemoteKernelSpecConnectionMetadata } from '../../../client/datascience../../kernels/types';
+import { RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
 import { JupyterServer } from '../jupyterServer';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 

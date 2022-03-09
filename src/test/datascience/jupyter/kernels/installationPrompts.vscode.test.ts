@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell } from 'vscode';
 import { IPythonApiProvider } from '../../../../client/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { Kernel } from '../../../../client/datascience../../kernels/kernel';
+import { Kernel } from '../../../../client/../kernels/kernel';
 import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
@@ -44,7 +44,7 @@ import {
     insertCodeCell,
     getCellOutputs
 } from '../../notebook/helper';
-import * as kernelSelector from '../../../../client/datascience../../kernels/kernelSelector';
+import * as kernelSelector from '../../../../client/../kernels/kernelSelector';
 import { JupyterNotebookView } from '../../../../client/datascience/notebook/constants';
 import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
 import { WrappedError } from '../../../../client/common/errors/types';
@@ -57,10 +57,7 @@ import { Product, IInstaller, InstallerResponse } from '../../../../kernels/inst
 suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
-    const templateIPynbFile = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience../../kernels/nbWithKernel.ipynb'
-    );
+    const templateIPynbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/../kernels/nbWithKernel.ipynb');
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);

@@ -16,7 +16,7 @@ import {
     ObservableExecutionResult
 } from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { LocalKernelSpecConnectionMetadata } from '../../client/datascience../../kernels/types';
+import { LocalKernelSpecConnectionMetadata } from '../../client/../kernels/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';

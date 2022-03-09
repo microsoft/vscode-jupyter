@@ -21,7 +21,7 @@ import {
     getInterpreterKernelSpecName,
     getKernelId,
     getKernelRegistrationInfo
-} from '../../../client/datascience../../kernels/helpers';
+} from '../../../client/../kernels/helpers';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -38,10 +38,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/
 import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 import { OSType } from '../../../client/common/utils/platform';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import {
-    KernelConnectionMetadata,
-    LocalKernelConnectionMetadata
-} from '../../../client/datascience../../kernels/types';
+import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../client/../kernels/types';
 import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/localKernelSpecFinderBase';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { arePathsSame } from '../../../client/common/platform/fileUtils';

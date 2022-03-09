@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../datascience../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 
 export enum IpykernelCheckResult {

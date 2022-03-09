@@ -18,7 +18,7 @@ import {
     NotebookEditor
 } from 'vscode';
 import * as path from 'path';
-import { IKernel, IKernelProvider } from '../../datascience../../kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../activation/types';

@@ -14,7 +14,7 @@ import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHa
 import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
 import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError';
-import { KernelConnectionMetadata } from '../../client/datascience../../kernels/types';
+import { KernelConnectionMetadata } from '../../client/../kernels/types';
 import {
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,

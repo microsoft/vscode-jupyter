@@ -5,24 +5,11 @@
 
 import * as path from 'path';
 import type { KernelSpec } from '@jupyterlab/services';
-import {
-    IDataScienceErrorHandler,
-    IInteractiveWindowProvider,
-    IJupyterKernelSpec,
-    IJupyterSession,
-    IRawNotebookProvider,
-    IStatusProvider,
-    KernelInterpreterDependencyResponse
-} from '../../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 import * as nbformat from '@jupyterlab/nbformat';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
-import { GLOBAL_MEMENTO, IConfigurationService, IMemento, IPathUtils, Resource } from '../../../common/types';
-import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     IKernel,
     KernelConnectionMetadata,
@@ -32,44 +19,58 @@ import {
     IKernelProvider,
     isLocalConnection
 } from './types';
-import { PreferredRemoteKernelIdProvider } from '../../notebookStorage/preferredRemoteKernelIdProvider';
-import { isPythonNotebook } from '../../notebook/helpers/helpers';
-import { DataScience } from '../../../common/utils/localize';
-import { Commands, Settings, Telemetry } from '../../constants';
-import { concatMultilineString } from '../../../../datascience-ui/common';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
+import { Uri, Memento, NotebookDocument } from 'vscode';
 import {
-    areInterpreterPathsSame,
+    IWorkspaceService,
+    ICommandManager,
+    IVSCodeNotebook,
+    IApplicationShell
+} from '../client/common/application/types';
+import { PYTHON_LANGUAGE, isCI } from '../client/common/constants';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../client/common/logger';
+import { getDisplayPath } from '../client/common/platform/fs-paths';
+import { IPythonExecutionFactory } from '../client/common/process/types';
+import { IPathUtils, IConfigurationService, Resource, IMemento, GLOBAL_MEMENTO } from '../client/common/types';
+import { createDeferred } from '../client/common/utils/async';
+import { DataScience } from '../client/common/utils/localize';
+import { getResourceType } from '../client/datascience/common';
+import { Settings } from '../client/datascience/constants';
+import { SysInfoReason } from '../client/datascience/interactive-common/interactiveWindowTypes';
+import { isPythonNotebook } from '../client/datascience/notebook/helpers/helpers';
+import { INotebookControllerManager } from '../client/datascience/notebook/types';
+import { VSCodeNotebookController } from '../client/datascience/notebook/vscodeNotebookController';
+import { PreferredRemoteKernelIdProvider } from '../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../client/datascience/telemetry/telemetry';
+import {
+    IJupyterSession,
+    IInteractiveWindowProvider,
+    IStatusProvider,
+    IDataScienceErrorHandler,
+    IRawNotebookProvider,
+    KernelInterpreterDependencyResponse,
+    IJupyterKernelSpec
+} from '../client/datascience/types';
+import { IServiceContainer } from '../client/ioc/types';
+import {
+    getNormalizedInterpreterPath,
     getInterpreterHash,
-    getNormalizedInterpreterPath
-} from '../../../pythonEnvironments/info/interpreter';
-import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { getResourceType } from '../../common';
-import { IPythonExecutionFactory } from '../../../common/process/types';
-import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
+    areInterpreterPathsSame
+} from '../client/pythonEnvironments/info/interpreter';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { getTelemetrySafeVersion } from '../client/telemetry/helpers';
+import { concatMultilineString } from '../datascience-ui/common';
+import { Telemetry, Commands } from '../datascience-ui/common/constants';
+import { findNotebookEditor, selectKernel } from './cell-execution/kernelSelector';
+import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
+import { Product } from './installer/types';
+import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
+import { removeNotebookSuffixAddedByExtension } from './jupyter/session/jupyterSession';
+import { SilentExecutionErrorOptions } from './kernel';
 import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
-} from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
-import { SilentExecutionErrorOptions } from './kernel';
-import { Memento, NotebookDocument, Uri } from 'vscode';
-import { IServiceContainer } from '../../../ioc/types';
-import { INotebookControllerManager } from '../../notebook/types';
-import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
-import { findNotebookEditor, selectKernel } from './kernelSelector';
-import { createDeferred } from '../../../common/utils/async';
-import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
-import { Product } from '../../../../kernels/installer/types';
+} from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { EnvironmentType, PythonEnvironment } from '../client/pythonEnvironments/info';
 
 // Helper functions for dealing with kernels and kernelspecs
 

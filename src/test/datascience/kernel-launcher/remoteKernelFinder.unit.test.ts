@@ -7,7 +7,7 @@ import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IRemoteKernelFinder } from '../../../client/datascience/kernel-launcher/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../client/../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { RemoteKernelFinder } from '../../../client/datascience/kernel-launcher/remoteKernelFinder';
 import { Disposable, EventEmitter, Uri } from 'vscode';
@@ -23,7 +23,7 @@ import {
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterSessionManager } from '../../../client/datascience/jupyter/jupyterSessionManager';
 import { noop } from '../../core';
-import { LiveKernelConnectionMetadata } from '../../../client/datascience../../kernels/types';
+import { LiveKernelConnectionMetadata } from '../../../client/../kernels/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 suite(`Remote Kernel Finder`, () => {

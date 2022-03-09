@@ -7,7 +7,7 @@ import * as path from 'path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { getKernelConnectionLanguage } from '../../../client/datascience../../kernels/helpers';
+import { getKernelConnectionLanguage } from '../../../client/../kernels/helpers';
 import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';

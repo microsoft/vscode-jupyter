@@ -6,17 +6,17 @@
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem } from 'vscode';
-import type { IAsyncDisposable, Resource } from '../../../common/types';
-import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type {
+import type * as nbformat from '@jupyterlab/nbformat';
+import * as url from 'url';
+import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
     INotebookProviderConnection,
     KernelSocketInformation
-} from '../../types';
-import type * as nbformat from '@jupyterlab/nbformat';
-import * as url from 'url';
+} from '../client/datascience/types';
+import { PythonEnvironment } from '../client/pythonEnvironments/info';
+import { IAsyncDisposable, Resource } from '../client/common/types';
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };

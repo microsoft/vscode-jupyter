@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { IKernel } from '../../../client/datascience../../kernels/types';
+import { IKernel } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
