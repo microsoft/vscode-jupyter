@@ -38,7 +38,6 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
@@ -58,13 +57,14 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { DisplayOptions } from '../displayOptions';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaService } from '../../common/process/condaService';
 import { waitForCondition } from '../../common/utils/async';
 import { debounceAsync } from '../../common/utils/decorators';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

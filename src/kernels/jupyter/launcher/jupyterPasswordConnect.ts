@@ -6,13 +6,13 @@ import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory } from '../../common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
-import { Telemetry } from './../constants';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { IMultiStepInputFactory, IMultiStepInput } from '../../../client/common/utils/multiStepInput';
+import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../../../client/datascience/types';
+import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
@@ -286,8 +286,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         state: { username: string; password: string }
     ) {
         state.username = await input.showInputBox({
-            title: localize.DataScience.jupyterSelectUserAndPasswordTitle(),
-            prompt: localize.DataScience.jupyterSelectUserPrompt(),
+            title: DataScience.jupyterSelectUserAndPasswordTitle(),
+            prompt: DataScience.jupyterSelectUserPrompt(),
             validate: this.validateUserNameOrPassword,
             value: ''
         });
@@ -305,8 +305,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         state: { username: string; password: string }
     ) {
         state.password = await input.showInputBox({
-            title: localize.DataScience.jupyterSelectUserAndPasswordTitle(),
-            prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
+            title: DataScience.jupyterSelectUserAndPasswordTitle(),
+            prompt: DataScience.jupyterSelectPasswordPrompt(),
             validate: this.validateUserNameOrPassword,
             value: '',
             password: true
@@ -315,7 +315,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
     private async getUserPassword(): Promise<string | undefined> {
         return this.appShell.showInputBox({
-            prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
+            prompt: DataScience.jupyterSelectPasswordPrompt(),
             ignoreFocusOut: true,
             password: true
         });
@@ -377,10 +377,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         } catch (e) {
             if (e.message.indexOf('reason: self signed certificate') >= 0) {
                 // Ask user to change setting and possibly try again.
-                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
-                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
+                const enableOption: string = DataScience.jupyterSelfCertEnable();
+                const closeOption: string = DataScience.jupyterSelfCertClose();
                 const value = await this.appShell.showErrorMessage(
-                    localize.DataScience.jupyterSelfCertFail().format(e.message),
+                    DataScience.jupyterSelfCertFail().format(e.message),
                     enableOption,
                     closeOption
                 );

@@ -4,23 +4,23 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
+import { noop } from 'rxjs';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { traceVerbose, traceWarning } from '../../../common/logger';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { IFileSystem } from '../../../common/platform/types';
-import { IPythonExecutionFactory } from '../../../common/process/types';
+import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../client/common/application/types';
+import { traceVerbose, traceWarning } from '../client/common/logger';
+import { getDisplayPath } from '../client/common/platform/fs-paths';
+import { IFileSystem } from '../client/common/platform/types';
+import { IPythonExecutionFactory } from '../client/common/process/types';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry
-} from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
-import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../../notebook/constants';
-import { INotebookProvider, IStatusProvider } from '../../types';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+    IDisposableRegistry,
+    IConfigurationService
+} from '../client/common/types';
+import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
+import { InteractiveWindowView } from '../client/datascience/notebook/constants';
+import { INotebookProvider, IStatusProvider } from '../client/datascience/types';
+import { CellOutputDisplayIdTracker } from './cell-execution/cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 

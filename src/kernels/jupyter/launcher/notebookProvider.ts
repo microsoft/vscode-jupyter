@@ -4,21 +4,25 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IConfigurationService } from '../../common/types';
-import { Settings, Telemetry } from '../constants';
-import { DisplayOptions } from '../displayOptions';
-import { isLocalConnection } from '../../../kernels/types';
-import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IConfigurationService } from '../../../client/common/types';
+import { Settings } from '../../../client/datascience/constants';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import {
-    ConnectNotebookProviderOptions,
-    NotebookCreationOptions,
-    IJupyterNotebookProvider,
-    INotebook,
+    trackKernelResourceInformation,
+    sendKernelTelemetryWhenDone
+} from '../../../client/datascience/telemetry/telemetry';
+import {
     INotebookProvider,
+    IRawNotebookProvider,
+    IJupyterNotebookProvider,
+    ConnectNotebookProviderOptions,
     INotebookProviderConnection,
-    IRawNotebookProvider
-} from '../types';
+    NotebookCreationOptions,
+    INotebook
+} from '../../../client/datascience/types';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { isLocalConnection } from '../../../kernels/types';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {

@@ -4,22 +4,21 @@
 'use strict';
 
 import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { traceInfo, traceWarning } from '../../../common/logger';
-import { IDisposable, IDisposableRegistry } from '../../../common/types';
-import { createDeferred, waitForPromise } from '../../../common/utils/async';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IJupyterSession, InterruptResult } from '../../types';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
-import type { IKernel, KernelConnectionMetadata } from './types';
-import { NotebookCellRunState } from './types';
-import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { KernelMessage } from '@jupyterlab/services';
+import { IApplicationShell } from '../../client/common/application/types';
+import { traceInfo, traceWarning } from '../../client/common/logger';
+import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../client/datascience/telemetry/telemetry';
+import { InterruptResult, IJupyterSession } from '../../client/datascience/types';
+import { captureTelemetry } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../types';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 /**
  * Separate class that deals just with kernel execution.

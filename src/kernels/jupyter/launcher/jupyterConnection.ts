@@ -1,23 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../client/common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
-import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
-import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
-
-import { IFileSystem } from '../../common/platform/types';
-import { ObservableExecutionResult, Output } from '../../common/process/types';
-import { IConfigurationService, IDisposable } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
-import { RegExpValues } from '../constants';
-import { IJupyterConnection } from '../types';
-import { JupyterConnectError } from '../errors/jupyterConnectError';
+import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+import { IConfigurationService, IDisposable } from '../../../client/common/types';
+import { Cancellation } from '../../../client/common/cancellation';
+import { traceInfo, traceError, traceWarning } from '../../../client/common/logger';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
+import { Deferred, createDeferred } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
+import { JupyterConnectError } from '../../../client/datascience/errors/jupyterConnectError';
+import { IJupyterConnection } from '../../../client/datascience/types';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { RegExpValues } from '../../../datascience-ui/common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
@@ -91,7 +90,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 },
                 (e) => this.rejectStartPromise(e),
                 // If the process dies, we can't extract connection information.
-                () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode))
+                () => this.rejectStartPromise(DataScience.jupyterServerCrashed().format(exitCode))
             )
         );
     }
@@ -157,7 +156,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             } catch (err) {
                 traceError(`Failed to parse ${uriString}`, err);
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(localize.DataScience.jupyterLaunchNoURL());
+                this.rejectStartPromise(DataScience.jupyterLaunchNoURL());
                 return;
             }
 
@@ -189,7 +188,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(localize.DataScience.jupyterLaunchTimedOut());
+            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut());
         }
     };
 

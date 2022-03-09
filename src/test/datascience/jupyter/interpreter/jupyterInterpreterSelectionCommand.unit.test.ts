@@ -10,8 +10,8 @@ import { IExtensionSingleActivationService } from '../../../../client/activation
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../../client/common/application/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
-import { JupyterInterpreterSelectionCommand } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand';
-import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
 
 suite('DataScience - Jupyter Interpreter Command', () => {
     let interpreterCommand: IExtensionSingleActivationService;

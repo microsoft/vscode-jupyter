@@ -15,9 +15,9 @@ import { IConfigurationService, IJupyterSettings } from '../../../client/common/
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { JupyterConnectionWaiter, JupyterServerInfo } from '../../../client/datascience/jupyter/jupyterConnection';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { JupyterServerInfo, JupyterConnectionWaiter } from '../../../kernels/jupyter/launcher/jupyterConnection';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterConnection', () => {

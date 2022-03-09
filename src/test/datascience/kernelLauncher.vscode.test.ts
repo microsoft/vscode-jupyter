@@ -7,8 +7,6 @@ import { assert, use } from 'chai';
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
-import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
-import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
@@ -22,6 +20,8 @@ import { PortAttributesProviders } from '../../client/common/net/portAttributePr
 import { IDisposable } from '../../client/common/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
+import { createRawKernel } from '../../kernels/raw/session/rawKernel';
+import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;

@@ -5,13 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { traceError } from '../../../common/logger';
-
-import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../../../common/process/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { JupyterDaemonModule } from '../../constants';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
+import { PythonEnvironment } from '../../../../extension';
+import { traceError } from '../../../client/common/logger';
+import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../client/common/process/types';
+import { reportAction } from '../../../client/datascience/progress/decorator';
+import { ReportableAction } from '../../../client/datascience/progress/types';
+import { JupyterDaemonModule } from '../../../datascience-ui/common/constants';
 
 @injectable()
 export class NbConvertExportToPythonService {

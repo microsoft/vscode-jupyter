@@ -23,11 +23,11 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { JupyterKernelService } from '../../../client/../kernels/jupyterKernelService';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/../kernels/types';
 import { IJupyterConnection, ISessionWithSocket } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
+import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService';
+import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {

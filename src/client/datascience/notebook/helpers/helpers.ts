@@ -23,7 +23,7 @@ import '../../../common/extensions';
 import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata } from '..//../../kernels/types';
+import { KernelConnectionMetadata } from '../../../../kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../../types';
 import { InteractiveWindowView, JupyterNotebookView } from '../constants';

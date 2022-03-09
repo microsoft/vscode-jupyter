@@ -4,26 +4,26 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, NotebookDocument, Uri, window, workspace } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
-import { displayErrorsInCell } from '../../../common/errors/errorUtils';
-import { traceInfo } from '../../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../common/types';
-import { DataScience } from '../../../common/utils/localize';
-import { IServiceContainer } from '../../../ioc/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Commands, Telemetry } from '../../constants';
-import { INotebookControllerManager } from '../../notebook/types';
-import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { IApplicationShell, ICommandManager } from '../client/common/application/types';
+import { displayErrorsInCell } from '../client/common/errors/errorUtils';
+import { traceInfo } from '../client/common/logger';
+import { IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
+import { DataScience } from '../client/common/utils/localize';
+import { INotebookControllerManager } from '../client/datascience/notebook/types';
+import { trackKernelResourceInformation } from '../client/datascience/telemetry/telemetry';
 import {
     IDataScienceCommandListener,
-    IDataScienceErrorHandler,
+    IStatusProvider,
     IInteractiveWindowProvider,
-    IStatusProvider
-} from '../../types';
-import { JupyterSession } from '../jupyterSession';
-import { CellExecutionCreator } from './cellExecutionCreator';
+    IDataScienceErrorHandler
+} from '../client/datascience/types';
+import { IServiceContainer } from '../client/ioc/types';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { Commands, Telemetry } from '../datascience-ui/common/constants';
+import { CellExecutionCreator } from './cell-execution/cellExecutionCreator';
 import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
+import { JupyterSession } from './jupyter/session/jupyterSession';
+import { RawJupyterSession } from './raw/session/rawJupyterSession';
 import { IKernel, IKernelProvider } from './types';
 
 @injectable()

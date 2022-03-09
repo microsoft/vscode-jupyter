@@ -4,11 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../../activation/types';
-import { ICommandManager } from '../../../common/application/types';
-import { IDisposableRegistry } from '../../../common/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
+import { ICommandManager } from '../../../client/common/application/types';
+import { IDisposableRegistry } from '../../../client/common/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
 @injectable()

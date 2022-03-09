@@ -44,7 +44,7 @@ import {
     insertCodeCell,
     getCellOutputs
 } from '../../notebook/helper';
-import * as kernelSelector from '../../../../client/../kernels/kernelSelector';
+import * as kernelSelector from '../../../../kernels/cell-execution/kernelSelector';
 import { JupyterNotebookView } from '../../../../client/datascience/notebook/constants';
 import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
 import { WrappedError } from '../../../../client/common/errors/types';

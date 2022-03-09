@@ -7,24 +7,23 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { Uri } from 'vscode';
-import { concatMultilineString } from '../../../datascience-ui/common';
-import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { CellMatcher } from '../cellMatcher';
-import { pruneCell } from '../common';
-import { CodeSnippets, defaultNotebookFormat } from '../constants';
+import { IWorkspaceService, IApplicationShell } from '../../../client/common/application/types';
+import { traceError } from '../../../client/common/logger';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IConfigurationService } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { CellMatcher } from '../../../client/datascience/cellMatcher';
+import { pruneCell } from '../../../client/datascience/common';
 import {
-    ICell,
-    IDataScienceErrorHandler,
+    INotebookExporter,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter
-} from '../types';
+    IDataScienceErrorHandler,
+    ICell
+} from '../../../client/datascience/types';
+import { concatMultilineString } from '../../../datascience-ui/common';
+import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
+import { defaultNotebookFormat, CodeSnippets } from '../../../datascience-ui/common/constants';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
@@ -40,7 +39,7 @@ export class JupyterExporter implements INotebookExporter {
     ) {}
 
     public dispose() {
-        noop();
+        // Do nothing
     }
 
     public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
@@ -59,9 +58,9 @@ export class JupyterExporter implements INotebookExporter {
             if (!showOpenPrompt) {
                 return;
             }
-            const openQuestion1 = localize.DataScience.exportOpenQuestion1();
+            const openQuestion1 = DataScience.exportOpenQuestion1();
             void this.applicationShell
-                .showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1)
+                .showInformationMessage(DataScience.exportDialogComplete().format(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
@@ -76,7 +75,7 @@ export class JupyterExporter implements INotebookExporter {
             traceError('Error in exporting notebook file');
             void this.applicationShell.showInformationMessage(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                localize.DataScience.exportDialogFailed().format(exc as any)
+                DataScience.exportDialogFailed().format(exc as any)
             );
         }
     }
@@ -129,7 +128,7 @@ export class JupyterExporter implements INotebookExporter {
 
         if (changeDirectory) {
             const exportChangeDirectory = CodeSnippets.ChangeDirectory.join(os.EOL).format(
-                localize.DataScience.exportChangeDirectoryComment(),
+                DataScience.exportChangeDirectoryComment(),
                 CodeSnippets.ChangeDirectoryCommentIdentifier,
                 changeDirectory
             );

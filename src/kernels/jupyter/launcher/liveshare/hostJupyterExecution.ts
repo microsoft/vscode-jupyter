@@ -1,24 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../common/extensions';
+import '../../../../client/common/extensions';
 
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { IWorkspaceService } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
-
-import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { IServiceContainer } from '../../../ioc/types';
-import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { NotebookStarter } from '../notebookStarter';
 import { ServerCache } from './serverCache';
 import { inject, injectable } from 'inversify';
-import { testOnlyMethod } from '../../../common/utils/decorators';
+import { IWorkspaceService } from '../../../../client/common/application/types';
+import { traceInfo } from '../../../../client/common/logger';
+import { IFileSystem } from '../../../../client/common/platform/types';
+import { IDisposableRegistry, IAsyncDisposableRegistry, IConfigurationService } from '../../../../client/common/types';
+import { testOnlyMethod } from '../../../../client/common/utils/decorators';
+import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../../../client/datascience/types';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../../client/ioc/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

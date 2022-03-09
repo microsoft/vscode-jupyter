@@ -8,7 +8,6 @@ import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { KernelDependencyService } from '../../../../client/../kernels/kernelDependencyService';
-import { JupyterKernelService } from '../../../../client/../kernels/jupyterKernelService';
 import { LocalKernelConnectionMetadata } from '../../../../client/../kernels/types';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IKernelDependencyService } from '../../../../client/datascience/types';
@@ -20,7 +19,8 @@ import { DisplayOptions } from '../../../../client/datascience/displayOptions';
 import { CancellationTokenSource } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../client/common/variables/environment';
 import { arePathsSame } from '../../../../client/common/platform/fileUtils';
-import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
+import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {

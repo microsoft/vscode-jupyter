@@ -14,34 +14,33 @@ import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { CancellationToken, EventEmitter } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-
-import { traceError, traceInfo } from '../../common/logger';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { traceInfo, traceError } from '../../../client/common/logger';
 import {
+    IPersistentState,
     IConfigurationService,
     IOutputChannel,
-    IPersistentState,
     IPersistentStateFactory,
     Resource
-} from '../../common/types';
-import { sleep } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { SessionDisposedError } from '../errors/sessionDisposedError';
+} from '../../../client/common/types';
+import { Common, DataScience } from '../../../client/common/utils/localize';
+import { SessionDisposedError } from '../../../client/datascience/errors/sessionDisposedError';
 import {
-    IDisplayOptions,
+    IJupyterSessionManager,
     IJupyterConnection,
-    IJupyterKernel,
-    IJupyterKernelSpec,
     IJupyterPasswordConnect,
-    IJupyterSessionManager
-} from '../types';
+    IDisplayOptions,
+    IJupyterKernel,
+    IJupyterKernelSpec
+} from '../../../client/datascience/types';
+import { sleep } from '../../../test/core';
+import { createInterpreterKernelSpec } from '../../helpers';
+import { KernelConnectionMetadata } from '../../types';
+import { JupyterKernelService } from '../jupyterKernelService';
+import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
-import { createInterpreterKernelSpec } from './kernels/helpers';
-import { JupyterKernelService } from './kernels/jupyterKernelService';
-import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
-import { KernelConnectionMetadata } from './kernels/types';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -303,7 +302,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
                 // Failed to get password info, notify the user
-                throw new Error(localize.DataScience.passwordFailure());
+                throw new Error(DataScience.passwordFailure());
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
@@ -345,25 +344,21 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
     private async insecureServerWarningPrompt(): Promise<boolean> {
-        const insecureMessage = localize.DataScience.insecureSessionMessage();
-        const insecureLabels = [
-            localize.Common.bannerLabelYes(),
-            localize.Common.bannerLabelNo(),
-            localize.Common.doNotShowAgain()
-        ];
+        const insecureMessage = DataScience.insecureSessionMessage();
+        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
 
         switch (response) {
-            case localize.Common.bannerLabelYes():
+            case Common.bannerLabelYes():
                 // On yes just proceed as normal
                 return true;
 
-            case localize.Common.doNotShowAgain():
+            case Common.doNotShowAgain():
                 // For don't ask again turn on the global true
                 await this.userAllowsInsecureConnections.updateValue(true);
                 return true;
 
-            case localize.Common.bannerLabelNo():
+            case Common.bannerLabelNo():
             default:
                 // No or for no choice return back false to block
                 return false;
@@ -393,7 +388,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // If our server is not secure, throw here to bail out on the process
         if (!(await serverSecurePromise)) {
-            throw new Error(localize.DataScience.insecureSessionDenied());
+            throw new Error(DataScience.insecureSessionDenied());
         }
     }
 }

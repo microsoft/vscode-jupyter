@@ -3,19 +3,19 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { DisplayOptions } from '../displayOptions';
-import { isJupyterNotebook } from '../notebook/helpers/helpers';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../../client/common/application/types';
+import { traceInfo, traceError } from '../../../client/common/logger';
+import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
+import { isJupyterNotebook } from '../../../client/datascience/notebook/helpers/helpers';
 import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
     INotebookCreationTracker,
+    IInteractiveWindowProvider,
     INotebookProvider,
-    IRawNotebookProvider
-} from '../types';
+    IRawNotebookProvider,
+    IInteractiveWindow
+} from '../../../client/datascience/types';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {

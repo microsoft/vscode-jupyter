@@ -25,38 +25,40 @@ import {
     Event,
     EventEmitter
 } from 'vscode';
-import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../../../datascience-ui/common/cellFactory';
-import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
-import { RefBool } from '../../../common/refBool';
-import { IDisposable, IDisposableRegistry } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
-import { swallowExceptions } from '../../../common/utils/decorators';
-import { noop } from '../../../common/utils/misc';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { handleTensorBoardDisplayDataOutput } from '../../notebook/helpers/executionHelpers';
-import {
-    cellOutputToVSCCellOutput,
-    NotebookCellStateTracker,
-    traceCellMessage,
-    translateCellDisplayOutput,
-    translateErrorOutput
-} from '../../notebook/helpers/helpers';
-import { ICellHash, ICellHashProvider, IJupyterSession } from '../../types';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
+
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
-import { disposeAllDisposables } from '../../../common/helpers';
-import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../../notebook/constants';
-import { BaseError } from '../../../common/errors/types';
-import * as localize from '../../../common/utils/localize';
-import { analyzeKernelErrors } from '../../../common/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
+import { IDisposable } from '@fluentui/react';
+import { noop } from 'rxjs';
+import { IApplicationShell } from '../../client/common/application/types';
+import { analyzeKernelErrors } from '../../client/common/errors/errorUtils';
+import { BaseError } from '../../client/common/errors/types';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { traceError, traceInfoIfCI, traceWarning } from '../../client/common/logger';
+import { RefBool } from '../../client/common/refBool';
+import { IDisposableRegistry } from '../../client/common/types';
+import { Deferred, createDeferred } from '../../client/common/utils/async';
+import * as localize from '../../client/common/utils/localize';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { InteractiveWindowView } from '../../client/datascience/notebook/constants';
+import { handleTensorBoardDisplayDataOutput } from '../../client/datascience/notebook/helpers/executionHelpers';
+import {
+    NotebookCellStateTracker,
+    traceCellMessage,
+    translateErrorOutput,
+    cellOutputToVSCCellOutput,
+    translateCellDisplayOutput
+} from '../../client/datascience/notebook/helpers/helpers';
+import { ICellHashProvider, IJupyterSession, ICellHash } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { formatStreamText, concatMultilineString } from '../../datascience-ui/common';
+import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../datascience-ui/common/cellFactory';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../helpers';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../types';
+import { swallowExceptions } from '../../client/common/utils/decorators';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {

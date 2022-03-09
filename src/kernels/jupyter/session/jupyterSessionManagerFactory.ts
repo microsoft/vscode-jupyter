@@ -2,25 +2,24 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { IApplicationShell } from '../../common/application/types';
-
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
+import { JupyterSessionManager } from './jupyterSessionManager';
+import { IApplicationShell } from '../../../client/common/application/types';
 import {
     IConfigurationService,
-    IDisposableRegistry,
     IOutputChannel,
-    IPersistentStateFactory
-} from '../../common/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+    IPersistentStateFactory,
+    IDisposableRegistry
+} from '../../../client/common/types';
 import {
-    IJupyterConnection,
+    IJupyterSessionManagerFactory,
     IJupyterPasswordConnect,
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory
-} from '../types';
-import { JupyterSessionManager } from './jupyterSessionManager';
-import { JupyterKernelService } from './kernels/jupyterKernelService';
+    IJupyterConnection,
+    IJupyterSessionManager
+} from '../../../client/datascience/types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../../datascience-ui/common/constants';
+import { JupyterKernelService } from '../jupyterKernelService';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {

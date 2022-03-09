@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import * as net from 'net';
 import * as path from 'path';
@@ -22,13 +23,13 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfo } from '../common/logger';
-import { IDisposable, IDisposableRegistry } from '../common/types';
-import { createDeferred } from '../common/utils/async';
-import { noop } from '../common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../constants';
-import { IProtocolParser } from '../debugger/extension/types';
-import { IJupyterDebugService } from './types';
+import { traceInfo, traceError } from '../../client/common/logger';
+import { IDisposableRegistry } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IJupyterDebugService } from '../../client/datascience/types';
+import { IProtocolParser } from '../../client/debugger/extension/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

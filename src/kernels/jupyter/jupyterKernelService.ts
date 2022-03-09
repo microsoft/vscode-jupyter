@@ -6,32 +6,31 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
-import { Cancellation } from '../../../common/cancellation';
-import '../../../common/extensions';
-import { traceDecorators, traceInfo, traceInfoIfCI } from '../../../common/logger';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { IFileSystem } from '../../../common/platform/types';
-
-import { ReadWrite, Resource } from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
-import { IEnvironmentVariablesService } from '../../../common/variables/types';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { ignoreLogging, logValue } from '../../../logging/trace';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { PythonEnvironment, IJupyterKernelSpec } from '../../../extension';
+import { Cancellation } from '../../client/common/cancellation';
+import '../../client/common/extensions';
+import { traceInfoIfCI, traceInfo } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { IFileSystem } from '../../client/common/platform/types';
+import { Resource, ReadWrite } from '../../client/common/types';
+import { IEnvironmentVariablesService } from '../../client/common/variables/types';
+import { JupyterKernelDependencyError } from '../../client/datascience/errors/jupyterKernelDependencyError';
 import {
-    IDisplayOptions,
-    IJupyterKernelSpec,
     IKernelDependencyService,
+    IDisplayOptions,
     KernelInterpreterDependencyResponse
-} from '../../types';
-import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
-import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
-import { JupyterKernelDependencyError } from '../../errors/jupyterKernelDependencyError';
+} from '../../client/datascience/types';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { traceDecorators } from '../../client/logging';
+import { logValue, ignoreLogging } from '../../client/logging/trace';
+import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
+import { JupyterPaths } from '../raw/finder/jupyterPaths';
+import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 
 /**
  * Responsible for registering and updating kernels

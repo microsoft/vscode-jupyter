@@ -17,8 +17,8 @@ import { CommandRegistry } from '../../client/datascience/commands/commandRegist
 import { pruneCell } from '../../client/datascience/common';
 import { GlobalActivation } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
-import { RawNotebookSupportedService } from '../../client/datascience/raw-kernel/rawNotebookSupportedService';
 import { IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../../client/datascience/types';
+import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {

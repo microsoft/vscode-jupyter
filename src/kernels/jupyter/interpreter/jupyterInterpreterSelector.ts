@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { Cancellation } from '../../../common/cancellation';
-import { IPathUtils } from '../../../common/types';
-import { DataScience } from '../../../common/utils/localize';
-import { IInterpreterSelector } from '../../../interpreter/configuration/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../extension';
+import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
+import { Cancellation } from '../../../client/common/cancellation';
+import { IPathUtils } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { IInterpreterSelector } from '../../../client/interpreter/configuration/types';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 /**

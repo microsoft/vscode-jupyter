@@ -6,7 +6,7 @@ import { CommandManager } from '../../../client/common/application/commandManage
 import { ICommandManager } from '../../../client/common/application/types';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {

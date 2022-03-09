@@ -5,33 +5,34 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
+import { PythonEnvironment, EnvironmentType } from '../../extension';
+import { IApplicationShell } from '../client/common/application/types';
+import { createPromiseFromCancellation } from '../client/common/cancellation';
+import { traceInfo, traceError } from '../client/common/logger';
+import { getDisplayPath } from '../client/common/platform/fs-paths';
+import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource } from '../client/common/types';
+import { DataScience, Common } from '../client/common/utils/localize';
+import { getResourceType } from '../client/datascience/common';
+import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';
+import {
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse,
+    IRawNotebookSupportedService,
+    IDisplayOptions
+} from '../client/datascience/types';
+import { IServiceContainer } from '../client/ioc/types';
+import { traceDecorators } from '../client/logging';
+import { ignoreLogging, logValue, TraceOptions } from '../client/logging/trace';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { getTelemetrySafeHashedString } from '../client/telemetry/helpers';
+import { Telemetry } from '../datascience-ui/common/constants';
 import {
     isModulePresentInEnvironmentCache,
     trackPackageInstalledIntoInterpreter,
     isModulePresentInEnvironment
-} from '../../../../kernels/installer/productInstaller';
-import { ProductNames } from '../../../../kernels/installer/productNames';
-import { IInstaller, InstallerResponse, Product } from '../../../../kernels/installer/types';
-import { IApplicationShell } from '../../../common/application/types';
-import { createPromiseFromCancellation } from '../../../common/cancellation';
-import { traceDecorators, traceError, traceInfo } from '../../../common/logger';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { GLOBAL_MEMENTO, IMemento, IsCodeSpace, Resource } from '../../../common/types';
-import { Common, DataScience } from '../../../common/utils/localize';
-import { IServiceContainer } from '../../../ioc/types';
-import { ignoreLogging, logValue, TraceOptions } from '../../../logging/trace';
-import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
-import { getResourceType } from '../../common';
-import { Telemetry } from '../../constants';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
-import {
-    IDisplayOptions,
-    IKernelDependencyService,
-    IRawNotebookSupportedService,
-    KernelInterpreterDependencyResponse
-} from '../../types';
+} from './installer/productInstaller';
+import { ProductNames } from './installer/productNames';
+import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { KernelConnectionMetadata } from './types';
 
 /**

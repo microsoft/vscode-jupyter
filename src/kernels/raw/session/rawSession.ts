@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IDisposable } from '@fluentui/react';
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
+import { noop } from 'rxjs';
 import * as uuid from 'uuid/v4';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import '../../common/extensions';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { IDisposable, Resource } from '../../common/types';
-import { createDeferred, sleep } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { KernelConnectionTimeoutError } from '../errors/kernelConnectionTimeoutError';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { IKernelProcess } from '../kernel-launcher/types';
-import { ISessionWithSocket, KernelSocketInformation } from '../types';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import '../../../client/common/extensions';
+import { traceVerbose, traceInfoIfCI, traceError } from '../../../client/common/logger';
+import { Resource } from '../../../client/common/types';
+import { createDeferred, sleep } from '../../../client/common/utils/async';
+import { KernelConnectionTimeoutError } from '../../../client/datascience/errors/kernelConnectionTimeoutError';
+import { ISessionWithSocket, KernelSocketInformation } from '../../../client/datascience/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { KernelConnectionMetadata } from '../../types';
+import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
 
 /*

@@ -10,9 +10,9 @@ import { IApplicationShell, IWorkspaceService } from '../../../../client/common/
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IPathUtils } from '../../../../client/common/types';
-import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
-import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
+import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector';
+import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore';
 
 suite('DataScience - Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;

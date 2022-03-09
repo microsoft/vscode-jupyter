@@ -3,13 +3,13 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IDebugService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IDisposableRegistry } from '../../common/types';
-import { Identifiers } from '../constants';
-import { IJupyterDebugService, IJupyterVariables } from '../types';
-import { pythonKernelDebugAdapter } from '../../debugger/constants';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IDebugService } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { IDisposableRegistry } from '../../client/common/types';
+import { IJupyterDebugService, IJupyterVariables } from '../../client/datascience/types';
+import { pythonKernelDebugAdapter } from '../../client/debugger/constants';
+import { Identifiers } from '../../datascience-ui/common/constants';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {

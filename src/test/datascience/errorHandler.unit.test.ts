@@ -21,10 +21,10 @@ import {
     KernelInterpreterDependencyResponse
 } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { JupyterInterpreterDependencyResponse } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

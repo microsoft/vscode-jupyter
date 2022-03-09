@@ -40,7 +40,6 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/ty
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/../kernels/types';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import {
     getTextOutputValue,
     hasErrorOutput,
@@ -59,6 +58,7 @@ import { VSCodeNotebookController } from '../../../client/datascience/notebook/v
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
 import { DataScience } from '../../../client/common/utils/localize';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;

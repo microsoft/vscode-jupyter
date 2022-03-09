@@ -7,31 +7,31 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { IDisposableRegistry, Resource } from '../../common/types';
-import { traceDecorators } from '../../logging';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
-import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceError, traceInfoIfCI } from '../../../client/common/logger';
+import { IDisposableRegistry, Resource } from '../../../client/common/types';
+import { getResourceType } from '../../../client/datascience/common';
+import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { sendKernelListTelemetry } from '../../../client/datascience/telemetry/kernelTelemetry';
 import {
-    IJupyterKernelSpec,
-    IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    INotebookProviderConnection
-} from '../types';
-import { IRemoteKernelFinder } from './types';
-import { traceError, traceInfoIfCI } from '../../common/logger';
-import { getResourceType } from '../common';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { ignoreLogging } from '../../logging/trace';
-import { IInterpreterService } from '../../interpreter/contracts';
+    INotebookProviderConnection,
+    IJupyterSessionManager,
+    IJupyterKernelSpec
+} from '../../../client/datascience/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { traceDecorators } from '../../../client/logging';
+import { ignoreLogging } from '../../../client/logging/trace';
+import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { getTelemetrySafeLanguage } from '../../../client/telemetry/helpers';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { IRemoteKernelFinder } from '../types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,

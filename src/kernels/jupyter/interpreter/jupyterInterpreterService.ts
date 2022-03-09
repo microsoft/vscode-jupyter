@@ -4,16 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { noop } from 'rxjs';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../common/cancellation';
-import '../../../common/extensions';
-import { noop } from '../../../common/utils/misc';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { JupyterInstallError } from '../../errors/jupyterInstallError';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import '../../../client/common/extensions';
+import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService

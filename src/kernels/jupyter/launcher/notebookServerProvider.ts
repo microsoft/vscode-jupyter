@@ -3,28 +3,28 @@
 
 'use strict';
 
+import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { CancellationError } from '../../common/cancellation';
-import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import { testOnlyMethod } from '../../common/utils/decorators';
-import * as localize from '../../common/utils/localize';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { Settings } from '../constants';
-import { DisplayOptions } from '../displayOptions';
-import { JupyterInstallError } from '../errors/jupyterInstallError';
-import { KernelProgressReporter } from '../progress/kernelProgressReporter';
+import { CancellationError, CancellationToken } from 'vscode';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { traceInfo } from '../../../client/common/logger';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../client/common/types';
+import { testOnlyMethod } from '../../../client/common/utils/decorators';
+import { DataScience } from '../../../client/common/utils/localize';
+import { Settings } from '../../../client/datascience/constants';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
+import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
 import {
-    GetServerOptions,
-    IJupyterExecution,
     IJupyterServerProvider,
-    IJupyterServerUriStorage,
     INotebookServer,
+    IJupyterExecution,
+    IJupyterServerUriStorage,
+    GetServerOptions,
     INotebookServerOptions
-} from '../types';
+} from '../../../client/datascience/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
@@ -120,8 +120,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Status depends upon if we're about to connect to existing server or not.
             progressReporter = (await this.jupyterExecution.getServer(serverOptions))
-                ? KernelProgressReporter.createProgressReporter(resource, localize.DataScience.connectingToJupyter())
-                : KernelProgressReporter.createProgressReporter(resource, localize.DataScience.startingJupyter());
+                ? KernelProgressReporter.createProgressReporter(resource, DataScience.connectingToJupyter())
+                : KernelProgressReporter.createProgressReporter(resource, DataScience.startingJupyter());
             disposables.push(progressReporter);
         };
         if (this.ui.disableUI) {
@@ -137,7 +137,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 traceInfo('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
                 );
             }
             // Then actually start the server
@@ -178,11 +178,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                     ? activeInterpreter.displayName
                     : activeInterpreter.path;
                 throw new Error(
-                    localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
+                    DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
                 );
             } else {
                 throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
                 );
             }
         }

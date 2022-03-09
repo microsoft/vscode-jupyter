@@ -4,14 +4,14 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { IAsyncDisposable, IDisposable, Resource } from '../../client/common/types';
+import { INotebookProviderConnection } from '../../client/datascience/types';
 import {
     KernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
     LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../../../kernels/types';
-import { INotebookProviderConnection } from '../types';
+} from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {

@@ -1,29 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../common/extensions';
+import '../../../client/common/extensions';
 
 import * as vscode from 'vscode';
-
-import { IPythonExtensionChecker } from '../../../api/types';
-import { IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IOutputChannel,
-    Resource
-} from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
-import * as localize from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { isPythonKernelConnection } from '..//../../kernels/helpers';
-import { KernelConnectionMetadata } from '..//../../kernels/types';
-import { IKernelLauncher } from '../../kernel-launcher/types';
+import * as uuid from 'uuid/v4';
 import {
     ConnectNotebookProviderOptions,
     IDisplayOptions,
@@ -31,14 +12,32 @@ import {
     IRawConnection,
     IRawNotebookProvider,
     IRawNotebookSupportedService
-} from '../../types';
-import { RawJupyterSession } from '../rawJupyterSession';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { inject, injectable, named } from 'inversify';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { JupyterNotebook } from '../../jupyter/jupyterNotebook';
-import * as uuid from 'uuid/v4';
+} from '../../../client/datascience/types';
+import { injectable, inject, named } from 'inversify';
+import { noop } from 'rxjs';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { traceInfo, traceVerbose, traceError } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IOutputChannel,
+    IDisposableRegistry,
+    Resource
+} from '../../../client/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
+import { trackKernelResourceInformation } from '../../../client/datascience/telemetry/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { isPythonKernelConnection } from '../../helpers';
+import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
+import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
+import { KernelConnectionMetadata } from '../../types';
+import { IKernelLauncher } from '../types';
+import { RawJupyterSession } from './rawJupyterSession';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -150,7 +149,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
                 notebookPromise.resolve(notebook);
             } else {
-                notebookPromise.reject(new Error(localize.DataScience.rawConnectionBrokenError()));
+                notebookPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

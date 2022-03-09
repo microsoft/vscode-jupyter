@@ -11,25 +11,24 @@ import type {
 } from '@jupyterlab/services';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Cancellation } from '../../common/cancellation';
-import { BaseError } from '../../common/errors/types';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { IOutputChannel, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
-import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
-import { Telemetry } from '../constants';
-import { IDisplayOptions, IJupyterConnection, ISessionWithSocket } from '../types';
-import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
+import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
+import { Cancellation } from '../../../client/common/cancellation';
+import { BaseError } from '../../../client/common/errors/types';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../client/common/logger';
+import { Resource, IOutputChannel } from '../../../client/common/types';
+import { waitForCondition } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
+import { JupyterInvalidKernelError } from '../../../client/datascience/errors/jupyterInvalidKernelError';
+import { SessionDisposedError } from '../../../client/datascience/errors/sessionDisposedError';
+import { IJupyterConnection, IDisplayOptions, ISessionWithSocket } from '../../../client/datascience/types';
+import { captureTelemetry } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
+import { getNameOfKernelConnection } from '../../helpers';
+import { KernelConnectionMetadata, isLocalConnection } from '../../types';
+import { JupyterKernelService } from '../jupyterKernelService';
 import { JupyterWebSockets } from './jupyterWebSocket';
-import { getNameOfKernelConnection } from './kernels/helpers';
-import { JupyterKernelService } from './kernels/jupyterKernelService';
-import { isLocalConnection, KernelConnectionMetadata } from './kernels/types';
-import { SessionDisposedError } from '../errors/sessionDisposedError';
-import { DisplayOptions } from '../displayOptions';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { waitForCondition } from '../../common/utils/async';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -303,10 +302,7 @@ export class JupyterSession extends BaseJupyterSession {
                     .then(async (session) => {
                         if (session.kernel) {
                             this.logRemoteOutput(
-                                localize.DataScience.createdNewKernel().format(
-                                    this.connInfo.baseUrl,
-                                    session?.kernel?.id || ''
-                                )
+                                DataScience.createdNewKernel().format(this.connInfo.baseUrl, session?.kernel?.id || '')
                             );
                             const sessionWithSocket = session as ISessionWithSocket;
 

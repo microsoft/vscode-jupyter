@@ -2,17 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { disposeAllDisposables } from '../../common/helpers';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../constants';
-import { createJupyterCellFromVSCNotebookCell, isJupyterNotebook } from '../notebook/helpers/helpers';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IVSCodeNotebook } from '../../client/common/application/types';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { IDisposableRegistry } from '../../client/common/types';
+import {
+    isJupyterNotebook,
+    createJupyterCellFromVSCNotebookCell
+} from '../../client/datascience/notebook/helpers/helpers';
+import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
+import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
+import { Telemetry } from '../../datascience-ui/common/constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 

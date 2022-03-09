@@ -7,17 +7,17 @@ import { inject, injectable } from 'inversify';
 // eslint-disable-next-line
 import parseArgsStringToArgv from 'string-argv';
 import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
+import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../client/common/application/types';
+import { IConfigurationService } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
 import {
-    IMultiStepInput,
     IMultiStepInputFactory,
+    IMultiStepInput,
     InputStep,
     IQuickPickParameters
-} from '../../common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+} from '../../../client/common/utils/multiStepInput';
+import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 
 @injectable()
 export class JupyterCommandLineSelector {
@@ -47,7 +47,7 @@ export class JupyterCommandLineSelector {
                 reload
             );
             if (item === reload) {
-                this.commandManager.executeCommand('workbench.action.reloadWindow');
+                void this.commandManager.executeCommand('workbench.action.reloadWindow');
             }
         }
     }

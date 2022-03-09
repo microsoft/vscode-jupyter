@@ -5,15 +5,15 @@ import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
-import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import {
     ICodeCssGenerator,
     IJupyterExecution,
     INotebookImporter,
     INotebookServer
 } from '../../client/datascience/types';
+import { JupyterImporter } from '../../kernels/jupyter/import-export/jupyterImporter';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from '../../kernels/jupyter/launcher/liveshare/hostJupyterServer';
 import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
 

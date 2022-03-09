@@ -4,24 +4,24 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
-import { IPythonDebuggerPathProvider } from '../../api/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
-import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { Identifiers, Telemetry } from '../constants';
+import { IPythonDebuggerPathProvider } from '../../client/api/types';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../client/common/logger';
+import { IPlatformService } from '../../client/common/platform/types';
+import { IConfigurationService } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { JupyterDebuggerNotInstalledError } from '../../client/datascience/errors/jupyterDebuggerNotInstalledError';
+import { JupyterDebuggerRemoteNotSupportedError } from '../../client/datascience/errors/jupyterDebuggerRemoteNotSupportedError';
 import {
-    ICellHashListener,
-    IFileHashes,
     IInteractiveWindowDebugger,
+    ICellHashListener,
     IJupyterDebugService,
+    IFileHashes,
     ISourceMapRequest
-} from '../types';
-import { JupyterDebuggerNotInstalledError } from '../errors/jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupportedError } from '../errors/jupyterDebuggerRemoteNotSupportedError';
-import { getPlainTextOrStreamOutput } from './kernels/kernel';
-import { IKernel, isLocalConnection } from './kernels/types';
-import { executeSilently } from './kernels/helpers';
+} from '../../client/datascience/types';
+import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { executeSilently } from '../helpers';
+import { getPlainTextOrStreamOutput } from '../kernel';
+import { IKernel, isLocalConnection } from '../types';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
@@ -334,7 +334,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
             );
         }
         throw new JupyterDebuggerNotInstalledError(
-            localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage),
+            DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage),
             undefined,
             kernel.kernelConnectionMetadata
         );

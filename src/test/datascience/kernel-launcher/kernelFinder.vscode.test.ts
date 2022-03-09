@@ -8,13 +8,13 @@ import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { getKernelConnectionLanguage } from '../../../client/../kernels/helpers';
-import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { traceInfo } from '../../../client/common/logger';
 import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { ILocalKernelFinder } from '../../../kernels/raw/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {

@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../client/common/extensions';
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
-
-import { IWorkspaceService } from '../../common/application/types';
-import { Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { SystemVariables } from '../../common/variables/systemVariables';
-import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
-import { IJupyterConnection, IJupyterServerUri } from '../types';
+import { noop } from 'rxjs';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { Resource } from '../../client/common/types';
+import { SystemVariables } from '../../client/common/variables/systemVariables';
+import { IJupyterServerUri, IJupyterConnection } from '../../client/datascience/types';
+import { getJupyterConnectionDisplayName } from './launcher/jupyterConnection';
 
 export function expandWorkingDir(
     workingDir: string | undefined,

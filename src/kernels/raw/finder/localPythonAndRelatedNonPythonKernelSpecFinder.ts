@@ -5,24 +5,24 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
-import { IPythonExtensionChecker } from '../../api/types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
-import { getDisplayPath } from '../../common/platform/fs-paths';
+import { PythonEnvironment } from '../../../../extension';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfoIfCI, traceVerbose, traceError } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../client/common/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
+import { captureTelemetry } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 

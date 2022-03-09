@@ -1,17 +1,18 @@
+import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, NotebookDocument } from 'vscode';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposable } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { DataFrameLoading, GetVariableInfo, Telemetry } from '../constants';
-import { IJupyterVariable, IKernelVariableRequester } from '../types';
-import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
-import { IKernel } from './kernels/types';
-import { executeSilently } from './kernels/helpers';
-import { stripAnsi } from '../../common/utils/regexp';
+import { traceError } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { stripAnsi } from '../../client/common/utils/regexp';
+import { DataFrameLoading, GetVariableInfo } from '../../client/datascience/constants';
+import { JupyterDataRateLimitError } from '../../client/datascience/errors/jupyterDataRateLimitError';
+import { IKernelVariableRequester, IJupyterVariable } from '../../client/datascience/types';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { executeSilently } from '../helpers';
+import { IKernel } from '../types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -266,7 +267,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 if (resultString.includes('iopub_data_rate_limit')) {
                     throw new JupyterDataRateLimitError();
                 } else {
-                    const error = localize.DataScience.jupyterGetVariablesExecutionError().format(resultString);
+                    const error = DataScience.jupyterGetVariablesExecutionError().format(resultString);
                     traceError(error);
                     throw new Error(error);
                 }
@@ -288,13 +289,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             ) {
                 const traceback: string[] = codeCellOutput.traceback as string[];
                 const stripped = traceback.map(stripAnsi).join('\r\n');
-                const error = localize.DataScience.jupyterGetVariablesExecutionError().format(stripped);
+                const error = DataScience.jupyterGetVariablesExecutionError().format(stripped);
                 traceError(error);
                 throw new Error(error);
             }
         }
 
-        throw new Error(localize.DataScience.jupyterGetVariablesBadResults());
+        throw new Error(DataScience.jupyterGetVariablesBadResults());
     }
 
     // Pull our text result out of the Jupyter cell

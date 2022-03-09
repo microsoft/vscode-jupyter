@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { IFileSystem } from '../../common/platform/types';
-
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IJupyterVariable } from '../types';
+import { IFileSystem } from '../../client/common/platform/types';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IJupyterVariable } from '../../client/datascience/types';
 
 export class VariableScriptLoader {
     private fetchVariableShapeScript?: string;

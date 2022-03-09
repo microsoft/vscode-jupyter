@@ -4,17 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../activation/types';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { IWorkspaceService } from '../common/application/types';
-import '../common/extensions';
-import { CondaService } from '../common/process/condaService';
-import { IDisposableRegistry } from '../common/types';
-import { noop } from '../common/utils/misc';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
-import { IEnvironmentActivationService } from '../interpreter/activation/types';
-import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
-import { IRawNotebookSupportedService } from './types';
+import { noop } from 'rxjs';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { CondaService } from '../../client/common/process/condaService';
+import { IDisposableRegistry } from '../../client/common/types';
+import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
+import { IRawNotebookSupportedService } from '../../client/datascience/types';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
 
 @injectable()
 export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {

@@ -3,27 +3,31 @@
 'use strict';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationError, CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IDisposable, IOutputChannel, Resource } from '../../common/types';
-import { createDeferred, sleep, TimedOutError } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { BaseJupyterSession } from '../baseJupyterSession';
-import { Telemetry } from '../constants';
-import { DisplayOptions } from '../displayOptions';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IDisposable, IOutputChannel, Resource } from '../../../client/common/types';
+import { TimedOutError, createDeferred } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
+import { StopWatch } from '../../../client/common/utils/stopWatch';
+import { DisplayOptions } from '../../../client/datascience/displayOptions';
+import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
+import {
+    trackKernelResourceInformation,
+    sendKernelTelemetryEvent
+} from '../../../client/datascience/telemetry/telemetry';
+import { IDisplayOptions, ISessionWithSocket } from '../../../client/datascience/types';
+import { sendTelemetryEvent, captureTelemetry } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
-import { IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
-import { KernelProgressReporter } from '../progress/kernelProgressReporter';
-import { RawSession } from '../raw-kernel/rawSession';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { IDisplayOptions, ISessionWithSocket } from '../types';
+import { sleep } from '../../../test/core';
+import { BaseJupyterSession } from '../../common/baseJupyterSession';
+import { IKernelLauncher, IKernelProcess } from '../types';
+import { RawSession } from './rawSession';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -93,7 +97,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
             this.outputChannel.appendLine(
-                localize.DataScience.kernelStarted().format(
+                DataScience.kernelStarted().format(
                     getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
                 )
             );
@@ -255,7 +259,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            localize.DataScience.connectingToKernel().format(
+            DataScience.connectingToKernel().format(
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
             ),
             () =>
@@ -271,7 +275,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            localize.DataScience.waitingForJupyterSessionToBeIdle(),
+            DataScience.waitingForJupyterSessionToBeIdle(),
             () => this.postStartRawSession(options, process)
         );
     }

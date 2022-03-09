@@ -9,24 +9,25 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable } from 'vscode';
-import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/types';
-import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
+import { CancellationError, CancellationToken, Disposable } from 'vscode';
+import { IDisposable } from '@fluentui/react';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { traceInfo, traceError } from '../../../client/common/logger';
+import { IFileSystem, TemporaryDirectory } from '../../../client/common/platform/types';
+import { IOutputChannel, Resource } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { StopWatch } from '../../../client/common/utils/stopWatch';
+import { JupyterConnectError } from '../../../client/datascience/errors/jupyterConnectError';
+import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
+import { ReportableAction } from '../../../client/datascience/progress/types';
+import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../client/datascience/types';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection';
-import { JupyterInstallError } from '../errors/jupyterInstallError';
-import { disposeAllDisposables } from '../../common/helpers';
-import { JupyterConnectError } from '../errors/jupyterConnectError';
-import { KernelProgressReporter } from '../progress/kernelProgressReporter';
-import { IDisposable, IOutputChannel, Resource } from '../../common/types';
+import { WrappedError } from '../../../client/common/errors/types';
 
 /**
  * Responsible for starting a notebook.
@@ -180,9 +181,9 @@ export class NotebookStarter implements Disposable {
 
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
+                throw new Error(DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
-                throw WrappedError.from(localize.DataScience.jupyterNotebookFailure().format(err), err);
+                throw WrappedError.from(DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
             progress.dispose();

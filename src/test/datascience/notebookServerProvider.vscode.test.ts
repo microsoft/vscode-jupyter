@@ -12,14 +12,14 @@ import { IS_NON_RAW_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
 import * as getFreePort from 'get-port';
-import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IConfigurationService } from '../../client/common/types';
 import { JupyterSettings } from '../../client/common/configSettings';
 import { IServiceContainer } from '../../client/ioc/types';
-import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider';
 
 suite('Jupyter CLI Tests', async () => {
     let jupyterServerProvider: NotebookServerProvider;

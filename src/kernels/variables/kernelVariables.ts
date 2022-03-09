@@ -3,23 +3,22 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
-import { CancellationError } from '../../common/cancellation';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { Experiments } from '../../common/experiments/groups';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { Identifiers } from '../constants';
+import { CancellationError, CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { Experiments } from '../../client/common/experiments/groups';
+import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import {
-    IJupyterSession,
     IJupyterVariable,
     IJupyterVariables,
+    IKernelVariableRequester,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    IKernelVariableRequester
-} from '../types';
-import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
-import { IKernel } from './kernels/types';
+    IJupyterSession
+} from '../../client/datascience/types';
+import { Identifiers } from '../../datascience-ui/common/constants';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
+import { IKernel } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 

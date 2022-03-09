@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import '../../../common/extensions';
-import { Resource } from '../../../common/types';
-import { IInteractiveWindowProvider } from '../../types';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
-import { getResourceType } from '../../common';
-import { traceError } from '../../../common/logger';
-import { KernelConnectionMetadata } from './types';
-import { JVSC_EXTENSION_ID } from '../../../common/constants';
+
+import { IVSCodeNotebook, ICommandManager } from '../../client/common/application/types';
+import { JVSC_EXTENSION_ID } from '../../client/common/constants';
+import { traceError } from '../../client/common/logger';
+import { Resource } from '../../client/common/types';
+import { getResourceType } from '../../client/datascience/common';
+import { getActiveInteractiveWindow } from '../../client/datascience/interactive-window/helpers';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { KernelConnectionMetadata } from '../types';
+
+// TODO: This should probably move to a 'notebook' subsection
 
 /**
  * Return `true` if a new kernel has been selected.

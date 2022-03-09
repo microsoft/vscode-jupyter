@@ -9,29 +9,29 @@ import * as path from 'path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, window } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { isTestExecution } from '../../common/constants';
-import { traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import { Telemetry } from '../constants';
+import { CancellationError, CancellationToken, window } from 'vscode';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { isTestExecution } from '../../../client/common/constants';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import { traceInfo, traceWarning } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../client/common/process/types';
+import { IDisposableRegistry, IConfigurationService, Resource } from '../../../client/common/types';
+import { swallowExceptions } from '../../../client/common/utils/decorators';
+import { DataScience } from '../../../client/common/utils/localize';
+import { sendKernelTelemetryWhenDone } from '../../../client/datascience/telemetry/telemetry';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
+import { IKernelLauncher, IKernelProcess, IKernelConnection } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
-import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
-import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { swallowExceptions } from '../../common/utils/decorators';
-import * as localize from '../../common/utils/localize';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -179,7 +179,7 @@ export class KernelLauncher implements IKernelLauncher {
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
         const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(localize.DataScience.kernelConsoleOutputChannel().format(baseName))
+            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel().format(baseName))
             : undefined;
         outputChannel?.clear();
 

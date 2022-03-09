@@ -4,17 +4,17 @@
 import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IDisposableRegistry } from '../../common/types';
-import { captureTelemetry } from '../../telemetry';
-import { Identifiers, Telemetry } from '../constants';
+import { IDisposableRegistry } from '../../client/common/types';
 import {
-    IConditionalJupyterVariables,
-    IJupyterVariable,
     IJupyterVariables,
+    IConditionalJupyterVariables,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
-} from '../types';
-import { IKernel } from './kernels/types';
+    IJupyterVariablesResponse,
+    IJupyterVariable
+} from '../../client/datascience/types';
+import { captureTelemetry } from '../../client/telemetry';
+import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { IKernel } from '../types';
 
 /**
  * This class provides variable data for showing in the interactive window or a notebook.

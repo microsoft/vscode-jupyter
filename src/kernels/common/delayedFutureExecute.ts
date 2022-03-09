@@ -3,9 +3,9 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import { createDeferred } from '../common/utils/async';
-import { CancellationError } from '../common/cancellation';
-import { traceInfoIfCI } from '../common/logger';
+import { CancellationError } from '../../client/common/cancellation';
+import { traceInfoIfCI } from '../../client/common/logger';
+import { createDeferred } from '../../client/common/utils/async';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute

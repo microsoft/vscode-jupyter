@@ -6,21 +6,22 @@ import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebugService, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IConfigurationService, Resource } from '../../common/types';
-import { IDebuggingManager, KernelDebugMode } from '../../debugger/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
-import { DebugLocationTracker } from '../debugLocationTracker';
+import { IDebugService, IVSCodeNotebook } from '../../client/common/application/types';
+import { traceError } from '../../client/common/logger';
+import { IConfigurationService, Resource } from '../../client/common/types';
+import { DataFrameLoading, GetVariableInfo } from '../../client/datascience/constants';
+import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
 import {
     IConditionalJupyterVariables,
-    IJupyterDebugService,
     IJupyterVariable,
+    IJupyterDebugService,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
-} from '../types';
-import { IKernel } from './kernels/types';
+} from '../../client/datascience/types';
+import { IDebuggingManager, KernelDebugMode } from '../../client/debugger/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';
 
 const DataViewableTypes: Set<string> = new Set<string>([

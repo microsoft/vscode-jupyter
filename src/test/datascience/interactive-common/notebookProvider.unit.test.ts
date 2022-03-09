@@ -9,9 +9,9 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { KernelConnectionMetadata } from '../../../client/../kernels/types';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
+import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);

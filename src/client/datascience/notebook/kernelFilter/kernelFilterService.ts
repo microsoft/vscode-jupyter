@@ -6,7 +6,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
-import { KernelConnectionMetadata } from '..//../../kernels/types';
+import { KernelConnectionMetadata } from '../../../../kernels/types';
 
 @injectable()
 export class KernelFilterService implements IDisposable {

@@ -4,22 +4,23 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
+import { noop } from 'rxjs';
 import { CancellationToken, Memento } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IMemento, ReadWrite } from '../../common/types';
-import { testOnlyMethod } from '../../common/utils/decorators';
-import { noop } from '../../common/utils/misc';
-import { ignoreLogging } from '../../logging/trace';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceError } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO, ReadWrite } from '../../../client/common/types';
+import { testOnlyMethod } from '../../../client/common/utils/decorators';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
+import { traceDecorators } from '../../../client/logging';
+import { ignoreLogging } from '../../../client/logging/trace';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
-import { JupyterKernelSpec } from '../../../kernels/jupyterKernelSpec';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { IJupyterKernelSpec } from '../types';
+import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;

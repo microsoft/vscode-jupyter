@@ -5,35 +5,37 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
+import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
-import { traceWarning } from '../../../common/logger';
-
+import { PythonEnvironment } from '../../../../extension';
+import { traceWarning } from '../../../client/common/logger';
 import {
-    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
+    SpawnOptions,
     ObservableExecutionResult,
-    SpawnOptions
-} from '../../../common/process/types';
-import { IOutputChannel, IPathUtils } from '../../../common/types';
-import { DataScience } from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
-import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
-import { JupyterServerInfo } from '../jupyterConnection';
-import { JupyterInstallError } from '../../errors/jupyterInstallError';
+    IPythonDaemonExecutionService
+} from '../../../client/common/process/types';
+import { IOutputChannel, IPathUtils } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import {
+    IJupyterSubCommandExecutionService,
+    IJupyterInterpreterDependencyManager
+} from '../../../client/datascience/types';
+import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
+import { Product } from '../../installer/types';
+import { JupyterPaths } from '../../raw/finder/jupyterPaths';
+import { JupyterServerInfo } from '../launcher/jupyterConnection';
 import {
     getMessageForLibrariesNotInstalled,
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
-import { Product } from '../../../../kernels/installer/types';
-import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

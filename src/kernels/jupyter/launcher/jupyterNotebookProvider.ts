@@ -4,17 +4,17 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { SessionDisposedError } from '../errors/sessionDisposedError';
+import { SessionDisposedError } from '../../../client/datascience/errors/sessionDisposedError';
 import {
-    ConnectNotebookProviderOptions,
-    NotebookCreationOptions,
-    IJupyterConnection,
     IJupyterNotebookProvider,
     IJupyterServerProvider,
-    INotebook,
-    IJupyterServerUriStorage
-} from '../types';
-import { isLocalConnection } from './kernels/types';
+    IJupyterServerUriStorage,
+    ConnectNotebookProviderOptions,
+    IJupyterConnection,
+    NotebookCreationOptions,
+    INotebook
+} from '../../../client/datascience/types';
+import { isLocalConnection } from '../../types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()

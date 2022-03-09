@@ -1,22 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../client/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { CodeSnippets, Identifiers } from '../constants';
-import { INbConvertExportToPythonService, INbConvertInterpreterDependencyChecker, INotebookImporter } from '../types';
+import { noop } from 'rxjs';
+import { PythonEnvironment } from '../../../../extension';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { traceError } from '../../../client/common/logger';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IDisposableRegistry, IConfigurationService } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import {
+    INotebookImporter,
+    INbConvertInterpreterDependencyChecker,
+    INbConvertExportToPythonService
+} from '../../../client/datascience/types';
+import { Identifiers, CodeSnippets } from '../../../datascience-ui/common/constants';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -92,7 +96,7 @@ export class JupyterImporter implements INotebookImporter {
             return this.addInstructionComments(fileOutput);
         }
 
-        throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+        throw new Error(DataScience.jupyterNbConvertNotSupported());
     }
 
     public dispose = () => {
@@ -100,7 +104,7 @@ export class JupyterImporter implements INotebookImporter {
     };
 
     private addInstructionComments = (pythonOutput: string): string => {
-        const comments = localize.DataScience.instructionComments().format(this.defaultCellMarker);
+        const comments = DataScience.instructionComments().format(this.defaultCellMarker);
         return comments.concat(pythonOutput);
     };
 
@@ -114,7 +118,7 @@ export class JupyterImporter implements INotebookImporter {
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
         const newCode = CodeSnippets.ChangeDirectory.join(os.EOL).format(
-            localize.DataScience.importChangeDirectoryComment().format(this.defaultCellMarker),
+            DataScience.importChangeDirectoryComment().format(this.defaultCellMarker),
             CodeSnippets.ChangeDirectoryCommentIdentifier,
             directoryChange
         );

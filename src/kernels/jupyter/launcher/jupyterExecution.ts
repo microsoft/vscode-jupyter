@@ -5,31 +5,31 @@ import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
-
-import { IWorkspaceService } from '../../common/application/types';
-import { Cancellation } from '../../common/cancellation';
-import { WrappedError } from '../../common/errors/types';
-import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../constants';
+import { PythonEnvironment } from '../../../../extension';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { Cancellation } from '../../../client/common/cancellation';
+import { WrappedError } from '../../../client/common/errors/types';
+import { traceInfo } from '../../../client/common/logger';
+import { IDisposableRegistry, IConfigurationService, Resource } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { JupyterSelfCertsError } from '../../../client/datascience/errors/jupyterSelfCertsError';
+import { JupyterWaitForIdleError } from '../../../client/datascience/errors/jupyterWaitForIdleError';
 import {
-    IJupyterConnection,
     IJupyterExecution,
-    IJupyterServerUri,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
-    INotebookServer,
+    IJupyterServerUri,
     INotebookServerOptions,
+    INotebookServer,
+    IJupyterConnection,
     JupyterServerUriHandle
-} from '../types';
-import { JupyterSelfCertsError } from '../errors/jupyterSelfCertsError';
-import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
-import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
+} from '../../../client/datascience/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { sendTelemetryEvent, captureTelemetry } from '../../../client/telemetry';
+import { Telemetry, Identifiers } from '../../../datascience-ui/common/constants';
+import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
+
 import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -172,17 +172,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
                                 throw WrappedError.from(
-                                    localize.DataScience.jupyterNotebookRemoteConnectFailed().format(
-                                        connection.baseUrl,
-                                        err
-                                    ),
+                                    DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err),
                                     err
                                 );
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
                             throw WrappedError.from(
-                                localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
+                                DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
                             );
                         }
@@ -231,7 +228,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 Cancellation.throwIfCanceled(cancelToken);
 
                 // Otherwise we can't connect
-                throw new Error(localize.DataScience.jupyterNotebookFailure().format(''));
+                throw new Error(DataScience.jupyterNotebookFailure().format(''));
             }
         } else {
             // Prepare our map of server URIs

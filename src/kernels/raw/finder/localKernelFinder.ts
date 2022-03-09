@@ -5,13 +5,6 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo } from '../../common/logger';
-import { GLOBAL_MEMENTO, IMemento, Resource } from '../../common/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import {
     findPreferredKernel,
     getDisplayNameOrNameOfKernelConnection,
@@ -19,19 +12,27 @@ import {
     getLanguageInNotebookMetadata
 } from '../../../kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../../../kernels/types';
-import { ILocalKernelFinder } from './types';
-import { getResourceType } from '../common';
-import { isPythonNotebook } from '../notebook/helpers/helpers';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { IFileSystem } from '../../common/platform/types';
-import { noop } from '../../common/utils/misc';
-import { createPromiseFromCancellation } from '../../common/cancellation';
-import { ignoreLogging, TraceOptions } from '../../logging/trace';
-import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { swallowExceptions } from '../../common/utils/decorators';
+import { noop } from 'rxjs';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo, traceError } from '../../../client/common/logger';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../client/common/types';
+import { getResourceType } from '../../../client/datascience/common';
+import { isPythonNotebook } from '../../../client/datascience/notebook/helpers/helpers';
+import { sendKernelListTelemetry } from '../../../client/datascience/telemetry/kernelTelemetry';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { traceDecorators } from '../../../client/logging';
+import { ignoreLogging, TraceOptions } from '../../../client/logging/trace';
+import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
+import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { getTelemetrySafeLanguage } from '../../../client/telemetry/helpers';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { ILocalKernelFinder } from '../types';
+import { swallowExceptions } from '../../../client/common/utils/decorators';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';

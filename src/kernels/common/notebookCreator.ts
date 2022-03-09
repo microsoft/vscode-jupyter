@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE, JVSC_EXTENSION_ID, JVSC_EXTENSION_DisplayName } from '../../client/common/constants';
-import { GlobalActivation } from '../../client/datascience/datascience';
+import { DataScience } from '../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../client/datascience/types';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
@@ -44,7 +44,7 @@ export class NotebookCreator {
             extensionId: JVSC_EXTENSION_ID,
             label: JVSC_EXTENSION_DisplayName
         });
-        const placeHolder = GlobalActivation.placeHolderToSelectOptionForNotebookCreation();
+        const placeHolder = DataScience.placeHolderToSelectOptionForNotebookCreation();
         const item = await this.appShell.showQuickPick(items, {
             matchOnDescription: true,
             matchOnDetail: true,

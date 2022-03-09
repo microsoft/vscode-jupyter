@@ -1,19 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../common/extensions';
+import '../../../../client/common/extensions';
 
 import { CancellationToken } from 'vscode';
-
-import { IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo } from '../../../common/logger';
-
-import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
-import { sleep } from '../../../common/utils/async';
-import { INotebookServer, INotebookServerOptions } from '../../types';
-import { calculateWorkingDirectory } from '../../utils';
-import { testOnlyMethod } from '../../../common/utils/decorators';
+import { IWorkspaceService } from '../../../../client/common/application/types';
+import { traceInfo, traceError } from '../../../../client/common/logger';
+import { IFileSystem } from '../../../../client/common/platform/types';
+import { IAsyncDisposable, IConfigurationService } from '../../../../client/common/types';
+import { testOnlyMethod } from '../../../../client/common/utils/decorators';
+import { INotebookServerOptions, INotebookServer } from '../../../../client/datascience/types';
+import { calculateWorkingDirectory } from '../../../../client/datascience/utils';
+import { sleep } from '../../../../client/common/utils/async';
 
 interface IServerData {
     options: INotebookServerOptions;

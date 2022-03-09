@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IDisposable } from '@fluentui/react';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
-import { traceError } from '../../common/logger';
-import { IDisposable } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { IKernelConnection } from '../kernel-launcher/types';
-import { IWebSocketLike } from '../kernelSocketWrapper';
-import { IKernelSocket } from '../types';
+import { traceError } from '../../../client/common/logger';
+import { noop } from '../../../client/common/utils/misc';
+import { IKernelSocket } from '../../../client/datascience/types';
+import { IWebSocketLike } from '../../common/kernelSocketWrapper';
+import { IKernelConnection } from '../types';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';

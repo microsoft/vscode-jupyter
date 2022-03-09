@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 'use strict';
+import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
+import { noop } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import {
@@ -13,37 +15,54 @@ import {
     NotebookController,
     NotebookDocument,
     ColorThemeKind,
-    Disposable
+    Disposable,
+    CancellationError
 } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { AddRunCellHook, CodeSnippets, Identifiers, Telemetry } from '../../constants';
+import { IApplicationShell, IWorkspaceService } from '../client/common/application/types';
+import { WrappedError } from '../client/common/errors/types';
+import { disposeAllDisposables } from '../client/common/helpers';
+import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../client/common/logger';
+import { getDisplayPath } from '../client/common/platform/fs-paths';
+import { IFileSystem } from '../client/common/platform/types';
+import { IPythonExecutionFactory } from '../client/common/process/types';
+import { Resource, IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
+import { Deferred } from '../client/common/utils/async';
+import { DataScience } from '../client/common/utils/localize';
+import { StopWatch } from '../client/common/utils/stopWatch';
+import { AddRunCellHook } from '../client/datascience/constants';
+import { DisplayOptions } from '../client/datascience/displayOptions';
+import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
+import { JupyterConnectError } from '../client/datascience/errors/jupyterConnectError';
+import { InteractiveWindowView } from '../client/datascience/notebook/constants';
+import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';
 import {
-    initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent,
-    trackKernelResourceInformation
-} from '../../telemetry/telemetry';
+    trackKernelResourceInformation,
+    initializeInteractiveOrNotebookTelemetryBasedOnUserAction
+} from '../client/datascience/telemetry/telemetry';
 import {
-    IJupyterSession,
-    INotebook,
-    INotebookProvider,
     INotebookProviderConnection,
-    InterruptResult,
+    KernelSocketInformation,
+    INotebook,
+    IJupyterSession,
+    INotebookProvider,
     IStatusProvider,
-    KernelSocketInformation
-} from '../../types';
+    InterruptResult
+} from '../client/datascience/types';
+import { calculateWorkingDirectory } from '../client/datascience/utils';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { concatMultilineString } from '../datascience-ui/common';
+import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
+import { sleep } from '../test/core';
+import { CellOutputDisplayIdTracker } from './cell-execution/cellDisplayIdTracker';
+import { KernelExecution } from './cell-execution/kernelExecution';
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     sendTelemetryForPythonKernelExecutable
 } from './helpers';
-import { KernelExecution } from './kernelExecution';
+import { expandWorkingDir } from './jupyter/jupyterUtils';
 import {
     IKernel,
     isLocalConnection,
@@ -51,23 +70,6 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from './types';
-import { InteractiveWindowView } from '../../notebook/constants';
-import { DataScience } from '../../../common/utils/localize';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
-import { calculateWorkingDirectory } from '../../utils';
-import { expandWorkingDir } from '../jupyterUtils';
-import type * as nbformat from '@jupyterlab/nbformat';
-import { concatMultilineString } from '../../../../datascience-ui/common';
-import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
-import { IPythonExecutionFactory } from '../../../common/process/types';
-import { Deferred, sleep } from '../../../common/utils/async';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { WrappedError } from '../../../common/errors/types';
-import { DisplayOptions } from '../../displayOptions';
-import { JupyterConnectError } from '../../errors/jupyterConnectError';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
-import { disposeAllDisposables } from '../../../common/helpers';
-import { CancellationError } from '../../../common/cancellation';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {

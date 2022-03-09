@@ -5,11 +5,17 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, IPathUtils } from '../../common/types';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { traceDecorators } from '../../logging';
-import { tryGetRealPath } from '../common';
+import { IPlatformService, IFileSystem } from '../../../client/common/platform/types';
+import {
+    IPathUtils,
+    IDisposableRegistry,
+    IMemento,
+    GLOBAL_MEMENTO,
+    IExtensionContext
+} from '../../../client/common/types';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { tryGetRealPath } from '../../../client/datascience/common';
+import { traceDecorators } from '../../../client/logging';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { IRawNotebookSupportedService } from '../types';
+import { traceInfo, traceError } from '../../../client/common/logger';
+import { IConfigurationService } from '../../../client/common/types';
+import { IRawNotebookSupportedService } from '../../../client/datascience/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()

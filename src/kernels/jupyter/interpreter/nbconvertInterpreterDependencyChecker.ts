@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
-import { IInstaller, Product } from '../../../../kernels/installer/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { parseSemVer } from '../../common';
-import { JupyterCommands } from '../../constants';
-import { IJupyterCommandFactory, INbConvertInterpreterDependencyChecker } from '../../types';
+import { PythonEnvironment } from '../../../../extension';
+import { parseSemVer } from '../../../client/datascience/common';
+import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../../../client/datascience/types';
+import { JupyterCommands } from '../../../datascience-ui/common/constants';
+import { IInstaller, Product } from '../../installer/types';
 
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {

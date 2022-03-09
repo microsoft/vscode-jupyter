@@ -34,7 +34,7 @@ import { ISpecModel } from '@jupyterlab/services/lib/kernelspec/restapi';
 import { JSONObject } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { Disposable } from 'vscode';
-import { IDisposable } from '../../../common/types';
+import { IDisposable } from '../client/common/types';
 import { IKernel } from './types';
 
 export class KernelConnectionWrapper implements Kernel.IKernelConnection {

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IJupyterSession, INotebook, INotebookProviderConnection } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { INotebook, INotebookProviderConnection, IJupyterSession } from '../../../client/datascience/types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services

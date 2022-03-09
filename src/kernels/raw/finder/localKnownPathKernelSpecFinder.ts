@@ -4,19 +4,19 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
 import { getKernelId } from '../../../kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IPythonExtensionChecker } from '../../api/types';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { IMemento, GLOBAL_MEMENTO } from '../../common/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo, traceError } from '../../../client/common/logger';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO } from '../../../client/common/types';
+import { captureTelemetry } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.

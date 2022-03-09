@@ -4,21 +4,22 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { noop } from 'rxjs';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../common/cancellation';
-import { traceError } from '../../../common/logger';
-import { Common, DataScience } from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { EnvironmentType, PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
-import { IJupyterCommandFactory } from '../../types';
-import { JupyterInstallError } from '../../errors/jupyterInstallError';
-import { ProductNames } from '../../../../kernels/installer/productNames';
-import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
+import { PythonEnvironment, EnvironmentType } from '../../../../extension';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { createPromiseFromCancellation, Cancellation } from '../../../client/common/cancellation';
+import { traceError } from '../../../client/common/logger';
+import { DataScience, Common } from '../../../client/common/utils/localize';
+import { HelpLinks } from '../../../client/datascience/constants';
+import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { reportAction } from '../../../client/datascience/progress/decorator';
+import { ReportableAction } from '../../../client/datascience/progress/types';
+import { IJupyterCommandFactory } from '../../../client/datascience/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
+import { ProductNames } from '../../installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 
 export enum JupyterInterpreterDependencyResponse {
     ok,

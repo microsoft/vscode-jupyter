@@ -1,38 +1,38 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../common/extensions';
+import '../../../../client/common/extensions';
 
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceInfo } from '../../../common/logger';
+import { IDisposable } from '@fluentui/react';
+import { injectable, inject, named } from 'inversify';
+import { noop } from 'rxjs';
+import { IWorkspaceService } from '../../../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../../client/common/constants';
+import { traceInfo, traceError } from '../../../../client/common/logger';
 import {
     IAsyncDisposableRegistry,
-    IDisposable,
-    IDisposableRegistry,
     IOutputChannel,
+    IDisposableRegistry,
     Resource
-} from '../../../common/types';
-import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
-import * as localize from '../../../common/utils/localize';
+} from '../../../../client/common/types';
+import { Deferred, createDeferred, sleep } from '../../../../client/common/utils/async';
+import { DataScience } from '../../../../client/common/utils/localize';
+import { StopWatch } from '../../../../client/common/utils/stopWatch';
+import { SessionDisposedError } from '../../../../client/datascience/errors/sessionDisposedError';
+import { sendKernelTelemetryEvent } from '../../../../client/datascience/telemetry/telemetry';
 import {
-    IDisplayOptions,
+    INotebookServer,
     IJupyterConnection,
-    IJupyterSessionManagerFactory,
     INotebook,
-    INotebookServer
-} from '../../types';
-import { computeWorkingDirectory } from '../jupyterUtils';
-import { isLocalConnection, KernelConnectionMetadata } from '../kernels/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
-import { inject, injectable, named } from 'inversify';
+    IJupyterSessionManagerFactory,
+    IDisplayOptions
+} from '../../../../client/datascience/types';
+import { Telemetry } from '../../../../datascience-ui/common/constants';
+import { KernelConnectionMetadata, isLocalConnection } from '../../../types';
+import { computeWorkingDirectory } from '../../jupyterUtils';
+import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook';
-import { noop } from '../../../common/utils/misc';
-import { Telemetry } from '../../constants';
-import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { JupyterSessionManager } from '../jupyterSessionManager';
-import { SessionDisposedError } from '../../errors/sessionDisposedError';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -138,7 +138,7 @@ export class HostJupyterServer implements INotebookServer {
         this.connectionInfoDisconnectHandler = this.connection.disconnected((c) => {
             try {
                 this.serverExitCode = c;
-                traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
+                traceError(DataScience.jupyterServerCrashed().format(c.toString()));
                 this.shutdown().ignoreErrors();
             } catch {
                 noop();
@@ -146,7 +146,7 @@ export class HostJupyterServer implements INotebookServer {
         });
 
         // Indicate we have a new session on the output channel
-        this.logRemoteOutput(localize.DataScience.connectingToJupyterUri().format(connection.baseUrl));
+        this.logRemoteOutput(DataScience.connectingToJupyterUri().format(connection.baseUrl));
 
         // Create our session manager
         this.sessionManager = (await this.sessionManagerFactory.create(connection)) as JupyterSessionManager;
@@ -172,7 +172,7 @@ export class HostJupyterServer implements INotebookServer {
                 ui
             );
             const baseUrl = this.connection?.baseUrl || '';
-            this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
+            this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
             return notebook;
         } catch (ex) {
@@ -246,7 +246,7 @@ export class HostJupyterServer implements INotebookServer {
     public getDisposedError(): Error {
         // We may have been disposed because of a crash. See if our connection info is indicating shutdown
         if (this.serverExitCode) {
-            return new Error(localize.DataScience.jupyterServerCrashed().format(this.serverExitCode.toString()));
+            return new Error(DataScience.jupyterServerCrashed().format(this.serverExitCode.toString()));
         }
 
         // Default is just say session was disposed

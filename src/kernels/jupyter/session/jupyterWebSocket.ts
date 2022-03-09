@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceError } from '../../common/logger';
-import { noop } from '../../common/utils/misc';
-import { KernelSocketWrapper } from '../kernelSocketWrapper';
-import { IKernelSocket } from '../types';
+import { traceError } from '../../../client/common/logger';
+import { noop } from '../../../client/common/utils/misc';
+import { IKernelSocket } from '../../../client/datascience/types';
+import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR

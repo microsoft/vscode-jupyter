@@ -14,16 +14,16 @@ import { IJupyterSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
 import { Settings } from '../../../client/datascience/constants';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../client/datascience/jupyterUriProviderRegistration';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
-import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { MockMemento } from '../../mocks/mementos';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {

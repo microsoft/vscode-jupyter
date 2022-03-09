@@ -7,42 +7,44 @@ import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as tmp from 'tmp';
 import * as os from 'os';
-import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
-import {
-    getErrorMessageFromPythonTraceback,
-    getTelemetrySafeErrorMessageFromPythonTraceback
-} from '../../common/errors/errorUtils';
-import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import {
-    IProcessService,
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    ObservableExecutionResult
-} from '../../common/process/types';
-import { IJupyterSettings, IOutputChannel, Resource } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { noop, swallowExceptions } from '../../common/utils/misc';
-import { captureTelemetry } from '../../telemetry';
-import { KernelInterruptDaemonModule, Telemetry } from '../constants';
+import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
     isPythonKernelConnection
 } from '../../../kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { IJupyterKernelSpec } from '../types';
+import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
-import { IKernelConnection, IKernelProcess } from './types';
-import { BaseError } from '../../common/errors/types';
-import { KernelProcessExitedError } from '../errors/kernelProcessExitedError';
-import { KernelDiedError } from '../errors/kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from '../errors/kernelPortNotUsedTimeoutError';
-import { ignoreLogging, TraceOptions } from '../../logging/trace';
-import { PythonKernelInterruptDaemon } from './pythonKernelInterruptDaemon';
+import { noop } from 'rxjs';
+import { IPythonExtensionChecker } from '../../../client/api/types';
+import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import {
+    getTelemetrySafeErrorMessageFromPythonTraceback,
+    getErrorMessageFromPythonTraceback
+} from '../../../client/common/errors/errorUtils';
+import { BaseError } from '../../../client/common/errors/types';
+import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
+import { IFileSystem } from '../../../client/common/platform/types';
+import {
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    ObservableExecutionResult,
+    IProcessService
+} from '../../../client/common/process/types';
+import { Resource, IOutputChannel, IJupyterSettings } from '../../../client/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
+import { swallowExceptions } from '../../../client/common/utils/misc';
+import { KernelDiedError } from '../../../client/datascience/errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../../../client/datascience/errors/kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from '../../../client/datascience/errors/kernelProcessExitedError';
+import { traceDecorators } from '../../../client/logging';
+import { ignoreLogging, TraceOptions } from '../../../client/logging/trace';
+import { captureTelemetry } from '../../../client/telemetry';
+import { Telemetry, KernelInterruptDaemonModule } from '../../../datascience-ui/common/constants';
+import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -240,7 +242,7 @@ export class KernelProcess implements IKernelProcess {
                     getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
                 throw new KernelDiedError(
-                    localize.DataScience.kernelDied().format(errorMessage),
+                    DataScience.kernelDied().format(errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
