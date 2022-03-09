@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { JVSC_EXTENSION_DisplayName, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../common/constants';
-import { DataScience } from '../../../common/utils/localize';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { INotebookEditorProvider } from '../../types';
+import { IApplicationShell } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE, JVSC_EXTENSION_ID, JVSC_EXTENSION_DisplayName } from '../../client/common/constants';
+import { GlobalActivation } from '../../client/datascience/datascience';
+import { INotebookEditorProvider } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
 import { CreationOptionService } from './creationOptionsService';
 
 @injectable()
@@ -44,7 +44,7 @@ export class NotebookCreator {
             extensionId: JVSC_EXTENSION_ID,
             label: JVSC_EXTENSION_DisplayName
         });
-        const placeHolder = DataScience.placeHolderToSelectOptionForNotebookCreation();
+        const placeHolder = GlobalActivation.placeHolderToSelectOptionForNotebookCreation();
         const item = await this.appShell.showQuickPick(items, {
             matchOnDescription: true,
             matchOnDetail: true,

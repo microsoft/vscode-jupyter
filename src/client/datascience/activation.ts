@@ -13,11 +13,11 @@ import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './commands/activeEditorContext';
-import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { INotebookCreationTracker, IRawNotebookSupportedService } from './types';
 import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';
 import { isJupyterNotebook } from './notebook/helpers/helpers';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {

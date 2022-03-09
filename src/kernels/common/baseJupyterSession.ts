@@ -19,8 +19,6 @@ import { getResourceType } from './common';
 import { Telemetry } from './constants';
 import { JupyterInvalidKernelError } from './errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './errors/jupyterWaitForIdleError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
-import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from './errors/sessionDisposedError';

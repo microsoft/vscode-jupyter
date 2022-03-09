@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForwardAction } from 'vscode';
+import { NotebookStarter } from '../../../kernels/jupyter/launcher/notebookStarter';
+import { KernelLauncher } from '../../../kernels/raw/launcher/kernelLauncher';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { NotebookStarter } from '../../datascience/jupyter/notebookStarter';
-import { KernelLauncher } from '../../datascience/kernel-launcher/kernelLauncher';
 import { traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
 

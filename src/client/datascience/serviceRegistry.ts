@@ -27,7 +27,7 @@ import { DataViewerFactory } from './data-viewing/dataViewerFactory';
 import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
-import { DataScience } from './datascience';
+import { GlobalActivation } from './datascience';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
@@ -217,7 +217,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
-    serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
+    serviceManager.addSingleton<IDataScience>(IDataScience, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceError } from '../../../common/logger';
-import { IExtensions } from '../../../common/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { traceError } from '../../client/common/logger';
+import { IExtensions } from '../../client/common/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
 
 @injectable()
 export class CreationOptionService {
