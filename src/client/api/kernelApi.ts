@@ -25,7 +25,7 @@ import {
     IKernelSocket,
     KernelConnectionMetadata,
     WebSocketData
-} from '../../../extension';
+} from './extension';
 
 @injectable()
 export class JupyterKernelServiceFactory {

@@ -5,7 +5,6 @@ import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
-import { PythonEnvironment } from '../../../../extension';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { Cancellation } from '../../../client/common/cancellation';
 import { WrappedError } from '../../../client/common/errors/types';
@@ -26,6 +25,7 @@ import {
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../client/telemetry';
 import { Telemetry, Identifiers } from '../../../datascience-ui/common/constants';
 import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';

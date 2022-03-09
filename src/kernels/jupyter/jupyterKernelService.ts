@@ -8,7 +8,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
-import { PythonEnvironment, IJupyterKernelSpec } from '../../../extension';
 import { Cancellation } from '../../client/common/cancellation';
 import '../../client/common/extensions';
 import { traceInfoIfCI, traceInfo } from '../../client/common/logger';
@@ -20,11 +19,13 @@ import { JupyterKernelDependencyError } from '../../client/datascience/errors/ju
 import {
     IKernelDependencyService,
     IDisplayOptions,
-    KernelInterpreterDependencyResponse
+    KernelInterpreterDependencyResponse,
+    IJupyterKernelSpec
 } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { traceDecorators } from '../../client/logging';
 import { logValue, ignoreLogging } from '../../client/logging/trace';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';

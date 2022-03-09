@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { noop } from 'rxjs';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { PythonEnvironment, EnvironmentType } from '../../../../extension';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { createPromiseFromCancellation, Cancellation } from '../../../client/common/cancellation';
 import { traceError } from '../../../client/common/logger';
@@ -16,6 +15,7 @@ import { JupyterInstallError } from '../../../client/datascience/errors/jupyterI
 import { reportAction } from '../../../client/datascience/progress/decorator';
 import { ReportableAction } from '../../../client/datascience/progress/types';
 import { IJupyterCommandFactory } from '../../../client/datascience/types';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
 import { ProductNames } from '../../installer/productNames';

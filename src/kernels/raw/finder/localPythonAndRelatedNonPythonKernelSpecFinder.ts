@@ -10,7 +10,6 @@ import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } fro
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { PythonEnvironment } from '../../../../extension';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -23,6 +22,7 @@ import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info
 import { captureTelemetry } from '../../../client/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 

@@ -7,7 +7,6 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
-import { PythonEnvironment } from '../../../../extension';
 import { traceWarning } from '../../../client/common/logger';
 import {
     IPythonExecutionFactory,
@@ -25,6 +24,7 @@ import {
 } from '../../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
 import { Product } from '../../installer/types';

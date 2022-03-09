@@ -5,7 +5,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
-import { PythonEnvironment, EnvironmentType } from '../../extension';
 import { IApplicationShell } from '../client/common/application/types';
 import { createPromiseFromCancellation } from '../client/common/cancellation';
 import { traceInfo, traceError } from '../client/common/logger';
@@ -23,6 +22,7 @@ import {
 import { IServiceContainer } from '../client/ioc/types';
 import { traceDecorators } from '../client/logging';
 import { ignoreLogging, logValue, TraceOptions } from '../client/logging/trace';
+import { EnvironmentType, PythonEnvironment } from '../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../client/telemetry';
 import { getTelemetrySafeHashedString } from '../client/telemetry/helpers';
 import { Telemetry } from '../datascience-ui/common/constants';

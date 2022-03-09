@@ -9,7 +9,6 @@ import * as path from 'path';
 
 import { Uri } from 'vscode';
 import { noop } from 'rxjs';
-import { PythonEnvironment } from '../../../../extension';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { traceError } from '../../../client/common/logger';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
@@ -21,6 +20,7 @@ import {
     INbConvertExportToPythonService
 } from '../../../client/datascience/types';
 import { Identifiers, CodeSnippets } from '../../../datascience-ui/common/constants';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {

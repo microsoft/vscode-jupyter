@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { noop } from 'rxjs';
-import { PythonEnvironment } from '../../../../extension';
 import { traceInfo, traceError } from '../../../client/common/logger';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { Resource } from '../../../client/common/types';
@@ -12,6 +11,7 @@ import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 @injectable()
 export class KernelEnvironmentVariablesService {
