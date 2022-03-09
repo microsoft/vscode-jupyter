@@ -300,7 +300,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 if (session.kernel.status == 'idle') {
                     deferred.resolve(session.kernel.status);
                 }
-
                 const result = await Promise.race([deferred.promise, sleep(timeout)]);
                 session.kernel.statusChanged?.disconnect(handler);
                 traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
@@ -313,12 +312,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 );
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                 this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+                throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } finally {
                 progress?.dispose();
             }
         } else {
-            throw new JupyterInvalidKernelError(undefined);
+            throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
         }
     }
 

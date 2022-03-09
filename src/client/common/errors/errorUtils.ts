@@ -572,7 +572,7 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export async function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellExecution, errorMessage: string) {
+export function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellExecution, errorMessage: string) {
     if (!errorMessage) {
         return;
     }
@@ -593,5 +593,4 @@ export async function displayErrorsInCell(cell: NotebookCell, execution: Noteboo
         })
     ]);
     void execution.appendOutput(output);
-    execution.end(false);
 }

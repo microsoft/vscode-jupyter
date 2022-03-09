@@ -29,7 +29,7 @@ import {
 } from '../../types';
 import { JupyterPaths } from '../../kernel-launcher/jupyterPaths';
 import { cleanEnvironment, getKernelRegistrationInfo } from './helpers';
-import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
+import { JupyterKernelDependencyError } from '../../errors/jupyterKernelDependencyError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types';
 

@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Memento, workspace, window, Uri } from 'vscode';
+import { commands, Memento, workspace, window, Uri, NotebookCell } from 'vscode';
 import { IPythonApiProvider } from '../../../../client/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { Kernel } from '../../../../client/datascience/jupyter/kernels/kernel';
@@ -23,7 +23,7 @@ import {
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
-import { hasErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
+import { hasErrorOutput, translateCellErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
 import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
@@ -180,7 +180,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed for '${path.basename(
         venvNoRegPath
     )}'`, async () => openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath));
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (VSCode Notebook)', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -204,7 +204,10 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
         await waitForCondition(
-            async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
+            async () =>
+                hasErrorOutput(cell.outputs) &&
+                assertVSCCellIsNotRunning(cell) &&
+                verifyInstallIPyKernelInstructionsInOutput(cell),
             defaultNotebookTestTimeout,
             'No errors in cell'
         );
@@ -241,7 +244,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell (Interactive)', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -273,7 +276,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
         await waitForCondition(
-            async () => cell.document.getText().includes('Canceled') && assertVSCCellIsNotRunning(cell),
+            async () => assertVSCCellIsNotRunning(cell),
             defaultNotebookTestTimeout,
             'No errors in cell'
         );
@@ -616,6 +619,12 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         return true;
     }
 
+    function verifyInstallIPyKernelInstructionsInOutput(cell: NotebookCell) {
+        const textToLookFor = `Run the following command to install '${ProductNames.get(Product.ipykernel)!}'`;
+        const err = translateCellErrorOutput(cell.outputs[0]);
+        assert.include(err.traceback.join(''), textToLookFor);
+        return true;
+    }
     type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
     function hookupKernelSelected(
         promptToInstall: Awaited<ReturnType<typeof selectKernelFromIPyKernelPrompt>>,

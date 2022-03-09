@@ -12,7 +12,7 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -26,7 +26,8 @@ import {
     waitForExecutionCompletedSuccessfully,
     runAllCellsInActiveNotebook,
     waitForKernelToGetAutoSelected,
-    deleteCell
+    deleteCell,
+    defaultNotebookTestTimeout
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
@@ -35,8 +36,9 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { Uri, workspace } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { translateCellErrorOutput } from '../../../client/datascience/notebook/helpers/helpers';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -207,6 +209,29 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // If execution order is 1, then we know the kernel restarted.
             assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
         });
+        test('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
+            await runAndFailWithKernelCrash();
+            await insertCodeCell('print("123412341234")', { index: 2 });
+            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            );
+            const restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { text: DataScience.restartKernel(), clickImmediately: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel, and it gets restarted.
+            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
+            await Promise.all([restartPrompt.displayed, runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+            // If execution order is 1, then we know the kernel restarted.
+            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
+        });
         test('Ensure cell outupt does not have errors when execution fails due to dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
@@ -271,12 +296,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             await waitForKernelToGetAutoSelected();
         }
-        async function displayErrorAboutOverriddenBuiltInModules(disablePythonDaemon: boolean) {
+        async function displayErrorAboutOverriddenBuiltInModules() {
             await closeNotebooksAndCleanUpAfterTests(disposables);
-
-            const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
-            settings.disablePythonDaemon = disablePythonDaemon;
-
             const randomFile = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
@@ -294,16 +315,25 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 disposables
             );
 
-            await createAndOpenTemporaryNotebookForKernelCrash(`nb${disablePythonDaemon}.ipynb`);
+            await createAndOpenTemporaryNotebookForKernelCrash(`nb.ipynb`);
             await insertCodeCell('print("123412341234")');
             await runAllCellsInActiveNotebook();
             // Wait for a max of 1s for error message to be dispalyed.
             await Promise.race([prompt.displayed, sleep(5_000).then(() => Promise.reject('Prompt not displayed'))]);
             prompt.dispose();
+
+            // Verify we have an output in the cell that contains the same information (about overirding built in modules).
+            const cell = window.activeNotebookEditor!.document.cellAt(0);
+            await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
+            const err = translateCellErrorOutput(cell.outputs[0]);
+            assert.include(err.traceback.join(''), 'random.py');
+            assert.include(
+                err.traceback.join(''),
+                'seems to be overriding built in modules and interfering with the startup of the kernel'
+            );
+            assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
         }
-        test.skip('Display error about overriding builtin modules (with Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules(false));
         test('Display error about overriding builtin modules (without Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules(true));
+            displayErrorAboutOverriddenBuiltInModules());
     });
 });

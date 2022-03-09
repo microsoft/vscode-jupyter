@@ -29,6 +29,10 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const clickHereForMoreInfoWithHtml = localize(
+        'Common.clickHereForMoreInfoWithHtml',
+        "Click <a href='{0}'>here</a> for more info."
+    );
 }
 
 export namespace CommonSurvey {
@@ -453,7 +457,6 @@ export namespace DataScience {
     export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');
     export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
-    export const canceledKernelHeader = localize('DataScience.canceledKernelHeader', 'Canceled connection to {0}');
 
     export const jupyterSelectURIPrompt = localize(
         'DataScience.jupyterSelectURIPrompt',
@@ -977,10 +980,6 @@ export namespace DataScience {
     export const ipykernelNotInstalled = localize(
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
-    );
-    export const ipykernelNotInstalledBecauseCanceled = localize(
-        'DataScience.ipykernelNotInstalledBecauseCanceled',
-        'IPyKernel not installed into interpreter. Installation canceled.'
     );
     export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
     export const setup = localize('DataScience.setup', 'Setup');

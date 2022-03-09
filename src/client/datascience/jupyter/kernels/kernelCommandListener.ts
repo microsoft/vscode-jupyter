@@ -15,7 +15,12 @@ import { Commands, Telemetry } from '../../constants';
 import { INotebookControllerManager } from '../../notebook/types';
 import { RawJupyterSession } from '../../raw-kernel/rawJupyterSession';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IDataScienceCommandListener, IInteractiveWindowProvider, IStatusProvider } from '../../types';
+import {
+    IDataScienceCommandListener,
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    IStatusProvider
+} from '../../types';
 import { JupyterSession } from '../jupyterSession';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
@@ -35,7 +40,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager
+        @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager,
+        @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -168,7 +174,12 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         } catch (ex) {
             if (currentCell) {
                 const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
-                displayErrorsInCell(currentCell, cellExecution, ex).ignoreErrors();
+                displayErrorsInCell(
+                    currentCell,
+                    cellExecution,
+                    await this.errorHandler.getErrorMessageForDisplayInCell(ex)
+                );
+                cellExecution.end(false);
             } else {
                 void this.applicationShell.showErrorMessage(ex.toString());
             }

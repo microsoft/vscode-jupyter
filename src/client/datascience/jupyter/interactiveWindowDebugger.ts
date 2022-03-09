@@ -327,16 +327,22 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         // if we cannot parse the connect information, throw so we exit out of debugging
         if (outputs.length > 0 && outputs[0].output_type === 'error') {
             const error = outputs[0] as nbformat.IError;
-            throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
+            throw new JupyterDebuggerNotInstalledError(
+                this.debuggerPackage,
+                error.ename,
+                kernel.kernelConnectionMetadata
+            );
         }
         throw new JupyterDebuggerNotInstalledError(
-            localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage)
+            localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage),
+            undefined,
+            kernel.kernelConnectionMetadata
         );
     }
 
-    private async connectToRemote(_kernel: IKernel): Promise<{ port: number; host: string }> {
+    private async connectToRemote(kernel: IKernel): Promise<{ port: number; host: string }> {
         // We actually need a token. This isn't supported at the moment
-        throw new JupyterDebuggerRemoteNotSupportedError();
+        throw new JupyterDebuggerRemoteNotSupportedError(kernel.kernelConnectionMetadata);
 
         //         let portNumber = this.configService.getSettings().remoteDebuggerPort;
         //         if (!portNumber) {

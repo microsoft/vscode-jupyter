@@ -64,7 +64,6 @@ import { removeNotebookSuffixAddedByExtension } from '../jupyterSession';
 import { SilentExecutionErrorOptions } from './kernel';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
-import { CancellationError } from '../../../common/cancellation';
 import { INotebookControllerManager } from '../../notebook/types';
 import { VSCodeNotebookController } from '../../notebook/vscodeNotebookController';
 import { findNotebookEditor, selectKernel } from './kernelSelector';
@@ -1955,10 +1954,6 @@ export async function handleKernelError(
 
     switch (handleResult) {
         case KernelInterpreterDependencyResponse.cancel:
-            throw new CancellationError(
-                DataScience.canceledKernelHeader().format(controller.connection.interpreter?.displayName || '')
-            );
-
         case KernelInterpreterDependencyResponse.failed:
             throw error;
 
