@@ -11,14 +11,14 @@ export abstract class BaseError extends Error {
     }
 }
 
-export abstract class BaseKernelError extends Error {
+export abstract class BaseKernelError extends BaseError {
     public stdErr?: string;
     constructor(
-        public readonly category: ErrorCategory,
+        category: ErrorCategory,
         message: string,
         public readonly kernelConnectionMetadata: KernelConnectionMetadata
     ) {
-        super(message);
+        super(category, message);
     }
 }
 
