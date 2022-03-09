@@ -327,7 +327,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
             const err = translateCellErrorOutput(cell.outputs[0]);
             assert.include(err.traceback.join(''), 'random.py');
-            assert.include(err.traceback.join(''), 'seems to be overriding built in modules and interfering with the startup of the kernel');
+            assert.include(
+                err.traceback.join(''),
+                'seems to be overriding built in modules and interfering with the startup of the kernel'
+            );
             assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
         }
         test('Display error about overriding builtin modules (without Python daemon', () =>
