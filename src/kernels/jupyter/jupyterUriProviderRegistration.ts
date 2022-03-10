@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 
-import { IExtensions } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
+import { IExtensions } from '../../client/common/types';
+import * as localize from '../../client/common/utils/localize';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
-} from './types';
+} from '../../client/datascience/types';
+import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
 
 @injectable()
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {

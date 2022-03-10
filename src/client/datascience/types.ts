@@ -1044,13 +1044,6 @@ export interface IKernelVariableRequester {
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
 
-export const INotebookCreationTracker = Symbol('INotebookCreationTracker');
-export interface INotebookCreationTracker {
-    readonly lastPythonNotebookCreated?: Date;
-    readonly lastNotebookCreated?: Date;
-    startTracking(): void;
-}
-
 export const IJupyterDebugService = Symbol('IJupyterDebugService');
 export interface IJupyterDebugService extends IDebugService {
     /**

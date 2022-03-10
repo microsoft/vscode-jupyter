@@ -49,7 +49,6 @@ import { MultiplexingDebugService } from './multiplexingDebugService';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
-import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
 import { PreferredRemoteKernelIdProvider } from './notebookStorage/preferredRemoteKernelIdProvider';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -85,7 +84,6 @@ import {
     IKernelVariableRequester,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
-    INotebookCreationTracker,
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
@@ -162,10 +160,10 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/varia
 import { PythonVariablesRequester } from '../../kernels/variables/pythonVariableRequester';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
-import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { ProgressReporter } from './progress/progressReporter';
 import { IPyWidgetMessageDispatcherFactory } from '../../kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcherFactory';
 import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -271,7 +269,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
-    serviceManager.addSingleton<INotebookCreationTracker>(INotebookCreationTracker, NotebookCreationTracker);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
