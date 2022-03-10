@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { Commands, Settings } from '../constants';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { IJupyterServerUriStorage } from '../types';
 import { isJupyterNotebook } from './helpers/helpers';
 import { INotebookControllerManager } from './types';

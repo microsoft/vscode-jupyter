@@ -15,7 +15,7 @@ import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
-} from './jupyter/kernels/helpers';
+} from '../../kernels/helpers';
 import { getNotebookMetadata, isJupyterNotebook } from './notebook/helpers/helpers';
 import { INotebookControllerManager } from './notebook/types';
 import { VSCodeNotebookController } from './notebook/vscodeNotebookController';

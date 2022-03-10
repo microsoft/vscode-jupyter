@@ -15,14 +15,14 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { IConfigurationService, IWatchableJupyterSettings } from '../../client/common/types';
 import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { pruneCell } from '../../client/datascience/common';
-import { DataScience } from '../../client/datascience/datascience';
+import { GlobalActivation } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
-import { RawNotebookSupportedService } from '../../client/datascience/raw-kernel/rawNotebookSupportedService';
 import { IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../../client/datascience/types';
+import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {
-    let dataScience: DataScience;
+    let dataScience: GlobalActivation;
     let cmdManager: CommandManager;
     let dataScienceCodeLensProvider: IDataScienceCodeLensProvider;
     let configService: IConfigurationService;
@@ -43,7 +43,7 @@ suite('DataScience Tests', () => {
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
 
-        dataScience = new DataScience(
+        dataScience = new GlobalActivation(
             instance(cmdManager),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             [] as any,

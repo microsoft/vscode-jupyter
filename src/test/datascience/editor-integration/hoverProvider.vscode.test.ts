@@ -18,7 +18,7 @@ import { initialize } from '../../initialize';
 import { HoverProvider } from '../../../client/datascience/editor-integration/hoverProvider';
 import { Identifiers } from '../../../client/datascience/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../../client/../kernels/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 

@@ -22,7 +22,7 @@ import * as localize from '../../common/utils/localize';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernelProvider } from '../jupyter/kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../types';
 import { CellHashProviderFactory } from './cellHashProviderFactory';

@@ -5,7 +5,7 @@ import {
     InteractiveWindowMessages,
     IShowDataViewer
 } from '../../datascience/interactive-common/interactiveWindowTypes';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';
 

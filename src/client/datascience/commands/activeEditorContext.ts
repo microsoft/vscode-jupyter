@@ -4,6 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -12,7 +13,6 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell, noop } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
 import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import { INotebookControllerManager } from '../notebook/types';

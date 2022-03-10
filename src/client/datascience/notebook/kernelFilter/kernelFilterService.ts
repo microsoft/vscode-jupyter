@@ -6,7 +6,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../../kernels/types';
 
 @injectable()
 export class KernelFilterService implements IDisposable {
@@ -119,7 +119,7 @@ type KernelSpecFiter = {
      * Can contain paths with / even when on windows.
      * Paths defined here can be case insensitive and path seprators can be either / or \
      * We need to ensure these paths are portable from machine to machine (users syncing their settings).
-     * E.g. `~/miniconda3/envs/wow/share/jupyter/kernels/misc/kernelspec.json`
+     * E.g. `~/miniconda3/envs/wow/share../../kernels/misc/kernelspec.json`
      */
     path: string;
 };

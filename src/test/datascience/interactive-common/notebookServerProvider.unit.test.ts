@@ -8,12 +8,12 @@ import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {

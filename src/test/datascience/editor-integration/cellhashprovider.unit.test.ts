@@ -9,7 +9,7 @@ import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernel } from '../../../client/../kernels/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocument } from '../mockDocument';

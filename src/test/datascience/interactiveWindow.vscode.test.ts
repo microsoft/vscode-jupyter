@@ -11,7 +11,7 @@ import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IKernelProvider } from '../../client/datascience/jupyter/kernels/types';
+import { IKernelProvider } from '../../client/../kernels/types';
 import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
 import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';

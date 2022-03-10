@@ -3,8 +3,8 @@
 
 import { BaseKernelError } from '../../common/errors/types';
 import { DataScience } from '../../common/utils/localize';
-import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export class KernelPortNotUsedTimeoutError extends BaseKernelError {
     constructor(kernelConnection: KernelConnectionMetadata) {

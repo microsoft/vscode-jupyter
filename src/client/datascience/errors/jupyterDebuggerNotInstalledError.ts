@@ -4,7 +4,7 @@
 import { BaseKernelError } from '../../common/errors/types';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export class JupyterDebuggerNotInstalledError extends BaseKernelError {
     constructor(debuggerPkg: string, message: string | undefined, kernelConnectionMetadata: KernelConnectionMetadata) {

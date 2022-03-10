@@ -8,11 +8,11 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
-import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernel } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider';
+import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {

@@ -25,7 +25,7 @@
 // } from './helper';
 // import { ProductNames } from '../../../client/common/installer/productNames';
 // import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
-// import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+// import { IKernelProvider } from '../../../client/../kernels/types';
 // import {
 //     IJupyterSession,
 //     INotebook,

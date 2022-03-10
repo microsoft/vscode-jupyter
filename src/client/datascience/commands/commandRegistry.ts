@@ -6,6 +6,9 @@
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { NotebookCreator } from '../../../kernels/common/notebookCreator';
+import { IKernelProvider } from '../../../kernels/types';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/debuggerVariables';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
     IApplicationShell,
@@ -29,9 +32,6 @@ import { DataViewerDependencyService } from '../data-viewing/dataViewerDependenc
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
-import { IKernelProvider } from '../jupyter/kernels/types';
-import { NotebookCreator } from '../notebook/creation/notebookCreator';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,

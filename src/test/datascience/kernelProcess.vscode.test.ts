@@ -5,7 +5,6 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { IDisposable, IJupyterSettings } from '../../client/common/types';
 import rewiremock from 'rewiremock';
@@ -16,16 +15,17 @@ import {
     ObservableExecutionResult
 } from '../../client/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { LocalKernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { LocalKernelSpecConnectionMetadata } from '../../client/../kernels/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
-import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';
 import { IPythonExtensionChecker } from '../../client/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo } from '../../client/common/logger';
 import { CancellationTokenSource } from 'vscode';
+import { IKernelConnection } from '../../kernels/raw/types';
+import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';
+import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;

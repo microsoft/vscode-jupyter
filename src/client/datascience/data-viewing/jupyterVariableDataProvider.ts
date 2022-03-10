@@ -10,7 +10,7 @@ import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables } fro
 import { DataViewerDependencyService } from './dataViewerDependencyService';
 import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
 import { traceError } from '../../common/logger';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {

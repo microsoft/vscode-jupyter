@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EnvironmentType } from '../../pythonEnvironments/info';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';

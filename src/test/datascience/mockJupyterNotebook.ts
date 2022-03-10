@@ -5,7 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../client/../kernels/types';
 import {
     ICell,
     ICellHashProvider,

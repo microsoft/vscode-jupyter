@@ -37,7 +37,7 @@ import {
 } from './types';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
 import { CheckboxState } from '../../telemetry/constants';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');

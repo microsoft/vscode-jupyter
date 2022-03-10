@@ -18,7 +18,7 @@ import { EditorContexts, Telemetry } from './constants';
 import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from './types';
 
 @injectable()
-export class DataScience implements IDataScience {
+export class GlobalActivation implements IDataScience {
     public isDisposed: boolean = false;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();

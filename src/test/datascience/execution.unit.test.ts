@@ -34,17 +34,6 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, IPathUtils } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { DisplayOptions } from '../../client/datascience/displayOptions';
-import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
-import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
-import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
-import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
-import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
-import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import {
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
@@ -55,7 +44,18 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
+import { getKernelId } from '../../kernels/helpers';
 import { Product } from '../../kernels/installer/types';
+import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterOldCacheStateStore } from '../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterSubCommandExecutionService } from '../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter';
+import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths';
+import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder';
+import { ILocalKernelFinder } from '../../kernels/raw/types';
+import { LocalKernelConnectionMetadata } from '../../kernels/types';
 import { getOSType, OSType } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';

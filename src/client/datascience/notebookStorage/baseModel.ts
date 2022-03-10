@@ -13,8 +13,8 @@ import {
     getKernelRegistrationInfo,
     isPythonKernelConnection,
     kernelConnectionMetadataHasKernelModel
-} from '../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+} from '../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 // eslint-disable-next-line complexity
 export function updateNotebookMetadata(

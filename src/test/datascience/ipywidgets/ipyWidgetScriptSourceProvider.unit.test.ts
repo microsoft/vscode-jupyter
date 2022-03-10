@@ -14,13 +14,13 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IJupyterSettings } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
-import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
-import { RemoteWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/remoteWidgetScriptSourceProvider';
-import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider';
+import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 

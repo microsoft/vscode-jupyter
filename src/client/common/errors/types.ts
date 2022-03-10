@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
-import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export abstract class BaseError extends Error {
     public stdErr?: string;

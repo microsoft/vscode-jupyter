@@ -3,7 +3,7 @@
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import type * as vsc from 'vscode-languageclient/node';
 import { Resource } from '../../common/types';
-import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../../../kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 

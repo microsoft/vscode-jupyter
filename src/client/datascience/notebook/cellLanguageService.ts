@@ -19,8 +19,8 @@ import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+} from '../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { getNotebookMetadata, isJupyterNotebook } from './helpers/helpers';
 

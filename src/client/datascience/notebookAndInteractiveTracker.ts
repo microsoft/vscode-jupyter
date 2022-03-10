@@ -7,8 +7,8 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../common/types';
-import { getKernelConnectionLanguage } from './jupyter/kernels/helpers';
-import { IKernel, IKernelProvider } from './jupyter/kernels/types';
+import { getKernelConnectionLanguage } from '../../kernels/helpers';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { INotebookCreationTracker } from './types';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';

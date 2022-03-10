@@ -8,7 +8,7 @@ import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
@@ -31,18 +31,18 @@ import {
     getErrorMessageFromPythonTraceback,
     KernelFailureReason
 } from '../../common/errors/errorUtils';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
 import { Commands, Telemetry } from '../constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterConnectError } from './jupyterConnectError';
-import { JupyterInterpreterDependencyResponse } from '../jupyter/interpreter/jupyterInterpreterDependencyService';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { translateProductToModule } from '../../../kernels/installer/moduleInstaller';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
+import { JupyterInterpreterDependencyResponse } from '../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {

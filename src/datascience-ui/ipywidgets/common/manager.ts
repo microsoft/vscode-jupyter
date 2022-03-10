@@ -18,12 +18,12 @@ import {
     InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { WIDGET_MIMETYPE } from '../../../client/datascience/ipywidgets/constants';
 import { KernelSocketOptions } from '../../../client/datascience/types';
 import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
+import { WIDGET_MIMETYPE } from '../../../kernels/ipywidgets/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

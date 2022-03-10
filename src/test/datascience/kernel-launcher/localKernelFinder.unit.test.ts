@@ -10,8 +10,6 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { LocalKernelFinder } from '../../../client/datascience/kernel-launcher/localKernelFinder';
-import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -21,7 +19,7 @@ import {
     getInterpreterKernelSpecName,
     getKernelId,
     getKernelRegistrationInfo
-} from '../../../client/datascience/jupyter/kernels/helpers';
+} from '../../../client/../kernels/helpers';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -32,19 +30,18 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../client/common/types';
-import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
-import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 import { OSType } from '../../../client/common/utils/platform';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import {
-    KernelConnectionMetadata,
-    LocalKernelConnectionMetadata
-} from '../../../client/datascience/jupyter/kernels/types';
-import { loadKernelSpec } from '../../../client/datascience/kernel-launcher/localKernelSpecFinderBase';
+import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../client/../kernels/types';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { arePathsSame } from '../../../client/common/platform/fileUtils';
+import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths';
+import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder';
+import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase';
+import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { ILocalKernelFinder } from '../../../kernels/raw/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {

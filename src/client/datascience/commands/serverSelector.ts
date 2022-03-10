@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { traceInfo } from '../../common/logger';
 import { Uri } from 'vscode';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {

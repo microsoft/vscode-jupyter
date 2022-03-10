@@ -11,9 +11,9 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
-import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {

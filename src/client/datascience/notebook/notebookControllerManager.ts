@@ -30,22 +30,20 @@ import {
     getKernelId,
     isLocalLaunch,
     isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
+} from '../../../kernels/helpers';
 import {
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../jupyter/kernels/types';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
+} from '../../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
-import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
@@ -58,13 +56,15 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { DisplayOptions } from '../displayOptions';
-import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { DataScience } from '../../common/utils/localize';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaService } from '../../common/process/condaService';
 import { waitForCondition } from '../../common/utils/async';
 import { debounceAsync } from '../../common/utils/decorators';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

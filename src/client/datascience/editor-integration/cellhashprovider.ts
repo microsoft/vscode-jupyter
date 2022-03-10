@@ -27,7 +27,7 @@ import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 import { stripAnsi } from '../../common/utils/regexp';

@@ -21,18 +21,18 @@ import { DataScience } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterDaemonModule } from '../../../../client/datascience/constants';
-import { JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterSubCommandExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyterConnection';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product } from '../../../../kernels/installer/types';
-import { JupyterPaths } from '../../../../client/datascience/kernel-launcher/jupyterPaths';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { JupyterServerInfo } from '../../../../kernels/jupyter/launcher/jupyterConnection';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths';
 use(chaiPromise);
 
 /* eslint-disable  */

@@ -3,17 +3,17 @@
 
 import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper';
+import {
+    IKernelProvider,
+    IKernel,
+    KernelConnectionMetadata as IKernelKernelConnectionMetadata
+} from '../../kernels/types';
 import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo } from '../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Telemetry } from '../datascience/constants';
-import { KernelConnectionWrapper } from '../datascience/jupyter/kernels/kernelConnectionWrapper';
-import {
-    IKernel,
-    IKernelProvider,
-    KernelConnectionMetadata as IKernelKernelConnectionMetadata
-} from '../datascience/jupyter/kernels/types';
 import { INotebookControllerManager } from '../datascience/notebook/types';
 import { IKernelSocket as ExtensionKernelSocket } from '../datascience/types';
 import { sendTelemetryEvent } from '../telemetry';

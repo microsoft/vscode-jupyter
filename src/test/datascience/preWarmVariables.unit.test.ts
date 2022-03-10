@@ -12,11 +12,11 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { CondaService } from '../../client/common/process/condaService';
 import { createDeferred } from '../../client/common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
 import { IRawNotebookSupportedService } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/variables/preWarmVariables';
 import { sleep } from '../core';
 
 suite('DataScience - PreWarm Env Vars', () => {

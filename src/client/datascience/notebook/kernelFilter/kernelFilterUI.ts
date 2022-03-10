@@ -12,8 +12,8 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelConnectionPath,
     getRemoteKernelSessionInformation
-} from '../../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+} from '../../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilterService';
 

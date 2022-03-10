@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService } from '../../client/common/types';
-import { getInterpreterWorkspaceFolder } from '../../client/datascience/jupyter/kernels/helpers';
+import { getInterpreterWorkspaceFolder } from '../../client/../kernels/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { isPoetryEnvironmentRelatedToFolder } from './poetry';

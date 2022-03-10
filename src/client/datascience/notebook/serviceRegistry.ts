@@ -6,10 +6,8 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
-import { KernelProvider } from '../jupyter/kernels/kernelProvider';
-import { IKernelProvider } from '../jupyter/kernels/types';
-import { CreationOptionService } from './creation/creationOptionsService';
-import { NotebookCreator } from './creation/notebookCreator';
+import { KernelProvider } from '../../../kernels/kernelProvider';
+import { IKernelProvider } from '../../../kernels/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
@@ -21,12 +19,14 @@ import { INotebookControllerManager, INotebookLanguageClientProvider } from './t
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
-import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
 import { IntellisenseProvider } from './intellisense/intellisenseProvider';
 import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { LiveKernelSwitcher } from './liveKernelSwitcher';
+import { CellOutputDisplayIdTracker } from '../../../kernels/cell-execution/cellDisplayIdTracker';
+import { CreationOptionService } from '../../../kernels/common/creationOptionsService';
+import { NotebookCreator } from '../../../kernels/common/notebookCreator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(

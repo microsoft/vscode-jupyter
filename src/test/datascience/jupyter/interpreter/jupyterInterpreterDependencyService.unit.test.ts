@@ -8,18 +8,18 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { DataScience } from '../../../../client/common/utils/localize';
-import {
-    InterpreterJupyterKernelSpecCommand,
-    JupyterCommandFactory
-} from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
-import {
-    JupyterInterpreterDependencyResponse,
-    JupyterInterpreterDependencyService
-} from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
+import {
+    JupyterCommandFactory,
+    InterpreterJupyterKernelSpecCommand
+} from '../../../../kernels/jupyter/interpreter/jupyterCommand';
+import {
+    JupyterInterpreterDependencyService,
+    JupyterInterpreterDependencyResponse
+} from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

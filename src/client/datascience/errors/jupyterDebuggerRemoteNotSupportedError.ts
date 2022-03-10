@@ -4,7 +4,7 @@
 import { BaseKernelError } from '../../common/errors/types';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 export class JupyterDebuggerRemoteNotSupportedError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

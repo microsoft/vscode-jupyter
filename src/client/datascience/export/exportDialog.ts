@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SaveDialogOptions, Uri } from 'vscode';
+import { computeWorkingDirectory } from '../../../kernels/jupyter/jupyterUtils';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import * as localize from '../../common/utils/localize';
-import { computeWorkingDirectory } from '../jupyter/jupyterUtils';
 import { ExportFormat, IExportDialog } from './types';
 
 // File extensions for each export method

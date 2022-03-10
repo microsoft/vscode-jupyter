@@ -6,10 +6,8 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { IRemoteKernelFinder } from '../../../client/datascience/kernel-launcher/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../client/../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { RemoteKernelFinder } from '../../../client/datascience/kernel-launcher/remoteKernelFinder';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { MockMemento } from '../../mocks/mementos';
@@ -20,11 +18,13 @@ import {
     IJupyterKernelSpec,
     IJupyterSessionManager
 } from '../../../client/datascience/types';
-import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { JupyterSessionManager } from '../../../client/datascience/jupyter/jupyterSessionManager';
 import { noop } from '../../core';
-import { LiveKernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
+import { LiveKernelConnectionMetadata } from '../../../kernels/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder';
+import { IRemoteKernelFinder } from '../../../kernels/raw/types';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

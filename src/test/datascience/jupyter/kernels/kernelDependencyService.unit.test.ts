@@ -10,9 +10,9 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../..
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { getResourceType } from '../../../../client/datascience/common';
 import { DisplayOptions } from '../../../../client/datascience/displayOptions';
-import { createInterpreterKernelSpec } from '../../../../client/datascience/jupyter/kernels/helpers';
-import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../client/datascience/jupyter/kernels/types';
+import { createInterpreterKernelSpec } from '../../../../client/../kernels/helpers';
+import { KernelDependencyService } from '../../../../client/../kernels/kernelDependencyService';
+import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../client/../kernels/types';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,

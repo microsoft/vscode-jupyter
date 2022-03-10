@@ -14,17 +14,17 @@ import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHa
 import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
 import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../client/../kernels/types';
 import {
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../client/datascience/types';
 import { getOSType, OSType } from '../common';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { JupyterInterpreterDependencyResponse } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
+import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

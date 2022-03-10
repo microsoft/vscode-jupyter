@@ -12,7 +12,7 @@ import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { Commands } from '../../../../client/datascience/constants';
-import { CreationOptionService } from '../../../../client/datascience/notebook/creation/creationOptionsService';
+import { CreationOptionService } from '../../../../kernels/common/creationOptionsService';
 import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';

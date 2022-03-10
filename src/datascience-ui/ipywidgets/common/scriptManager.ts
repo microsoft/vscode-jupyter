@@ -12,7 +12,6 @@ import {
     IInteractiveWindowMapping,
     IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../../client/datascience/types';
 import { PostOffice } from '../../react-common/postOffice';
@@ -20,6 +19,7 @@ import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatib
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
+import { WidgetScriptSource } from '../../../kernels/ipywidgets/types';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
