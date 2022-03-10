@@ -164,8 +164,8 @@ import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker'
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { ProgressReporter } from './progress/progressReporter';
-import { IPyWidgetMessageDispatcherFactory } from '../../kernels/ipywidgets/ipyWidgetMessageDispatcherFactory';
-import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
+import { IPyWidgetMessageDispatcherFactory } from '../../kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcherFactory';
+import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 

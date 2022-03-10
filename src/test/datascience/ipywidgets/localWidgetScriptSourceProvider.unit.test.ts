@@ -11,8 +11,8 @@ import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IKernel } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider';
+import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {

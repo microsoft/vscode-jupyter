@@ -80,7 +80,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { CellExecutionCreator } from '../../../kernels/cell-execution/cellExecutionCreator';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{

@@ -23,7 +23,7 @@ import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
-import { WIDGET_MIMETYPE } from '../../../kernels/ipywidgets/constants';
+import { WIDGET_MIMETYPE } from '../../../kernels/ipywidgets-message-coordination/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
