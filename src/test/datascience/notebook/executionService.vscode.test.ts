@@ -437,7 +437,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Hence skipping this test in such cases is acceptable.
         if (hasErrorOutput(cell3.outputs)) {
             const errorOutput = translateCellErrorOutput(cell3.outputs[0]);
-            if (errorOutput && errorOutput.traceback.includes('shell not found')) {
+            if (errorOutput.traceback.includes('shell not found') || errorOutput.evalue.includes('shell not found')) {
                 return this.skip();
             }
         }
