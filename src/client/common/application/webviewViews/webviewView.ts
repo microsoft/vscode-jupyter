@@ -56,7 +56,7 @@ export class WebviewView extends Webview implements IWebviewView {
             })
         );
 
-        // Fire one inital visibility change once now as we have loaded
+        // Fire one initial visibility change once now as we have loaded
         this._onDidChangeVisibility.fire();
     }
 }

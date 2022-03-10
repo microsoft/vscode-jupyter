@@ -1104,7 +1104,7 @@ export interface IWebviewOptions {
     scripts: string[];
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
-     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
+     * E.g. required for webview to serve images from workspaces when nb is in a nested folder.
      */
     additionalPaths?: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

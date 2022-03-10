@@ -78,7 +78,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 
     public setApi(api: PythonApi): void {
         // Never allow accessing python API (we dont want to ever use the API and run code in untrusted API).
-        // Don't assume Python API will always be disabled in untrusted worksapces.
+        // Don't assume Python API will always be disabled in untrusted workspaces.
         if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }

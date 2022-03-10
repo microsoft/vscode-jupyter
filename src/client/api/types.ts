@@ -31,7 +31,7 @@ export interface IPythonExtensionChecker {
 }
 
 /**
- * This allows Python exntension to update Product enum without breaking Jupyter.
+ * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
  */
 export enum JupyterProductToInstall {

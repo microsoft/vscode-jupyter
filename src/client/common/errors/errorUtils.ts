@@ -542,7 +542,7 @@ function isBuiltInModuleOverwritten(
     if (!pythonSysPrefix) {
         return;
     }
-    // If we cannot tell whether this is part of a worksapce folder,
+    // If we cannot tell whether this is part of a workspace folder,
     // then we cannot tell if the user created this.
     if (workspaceFolders.length === 0) {
         return;
