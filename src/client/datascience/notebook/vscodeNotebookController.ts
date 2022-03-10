@@ -382,8 +382,10 @@ export class VSCodeNotebookController implements Disposable {
         void execution.clearOutput(cell);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
+        let context: 'start' | 'execution' = 'start';
         try {
             const kernel = await this.connectToKernel(doc);
+            context = 'execution';
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
@@ -392,7 +394,7 @@ export class VSCodeNotebookController implements Disposable {
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex));
+            displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex, context));
             const isCancelled =
                 (WrappedError.unwrap(ex) || ex) instanceof CancellationError ||
                 (WrappedError.unwrap(ex) || ex) instanceof VscCancellationError;

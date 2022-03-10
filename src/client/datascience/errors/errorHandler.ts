@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { BaseError, BaseKernelError, WrappedError, WrappedKernelError } from '../../common/errors/types';
@@ -9,8 +8,7 @@ import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { getDisplayNameOrNameOfKernelConnection, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
-import { isPythonNotebook } from '../notebook/helpers/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterInterpreterDependencyManager,
@@ -91,23 +89,22 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             err instanceof KernelProcessExitedError ||
             err instanceof JupyterConnectError
         ) {
-            const defaultErrorMessage = getCombinedErrorMessage(
-                getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr
-            );
-            this.applicationShell.showErrorMessage(defaultErrorMessage).then(noop, noop);
+            this.applicationShell.showErrorMessage(getUserFriendlyErrorMessage(err)).then(noop, noop);
         } else {
             // Some errors have localized and/or formatted error messages.
             const message = getCombinedErrorMessage(err.message || err.toString());
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-    public async getErrorMessageForDisplayInCell(error: Error) {
-        let message: string = error.message;
+    public async getErrorMessageForDisplayInCell(
+        error: Error,
+        context: 'start' | 'restart' | 'interrupt' | 'execution'
+    ) {
         error = WrappedError.unwrap(error);
         if (error instanceof JupyterKernelDependencyError) {
-            message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+            return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof JupyterInstallError) {
-            message = getJupyterMissingErrorMessageForCell(error) || message;
+            return getJupyterMissingErrorMessageForCell(error) || error.message;
         } else if (error instanceof VscCancellationError || error instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, error);
@@ -121,7 +118,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         ) {
             // We don't look for ipykernel dependencies before we start a kernel, hence
             // its possible the kernel failed to start due to missing dependencies.
-            message = getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+            return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
@@ -135,7 +132,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
                     ['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
                 ) {
-                    return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || message;
+                    return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
                 }
                 const messageParts = [failureInfo.message];
                 if (failureInfo.moreInfoLink) {
@@ -143,19 +140,12 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 }
                 return messageParts.join('\n');
             }
-            return getCombinedErrorMessage(
-                getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
-            );
-        } else if (error instanceof BaseError) {
-            return getCombinedErrorMessage(
-                getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
-            );
         }
-        return message;
+        return getUserFriendlyErrorMessage(error, context);
     }
     public async handleKernelError(
         err: Error,
-        purpose: 'start' | 'restart' | 'interrupt' | 'execution',
+        context: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
@@ -166,7 +156,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterKernelDependencyError) {
             return err.reason;
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
-        } else if ((purpose === 'start' || purpose === 'restart') && err instanceof JupyterInstallError) {
+        } else if ((context === 'start' || context === 'restart') && err instanceof JupyterInstallError) {
             const response = await this.dependencyManager.installMissingDependencies(err);
             return response === JupyterInterpreterDependencyResponse.ok
                 ? KernelInterpreterDependencyResponse.ok
@@ -196,7 +186,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             traceWarning(`Cancelled by user`, err);
             return KernelInterpreterDependencyResponse.cancel;
         } else if (
-            (purpose === 'start' || purpose === 'restart') &&
+            (context === 'start' || context === 'restart') &&
             !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
         ) {
             const tokenSource = new CancellationTokenSource();
@@ -220,13 +210,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             );
             if (failureInfo) {
                 void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
-            } else if (err instanceof BaseError) {
-                const message = getCombinedErrorMessage(
-                    getErrorMessageFromPythonTraceback(err.stdErr) || err.stdErr || err.message
-                );
-                void this.showMessageWithMoreInfo(message);
             } else {
-                void this.showMessageWithMoreInfo(err.message);
+                // These are generic errors, we have no idea what went wrong,
+                // hence add a descriptive prefix (message), that provides more context to the user.
+                void this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, context));
             }
             return KernelInterpreterDependencyResponse.failed;
         }
@@ -243,8 +230,35 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         });
     }
 }
-function getCombinedErrorMessage(message?: string) {
-    const errorMessage = ['', message || '']
+const errorPrefixes = {
+    restart: DataScience.failedToRestartKernel(),
+    start: DataScience.failedToStartKernel(),
+    interrupt: DataScience.failedToInterruptKernel(),
+    execution: ''
+};
+/**
+ * Sometimes the errors thrown don't contain user friendly messages,
+ * all they contain is some cryptic or stdout or tracebacks.
+ * For such messages, provide more context on what went wrong.
+ */
+function getUserFriendlyErrorMessage(error: Error, context?: 'start' | 'restart' | 'interrupt' | 'execution') {
+    error = WrappedError.unwrap(error);
+    const errorPrefix = context ? errorPrefixes[context] : '';
+    if (error instanceof BaseError) {
+        // These are generic errors, we have no idea what went wrong,
+        // hence add a descriptive prefix (message), that provides more context to the user.
+        return getCombinedErrorMessage(
+            errorPrefix,
+            getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
+        );
+    } else {
+        // These are generic errors, we have no idea what went wrong,
+        // hence add a descriptive prefix (message), that provides more context to the user.
+        return getCombinedErrorMessage(errorPrefix, error.message);
+    }
+}
+function getCombinedErrorMessage(prefix?: string, message?: string) {
+    const errorMessage = [prefix || '', message || '']
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
@@ -255,16 +269,6 @@ function getCombinedErrorMessage(message?: string) {
     }
     return errorMessage;
 }
-export function getKernelNotInstalledErrorMessage(notebookMetadata?: nbformat.INotebookMetadata) {
-    const language = getLanguageInNotebookMetadata(notebookMetadata);
-    if (isPythonNotebook(notebookMetadata) || !language) {
-        return DataScience.pythonNotInstalled();
-    } else {
-        const kernelName = notebookMetadata?.kernelspec?.display_name || notebookMetadata?.kernelspec?.name || language;
-        return DataScience.kernelNotInstalled().format(kernelName);
-    }
-}
-
 function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnectionMetadata) {
     if (
         kernelConnection.kind === 'connectToLiveKernel' ||
