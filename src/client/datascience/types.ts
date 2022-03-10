@@ -421,7 +421,10 @@ export interface IDataScienceErrorHandler {
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse>;
-    getErrorMessageForDisplayInCell(err: Error): Promise<string>;
+    getErrorMessageForDisplayInCell(
+        err: Error,
+        context: 'start' | 'restart' | 'interrupt' | 'execution'
+    ): Promise<string>;
 }
 
 /**
