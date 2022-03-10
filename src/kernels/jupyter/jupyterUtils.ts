@@ -6,12 +6,12 @@ import '../../client/common/extensions';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { noop } from 'rxjs';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { Resource } from '../../client/common/types';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { IJupyterServerUri, IJupyterConnection } from '../../client/datascience/types';
 import { getJupyterConnectionDisplayName } from './launcher/jupyterConnection';
+import { noop } from '../../client/common/utils/misc';
 
 export function expandWorkingDir(
     workingDir: string | undefined,

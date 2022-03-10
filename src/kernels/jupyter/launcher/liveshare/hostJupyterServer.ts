@@ -4,9 +4,7 @@
 import '../../../../client/common/extensions';
 
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IDisposable } from '@fluentui/react';
 import { injectable, inject, named } from 'inversify';
-import { noop } from 'rxjs';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../client/common/constants';
 import { traceInfo, traceError } from '../../../../client/common/logger';
@@ -14,7 +12,8 @@ import {
     IAsyncDisposableRegistry,
     IOutputChannel,
     IDisposableRegistry,
-    Resource
+    Resource,
+    IDisposable
 } from '../../../../client/common/types';
 import { Deferred, createDeferred, sleep } from '../../../../client/common/utils/async';
 import { DataScience } from '../../../../client/common/utils/localize';
@@ -33,6 +32,7 @@ import { KernelConnectionMetadata, isLocalConnection } from '../../../types';
 import { computeWorkingDirectory } from '../../jupyterUtils';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook';
+import { noop } from '../../../../client/common/utils/misc';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()

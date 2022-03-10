@@ -16,7 +16,6 @@ import {
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
-import { noop } from 'rxjs';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { createPromiseFromCancellation } from '../../../client/common/cancellation';
 import {
@@ -35,7 +34,7 @@ import {
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
-import { swallowExceptions } from '../../../client/common/utils/misc';
+import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { KernelDiedError } from '../../../client/datascience/errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../../client/datascience/errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../../client/datascience/errors/kernelProcessExitedError';

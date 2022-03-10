@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { noop } from 'rxjs';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import '../../client/common/extensions';
@@ -19,6 +18,7 @@ import {
 } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
 import { DataScience, Common } from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
 import { ILocalResourceUriConverter } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { sendTelemetryEvent } from '../../client/telemetry';

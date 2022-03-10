@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { noop } from 'rxjs';
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceInfo, traceError } from '../../client/common/logger';
+import { noop } from '../../client/common/utils/misc';
 import { traceCellMessage } from '../../client/datascience/notebook/helpers/helpers';
 import { IJupyterSession } from '../../client/datascience/types';
 import { KernelConnectionMetadata, NotebookCellRunState } from '../types';

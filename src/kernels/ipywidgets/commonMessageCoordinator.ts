@@ -5,7 +5,6 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
-import { noop } from 'rxjs';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
@@ -21,6 +20,7 @@ import {
     IExtensionContext
 } from '../../client/common/types';
 import { Common, DataScience } from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
 import { stripAnsi } from '../../client/common/utils/regexp';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInterpreterService } from '../../client/interpreter/contracts';

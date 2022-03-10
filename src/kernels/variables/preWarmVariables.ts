@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { noop } from 'rxjs';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { CondaService } from '../../client/common/process/condaService';
 import { IDisposableRegistry } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IRawNotebookSupportedService } from '../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';

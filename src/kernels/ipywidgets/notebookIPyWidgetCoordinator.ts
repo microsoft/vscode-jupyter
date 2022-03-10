@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
-import { noop } from 'rxjs';
 import {
     NotebookDocument,
     CancellationToken,
@@ -17,8 +15,9 @@ import { Cancellation } from '../../client/common/cancellation';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo, traceVerbose, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IDisposableRegistry, IAsyncDisposableRegistry } from '../../client/common/types';
+import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import {
     InteractiveWindowMessages,
     IPyWidgetMessages

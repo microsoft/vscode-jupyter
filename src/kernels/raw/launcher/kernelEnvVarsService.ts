@@ -3,10 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { noop } from 'rxjs';
 import { traceInfo, traceError } from '../../../client/common/logger';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { Resource } from '../../../client/common/types';
+import { noop } from '../../../client/common/utils/misc';
 import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';

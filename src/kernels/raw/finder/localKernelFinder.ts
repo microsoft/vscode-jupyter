@@ -14,7 +14,6 @@ import {
 import { LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { noop } from 'rxjs';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { createPromiseFromCancellation } from '../../../client/common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -33,6 +32,7 @@ import { getTelemetrySafeLanguage } from '../../../client/telemetry/helpers';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { ILocalKernelFinder } from '../types';
 import { swallowExceptions } from '../../../client/common/utils/decorators';
+import { noop } from '../../../client/common/utils/misc';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';

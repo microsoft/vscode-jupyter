@@ -6,7 +6,6 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../client/common/cancellation';
 import '../../client/common/extensions';
@@ -14,6 +13,7 @@ import { traceInfoIfCI, traceInfo } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Resource, ReadWrite } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { JupyterKernelDependencyError } from '../../client/datascience/errors/jupyterKernelDependencyError';
 import {

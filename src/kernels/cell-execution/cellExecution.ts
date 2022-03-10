@@ -29,15 +29,13 @@ import {
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { IDisposable } from '@fluentui/react';
-import { noop } from 'rxjs';
 import { IApplicationShell } from '../../client/common/application/types';
 import { analyzeKernelErrors } from '../../client/common/errors/errorUtils';
 import { BaseError } from '../../client/common/errors/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../client/common/logger';
 import { RefBool } from '../../client/common/refBool';
-import { IDisposableRegistry } from '../../client/common/types';
+import { IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
 import * as localize from '../../client/common/utils/localize';
 import { StopWatch } from '../../client/common/utils/stopWatch';
@@ -59,6 +57,7 @@ import { Telemetry } from '../../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../types';
 import { swallowExceptions } from '../../client/common/utils/decorators';
+import { noop } from '../../client/common/utils/misc';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {

@@ -4,11 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { noop } from 'rxjs';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../client/common/cancellation';
 import '../../../client/common/extensions';
+import { noop } from '../../../client/common/utils/misc';
 import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';

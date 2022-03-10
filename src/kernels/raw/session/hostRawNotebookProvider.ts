@@ -14,7 +14,6 @@ import {
     IRawNotebookSupportedService
 } from '../../../client/datascience/types';
 import { injectable, inject, named } from 'inversify';
-import { noop } from 'rxjs';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -38,6 +37,7 @@ import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
 import { KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher } from '../types';
 import { RawJupyterSession } from './rawJupyterSession';
+import { noop } from '../../../client/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */

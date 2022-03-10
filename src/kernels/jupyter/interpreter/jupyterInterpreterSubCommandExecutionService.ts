@@ -5,7 +5,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { noop } from 'rxjs';
 import { CancellationToken } from 'vscode';
 import { traceWarning } from '../../../client/common/logger';
 import {
@@ -16,6 +15,7 @@ import {
 } from '../../../client/common/process/types';
 import { IOutputChannel, IPathUtils } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
+import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
 import {

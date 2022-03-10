@@ -4,7 +4,6 @@
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
-import { noop } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import {
@@ -28,6 +27,7 @@ import { IPythonExecutionFactory } from '../client/common/process/types';
 import { Resource, IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
 import { Deferred } from '../client/common/utils/async';
 import { DataScience } from '../client/common/utils/localize';
+import { noop } from '../client/common/utils/misc';
 import { StopWatch } from '../client/common/utils/stopWatch';
 import { AddRunCellHook } from '../client/datascience/constants';
 import { DisplayOptions } from '../client/datascience/displayOptions';

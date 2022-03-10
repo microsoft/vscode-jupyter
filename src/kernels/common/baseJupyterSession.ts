@@ -1,20 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IDisposable } from '@fluentui/react';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
-import { noop } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../../client/common/errors/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../client/common/logger';
-import { Resource } from '../../client/common/types';
+import { IDisposable, Resource } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import * as localize from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
 import { getResourceType } from '../../client/datascience/common';
 import { JupyterInvalidKernelError } from '../../client/datascience/errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/errors/jupyterWaitForIdleError';

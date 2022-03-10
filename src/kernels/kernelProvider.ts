@@ -4,7 +4,6 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { noop } from 'rxjs';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../client/common/application/types';
 import { traceVerbose, traceWarning } from '../client/common/logger';
@@ -17,6 +16,7 @@ import {
     IDisposableRegistry,
     IConfigurationService
 } from '../client/common/types';
+import { noop } from '../client/common/utils/misc';
 import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../client/datascience/notebook/constants';
 import { INotebookProvider, IStatusProvider } from '../client/datascience/types';

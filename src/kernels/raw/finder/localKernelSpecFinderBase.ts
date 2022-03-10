@@ -4,7 +4,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { noop } from 'rxjs';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -14,6 +13,7 @@ import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO, ReadWrite } from '../../../client/common/types';
 import { testOnlyMethod } from '../../../client/common/utils/decorators';
+import { noop } from '../../../client/common/utils/misc';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { traceDecorators } from '../../../client/logging';
 import { ignoreLogging } from '../../../client/logging/trace';

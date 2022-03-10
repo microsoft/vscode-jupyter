@@ -3,15 +3,15 @@
 
 'use strict';
 
-import { IDisposable } from '@fluentui/react';
 import type { KernelMessage } from '@jupyterlab/services';
-import { noop } from 'rxjs';
 import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../client/common/logger';
+import { IDisposable } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
     IPyWidgetMessages,
