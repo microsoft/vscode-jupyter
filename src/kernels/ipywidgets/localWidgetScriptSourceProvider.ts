@@ -5,20 +5,19 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
-
-import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { traceError } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { ILocalResourceUriConverter } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { captureTelemetry } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,
-    getKernelPathFromKernelConnection,
-    isPythonKernelConnection
-} from '../../../kernels/helpers';
-import { IKernel } from '../../../kernels/types';
-import { ILocalResourceUriConverter } from '../types';
+    isPythonKernelConnection,
+    getKernelPathFromKernelConnection
+} from '../helpers';
+import { IKernel } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**

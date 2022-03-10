@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { traceWarning } from '../../common/logger';
-import { IHttpClient } from '../../common/types';
+import { traceWarning } from '../../client/common/logger';
+import { IHttpClient } from '../../client/common/types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**

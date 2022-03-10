@@ -44,7 +44,6 @@ import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
-import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
@@ -65,6 +64,7 @@ import { waitForCondition } from '../../common/utils/async';
 import { debounceAsync } from '../../common/utils/decorators';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

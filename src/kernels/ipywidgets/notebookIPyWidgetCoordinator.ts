@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
+import { noop } from 'rxjs';
 import {
     NotebookDocument,
     CancellationToken,
@@ -10,19 +12,21 @@ import {
     EventEmitter,
     CancellationTokenSource
 } from 'vscode';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { Cancellation } from '../../common/cancellation';
-import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
-import { ConsoleForegroundColors } from '../../logging/_global';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookCommunication } from '../notebook/types';
-import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
+import { IVSCodeNotebook } from '../../client/common/application/types';
+import { Cancellation } from '../../client/common/cancellation';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { traceInfo, traceVerbose, traceInfoIfCI } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { IDisposableRegistry, IAsyncDisposableRegistry } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
+import {
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { INotebookCommunication } from '../../client/datascience/notebook/types';
+import { VSCodeNotebookController } from '../../client/datascience/notebook/vscodeNotebookController';
+import { IServiceContainer } from '../../client/ioc/types';
+import { ConsoleForegroundColors } from '../../client/logging/_global';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {

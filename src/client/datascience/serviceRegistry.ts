@@ -103,7 +103,6 @@ import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { IApplicationEnvironment } from '../common/application/types';
-import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { NativeInteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
@@ -163,9 +162,10 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/varia
 import { PythonVariablesRequester } from '../../kernels/variables/pythonVariableRequester';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
-import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { ProgressReporter } from './progress/progressReporter';
+import { IPyWidgetMessageDispatcherFactory } from '../../kernels/ipywidgets/ipyWidgetMessageDispatcherFactory';
+import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 

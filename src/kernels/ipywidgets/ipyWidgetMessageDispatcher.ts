@@ -3,21 +3,24 @@
 
 'use strict';
 
+import { IDisposable } from '@fluentui/react';
 import type { KernelMessage } from '@jupyterlab/services';
+import { noop } from 'rxjs';
 import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { IDisposable } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
-import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../constants';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { KernelSocketInformation } from '../types';
+import { traceInfoIfCI, traceVerbose, traceError } from '../../client/common/logger';
+import { Deferred, createDeferred } from '../../client/common/utils/async';
+import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
+import {
+    IPyWidgetMessages,
+    IInteractiveWindowMapping
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { KernelSocketInformation } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { IKernel, IKernelProvider } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 

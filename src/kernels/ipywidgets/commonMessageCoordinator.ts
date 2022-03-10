@@ -5,36 +5,36 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
+import { noop } from 'rxjs';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
 import {
-    ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
-} from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import {
-    IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext,
-    IHttpClient,
     IOutputChannel,
-    IPersistentStateFactory
-} from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { stripAnsi } from '../../common/utils/regexp';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { ConsoleForegroundColors } from '../../logging/_global';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Commands, Telemetry } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernelProvider } from '../../../kernels/types';
+    IConfigurationService,
+    IHttpClient,
+    IPersistentStateFactory,
+    IExtensionContext
+} from '../../client/common/types';
+import { Common, DataScience } from '../../client/common/utils/localize';
+import { stripAnsi } from '../../client/common/utils/regexp';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { IServiceContainer } from '../../client/ioc/types';
+import { ConsoleForegroundColors } from '../../client/logging/_global';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
+import { Telemetry, Commands } from '../../datascience-ui/common/constants';
+import {
+    LoadIPyWidgetClassLoadAction,
+    ILoadIPyWidgetClassFailureAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
+} from '../../datascience-ui/interactive-common/redux/reducers/types';
+import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher } from './types';
@@ -136,15 +136,15 @@ export class CommonMessageCoordinator {
             let errorMessage: string = payload.error.toString();
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
             if (!payload.isOnline) {
-                errorMessage = localize.DataScience.loadClassFailedWithNoInternet().format(
+                errorMessage = DataScience.loadClassFailedWithNoInternet().format(
                     payload.moduleName,
                     payload.moduleVersion
                 );
                 this.appShell.showErrorMessage(errorMessage).then(noop, noop);
             } else if (!cdnsEnabled) {
-                const moreInfo = localize.Common.moreInfo();
-                const enableDownloads = localize.DataScience.enableCDNForWidgetsButton();
-                errorMessage = localize.DataScience.enableCDNForWidgetsSetting().format(
+                const moreInfo = Common.moreInfo();
+                const enableDownloads = DataScience.enableCDNForWidgetsButton();
+                errorMessage = DataScience.enableCDNForWidgetsSetting().format(
                     payload.moduleName,
                     payload.moduleVersion
                 );
@@ -203,7 +203,7 @@ export class CommonMessageCoordinator {
                 }
                 traceInfo(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
                 this.jupyterOutput.appendLine(
-                    localize.DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
+                    DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
                 );
                 sendTelemetryEvent(Telemetry.IPyWidgetUnhandledMessage, undefined, { msg_type: msg.header.msg_type });
             } catch {

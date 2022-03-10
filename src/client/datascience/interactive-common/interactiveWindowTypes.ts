@@ -12,7 +12,6 @@ import {
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
-import { WidgetScriptSource } from '../ipywidgets/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import {
@@ -23,6 +22,7 @@ import {
     KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
+import { WidgetScriptSource } from '../../../kernels/ipywidgets/types';
 
 export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',

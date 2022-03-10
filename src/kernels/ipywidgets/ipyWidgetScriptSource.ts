@@ -6,28 +6,30 @@ import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo, traceVerbose } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
-
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { traceError, traceInfo, traceVerbose } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
 import {
-    IConfigurationService,
-    IDisposable,
     IDisposableRegistry,
-    IExtensionContext,
+    IConfigurationService,
     IHttpClient,
-    IPersistentStateFactory
-} from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { getOSType, OSType } from '../../common/utils/platform';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { ConsoleForegroundColors } from '../../logging/_global';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { ILocalResourceUriConverter } from '../types';
+    IPersistentStateFactory,
+    IExtensionContext,
+    IDisposable
+} from '../../client/common/types';
+import { Deferred, createDeferred } from '../../client/common/utils/async';
+import {
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ILocalResourceUriConverter } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { ConsoleForegroundColors } from '../../client/logging/_global';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { getOSType, OSType } from '../../test/common';
+import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */

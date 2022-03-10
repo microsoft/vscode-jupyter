@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 

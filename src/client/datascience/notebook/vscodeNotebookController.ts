@@ -52,7 +52,6 @@ import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Commands, Telemetry } from '../constants';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import {
     areKernelConnectionsEqual,
     getRemoteKernelSessionInformation,
@@ -81,6 +80,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { CellExecutionCreator } from '../../../kernels/cell-execution/cellExecutionCreator';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
