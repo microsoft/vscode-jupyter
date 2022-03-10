@@ -67,7 +67,7 @@ jobs:
               repo: context.repo.repo,
               assignees: ['amunger']
             })
-      - name: Sunday (Soojin)
+      - name: Sunday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
         uses: actions/github-script@v4
         with:
@@ -77,7 +77,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['minsa110']
+              assignees: ['DonJayamanne']
             })
       - name: Monday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
