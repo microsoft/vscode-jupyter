@@ -431,7 +431,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // We already have tests that ensures the first path in sys.path points to where the executable is located.
         // Hence skipping this test in such cases is acceptable.
         if (hasErrorOutput(cell1.outputs)) {
-            const errorOutput = translateCellErrorOutput(cell3.outputs[0]);
+            const errorOutput = translateCellErrorOutput(cell1.outputs[0]);
             if (errorOutput.traceback.includes('shell not found') || errorOutput.evalue.includes('shell not found')) {
                 return this.skip();
             }
