@@ -57,7 +57,10 @@ import { Product, IInstaller, InstallerResponse } from '../../../../kernels/inst
 suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: string;
-    const templateIPynbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/../kernels/nbWithKernel.ipynb');
+    const templateIPynbFile = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
+    );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     let venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
     let venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);

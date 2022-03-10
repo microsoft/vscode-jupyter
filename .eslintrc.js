@@ -618,7 +618,6 @@ module.exports = {
         'src/client/datascience/plotting/plotViewerMessageListener.ts',
         'src/client/datascience/plotting/types.ts',
         'src/client/datascience/plotting/plotViewerProvider.ts',
-        'src/client/datascience/commands/commandLineSelector.ts',
         'src/client/datascience/notebook/renderer.ts',
         'src/client/datascience/notebook/survey.ts',
         'src/client/datascience/export/exportToHTML.ts',
