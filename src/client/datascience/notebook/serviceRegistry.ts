@@ -24,7 +24,7 @@ import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { LiveKernelSwitcher } from './liveKernelSwitcher';
-import { CellOutputDisplayIdTracker } from '../../../kernels/cell-execution/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../../../notebooks/execution/cellDisplayIdTracker';
 import { CreationOptionService } from '../../../kernels/common/creationOptionsService';
 import { NotebookCreator } from '../../../kernels/common/notebookCreator';
 

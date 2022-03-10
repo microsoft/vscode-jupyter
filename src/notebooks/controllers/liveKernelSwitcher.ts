@@ -9,7 +9,7 @@ import { traceError } from '../../common/logger';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { IKernelProvider, LiveKernelConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from './types';
-import { switchKernel } from '../../../notebooks/execution/kernelSelector';
+import { switchKernel } from '../../../kernels/cell-execution/kernelSelector';
 
 const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
 

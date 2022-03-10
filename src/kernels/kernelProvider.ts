@@ -20,7 +20,7 @@ import { noop } from '../client/common/utils/misc';
 import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../client/datascience/notebook/constants';
 import { INotebookProvider, IStatusProvider } from '../client/datascience/types';
-import { CellOutputDisplayIdTracker } from './cell-execution/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 

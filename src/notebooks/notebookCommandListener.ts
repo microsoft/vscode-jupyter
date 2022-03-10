@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../client/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { IDisposableRegistry } from '../../common/types';
-import { Commands } from '../constants';
-import { IDataScienceCommandListener } from '../types';
-import { NotebookCellLanguageService } from '../notebook/cellLanguageService';
-import { getNotebookMetadata } from '../notebook/helpers/helpers';
-import { noop } from '../../common/utils/misc';
-import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
+import { IVSCodeNotebook, ICommandManager } from '../client/common/application/types';
+import { IDisposableRegistry } from '../client/common/types';
+import { NotebookCellLanguageService } from '../client/datascience/notebook/cellLanguageService';
+import { IDataScienceCommandListener } from '../client/datascience/types';
+import { Commands } from '../datascience-ui/common/constants';
+import { chainWithPendingUpdates } from './execution/notebookUpdater';
+import { getNotebookMetadata } from './helpers';
+import { noop } from '../client/common/utils/misc';
 
 @injectable()
-export class NativeEditorCommandListener implements IDataScienceCommandListener {
+export class NotebookCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private notebooks: IVSCodeNotebook,
@@ -39,6 +39,12 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
+        );
+        this.disposableRegistry.push(
+            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this)
+        );
+        this.disposableRegistry.push(
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
         );
     }
 
@@ -77,5 +83,32 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
             ])
         ).then(noop, noop);
+    }
+    private collapseAll() {
+        const document = this.notebooks.activeNotebookEditor?.document;
+        if (!document) {
+            return;
+        }
+
+        chainWithPendingUpdates(document, (edit) => {
+            document.getCells().forEach((cell, index) => {
+                const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+            });
+        }).then(noop, noop);
+    }
+
+    private expandAll() {
+        const document = this.notebooks.activeNotebookEditor?.document;
+        if (!document) {
+            return;
+        }
+
+        chainWithPendingUpdates(document, (edit) => {
+            document.getCells().forEach((cell, index) => {
+                const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
+                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+            });
+        }).then(noop, noop);
     }
 }

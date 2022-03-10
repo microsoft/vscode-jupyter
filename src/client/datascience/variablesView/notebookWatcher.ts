@@ -18,7 +18,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../notebook/constants';
-import { isJupyterNotebook } from '../notebook/helpers/helpers';
+import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { IInteractiveWindowProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 

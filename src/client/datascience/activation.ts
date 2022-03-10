@@ -16,8 +16,8 @@ import { ActiveEditorContextService } from './commands/activeEditorContext';
 import { IRawNotebookSupportedService } from './types';
 import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';
-import { isJupyterNotebook } from './notebook/helpers/helpers';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { isJupyterNotebook } from '../../notebooks/helpers';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {

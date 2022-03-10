@@ -54,7 +54,7 @@ import { sendTelemetryEvent } from '../client/telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
 import { sleep } from '../test/core';
-import { CellOutputDisplayIdTracker } from './cell-execution/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { KernelExecution } from './cell-execution/kernelExecution';
 import {
     executeSilently,
