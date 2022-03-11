@@ -19,7 +19,6 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { EnvironmentType } from '../../client/api/extension';
 import { IPythonExtensionChecker } from '../../client/api/types';
 import {
     IVSCodeNotebook,
@@ -54,6 +53,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { traceDecorators } from '../../client/logging';
 import { TraceOptions } from '../../client/logging/trace';
 import { ConsoleForegroundColors } from '../../client/logging/_global';
+import { EnvironmentType } from '../../client/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
 import { displayErrorsInCell } from '../../extension/errors/errorUtils';
 import { WrappedError } from '../../extension/errors/types';

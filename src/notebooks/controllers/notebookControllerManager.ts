@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../client/activation/types';
-import { PythonEnvironment, EnvironmentType } from '../../client/api/extension';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
 import {
     IVSCodeNotebook,
@@ -39,6 +38,7 @@ import { INotebookProvider, IJupyterServerUriStorage } from '../../client/datasc
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { traceDecorators } from '../../client/logging';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
