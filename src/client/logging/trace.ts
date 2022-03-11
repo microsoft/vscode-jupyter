@@ -202,7 +202,16 @@ function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: 
         }
     } else {
         logToAll(loggers, LogLevel.Error, [formatted, traced.err]);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sendTelemetryEvent('ERROR' as any, undefined, undefined, traced.err);
+        sendTelemetryEvent(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            'ERROR' as any,
+            undefined,
+            {
+                failureCategory: 'methodException',
+                failureSubCategory: call ? `${call.name}:${call.methodName}` : 'unknown'
+            },
+            traced.err,
+            true
+        );
     }
 }
