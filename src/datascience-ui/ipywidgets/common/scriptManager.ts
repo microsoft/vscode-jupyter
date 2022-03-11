@@ -19,7 +19,7 @@ import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatib
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
-import { WidgetScriptSource } from '../../../kernels/ipywidgets/types';
+import { WidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/types';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();

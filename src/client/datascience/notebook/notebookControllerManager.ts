@@ -64,7 +64,7 @@ import { waitForCondition } from '../../common/utils/async';
 import { debounceAsync } from '../../common/utils/decorators';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

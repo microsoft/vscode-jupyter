@@ -9,8 +9,8 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { Extensions } from '../../client/common/application/extensions';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {

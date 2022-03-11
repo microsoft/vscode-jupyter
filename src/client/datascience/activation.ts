@@ -13,7 +13,7 @@ import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './commands/activeEditorContext';
-import { INotebookCreationTracker, IRawNotebookSupportedService } from './types';
+import { IRawNotebookSupportedService } from './types';
 import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';
 import { isJupyterNotebook } from './notebook/helpers/helpers';
@@ -29,15 +29,12 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
         @inject(IRawNotebookSupportedService) private readonly rawSupported: IRawNotebookSupportedService,
-        @inject(INotebookCreationTracker)
-        private readonly tracker: INotebookCreationTracker,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         void this.contextService.activate();
-        this.tracker.startTracking();
     }
 
     private onDidOpenNotebookEditor(e: NotebookDocument) {

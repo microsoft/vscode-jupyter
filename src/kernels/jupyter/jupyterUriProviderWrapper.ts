@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as vscode from 'vscode';
-import * as localize from '../common/utils/localize';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from './types';
+import * as localize from '../../client/common/utils/localize';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
 
 /**
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show

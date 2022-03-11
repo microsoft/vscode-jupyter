@@ -17,10 +17,10 @@ import { Common, DataScience } from '../../../client/common/utils/localize';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider';
+import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 

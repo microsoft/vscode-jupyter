@@ -16,9 +16,9 @@ import { IConfigurationService, WidgetCDNs } from '../../../client/common/types'
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { ILocalResourceUriConverter } from '../../../client/datascience/types';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets/ipyWidgetScriptSource';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource';
+import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');

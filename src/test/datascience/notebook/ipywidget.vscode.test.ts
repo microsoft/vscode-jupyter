@@ -25,7 +25,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookCommunication } from '../../../client/datascience/notebook/types';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets/notebookIPyWidgetCoordinator';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {

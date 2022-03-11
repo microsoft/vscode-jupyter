@@ -1,34 +1,42 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, NotebookDocument } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceInfo, traceError } from '../../../client/common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
 import { isJupyterNotebook } from '../../../client/datascience/notebook/helpers/helpers';
 import {
-    INotebookCreationTracker,
     IInteractiveWindowProvider,
     INotebookProvider,
     IRawNotebookProvider,
     IInteractiveWindow
 } from '../../../client/datascience/types';
+import { getKernelConnectionLanguage } from '../../helpers';
+import { IKernel, IKernelProvider } from '../../types';
 
+const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
+const LastNotebookCreatedKey = 'last-notebook-created';
+
+/**
+ * Class used for preloading a kernel. Makes first run of a kernel faster as it loads as soon as the extension does.
+ */
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
-        @inject(INotebookCreationTracker)
-        private readonly tracker: INotebookCreationTracker,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
@@ -42,12 +50,19 @@ export class ServerPreload implements IExtensionSingleActivationService {
         // And the user has specified local server in their settings.
         this.checkDateForServerStart();
 
+        this.disposables.push(this.kernelProvider.onDidStartKernel(this.kernelStarted, this));
+
         // Don't hold up activation though
         return Promise.resolve();
     }
 
+    private get lastNotebookCreated() {
+        const time = this.mementoStorage.get<number | undefined>(LastNotebookCreatedKey);
+        return time ? new Date(time) : undefined;
+    }
+
     private checkDateForServerStart() {
-        if (this.shouldAutoStartStartServer(this.tracker.lastNotebookCreated)) {
+        if (this.shouldAutoStartStartServer(this.lastNotebookCreated)) {
             this.createServerIfNecessary().ignoreErrors();
         }
     }
@@ -99,6 +114,18 @@ export class ServerPreload implements IExtensionSingleActivationService {
     private onDidOpenOrCloseInteractive(interactive: IInteractiveWindow | undefined) {
         if (interactive) {
             this.createServerIfNecessary().ignoreErrors();
+        }
+    }
+
+    // Callback for when a notebook is created by the notebook provider
+    // Note the time as well as an extra time for python specific notebooks
+    private kernelStarted(kernel: IKernel) {
+        const language = getKernelConnectionLanguage(kernel.kernelConnectionMetadata);
+
+        void this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
+
+        if (language === PYTHON_LANGUAGE) {
+            void this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
         }
     }
 }

@@ -22,7 +22,7 @@ import {
     KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
-import { WidgetScriptSource } from '../../../kernels/ipywidgets/types';
+import { WidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/types';
 
 export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',
