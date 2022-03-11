@@ -420,19 +420,39 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForCellExecutionToComplete(cell1),
-            waitForCellHavingOutput(cell1)
+            waitForCellHavingOutput(cell1),
+            waitForCondition(
+                async () => {
+                    if (getCellOutputs(cell1).trim().length > 0) {
+                        return true;
+                    }
+                    if (hasErrorOutput(cell1.outputs)) {
+                        return true;
+                    }
+                    return false;
+                },
+                defaultNotebookTestTimeout,
+                'Cell did not have output'
+            )
         ]);
 
         // On windows `!where python`, prints multiple items in the output (all executables found).
-        const shellExecutable = getCellOutputs(cell1).trim().split('\n')[0].trim();
+        const cell1Output = getCellOutputs(cell1);
+        const shellExecutable = cell1Output
+            .trim()
+            .split('\n')
+            .filter((item) => item.length)[0]
+            .trim();
 
         // Sometimes the IPython can (sometimes) fail with an error of `shell not found`.
         // For now, we'll ignore these errors
         // We already have tests that ensures the first path in sys.path points to where the executable is located.
         // Hence skipping this test in such cases is acceptable.
+        let errorOutput = '';
         if (hasErrorOutput(cell1.outputs)) {
-            const errorOutput = translateCellErrorOutput(cell1.outputs[0]);
-            if (errorOutput.traceback.includes('shell not found') || errorOutput.evalue.includes('shell not found')) {
+            const error = translateCellErrorOutput(cell1.outputs[0]);
+            errorOutput = `${error.evalue}:${error.traceback}`;
+            if (errorOutput.includes('shell not found')) {
                 return this.skip();
             }
         }
@@ -443,7 +463,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // First path in PATH must be the directory where executable is located.
         assert.ok(
             areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
-            `Python paths do not match ${shellExecutable}, ${sysExecutable}`
+            `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is ${cell1Output}, error is ${errorOutput}`
         );
     });
     test('Testing streamed output', async () => {
