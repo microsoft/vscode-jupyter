@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDisposable } from '@fluentui/react';
 import { injectable, inject } from 'inversify';
 import {
     CancellationToken,
@@ -24,13 +25,13 @@ import {
     HoverProvider,
     Diagnostic
 } from 'vscode';
-import { IExtensionSyncActivationService } from '../../activation/types';
-import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { disposeAllDisposables } from '../../common/helpers';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
-import { JupyterNotebookView } from './constants';
+import { IExtensionSyncActivationService } from '../client/activation/types';
+import { IVSCodeNotebook, IDocumentManager } from '../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../client/common/constants';
+import { disposeAllDisposables } from '../client/common/helpers';
+import { IDisposableRegistry } from '../client/common/types';
+import { DataScience } from '../client/common/utils/localize';
+import { JupyterNotebookView } from '../notebooks/constants';
 
 type CellUri = string;
 type CellVersion = number;

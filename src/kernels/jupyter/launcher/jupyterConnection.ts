@@ -13,10 +13,10 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
-import { JupyterConnectError } from '../../../client/datascience/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { RegExpValues } from '../../../datascience-ui/common/constants';
+import { JupyterConnectError } from '../../../extension/errors/jupyterConnectError';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');

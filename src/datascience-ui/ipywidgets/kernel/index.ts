@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../extension/messageTypes';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { logMessage } from '../../react-common/logger';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';

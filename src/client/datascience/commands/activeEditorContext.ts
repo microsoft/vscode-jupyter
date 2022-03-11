@@ -14,8 +14,8 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell, noop } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { InteractiveWindowView, JupyterNotebookView } from '../notebook/constants';
-import { INotebookControllerManager } from '../notebook/types';
+import { InteractiveWindowView, JupyterNotebookView } from '../../../notebooks/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 @injectable()

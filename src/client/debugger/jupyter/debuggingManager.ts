@@ -22,7 +22,6 @@ import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
 import { EditorContexts } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -36,6 +35,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

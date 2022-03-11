@@ -17,7 +17,7 @@ import {
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { PythonKernelCompletionProvider } from '../../../../client/datascience/notebook/intellisense/pythonKernelCompletionProvider';
+import { PythonKernelCompletionProvider } from '../../../../intellisense/pythonKernelCompletionProvider';
 import { IExtensionTestApi, sleep } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';

@@ -15,7 +15,6 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { Resource, ReadWrite } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { JupyterKernelDependencyError } from '../../client/datascience/errors/jupyterKernelDependencyError';
 import {
     IKernelDependencyService,
     IDisplayOptions,
@@ -28,6 +27,7 @@ import { logValue, ignoreLogging } from '../../client/logging/trace';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
+import { JupyterKernelDependencyError } from '../../extension/errors/jupyterKernelDependencyError';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../types';

@@ -18,7 +18,7 @@ import {
     CancellationError
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../client/common/application/types';
-import { WrappedError } from '../client/common/errors/types';
+import { WrappedError } from '../client/../extension/errors/types';
 import { disposeAllDisposables } from '../client/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../client/common/logger';
 import { getDisplayPath } from '../client/common/platform/fs-paths';
@@ -32,8 +32,8 @@ import { StopWatch } from '../client/common/utils/stopWatch';
 import { AddRunCellHook } from '../client/datascience/constants';
 import { DisplayOptions } from '../client/datascience/displayOptions';
 import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
-import { JupyterConnectError } from '../client/datascience/errors/jupyterConnectError';
-import { InteractiveWindowView } from '../client/datascience/notebook/constants';
+import { JupyterConnectError } from '../extension/errors/jupyterConnectError';
+import { InteractiveWindowView } from '../notebooks/constants';
 import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';
 import {
     sendKernelTelemetryEvent,
@@ -55,7 +55,6 @@ import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
 import { sleep } from '../test/core';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
-import { KernelExecution } from './cell-execution/kernelExecution';
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
@@ -70,6 +69,7 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from './types';
+import { KernelExecution } from '../notebooks/execution/kernelExecution';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {

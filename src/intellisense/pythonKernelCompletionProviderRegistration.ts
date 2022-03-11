@@ -3,10 +3,10 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { NOTEBOOK_SELECTOR } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { PythonKernelCompletionProvider } from './intellisense/pythonKernelCompletionProvider';
+import { IExtensionSingleActivationService } from '../client/activation/types';
+import { NOTEBOOK_SELECTOR } from '../client/common/constants';
+import { IDisposableRegistry, IConfigurationService } from '../client/common/types';
+import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 
 // Default set of trigger characters for jupyter
 const DefaultTriggerCharacters = ['.', '%'];

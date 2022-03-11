@@ -3,13 +3,13 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/../extension/errors/errorUtils';
 import '../../../client/common/extensions';
 import { traceVerbose, traceInfoIfCI, traceError } from '../../../client/common/logger';
 import { IDisposable, Resource } from '../../../client/common/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
-import { KernelConnectionTimeoutError } from '../../../client/datascience/errors/kernelConnectionTimeoutError';
+import { KernelConnectionTimeoutError } from '../../../extension/errors/kernelConnectionTimeoutError';
 import { ISessionWithSocket, KernelSocketInformation } from '../../../client/datascience/types';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';

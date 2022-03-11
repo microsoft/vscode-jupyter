@@ -2,17 +2,23 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { noop } from 'lodash';
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { Commands, Settings } from '../constants';
-import { IJupyterServerUriStorage } from '../types';
-import { isJupyterNotebook } from './helpers/helpers';
-import { INotebookControllerManager } from './types';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import {
+    IDocumentManager,
+    IVSCodeNotebook,
+    ICommandManager,
+    IApplicationShell
+} from '../../client/common/application/types';
+import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { Settings } from '../../client/datascience/constants';
+import { IJupyterServerUriStorage } from '../../client/datascience/types';
+import { Commands } from '../../datascience-ui/common/constants';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
+import { isJupyterNotebook } from '../helpers';
+import { INotebookControllerManager } from '../types';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {

@@ -14,20 +14,20 @@ import {
     workspace
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import { IVSCodeNotebook } from '../../../common/application/types';
-import { createPromiseFromCancellation } from '../../../common/cancellation';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../../common/logger';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { waitForPromise } from '../../../common/utils/async';
-import { isNotebookCell } from '../../../common/utils/misc';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { Settings } from '../../constants';
-import { mapJupyterKind } from '../../interactive-common/intellisense/conversion';
-import { IKernelProvider } from '../../../../kernels/types';
-import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../../types';
-import { findAssociatedNotebookDocument } from '../helpers/helpers';
-import { INotebookLanguageClientProvider } from '../types';
+import { IVSCodeNotebook } from '../client/common/application/types';
+import { createPromiseFromCancellation } from '../client/common/cancellation';
+import { traceError, traceInfoIfCI, traceVerbose } from '../client/common/logger';
+import { getDisplayPath } from '../client/common/platform/fs-paths';
+import { IConfigurationService, IDisposableRegistry } from '../client/common/types';
+import { waitForPromise } from '../client/common/utils/async';
+import { isNotebookCell } from '../client/common/utils/misc';
+import { StopWatch } from '../client/common/utils/stopWatch';
+import { Settings } from '../client/datascience/constants';
+import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../client/datascience/types';
+import { IKernelProvider } from '../kernels/types';
+import { findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { INotebookLanguageClientProvider } from '../notebooks/types';
+import { mapJupyterKind } from './conversion';
 
 // Type that holds extra string (makes it quicker to filter). Exported for testing
 export type JupyterCompletionItem = CompletionItem & {

@@ -10,10 +10,10 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import { IKernel } from '../../../client/../kernels/types';
-import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocument } from '../mockDocument';
 import { MockDocumentManager } from '../mockDocumentManager';
+import { JupyterNotebookView } from '../../../notebooks/constants';
 
 class HashListener implements ICellHashListener {
     public lastHashes: IFileHashes[] = [];

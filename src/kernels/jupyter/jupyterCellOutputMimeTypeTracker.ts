@@ -10,13 +10,10 @@ import { IExtensionSingleActivationService } from '../../client/activation/types
 import { IVSCodeNotebook } from '../../client/common/application/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { IDisposableRegistry } from '../../client/common/types';
-import {
-    isJupyterNotebook,
-    createJupyterCellFromVSCNotebookCell
-} from '../../client/datascience/notebook/helpers/helpers';
 import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
 import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
 import { Telemetry } from '../../datascience-ui/common/constants';
+import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 

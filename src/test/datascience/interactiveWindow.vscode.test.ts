@@ -12,8 +12,6 @@ import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IKernelProvider } from '../../client/../kernels/types';
-import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
-import { INotebookControllerManager } from '../../client/datascience/notebook/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
@@ -35,6 +33,8 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
+import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
+import { INotebookControllerManager } from '../../notebooks/types';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);

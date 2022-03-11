@@ -13,7 +13,7 @@ import { closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { cellOutputToVSCCellOutput } from '../../../client/datascience/notebook/helpers/helpers';
+import { cellOutputToVSCCellOutput } from '../../../notebooks/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Validate Output order)', function () {

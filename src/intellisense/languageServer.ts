@@ -29,14 +29,14 @@ import {
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy';
-import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
-import { traceInfo } from '../../../common/logger';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sleep } from '../../../common/utils/async';
 import * as uuid from 'uuid/v4';
-import { noop } from '../../../common/utils/misc';
-import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
+import { PythonEnvironment } from '../client/api/extension';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../client/common/constants';
+import { traceInfo } from '../client/common/logger';
+import { getInterpreterId } from '../client/pythonEnvironments/info/interpreter';
+import { noop } from '../client/common/utils/misc';
+import { sleep } from '../client/common/utils/async';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {

@@ -18,7 +18,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { InteractiveWindowView } from '../notebook/constants';
+import { InteractiveWindowView } from '../../../notebooks/constants';
 import { IInteractiveWindowProvider, IJupyterVariables } from '../types';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {

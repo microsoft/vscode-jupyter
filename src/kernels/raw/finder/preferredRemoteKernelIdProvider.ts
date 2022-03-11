@@ -4,11 +4,11 @@
 import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
-import { traceInfo } from '../../common/logger';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { traceInfo } from '../../../client/common/logger';
+import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../client/common/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Telemetry } from '../../../datascience-ui/common/constants';
 
 export const ActiveKernelIdList = 'Active_Kernel_Id_List';
 // This is the number of kernel ids that will be remembered between opening and closing VS code

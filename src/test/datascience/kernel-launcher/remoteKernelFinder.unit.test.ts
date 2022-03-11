@@ -9,7 +9,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../client/../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
-import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { MockMemento } from '../../mocks/mementos';
 import { CryptoUtils } from '../../../client/common/crypto';
 import {
@@ -25,6 +24,7 @@ import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterS
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder';
 import { IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

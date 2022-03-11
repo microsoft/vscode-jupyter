@@ -2,27 +2,26 @@
 // Licensed under the MIT License.
 'use strict';
 import { Uri } from 'vscode';
-
 import type { KernelMessage } from '@jupyterlab/services';
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../client/datascience/messages';
 import {
-    CommonActionType,
-    ILoadIPyWidgetClassFailureAction,
-    IVariableExplorerHeight,
-    LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
-} from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import {
-    ICell,
     IJupyterVariable,
+    KernelSocketOptions,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    KernelSocketOptions
-} from '../types';
-import { BaseReduxActionPayload } from './types';
-import { WidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/types';
+    ICell
+} from '../client/datascience/types';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../datascience-ui/common/constants';
+import {
+    IVariableExplorerHeight,
+    CommonActionType,
+    LoadIPyWidgetClassLoadAction,
+    ILoadIPyWidgetClassFailureAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
+} from '../datascience-ui/interactive-common/redux/reducers/types';
+import { WidgetScriptSource } from '../kernels/ipywidgets-message-coordination/types';
+import { KernelConnectionMetadata } from '../kernels/types';
+import { BaseReduxActionPayload } from '../webviews/types';
 
 export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',

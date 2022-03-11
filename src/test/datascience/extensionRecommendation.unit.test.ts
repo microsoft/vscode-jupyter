@@ -10,10 +10,10 @@ import { IDisposable, IExtensions } from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
 import { Common } from '../../client/common/utils/localize';
 import { ExtensionRecommendationService } from '../../client/datascience/extensionRecommendation';
-import { JupyterNotebookView } from '../../client/datascience/notebook/constants';
-import { INotebookControllerManager } from '../../client/datascience/notebook/types';
-import { VSCodeNotebookController } from '../../client/datascience/notebook/vscodeNotebookController';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { JupyterNotebookView } from '../../notebooks/constants';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
+import { INotebookControllerManager } from '../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience Extension Recommendation', () => {

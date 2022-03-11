@@ -5,11 +5,11 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, NotebookDocument, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../client/common/application/types';
-import { displayErrorsInCell } from '../client/common/errors/errorUtils';
+import { displayErrorsInCell } from '../client/../extension/errors/errorUtils';
 import { traceInfo } from '../client/common/logger';
 import { IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
 import { DataScience } from '../client/common/utils/localize';
-import { INotebookControllerManager } from '../client/datascience/notebook/types';
+import { INotebookControllerManager } from '../notebooks/types';
 import { trackKernelResourceInformation } from '../client/datascience/telemetry/telemetry';
 import {
     IDataScienceCommandListener,
@@ -20,11 +20,11 @@ import {
 import { IServiceContainer } from '../client/ioc/types';
 import { sendTelemetryEvent } from '../client/telemetry';
 import { Commands, Telemetry } from '../datascience-ui/common/constants';
-import { CellExecutionCreator } from './cell-execution/cellExecutionCreator';
 import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
 import { JupyterSession } from './jupyter/session/jupyterSession';
 import { RawJupyterSession } from './raw/session/rawJupyterSession';
 import { IKernel, IKernelProvider } from './types';
+import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {

@@ -8,7 +8,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { DataScience } from '../../client/common/utils/localize';
 import { stripAnsi } from '../../client/common/utils/regexp';
 import { DataFrameLoading, GetVariableInfo } from '../../client/datascience/constants';
-import { JupyterDataRateLimitError } from '../../client/datascience/errors/jupyterDataRateLimitError';
+import { JupyterDataRateLimitError } from '../../extension/errors/jupyterDataRateLimitError';
 import { IKernelVariableRequester, IJupyterVariable } from '../../client/datascience/types';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { executeSilently } from '../helpers';

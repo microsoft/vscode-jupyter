@@ -2,12 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { Reducer } from 'redux';
-import {
-    IFinishCell,
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
+import { IFinishCell, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../extension/messageTypes';
+import { BaseReduxActionPayload } from '../../../../webviews/types';
 import {
     IJupyterVariable,
     IJupyterVariablesRequest,

@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
-import { IApplicationShell } from '../../client/common/application/types';
-import { PYTHON_LANGUAGE, JVSC_EXTENSION_ID, JVSC_EXTENSION_DisplayName } from '../../client/common/constants';
-import { DataScience } from '../../client/common/utils/localize';
-import { INotebookEditorProvider } from '../../client/datascience/types';
-import { sendTelemetryEvent } from '../../client/telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
-import { CreationOptionService } from './creationOptionsService';
+import { IApplicationShell } from '../client/common/application/types';
+import { PYTHON_LANGUAGE, JVSC_EXTENSION_ID, JVSC_EXTENSION_DisplayName } from '../client/common/constants';
+import { DataScience } from '../client/common/utils/localize';
+import { INotebookEditorProvider } from '../client/datascience/types';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { Telemetry } from '../datascience-ui/common/constants';
+import { CreationOptionService } from '../kernels/common/creationOptionsService';
 
 @injectable()
 export class NotebookCreator {

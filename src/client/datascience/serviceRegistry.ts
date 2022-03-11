@@ -18,7 +18,6 @@ import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
-import { NotebookCommands } from './commands/notebookCommands';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { DataScienceStartupTime, Identifiers } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
@@ -34,7 +33,7 @@ import { DataScienceCodeLensProvider } from './editor-integration/codelensprovid
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { DataScienceErrorHandler } from './errors/errorHandler';
+import { DataScienceErrorHandler } from '../../extension/errors/errorHandler';
 import { ExportBase } from './export/exportBase';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';
@@ -46,10 +45,8 @@ import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './export/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
-import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
-import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
+import { registerTypes as registerNotebookTypes } from '../../notebooks/serviceRegistry';
 import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
-import { PreferredRemoteKernelIdProvider } from './notebookStorage/preferredRemoteKernelIdProvider';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
@@ -84,7 +81,6 @@ import {
     IKernelVariableRequester,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
-    INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
     INotebookProvider,
@@ -109,10 +105,8 @@ import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
 import { KernelCommandListener } from '../../kernels/kernelCommandListener';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 import { ExportToPythonPlain } from './export/exportToPythonPlain';
-import { ErrorRendererCommunicationHandler } from './errors/errorRendererComms';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { PreReleaseChecker } from './prereleaseChecker';
-import { LogReplayService } from './notebook/intellisense/logReplayService';
 import { InteractiveWindowDebugger } from '../../kernels/debugging/interactiveWindowDebugger';
 import { JupyterDebugService } from '../../kernels/debugging/jupyterDebugService';
 import { isLocalLaunch } from '../../kernels/helpers';
@@ -158,12 +152,12 @@ import { JupyterVariables } from '../../kernels/variables/jupyterVariables';
 import { KernelVariables } from '../../kernels/variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/variables/preWarmVariables';
 import { PythonVariablesRequester } from '../../kernels/variables/pythonVariableRequester';
-import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
-import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { ProgressReporter } from './progress/progressReporter';
 import { IPyWidgetMessageDispatcherFactory } from '../../kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcherFactory';
 import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { LogReplayService } from '../../intellisense/logReplayService';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -189,7 +183,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 
     // This condition is temporary.
-    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
@@ -218,7 +211,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDataScience>(IDataScience, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
@@ -227,7 +219,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, JupyterInterpreterSelectionCommand);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreWarmActivatedJupyterEnvironmentVariables);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     if (isDevMode) {
@@ -260,7 +251,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
     serviceManager.addSingleton<JupyterServerSelectorCommand>(JupyterServerSelectorCommand, JupyterServerSelectorCommand);
     serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
-    serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
@@ -290,7 +280,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ErrorRendererCommunicationHandler);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelProgressReporter);
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreReleaseChecker);

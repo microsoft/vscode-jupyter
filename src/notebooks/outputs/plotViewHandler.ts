@@ -1,9 +1,9 @@
 import sizeOf from 'image-size';
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
-import { traceError } from '../../../common/logger';
-import { getDisplayPath } from '../../../common/platform/fs-paths';
-import { IPlotViewerProvider } from '../../types';
+import { traceError } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { IPlotViewerProvider } from '../../client/datascience/types';
 
 const svgMimeType = 'image/svg+xml';
 const pngMimeType = 'image/png';

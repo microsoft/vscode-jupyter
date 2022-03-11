@@ -6,23 +6,23 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceWarning } from '../../common/logger';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
-import { swallowExceptions } from '../../common/utils/decorators';
-import { translateKernelLanguageToMonaco } from '../common';
-import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../constants';
+import { IExtensionSingleActivationService } from '../client/activation/types';
+import { IJupyterKernelSpec } from '../client/api/extension';
+import { IPythonExtensionChecker } from '../client/api/types';
+import { IVSCodeNotebook } from '../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../client/common/constants';
+import { traceWarning } from '../client/common/logger';
+import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../client/common/types';
+import { swallowExceptions } from '../client/common/utils/decorators';
+import { translateKernelLanguageToMonaco } from '../client/datascience/common';
+import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../datascience-ui/common/constants';
 import {
+    isPythonKernelConnection,
     getKernelConnectionLanguage,
-    getLanguageInNotebookMetadata,
-    isPythonKernelConnection
-} from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { IJupyterKernelSpec } from '../types';
-import { getNotebookMetadata, isJupyterNotebook } from './helpers/helpers';
+    getLanguageInNotebookMetadata
+} from '../kernels/helpers';
+import { KernelConnectionMetadata } from '../kernels/types';
+import { isJupyterNotebook, getNotebookMetadata } from '../notebooks/helpers';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**

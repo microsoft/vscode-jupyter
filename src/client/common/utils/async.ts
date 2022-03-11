@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { BaseError } from '../errors/types';
+import { BaseError } from '../../../extension/errors/types';
 
 /**
  * Error type thrown when a timeout occurs

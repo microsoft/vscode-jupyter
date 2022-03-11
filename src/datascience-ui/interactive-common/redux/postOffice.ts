@@ -3,10 +3,7 @@
 'use strict';
 import * as Redux from 'redux';
 
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../extension/messageTypes';
 import { PostOffice } from '../../react-common/postOffice';
 import { isAllowedAction, unwrapPostableAction } from './helpers';
 import { CommonActionType } from './reducers/types';

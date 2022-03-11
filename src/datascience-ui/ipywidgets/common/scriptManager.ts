@@ -8,10 +8,7 @@ import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
 import '../../../client/common/extensions';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../extension/messageTypes';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../../client/datascience/types';
 import { PostOffice } from '../../react-common/postOffice';

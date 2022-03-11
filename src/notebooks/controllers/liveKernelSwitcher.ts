@@ -3,13 +3,13 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { IKernelProvider, LiveKernelConnectionMetadata } from '../../../kernels/types';
-import { INotebookControllerManager } from './types';
-import { switchKernel } from '../../../kernels/cell-execution/kernelSelector';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IVSCodeNotebook, ICommandManager } from '../../client/common/application/types';
+import { traceError } from '../../client/common/logger';
+import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../client/common/types';
+import { IKernelProvider, LiveKernelConnectionMetadata } from '../../kernels/types';
+import { INotebookControllerManager } from '../types';
+import { switchKernel } from './kernelSelector';
 
 const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
 

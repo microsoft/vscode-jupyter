@@ -17,8 +17,8 @@ import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../
 import { InterruptResult, IJupyterSession } from '../../client/datascience/types';
 import { captureTelemetry } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 
 /**
  * Separate class that deals just with kernel execution.

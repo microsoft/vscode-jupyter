@@ -30,7 +30,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
-import { INotebookControllerManager } from '../notebook/types';
+import { INotebookControllerManager } from '../../../notebooks/types';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,

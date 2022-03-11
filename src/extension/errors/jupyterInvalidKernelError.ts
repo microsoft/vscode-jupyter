@@ -1,20 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { BaseKernelError } from '../../common/errors/types';
-import * as localize from '../../common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { BaseKernelError } from './types';
 
 export class JupyterInvalidKernelError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
         super(
             'invalidkernel',
-            localize.DataScience.kernelInvalid().format(
-                getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)
-            ),
+            DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
         );
         sendTelemetryEvent(Telemetry.KernelInvalid);

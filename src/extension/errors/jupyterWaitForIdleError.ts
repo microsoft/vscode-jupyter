@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { BaseKernelError } from '../../common/errors/types';
-import { DataScience } from '../../common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { BaseKernelError } from './types';
 
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

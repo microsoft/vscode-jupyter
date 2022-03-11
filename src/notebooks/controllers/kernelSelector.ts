@@ -8,7 +8,7 @@ import { Resource } from '../../client/common/types';
 import { getResourceType } from '../../client/datascience/common';
 import { getActiveInteractiveWindow } from '../../client/datascience/interactive-window/helpers';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { KernelConnectionMetadata } from '../types';
+import { KernelConnectionMetadata } from '../../kernels/types';
 
 // TODO: This should probably move to a 'notebook' subsection
 

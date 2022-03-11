@@ -18,14 +18,9 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import {
-    InteractiveWindowMessages,
-    IShowDataViewer
-} from '../../datascience/interactive-common/interactiveWindowTypes';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerFactory } from '../data-viewing/types';
-import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import {
     ICodeCssGenerator,
     IJupyterVariableDataProviderFactory,
@@ -38,6 +33,8 @@ import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { ContextKey } from '../../common/contextKey';
+import { InteractiveWindowMessages, IShowDataViewer } from '../../../extension/messageTypes';
+import { DataViewerChecker } from '../../../webviews/dataviewer/dataViewerChecker';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 

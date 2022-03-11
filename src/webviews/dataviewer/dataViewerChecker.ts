@@ -1,8 +1,8 @@
 import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { IConfigurationService, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { ColumnWarningSize } from '../data-viewing/types';
+import { IApplicationShell } from '../../client/common/application/types';
+import { IConfigurationService, Resource } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { ColumnWarningSize } from '../../client/datascience/data-viewing/types';
 
 // This helper class validates requests to show large data in the data viewer and configures related settings.
 export class DataViewerChecker {
@@ -10,10 +10,10 @@ export class DataViewerChecker {
 
     public async isRequestedColumnSizeAllowed(columnSize: number, owningResource?: Resource): Promise<boolean> {
         if (columnSize > ColumnWarningSize && (await this.shouldAskForLargeData(owningResource))) {
-            const message = localize.DataScience.tooManyColumnsMessage();
-            const yes = localize.DataScience.tooManyColumnsYes();
-            const no = localize.DataScience.tooManyColumnsNo();
-            const dontAskAgain = localize.DataScience.tooManyColumnsDontAskAgain();
+            const message = DataScience.tooManyColumnsMessage();
+            const yes = DataScience.tooManyColumnsYes();
+            const no = DataScience.tooManyColumnsNo();
+            const dontAskAgain = DataScience.tooManyColumnsDontAskAgain();
 
             const result = await this.applicationShell.showWarningMessage(message, yes, no, dontAskAgain);
             if (result === dontAskAgain) {

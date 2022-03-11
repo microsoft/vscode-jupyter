@@ -17,7 +17,6 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceError, traceInfoIfCI } from '../../../client/common/logger';
 import { IDisposableRegistry, Resource } from '../../../client/common/types';
 import { getResourceType } from '../../../client/datascience/common';
-import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { sendKernelListTelemetry } from '../../../client/datascience/telemetry/kernelTelemetry';
 import {
     IJupyterSessionManagerFactory,
@@ -32,6 +31,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry'
 import { getTelemetrySafeLanguage } from '../../../client/telemetry/helpers';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IRemoteKernelFinder } from '../types';
+import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,

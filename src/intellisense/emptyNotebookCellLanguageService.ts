@@ -3,17 +3,17 @@
 
 import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { translateKernelLanguageToMonaco } from '../common';
-import { isJupyterNotebook } from './helpers/helpers';
-import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-import { VSCodeNotebookController } from './vscodeNotebookController';
-import { INotebookControllerManager } from './types';
+import { IExtensionSingleActivationService } from '../client/activation/types';
+import { IVSCodeNotebook } from '../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../client/common/constants';
+import { traceError } from '../client/common/logger';
+import { IDisposableRegistry } from '../client/common/types';
+import { noop } from '../client/common/utils/misc';
+import { translateKernelLanguageToMonaco } from '../client/datascience/common';
+import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
+import { isJupyterNotebook } from '../notebooks/helpers';
+import { INotebookControllerManager } from '../notebooks/types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.

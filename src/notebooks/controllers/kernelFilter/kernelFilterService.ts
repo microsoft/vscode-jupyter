@@ -2,11 +2,11 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
-import { disposeAllDisposables } from '../../../common/helpers';
-import { traceVerbose } from '../../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
-import { KernelConnectionMetadata } from '../../../../kernels/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { traceVerbose } from '../../../client/common/logger';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../client/common/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 
 @injectable()
 export class KernelFilterService implements IDisposable {

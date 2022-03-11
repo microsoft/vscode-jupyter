@@ -3,13 +3,18 @@
 
 import { inject, injectable } from 'inversify';
 import { commands, NotebookRange, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
-import { IExtensionSyncActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { arePathsSame } from '../../common/platform/fileUtils';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry } from '../../common/types';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
+import { IExtensionSyncActivationService } from '../../client/activation/types';
+import {
+    IDocumentManager,
+    ICommandManager,
+    IApplicationShell,
+    IVSCodeNotebook
+} from '../../client/common/application/types';
+import { arePathsSame } from '../../client/common/platform/fileUtils';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IDisposableRegistry } from '../../client/common/types';
+import { InteractiveWindowMessages } from '../../extension/messageTypes';
+import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 
 @injectable()
 export class ErrorRendererCommunicationHandler implements IExtensionSyncActivationService {

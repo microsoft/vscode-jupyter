@@ -3,17 +3,17 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, NotebookDocument, Uri } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../activation/types';
-import { IPythonExtensionChecker } from '../../../api/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
-import { IConfigurationService, IDisposableRegistry, IsPreRelease } from '../../../common/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
-import { IInteractiveWindowProvider } from '../../types';
-import { findAssociatedNotebookDocument, isJupyterNotebook } from '../helpers/helpers';
-import { INotebookControllerManager, INotebookLanguageClientProvider } from '../types';
-import { VSCodeNotebookController } from '../vscodeNotebookController';
+import { IExtensionSyncActivationService } from '../client/activation/types';
+import { IPythonExtensionChecker } from '../client/api/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../client/common/application/types';
+import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../client/common/types';
+import { IInteractiveWindowProvider } from '../client/datascience/types';
+import { IInterpreterService } from '../client/interpreter/contracts';
+import { PythonEnvironment } from '../client/pythonEnvironments/info';
+import { getInterpreterId } from '../client/pythonEnvironments/info/interpreter';
+import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
+import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { INotebookLanguageClientProvider, INotebookControllerManager } from '../notebooks/types';
 import { LanguageServer } from './languageServer';
 
 const EmptyWorkspaceKey = '';

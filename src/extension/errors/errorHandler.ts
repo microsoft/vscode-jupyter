@@ -1,48 +1,44 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { BaseError, BaseKernelError, WrappedError, WrappedKernelError } from '../../common/errors/types';
-import { traceWarning } from '../../common/logger';
-import { Common, DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import {
-    IDataScienceErrorHandler,
-    IJupyterInterpreterDependencyManager,
-    IKernelDependencyService,
-    KernelInterpreterDependencyResponse
-} from '../types';
-import {
+    CancellationError,
     CancellationError as VscCancellationError,
     CancellationTokenSource,
     ConfigurationTarget,
     workspace
 } from 'vscode';
-import { CancellationError } from '../../common/cancellation';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { traceWarning } from '../../client/common/logger';
+import { IBrowserService, IConfigurationService, Resource } from '../../client/common/types';
+import { DataScience, Common } from '../../client/common/utils/localize';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
 import {
-    analyzeKernelErrors,
-    getErrorMessageFromPythonTraceback,
-    KernelFailureReason
-} from '../../common/errors/errorUtils';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { IBrowserService, IConfigurationService, Resource } from '../../common/types';
-import { Commands, Telemetry } from '../constants';
-import { sendTelemetryEvent } from '../../telemetry';
+    IDataScienceErrorHandler,
+    IJupyterInterpreterDependencyManager,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry, Commands } from '../../datascience-ui/common/constants';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { translateProductToModule } from '../../kernels/installer/moduleInstaller';
+import { ProductNames } from '../../kernels/installer/productNames';
+import { Product } from '../../kernels/installer/types';
+import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
 import { JupyterConnectError } from './jupyterConnectError';
-import { DisplayOptions } from '../displayOptions';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import { EnvironmentType } from '../../pythonEnvironments/info';
-import { translateProductToModule } from '../../../kernels/installer/moduleInstaller';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
-import { JupyterInterpreterDependencyResponse } from '../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { WrappedError, BaseKernelError, WrappedKernelError, BaseError } from './types';
+import { noop } from '../../client/common/utils/misc';
+import { EnvironmentType } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {

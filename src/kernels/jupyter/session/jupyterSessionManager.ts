@@ -24,7 +24,7 @@ import {
     Resource
 } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
-import { SessionDisposedError } from '../../../client/datascience/errors/sessionDisposedError';
+import { SessionDisposedError } from '../../../extension/errors/sessionDisposedError';
 import {
     IJupyterSessionManager,
     IJupyterConnection,

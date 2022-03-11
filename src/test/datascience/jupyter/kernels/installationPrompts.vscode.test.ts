@@ -23,7 +23,7 @@ import {
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
-import { hasErrorOutput, translateCellErrorOutput } from '../../../../client/datascience/notebook/helpers/helpers';
+import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
 import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
@@ -31,27 +31,27 @@ import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForConditi
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook, submitFromPythonFile } from '../../helpers';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
-    runAllCellsInActiveNotebook,
-    hijackPrompt,
-    waitForExecutionCompletedSuccessfully,
-    waitForKernelToChange,
-    waitForKernelToGetAutoSelected,
-    defaultNotebookTestTimeout,
-    assertVSCCellIsNotRunning,
-    insertCodeCell,
-    getCellOutputs
-} from '../../notebook/helper';
-import * as kernelSelector from '../../../../kernels/cell-execution/kernelSelector';
-import { JupyterNotebookView } from '../../../../client/datascience/notebook/constants';
-import { INotebookControllerManager } from '../../../../client/datascience/notebook/types';
-import { WrappedError } from '../../../../client/common/errors/types';
+import { JupyterNotebookView } from '../../../../notebooks/constants';
+import { INotebookControllerManager } from '../../../../notebooks/types';
+import { WrappedError } from '../../../../client/../extension/errors/types';
 import { Commands } from '../../../../client/datascience/constants';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
+import {
+    createTemporaryNotebook,
+    closeNotebooksAndCleanUpAfterTests,
+    hijackPrompt,
+    waitForKernelToGetAutoSelected,
+    runAllCellsInActiveNotebook,
+    assertVSCCellIsNotRunning,
+    defaultNotebookTestTimeout,
+    waitForKernelToChange,
+    insertCodeCell,
+    waitForExecutionCompletedSuccessfully,
+    getCellOutputs
+} from '../../notebook/helper';
+import * as kernelSelector from '../../../../notebooks/execution/kernelSelector';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

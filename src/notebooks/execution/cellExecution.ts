@@ -30,8 +30,8 @@ import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../client/common/application/types';
-import { analyzeKernelErrors } from '../../client/common/errors/errorUtils';
-import { BaseError } from '../../client/common/errors/types';
+import { analyzeKernelErrors } from '../../client/../extension/errors/errorUtils';
+import { BaseError } from '../../client/../extension/errors/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../client/common/logger';
 import { RefBool } from '../../client/common/refBool';
@@ -40,24 +40,24 @@ import { Deferred, createDeferred } from '../../client/common/utils/async';
 import * as localize from '../../client/common/utils/localize';
 import { StopWatch } from '../../client/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../../client/datascience/notebook/constants';
-import { handleTensorBoardDisplayDataOutput } from '../../client/datascience/notebook/helpers/executionHelpers';
+import { InteractiveWindowView } from '../../notebooks/constants';
 import {
     NotebookCellStateTracker,
     traceCellMessage,
     translateErrorOutput,
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput
-} from '../../client/datascience/notebook/helpers/helpers';
+} from '../../notebooks/helpers';
 import { ICellHashProvider, IJupyterSession, ICellHash } from '../../client/datascience/types';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { formatStreamText, concatMultilineString } from '../../datascience-ui/common';
 import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../datascience-ui/common/cellFactory';
 import { Telemetry } from '../../datascience-ui/common/constants';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../helpers';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../types';
 import { swallowExceptions } from '../../client/common/utils/decorators';
 import { noop } from '../../client/common/utils/misc';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {

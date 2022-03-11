@@ -5,17 +5,17 @@
 import { injectable, inject } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { IExtensionSingleActivationService } from '../../../activation/types';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { Commands, EditorContexts } from '../../constants';
 import * as lspConcat from '@vscode/lsp-notebook-concat';
-import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
 import * as protocol from 'vscode-languageserver-protocol';
-import { traceInfo } from '../../../common/logger';
-import { ContextKey } from '../../../common/contextKey';
-import { sleep, waitForCondition } from '../../../common/utils/async';
+import { IExtensionSingleActivationService } from '../client/activation/types';
+import { ICommandManager, IApplicationShell } from '../client/common/application/types';
+import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../client/common/constants';
+import { ContextKey } from '../client/common/contextKey';
+import { traceInfo } from '../client/common/logger';
+import { IFileSystem } from '../client/common/platform/types';
+import { IDisposableRegistry, IConfigurationService } from '../client/common/types';
+import { Commands, EditorContexts } from '../datascience-ui/common/constants';
+import { sleep, waitForCondition } from '../client/common/utils/async';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

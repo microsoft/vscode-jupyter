@@ -8,9 +8,9 @@ import {
     NotebookCellOutputItem,
     WorkspaceFolder
 } from 'vscode';
-import { JupyterConnectError } from '../../datascience/errors/jupyterConnectError';
-import { getDisplayPath } from '../platform/fs-paths';
-import { DataScience } from '../utils/localize';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { DataScience } from '../../client/common/utils/localize';
+import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

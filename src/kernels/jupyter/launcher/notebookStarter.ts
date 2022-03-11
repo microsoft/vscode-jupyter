@@ -18,8 +18,8 @@ import { IFileSystem, TemporaryDirectory } from '../../../client/common/platform
 import { IOutputChannel, Resource } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { StopWatch } from '../../../client/common/utils/stopWatch';
-import { JupyterConnectError } from '../../../client/datascience/errors/jupyterConnectError';
-import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { JupyterConnectError } from '../../../extension/errors/jupyterConnectError';
+import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
 import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
 import { ReportableAction } from '../../../client/datascience/progress/types';
 import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../client/datascience/types';
@@ -27,7 +27,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection';
-import { WrappedError } from '../../../client/common/errors/types';
+import { WrappedError } from '../../../client/../extension/errors/types';
 
 /**
  * Responsible for starting a notebook.

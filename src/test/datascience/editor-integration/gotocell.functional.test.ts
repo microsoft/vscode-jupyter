@@ -21,7 +21,7 @@ suite('Dummy12', () => {
 // import { IJupyterSettings } from '../../../client/common/types';
 // import * as CellFactory from '../../../client/datascience/cellFactory';
 // import { Commands } from '../../../client/datascience/constants';
-// import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+// import { InteractiveWindowMessages } from '../../../extension/messageTypes';
 // import { getDefaultInteractiveIdentity } from '../../../client/datascience/interactive-window/identity';
 // import {
 //     ICell,

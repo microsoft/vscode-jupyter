@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, NotebookCellExecutionState } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { IDisposableRegistry } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
+import { IExtensionSingleActivationService } from '../client/activation/types';
+import { IVSCodeNotebook } from '../client/common/application/types';
+import { IDisposableRegistry } from '../client/common/types';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { Telemetry } from '../datascience-ui/common/constants';
+import { isJupyterNotebook } from './helpers';
 
 /**
  * This class tracks opened notebooks & # of executed notebooks.

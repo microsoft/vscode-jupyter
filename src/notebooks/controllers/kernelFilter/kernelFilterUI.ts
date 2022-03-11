@@ -2,19 +2,19 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../activation/types';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import { disposeAllDisposables } from '../../../common/helpers';
-import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../common/types';
-import { DataScience } from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
+import { IExtensionSyncActivationService } from '../../../client/activation/types';
+import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../client/common/types';
+import { DataScience } from '../../../client/common/utils/localize';
+import { noop } from '../../../client/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelConnectionPath,
     getRemoteKernelSessionInformation
-} from '../../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../../kernels/types';
-import { INotebookControllerManager } from '../types';
+} from '../../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../../kernels/types';
+import { INotebookControllerManager } from '../../types';
 import { KernelFilterService } from './kernelFilterService';
 
 @injectable()

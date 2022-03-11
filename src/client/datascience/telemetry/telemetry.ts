@@ -19,7 +19,7 @@ import { InterpreterCountTracker } from './interpreterCountTracker';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
-import { populateTelemetryWithErrorInfo } from '../../common/errors';
+import { populateTelemetryWithErrorInfo } from '../../../extension/errors';
 import { createDeferred } from '../../common/utils/async';
 import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/interpreter';
 

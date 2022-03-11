@@ -3,8 +3,8 @@
 'use strict';
 import { SemVer } from 'semver';
 
-import { ErrorUtils } from '../../client/common/errors/errorUtils';
-import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
+import { ErrorUtils } from '../../client/../extension/errors/errorUtils';
+import { ModuleNotInstalledError } from '../../client/../extension/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import {

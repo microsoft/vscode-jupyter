@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../extension/messageTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import {
     CommonAction,

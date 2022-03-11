@@ -3,46 +3,39 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
-import { IServiceManager } from '../../ioc/types';
-import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
-import { KernelProvider } from '../../../kernels/kernelProvider';
-import { IKernelProvider } from '../../../kernels/types';
-import { NotebookCellLanguageService } from './cellLanguageService';
-import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
-import { NotebookIntegration } from './integration';
-import { PythonKernelCompletionProvider } from './intellisense/pythonKernelCompletionProvider';
-import { NotebookControllerManager } from './notebookControllerManager';
-import { NotebookDisposeService } from './notebookDisposeService';
-import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookControllerManager, INotebookLanguageClientProvider } from './types';
-import { RendererCommunication } from './outputs/rendererCommunication';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../client/activation/types';
+import { IDataScienceCommandListener, INotebookEditorProvider } from '../client/datascience/types';
+import { IServiceManager } from '../client/ioc/types';
+import { GitHubIssueCodeLensProvider } from '../client/logging/gitHubIssueCodeLensProvider';
+import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider';
+import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
+import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
+import { PythonKernelCompletionProvider } from '../intellisense/pythonKernelCompletionProvider';
+import { CreationOptionService } from '../kernels/common/creationOptionsService';
+import { KernelProvider } from '../kernels/kernelProvider';
+import { IKernelProvider } from '../kernels/types';
+import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
+import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
+import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
+import { NotebookControllerManager } from './controllers/notebookControllerManager';
+import { RemoteSwitcher } from './controllers/remoteSwitcher';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { NotebookCommandListener } from './notebookCommandListener';
+import { NotebookCreator } from './notebookCreator';
+import { NotebookEditorProvider } from './notebookEditorProvider';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
-import { IntellisenseProvider } from './intellisense/intellisenseProvider';
-import { KernelFilterUI } from './kernelFilter/kernelFilterUI';
-import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { LiveKernelSwitcher } from './liveKernelSwitcher';
-import { CellOutputDisplayIdTracker } from '../../../notebooks/execution/cellDisplayIdTracker';
-import { CreationOptionService } from '../../../kernels/common/creationOptionsService';
-import { NotebookCreator } from '../../../kernels/common/notebookCreator';
+import { RendererCommunication } from './outputs/rendererCommunication';
+import { INotebookLanguageClientProvider, INotebookControllerManager } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookIntegration
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookDisposeService
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
-    serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -81,4 +74,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         LiveKernelSwitcher
     );
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ErrorRendererCommunicationHandler
+    );
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
 }

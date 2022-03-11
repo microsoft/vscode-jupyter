@@ -38,7 +38,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../../client/../kerne
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../client/datascience/notebook/helpers/helpers';
+import { translateCellErrorOutput } from '../../../notebooks/helpers';
 
 const codeToKillKernel = dedent`
 import IPython

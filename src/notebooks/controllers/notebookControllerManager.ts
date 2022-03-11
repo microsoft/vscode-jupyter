@@ -4,67 +4,68 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
-import { IExtensionSyncActivationService } from '../../activation/types';
+import { IExtensionSyncActivationService } from '../../client/activation/types';
+import { PythonEnvironment, EnvironmentType } from '../../client/api/extension';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
 import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
     IVSCodeNotebook,
-    IWorkspaceService
-} from '../../common/application/types';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../common/logger';
+    ICommandManager,
+    IWorkspaceService,
+    IDocumentManager,
+    IApplicationShell
+} from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../client/common/logger';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { CondaService } from '../../client/common/process/condaService';
 import {
-    IBrowserService,
-    IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext,
     IExtensions,
+    IConfigurationService,
+    IExtensionContext,
     IPathUtils,
+    IBrowserService,
     Resource
-} from '../../common/types';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { Telemetry } from '../constants';
+} from '../../client/common/types';
+import { waitForCondition } from '../../client/common/utils/async';
+import { debounceAsync } from '../../client/common/utils/decorators';
+import { DataScience } from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { DisplayOptions } from '../../client/datascience/displayOptions';
+import { sendKernelListTelemetry } from '../../client/datascience/telemetry/kernelTelemetry';
+import { trackKernelResourceInformation } from '../../client/datascience/telemetry/telemetry';
+import { INotebookProvider, IJupyterServerUriStorage } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { IServiceContainer } from '../../client/ioc/types';
+import { traceDecorators } from '../../client/logging';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Telemetry } from '../../datascience-ui/common/constants';
+import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
-    createInterpreterKernelSpec,
-    getDisplayNameOrNameOfKernelConnection,
-    getKernelId,
     isLocalLaunch,
-    isPythonKernelConnection
-} from '../../../kernels/helpers';
+    createInterpreterKernelSpec,
+    getKernelId,
+    isPythonKernelConnection,
+    getDisplayNameOrNameOfKernelConnection
+} from '../../kernels/helpers';
+import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernels/raw/types';
 import {
-    IKernelProvider,
-    isLocalConnection,
-    KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../../../kernels/types';
-import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { IJupyterServerUriStorage, INotebookProvider } from '../types';
-import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
-import { VSCodeNotebookController } from './vscodeNotebookController';
-import { INotebookControllerManager } from './types';
-import { InteractiveWindowView, JupyterNotebookView } from './constants';
-import { sendTelemetryEvent } from '../../telemetry';
-import { NotebookCellLanguageService } from './cellLanguageService';
-import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { noop } from '../../common/utils/misc';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
-import { IInterpreterService } from '../../interpreter/contracts';
+    IKernelProvider,
+    KernelConnectionMetadata,
+    PythonKernelConnectionMetadata,
+    isLocalConnection
+} from '../../kernels/types';
+import { JupyterNotebookView, InteractiveWindowView } from '../constants';
+import { isPythonNotebook, getNotebookMetadata } from '../helpers';
+import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { getDisplayPath } from '../../common/platform/fs-paths';
-import { DisplayOptions } from '../displayOptions';
-import { DataScience } from '../../common/utils/localize';
-import { trackKernelResourceInformation } from '../telemetry/telemetry';
-import { IServiceContainer } from '../../ioc/types';
-import { CondaService } from '../../common/process/condaService';
-import { waitForCondition } from '../../common/utils/async';
-import { debounceAsync } from '../../common/utils/decorators';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
+import { VSCodeNotebookController } from './vscodeNotebookController';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

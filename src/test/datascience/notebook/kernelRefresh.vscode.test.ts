@@ -23,9 +23,9 @@ import {
     defaultNotebookTestTimeout
 } from './helper';
 import { IS_CONDA_TEST } from '../../constants';
-import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { JupyterNotebookView } from '../../../notebooks/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function () {

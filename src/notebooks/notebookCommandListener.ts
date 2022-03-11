@@ -8,12 +8,12 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
 import { IVSCodeNotebook, ICommandManager } from '../client/common/application/types';
 import { IDisposableRegistry } from '../client/common/types';
-import { NotebookCellLanguageService } from '../client/datascience/notebook/cellLanguageService';
 import { IDataScienceCommandListener } from '../client/datascience/types';
 import { Commands } from '../datascience-ui/common/constants';
 import { chainWithPendingUpdates } from './execution/notebookUpdater';
 import { getNotebookMetadata } from './helpers';
 import { noop } from '../client/common/utils/misc';
+import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {

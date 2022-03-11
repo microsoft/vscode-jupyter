@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { BaseKernelError } from '../../common/errors/types';
-import { DataScience } from '../../common/utils/localize';
-import { KernelInterpreterDependencyResponse } from '../types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+
+import { DataScience } from '../../client/common/utils/localize';
+import { KernelInterpreterDependencyResponse } from '../../client/datascience/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { BaseKernelError } from './types';
 
 export class JupyterKernelDependencyError extends BaseKernelError {
     constructor(

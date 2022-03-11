@@ -3,7 +3,7 @@
 'use strict';
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { BaseError } from './errors/types';
+import { BaseError } from '../../extension/errors/types';
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 

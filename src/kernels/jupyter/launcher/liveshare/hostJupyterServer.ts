@@ -18,7 +18,7 @@ import {
 import { Deferred, createDeferred, sleep } from '../../../../client/common/utils/async';
 import { DataScience } from '../../../../client/common/utils/localize';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
-import { SessionDisposedError } from '../../../../client/datascience/errors/sessionDisposedError';
+import { SessionDisposedError } from '../../../../extension/errors/sessionDisposedError';
 import { sendKernelTelemetryEvent } from '../../../../client/datascience/telemetry/telemetry';
 import {
     INotebookServer,

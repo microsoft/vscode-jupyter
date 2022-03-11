@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { WrappedKernelError } from '../../common/errors/types';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { WrappedKernelError } from './types';
 
 export class KernelDiedError extends WrappedKernelError {
     constructor(

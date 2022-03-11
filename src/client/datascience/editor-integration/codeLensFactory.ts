@@ -23,7 +23,7 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernelProvider } from '../../../kernels/types';
-import { InteractiveWindowView } from '../notebook/constants';
+import { InteractiveWindowView } from '../../../notebooks/constants';
 import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../types';
 import { CellHashProviderFactory } from './cellHashProviderFactory';
 

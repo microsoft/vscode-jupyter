@@ -40,25 +40,21 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/ty
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/../kernels/types';
-import {
-    getTextOutputValue,
-    hasErrorOutput,
-    NotebookCellStateTracker
-} from '../../../client/datascience/notebook/helpers/helpers';
-import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
-import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
-import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
+import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
+import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
+import { INotebookControllerManager, CellOutputMimeTypes } from '../../../notebooks/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;

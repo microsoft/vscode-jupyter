@@ -9,10 +9,7 @@ import type { ISignal, Signal } from '@lumino/signaling';
 import * as WebSocketWS from 'ws';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../../client/common/utils/serializers';
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../extension/messageTypes';
 import { KernelSocketOptions } from '../../../client/datascience/types';
 import { logMessageOnlyOnCI } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';

@@ -14,28 +14,35 @@ import {
     NotebookCellKind,
     NotebookCellExecutionState,
     NotebookCellExecutionSummary,
-    WorkspaceEdit
+    WorkspaceEdit,
+    Uri
 } from 'vscode';
-import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
-import '../../../common/extensions';
-import { traceError, traceInfoIfCI, traceWarning } from '../../../common/logger';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata } from '../../../../kernels/types';
-import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
-import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../../types';
-import { InteractiveWindowView, JupyterNotebookView } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { Uri } from 'vscode';
-import { Resource } from '../../../common/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { CellOutputMimeTypes } from '../types';
-import { arePathsSame } from '../../../common/platform/fileUtils';
+import fastDeepEqual = require('fast-deep-equal');
+import * as path from 'path';
+import { IVSCodeNotebook, IDocumentManager } from '../client/common/application/types';
+import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../client/common/constants';
+import { traceInfoIfCI, traceError, traceWarning } from '../client/common/logger';
+import { arePathsSame } from '../client/common/platform/fileUtils';
+import { IFileSystem } from '../client/common/platform/types';
+import { Resource } from '../client/common/types';
+import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../client/datascience/types';
+import { getInterpreterHash } from '../client/pythonEnvironments/info/interpreter';
+import { sendTelemetryEvent } from '../client/telemetry';
+import { splitMultilineString, concatMultilineString } from '../datascience-ui/common';
+import { Telemetry } from '../datascience-ui/common/constants';
+import {
+    isPythonKernelConnection,
+    getInterpreterFromKernelConnectionMetadata,
+    kernelConnectionMetadataHasKernelModel,
+    getKernelRegistrationInfo
+} from '../kernels/helpers';
+import { KernelConnectionMetadata } from '../kernels/types';
+import { JupyterNotebookView, InteractiveWindowView } from './constants';
+import { CellOutputMimeTypes } from './types';
 
 /**
  * Whether this is a Notebook we created/manage/use.
