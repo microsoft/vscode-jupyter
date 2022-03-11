@@ -121,11 +121,6 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
-        // Indicate update from extension side
-        if (action.type && action.type === InteractiveWindowMessages.UpdateModel) {
-            sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
-        }
-
         if (action.type !== 'action.postOutgoingMessage') {
             sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
         }

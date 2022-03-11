@@ -58,6 +58,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         this.asyncDisposables.push(this);
+        this.notebook.onDidCloseNotebookDocument(this.disposeOldKernel, this, disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {

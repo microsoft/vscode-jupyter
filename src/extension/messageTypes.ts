@@ -47,8 +47,6 @@ export enum InteractiveWindowMessages {
     NotebookClose = 'close',
     VariablesComplete = 'variables_complete',
     ExecutionRendered = 'rendered_execution',
-    UpdateModel = 'update_model',
-    ReceivedUpdateModel = 'received_update_model',
     OpenSettings = 'open_settings',
     IPyWidgetLoadSuccess = 'ipywidget_load_success',
     IPyWidgetLoadFailure = 'ipywidget_load_failure',
@@ -335,8 +333,6 @@ export class IInteractiveWindowMapping {
     };
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
-    public [InteractiveWindowMessages.UpdateModel]: NotebookModelChange;
-    public [InteractiveWindowMessages.ReceivedUpdateModel]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;

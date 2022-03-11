@@ -16,7 +16,7 @@ const DefaultTriggerCharacters = ['.', '%'];
  * I.e. this is where we integrate our stuff with VS Code via their extension endpoints.
  */
 @injectable()
-export class NotebookIntegration implements IExtensionSingleActivationService {
+export class PythonKernelCompletionProviderRegistration implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly config: IConfigurationService,
