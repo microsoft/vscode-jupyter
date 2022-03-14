@@ -134,9 +134,8 @@ function buildConfiguration(bundle) {
                     from: path.join(
                         constants.ExtensionRootDir,
                         'src',
-                        'client',
-                        'datascience',
-                        'notebook',
+                        'notebooks',
+                        'controllers',
                         'fontAwesomeLoader.js'
                     ),
                     to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
