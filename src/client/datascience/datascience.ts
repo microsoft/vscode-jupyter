@@ -13,7 +13,7 @@ import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
-import { CommandRegistry } from './commands/commandRegistry';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
 import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from './types';
 

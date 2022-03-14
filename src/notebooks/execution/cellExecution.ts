@@ -39,7 +39,7 @@ import { IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
 import * as localize from '../../client/common/utils/localize';
 import { StopWatch } from '../../client/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import {
     NotebookCellStateTracker,

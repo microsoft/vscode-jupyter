@@ -11,7 +11,7 @@ import { IJupyterSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { ICell, ICellRange } from './types';
-import { getInteractiveCellMetadata } from './interactive-window/interactiveWindow';
+import { getInteractiveCellMetadata } from '../../interactive-window/interactiveWindow';
 import { createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
 
 function generateCodeCell(code: string[], uri: Uri | undefined, magicCommandsAsComments: boolean): ICell {

@@ -13,10 +13,10 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { JupyterSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../client/common/types';
-import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { pruneCell } from '../../client/datascience/common';
 import { GlobalActivation } from '../../client/datascience/datascience';
-import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
+import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../../client/datascience/types';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService';
 

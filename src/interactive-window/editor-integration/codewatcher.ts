@@ -18,21 +18,21 @@ import {
     Uri
 } from 'vscode';
 
-import { IDocumentManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { IDocumentManager } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { chainable } from '../../common/utils/decorators';
-import * as localize from '../../common/utils/localize';
-import { isUri } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { traceDecorators } from '../../logging';
-import { TraceOptions } from '../../logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { ICodeExecutionHelper } from '../../terminals/types';
-import { CellMatcher } from '../cellMatcher';
-import { Commands, Identifiers, Telemetry } from '../constants';
-import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
+import { IConfigurationService, IDisposable, Resource } from '../../client/common/types';
+import { chainable } from '../../client/common/utils/decorators';
+import * as localize from '../../client/common/utils/localize';
+import { isUri } from '../../client/common/utils/misc';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { traceDecorators } from '../../client/logging';
+import { TraceOptions } from '../../client/logging/trace';
+import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
+import { ICodeExecutionHelper } from '../../client/terminals/types';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { Commands, Identifiers, Telemetry } from '../../client/datascience/constants';
+import { InteractiveCellResultError } from '../../extension/errors/interactiveCellResultError';
 import {
     ICellRange,
     ICodeLensFactory,
@@ -40,7 +40,7 @@ import {
     IDataScienceErrorHandler,
     IInteractiveWindow,
     IInteractiveWindowProvider
-} from '../types';
+} from '../../client/datascience/types';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing

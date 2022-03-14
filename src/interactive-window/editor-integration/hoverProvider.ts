@@ -4,22 +4,22 @@
 import { inject, injectable, named } from 'inversify';
 
 import * as vscode from 'vscode';
-import { IExtensionSyncActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
-import { Cancellation } from '../../common/cancellation';
-import { PYTHON } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry } from '../../common/types';
+import { IExtensionSyncActivationService } from '../../client/activation/types';
+import { IVSCodeNotebook } from '../../client/common/application/types';
+import { Cancellation } from '../../client/common/cancellation';
+import { PYTHON } from '../../client/common/constants';
+import { traceError } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IDisposableRegistry } from '../../client/common/types';
 
-import { sleep } from '../../common/utils/async';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../constants';
-import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { InteractiveWindowView } from '../../../notebooks/constants';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../types';
+import { sleep } from '../../client/common/utils/async';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Identifiers, Telemetry } from '../../client/datascience/constants';
+import { getInteractiveCellMetadata } from '../interactiveWindow';
+import { IKernel, IKernelProvider } from '../../kernels/types';
+import { InteractiveWindowView } from '../../notebooks/constants';
+import { IInteractiveWindowProvider, IJupyterVariables } from '../../client/datascience/types';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();

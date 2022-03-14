@@ -5,23 +5,23 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
-import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
-import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposable } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
-import { isUri } from '../../common/utils/misc';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
-import { FileConverter } from '../export/fileConverter';
-import { ExportFormat, IFileConverter } from '../export/types';
-import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { getNotebookMetadata, isPythonNotebook } from '../../../notebooks/helpers';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { IInteractiveWindowProvider } from '../types';
+import { getLocString } from '../../datascience-ui/react-common/locReactSide';
+import { ICommandNameArgumentTypeMapping } from '../../client/common/application/commands';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../client/common/application/types';
+import { traceInfo } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IDisposable } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { isUri } from '../../client/common/utils/misc';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { Commands, Telemetry } from '../../client/datascience/constants';
+import { FileConverter } from '../../client/datascience/export/fileConverter';
+import { ExportFormat, IFileConverter } from '../../client/datascience/export/types';
+import { getActiveInteractiveWindow } from '../helpers';
+import { getNotebookMetadata, isPythonNotebook } from '../../notebooks/helpers';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;

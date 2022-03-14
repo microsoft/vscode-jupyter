@@ -28,9 +28,9 @@ import {
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
-import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
-import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
+import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory';
+import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
+import { CodeWatcher } from '../../../interactive-window/editor-integration/codewatcher';
 import {
     ICodeWatcher,
     IDataScienceErrorHandler,
@@ -45,7 +45,7 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { CellHashProviderFactory } from '../../../client/datascience/editor-integration/cellHashProviderFactory';
+import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../client/../kernels/types';
 import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
 

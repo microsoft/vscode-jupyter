@@ -4,19 +4,19 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../../notebooks/helpers';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { ContextKey } from '../../common/contextKey';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { isNotebookCell, noop } from '../../common/utils/misc';
-import { EditorContexts } from '../constants';
-import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { InteractiveWindowView, JupyterNotebookView } from '../../../notebooks/constants';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../notebooks/helpers';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { ContextKey } from '../../client/common/contextKey';
+import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { isNotebookCell, noop } from '../../client/common/utils/misc';
+import { EditorContexts } from '../../client/datascience/constants';
+import { getActiveInteractiveWindow } from '../helpers';
+import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {

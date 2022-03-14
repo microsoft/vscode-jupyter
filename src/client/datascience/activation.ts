@@ -12,7 +12,7 @@ import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
-import { ActiveEditorContextService } from './commands/activeEditorContext';
+import { ActiveEditorContextService } from '../../interactive-window/commands/activeEditorContext';
 import { IRawNotebookSupportedService } from './types';
 import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';

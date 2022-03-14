@@ -8,7 +8,7 @@ import { NotebookCell, NotebookCellKind, Position, Range, Uri } from 'vscode';
 import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
-import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
+import { CellHashProvider } from '../../../interactive-window/editor-integration/cellhashprovider';
 import { IKernel } from '../../../client/../kernels/types';
 import { ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocument } from '../mockDocument';

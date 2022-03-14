@@ -10,7 +10,7 @@ import { IPythonApiProvider } from '../../client/api/types';
 import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposable } from '../../client/common/types';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { IKernelProvider } from '../../client/../kernels/types';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';

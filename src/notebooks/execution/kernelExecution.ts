@@ -12,7 +12,7 @@ import { traceInfo, traceWarning } from '../../client/common/logger';
 import { IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { StopWatch } from '../../client/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
+import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../client/datascience/telemetry/telemetry';
 import { InterruptResult, IJupyterSession } from '../../client/datascience/types';
 import { captureTelemetry } from '../../client/telemetry';

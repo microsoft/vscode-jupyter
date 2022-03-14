@@ -15,22 +15,22 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../common/utils/localize';
+import * as localize from '../../client/common/utils/localize';
 
-import { splitMultilineString } from '../../../datascience-ui/common';
-import { uncommentMagicCommands } from '../../../datascience-ui/common/cellFactory';
-import { IDebugService, IDocumentManager } from '../../common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+import { splitMultilineString } from '../../datascience-ui/common';
+import { uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
+import { IDebugService, IDocumentManager } from '../../client/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
 
-import { IConfigurationService } from '../../common/types';
-import { getCellResource } from '../cellFactory';
-import { CellMatcher } from '../cellMatcher';
-import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernel } from '../../../kernels/types';
-import { InteractiveWindowView } from '../../../notebooks/constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
-import { stripAnsi } from '../../common/utils/regexp';
+import { IConfigurationService } from '../../client/common/types';
+import { getCellResource } from '../../client/datascience/cellFactory';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { getInteractiveCellMetadata } from '../interactiveWindow';
+import { IKernel } from '../../kernels/types';
+import { InteractiveWindowView } from '../../notebooks/constants';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../client/datascience/types';
+import { stripAnsi } from '../../client/common/utils/regexp';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

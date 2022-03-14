@@ -22,39 +22,39 @@ import {
     window,
     ThemeColor
 } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
-import '../../common/extensions';
-import { traceInfo, traceInfoIfCI } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+import { IPythonExtensionChecker } from '../client/api/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../client/common/application/types';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../client/common/constants';
+import '../client/common/extensions';
+import { traceInfo, traceInfoIfCI } from '../client/common/logger';
+import { IFileSystem } from '../client/common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { generateCellsFromNotebookDocument } from '../cellFactory';
-import { CellMatcher } from '../cellMatcher';
-import { Commands, defaultNotebookFormat } from '../constants';
-import { ExportFormat, IExportDialog } from '../export/types';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../../kernels/types';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, INotebookExporter } from '../types';
+import { IConfigurationService, InteractiveWindowMode, Resource } from '../client/common/types';
+import { noop } from '../client/common/utils/misc';
+import { generateCellsFromNotebookDocument } from '../client/datascience/cellFactory';
+import { CellMatcher } from '../client/datascience/cellMatcher';
+import { Commands, defaultNotebookFormat } from '../client/datascience/constants';
+import { ExportFormat, IExportDialog } from '../client/datascience/export/types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
+import { INotebookControllerManager } from '../notebooks/types';
+import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, INotebookExporter } from '../client/datascience/types';
 import { getInteractiveWindowTitle } from './identity';
-import { generateMarkdownFromCodeLines, parseForComments } from '../../../datascience-ui/common';
+import { generateMarkdownFromCodeLines, parseForComments } from '../datascience-ui/common';
 import { INativeInteractiveWindow } from './types';
-import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
-import { InteractiveWindowView } from '../../../notebooks/constants';
-import { chainable } from '../../common/utils/decorators';
-import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
-import { DataScience } from '../../common/utils/localize';
-import { createDeferred } from '../../common/utils/async';
-import { connectToKernel } from '../../../kernels/helpers';
-import { IServiceContainer } from '../../ioc/types';
-import { SysInfoReason } from '../../../extension/messageTypes';
-import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
-import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
-import { updateNotebookMetadata } from '../../../notebooks/helpers';
+import { generateInteractiveCode } from '../datascience-ui/common/cellFactory';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../client/datascience/telemetry/telemetry';
+import { InteractiveWindowView } from '../notebooks/constants';
+import { chainable } from '../client/common/utils/decorators';
+import { InteractiveCellResultError } from '../extension/errors/interactiveCellResultError';
+import { DataScience } from '../client/common/utils/localize';
+import { createDeferred } from '../client/common/utils/async';
+import { connectToKernel } from '../kernels/helpers';
+import { IServiceContainer } from '../client/ioc/types';
+import { SysInfoReason } from '../extension/messageTypes';
+import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
+import { updateNotebookMetadata } from '../notebooks/helpers';
 
 type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;

@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { JupyterCommandLineSelector } from '../../../kernels/jupyter/launcher/commandLineSelector';
-import { ICommandManager } from '../../common/application/types';
-import { IDisposable } from '../../common/types';
-import { Commands } from '../constants';
+import { JupyterCommandLineSelector } from '../../kernels/jupyter/launcher/commandLineSelector';
+import { ICommandManager } from '../../client/common/application/types';
+import { IDisposable } from '../../client/common/types';
+import { Commands } from '../../client/datascience/constants';
 
 @injectable()
 export class JupyterCommandLineSelectorCommand implements IDisposable {

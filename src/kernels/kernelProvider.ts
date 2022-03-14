@@ -17,7 +17,7 @@ import {
     IConfigurationService
 } from '../client/common/types';
 import { noop } from '../client/common/utils/misc';
-import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
+import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { INotebookProvider, IStatusProvider } from '../client/datascience/types';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
