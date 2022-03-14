@@ -423,7 +423,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             waitForCellHavingOutput(cell1),
             waitForCondition(
                 async () => {
-                    if (getCellOutputs(cell1).trim().length > 0) {
+                    const output = getCellOutputs(cell1).trim();
+                    if (output !== '<No cell outputs>' && output.length > 0) {
                         return true;
                     }
                     if (hasErrorOutput(cell1.outputs)) {
