@@ -233,6 +233,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.finishSysInfoMessage(ex, sysInfoCell, SysInfoReason.Start);
                 this._kernelPromise.resolve(undefined);
                 this.disconnectKernel();
+                this._kernelConnectionId = controller.id;
             }
         }
     }
@@ -535,7 +536,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this._kernelPromise.resolved) {
             this._kernelPromise = createDeferred<IKernel>();
         }
-        this._kernelConnectionId = undefined;
     }
 
     @chainable()
