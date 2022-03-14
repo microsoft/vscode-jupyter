@@ -51,7 +51,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     getCellOutputs
 } from '../../notebook/helper';
-import * as kernelSelector from '../../../../notebooks/execution/kernelSelector';
+import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
