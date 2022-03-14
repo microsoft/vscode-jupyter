@@ -15,7 +15,7 @@ import { IInteractiveWindowProvider, IJupyterVariables } from '../../../client/d
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
-import { HoverProvider } from '../../../client/datascience/editor-integration/hoverProvider';
+import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
 import { Identifiers } from '../../../client/datascience/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { IKernelProvider } from '../../../client/../kernels/types';

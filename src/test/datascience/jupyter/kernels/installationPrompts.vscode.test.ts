@@ -22,7 +22,7 @@ import {
 } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
-import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
 import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';

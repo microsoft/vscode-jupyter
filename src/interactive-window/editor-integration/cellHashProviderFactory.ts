@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, multiInject, optional } from 'inversify';
-import { IDocumentManager, IDebugService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { ICellHashListener } from '../types';
+import { IDocumentManager, IDebugService } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService } from '../../client/common/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
+import { ICellHashListener } from '../../client/datascience/types';
 import { CellHashProvider } from './cellhashprovider';
 
 @injectable()

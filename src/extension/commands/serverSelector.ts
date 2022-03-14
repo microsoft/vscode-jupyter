@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ICommandManager } from '../../common/application/types';
-import { IDisposable } from '../../common/types';
-import { Commands } from '../constants';
-import { traceInfo } from '../../common/logger';
+import { ICommandManager } from '../../client/common/application/types';
+import { IDisposable } from '../../client/common/types';
+import { Commands } from '../../client/datascience/constants';
+import { traceInfo } from '../../client/common/logger';
 import { Uri } from 'vscode';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {

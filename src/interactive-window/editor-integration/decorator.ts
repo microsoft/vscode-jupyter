@@ -4,12 +4,12 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
-import { generateCellRangesFromDocument } from '../cellFactory';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IPythonExtensionChecker } from '../../client/api/types';
+import { IDocumentManager } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { generateCellRangesFromDocument } from '../../client/datascience/cellFactory';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {

@@ -9,8 +9,8 @@ import { traceInfo } from '../../client/common/logger';
 import { arePathsSame } from '../../client/common/platform/fileUtils';
 import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import {
     IDataScienceCodeLensProvider,
     IInteractiveWindow,

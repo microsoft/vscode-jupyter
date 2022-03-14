@@ -31,7 +31,7 @@ import { noop } from '../client/common/utils/misc';
 import { StopWatch } from '../client/common/utils/stopWatch';
 import { AddRunCellHook } from '../client/datascience/constants';
 import { DisplayOptions } from '../client/datascience/displayOptions';
-import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
+import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { JupyterConnectError } from '../extension/errors/jupyterConnectError';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';

@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';

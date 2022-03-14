@@ -15,7 +15,7 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IDisposableRegistry } from '../../common/types';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { getActiveInteractiveWindow } from '../interactive-window/helpers';
+import { getActiveInteractiveWindow } from '../../../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers';

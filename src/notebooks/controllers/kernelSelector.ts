@@ -6,7 +6,7 @@ import { JVSC_EXTENSION_ID } from '../../client/common/constants';
 import { traceError } from '../../client/common/logger';
 import { Resource } from '../../client/common/types';
 import { getResourceType } from '../../client/datascience/common';
-import { getActiveInteractiveWindow } from '../../client/datascience/interactive-window/helpers';
+import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
 

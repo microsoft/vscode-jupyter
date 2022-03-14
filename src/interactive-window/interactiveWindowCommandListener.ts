@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../client/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import {
@@ -21,18 +21,18 @@ import {
     ICommandManager,
     IDocumentManager,
     IVSCodeNotebook
-} from '../../common/application/types';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
-import { CommandSource } from '../../testing/common/constants';
-import { generateCellsFromDocument } from '../cellFactory';
-import { Commands, Telemetry } from '../constants';
-import { ExportFormat, IExportDialog, IFileConverter } from '../export/types';
-import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
+} from '../client/common/application/types';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../client/common/constants';
+import { traceError, traceInfo } from '../client/common/logger';
+import { IFileSystem } from '../client/common/platform/types';
+import { IConfigurationService, IDisposableRegistry } from '../client/common/types';
+import * as localize from '../client/common/utils/localize';
+import { captureTelemetry } from '../client/telemetry';
+import { CommandSource } from '../client/testing/common/constants';
+import { generateCellsFromDocument } from '../client/datascience/cellFactory';
+import { Commands, Telemetry } from '../client/datascience/constants';
+import { ExportFormat, IExportDialog, IFileConverter } from '../client/datascience/export/types';
+import { JupyterInstallError } from '../extension/errors/jupyterInstallError';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
@@ -41,15 +41,15 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     IStatusProvider
-} from '../types';
+} from '../client/datascience/types';
 import { getActiveInteractiveWindow } from './helpers';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { JupyterNotebookView } from '../../../notebooks/constants';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
+import { INotebookControllerManager } from '../notebooks/types';
+import { JupyterNotebookView } from '../notebooks/constants';
+import { KernelConnectionMetadata } from '../kernels/types';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 
 @injectable()
-export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
+export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,

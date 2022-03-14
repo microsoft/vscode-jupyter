@@ -6,32 +6,32 @@
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IShowDataViewerFromVariablePanel } from '../../../extension/messageTypes';
-import { IKernelProvider } from '../../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/debuggerVariables';
-import { NotebookCreator } from '../../../notebooks/notebookCreator';
-import { DataViewerChecker } from '../../../webviews/dataviewer/dataViewerChecker';
-import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
+import { IShowDataViewerFromVariablePanel } from '../../extension/messageTypes';
+import { IKernelProvider } from '../../kernels/types';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables';
+import { NotebookCreator } from '../../notebooks/notebookCreator';
+import { DataViewerChecker } from '../../webviews/dataviewer/dataViewerChecker';
+import { ICommandNameArgumentTypeMapping } from '../../client/common/application/commands';
 import {
     IApplicationShell,
     ICommandManager,
     IDebugService,
     IDocumentManager,
     IWorkspaceService
-} from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+} from '../../client/common/application/types';
+import { traceError } from '../../client/common/logger';
+import { IFileSystem } from '../../client/common/platform/types';
 
-import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
-import { isUri, noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { LogLevel } from '../../logging/levels';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { DataViewerDependencyService } from '../data-viewing/dataViewerDependencyService';
-import { IDataViewerFactory } from '../data-viewing/types';
+import { IConfigurationService, IDisposable, IOutputChannel } from '../../client/common/types';
+import { DataScience } from '../../client/common/utils/localize';
+import { isUri, noop } from '../../client/common/utils/misc';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { LogLevel } from '../../client/logging/levels';
+import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
+import { EventName } from '../../client/telemetry/constants';
+import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../client/datascience/constants';
+import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
+import { IDataViewerFactory } from '../../client/datascience/data-viewing/types';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -41,10 +41,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables
-} from '../types';
-import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
+} from '../../client/datascience/types';
 import { ExportCommands } from './exportCommands';
-import { JupyterServerSelectorCommand } from './serverSelector';
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -57,9 +55,6 @@ export class CommandRegistry implements IDisposable {
         @optional()
         private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
-        @inject(JupyterCommandLineSelectorCommand)
-        private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -79,7 +74,6 @@ export class CommandRegistry implements IDisposable {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
-        this.disposables.push(this.serverSelectedCommand);
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
@@ -125,8 +119,6 @@ export class CommandRegistry implements IDisposable {
         if (!this.workspace.isTrusted) {
             return;
         }
-        this.commandLineCommand.register();
-        this.serverSelectedCommand.register();
         this.exportCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);

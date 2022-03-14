@@ -4,19 +4,24 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { ContextKey } from '../../common/contextKey';
-import { disposeAllDisposables } from '../../common/helpers';
-import { IFileSystem } from '../../common/platform/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
+import { ContextKey } from '../../client/common/contextKey';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { IFileSystem } from '../../client/common/platform/types';
 
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../types';
-import { traceInfoIfCI } from '../../common/logger';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
+import { StopWatch } from '../../client/common/utils/stopWatch';
+import { IServiceContainer } from '../../client/ioc/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
+import { CodeLensCommands, EditorContexts, Telemetry } from '../../client/datascience/constants';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../client/datascience/types';
+import { traceInfoIfCI } from '../../client/common/logger';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {

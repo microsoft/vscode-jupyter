@@ -5,7 +5,7 @@
 
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
-import { ActiveEditorContextService } from '../commands/activeEditorContext';
+import { ActiveEditorContextService } from '../../../interactive-window/commands/activeEditorContext';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { InterpreterPackages } from './interpreterPackages';
 import { InterpreterPackageTracker } from './interpreterPackageTracker';

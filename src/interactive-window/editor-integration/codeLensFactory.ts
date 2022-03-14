@@ -14,17 +14,17 @@ import {
     workspace
 } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { traceWarning, traceInfoIfCI } from '../../common/logger';
+import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../client/common/application/types';
+import { traceWarning, traceInfoIfCI } from '../../client/common/logger';
 
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { generateCellRangesFromDocument } from '../cellFactory';
-import { CodeLensCommands, Commands } from '../constants';
-import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
-import { IKernelProvider } from '../../../kernels/types';
-import { InteractiveWindowView } from '../../../notebooks/constants';
-import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../client/common/types';
+import * as localize from '../../client/common/utils/localize';
+import { generateCellRangesFromDocument } from '../../client/datascience/cellFactory';
+import { CodeLensCommands, Commands } from '../../client/datascience/constants';
+import { getInteractiveCellMetadata } from '../interactiveWindow';
+import { IKernelProvider } from '../../kernels/types';
+import { InteractiveWindowView } from '../../notebooks/constants';
+import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../../client/datascience/types';
 import { CellHashProviderFactory } from './cellHashProviderFactory';
 
 type CodeLensCacheData = {
