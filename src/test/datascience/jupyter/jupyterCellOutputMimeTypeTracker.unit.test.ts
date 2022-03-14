@@ -11,7 +11,7 @@ export const __ = '';
 // import { getNamesAndValues } from '../../utils/enum';
 // import { Telemetry } from '../../../client/datascience/constants';
 // import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
-// import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
+// import { NativeEditorNotebookModel } from '../../../notebooksStorage/notebookModel';
 // import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
 // import { getTelemetrySafeHashedString } from '../../../client/telemetry/helpers';
 // import { IVSCodeNotebook } from '../../../client/common/application/types';

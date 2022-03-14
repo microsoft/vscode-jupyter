@@ -12,7 +12,6 @@ import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';
@@ -33,6 +32,7 @@ import {
     waitForTextOutput
 } from './helper';
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
+import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {

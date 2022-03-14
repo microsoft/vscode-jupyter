@@ -12,9 +12,9 @@ export const __ = '';
 // import { createDeferred, Deferred } from '../../client/common/utils/async';
 // import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 // import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
-// import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
-// import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-// import { INotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
+// import { NativeEditorProvider } from '../../notebooksStorage/nativeEditorProvider';
+// import { NativeEditorNotebookModel } from '../../notebooksStorage/notebookModel';
+// import { INotebookStorageProvider } from '../../notebooksStorage/notebookStorageProvider';
 // import {
 //     IDataScienceErrorHandler,
 //     INotebookEditor,

@@ -25,10 +25,10 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { InteractiveWindowMessages } from '../../../extension/messageTypes';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.

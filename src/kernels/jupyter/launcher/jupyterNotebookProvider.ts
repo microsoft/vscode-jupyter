@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { SessionDisposedError } from '../../../client/datascience/errors/sessionDisposedError';
+import { SessionDisposedError } from '../../../extension/errors/sessionDisposedError';
 import {
     IJupyterNotebookProvider,
     IJupyterServerProvider,

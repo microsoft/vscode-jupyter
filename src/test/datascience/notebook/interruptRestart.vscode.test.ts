@@ -12,11 +12,6 @@ import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from 
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/../kernels/types';
-import {
-    getTextOutputValue,
-    hasErrorOutput,
-    NotebookCellStateTracker
-} from '../../../client/datascience/notebook/helpers/helpers';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
@@ -35,6 +30,7 @@ import {
     waitForOutputs,
     clickOKForRestartPrompt
 } from './helper';
+import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*

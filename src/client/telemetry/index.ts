@@ -20,13 +20,13 @@ import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/ty
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
-import { populateTelemetryWithErrorInfo } from '../common/errors';
-import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
 import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { DebuggingTelemetry } from '../debugger/constants';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { IExportedKernelService } from '../api/extension';
+import { populateTelemetryWithErrorInfo } from '../../extension/errors';
+import { TelemetryErrorProperties, ErrorCategory } from '../../extension/errors/types';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

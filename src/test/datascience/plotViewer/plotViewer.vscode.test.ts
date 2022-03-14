@@ -8,16 +8,16 @@ import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { createJupyterCellFromVSCNotebookCell } from '../../../client/datascience/notebook/helpers/helpers';
+import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
-    closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully,
+    closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
-    runAllCellsInActiveNotebook
+    insertCodeCell,
+    runAllCellsInActiveNotebook,
+    waitForExecutionCompletedSuccessfully
 } from '../notebook/helper';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {

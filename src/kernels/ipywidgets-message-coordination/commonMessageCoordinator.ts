@@ -22,7 +22,7 @@ import {
 import { Common, DataScience } from '../../client/common/utils/localize';
 import { noop } from '../../client/common/utils/misc';
 import { stripAnsi } from '../../client/common/utils/regexp';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../extension/messageTypes';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ConsoleForegroundColors } from '../../client/logging/_global';

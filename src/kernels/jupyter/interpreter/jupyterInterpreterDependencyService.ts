@@ -11,13 +11,13 @@ import { traceError } from '../../../client/common/logger';
 import { DataScience, Common } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { HelpLinks } from '../../../client/datascience/constants';
-import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
 import { reportAction } from '../../../client/datascience/progress/decorator';
 import { ReportableAction } from '../../../client/datascience/progress/types';
 import { IJupyterCommandFactory } from '../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
+import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 

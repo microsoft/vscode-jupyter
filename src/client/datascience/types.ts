@@ -34,7 +34,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
-import { JupyterInstallError } from './errors/jupyterInstallError';
+import { JupyterInstallError } from '../../extension/errors/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterServerInfo } from '../../kernels/jupyter/launcher/jupyterConnection';
 import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';

@@ -9,8 +9,6 @@ import { traceInfo, traceInfoIfCI, traceWarning } from '../../client/common/logg
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { DataScience } from '../../client/common/utils/localize';
-import { JupyterDebuggerNotInstalledError } from '../../client/datascience/errors/jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupportedError } from '../../client/datascience/errors/jupyterDebuggerRemoteNotSupportedError';
 import {
     IInteractiveWindowDebugger,
     ICellHashListener,
@@ -19,6 +17,8 @@ import {
     ISourceMapRequest
 } from '../../client/datascience/types';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { JupyterDebuggerNotInstalledError } from '../../extension/errors/jupyterDebuggerNotInstalledError';
+import { JupyterDebuggerRemoteNotSupportedError } from '../../extension/errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently } from '../helpers';
 import { getPlainTextOrStreamOutput } from '../kernel';
 import { IKernel, isLocalConnection } from '../types';

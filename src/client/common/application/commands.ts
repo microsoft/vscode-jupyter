@@ -13,8 +13,8 @@ import {
     Uri,
     ViewColumn
 } from 'vscode';
+import { IShowDataViewerFromVariablePanel } from '../../../extension/messageTypes';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Channel } from './types';

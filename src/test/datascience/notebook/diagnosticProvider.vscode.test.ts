@@ -17,9 +17,9 @@ import {
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages
 } from './helper';
-import { NotebookCellBangInstallDiagnosticsProvider } from '../../../client/datascience/notebook/diagnosticsProvider';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../client/activation/types';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {

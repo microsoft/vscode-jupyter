@@ -9,10 +9,10 @@ import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../common/t
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { InterpreterPackages } from './interpreterPackages';
-import { INotebookControllerManager } from '../notebook/types';
-import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
+import { INotebookControllerManager } from '../../../notebooks/types';
 import { trackKernelResourceInformation } from './telemetry';
 import { IInstaller, Product } from '../../../kernels/installer/types';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {

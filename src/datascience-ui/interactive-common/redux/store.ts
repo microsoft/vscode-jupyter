@@ -4,8 +4,8 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
+import { InteractiveWindowMessages } from '../../../extension/messageTypes';
+import { BaseReduxActionPayload } from '../../../webviews/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
@@ -119,11 +119,6 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             action.type === InteractiveWindowMessages.GetVariablesResponse
         ) {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
-        }
-
-        // Indicate update from extension side
-        if (action.type && action.type === InteractiveWindowMessages.UpdateModel) {
-            sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
         }
 
         if (action.type !== 'action.postOutgoingMessage') {

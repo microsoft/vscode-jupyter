@@ -35,11 +35,7 @@ import { createDeferred } from '../client/common/utils/async';
 import { DataScience } from '../client/common/utils/localize';
 import { getResourceType } from '../client/datascience/common';
 import { Settings } from '../client/datascience/constants';
-import { SysInfoReason } from '../client/datascience/interactive-common/interactiveWindowTypes';
-import { isPythonNotebook } from '../client/datascience/notebook/helpers/helpers';
-import { INotebookControllerManager } from '../client/datascience/notebook/types';
-import { VSCodeNotebookController } from '../client/datascience/notebook/vscodeNotebookController';
-import { PreferredRemoteKernelIdProvider } from '../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
+import { SysInfoReason } from '../extension/messageTypes';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../client/datascience/telemetry/telemetry';
 import {
     IJupyterSession,
@@ -60,7 +56,6 @@ import { sendTelemetryEvent } from '../client/telemetry';
 import { getTelemetrySafeVersion } from '../client/telemetry/helpers';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Commands } from '../datascience-ui/common/constants';
-import { findNotebookEditor, selectKernel } from './cell-execution/kernelSelector';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
 import { Product } from './installer/types';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
@@ -71,6 +66,11 @@ import {
     isDefaultPythonKernelSpecName
 } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { EnvironmentType, PythonEnvironment } from '../client/pythonEnvironments/info';
+import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
+import { isPythonNotebook } from '../notebooks/helpers';
+import { INotebookControllerManager } from '../notebooks/types';
+import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
+import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
 
 // Helper functions for dealing with kernels and kernelspecs
 

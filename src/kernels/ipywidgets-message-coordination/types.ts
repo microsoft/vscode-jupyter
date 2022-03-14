@@ -5,7 +5,7 @@
 
 import { Event } from 'vscode';
 import { IDisposable } from '../../client/common/types';
-import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetMessages } from '../../extension/messageTypes';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;

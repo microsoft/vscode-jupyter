@@ -19,10 +19,7 @@ import {
     IDisposable
 } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
-import {
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../extension/messageTypes';
 import { ILocalResourceUriConverter } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ConsoleForegroundColors } from '../../client/logging/_global';

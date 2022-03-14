@@ -21,7 +21,7 @@ import { traceInfo, traceError } from '../../../client/common/logger';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../client/common/types';
 import { getResourceType } from '../../../client/datascience/common';
-import { isPythonNotebook } from '../../../client/datascience/notebook/helpers/helpers';
+import { isPythonNotebook } from '../../../notebooks/helpers';
 import { sendKernelListTelemetry } from '../../../client/datascience/telemetry/kernelTelemetry';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { traceDecorators } from '../../../client/logging';

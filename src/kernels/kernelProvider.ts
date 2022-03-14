@@ -18,9 +18,9 @@ import {
 } from '../client/common/types';
 import { noop } from '../client/common/utils/misc';
 import { CellHashProviderFactory } from '../client/datascience/editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../client/datascience/notebook/constants';
+import { InteractiveWindowView } from '../notebooks/constants';
 import { INotebookProvider, IStatusProvider } from '../client/datascience/types';
-import { CellOutputDisplayIdTracker } from './cell-execution/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 
@@ -58,6 +58,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         this.asyncDisposables.push(this);
+        this.notebook.onDidCloseNotebookDocument(this.disposeOldKernel, this, disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {

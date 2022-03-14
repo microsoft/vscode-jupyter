@@ -32,7 +32,7 @@ import { CommandSource } from '../../testing/common/constants';
 import { generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportDialog, IFileConverter } from '../export/types';
-import { JupyterInstallError } from '../errors/jupyterInstallError';
+import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
@@ -43,10 +43,10 @@ import {
     IStatusProvider
 } from '../types';
 import { getActiveInteractiveWindow } from './helpers';
-import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
-import { INotebookControllerManager } from '../notebook/types';
-import { JupyterNotebookView } from '../notebook/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
+import { JupyterNotebookView } from '../../../notebooks/constants';
 import { KernelConnectionMetadata } from '../../../kernels/types';
+import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
 
 @injectable()
 export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {

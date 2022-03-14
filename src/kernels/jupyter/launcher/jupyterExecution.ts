@@ -7,12 +7,12 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { Cancellation } from '../../../client/common/cancellation';
-import { WrappedError } from '../../../client/common/errors/types';
+import { WrappedError } from '../../../client/../extension/errors/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
-import { JupyterSelfCertsError } from '../../../client/datascience/errors/jupyterSelfCertsError';
-import { JupyterWaitForIdleError } from '../../../client/datascience/errors/jupyterWaitForIdleError';
+import { JupyterSelfCertsError } from '../../../extension/errors/jupyterSelfCertsError';
+import { JupyterWaitForIdleError } from '../../../extension/errors/jupyterWaitForIdleError';
 import {
     IJupyterExecution,
     IJupyterSubCommandExecutionService,

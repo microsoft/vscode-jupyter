@@ -46,11 +46,7 @@ import {
 } from './helper';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../client/common/utils/misc';
-import {
-    getTextOutputValue,
-    hasErrorOutput,
-    translateCellErrorOutput
-} from '../../../client/datascience/notebook/helpers/helpers';
+import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';

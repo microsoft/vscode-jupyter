@@ -3,12 +3,8 @@
 'use strict';
 
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../client/datascience/constants';
-import {
-    IEditorContentChange,
-    InteractiveWindowMessages,
-    IShowDataViewer
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
+import { IEditorContentChange, InteractiveWindowMessages, IShowDataViewer } from '../../../../extension/messageTypes';
+import { BaseReduxActionPayload } from '../../../../webviews/types';
 import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';

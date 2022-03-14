@@ -13,7 +13,7 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { createPromiseFromCancellation } from '../../../client/common/cancellation';
 import { isTestExecution } from '../../../client/common/constants';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/../extension/errors/errorUtils';
 import { traceInfo, traceWarning } from '../../../client/common/logger';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { IFileSystem } from '../../../client/common/platform/types';

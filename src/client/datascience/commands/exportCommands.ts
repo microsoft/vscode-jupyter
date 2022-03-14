@@ -19,8 +19,8 @@ import { Commands, Telemetry } from '../constants';
 import { FileConverter } from '../export/fileConverter';
 import { ExportFormat, IFileConverter } from '../export/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
-import { getNotebookMetadata, isPythonNotebook } from '../notebook/helpers/helpers';
-import { INotebookControllerManager } from '../notebook/types';
+import { getNotebookMetadata, isPythonNotebook } from '../../../notebooks/helpers';
+import { INotebookControllerManager } from '../../../notebooks/types';
 import { IInteractiveWindowProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {

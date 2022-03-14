@@ -16,9 +16,9 @@ import {
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
 } from '../../kernels/helpers';
-import { getNotebookMetadata, isJupyterNotebook } from './notebook/helpers/helpers';
-import { INotebookControllerManager } from './notebook/types';
-import { VSCodeNotebookController } from './notebook/vscodeNotebookController';
+import { getNotebookMetadata, isJupyterNotebook } from '../../notebooks/helpers';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
+import { INotebookControllerManager } from '../../notebooks/types';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
 const knownExtensionsToRecommend = new Map<string, { displayName: string; extensionLink: string }>([

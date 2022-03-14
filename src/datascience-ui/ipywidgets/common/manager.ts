@@ -17,7 +17,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
     IPyWidgetMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+} from '../../../extension/messageTypes';
 import { KernelSocketOptions } from '../../../client/datascience/types';
 import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';

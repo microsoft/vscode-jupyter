@@ -24,7 +24,7 @@
 //     waitForTextOutput
 // } from './helper';
 // import { ProductNames } from '../../../client/common/installer/productNames';
-// import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
+// import { INotebookControllerManager } from '../../../notebooks/types';
 // import { IKernelProvider } from '../../../client/../kernels/types';
 // import {
 //     IJupyterSession,

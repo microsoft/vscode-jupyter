@@ -7,7 +7,7 @@ import * as jupyterlab from '@jupyter-widgets/base/lib';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@lumino/signaling';
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping } from '../../../extension/messageTypes';
 import { Widget } from '@lumino/widgets';
 
 export interface IMessageSender {

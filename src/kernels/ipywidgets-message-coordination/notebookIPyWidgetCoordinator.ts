@@ -18,15 +18,12 @@ import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import {
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { INotebookCommunication } from '../../client/datascience/notebook/types';
-import { VSCodeNotebookController } from '../../client/datascience/notebook/vscodeNotebookController';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../extension/messageTypes';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ConsoleForegroundColors } from '../../client/logging/_global';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
+import { INotebookCommunication } from '../../notebooks/types';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {
     private eventHandlerListening?: boolean;

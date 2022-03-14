@@ -32,7 +32,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { InteractiveCellResultError } from '../errors/interactiveCellResultError';
+import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
 import {
     ICellRange,
     ICodeLensFactory,

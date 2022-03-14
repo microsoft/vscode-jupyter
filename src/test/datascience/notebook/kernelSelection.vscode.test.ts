@@ -12,7 +12,6 @@ import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
 import { IKernelProvider } from '../../../client/../kernels/types';
-import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
@@ -33,6 +32,7 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout
 } from './helper';
+import { getTextOutputValue } from '../../../notebooks/helpers';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {

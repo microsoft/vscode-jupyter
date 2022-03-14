@@ -30,8 +30,8 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { Disposable, Memento } from 'vscode';
-import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { instance, mock, verify } from 'ts-mockito';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;

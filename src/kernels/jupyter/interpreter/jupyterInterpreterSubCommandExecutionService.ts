@@ -17,7 +17,6 @@ import { IOutputChannel, IPathUtils } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
 import {
     IJupyterSubCommandExecutionService,
     IJupyterInterpreterDependencyManager
@@ -27,6 +26,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../client/telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
+import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths';
 import { JupyterServerInfo } from '../launcher/jupyterConnection';

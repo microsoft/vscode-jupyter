@@ -6,7 +6,7 @@ import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../client/common/cancellation';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/common/errors/errorUtils';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/../extension/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
 import { IDisposable, IOutputChannel, Resource } from '../../../client/common/types';

@@ -9,7 +9,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceInfo, traceError } from '../../../client/common/logger';
 import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../../client/common/types';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { isJupyterNotebook } from '../../../client/datascience/notebook/helpers/helpers';
+import { isJupyterNotebook } from '../../../notebooks/helpers';
 import {
     IInteractiveWindowProvider,
     INotebookProvider,

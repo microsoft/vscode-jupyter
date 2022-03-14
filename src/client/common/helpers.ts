@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ModuleNotInstalledError } from './errors/moduleNotInstalledError';
+import { ModuleNotInstalledError } from '../../extension/errors/moduleNotInstalledError';
 import { IDisposable } from './types';
 
 export function isNotInstalledError(error: Error): boolean {

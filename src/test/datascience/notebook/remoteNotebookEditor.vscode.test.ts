@@ -30,13 +30,13 @@ import {
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { Settings } from '../../../client/datascience/constants';
-import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
 import { JupyterServer } from '../jupyterServer';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {

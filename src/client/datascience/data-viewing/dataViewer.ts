@@ -16,7 +16,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
-import { JupyterDataRateLimitError } from '../errors/jupyterDataRateLimitError';
+import { JupyterDataRateLimitError } from '../../../extension/errors/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,

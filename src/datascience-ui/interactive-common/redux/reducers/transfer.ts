@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../../../extension/messageTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IMainState } from '../../mainState';
 import { postActionToExtension } from '../helpers';

@@ -47,7 +47,7 @@ import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { CellHashProviderFactory } from '../../../client/datascience/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../client/../kernels/types';
-import { InteractiveCellResultError } from '../../../client/datascience/errors/interactiveCellResultError';
+import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

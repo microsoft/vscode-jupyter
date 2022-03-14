@@ -13,10 +13,7 @@ import { IDisposable } from '../../client/common/types';
 import { Deferred, createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
-import {
-    IPyWidgetMessages,
-    IInteractiveWindowMapping
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../extension/messageTypes';
 import { KernelSocketInformation } from '../../client/datascience/types';
 import { sendTelemetryEvent } from '../../client/telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';

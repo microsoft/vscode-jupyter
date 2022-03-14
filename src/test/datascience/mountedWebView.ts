@@ -10,7 +10,7 @@ import {
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../extension/messageTypes';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
 export type WaitForMessageOptions = {

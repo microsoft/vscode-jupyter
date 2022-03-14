@@ -13,8 +13,8 @@
 // import { BufferDecoder } from '../../../client/common/process/decoder';
 // import { ProcessService } from '../../../client/common/process/proc';
 // import { IDisposable } from '../../../client/common/types';
-// import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
-// import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
+// import { JupyterNotebookView } from '../../../notebooks/constants';
+// import { getTextOutputValue } from '../../../notebooks/helpers';
 // import { IInterpreterService } from '../../../client/interpreter/contracts';
 // import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 // import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';

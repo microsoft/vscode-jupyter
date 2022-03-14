@@ -8,6 +8,7 @@ import * as path from 'path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
+import { isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../common/constants';
@@ -15,7 +16,6 @@ import '../common/extensions';
 import { disposeAllDisposables } from '../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { isJupyterNotebook } from '../datascience/notebook/helpers/helpers';
 import { EventName } from './constants';
 import { getTelemetrySafeHashedString } from './helpers';
 

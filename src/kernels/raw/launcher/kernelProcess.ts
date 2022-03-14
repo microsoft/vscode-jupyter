@@ -21,8 +21,8 @@ import { createPromiseFromCancellation } from '../../../client/common/cancellati
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
-} from '../../../client/common/errors/errorUtils';
-import { BaseError } from '../../../client/common/errors/types';
+} from '../../../client/../extension/errors/errorUtils';
+import { BaseError } from '../../../client/../extension/errors/types';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
@@ -35,9 +35,9 @@ import { Resource, IOutputChannel, IJupyterSettings } from '../../../client/comm
 import { createDeferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
-import { KernelDiedError } from '../../../client/datascience/errors/kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from '../../../client/datascience/errors/kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from '../../../client/datascience/errors/kernelProcessExitedError';
+import { KernelDiedError } from '../../../extension/errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../../../extension/errors/kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from '../../../extension/errors/kernelProcessExitedError';
 import { traceDecorators } from '../../../client/logging';
 import { ignoreLogging, TraceOptions } from '../../../client/logging/trace';
 import { captureTelemetry } from '../../../client/telemetry';

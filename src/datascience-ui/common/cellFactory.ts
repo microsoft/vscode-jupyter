@@ -4,7 +4,7 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { KernelFailure } from '../../client/common/errors/errorUtils';
+import { KernelFailure } from '../../client/../extension/errors/errorUtils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';

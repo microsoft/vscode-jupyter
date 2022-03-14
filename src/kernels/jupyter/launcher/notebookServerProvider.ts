@@ -13,7 +13,7 @@ import { testOnlyMethod } from '../../../client/common/utils/decorators';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Settings } from '../../../client/datascience/constants';
 import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { JupyterInstallError } from '../../../client/datascience/errors/jupyterInstallError';
+import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
 import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
 import {
     IJupyterServerProvider,

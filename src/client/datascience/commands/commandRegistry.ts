@@ -6,9 +6,11 @@
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { NotebookCreator } from '../../../kernels/common/notebookCreator';
+import { IShowDataViewerFromVariablePanel } from '../../../extension/messageTypes';
 import { IKernelProvider } from '../../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/debuggerVariables';
+import { NotebookCreator } from '../../../notebooks/notebookCreator';
+import { DataViewerChecker } from '../../../webviews/dataviewer/dataViewerChecker';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
     IApplicationShell,
@@ -30,8 +32,6 @@ import { EventName } from '../../telemetry/constants';
 import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { DataViewerDependencyService } from '../data-viewing/dataViewerDependencyService';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
-import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -44,7 +44,6 @@ import {
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
-import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
 
 @injectable()
@@ -59,7 +58,6 @@ export class CommandRegistry implements IDisposable {
         private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
-        @inject(NotebookCommands) private readonly notebookCommands: NotebookCommands,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(IDebugService) private debugService: IDebugService,
@@ -82,7 +80,6 @@ export class CommandRegistry implements IDisposable {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         this.disposables.push(this.serverSelectedCommand);
-        this.disposables.push(this.notebookCommands);
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
@@ -130,7 +127,6 @@ export class CommandRegistry implements IDisposable {
         }
         this.commandLineCommand.register();
         this.serverSelectedCommand.register();
-        this.notebookCommands.register();
         this.exportCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);

@@ -9,12 +9,12 @@ import {
     IKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
 } from '../../kernels/types';
+import { INotebookControllerManager } from '../../notebooks/types';
 import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo } from '../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Telemetry } from '../datascience/constants';
-import { INotebookControllerManager } from '../datascience/notebook/types';
 import { IKernelSocket as ExtensionKernelSocket } from '../datascience/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { ApiAccessService } from './apiAccessService';

@@ -1,10 +1,6 @@
 import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import {
-    IFinishCell,
-    InteractiveWindowMessages,
-    IShowDataViewer
-} from '../../datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, IShowDataViewer, IFinishCell } from '../../../extension/messageTypes';
 import { IKernel } from '../../../kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';

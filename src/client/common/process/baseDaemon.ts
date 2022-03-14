@@ -10,7 +10,7 @@ import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { IPlatformService } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { BaseError } from '../errors/types';
+import { BaseError } from '../../../extension/errors/types';
 import { traceError, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
