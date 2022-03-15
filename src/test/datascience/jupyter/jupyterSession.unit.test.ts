@@ -28,6 +28,7 @@ import { IJupyterConnection, ISessionWithSocket } from '../../../client/datascie
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
+import { IFileSystem } from '../../../client/common/platform/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -121,7 +122,8 @@ suite('DataScience - JupyterSession', () => {
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
-
+        const fs = mock<IFileSystem>();
+        when(fs.deleteLocalFile(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
@@ -139,7 +141,8 @@ suite('DataScience - JupyterSession', () => {
             '',
             1,
             instance(kernelService),
-            1
+            1,
+            instance(fs)
         );
     }
     setup(() => createJupyterSession());

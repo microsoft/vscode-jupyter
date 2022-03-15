@@ -29,6 +29,7 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
 import { JupyterWebSockets } from './jupyterWebSocket';
+import { IFileSystem } from '../../../client/common/platform/types';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -69,7 +70,8 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number
+        interruptTimeout: number,
+        private readonly fs: IFileSystem
     ) {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
@@ -271,6 +273,9 @@ export class JupyterSession extends BaseJupyterSession {
                 if (this.connInfo && backingFile) {
                     this.contentsManager.delete(backingFile.path).ignoreErrors();
                 }
+                if (backingFile) {
+                    this.fs.deleteLocalFile(backingFile.path).ignoreErrors();
+                }
                 throw ex;
             }
         }
@@ -333,6 +338,9 @@ export class JupyterSession extends BaseJupyterSession {
                     .finally(() => {
                         if (this.connInfo && backingFile) {
                             this.contentsManager.delete(backingFile.path).ignoreErrors();
+                        }
+                        if (backingFile) {
+                            this.fs.deleteLocalFile(backingFile.path).ignoreErrors();
                         }
                     }),
             options.token
