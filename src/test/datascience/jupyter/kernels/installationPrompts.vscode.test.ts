@@ -280,6 +280,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             defaultNotebookTestTimeout,
             'No errors in cell'
         );
+
+        // Prompt should only be displayed once
+        assert.equal(prompt.getDisplayCount(), 1, 'Display prompt shown more than once');
     });
     test('Ensure ipykernel install prompt is displayed even after uninstalling ipykernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
