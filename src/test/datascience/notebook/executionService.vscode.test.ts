@@ -440,7 +440,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // On windows `!where python`, prints multiple items in the output (all executables found).
         const cell1Output = getCellOutputs(cell1);
         const shellExecutable = cell1Output
-            .trim()
             .split('\n')
             .filter((item) => item.length)[0]
             .trim();
