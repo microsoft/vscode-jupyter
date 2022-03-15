@@ -106,7 +106,8 @@ export class KernelProcess implements IKernelProcess {
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&
-            this._interruptSignalHandle
+            this._interruptSignalHandle &&
+            isPythonKernelConnection(this._kernelConnectionMetadata)
         ) {
             traceInfo('Interrupting kernel via custom event (Win32)');
             return this.fireWin32InterruptEvent();
@@ -331,6 +332,8 @@ export class KernelProcess implements IKernelProcess {
             // a different process tries to open it.
             const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
+            // Ensure we dispose this, and don't maintain a handle on this file.
+            await tempFile.dispose(); // Do not remove this line.
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
