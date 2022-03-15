@@ -359,7 +359,14 @@ export class VSCodeNotebookController implements Disposable {
         scripts.push(
             ...[
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
-                join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
+                join(
+                    this.context.extensionPath,
+                    'node_modules',
+                    '@vscode',
+                    'jupyter-ipywidgets',
+                    'dist',
+                    'ipywidgets.js'
+                ),
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
                 join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
             ]

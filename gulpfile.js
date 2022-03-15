@@ -138,16 +138,6 @@ gulp.task('installPythonLibs', async () => {
     }
 });
 
-gulp.task('compile-ipywidgets', () => buildIPyWidgets());
-
-async function buildIPyWidgets() {
-    // if the output ipywidgest file exists, then no need to re-build.
-    // Barely changes. If making changes, then re-build manually.
-    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
-        return;
-    }
-    await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
-}
 gulp.task('compile-renderers', async () => {
     console.log('Building renderers');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
@@ -172,7 +162,6 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
-    await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
