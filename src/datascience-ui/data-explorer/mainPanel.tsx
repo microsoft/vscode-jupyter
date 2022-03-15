@@ -386,7 +386,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private generateColumns(variable: IDataFrameInfo, indexColumn:string): Slick.Column<Slick.SlickData>[] {
+    private generateColumns(variable: IDataFrameInfo, indexColumn: string): Slick.Column<Slick.SlickData>[] {
         if (variable.columns) {
             // Generate a column for row numbers
             const rowNumberColumn = {
@@ -398,10 +398,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
                     // Only show index column for pandas DataFrame and Series
                     const isDataFrameOrSeries = variable?.type === 'DataFrame' || variable?.type === 'Series';
-                    if (
-                        isDataFrameOrSeries ||
-                        c.key !== indexColumn
-                    ) {
+                    if (isDataFrameOrSeries || c.key !== indexColumn) {
                         accum.push({
                             type: c.type,
                             // When dealing with a dataframe/series, the index column will have a key of 'index'.
