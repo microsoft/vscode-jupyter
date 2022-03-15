@@ -50,7 +50,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorInterruptKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        void this.interruptKernel(context?.notebookEditor.notebookUri);
+                        void this.interruptKernel(context?.notebookEditor?.notebookUri);
                     } else {
                         void this.interruptKernel(context);
                     }
@@ -62,7 +62,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorRestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        void this.restartKernel(context?.notebookEditor.notebookUri);
+                        void this.restartKernel(context?.notebookEditor?.notebookUri);
                     } else {
                         void this.restartKernel(context);
                     }
@@ -73,14 +73,14 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             commandManager.registerCommand(
                 Commands.InterruptKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.interruptKernel(context?.notebookEditor.notebookUri)
+                    this.interruptKernel(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.restartKernel(context?.notebookEditor.notebookUri)
+                    this.restartKernel(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this));
