@@ -634,6 +634,7 @@ export class CellExecution implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         this.clearLastUsedStreamOutput();
+        traceCellMessage(this.cell, 'Append output in addToCellData');
         task?.appendOutput([cellOutput]).then(noop, noop);
         this.endTemporaryTask();
     }
@@ -755,6 +756,7 @@ export class CellExecution implements IDisposable {
         // Clear output if waiting for a clear
         const clearOutput = clearState.value;
         if (clearOutput) {
+            traceCellMessage(this.cell, 'Clear cell output');
             this.clearLastUsedStreamOutput();
             task?.clearOutput().then(noop, noop);
             clearState.update(false);
@@ -789,6 +791,7 @@ export class CellExecution implements IDisposable {
                 name: msg.content.name,
                 text: this.lastUsedStreamOutput.text
             });
+            traceCellMessage(this.cell, `Replace output items ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
             task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (clearOutput) {
             // Replace the current outputs with a single new output.
@@ -799,6 +802,7 @@ export class CellExecution implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
+            traceCellMessage(this.cell, `Replace output ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
             task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
@@ -809,6 +813,7 @@ export class CellExecution implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
+            traceCellMessage(this.cell, `Append output ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
             task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();
@@ -909,6 +914,7 @@ export class CellExecution implements IDisposable {
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
+        traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
         task?.replaceOutputItems(newOutput.items, outputToBeUpdated).then(noop, noop);
         this.endTemporaryTask();
     }

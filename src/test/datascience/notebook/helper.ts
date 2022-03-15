@@ -560,7 +560,7 @@ export async function waitForCellHavingOutput(cell: NotebookCell) {
     return waitForCondition(
         async () => {
             const cellOutputs = getCellOutputs(cell);
-            return cellOutputs.length > 0 && !cellOutputs[0].includes('No cell outputs');
+            return cellOutputs.length > 0 && !cellOutputs.includes('No cell outputs');
         },
         defaultNotebookTestTimeout,
         'No output'
@@ -751,13 +751,6 @@ export async function waitForTextOutput(
             `A after ${timeout}ms output does not contain provided text '${text}' for Cell ${
                 cell.index + 1
             }, it is ${getCellOutputs(cell)}`
-    );
-}
-export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
-    await waitForCondition(
-        async () => cell.outputs.length > 0,
-        timeout,
-        () => `No outputs for Cell ${cell.index + 1}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
