@@ -560,7 +560,7 @@ export async function waitForCellHavingOutput(cell: NotebookCell) {
     return waitForCondition(
         async () => {
             const cellOutputs = getCellOutputs(cell);
-            return cellOutputs.length > 0 && !cellOutputs[0].includes('No cell outputs');
+            return cellOutputs.length > 0 && !cellOutputs.includes('No cell outputs');
         },
         defaultNotebookTestTimeout,
         'No output'
