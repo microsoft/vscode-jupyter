@@ -178,11 +178,6 @@ module.exports = {
         'src/test/workspaceSymbols/main.unit.test.ts',
         'src/test/workspaceSymbols/generator.unit.test.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-ai-tools-test/src/serverPicker.ts',
-        'src/ipywidgets/types/require.js.d.ts',
-        'src/ipywidgets/scripts/copyfiles.js',
-        'src/ipywidgets/scripts/clean.js',
-        'src/ipywidgets/src/widgetLoader.ts',
-        'src/ipywidgets/src/index.ts',
         'src/datascience-ui/renderers/index.tsx',
         'src/datascience-ui/renderers/webviewApi.d.ts',
         'src/datascience-ui/renderers/constants.ts',
@@ -643,8 +638,7 @@ module.exports = {
         'src/client/workspaceSymbols/contracts.ts',
         'src/client/workspaceSymbols/generator.ts',
         'src/client/workspaceSymbols/parser.ts',
-        'src/client/workspaceSymbols/provider.ts',
-        'src/ipywidgets/**/*'
+        'src/client/workspaceSymbols/provider.ts'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
