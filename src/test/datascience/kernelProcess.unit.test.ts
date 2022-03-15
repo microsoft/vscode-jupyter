@@ -5,16 +5,12 @@
 
 import * as os from 'os';
 import { assert } from 'chai';
-import * as path from 'path';
-import * as fsExtra from 'fs-extra';
-import * as sinon from 'sinon';
 import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
 import {
     IProcessService,
     IProcessServiceFactory,
-    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     IPythonExecutionService,
     Output
