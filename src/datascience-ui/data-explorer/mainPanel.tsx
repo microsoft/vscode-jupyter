@@ -281,10 +281,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const variable = payload as IDataFrameInfo;
             if (variable) {
-                const columns = this.generateColumns(variable);
+                const indexColumn = variable.indexColumn ?? 'index';
+                const columns = this.generateColumns(variable, indexColumn);
                 const totalRowCount = variable.rowCount ?? 0;
                 const initialRows: ISlickRow[] = [];
-                const indexColumn = variable.indexColumn ?? 'index';
                 const originalVariableType = variable.type ?? this.state.originalVariableType;
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
                 const variableName = this.state.variableName ?? variable.name;
@@ -386,7 +386,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
+    private generateColumns(variable: IDataFrameInfo, indexColumn:string): Slick.Column<Slick.SlickData>[] {
         if (variable.columns) {
             // Generate a column for row numbers
             const rowNumberColumn = {
@@ -397,14 +397,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return columns.reduce(
                 (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
                     // Only show index column for pandas DataFrame and Series
+                    const isDataFrameOrSeries = variable?.type === 'DataFrame' || variable?.type === 'Series';
                     if (
-                        variable?.type === 'DataFrame' ||
-                        variable?.type === 'Series' ||
-                        c.key !== this.state.indexColumn
+                        isDataFrameOrSeries ||
+                        c.key !== indexColumn
                     ) {
                         accum.push({
                             type: c.type,
-                            field: c.key.toString(),
+                            // When dealing with a dataframe/series, the index column will have a key of 'index'.
+                            // When serializing to JSON, the index columns can have different titles, but the key will still be 'index'.
+                            field: isDataFrameOrSeries && c.key === indexColumn ? 'index' : c.key.toString(),
                             id: `${i}`,
                             name: c.key.toString(),
                             sortable: true,
