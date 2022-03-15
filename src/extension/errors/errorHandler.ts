@@ -106,7 +106,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             traceWarning(`Cancelled by user`, error);
             return '';
         } else if (
-            error instanceof KernelDiedError &&
+            (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
                 error.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') &&
             error.kernelConnectionMetadata.interpreter &&

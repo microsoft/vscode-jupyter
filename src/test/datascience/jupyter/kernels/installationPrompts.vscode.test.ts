@@ -209,7 +209,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 assertVSCCellIsNotRunning(cell) &&
                 verifyInstallIPyKernelInstructionsInOutput(cell),
             defaultNotebookTestTimeout,
-            'No errors in cell'
+            'No errors in cell (first time)'
         );
 
         // Execute notebook once again & we should get another prompted to install ipykernel.
@@ -225,7 +225,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await waitForCondition(
             async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
             defaultNotebookTestTimeout,
-            'No errors in cell'
+            'No errors in cell (second time)'
         );
 
         // Execute a cell this time & we should get yet another prompted to install ipykernel.
@@ -241,7 +241,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await waitForCondition(
             async () => hasErrorOutput(cell.outputs) && assertVSCCellIsNotRunning(cell),
             defaultNotebookTestTimeout,
-            'No errors in cell'
+            'No errors in cell (third time)'
         );
     });
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
