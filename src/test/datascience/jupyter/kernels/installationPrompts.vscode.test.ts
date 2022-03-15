@@ -49,7 +49,8 @@ import {
     waitForKernelToChange,
     insertCodeCell,
     waitForExecutionCompletedSuccessfully,
-    getCellOutputs
+    getCellOutputs,
+    waitForCellHavingOutput
 } from '../../notebook/helper';
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 
@@ -568,7 +569,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                     ? Promise.resolve()
                     : waitForIPyKernelToGetInstalled(),
                 waitForExecutionCompletedSuccessfully(cell),
-                waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No cell output')
+                waitForCellHavingOutput(cell)
             ]);
 
             console.log('Stepd');

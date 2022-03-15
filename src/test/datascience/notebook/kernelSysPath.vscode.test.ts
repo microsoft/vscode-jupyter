@@ -23,7 +23,7 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToChange,
-    waitForCellToHaveOutput
+    waitForCellHavingOutput
 } from './helper';
 import { traceInfoIfCI } from '../../../client/common/logger';
 
@@ -103,7 +103,7 @@ suite('sys.path in Python Kernels', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
-            waitForCellToHaveOutput(cell)
+            waitForCellHavingOutput(cell)
         ]);
 
         const output = Buffer.from(cell.outputs[0].items[0].data).toString().trim();
