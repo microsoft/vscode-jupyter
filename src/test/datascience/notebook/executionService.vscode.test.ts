@@ -437,13 +437,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             )
         ]);
 
-        // On windows `!where python`, prints multiple items in the output (all executables found).
-        const cell1Output = getCellOutputs(cell1);
-        const shellExecutable = cell1Output
-            .split('\n')
-            .filter((item) => item.length)[0]
-            .trim();
-
         // Sometimes the IPython can (sometimes) fail with an error of `shell not found`.
         // For now, we'll ignore these errors
         // We already have tests that ensures the first path in sys.path points to where the executable is located.
@@ -456,6 +449,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 return this.skip();
             }
         }
+
+        // On windows `!where python`, prints multiple items in the output (all executables found).
+        const cell1Output = getCellOutputs(cell1);
+        const shellExecutable = cell1Output
+            .split('\n')
+            .filter((item) => item.length)[0]
+            .trim();
+
         await Promise.all([waitForCellExecutionToComplete(cell3), waitForCellHavingOutput(cell3)]);
 
         const sysExecutable = getCellOutputs(cell3).trim();
