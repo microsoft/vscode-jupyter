@@ -464,11 +464,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // First path in PATH must be the directory where executable is located.
         assert.ok(
             areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
-            `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}, ${
-                cell1.outputs.length
-            }) (${cell1.outputs
-                .map((item) => item.items.map((i) => i.mime).join(','))
-                .join('#')}), error is ${errorOutput}`
+            `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}), error is ${errorOutput}`
         );
     });
     test('Testing streamed output', async () => {
