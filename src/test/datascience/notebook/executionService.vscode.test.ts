@@ -420,9 +420,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForCellExecutionToComplete(cell1),
-            waitForCellHavingOutput(cell1),
             waitForCondition(
                 async () => {
+                    // Sometimes the cell can fail execution (IPython can sometimes throw an error).
                     const output = getCellOutputs(cell1).trim();
                     if (output !== '<No cell outputs>' && output.length > 0) {
                         return true;
