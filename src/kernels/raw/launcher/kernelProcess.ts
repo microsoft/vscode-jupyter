@@ -23,7 +23,7 @@ import {
     getErrorMessageFromPythonTraceback
 } from '../../../client/../extension/errors/errorUtils';
 import { BaseError } from '../../../client/../extension/errors/types';
-import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
+import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../client/common/logger';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
     IProcessServiceFactory,
@@ -152,6 +152,7 @@ export class KernelProcess implements IKernelProcess {
                 exitEventFired = true;
             }
             if (!cancelToken.isCancellationRequested) {
+                traceInfoIfCI(`KernelProcessExitedError raised`, stderr);
                 deferred.reject(new KernelProcessExitedError(exitCode || -1, stderr, this.kernelConnectionMetadata));
             }
         });
@@ -240,6 +241,7 @@ export class KernelProcess implements IKernelProcess {
                 const errorMessage =
                     getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
+                traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
                 throw new KernelDiedError(
                     DataScience.kernelDied().format(errorMessage),
                     // Include what ever we have as the stderr.
