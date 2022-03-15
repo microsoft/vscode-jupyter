@@ -64,7 +64,7 @@ export function createPromiseFromCancellation<T>(
  * @returns {CancellationToken}
  */
 export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
-    const wrappedCancellantionToken = new CancellationTokenSource();
+    const wrappedCancellationToken = new CancellationTokenSource();
     for (const token of tokens) {
         if (!token) {
             continue;
@@ -72,10 +72,10 @@ export function wrapCancellationTokens(...tokens: (CancellationToken | undefined
         if (token.isCancellationRequested) {
             return token;
         }
-        token.onCancellationRequested(() => wrappedCancellantionToken.cancel());
+        token.onCancellationRequested(() => wrappedCancellationToken.cancel());
     }
 
-    return wrappedCancellantionToken.token;
+    return wrappedCancellationToken.token;
 }
 
 export namespace Cancellation {
