@@ -69,7 +69,7 @@ export class ExportCommands implements IDisposable {
     }
 
     private async nativeNotebookExport(context?: Uri | { notebookEditor: { notebookUri: Uri } }) {
-        const notebookUri = isUri(context) ? context : context?.notebookEditor.notebookUri;
+        const notebookUri = isUri(context) ? context : context?.notebookEditor?.notebookUri;
         const document = notebookUri
             ? this.notebooks.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
             : this.notebooks.activeNotebookEditor?.document;

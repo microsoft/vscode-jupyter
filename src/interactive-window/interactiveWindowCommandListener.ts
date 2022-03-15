@@ -141,14 +141,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             commandManager.registerCommand(
                 Commands.ExpandAllCells,
                 async (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.expandAllCells(context?.notebookEditor.notebookUri)
+                    this.expandAllCells(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.CollapseAllCells,
                 async (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.collapseAllCells(context?.notebookEditor.notebookUri)
+                    this.collapseAllCells(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(
@@ -157,14 +157,15 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.InteractiveExportAsNotebook,
-                (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor.notebookUri)
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.export(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.InteractiveExportAs,
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.exportAs(context?.notebookEditor.notebookUri)
+                    this.exportAs(context?.notebookEditor?.notebookUri)
             )
         );
         this.disposableRegistry.push(
@@ -422,7 +423,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        const uri = this.getTargetInteractiveWindow(context?.notebookEditor.notebookUri)?.notebookUri;
+        const uri = this.getTargetInteractiveWindow(context?.notebookEditor?.notebookUri)?.notebookUri;
         if (!uri) {
             return;
         }
