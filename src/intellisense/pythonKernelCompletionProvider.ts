@@ -25,7 +25,7 @@ import { StopWatch } from '../client/common/utils/stopWatch';
 import { Settings } from '../client/datascience/constants';
 import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../client/datascience/types';
 import { IKernelProvider } from '../kernels/types';
-import { findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion';
 
@@ -211,8 +211,9 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         context: CompletionContext,
         cancelToken: CancellationToken
     ) {
-        if (document.notebook) {
-            const client = await this.languageClientProvider.getLanguageClient(document.notebook);
+        const notebook = getAssociatedJupyterNotebook(document);
+        if (notebook) {
+            const client = await this.languageClientProvider.getLanguageClient(notebook);
             if (client) {
                 // Use provider so it gets translated by middleware
                 const feature = client.getFeature(lsp.CompletionRequest.method);

@@ -10,6 +10,7 @@ import { IDocumentManager } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { generateCellRangesFromDocument } from '../../client/datascience/cellFactory';
+import { getAssociatedJupyterNotebook } from '../../notebooks/helpers';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {
@@ -117,7 +118,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                 editor &&
                 editor.document &&
                 editor.document.languageId === PYTHON_LANGUAGE &&
-                editor.document.notebook === undefined &&
+                !getAssociatedJupyterNotebook(editor.document) &&
                 this.currentCellTop &&
                 this.currentCellBottom &&
                 this.currentCellTopUnfocused &&

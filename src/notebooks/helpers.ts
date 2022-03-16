@@ -15,7 +15,9 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionSummary,
     WorkspaceEdit,
-    Uri
+    Uri,
+    workspace,
+    TextDocument
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -996,4 +998,10 @@ export function updateNotebookMetadata(
         }
     }
     return { changed, kernelId };
+}
+
+export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
+    return workspace.notebookDocuments.find(
+        (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
+    );
 }
