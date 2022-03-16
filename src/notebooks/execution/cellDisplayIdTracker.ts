@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable, inject } from 'inversify';
-import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'vscode';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { injectable } from 'inversify';
+import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
 import { isJupyterNotebook } from '../../notebooks/helpers';
 
 @injectable()
@@ -13,24 +12,22 @@ export class CellOutputDisplayIdTracker {
         Map<string, { output: NotebookCellOutput; cell: NotebookCell }>
     >();
     private cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
-    constructor(@inject(IVSCodeNotebook) notebooks: IVSCodeNotebook) {
-        notebooks.onDidChangeNotebookDocument((e) => {
-            if (!isJupyterNotebook(e.document)) {
+    constructor() {
+        workspace.onDidChangeNotebookDocument((e) => {
+            if (!isJupyterNotebook(e.notebook)) {
                 return;
             }
             // We are only interested in cells that were cleared
-            if (e.type === 'changeCellOutputs') {
-                e.cells
-                    .filter((cell) => cell.outputs.length === 0)
-                    .map((cell) => {
-                        // If a cell was cleared, then remove the mapping, the output cannot exist anymore.
-                        const displayIdToDelete = this.cellToDisplayIdMapping.get(cell);
-                        if (displayIdToDelete) {
-                            this.cellToDisplayIdMapping.delete(cell);
-                            this.displayIdCellOutputMappingPerDocument.get(cell.notebook)?.delete(displayIdToDelete);
-                        }
-                    });
-            }
+            e.cellChanges
+                .filter((change) => !change.outputs || change.outputs.length === 0)
+                .map((change) => {
+                    // If a cell was cleared, then remove the mapping, the output cannot exist anymore.
+                    const displayIdToDelete = this.cellToDisplayIdMapping.get(change.cell);
+                    if (displayIdToDelete) {
+                        this.cellToDisplayIdMapping.delete(change.cell);
+                        this.displayIdCellOutputMappingPerDocument.get(e.notebook)?.delete(displayIdToDelete);
+                    }
+                });
         });
     }
     /**

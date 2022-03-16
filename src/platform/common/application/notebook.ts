@@ -5,9 +5,7 @@ import { inject, injectable } from 'inversify';
 import {
     Disposable,
     Event,
-    EventEmitter,
     notebooks,
-    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookController,
     NotebookData,
     NotebookDocument,
@@ -23,9 +21,8 @@ import {
     NotebookDocumentShowOptions,
     NotebookCellExecutionStateChangeEvent
 } from 'vscode';
-import { IDisposableRegistry } from '../types';
 import { isUri } from '../utils/misc';
-import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
+import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
@@ -35,7 +32,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
-    public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
         return notebooks.onDidChangeNotebookCellExecutionState;
     }
@@ -48,21 +44,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public get activeNotebookEditor(): NotebookEditor | undefined {
         return window.activeNotebookEditor;
     }
-    private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
-    private addedEventHandlers?: boolean;
-    private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
-    constructor(
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
-    ) {
-        this.addEventHandlers();
+    constructor(@inject(IApplicationEnvironment) readonly env: IApplicationEnvironment) {
         this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
         this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
         this.onDidOpenNotebookDocument = workspace.onDidOpenNotebookDocument;
         this.onDidCloseNotebookDocument = workspace.onDidCloseNotebookDocument;
         this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
-        this.onDidSaveNotebookDocument = notebooks.onDidSaveNotebookDocument;
-        this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
+        this.onDidSaveNotebookDocument = workspace.onDidSaveNotebookDocument;
     }
     public async openNotebookDocument(uri: Uri): Promise<NotebookDocument>;
     public async openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
@@ -109,31 +97,5 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         rendererScripts?: NotebookRendererScript[]
     ): NotebookController {
         return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
-    }
-    private addEventHandlers() {
-        if (this.addedEventHandlers) {
-            return;
-        }
-        this.addedEventHandlers = true;
-        this.disposables.push(
-            ...[
-                notebooks.onDidChangeCellMetadata((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
-                ),
-                notebooks.onDidChangeNotebookDocumentMetadata((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' })
-                ),
-                notebooks.onDidChangeCellOutputs((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
-                ),
-                notebooks.onDidChangeNotebookCells((e) => {
-                    if (this.handledCellChanges.has(e)) {
-                        return;
-                    }
-                    this.handledCellChanges.add(e);
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCells' });
-                })
-            ]
-        );
     }
 }

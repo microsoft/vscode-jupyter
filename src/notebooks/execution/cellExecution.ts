@@ -18,7 +18,6 @@ import {
     NotebookCellData,
     NotebookRange,
     Range,
-    notebooks,
     NotebookCellOutput,
     NotebookCellExecutionState,
     CancellationTokenSource,
@@ -46,7 +45,8 @@ import {
     traceCellMessage,
     translateErrorOutput,
     cellOutputToVSCCellOutput,
-    translateCellDisplayOutput
+    translateCellDisplayOutput,
+    isJupyterNotebook
 } from '../../notebooks/helpers';
 import { ICellHashProvider, IJupyterSession, ICellHash } from '../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -179,9 +179,16 @@ export class CellExecution implements IDisposable {
             this,
             this.disposables
         );
-        notebooks.onDidChangeCellOutputs(
+        workspace.onDidChangeNotebookDocument(
             (e) => {
-                if (e.cells.includes(this.cell) && this.cell.outputs.length === 0) {
+                if (!isJupyterNotebook(e.notebook) || e.cellChanges.length === 0) {
+                    return;
+                }
+                const thisCellChange = e.cellChanges.find((item) => item.cell === this.cell);
+                if (!thisCellChange) {
+                    return;
+                }
+                if (!thisCellChange.outputs || thisCellChange.outputs.length === 0) {
                     // keep track of the fact that user has cleared the output.
                     this.clearLastUsedStreamOutput();
                 }
