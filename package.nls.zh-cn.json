@@ -99,6 +99,7 @@
     "jupyter.command.jupyter.collapseallcells.shorttitle": "折叠",
     "jupyter.command.jupyter.addcellbelow.title": "添加空单元到文件",
     "jupyter.command.jupyter.scrolltocell.title": "滚动至单元",
+    "jupyter.command.jupyter.createnewnotebook.title": "创建新的空白 Jupyter 笔记本",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "选择解释器来启动 Jupyter 服务器",
     "jupyter.command.jupyter.createGitHubIssue.title": "创建 GitHub Issue",
     "jupyter.command.jupyter.submitGitHubIssue.title": "提交 GitHub Issue",
