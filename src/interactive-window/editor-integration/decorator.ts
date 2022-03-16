@@ -6,11 +6,11 @@ import * as vscode from 'vscode';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IPythonExtensionChecker } from '../../client/api/types';
-import { getAssociatedNotebook } from '../../client/common/application/notebook';
 import { IDocumentManager } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { generateCellRangesFromDocument } from '../../client/datascience/cellFactory';
+import { getAssociatedNotebook } from '../../notebooks/helpers';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {

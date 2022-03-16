@@ -21,8 +21,7 @@ import {
     NotebookDocumentContentOptions,
     Uri,
     NotebookDocumentShowOptions,
-    NotebookCellExecutionStateChangeEvent,
-    TextDocument
+    NotebookCellExecutionStateChangeEvent
 } from 'vscode';
 import { IDisposableRegistry } from '../types';
 import { isUri } from '../utils/misc';
@@ -137,10 +136,4 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             ]
         );
     }
-}
-
-export function getAssociatedNotebook(document: TextDocument): NotebookDocument | undefined {
-    return workspace.notebookDocuments.find((notebook) =>
-        notebook.getCells().some((cell) => cell.document === document)
-    );
 }

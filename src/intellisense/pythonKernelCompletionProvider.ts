@@ -14,7 +14,6 @@ import {
     workspace
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import { getAssociatedNotebook } from '../client/common/application/notebook';
 import { IVSCodeNotebook } from '../client/common/application/types';
 import { createPromiseFromCancellation } from '../client/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../client/common/logger';
@@ -26,7 +25,7 @@ import { StopWatch } from '../client/common/utils/stopWatch';
 import { Settings } from '../client/datascience/constants';
 import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../client/datascience/types';
 import { IKernelProvider } from '../kernels/types';
-import { findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { findAssociatedNotebookDocument, getAssociatedNotebook } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion';
 

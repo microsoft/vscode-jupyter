@@ -26,13 +26,13 @@ import {
     Diagnostic
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../client/activation/types';
-import { getAssociatedNotebook } from '../client/common/application/notebook';
 import { IVSCodeNotebook, IDocumentManager } from '../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../client/common/constants';
 import { disposeAllDisposables } from '../client/common/helpers';
 import { IDisposableRegistry } from '../client/common/types';
 import { DataScience } from '../client/common/utils/localize';
 import { JupyterNotebookView } from '../notebooks/constants';
+import { getAssociatedNotebook } from '../notebooks/helpers';
 
 type CellUri = string;
 type CellVersion = number;
