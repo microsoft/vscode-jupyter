@@ -167,6 +167,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         void envVariablesOurSelves.promise.then(() =>
             traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.path)} in ${stopWatch.elapsedTime}ms`)
         );
+        // If this is a conda environment and we get empty env variables from the Python extension,
+        // Then try our approach.
+        // This could happen when Python extension fails to get the activated env variables.
+        if (
+            interpreter.envType === EnvironmentType.Conda &&
+            envVariablesFromPython.completed &&
+            !envVariablesFromPython.value
+        ) {
+            await envVariablesOurSelves.promise;
+        }
+
         // If we got this using our way, and we have env variables use it.
         if (envVariablesOurSelves.resolved) {
             if (envVariablesOurSelves.value) {
@@ -194,9 +205,33 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         void this.envVarsService.getEnvironmentVariables(resource);
 
         // Check cache.
+        let reasonForFailure:
+            | 'emptyVariables'
+            | 'failedToGetActivatedEnvVariablesFromPython'
+            | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let [env, customEnvVars] = await Promise.all([
-            this.apiProvider.getApi().then((api) => api.getActivatedEnvironmentVariables(resource, interpreter, false)),
-            this.envVarsService.getCustomEnvironmentVariables(resource)
+            this.apiProvider.getApi().then((api) =>
+                api.getActivatedEnvironmentVariables(resource, interpreter, false).catch((ex) => {
+                    traceError(
+                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                            interpreter.path
+                        )}`,
+                        ex
+                    );
+                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                    return undefined;
+                })
+            ),
+            this.envVarsService.getCustomEnvironmentVariables(resource).catch((ex) => {
+                traceError(
+                    `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                        interpreter.path
+                    )}`,
+                    ex
+                );
+                reasonForFailure = 'failedToGetCustomEnvVariables';
+                return undefined;
+            })
         ]);
 
         const envType = interpreter.envType;
@@ -205,7 +240,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             pythonEnvType: envType,
             source: 'python',
             failed: Object.keys(env || {}).length === 0,
-            reason: 'emptyVariables'
+            reason: reasonForFailure
         });
         // We must get activated env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).

@@ -598,7 +598,9 @@ export interface IEventNamePropertyMapping {
             | 'emptyVariables'
             | 'unhandledError'
             | 'emptyFromCondaRun'
-            | 'emptyFromPython';
+            | 'emptyFromPython'
+            | 'failedToGetActivatedEnvVariablesFromPython'
+            | 'failedToGetCustomEnvVariables';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
