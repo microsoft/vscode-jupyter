@@ -104,6 +104,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
                     });
                     change.addedCells.forEach((cell) => this.queueCellForProcessing(cell));
                 });
+                e.cellChanges.forEach((change) => this.queueCellForProcessing(change.cell));
             },
             this,
             this.disposables
