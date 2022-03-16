@@ -2,10 +2,10 @@
 
 ---
 
-| `main` branch                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
----
+| `main` branch |
+| ------------- |
+
+## | ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
@@ -13,8 +13,8 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 14.16.0
-2. [npm](https://www.npmjs.com/) 6.14 (but not newer)
+1. [Node.js](https://nodejs.org/) 16.13.0
+2. [npm](https://www.npmjs.com/) 8.3
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
