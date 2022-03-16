@@ -11,10 +11,7 @@ export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme: 'untitled', pattern: '**/issue.md' }];
 
 export const InteractiveInputScheme = 'vscode-interactive-input';
-export const NOTEBOOK_SELECTOR = [
-    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
-    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE }
-];
+export const NOTEBOOK_SELECTOR = [{ language: PYTHON_LANGUAGE, notebookType: 'jupyter-notebook' }];
 
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
 export const JVSC_EXTENSION_DisplayName = 'Jupyter';
