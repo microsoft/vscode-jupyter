@@ -14,6 +14,7 @@ import {
     workspace
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
+import { getAssociatedNotebook } from '../client/common/application/notebook';
 import { IVSCodeNotebook } from '../client/common/application/types';
 import { createPromiseFromCancellation } from '../client/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../client/common/logger';
@@ -211,8 +212,9 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         context: CompletionContext,
         cancelToken: CancellationToken
     ) {
-        if (document.notebook) {
-            const client = await this.languageClientProvider.getLanguageClient(document.notebook);
+        const notebook = getAssociatedNotebook(document);
+        if (notebook) {
+            const client = await this.languageClientProvider.getLanguageClient(notebook);
             if (client) {
                 // Use provider so it gets translated by middleware
                 const feature = client.getFeature(lsp.CompletionRequest.method);

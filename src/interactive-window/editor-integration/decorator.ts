@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IPythonExtensionChecker } from '../../client/api/types';
+import { getAssociatedNotebook } from '../../client/common/application/notebook';
 import { IDocumentManager } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
@@ -117,7 +118,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                 editor &&
                 editor.document &&
                 editor.document.languageId === PYTHON_LANGUAGE &&
-                editor.document.notebook === undefined &&
+                !getAssociatedNotebook(editor.document) &&
                 this.currentCellTop &&
                 this.currentCellBottom &&
                 this.currentCellTopUnfocused &&

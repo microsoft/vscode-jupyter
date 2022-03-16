@@ -26,6 +26,7 @@ import {
     Diagnostic
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../client/activation/types';
+import { getAssociatedNotebook } from '../client/common/application/notebook';
 import { IVSCodeNotebook, IDocumentManager } from '../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../client/common/constants';
 import { disposeAllDisposables } from '../client/common/helpers';
@@ -66,7 +67,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         this.disposables.push(languages.registerHoverProvider(PYTHON_LANGUAGE, this));
         this.documents.onDidChangeTextDocument(
             (e) => {
-                const notebook = e.document.notebook;
+                const notebook = getAssociatedNotebook(e.document);
                 if (notebook?.notebookType !== JupyterNotebookView) {
                     return;
                 }
@@ -111,7 +112,8 @@ export class NotebookCellBangInstallDiagnosticsProvider
         this.notebooks.notebookDocuments.map((e) => this.analyzeNotebook(e));
     }
     public provideHover(document: TextDocument, position: Position, _token: CancellationToken) {
-        if (document.notebook?.notebookType !== JupyterNotebookView) {
+        const notebook = getAssociatedNotebook(document);
+        if (notebook?.notebookType !== JupyterNotebookView) {
             return;
         }
         const diagnostics = this.problems.get(document.uri);
@@ -135,7 +137,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         context: CodeActionContext,
         _token: CancellationToken
     ): CodeAction[] {
-        if (document.notebook?.notebookType !== JupyterNotebookView) {
+        if (getAssociatedNotebook(document)?.notebookType !== JupyterNotebookView) {
             return [];
         }
         const codeActions: CodeAction[] = [];

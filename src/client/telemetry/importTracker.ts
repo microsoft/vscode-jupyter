@@ -10,6 +10,7 @@ import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { getAssociatedNotebook } from '../common/application/notebook';
 import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../common/constants';
 import '../common/extensions';
@@ -120,11 +121,9 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
             this.scheduleDocument(document);
-        } else if (
-            document.notebook &&
-            isJupyterNotebook(document.notebook) &&
-            document.languageId === PYTHON_LANGUAGE
-        ) {
+        }
+        const notebook = getAssociatedNotebook(document);
+        if (notebook && isJupyterNotebook(notebook) && document.languageId === PYTHON_LANGUAGE) {
             this.scheduleDocument(document);
         }
     }
