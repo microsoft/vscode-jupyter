@@ -41,6 +41,7 @@ import { registerLoggerTypes } from './logging/serviceRegistry';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { registerInstallerTypes } from '../kernels/installer/serviceRegistry';
+import { getDisplayPath } from './common/platform/fs-paths';
 
 export async function activateComponents(
     context: IExtensionContext,
@@ -102,6 +103,19 @@ async function activateLegacy(
         standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
+    }
+    if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
+        standardOutputChannel.appendLine(`No workspace folder opened.`);
+    } else if (workspace.workspaceFolders.length === 1) {
+        standardOutputChannel.appendLine(
+            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri.fsPath)}`
+        );
+    } else {
+        standardOutputChannel.appendLine(
+            `Multiple Workspace folders opened ${workspace.workspaceFolders
+                .map((item) => getDisplayPath(item.uri.fsPath))
+                .join(', ')}`
+        );
     }
 
     // Initialize logging to file if necessary as early as possible
