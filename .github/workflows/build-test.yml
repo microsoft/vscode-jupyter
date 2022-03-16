@@ -32,11 +32,11 @@ on:
         default: 'Do not publish'
         type: choice
         options:
-        - Do not publish
-        - Yes, publish pre-release
+          - Do not publish
+          - Yes, publish pre-release
 
 env:
-  NODE_VERSION: 14.16.0
+  NODE_VERSION: 16.13.0
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -106,13 +106,13 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name:
-    #       pre-release channel
-    #       # Scheduled builds will publish pre-release builds.
-    #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-    #     run: |
-    #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-    #       echo "release_channel=pre-release" >> $GITHUB_ENV
+      #   - name:
+      #       pre-release channel
+      #       # Scheduled builds will publish pre-release builds.
+      #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+      #     run: |
+      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
+      #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
