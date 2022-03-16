@@ -1,3 +1,5 @@
+import { JupyterNotebookView } from '../../notebooks/constants';
+
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
 export const JUPYTER_LANGUAGE = 'jupyter';
@@ -11,9 +13,13 @@ export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme: 'untitled', pattern: '**/issue.md' }];
 
 export const InteractiveInputScheme = 'vscode-interactive-input';
+export const InteractiveScheme = 'vscode-interactive';
+
 export const NOTEBOOK_SELECTOR = [
-    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE },
-    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE }
+    { language: PYTHON_LANGUAGE, notebookType: JupyterNotebookView },
+    { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
+    { scheme: InteractiveScheme, language: PYTHON_LANGUAGE },
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }
 ];
 
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
