@@ -32,7 +32,7 @@ import { disposeAllDisposables } from '../client/common/helpers';
 import { IDisposableRegistry } from '../client/common/types';
 import { DataScience } from '../client/common/utils/localize';
 import { JupyterNotebookView } from '../notebooks/constants';
-import { getAssociatedNotebook } from '../notebooks/helpers';
+import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
 
 type CellUri = string;
 type CellVersion = number;
@@ -67,8 +67,8 @@ export class NotebookCellBangInstallDiagnosticsProvider
         this.disposables.push(languages.registerHoverProvider(PYTHON_LANGUAGE, this));
         this.documents.onDidChangeTextDocument(
             (e) => {
-                const notebook = getAssociatedNotebook(e.document);
-                if (notebook?.notebookType !== JupyterNotebookView) {
+                const notebook = getAssociatedJupyterNotebook(e.document);
+                if (!notebook) {
                     return;
                 }
                 const cell = notebook.getCells().find((c) => c.document === e.document);
@@ -112,7 +112,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         this.notebooks.notebookDocuments.map((e) => this.analyzeNotebook(e));
     }
     public provideHover(document: TextDocument, position: Position, _token: CancellationToken) {
-        const notebook = getAssociatedNotebook(document);
+        const notebook = getAssociatedJupyterNotebook(document);
         if (notebook?.notebookType !== JupyterNotebookView) {
             return;
         }
@@ -137,7 +137,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         context: CodeActionContext,
         _token: CancellationToken
     ): CodeAction[] {
-        if (getAssociatedNotebook(document)?.notebookType !== JupyterNotebookView) {
+        if (!getAssociatedJupyterNotebook(document)) {
             return [];
         }
         const codeActions: CodeAction[] = [];

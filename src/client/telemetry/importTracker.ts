@@ -8,7 +8,7 @@ import * as path from 'path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
-import { getAssociatedNotebook, isJupyterNotebook } from '../../notebooks/helpers';
+import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../common/constants';
@@ -121,8 +121,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         if (path.extname(document.fileName) === '.py') {
             this.scheduleDocument(document);
         }
-        const notebook = getAssociatedNotebook(document);
-        if (notebook && isJupyterNotebook(notebook) && document.languageId === PYTHON_LANGUAGE) {
+        if (getAssociatedJupyterNotebook(document) && document.languageId === PYTHON_LANGUAGE) {
             this.scheduleDocument(document);
         }
     }

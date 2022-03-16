@@ -1000,7 +1000,7 @@ export function updateNotebookMetadata(
     return { changed, kernelId };
 }
 
-export function getAssociatedNotebook(document: TextDocument): NotebookDocument | undefined {
+export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
     return workspace.notebookDocuments.find(
         (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
     );
