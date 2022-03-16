@@ -349,17 +349,45 @@ export class VSCodeNotebookController implements Disposable {
     }
     private getRendererScripts(): NotebookRendererScript[] {
         const scripts: string[] = [];
+
+        // Put require.js first
+        scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'));
+
         // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||
             this.context.extensionMode === ExtensionMode.Test
         ) {
             scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
+
+            // In development mode, ipywidgets is not under the 'out' folder.
+            scripts.push(
+                join(
+                    this.context.extensionPath,
+                    'node_modules',
+                    '@vscode',
+                    'jupyter-ipywidgets',
+                    'dist',
+                    'ipywidgets.js'
+                )
+            );
+        } else {
+            // Normal package mode, ipywidgets ends up next to extension.ts
+            scripts.push(
+                join(
+                    this.context.extensionPath,
+                    'out',
+                    'client',
+                    'node_modules',
+                    '@vscode',
+                    'jupyter-ipywidgets',
+                    'dist',
+                    'ipywidgets.js'
+                )
+            );
         }
         scripts.push(
             ...[
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
-                join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
                 join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
                 join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
             ]
