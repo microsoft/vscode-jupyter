@@ -483,6 +483,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
+        this.appShell
+            .showInformationMessage(
+                'This command has been deprecated and will eventually be removed, please use "Create: New Jupyter Notebook" instead'
+            )
+            .then(noop, noop);
         await this.nativeNotebookCreator.createNewNotebook();
     }
 

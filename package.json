@@ -27,7 +27,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.64.0"
+        "vscode": "^1.66.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -89,15 +89,15 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "jupyter.createNewNotebook",
+                        "id": "ipynb.newUntitledIpynb",
                         "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Jupyter: Create New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:jupyter.createnewnotebook)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
                             "altText": "Creating a new Jupyter notebook"
                         },
                         "completionEvents": [
-                            "onCommand:jupyter.createnewnotebook",
+                            "onCommand:ipynb.newUntitledIpynb",
                             "onCommand:jupyter.createnewinteractive",
                             "onCommand:workbench.action.files.openFolder",
                             "onCommand:workbench.action.files.openFileFolder"
@@ -1037,11 +1037,6 @@
                     "group": "Jupyter"
                 }
             ],
-            "file/newFile": [
-                {
-                    "command": "jupyter.createnewnotebook"
-                }
-            ],
             "commandPalette": [
                 {
                     "command": "jupyter.replayPylanceLog",
@@ -1388,7 +1383,8 @@
                 {
                     "command": "jupyter.createnewnotebook",
                     "title": "%jupyter.command.jupyter.createnewnotebook.title%",
-                    "category": "Jupyter"
+                    "category": "Jupyter",
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.runtoline",
