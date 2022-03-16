@@ -287,7 +287,7 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm install -g vsce
 # Perform the next steps in the vscode-jupyter folder.
 > npm ci
-> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
 > npm run clean
 > npm run package # This step takes around 10 minutes.
 ```
