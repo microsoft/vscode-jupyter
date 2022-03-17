@@ -12,7 +12,6 @@ import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diag
 import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
 import { PythonKernelCompletionProvider } from '../intellisense/pythonKernelCompletionProvider';
-import { CreationOptionService } from '../kernels/common/creationOptionsService';
 import { KernelProvider } from '../kernels/kernelProvider';
 import { IKernelProvider } from '../kernels/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -56,7 +55,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
-    serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
