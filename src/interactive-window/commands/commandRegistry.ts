@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../extension/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
@@ -94,6 +94,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.GotoNextCellInFile, this.gotoNextCellInFile);
         this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
+        this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
@@ -477,6 +478,15 @@ export class CommandRegistry implements IDisposable {
         } else {
             return;
         }
+    }
+
+    private async createNewNotebook(): Promise<void> {
+        this.appShell
+            .showInformationMessage(
+                'This command has been deprecated and will eventually be removed, please use ["Create: New Jupyter Notebook"](command:workbench.action.openGlobalKeybindings?%5B%22@command:ipynb.newUntitledIpynb%22%5D) instead.'
+            )
+            .then(noop, noop);
+        await commands.executeCommand('ipynb.newUntitledIpynb');
     }
 
     private viewJupyterOutput() {

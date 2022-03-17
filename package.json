@@ -55,6 +55,7 @@
         "onCommand:jupyter.exportToHTML",
         "onCommand:jupyter.exportToPDF",
         "onCommand:jupyter.notebookeditor.export",
+        "onCommand:jupyter.createnewnotebook",
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
@@ -699,6 +700,11 @@
             {
                 "command": "jupyter.addcellbelow",
                 "title": "%jupyter.command.jupyter.addcellbelow.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.createnewnotebook",
+                "title": "Create New Jupyter Notebook",
                 "category": "Jupyter"
             },
             {
@@ -1372,6 +1378,11 @@
                     "title": "%jupyter.command.jupyter.addcellbelow.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
+                },
+                {
+                    "command": "jupyter.createnewnotebook",
+                    "category": "Jupyter",
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.runtoline",
