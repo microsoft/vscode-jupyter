@@ -704,8 +704,7 @@
             },
             {
                 "command": "jupyter.createnewnotebook",
-                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
-                "shortTitle": "%jupyter.command.jupyter.createnewnotebook.shortTitle%",
+                "title": "Create New Jupyter Notebook",
                 "category": "Jupyter"
             },
             {
@@ -1382,7 +1381,6 @@
                 },
                 {
                     "command": "jupyter.createnewnotebook",
-                    "title": "%jupyter.command.jupyter.createnewnotebook.title%",
                     "category": "Jupyter",
                     "when": "false"
                 },

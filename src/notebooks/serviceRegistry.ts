@@ -22,7 +22,6 @@ import { NotebookControllerManager } from './controllers/notebookControllerManag
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { NotebookCommandListener } from './notebookCommandListener';
-import { NotebookCreator } from './notebookCreator';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
@@ -58,7 +57,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
-    serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);

@@ -77,7 +77,6 @@
     "jupyter.command.jupyter.runfromline.title": "在互動式視窗中執行到此行",
     "jupyter.command.jupyter.execSelectionInteractive.title": "在互動式視窗中執行選取內容/行",
     "jupyter.command.jupyter.clearSavedJupyterUris.title": "清除遠端 Jupyter 伺服器清單",
-    "jupyter.command.jupyter.createnewnotebook.title": "新增 Jupyter Notebook",
     "jupyter.command.jupyter.openOutlineView.title": "顯示目錄（大綱欄位）",
     "jupyter.command.jupyter.openOutlineView.shorttitle": "大綱",
     "jupyter.command.jupyter.debug.title": "偵錯",

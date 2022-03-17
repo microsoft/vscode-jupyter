@@ -4,12 +4,11 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../extension/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables';
-import { NotebookCreator } from '../../notebooks/notebookCreator';
 import { DataViewerChecker } from '../../webviews/dataviewer/dataViewerChecker';
 import { ICommandNameArgumentTypeMapping } from '../../client/common/application/commands';
 import {
@@ -66,7 +65,6 @@ export class CommandRegistry implements IDisposable {
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
-        @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
@@ -485,10 +483,10 @@ export class CommandRegistry implements IDisposable {
     private async createNewNotebook(): Promise<void> {
         this.appShell
             .showInformationMessage(
-                'This command has been deprecated and will eventually be removed, please use "Create: New Jupyter Notebook" instead. [Edit Key Binding](command:workbench.action.openGlobalKeybindings?%5B%22@command:ipynb.newUntitledIpynb%22%5D)'
+                'This command has been deprecated and will eventually be removed, please use ["Create: New Jupyter Notebook"](command:workbench.action.openGlobalKeybindings?%5B%22@command:ipynb.newUntitledIpynb%22%5D) instead.'
             )
             .then(noop, noop);
-        await this.nativeNotebookCreator.createNewNotebook();
+        await commands.executeCommand('ipynb.newUntitledIpynb');
     }
 
     private viewJupyterOutput() {
