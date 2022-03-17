@@ -2039,6 +2039,8 @@
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
+        "createNycFolder": "gulp createNycFolder",
+        "validateTranslationFiles": "gulp validateTranslationFiles",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",

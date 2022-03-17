@@ -203,7 +203,7 @@ jobs:
         id: check-ignore-list
 
       - name: Verify Translation files
-        run: npx gulp validateTranslationFiles
+        run: npm run validateTranslationFiles
 
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
@@ -307,7 +307,7 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
@@ -325,7 +325,7 @@ jobs:
           check_name: Ts-Unit Test Report
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -532,7 +532,7 @@ jobs:
 
         # This step is slow.
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
@@ -656,7 +656,7 @@ jobs:
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -761,7 +761,7 @@ jobs:
           path: './smoke-test.log'
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -797,7 +797,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
