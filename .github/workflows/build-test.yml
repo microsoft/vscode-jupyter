@@ -527,9 +527,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install imagemagick
 
-      - name: Install screen capture
-        run: npm i -D screenshot-desktop
-
         # This step is slow.
       - name: Compile if not cached
         run: npm run prePublishNonBundle
