@@ -2343,7 +2343,8 @@
         "yargs-parser": "^13.1.2"
     },
     "optionalDependencies": {
-        "canvas": "^2.7.0"
+        "canvas": "^2.7.0",
+        "fsevents": "^2.3.2"
     },
     "resolutions": {
         "marked": "4.0.10",
