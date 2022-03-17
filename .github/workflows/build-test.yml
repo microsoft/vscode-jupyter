@@ -226,7 +226,7 @@ jobs:
         working-directory: pythonFiles
 
       - name: Run gulp prePublishNonBundle
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
         uses: actions/cache@v2.1.4

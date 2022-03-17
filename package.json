@@ -2038,6 +2038,7 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
+        "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
@@ -2251,6 +2252,7 @@
         "del": "^3.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
+        "es-abstract": "^1.19.1",
         "eslint": "^7.32.0",
         "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^6.15.0",
