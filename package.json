@@ -2091,7 +2091,7 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/jupyter-ipywidgets": "1.0.8",
         "@vscode/jupyter-lsp-middleware": "0.2.38",
-        "ajv-keywords": "^5.1.0",
+        "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
