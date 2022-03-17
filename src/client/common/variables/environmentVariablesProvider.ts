@@ -25,7 +25,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @optional() private cacheDuration: number = CACHE_DURATION
+        @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
     ) {
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
