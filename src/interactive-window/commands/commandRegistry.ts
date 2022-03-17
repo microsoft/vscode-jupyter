@@ -485,7 +485,7 @@ export class CommandRegistry implements IDisposable {
     private async createNewNotebook(): Promise<void> {
         this.appShell
             .showInformationMessage(
-                'This command has been deprecated and will eventually be removed, please use "Create: New Jupyter Notebook" instead'
+                'This command has been deprecated and will eventually be removed, please use "Create: New Jupyter Notebook" instead. [Edit Key Binding](command:workbench.action.openGlobalKeybindings?%5B%22@command:ipynb.newUntitledIpynb%22%5D)'
             )
             .then(noop, noop);
         await this.nativeNotebookCreator.createNewNotebook();
