@@ -36,6 +36,7 @@
     -   new features
     -   settings changes
     -   etc. (ask the team)
+    [ ] Release notes from VS code have something about jupyter
 -   [ ] Schedule a sanity test. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
 -   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
 -   [ ] Ask CTI to test the release candidate
