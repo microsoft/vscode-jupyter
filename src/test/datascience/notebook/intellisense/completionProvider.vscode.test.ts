@@ -6,11 +6,14 @@ import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import {
+    CancellationToken,
     CancellationTokenSource,
+    commands,
     CompletionContext,
     CompletionTriggerKind,
     ConfigurationTarget,
     Position,
+    TextDocument,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -71,6 +74,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        sinon.restore();
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         delete process.env.VSC_JUPYTER_IntellisenseTimeout;
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -228,5 +232,31 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     test('File path completions with single quotes', async () => {
         const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
         await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
+    });
+    test('Provider is registered', async () => {
+        await insertCodeCell('print(1)', {
+            index: 0
+        });
+        let stubCalled = false;
+        const stub = sinon.stub(completionProvider, 'provideCompletionItems');
+        stub.callsFake(
+            async (
+                _document: TextDocument,
+                _position: Position,
+                _token: CancellationToken,
+                _context: CompletionContext
+            ) => {
+                stubCalled = true;
+                return [];
+            }
+        );
+        await insertCodeCell('a.', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+
+        const position = new Position(0, 2);
+        traceInfo('Get completions in test');
+        // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
+        await commands.executeCommand('vscode.executeCompletionItemProvider', cell2.document.uri, position);
+        assert.ok(stubCalled, 'Completion provider not registered');
     });
 });

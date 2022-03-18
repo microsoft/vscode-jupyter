@@ -12,6 +12,7 @@ import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diag
 import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
 import { PythonKernelCompletionProvider } from '../intellisense/pythonKernelCompletionProvider';
+import { PythonKernelCompletionProviderRegistration } from '../intellisense/pythonKernelCompletionProviderRegistration';
 import { KernelProvider } from '../kernels/kernelProvider';
 import { IKernelProvider } from '../kernels/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -52,6 +53,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
         PythonKernelCompletionProvider,
         PythonKernelCompletionProvider
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        PythonKernelCompletionProviderRegistration
     );
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
