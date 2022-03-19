@@ -8,12 +8,12 @@ import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposable } from '../../client/common/types';
-import { EventName } from '../../client/telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
-import { ImportTracker } from '../../client/telemetry/importTracker';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable } from '../../platform/common/types';
+import { EventName } from '../../platform/telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { ImportTracker } from '../../platform/telemetry/importTracker';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', () => {

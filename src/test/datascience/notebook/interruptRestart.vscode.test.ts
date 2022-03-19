@@ -6,12 +6,12 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookCellExecutionState, NotebookEditor as VSCNotebookEditor } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
-import { Commands } from '../../../client/datascience/constants';
-import { IKernelProvider } from '../../../client/../kernels/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { Commands } from '../../../platform/datascience/constants';
+import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';

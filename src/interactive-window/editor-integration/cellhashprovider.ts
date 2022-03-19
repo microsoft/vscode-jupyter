@@ -15,22 +15,22 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../client/common/utils/localize';
+import * as localize from '../../platform/common/utils/localize';
 
 import { splitMultilineString } from '../../datascience-ui/common';
 import { uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
-import { IDebugService, IDocumentManager } from '../../client/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService } from '../../client/common/types';
-import { getCellResource } from '../../client/datascience/cellFactory';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { IConfigurationService } from '../../platform/common/types';
+import { getCellResource } from '../../platform/datascience/cellFactory';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../client/datascience/types';
-import { stripAnsi } from '../../client/common/utils/regexp';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../platform/datascience/types';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

@@ -4,25 +4,25 @@
 'use strict';
 
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import '../../client/common/extensions';
-import { traceError } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import '../../platform/common/extensions';
+import { traceError } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
     WidgetCDNs,
     IPersistentState,
     IConfigurationService,
     IPersistentStateFactory,
     IHttpClient
-} from '../../client/common/types';
-import { Deferred, createDeferred } from '../../client/common/utils/async';
-import { DataScience, Common } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { ILocalResourceUriConverter } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { sendTelemetryEvent } from '../../client/telemetry';
-import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
+} from '../../platform/common/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { ILocalResourceUriConverter } from '../../platform/datascience/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { sendTelemetryEvent } from '../../platform/telemetry';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';

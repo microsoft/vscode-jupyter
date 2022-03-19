@@ -7,16 +7,16 @@ import { inject, injectable } from 'inversify';
 // eslint-disable-next-line
 import parseArgsStringToArgv from 'string-argv';
 import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
-import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../client/common/application/types';
-import { IConfigurationService } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
+import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { IConfigurationService } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
     InputStep,
     IQuickPickParameters
-} from '../../../client/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+} from '../../../platform/common/utils/multiStepInput';
+import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 
 @injectable()

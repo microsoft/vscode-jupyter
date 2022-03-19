@@ -1,7 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
-import { SliceOperationSource } from '../../client/telemetry/constants';
+import { IGetSliceRequest } from '../../platform/datascience/data-viewing/types';
+import { SliceOperationSource } from '../../platform/telemetry/constants';
 import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';
 import {

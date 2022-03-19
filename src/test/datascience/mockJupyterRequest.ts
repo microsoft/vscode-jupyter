@@ -5,9 +5,9 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
-import { ICell } from '../../client/datascience/types';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
+import { ICell } from '../../platform/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

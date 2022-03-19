@@ -9,8 +9,8 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { EnvironmentVariablesService, parseEnvFile } from '../../../platform/common/variables/environment';
 
 use(chaiAsPromised);
 

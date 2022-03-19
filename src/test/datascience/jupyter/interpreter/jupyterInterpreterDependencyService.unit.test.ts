@@ -5,11 +5,11 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../../../client/common/application/types';
-import { DataScience } from '../../../../client/common/utils/localize';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
+import { IApplicationShell } from '../../../../platform/common/application/types';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../platform/datascience/types';
+import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import {

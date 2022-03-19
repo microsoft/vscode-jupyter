@@ -9,10 +9,10 @@ import * as TypeMoq from 'typemoq';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import untildify = require('untildify');
 
-import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { ProcessLogger } from '../../../client/common/process/logger';
-import { IOutputChannel } from '../../../client/common/types';
-import { Logging } from '../../../client/common/utils/localize';
+import { PathUtils } from '../../../platform/common/platform/pathUtils';
+import { ProcessLogger } from '../../../platform/common/process/logger';
+import { IOutputChannel } from '../../../platform/common/types';
+import { Logging } from '../../../platform/common/utils/localize';
 import { getOSType, OSType } from '../../common';
 
 /* eslint-disable  */

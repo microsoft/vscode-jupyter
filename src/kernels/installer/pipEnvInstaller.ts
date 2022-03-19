@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { InterpreterUri } from '../../client/common/types';
-import { isResource } from '../../client/common/utils/misc';
-import { IInterpreterService } from '../../client/interpreter/contracts';
+import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { InterpreterUri } from '../../platform/common/types';
+import { isResource } from '../../platform/common/utils/misc';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv';
-import { getInterpreterWorkspaceFolder } from '../../client/../kernels/helpers';
-import { IServiceContainer } from '../../client/ioc/types';
+import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers';
+import { IServiceContainer } from '../../platform/ioc/types';
 
 export const pipenvName = 'pipenv';
 

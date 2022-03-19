@@ -4,11 +4,11 @@
 import { injectable } from 'inversify';
 import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import * as path from 'path';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { _SCRIPTS_DIR } from '../../client/common/process/internal/scripts';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {

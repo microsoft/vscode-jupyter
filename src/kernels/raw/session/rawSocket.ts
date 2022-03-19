@@ -6,9 +6,9 @@ import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
-import { traceError } from '../../../client/common/logger';
-import { noop } from '../../../client/common/utils/misc';
-import { IKernelSocket } from '../../../client/datascience/types';
+import { traceError } from '../../../platform/common/logger';
+import { noop } from '../../../platform/common/utils/misc';
+import { IKernelSocket } from '../../../platform/datascience/types';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelConnection } from '../types';
 

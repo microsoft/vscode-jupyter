@@ -1,6 +1,6 @@
 import * as path from 'path';
-import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../client/common/utils/platform';
-import { arePathsSame, isParentPath, pathExists } from '../../client/common/platform/fileUtils';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform';
+import { arePathsSame, isParentPath, pathExists } from '../../platform/common/platform/fileUtils';
 
 export function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.

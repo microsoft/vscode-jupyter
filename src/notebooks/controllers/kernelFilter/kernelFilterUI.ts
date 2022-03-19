@@ -2,12 +2,12 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../client/activation/types';
-import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelConnectionPath,

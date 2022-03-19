@@ -6,10 +6,10 @@
 // /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 // import { assert } from 'chai';
 // import * as sinon from 'sinon';
-// import { Common } from '../../../client/common/utils/localize';
-// import { IVSCodeNotebook } from '../../../client/common/application/types';
-// import { traceInfo } from '../../../client/common/logger';
-// import { IDisposable, Product } from '../../../client/common/types';
+// import { Common } from '../../../platform/common/utils/localize';
+// import { IVSCodeNotebook } from '../../../platform/common/application/types';
+// import { traceInfo } from '../../../platform/common/logger';
+// import { IDisposable, Product } from '../../../platform/common/types';
 // import { IExtensionTestApi } from '../../common';
 // import { initialize } from '../../initialize';
 // import {
@@ -23,15 +23,15 @@
 //     workAroundVSCodeNotebookStartPages,
 //     waitForTextOutput
 // } from './helper';
-// import { ProductNames } from '../../../client/common/installer/productNames';
+// import { ProductNames } from '../../../platform/common/installer/productNames';
 // import { INotebookControllerManager } from '../../../notebooks/types';
-// import { IKernelProvider } from '../../../client/../kernels/types';
+// import { IKernelProvider } from '../../../platform/../kernels/types';
 // import {
 //     IJupyterSession,
 //     INotebook,
 //     INotebookProvider,
 //     KernelSocketInformation
-// } from '../../../client/datascience/types';
+// } from '../../../platform/datascience/types';
 // import { instance, mock, when } from 'ts-mockito';
 // import { Subject } from 'rxjs-compat/Subject';
 // import { EventEmitter, NotebookDocument } from 'vscode';

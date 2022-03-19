@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../client/activation/types';
-import { IDataScienceCommandListener, INotebookEditorProvider } from '../client/datascience/types';
-import { IServiceManager } from '../client/ioc/types';
-import { GitHubIssueCodeLensProvider } from '../client/logging/gitHubIssueCodeLensProvider';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IDataScienceCommandListener, INotebookEditorProvider } from '../platform/datascience/types';
+import { IServiceManager } from '../platform/ioc/types';
+import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';

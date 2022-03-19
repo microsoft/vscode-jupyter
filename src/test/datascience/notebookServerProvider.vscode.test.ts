@@ -5,19 +5,19 @@
 
 import { assert } from 'chai';
 import { Disposable, CancellationTokenSource } from 'vscode';
-import { traceInfo } from '../../client/common/logger';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
-import { IJupyterExecution, IJupyterServerProvider } from '../../client/datascience/types';
+import { traceInfo } from '../../platform/common/logger';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
+import { IJupyterExecution, IJupyterServerProvider } from '../../platform/datascience/types';
 import { IS_NON_RAW_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
 import * as getFreePort from 'get-port';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { IConfigurationService } from '../../client/common/types';
-import { JupyterSettings } from '../../client/common/configSettings';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IConfigurationService } from '../../platform/common/types';
+import { JupyterSettings } from '../../platform/common/configSettings';
+import { IServiceContainer } from '../../platform/ioc/types';
 import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider';
 

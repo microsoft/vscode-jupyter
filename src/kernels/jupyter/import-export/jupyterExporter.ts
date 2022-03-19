@@ -7,20 +7,20 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { Uri } from 'vscode';
-import { IWorkspaceService, IApplicationShell } from '../../../client/common/application/types';
-import { traceError } from '../../../client/common/logger';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { CellMatcher } from '../../../client/datascience/cellMatcher';
-import { pruneCell } from '../../../client/datascience/common';
+import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
+import { traceError } from '../../../platform/common/logger';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IConfigurationService } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { CellMatcher } from '../../../platform/datascience/cellMatcher';
+import { pruneCell } from '../../../platform/datascience/common';
 import {
     INotebookExporter,
     IJupyterExecution,
     INotebookEditorProvider,
     IDataScienceErrorHandler,
     ICell
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { defaultNotebookFormat, CodeSnippets } from '../../../datascience-ui/common/constants';

@@ -5,8 +5,8 @@
 import { expect } from 'chai';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
-import { IDebugLocation } from '../../client/datascience/types';
+import { DebugLocationTracker } from '../../platform/datascience/debugLocationTracker';
+import { IDebugLocation } from '../../platform/datascience/types';
 
 suite('Debug Location Tracker', () => {
     let debugTracker: DebugLocationTracker;

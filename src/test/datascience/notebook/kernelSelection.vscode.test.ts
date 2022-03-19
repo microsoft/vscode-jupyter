@@ -6,14 +6,17 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, window } from 'vscode';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { BufferDecoder } from '../../../client/common/process/decoder';
-import { ProcessService } from '../../../client/common/process/proc';
-import { IDisposable } from '../../../client/common/types';
-import { IKernelProvider } from '../../../client/../kernels/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { BufferDecoder } from '../../../platform/common/process/decoder';
+import { ProcessService } from '../../../platform/common/process/proc';
+import { IDisposable } from '../../../platform/common/types';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import {
+    getInterpreterHash,
+    getNormalizedInterpreterPath
+} from '../../../platform/pythonEnvironments/info/interpreter';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as sinon from 'sinon';
-import { ICommandManager, IVSCodeNotebook } from '../../client/common/application/types';
-import { IDisposable } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
-import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDisposable } from '../../platform/common/types';
+import { Commands } from '../../platform/datascience/constants';
+import { IVariableViewProvider } from '../../platform/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -22,8 +22,8 @@ import {
     getDebugSessionAndAdapter
 } from './notebook/helper';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../client/common/logger';
-import { IDebuggingManager } from '../../client/debugger/types';
+import { traceInfo } from '../../platform/common/logger';
+import { IDebuggingManager } from '../../platform/debugger/types';
 import { assert } from 'chai';
 import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';

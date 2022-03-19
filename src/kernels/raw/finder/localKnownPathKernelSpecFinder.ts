@@ -8,15 +8,15 @@ import { getKernelId } from '../../../kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfo, traceError } from '../../../client/common/logger';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IMemento, GLOBAL_MEMENTO } from '../../../client/common/types';
-import { captureTelemetry } from '../../../client/telemetry';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfo, traceError } from '../../../platform/common/logger';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { captureTelemetry } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
+import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.

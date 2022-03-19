@@ -4,12 +4,12 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { KernelFailure } from '../../client/../extension/errors/errorUtils';
+import { KernelFailure } from '../../platform/errors/errorUtils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
-import '../../client/common/extensions';
-import { IJupyterSettings } from '../../client/common/types';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import '../../platform/common/extensions';
+import { IJupyterSettings } from '../../platform/common/types';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines, removeLinesFromFrontAndBackNoConcat } from './index';
 
 export function uncommentMagicCommands(line: string): string {

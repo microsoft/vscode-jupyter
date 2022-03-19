@@ -6,10 +6,10 @@ import {
     IWorkspaceService,
     IEncryptedStorage,
     IApplicationEnvironment
-} from '../../../client/common/application/types';
-import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../client/common/types';
-import { Settings } from '../../../client/datascience/constants';
-import { IJupyterServerUriStorage } from '../../../client/datascience/types';
+} from '../../../platform/common/application/types';
+import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { Settings } from '../../../platform/datascience/constants';
+import { IJupyterServerUriStorage } from '../../../platform/datascience/types';
 
 /**
  * Class for storing Jupyter Server URI values

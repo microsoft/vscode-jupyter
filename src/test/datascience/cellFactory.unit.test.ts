@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { generateCells } from '../../client/datascience/cellFactory';
+import { generateCells } from '../../platform/datascience/cellFactory';
 import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
 import * as vscode from 'vscode';
 

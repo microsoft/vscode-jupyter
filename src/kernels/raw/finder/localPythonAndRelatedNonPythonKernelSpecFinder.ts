@@ -10,19 +10,19 @@ import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } fro
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfoIfCI, traceVerbose, traceError } from '../../../client/common/logger';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../client/common/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
-import { captureTelemetry } from '../../../client/telemetry';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/common/logger';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { captureTelemetry } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 

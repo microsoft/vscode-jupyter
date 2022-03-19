@@ -7,11 +7,11 @@ import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
-import { createDeferred } from '../../client/common/utils/async';
-import { RegExpValues } from '../../client/datascience/constants';
-import { SharedMessages } from '../../client/datascience/messages';
-import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
-import { IJupyterExtraSettings } from '../../client/datascience/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { RegExpValues } from '../../platform/datascience/constants';
+import { SharedMessages } from '../../platform/datascience/messages';
+import { IPlotViewerMapping, PlotViewerMessages } from '../../platform/datascience/plotting/types';
+import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getDefaultSettings } from '../react-common/settingsReactSide';

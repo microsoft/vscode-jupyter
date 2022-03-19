@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { CancellationTokenSource, Event, Uri } from 'vscode';
-import { InterpreterUri } from '../../client/common/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { InterpreterUri } from '../../platform/common/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export enum InstallerResponse {
     Installed,

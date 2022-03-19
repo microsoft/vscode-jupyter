@@ -5,11 +5,11 @@ import { ISignal } from '@lumino/signaling';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
-import { isTestExecution } from '../../../client/common/constants';
-import { traceError, traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { swallowExceptions } from '../../../client/common/utils/misc';
-import { IKernelSocket } from '../../../client/datascience/types';
+import { isTestExecution } from '../../../platform/common/constants';
+import { traceError, traceInfo } from '../../../platform/common/logger';
+import { IDisposable } from '../../../platform/common/types';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { IKernelSocket } from '../../../platform/datascience/types';
 import { getNameOfKernelConnection } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';

@@ -1,6 +1,6 @@
 import { ReactWrapper } from 'enzyme';
 import { inject, injectable } from 'inversify';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IMountedWebView, MountedWebView } from './mountedWebView';
 
 export const IMountedWebViewFactory = Symbol('IMountedWebViewFactory');

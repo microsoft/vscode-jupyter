@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
-import { IVSCodeNotebook } from '../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../client/common/constants';
-import '../client/common/extensions';
-import { INotebookEditorProvider } from '../client/datascience/types';
-import { captureTelemetry } from '../client/telemetry';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import '../platform/common/extensions';
+import { INotebookEditorProvider } from '../platform/datascience/types';
+import { captureTelemetry } from '../platform/telemetry';
 import { Telemetry, defaultNotebookFormat } from '../datascience-ui/common/constants';
 import { JupyterNotebookView } from './constants';
 

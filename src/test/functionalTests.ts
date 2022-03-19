@@ -99,7 +99,7 @@ exports.mochaHooks = {
             }
         }
 
-        const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');
+        const kernelLauncherMod = require('../platform/datascience/kernel-launcher/kernelLauncher');
 
         // After all tests run, clean up the kernel launcher mutex files
         return kernelLauncherMod.KernelLauncher.cleanupStartPort().then(() => nycPromise);

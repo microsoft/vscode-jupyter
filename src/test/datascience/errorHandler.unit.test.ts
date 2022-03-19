@@ -6,25 +6,25 @@ import * as dedent from 'dedent';
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { Common, DataScience } from '../../client/common/utils/localize';
-import { IBrowserService, IConfigurationService } from '../../client/common/types';
-import { KernelConnectionMetadata } from '../../client/../kernels/types';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Common, DataScience } from '../../platform/common/utils/localize';
+import { IBrowserService, IConfigurationService } from '../../platform/common/types';
+import { KernelConnectionMetadata } from '../../platform/../kernels/types';
 import {
     IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 import { getOSType, OSType } from '../common';
-import { PythonEnvironment, EnvironmentType } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import { DataScienceErrorHandler } from '../../extension/errors/errorHandler';
-import { JupyterConnectError } from '../../extension/errors/jupyterConnectError';
-import { JupyterInstallError } from '../../extension/errors/jupyterInstallError';
-import { JupyterSelfCertsError } from '../../extension/errors/jupyterSelfCertsError';
-import { KernelDiedError } from '../../extension/errors/kernelDiedError';
+import { DataScienceErrorHandler } from '../../platform/errors/errorHandler';
+import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
+import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { KernelDiedError } from '../../platform/errors/kernelDiedError';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

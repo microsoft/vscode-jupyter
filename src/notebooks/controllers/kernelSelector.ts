@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IVSCodeNotebook, ICommandManager } from '../../client/common/application/types';
-import { JVSC_EXTENSION_ID } from '../../client/common/constants';
-import { traceError } from '../../client/common/logger';
-import { Resource } from '../../client/common/types';
-import { getResourceType } from '../../client/datascience/common';
+import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { traceError } from '../../platform/common/logger';
+import { Resource } from '../../platform/common/types';
+import { getResourceType } from '../../platform/datascience/common';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
 
 // TODO: This should probably move to a 'notebook' subsection

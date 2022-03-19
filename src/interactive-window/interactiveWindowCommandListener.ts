@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../client/common/extensions';
+import '../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import {
@@ -21,18 +21,18 @@ import {
     ICommandManager,
     IDocumentManager,
     IVSCodeNotebook
-} from '../client/common/application/types';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../client/common/constants';
-import { traceError, traceInfo } from '../client/common/logger';
-import { IFileSystem } from '../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../client/common/types';
-import * as localize from '../client/common/utils/localize';
-import { captureTelemetry } from '../client/telemetry';
-import { CommandSource } from '../client/testing/common/constants';
-import { generateCellsFromDocument } from '../client/datascience/cellFactory';
-import { Commands, Telemetry } from '../client/datascience/constants';
-import { ExportFormat, IExportDialog, IFileConverter } from '../client/datascience/export/types';
-import { JupyterInstallError } from '../extension/errors/jupyterInstallError';
+} from '../platform/common/application/types';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { traceError, traceInfo } from '../platform/common/logger';
+import { IFileSystem } from '../platform/common/platform/types';
+import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
+import * as localize from '../platform/common/utils/localize';
+import { captureTelemetry } from '../platform/telemetry';
+import { CommandSource } from '../platform/testing/common/constants';
+import { generateCellsFromDocument } from '../platform/datascience/cellFactory';
+import { Commands, Telemetry } from '../platform/datascience/constants';
+import { ExportFormat, IExportDialog, IFileConverter } from '../platform/datascience/export/types';
+import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
@@ -41,7 +41,7 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     IStatusProvider
-} from '../client/datascience/types';
+} from '../platform/datascience/types';
 import { getActiveInteractiveWindow } from './helpers';
 import { INotebookControllerManager } from '../notebooks/types';
 import { JupyterNotebookView } from '../notebooks/constants';

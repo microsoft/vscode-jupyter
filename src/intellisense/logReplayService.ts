@@ -7,15 +7,15 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as lspConcat from '@vscode/lsp-notebook-concat';
 import * as protocol from 'vscode-languageserver-protocol';
-import { IExtensionSingleActivationService } from '../client/activation/types';
-import { ICommandManager, IApplicationShell } from '../client/common/application/types';
-import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../client/common/constants';
-import { ContextKey } from '../client/common/contextKey';
-import { traceInfo } from '../client/common/logger';
-import { IFileSystem } from '../client/common/platform/types';
-import { IDisposableRegistry, IConfigurationService } from '../client/common/types';
+import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
+import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
+import { ContextKey } from '../platform/common/contextKey';
+import { traceInfo } from '../platform/common/logger';
+import { IFileSystem } from '../platform/common/platform/types';
+import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../datascience-ui/common/constants';
-import { sleep, waitForCondition } from '../client/common/utils/async';
+import { sleep, waitForCondition } from '../platform/common/utils/async';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

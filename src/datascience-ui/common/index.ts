@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { noop } from '../../client/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';

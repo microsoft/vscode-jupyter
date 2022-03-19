@@ -6,9 +6,9 @@
 
 import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { PipInstaller } from '../../../kernels/installer/pipInstaller';
 
 suite('Pip installer', async () => {

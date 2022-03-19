@@ -5,11 +5,11 @@
 
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo } from '../../../client/common/logger';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { BasePythonDaemon } from '../../../client/common/process/baseDaemon';
-import { IPythonExecutionService } from '../../../client/common/process/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { traceInfo } from '../../../platform/common/logger';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { BasePythonDaemon } from '../../../platform/common/process/baseDaemon';
+import { IPythonExecutionService } from '../../../platform/common/process/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonKernelDaemon } from '../types';
 
 export class PythonKernelInterruptDaemon extends BasePythonDaemon implements IPythonKernelDaemon {

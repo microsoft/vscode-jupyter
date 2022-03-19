@@ -8,10 +8,10 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { PipEnvInstaller } from '../../../kernels/installer/pipEnvInstaller';
 import * as pipEnvHelper from '../../../kernels/installer/pipenv';
 

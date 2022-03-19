@@ -4,14 +4,14 @@
 'use strict';
 
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
-import { createDeferred } from '../../../client/common/utils/async';
+import { createDeferred } from '../../../platform/common/utils/async';
 import {
     disposeRegisteredReporters,
     registerReporter,
     reportAction
-} from '../../../client/datascience/progress/decorator';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { IProgressReporter, ReportableAction } from '../../../client/datascience/progress/types';
+} from '../../../platform/datascience/progress/decorator';
+import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
+import { IProgressReporter, ReportableAction } from '../../../platform/datascience/progress/types';
 import { noop } from '../../core';
 
 suite('DataScience - Progress Reporter Decorator', () => {

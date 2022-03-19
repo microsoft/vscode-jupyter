@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
 import { languages } from 'vscode';
-import { traceInfo } from '../../../../client/common/logger';
-import { IDisposable } from '../../../../client/common/types';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { traceInfo } from '../../../../platform/common/logger';
+import { IDisposable } from '../../../../platform/common/types';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize, IS_CI_SERVER } from '../../../initialize';
@@ -23,9 +23,9 @@ import {
     waitForDiagnostics,
     defaultNotebookTestTimeout
 } from '../helper';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { IPythonExecutionFactory } from '../../../../client/common/process/types';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { IPythonExecutionFactory } from '../../../../platform/common/process/types';
+import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Intellisense Switch interpreters in a notebook', function () {

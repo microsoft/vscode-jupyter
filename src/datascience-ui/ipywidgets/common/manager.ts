@@ -12,13 +12,13 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
     IPyWidgetMessages
-} from '../../../extension/messageTypes';
-import { KernelSocketOptions } from '../../../client/datascience/types';
+} from '../../../platform/messageTypes';
+import { KernelSocketOptions } from '../../../platform/datascience/types';
 import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';

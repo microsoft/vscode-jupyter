@@ -14,9 +14,9 @@ import {
     IJupyterSession,
     INotebookProviderConnection,
     KernelSocketInformation
-} from '../client/datascience/types';
-import { PythonEnvironment } from '../client/pythonEnvironments/info';
-import { IAsyncDisposable, Resource } from '../client/common/types';
+} from '../platform/datascience/types';
+import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { IAsyncDisposable, Resource } from '../platform/common/types';
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };

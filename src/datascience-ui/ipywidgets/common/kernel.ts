@@ -7,10 +7,10 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@lumino/signaling';
 import * as WebSocketWS from 'ws';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { deserializeDataViews, serializeDataViews } from '../../../client/common/utils/serializers';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../extension/messageTypes';
-import { KernelSocketOptions } from '../../../client/datascience/types';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { deserializeDataViews, serializeDataViews } from '../../../platform/common/utils/serializers';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../platform/messageTypes';
+import { KernelSocketOptions } from '../../../platform/datascience/types';
 import { logMessageOnlyOnCI } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 

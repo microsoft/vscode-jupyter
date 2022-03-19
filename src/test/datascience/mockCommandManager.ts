@@ -4,8 +4,8 @@
 import { noop } from 'lodash';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
-import { ICommandNameArgumentTypeMapping } from '../../client/common/application/commands';
-import { ICommandManager } from '../../client/common/application/types';
+import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandManager } from '../../platform/common/application/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockCommandManager implements ICommandManager {

@@ -8,10 +8,10 @@ import { assert, expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Common } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { Common } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
@@ -24,7 +24,7 @@ import {
     workAroundVSCodeNotebookStartPages
 } from './helper';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
-import { createDeferred } from '../../../client/common/utils/async';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';

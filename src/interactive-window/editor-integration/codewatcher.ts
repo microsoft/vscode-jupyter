@@ -18,21 +18,21 @@ import {
     Uri
 } from 'vscode';
 
-import { IDocumentManager } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IDocumentManager } from '../../platform/common/application/types';
+import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService, IDisposable, Resource } from '../../client/common/types';
-import { chainable } from '../../client/common/utils/decorators';
-import * as localize from '../../client/common/utils/localize';
-import { isUri } from '../../client/common/utils/misc';
-import { StopWatch } from '../../client/common/utils/stopWatch';
-import { traceDecorators } from '../../client/logging';
-import { TraceOptions } from '../../client/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
-import { ICodeExecutionHelper } from '../../client/terminals/types';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { Commands, Identifiers, Telemetry } from '../../client/datascience/constants';
-import { InteractiveCellResultError } from '../../extension/errors/interactiveCellResultError';
+import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
+import { chainable } from '../../platform/common/utils/decorators';
+import * as localize from '../../platform/common/utils/localize';
+import { isUri } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { traceDecorators } from '../../platform/logging';
+import { TraceOptions } from '../../platform/logging/trace';
+import { captureTelemetry, sendTelemetryEvent } from '../../platform/telemetry';
+import { ICodeExecutionHelper } from '../../platform/terminals/types';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
+import { Commands, Identifiers, Telemetry } from '../../platform/datascience/constants';
+import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import {
     ICellRange,
     ICodeLensFactory,
@@ -40,7 +40,7 @@ import {
     IDataScienceErrorHandler,
     IInteractiveWindow,
     IInteractiveWindowProvider
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing

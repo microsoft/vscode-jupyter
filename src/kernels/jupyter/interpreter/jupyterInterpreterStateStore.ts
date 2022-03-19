@@ -5,10 +5,10 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../client/activation/types';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../../client/api/types';
-import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
 
 const key = 'INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER';
 const keySelected = 'INTERPRETER_PATH_WAS_SELECTED_FOR_JUPYTER_SERVER';

@@ -4,9 +4,9 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { traceInfo } from '../../../../client/common/logger';
-import { IDisposable } from '../../../../client/common/types';
+import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { traceInfo } from '../../../../platform/common/logger';
+import { IDisposable } from '../../../../platform/common/types';
 import { IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';

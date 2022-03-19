@@ -5,10 +5,10 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { getInterpreterInfo } from '.';
-import { IPythonExtensionChecker } from '../../client/api/types';
-import { Resource } from '../../client/common/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { Resource } from '../../platform/common/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 let interpretersCache: Promise<PythonEnvironment[]> | undefined;
 @injectable()

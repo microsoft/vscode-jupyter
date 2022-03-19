@@ -6,15 +6,15 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../client/activation/types';
-import { IJupyterKernelSpec } from '../client/api/extension';
-import { IPythonExtensionChecker } from '../client/api/types';
-import { IVSCodeNotebook } from '../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../client/common/constants';
-import { traceWarning } from '../client/common/logger';
-import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../client/common/types';
-import { swallowExceptions } from '../client/common/utils/decorators';
-import { translateKernelLanguageToMonaco } from '../client/datascience/common';
+import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IJupyterKernelSpec } from '../platform/api/extension';
+import { IPythonExtensionChecker } from '../platform/api/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { traceWarning } from '../platform/common/logger';
+import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
+import { swallowExceptions } from '../platform/common/utils/decorators';
+import { translateKernelLanguageToMonaco } from '../platform/datascience/common';
 import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../datascience-ui/common/constants';
 import {
     isPythonKernelConnection,

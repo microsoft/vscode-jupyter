@@ -23,10 +23,10 @@ import {
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
-import { ILanguageServer } from '../../client/api/types';
+import { ILanguageServer } from '../../platform/api/types';
 
-import { createDeferred, Deferred, sleep } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
+import { createDeferred, Deferred, sleep } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 export class MockLanguageServer implements ILanguageServer {

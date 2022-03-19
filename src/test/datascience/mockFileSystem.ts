@@ -3,7 +3,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { FileSystem } from '../../client/common/platform/fileSystem';
+import { FileSystem } from '../../platform/common/platform/fileSystem';
 import { FakeVSCodeFileSystemAPI } from '../serviceRegistry';
 
 export class MockFileSystem extends FileSystem {

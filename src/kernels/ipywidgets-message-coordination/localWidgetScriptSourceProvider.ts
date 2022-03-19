@@ -5,12 +5,12 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
-import { ILocalResourceUriConverter } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { captureTelemetry } from '../../client/telemetry';
+import { traceError } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { ILocalResourceUriConverter } from '../../platform/datascience/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { captureTelemetry } from '../../platform/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,

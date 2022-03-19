@@ -5,11 +5,11 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position } from 'vscode';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { traceInfo } from '../../../../client/common/logger';
-import { IDisposable } from '../../../../client/common/types';
+import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { traceInfo } from '../../../../platform/common/logger';
+import { IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
+import { IInteractiveWindowProvider } from '../../../../platform/datascience/types';
 import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';

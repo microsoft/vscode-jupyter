@@ -7,20 +7,20 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import {
     IConfigurationService,
     IDisposable,
     IExtensions,
     IWatchableJupyterSettings
-} from '../../../client/common/types';
-import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
-import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
-import { FileConverter } from '../../../client/datascience/export/fileConverter';
-import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { ExportFormat, INbConvertExport, IExportDialog, IExport } from '../../../client/datascience/export/types';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
+} from '../../../platform/common/types';
+import { ExportFileOpener } from '../../../platform/datascience/export/exportFileOpener';
+import { ExportInterpreterFinder } from '../../../platform/datascience/export/exportInterpreterFinder';
+import { FileConverter } from '../../../platform/datascience/export/fileConverter';
+import { ExportUtil } from '../../../platform/datascience/export/exportUtil';
+import { ExportFormat, INbConvertExport, IExportDialog, IExport } from '../../../platform/datascience/export/types';
+import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
 
 suite('DataScience - File Converter', () => {
     let fileConverter: FileConverter;

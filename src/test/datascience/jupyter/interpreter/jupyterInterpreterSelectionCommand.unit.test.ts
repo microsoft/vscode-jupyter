@@ -6,10 +6,10 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../../client/activation/types';
-import { CommandManager } from '../../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../../client/common/application/types';
-import { IDisposableRegistry } from '../../../../client/common/types';
+import { IExtensionSingleActivationService } from '../../../../platform/activation/types';
+import { CommandManager } from '../../../../platform/common/application/commandManager';
+import { ICommandManager } from '../../../../platform/common/application/types';
+import { IDisposableRegistry } from '../../../../platform/common/types';
 import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
 

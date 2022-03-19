@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import type { KernelSpec } from '@jupyterlab/services';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IJupyterKernelSpec } from '../../platform/datascience/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;

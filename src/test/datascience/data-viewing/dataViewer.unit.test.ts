@@ -5,19 +5,23 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
-import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
-import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { JupyterSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IConfigurationService } from '../../../client/common/types';
-import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
-import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
-import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
-import { IDataViewer, IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
-import { ThemeFinder } from '../../../client/datascience/themeFinder';
-import { ICodeCssGenerator, IDataScienceErrorHandler, IThemeFinder } from '../../../client/datascience/types';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import {
+    IApplicationShell,
+    IWebviewPanelProvider,
+    IWorkspaceService
+} from '../../../platform/common/application/types';
+import { WebviewPanelProvider } from '../../../platform/common/application/webviewPanels/webviewPanelProvider';
+import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { IConfigurationService } from '../../../platform/common/types';
+import { CodeCssGenerator } from '../../../platform/datascience/codeCssGenerator';
+import { DataViewer } from '../../../platform/datascience/data-viewing/dataViewer';
+import { JupyterVariableDataProvider } from '../../../platform/datascience/data-viewing/jupyterVariableDataProvider';
+import { IDataViewer, IDataViewerDataProvider } from '../../../platform/datascience/data-viewing/types';
+import { ThemeFinder } from '../../../platform/datascience/themeFinder';
+import { ICodeCssGenerator, IDataScienceErrorHandler, IThemeFinder } from '../../../platform/datascience/types';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - DataViewer', () => {

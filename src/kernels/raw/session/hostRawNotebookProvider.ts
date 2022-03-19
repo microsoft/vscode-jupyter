@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../client/common/extensions';
+import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid/v4';
@@ -12,24 +12,24 @@ import {
     IRawConnection,
     IRawNotebookProvider,
     IRawNotebookSupportedService
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { injectable, inject, named } from 'inversify';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { traceInfo, traceVerbose, traceError } from '../../../client/common/logger';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../platform/common/constants';
+import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IOutputChannel,
     IDisposableRegistry,
     Resource
-} from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
-import { DataScience } from '../../../client/common/utils/localize';
-import { trackKernelResourceInformation } from '../../../client/datascience/telemetry/telemetry';
-import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+} from '../../../platform/common/types';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { trackKernelResourceInformation } from '../../../platform/datascience/telemetry/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
@@ -37,7 +37,7 @@ import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
 import { KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher } from '../types';
 import { RawJupyterSession } from './rawJupyterSession';
-import { noop } from '../../../client/common/utils/misc';
+import { noop } from '../../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */

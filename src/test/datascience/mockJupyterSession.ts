@@ -6,17 +6,17 @@ import { JSONObject } from '@lumino/coreutils';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
-import { noop } from '../../client/common/utils/misc';
-import { JupyterInvalidKernelError } from '../../extension/errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../extension/errors/jupyterWaitForIdleError';
-import { KernelConnectionMetadata } from '../../client/../kernels/types';
-import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
+import { noop } from '../../platform/common/utils/misc';
+import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
+import { KernelConnectionMetadata } from '../../platform/../kernels/types';
+import { IJupyterSession, KernelSocketInformation } from '../../platform/datascience/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
-import { Resource } from '../../client/common/types';
+import { Resource } from '../../platform/common/types';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
-import { KernelInterruptTimeoutError } from '../../extension/errors/kernelInterruptTimeoutError';
+import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 

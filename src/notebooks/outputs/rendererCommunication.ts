@@ -3,10 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposable } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { PlotSaveHandler } from './plotSaveHandler';
 import { PlotViewHandler } from './plotViewHandler';
 

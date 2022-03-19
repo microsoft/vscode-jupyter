@@ -16,9 +16,9 @@ import {
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse
-} from '../../client/datascience/data-viewing/types';
-import { SharedMessages } from '../../client/datascience/messages';
-import { IJupyterExtraSettings } from '../../client/datascience/types';
+} from '../../platform/datascience/data-viewing/types';
+import { SharedMessages } from '../../platform/datascience/messages';
+import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';

@@ -5,20 +5,20 @@ import * as fsextra from 'fs-extra';
 import { Container } from 'inversify';
 import * as path from 'path';
 import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
-import { convertStat } from '../client/common/platform/fileSystemUtils';
-import { FileStat, FileType } from '../client/common/platform/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../platform/common/constants';
+import { convertStat } from '../platform/common/platform/fileSystemUtils';
+import { FileStat, FileType } from '../platform/common/platform/types';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
     IMemento,
     IOutputChannel,
     WORKSPACE_MEMENTO
-} from '../client/common/types';
-import { createDeferred } from '../client/common/utils/async';
-import { ServiceContainer } from '../client/ioc/container';
-import { ServiceManager } from '../client/ioc/serviceManager';
-import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+} from '../platform/common/types';
+import { createDeferred } from '../platform/common/utils/async';
+import { ServiceContainer } from '../platform/ioc/container';
+import { ServiceManager } from '../platform/ioc/serviceManager';
+import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { MockOutputChannel } from './mockClasses';
 import { MockMemento } from './mocks/mementos';
 

@@ -3,9 +3,9 @@ import { injectable } from 'inversify';
 // Licensed under the MIT License.
 
 import { getActivatedEnvVariables } from '.';
-import { Resource } from '../../client/common/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { Resource } from '../../platform/common/types';
+import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {

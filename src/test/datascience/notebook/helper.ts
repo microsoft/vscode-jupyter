@@ -32,23 +32,23 @@ import {
     Hover,
     Diagnostic
 } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
-import { swallowExceptions } from '../../../client/common/utils/misc';
-import { IKernelProvider } from '../../../client/../kernels/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { INotebookEditorProvider } from '../../../platform/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
-import { DataScience } from '../../../client/common/utils/localize';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
@@ -190,7 +190,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../../../client/common/configSettings');
+        const configSettings = await import('../../../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }

@@ -23,13 +23,13 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceInfo, traceError } from '../../client/common/logger';
-import { IDisposableRegistry } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { IJupyterDebugService } from '../../client/datascience/types';
-import { IProtocolParser } from '../../client/debugger/extension/types';
+import { traceInfo, traceError } from '../../platform/common/logger';
+import { IDisposableRegistry } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
+import { IJupyterDebugService } from '../../platform/datascience/types';
+import { IProtocolParser } from '../../platform/debugger/extension/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

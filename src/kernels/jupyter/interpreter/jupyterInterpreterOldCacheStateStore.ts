@@ -4,8 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IPersistentState, IPersistentStateFactory } from '../../../platform/common/types';
 
 type CacheInfo = {
     /**

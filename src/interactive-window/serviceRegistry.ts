@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../client/activation/types';
+import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import {
     IInteractiveWindowProvider,
     IDataScienceCommandListener,
     ICodeLensFactory,
     ICodeWatcher,
     IDataScienceCodeLensProvider
-} from '../client/datascience/types';
-import { IServiceManager } from '../client/ioc/types';
+} from '../platform/datascience/types';
+import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';

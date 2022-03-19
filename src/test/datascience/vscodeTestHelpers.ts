@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Basic shape that something needs to support to hook up to this
 interface IOnMessageListener {

@@ -4,19 +4,19 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
-import { IExtensionSyncActivationService } from '../../client/activation/types';
-import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
     IApplicationShell
-} from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { CondaService } from '../../client/common/process/condaService';
+} from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { CondaService } from '../../platform/common/process/condaService';
 import {
     IDisposableRegistry,
     IExtensions,
@@ -25,21 +25,21 @@ import {
     IPathUtils,
     IBrowserService,
     Resource
-} from '../../client/common/types';
-import { waitForCondition } from '../../client/common/utils/async';
-import { debounceAsync } from '../../client/common/utils/decorators';
-import { DataScience } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { StopWatch } from '../../client/common/utils/stopWatch';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
-import { sendKernelListTelemetry } from '../../client/datascience/telemetry/kernelTelemetry';
-import { trackKernelResourceInformation } from '../../client/datascience/telemetry/telemetry';
-import { INotebookProvider, IJupyterServerUriStorage } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { IServiceContainer } from '../../client/ioc/types';
-import { traceDecorators } from '../../client/logging';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../client/telemetry';
+} from '../../platform/common/types';
+import { waitForCondition } from '../../platform/common/utils/async';
+import { debounceAsync } from '../../platform/common/utils/decorators';
+import { DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
+import { sendKernelListTelemetry } from '../../platform/datascience/telemetry/kernelTelemetry';
+import { trackKernelResourceInformation } from '../../platform/datascience/telemetry/telemetry';
+import { INotebookProvider, IJupyterServerUriStorage } from '../../platform/datascience/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { traceDecorators } from '../../platform/logging';
+import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../platform/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {

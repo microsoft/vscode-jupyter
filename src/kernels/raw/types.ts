@@ -4,8 +4,8 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisposable, Resource } from '../../client/common/types';
-import { INotebookProviderConnection } from '../../client/datascience/types';
+import { IAsyncDisposable, IDisposable, Resource } from '../../platform/common/types';
+import { INotebookProviderConnection } from '../../platform/datascience/types';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,

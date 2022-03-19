@@ -5,9 +5,9 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IDisposable } from '../../../platform/common/types';
 import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';

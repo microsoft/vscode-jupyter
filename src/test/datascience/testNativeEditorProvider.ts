@@ -6,12 +6,12 @@ export const __ = '';
 // import * as uuid from 'uuid/v4';
 // import { CustomDocument, Uri, WebviewPanel } from 'vscode';
 
-// import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-// import { IFileSystem } from '../../client/common/platform/types';
-// import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
-// import { createDeferred, Deferred } from '../../client/common/utils/async';
-// import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
-// import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
+// import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
+// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
+// import { createDeferred, Deferred } from '../../platform/common/utils/async';
+// import { NativeEditor } from '../../platform/datascience/interactive-ipynb/nativeEditor';
+// import { NativeEditorProviderOld } from '../../platform/datascience/interactive-ipynb/nativeEditorProviderOld';
 // import { NativeEditorProvider } from '../../notebooksStorage/nativeEditorProvider';
 // import { NativeEditorNotebookModel } from '../../notebooksStorage/notebookModel';
 // import { INotebookStorageProvider } from '../../notebooksStorage/notebookStorageProvider';
@@ -20,8 +20,8 @@ export const __ = '';
 //     INotebookEditor,
 //     INotebookEditorProvider,
 //     INotebookProvider
-// } from '../../client/datascience/types';
-// import { ClassType, IServiceContainer } from '../../client/ioc/types';
+// } from '../../platform/datascience/types';
+// import { ClassType, IServiceContainer } from '../../platform/ioc/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
 // import { mountConnectedMainPanel } from './testHelpers';

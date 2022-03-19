@@ -6,11 +6,11 @@ import {
     IWebviewPanelMessageListener,
     IWebviewPanelOptions,
     WebviewMessage
-} from '../../client/common/application/types';
-import { traceError, traceInfo } from '../../client/common/logger';
-import { IDisposable } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../extension/messageTypes';
+} from '../../platform/common/application/types';
+import { traceError, traceInfo } from '../../platform/common/logger';
+import { IDisposable } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { InteractiveWindowMessages } from '../../platform/messageTypes';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
 export type WaitForMessageOptions = {

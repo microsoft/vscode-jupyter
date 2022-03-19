@@ -17,29 +17,29 @@ import {
     Disposable,
     CancellationError
 } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../client/common/application/types';
-import { WrappedError } from '../client/../extension/errors/types';
-import { disposeAllDisposables } from '../client/common/helpers';
-import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../client/common/logger';
-import { getDisplayPath } from '../client/common/platform/fs-paths';
-import { IFileSystem } from '../client/common/platform/types';
-import { IPythonExecutionFactory } from '../client/common/process/types';
-import { Resource, IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
-import { Deferred } from '../client/common/utils/async';
-import { DataScience } from '../client/common/utils/localize';
-import { noop } from '../client/common/utils/misc';
-import { StopWatch } from '../client/common/utils/stopWatch';
-import { AddRunCellHook } from '../client/datascience/constants';
-import { DisplayOptions } from '../client/datascience/displayOptions';
+import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
+import { WrappedError } from '../platform/errors/types';
+import { disposeAllDisposables } from '../platform/common/helpers';
+import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/common/logger';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IFileSystem } from '../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { Resource, IDisposableRegistry, IConfigurationService, IDisposable } from '../platform/common/types';
+import { Deferred } from '../platform/common/utils/async';
+import { DataScience } from '../platform/common/utils/localize';
+import { noop } from '../platform/common/utils/misc';
+import { StopWatch } from '../platform/common/utils/stopWatch';
+import { AddRunCellHook } from '../platform/datascience/constants';
+import { DisplayOptions } from '../platform/datascience/displayOptions';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
-import { JupyterConnectError } from '../extension/errors/jupyterConnectError';
+import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';
+import { KernelProgressReporter } from '../platform/datascience/progress/kernelProgressReporter';
 import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
-} from '../client/datascience/telemetry/telemetry';
+} from '../platform/datascience/telemetry/telemetry';
 import {
     INotebookProviderConnection,
     KernelSocketInformation,
@@ -48,9 +48,9 @@ import {
     INotebookProvider,
     IStatusProvider,
     InterruptResult
-} from '../client/datascience/types';
-import { calculateWorkingDirectory } from '../client/datascience/utils';
-import { sendTelemetryEvent } from '../client/telemetry';
+} from '../platform/datascience/types';
+import { calculateWorkingDirectory } from '../platform/datascience/utils';
+import { sendTelemetryEvent } from '../platform/telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
 import { sleep } from '../test/core';

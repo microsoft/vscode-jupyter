@@ -6,12 +6,12 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell } from 'vscode';
-import { IPythonApiProvider } from '../../../../client/api/types';
-import { ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { Kernel } from '../../../../client/../kernels/kernel';
-import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
-import { BufferDecoder } from '../../../../client/common/process/decoder';
-import { ProcessService } from '../../../../client/common/process/proc';
+import { IPythonApiProvider } from '../../../../platform/api/types';
+import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { Kernel } from '../../../../platform/../kernels/kernel';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
+import { BufferDecoder } from '../../../../platform/common/process/decoder';
+import { ProcessService } from '../../../../platform/common/process/proc';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -19,22 +19,22 @@ import {
     IMemento,
     IWatchableJupyterSettings,
     ReadWrite
-} from '../../../../client/common/types';
-import { createDeferred } from '../../../../client/common/utils/async';
-import { Common, DataScience } from '../../../../client/common/utils/localize';
+} from '../../../../platform/common/types';
+import { createDeferred } from '../../../../platform/common/utils/async';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
-import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
-import { areInterpreterPathsSame, getInterpreterHash } from '../../../../client/pythonEnvironments/info/interpreter';
+import { IInteractiveWindowProvider } from '../../../../platform/datascience/types';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook, submitFromPythonFile } from '../../helpers';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { WrappedError } from '../../../../client/../extension/errors/types';
-import { Commands } from '../../../../client/datascience/constants';
+import { WrappedError } from '../../../../platform/errors/types';
+import { Commands } from '../../../../platform/datascience/constants';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';

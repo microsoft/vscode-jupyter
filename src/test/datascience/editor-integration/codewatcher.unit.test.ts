@@ -24,10 +24,10 @@ import {
     IDocumentManager,
     IVSCodeNotebook,
     IWorkspaceService
-} from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService } from '../../../client/common/types';
-import { Commands, EditorContexts } from '../../../client/datascience/constants';
+} from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IConfigurationService } from '../../../platform/common/types';
+import { Commands, EditorContexts } from '../../../platform/datascience/constants';
 import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../interactive-window/editor-integration/codewatcher';
@@ -37,17 +37,17 @@ import {
     IDebugLocationTracker,
     IInteractiveWindow,
     IInteractiveWindowProvider
-} from '../../../client/datascience/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { ICodeExecutionHelper } from '../../../client/terminals/types';
+} from '../../../platform/datascience/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { ICodeExecutionHelper } from '../../../platform/terminals/types';
 import { MockDocumentManager } from '../mockDocumentManager';
 import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
-import { disposeAllDisposables } from '../../../client/common/helpers';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
-import { IKernel, IKernelProvider } from '../../../client/../kernels/types';
-import { InteractiveCellResultError } from '../../../extension/errors/interactiveCellResultError';
+import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
+import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

@@ -4,18 +4,18 @@
 'use strict';
 import { noop } from 'lodash';
 import * as vscode from 'vscode';
-import { IPythonApiProvider } from '../../client/api/types';
-import { traceInfo } from '../../client/common/logger';
-import { arePathsSame } from '../../client/common/platform/fileUtils';
-import { IJupyterSettings } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
+import { IPythonApiProvider } from '../../platform/api/types';
+import { traceInfo } from '../../platform/common/logger';
+import { arePathsSame } from '../../platform/common/platform/fileUtils';
+import { IJupyterSettings } from '../../platform/common/types';
+import { Commands } from '../../platform/datascience/constants';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import {
     IDataScienceCodeLensProvider,
     IInteractiveWindow,
     IInteractiveWindowProvider
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 import { waitForCondition } from '../common';
 import {
     createTemporaryFile,

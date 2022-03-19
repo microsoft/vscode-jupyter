@@ -4,13 +4,13 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
-import { PythonExtensionChecker } from '../../../client/api/pythonApi';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IJupyterSettings } from '../../../client/common/types';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { KernelConnectionMetadata } from '../../../client/../kernels/types';
-import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { IJupyterSettings } from '../../../platform/common/types';
+import { DisplayOptions } from '../../../platform/datascience/displayOptions';
+import { KernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../platform/datascience/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 
 function Uri(filename: string): vscode.Uri {

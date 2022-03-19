@@ -6,12 +6,12 @@ import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../../client/common/utils/multiStepInput';
-import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../../../client/datascience/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
+import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../../../platform/datascience/types';
+import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 
 @injectable()

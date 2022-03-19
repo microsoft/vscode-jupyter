@@ -4,16 +4,16 @@
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from '../../../client/common/logger';
+import { traceError } from '../../../platform/common/logger';
 import {
     IPythonExecutionService,
     IPythonExecutionFactory,
     IPythonDaemonExecutionService,
     ExecutionResult
-} from '../../../client/common/process/types';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../client/datascience/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+} from '../../../platform/common/process/types';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../platform/datascience/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterDaemonModule, JupyterCommands } from '../../../datascience-ui/common/constants';
 
 class InterpreterJupyterCommand implements IJupyterCommand {

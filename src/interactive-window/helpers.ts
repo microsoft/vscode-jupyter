@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../client/datascience/types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../platform/datascience/types';
 import { window } from 'vscode';
-import { NotebookCellScheme } from '../client/common/constants';
+import { NotebookCellScheme } from '../platform/common/constants';
 
 export function getActiveInteractiveWindow(
     interactiveWindowProvider: IInteractiveWindowProvider

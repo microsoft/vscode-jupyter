@@ -8,7 +8,7 @@ suite('Dummy1a', () => {
     });
 });
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// import '../../client/common/extensions';
+// import '../../platform/common/extensions';
 
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import * as assert from 'assert';
@@ -18,21 +18,21 @@ suite('Dummy1a', () => {
 // import * as React from 'react';
 // import * as uuid from 'uuid/v4';
 // import { Disposable } from 'vscode';
-// const telemetry = require('../../client/telemetry/index');
-// import { Identifiers, Telemetry } from '../../client/datascience/constants';
+// const telemetry = require('../../platform/telemetry/index');
+// import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 // import {
 //     DataViewerMessages,
 //     IDataViewer,
 //     IDataViewerDataProvider,
 //     IDataViewerFactory
-// } from '../../client/datascience/data-viewing/types';
-// import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+// } from '../../platform/datascience/data-viewing/types';
+// import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
 // import {
 //     IJupyterVariable,
 //     IJupyterVariableDataProviderFactory,
 //     INotebook,
 //     INotebookProvider
-// } from '../../client/datascience/types';
+// } from '../../platform/datascience/types';
 // import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 // import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 // import { noop, sleep } from '../core';
@@ -41,7 +41,7 @@ suite('Dummy1a', () => {
 // import { IMountedWebView } from './mountedWebView';
 // import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
 // import { Dropdown } from '@fluentui/react';
-// import { CheckboxState, SliceOperationSource } from '../../client/telemetry/constants';
+// import { CheckboxState, SliceOperationSource } from '../../platform/telemetry/constants';
 // import { range } from 'lodash';
 
 // interface ISliceControlTestInterface {

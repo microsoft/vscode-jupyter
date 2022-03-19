@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import * as path from 'path';
-import { getInterpreterHash } from '../client/pythonEnvironments/info/interpreter';
+import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 
 function doHash(p: string) {
     return getInterpreterHash({ path: p });

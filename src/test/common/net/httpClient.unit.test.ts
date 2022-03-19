@@ -11,9 +11,9 @@ import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { HttpClient } from '../../../client/common/net/httpClient';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { HttpClient } from '../../../platform/common/net/httpClient';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 // eslint-disable-next-line
 suite('Http Client', () => {

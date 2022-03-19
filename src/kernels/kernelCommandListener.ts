@@ -4,21 +4,21 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, NotebookDocument, Uri, window, workspace } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../client/common/application/types';
-import { displayErrorsInCell } from '../client/../extension/errors/errorUtils';
-import { traceInfo } from '../client/common/logger';
-import { IDisposableRegistry, IConfigurationService, IDisposable } from '../client/common/types';
-import { DataScience } from '../client/common/utils/localize';
+import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
+import { displayErrorsInCell } from '../platform/errors/errorUtils';
+import { traceInfo } from '../platform/common/logger';
+import { IDisposableRegistry, IConfigurationService, IDisposable } from '../platform/common/types';
+import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
-import { trackKernelResourceInformation } from '../client/datascience/telemetry/telemetry';
+import { trackKernelResourceInformation } from '../platform/datascience/telemetry/telemetry';
 import {
     IDataScienceCommandListener,
     IStatusProvider,
     IInteractiveWindowProvider,
     IDataScienceErrorHandler
-} from '../client/datascience/types';
-import { IServiceContainer } from '../client/ioc/types';
-import { sendTelemetryEvent } from '../client/telemetry';
+} from '../platform/datascience/types';
+import { IServiceContainer } from '../platform/ioc/types';
+import { sendTelemetryEvent } from '../platform/telemetry';
 import { Commands, Telemetry } from '../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
 import { JupyterSession } from './jupyter/session/jupyterSession';

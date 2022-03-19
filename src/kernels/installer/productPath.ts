@@ -6,8 +6,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstaller, IProductPathService, ModuleNamePurpose, Product } from './types';
 
 @injectable()
