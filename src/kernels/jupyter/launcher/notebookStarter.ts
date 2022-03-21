@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { IDisposable } from '@fluentui/react';
-import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../../client/common/cancellation';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo, traceError } from '../../../client/common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../../client/common/platform/types';
@@ -91,9 +91,7 @@ export class NotebookStarter implements Disposable {
             );
 
             // Make sure we haven't canceled already.
-            if (cancelToken.isCancellationRequested) {
-                throw new CancellationError();
-            }
+            Cancellation.throwIfCanceled(cancelToken);
 
             // Then use this to launch our notebook process.
             traceInfo('Starting Jupyter Notebook');
@@ -135,9 +133,7 @@ export class NotebookStarter implements Disposable {
                 cancelToken
             );
             // Make sure we haven't canceled already.
-            if (cancelToken && cancelToken.isCancellationRequested) {
-                throw new CancellationError();
-            }
+            Cancellation.throwIfCanceled(cancelToken);
             const connection = await Promise.race([
                 starter.waitForConnection(),
                 createPromiseFromCancellation<void>({

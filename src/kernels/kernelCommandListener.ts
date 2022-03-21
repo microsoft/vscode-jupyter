@@ -3,7 +3,7 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, NotebookDocument, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../client/common/application/types';
 import { displayErrorsInCell } from '../client/../extension/errors/errorUtils';
 import { traceInfo } from '../client/common/logger';
@@ -117,7 +117,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
         }
-        await this.wrapKernelMethod('interrupt', document, kernel);
+        await this.wrapKernelMethod('interrupt', kernel);
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
@@ -154,36 +154,57 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void this.wrapKernelMethod('restart', document, kernel);
+                    void this.wrapKernelMethod('restart', kernel);
                 } else if (response === yes) {
-                    void this.wrapKernelMethod('restart', document, kernel);
+                    void this.wrapKernelMethod('restart', kernel);
                 }
             } else {
-                void this.wrapKernelMethod('restart', document, kernel);
+                void this.wrapKernelMethod('restart', kernel);
             }
         }
     }
 
-    private async wrapKernelMethod(context: 'interrupt' | 'restart', notebook: NotebookDocument, kernel: IKernel) {
-        // Get currently executing cell and controller
-        const currentCell = kernel.pendingCells[0];
-        const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
-        try {
-            // Wrap the restart/interrupt in a loop that allows the user to switch
-            await wrapKernelMethod(controller!, context, this.serviceContainer, notebook.uri, notebook);
-        } catch (ex) {
-            if (currentCell) {
-                const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
-                displayErrorsInCell(
-                    currentCell,
-                    cellExecution,
-                    await this.errorHandler.getErrorMessageForDisplayInCell(ex, context)
-                );
-                cellExecution.end(false);
-            } else {
-                void this.applicationShell.showErrorMessage(ex.toString());
-            }
+    private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
+    private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
+        // We don't want to create multiple restarts/interrupt requests for the same kernel.
+        const pendingPromise = this.pendingRestartInterrupt.get(kernel);
+        if (pendingPromise) {
+            return pendingPromise;
         }
+        const promise = (async () => {
+            // Get currently executing cell and controller
+            const currentCell = kernel.pendingCells[0];
+            const controller = this.notebookControllerManager.getSelectedNotebookController(kernel.notebookDocument);
+            try {
+                // Wrap the restart/interrupt in a loop that allows the user to switch
+                await wrapKernelMethod(
+                    controller!,
+                    context,
+                    this.serviceContainer,
+                    kernel.resourceUri,
+                    kernel.notebookDocument
+                );
+            } catch (ex) {
+                if (currentCell) {
+                    const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
+                    displayErrorsInCell(
+                        currentCell,
+                        cellExecution,
+                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, context)
+                    );
+                    cellExecution.end(false);
+                } else {
+                    void this.applicationShell.showErrorMessage(ex.toString());
+                }
+            }
+        })();
+        promise.finally(() => {
+            if (this.pendingRestartInterrupt.get(kernel) === promise) {
+                this.pendingRestartInterrupt.delete(kernel);
+            }
+        });
+        this.pendingRestartInterrupt.set(kernel, promise);
+        return promise;
     }
 
     private async shouldAskForRestart(notebookUri: Uri): Promise<boolean> {

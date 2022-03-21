@@ -6,7 +6,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../client/common/application/types';
-import { traceVerbose, traceWarning } from '../client/common/logger';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../client/common/logger';
 import { getDisplayPath } from '../client/common/platform/fs-paths';
 import { IFileSystem } from '../client/common/platform/types';
 import { IPythonExecutionFactory } from '../client/common/process/types';
@@ -77,6 +77,7 @@ export class KernelProvider implements IKernelProvider {
         return this.kernelsByNotebook.get(notebook)?.kernel;
     }
     public async dispose() {
+        traceInfoIfCI(`Disposing all kernels from kernel provider`);
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
@@ -149,6 +150,9 @@ export class KernelProvider implements IKernelProvider {
         );
     }
     private disposeOldKernel(notebook: NotebookDocument) {
+        traceInfoIfCI(
+            `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
+        );
         const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
             this.pendingDisposables.add(kernelToDispose.kernel);

@@ -9,7 +9,7 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../client/common/cancellation';
 import '../../client/common/extensions';
-import { traceInfoIfCI, traceInfo } from '../../client/common/logger';
+import { traceInfoIfCI, traceInfo, traceVerbose } from '../../client/common/logger';
 import { getDisplayPath } from '../../client/common/platform/fs-paths';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Resource, ReadWrite } from '../../client/common/types';
@@ -55,13 +55,13 @@ export class JupyterKernelService {
      * @param resource
      * @param kernel
      */
-    @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
         resource: Resource,
         @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
-        @ignoreLogging() ui: IDisplayOptions,
+        @logValue<IDisplayOptions>('disableUI') ui: IDisplayOptions,
         @ignoreLogging() cancelToken: CancellationToken
     ): Promise<void> {
+        traceVerbose('Check if a kernel is usable');
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (
             kernel.kind !== 'connectToLiveKernel' &&

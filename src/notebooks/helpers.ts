@@ -311,7 +311,9 @@ export class NotebookCellStateTracker {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+        `Cell Index:${cell.index}, of document ${path.basename(
+            cell.notebook.uri.fsPath
+        )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}`
     );
