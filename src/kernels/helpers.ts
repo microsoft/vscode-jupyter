@@ -2003,6 +2003,38 @@ const connections = new WeakMap<
     }
 >();
 
+async function verifyKernelState(
+    serviceContainer: IServiceContainer,
+    resource: Resource,
+    notebook: NotebookDocument,
+    options: IDisplayOptions = new DisplayOptions(false),
+    promise: Promise<{
+        kernel: IKernel;
+        controller: VSCodeNotebookController;
+        deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+    }>
+): Promise<IKernel> {
+    const { kernel, controller, deadKernelAction } = await promise;
+    // Before returning, but without disposing the kernel, double check it's still valid
+    // If a restart didn't happen, then we can't connect. Throw an error.
+    // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
+    if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
+        // If the kernel is dead, then remove the cached promise, & try to get the kernel again.
+        // At that point, it will get restarted.
+        if (connections.get(notebook)?.kernel.promise === promise) {
+            connections.delete(notebook);
+        }
+        if (deadKernelAction === 'deadKernelWasNoRestarted') {
+            throw new KernelDeadError(kernel.kernelConnectionMetadata);
+        } else if (deadKernelAction === 'deadKernelWasRestarted') {
+            return kernel;
+        }
+        // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
+        return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options);
+    }
+    return kernel;
+}
+
 export async function wrapKernelMethod(
     initialController: VSCodeNotebookController,
     initialContext: 'start' | 'interrupt' | 'restart',
@@ -2025,37 +2057,10 @@ export async function wrapKernelMethod(
         connections.delete(notebook);
         currentPromise = undefined;
     }
-    const verifyKernelState = async (
-        promise: Promise<{
-            kernel: IKernel;
-            controller: VSCodeNotebookController;
-            deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
-        }>
-    ): Promise<IKernel> => {
-        const { kernel, controller, deadKernelAction } = await promise;
-        // Before returning, but without disposing the kernel, double check it's still valid
-        // If a restart didn't happen, then we can't connect. Throw an error.
-        // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
-        if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
-            // If the kernel is dead, then remove the cached promise, & try to get the kernel again.
-            // At that point, it will get restarted.
-            if (connections.get(notebook)?.kernel.promise === promise) {
-                connections.delete(notebook);
-            }
-            if (deadKernelAction === 'deadKernelWasNoRestarted') {
-                throw new KernelDeadError(kernel.kernelConnectionMetadata);
-            } else if (deadKernelAction === 'deadKernelWasRestarted') {
-                return kernel;
-            }
-            // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
-            return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options);
-        }
-        return kernel;
-    };
 
     // Wrap the kernel method again to interrupt/restart this kernel.
     if (currentPromise && initialContext !== 'restart' && initialContext !== 'interrupt') {
-        return verifyKernelState(currentPromise.kernel.promise);
+        return verifyKernelState(serviceContainer, resource, notebook, options, currentPromise.kernel.promise);
     }
 
     const promise = wrapKernelMethodImpl(
