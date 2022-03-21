@@ -70,6 +70,8 @@ import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry'
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry';
 import { registerTypes as registerWebviewTypes } from './webviews/serviceRegistry';
+import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry';
+import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
@@ -281,10 +283,12 @@ async function activateLegacy(
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager, isDevMode);
+    registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
     registerWebviewTypes(serviceManager, isDevMode);
+    registerIntellisenseTypes(serviceManager, isDevMode);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystem>(IFileSystem);
