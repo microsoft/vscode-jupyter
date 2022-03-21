@@ -138,9 +138,9 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
-export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
+export function createDeferredFrom<T>(promise: Promise<T>): Deferred<T> {
     const deferred = createDeferred<T>();
-    Promise.all<T>(promises)
+    promise
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then(deferred.resolve.bind(deferred) as any)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

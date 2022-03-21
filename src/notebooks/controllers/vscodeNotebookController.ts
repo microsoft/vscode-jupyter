@@ -29,7 +29,7 @@ import {
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
@@ -48,7 +48,7 @@ import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
 } from '../../telemetry/telemetry';
-import { IDataScienceErrorHandler, KernelSocketInformation } from '../../platform/datascience/types';
+import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../platform/datascience/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/trace';
@@ -82,6 +82,8 @@ import {
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -226,6 +228,24 @@ export class VSCodeNotebookController implements Disposable {
             traceInfoIfCI('No cells passed to handleExecution');
             return;
         }
+        // Found on CI that sometimes VS Code calls this with old deleted cells.
+        // See here https://github.com/microsoft/vscode-jupyter/runs/5581627878?check_suite_focus=true
+        cells = cells.filter((cell) => {
+            if (cell.index < 0) {
+                traceWarning(
+                    `Attempting to run a cell with index ${cell.index}, kind ${
+                        cell.kind
+                    }, text = ${cell.document.getText()}`
+                );
+                return false;
+            }
+            return true;
+        });
+        traceInfoIfCI(
+            `VSCodeNotebookController::handleExecution for ${getDisplayPath(notebook.uri)} for cells ${
+                cells.length
+            } with data ${cells.map((cell) => cell.document.getText()).join('\n#CELL\n')}`
+        );
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         if (!this.workspace.isTrusted) {
@@ -404,16 +424,23 @@ export class VSCodeNotebookController implements Disposable {
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
-
+        const startTime = new Date().getTime();
         // Start execution now (from the user's point of view)
-        const execution = CellExecutionCreator.getOrCreate(cell, this.controller);
-        execution.start(new Date().getTime());
+        let execution = CellExecutionCreator.getOrCreate(cell, this.controller);
+        execution.start(startTime);
         void execution.clearOutput(cell);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let context: 'start' | 'execution' = 'start';
+        let kernel: IKernel | undefined;
         try {
-            const kernel = await this.connectToKernel(doc);
+            kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            // If the controller changed, then ensure to create a new cell execution object.
+            if (kernel && kernel.controller.id !== execution.controllerId) {
+                execution.end(undefined);
+                execution = CellExecutionCreator.getOrCreate(cell, kernel.controller);
+                execution.start(startTime);
+            }
             context = 'execution';
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
@@ -421,12 +448,11 @@ export class VSCodeNotebookController implements Disposable {
             return await kernel.executeCell(cell);
         } catch (ex) {
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-
             // If there was a failure connecting or executing the kernel, stick it in this cell
             displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex, context));
+            ex = WrappedError.unwrap(ex);
             const isCancelled =
-                (WrappedError.unwrap(ex) || ex) instanceof CancellationError ||
-                (WrappedError.unwrap(ex) || ex) instanceof VscCancellationError;
+                ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
             // If user cancels the execution, then don't show error status against cell.
             execution.end(isCancelled ? undefined : false);
             return NotebookCellExecutionState.Idle;
@@ -436,11 +462,11 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     @chainable()
-    private async connectToKernel(doc: NotebookDocument) {
+    private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions) {
         // executeCell can get called multiple times before the first one is resolved. Since we only want
         // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
         // all of the cells if it fails.
-        return connectToKernel(this, this.serviceContainer, doc.uri, doc);
+        return connectToKernel(this, this.serviceContainer, doc.uri, doc, options);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
@@ -584,7 +610,7 @@ export class VSCodeNotebookController implements Disposable {
             isLocalConnection(this.kernelConnection)
         ) {
             // Startup could fail due to missing dependencies or the like.
-            void newKernel.start({ disableUI: true });
+            this.connectToKernel(document, new DisplayOptions(true)).catch(noop);
         }
     }
 }

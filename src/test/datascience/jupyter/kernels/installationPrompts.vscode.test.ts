@@ -33,7 +33,7 @@ import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook, submitFromPythonFile } from '../../helpers';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { WrappedError } from '../../../../platform/errors/types';
+import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
 import { Commands } from '../../../../platform/datascience/constants';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
@@ -47,10 +47,10 @@ import {
     assertVSCCellIsNotRunning,
     defaultNotebookTestTimeout,
     waitForKernelToChange,
-    insertCodeCell,
     waitForExecutionCompletedSuccessfully,
     getCellOutputs,
-    waitForCellHavingOutput
+    waitForCellHavingOutput,
+    insertCodeCell
 } from '../../notebook/helper';
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 
@@ -137,6 +137,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 .toString('utf8')
                 .replace('<hash>', getInterpreterHash({ path: venvPythonPath }))
         );
+        await installIPyKernel(venvKernelPath);
         await uninstallIPyKernel(venvPythonPath);
         await closeActiveWindows();
         await Promise.all([
@@ -365,7 +366,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             waitForIPyKernelToGetInstalled()
         ]);
     });
-    test.skip('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
+    test('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -436,11 +437,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         await openNotebook(nbFile);
         await waitForKernelToGetAutoSelected();
-        let cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // Insert another cell so we can test run all
-        await insertCodeCell('print("foo")');
+        const cell2 = await insertCodeCell('print("foo")');
 
         // The prompt should be displayed when we run a cell.
         const runPromise = runAllCellsInActiveNotebook();
@@ -448,11 +449,10 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Now the run should finish
         await runPromise;
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell), waitForExecutionCompletedSuccessfully(cell2)]);
     });
 
-    test.skip('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
+    test('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
         // Ensure we have auto start enabled, and verify kernel startup fails silently without any notifications.
         // When running a cell we should get an install prompt.
         configSettings.disableJupyterAutoStart = false;
@@ -476,8 +476,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             await kernelStartSpy.getCall(0).returnValue;
             assert.fail('Did not fail as expected');
         } catch (ex) {
-            const err = WrappedError.unwrap(ex);
-            assert.strictEqual(err.category, 'kerneldied');
+            const err = WrappedError.unwrap(ex) as BaseKernelError;
+            // Depending on whether its jupter or raw kernels, we could get a different error thrown.
+            assert.include('noipykernel kerneldied', err.category);
         }
 
         console.log('Step6');

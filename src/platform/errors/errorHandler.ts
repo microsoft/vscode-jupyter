@@ -39,6 +39,7 @@ import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { WrappedError, BaseKernelError, WrappedKernelError, BaseError } from './types';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
+import { KernelDeadError } from './kernelDeadError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -97,7 +98,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         context: 'start' | 'restart' | 'interrupt' | 'execution'
     ) {
         error = WrappedError.unwrap(error);
-        if (error instanceof JupyterKernelDependencyError) {
+        if (error instanceof KernelDeadError) {
+            // When we get this we've already asked the user to restart the kernel,
+            // No need to display errors in each cell.
+            return '';
+        } else if (error instanceof JupyterKernelDependencyError) {
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof JupyterInstallError) {
             return getJupyterMissingErrorMessageForCell(error) || error.message;

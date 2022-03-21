@@ -20,6 +20,7 @@ import {
 } from '../../../platform/datascience/types';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { isLocalConnection } from '../../../kernels/types';
+import { Cancellation } from '../../../platform/common/cancellation';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
@@ -75,7 +76,7 @@ export class NotebookProvider implements INotebookProvider {
                 return undefined;
             }
         }
-
+        Cancellation.throwIfCanceled(options.token);
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawLocalKernel
             ? this.rawNotebookProvider.createNotebook(

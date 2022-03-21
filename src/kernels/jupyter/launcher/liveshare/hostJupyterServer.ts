@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { injectable, inject, named } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../../platform/common/logger';
+import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/common/logger';
 import {
     IAsyncDisposableRegistry,
     IOutputChannel,
@@ -33,6 +33,8 @@ import { computeWorkingDirectory } from '../../jupyterUtils';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook';
 import { noop } from '../../../../platform/common/utils/misc';
+import { Cancellation } from '../../../../platform/common/cancellation';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -66,7 +68,12 @@ export class HostJupyterServer implements INotebookServer {
     private get isDisposed() {
         return this.disposed;
     }
-
+    private throwIfDisposedOrCancelled(token?: CancellationToken) {
+        if (this.isDisposed) {
+            throw new SessionDisposedError();
+        }
+        Cancellation.throwIfCanceled(token);
+    }
     private async createNotebookInstance(
         resource: Resource,
         sessionManager: JupyterSessionManager,
@@ -74,17 +81,19 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions
     ): Promise<INotebook> {
+        this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
         this.trackDisposable(notebookPromise.promise);
         const getExistingSession = async () => {
             const connection = await this.computeLaunchInfo();
-
+            this.throwIfDisposedOrCancelled(cancelToken);
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = isLocalConnection(kernelConnection)
                 ? await computeWorkingDirectory(resource, this.workspaceService)
                 : '';
+            this.throwIfDisposedOrCancelled(cancelToken);
             // Start a session (or use the existing one if allowed)
             const session = await sessionManager.startNew(
                 resource,
@@ -93,12 +102,14 @@ export class HostJupyterServer implements INotebookServer {
                 ui,
                 cancelToken
             );
+            this.throwIfDisposedOrCancelled(cancelToken);
             traceInfo(`Started session for kernel ${kernelConnection.id}`);
             return { connection, session };
         };
 
         try {
             const { connection, session } = await getExistingSession();
+            this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
                 // Create our notebook
@@ -158,6 +169,12 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions
     ): Promise<INotebook> {
+        this.throwIfDisposedOrCancelled(cancelToken);
+        traceInfoIfCI(
+            `HostJupyterServer.createNotebook for ${getDisplayPath(resource)} with ui.disableUI=${
+                ui.disableUI
+            }, cancelToken.isCancellationRequested=${cancelToken.isCancellationRequested}`
+        );
         if (!this.sessionManager || this.isDisposed) {
             throw new SessionDisposedError();
         }
@@ -171,6 +188,7 @@ export class HostJupyterServer implements INotebookServer {
                 cancelToken,
                 ui
             );
+            this.throwIfDisposedOrCancelled(cancelToken);
             const baseUrl = this.connection?.baseUrl || '';
             this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);

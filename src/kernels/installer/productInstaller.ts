@@ -117,6 +117,9 @@ abstract class BaseInstaller {
         if (!installer) {
             return InstallerResponse.Ignore;
         }
+        if (cancelTokenSource.token.isCancellationRequested) {
+            return InstallerResponse.Cancelled;
+        }
         let flags =
             reInstallAndUpdate === true
                 ? ModuleInstallFlags.updateDependencies | ModuleInstallFlags.reInstall
@@ -125,7 +128,9 @@ abstract class BaseInstaller {
             flags = flags ? flags | ModuleInstallFlags.installPipIfRequired : ModuleInstallFlags.installPipIfRequired;
         }
         await installer.installModule(product, interpreter, cancelTokenSource, flags);
-
+        if (cancelTokenSource.token.isCancellationRequested) {
+            return InstallerResponse.Cancelled;
+        }
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
@@ -257,7 +262,7 @@ export class ProductInstaller implements IInstaller {
         if (interpreter) {
             this.interpreterPackages.trackPackages(interpreter);
         }
-        let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
+        let action: 'installed' | 'failed' | 'disabled' | 'ignored' | 'cancelled' = 'installed';
         try {
             const result = await this.createInstaller(product).install(
                 product,
@@ -271,6 +276,9 @@ export class ProductInstaller implements IInstaller {
                 this._onInstalled.fire({ product, resource: interpreter });
             }
             switch (result) {
+                case InstallerResponse.Cancelled:
+                    action = 'cancelled';
+                    break;
                 case InstallerResponse.Installed:
                     action = 'installed';
                     break;

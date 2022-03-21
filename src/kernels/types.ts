@@ -9,6 +9,7 @@ import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPi
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import {
+    IDisplayOptions,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -178,7 +179,7 @@ export interface IKernel extends IAsyncDisposable {
      * Controller associated with this kernel
      */
     readonly controller: NotebookController;
-    start(options?: { disableUI?: boolean }): Promise<void>;
+    start(options?: IDisplayOptions): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;

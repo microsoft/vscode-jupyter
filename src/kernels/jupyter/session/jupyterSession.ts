@@ -29,6 +29,7 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
 import { JupyterWebSockets } from './jupyterWebSocket';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -145,12 +146,15 @@ export class JupyterSession extends BaseJupyterSession {
                 await this.waitForIdleOnSession(newSession, this.idleTimeout);
             }
         } catch (exc) {
+            // Don't log errors if UI is disabled (e.g. auto starting a kernel)
+            // Else we just pollute the logs with lots of noise.
+            const loggerFn = options.ui.disableUI ? traceVerbose : traceError;
             // Don't swallow known exceptions.
             if (exc instanceof BaseError) {
-                traceError('Failed to change kernel, re-throwing', exc);
+                loggerFn('Failed to change kernel, re-throwing', exc);
                 throw exc;
             } else {
-                traceError('Failed to change kernel', exc);
+                loggerFn('Failed to change kernel', exc);
                 // Throw a new exception indicating we cannot change.
                 throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
             }
@@ -252,6 +256,11 @@ export class JupyterSession extends BaseJupyterSession {
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
+        traceInfoIfCI(
+            `JupyterSession.createSession for ${getDisplayPath(this.resource)}, options.ui.disableUI=${
+                options.ui.disableUI
+            }`
+        );
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
 
@@ -259,7 +268,11 @@ export class JupyterSession extends BaseJupyterSession {
         if (this.kernelConnectionMetadata?.interpreter && isLocalConnection(this.kernelConnectionMetadata)) {
             // Make sure the kernel actually exists and is up to date.
             try {
-                traceInfoIfCI(`JupyterSession.createSession ${this.kernelConnectionMetadata.id}`);
+                traceInfoIfCI(
+                    `JupyterSession.createSession ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                        this.resource
+                    )}, options.ui.disableUI=${options.ui.disableUI}`
+                );
                 await this.kernelService.ensureKernelIsUsable(
                     this.resource,
                     this.kernelConnectionMetadata,
@@ -291,7 +304,11 @@ export class JupyterSession extends BaseJupyterSession {
             type: 'notebook'
         };
 
-        traceInfo(`Starting a new session for kernel id = ${this.kernelConnectionMetadata?.id}, name = ${kernelName}`);
+        traceInfo(
+            `Starting a new session for kernel id = ${
+                this.kernelConnectionMetadata?.id
+            }, name = ${kernelName} for ${getDisplayPath(this.resource)}`
+        );
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(sessionOptions, {

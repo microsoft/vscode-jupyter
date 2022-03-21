@@ -266,6 +266,9 @@ export class CellExecution implements IDisposable {
      * Hence `forced=true` is more like a hard kill.
      */
     public async cancel(forced = false) {
+        if (this.cancelHandled) {
+            return;
+        }
         // Close all of the prompts (if we any any UI prompts asking user for input).
         this.prompts.forEach((item) => item.cancel());
         if (this.started && !forced) {

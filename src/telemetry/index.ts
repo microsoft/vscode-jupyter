@@ -18,7 +18,7 @@ import {
 } from '../platform/datascience/constants';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { ExportFormat } from '../platform/datascience/export/types';
-import { InterruptResult } from '../platform/datascience/types';
+import { InterruptResult, KernelInterpreterDependencyResponse } from '../platform/datascience/types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
 import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
@@ -846,6 +846,7 @@ export interface IEventNamePropertyMapping {
          */
         isModulePresent?: 'true' | undefined;
         action:
+            | 'cancelled' // User cancelled the installation or closed the notebook or the like.
             | 'displayed' // Install prompt may have been displayed.
             | 'prompted' // Install prompt was displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
@@ -1309,7 +1310,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
-        reason: number;
+        reason: KernelInterpreterDependencyResponse;
     } & TelemetryErrorProperties;
     /**
      * This event is sent when the underlying kernelProcess for a

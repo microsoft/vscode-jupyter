@@ -174,7 +174,7 @@ export class JupyterInterpreterDependencyService {
                     sortProductsInOrderForInstallation(productsToInstall);
 
                     let productToInstall = productsToInstall.shift();
-                    const cancellatonPromise = createPromiseFromCancellation({
+                    const cancellationPromise = createPromiseFromCancellation({
                         cancelAction: 'resolve',
                         defaultValue: InstallerResponse.Ignore,
                         token: tokenSource.token
@@ -189,7 +189,7 @@ export class JupyterInterpreterDependencyService {
                                 undefined,
                                 pipInstalledInNonCondaEnv === false
                             ),
-                            cancellatonPromise
+                            cancellationPromise
                         ]);
                         if (response === InstallerResponse.Installed) {
                             productToInstall = productsToInstall.shift();

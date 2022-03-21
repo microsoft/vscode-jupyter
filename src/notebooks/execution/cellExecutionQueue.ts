@@ -116,6 +116,7 @@ export class CellExecutionQueue implements Disposable {
         }
     }
     private async executeQueuedCells() {
+        let notebookClosed: boolean | undefined;
         const kernelConnection = await this.session;
         this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
         while (this.queueOfCellsToExecute.length) {
@@ -127,8 +128,14 @@ export class CellExecutionQueue implements Disposable {
 
             let executionResult: NotebookCellRunState | undefined;
             try {
-                await cellToExecute.start(kernelConnection);
-                executionResult = await cellToExecute.result;
+                if (cellToExecute.cell.notebook.isClosed) {
+                    notebookClosed = true;
+                } else if (this.cancelledOrCompletedWithErrors) {
+                    // Noop.
+                } else {
+                    await cellToExecute.start(kernelConnection);
+                    executionResult = await cellToExecute.result;
+                }
             } finally {
                 // Once the cell has completed execution, remove it from the queue.
                 traceCellMessage(cellToExecute.cell, `After Execute individual cell ${executionResult}`);
@@ -138,10 +145,16 @@ export class CellExecutionQueue implements Disposable {
                 }
             }
 
-            // If a cell has failed the get out.
-            if (this.cancelledOrCompletedWithErrors || executionResult === NotebookCellRunState.Error) {
+            // If notebook was closed or a cell has failed the get out.
+            if (
+                notebookClosed ||
+                this.cancelledOrCompletedWithErrors ||
+                executionResult === NotebookCellRunState.Error
+            ) {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(`Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult}`);
+                traceInfo(
+                    `Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult} || ${notebookClosed}`
+                );
                 await this.cancel();
                 break;
             }

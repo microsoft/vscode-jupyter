@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { traceInfo, traceError } from '../platform/common/logger';
+import { traceInfo, traceError, traceInfoIfCI } from '../platform/common/logger';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
@@ -21,7 +21,7 @@ import {
 } from '../platform/datascience/types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { traceDecorators } from '../platform/logging';
-import { ignoreLogging, logValue, TraceOptions } from '../platform/logging/trace';
+import { ignoreLogging, logValue } from '../platform/logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
@@ -34,6 +34,7 @@ import {
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { KernelConnectionMetadata } from './types';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -54,7 +55,7 @@ export class KernelDependencyService implements IKernelDependencyService {
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
      */
-    @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
+    @traceDecorators.verbose('Install Missing Dependencies')
     public async installMissingDependencies(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -62,7 +63,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         @ignoreLogging() token: CancellationToken,
         ignoreCache?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
-        traceInfo(`installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}`);
+        traceInfo(
+            `installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}, ui.disabled=${
+                ui.disableUI
+            } for resource ${getDisplayPath(resource)}`
+        );
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
@@ -83,14 +88,25 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        const cancelTokenSource = new CancellationTokenSource();
         let promise = this.installPromises.get(kernelConnection.interpreter.path);
+        let cancelTokenSource: CancellationTokenSource | undefined;
         if (!promise) {
+            const cancelTokenSource = new CancellationTokenSource();
+            const disposable = token.onCancellationRequested(() => {
+                cancelTokenSource.cancel();
+                disposable.dispose();
+            });
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
                 () => this.runInstaller(resource, kernelConnection.interpreter!, ui, cancelTokenSource)
             );
+            promise
+                .finally(() => {
+                    disposable.dispose();
+                    cancelTokenSource.dispose();
+                })
+                .catch(noop);
             this.installPromises.set(kernelConnection.interpreter.path, promise);
         }
 
@@ -99,10 +115,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         try {
             // This can throw an exception (if say it fails to install) or it can cancel
             dependencyResponse = await promise;
-            if (cancelTokenSource.token?.isCancellationRequested || token.isCancellationRequested) {
+            if (cancelTokenSource?.token?.isCancellationRequested || token.isCancellationRequested) {
                 dependencyResponse = KernelInterpreterDependencyResponse.cancel;
             }
         } catch (ex) {
+            traceInfoIfCI(`Failed to install kernel dependency`, ex);
             // Failure occurred
             dependencyResponse = KernelInterpreterDependencyResponse.failed;
         } finally {
@@ -163,6 +180,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         ui: IDisplayOptions,
         cancelTokenSource: CancellationTokenSource
     ): Promise<KernelInterpreterDependencyResponse> {
+        traceInfoIfCI(
+            `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
+                ui.disableUI
+            }, cancelTokenSource.token.isCancellationRequested=${cancelTokenSource.token.isCancellationRequested}`
+        );
         // If there's no UI, then cancel installation.
         if (ui.disableUI) {
             return KernelInterpreterDependencyResponse.uiHidden;
@@ -213,6 +235,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     pythonEnvType: interpreter.envType
                 });
             }
+            traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
             const selection = this.isCodeSpace
                 ? Common.install()
                 : await Promise.race([
@@ -248,7 +271,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 const cancellationPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
-                    defaultValue: InstallerResponse.Ignore,
+                    defaultValue: InstallerResponse.Cancelled,
                     token: cancelTokenSource.token
                 });
                 // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.

@@ -8,7 +8,8 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 export enum InstallerResponse {
     Installed,
     Disabled,
-    Ignore
+    Ignore,
+    Cancelled
 }
 
 export enum Product {

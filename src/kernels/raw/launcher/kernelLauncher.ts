@@ -11,7 +11,7 @@ import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceWarning } from '../../../platform/common/logger';
@@ -204,9 +204,7 @@ export class KernelLauncher implements IKernelLauncher {
             ]);
         } catch (ex) {
             void kernelProcess.dispose();
-            if (ex instanceof CancellationError || cancelToken?.isCancellationRequested) {
-                throw new CancellationError();
-            }
+            Cancellation.throwIfCanceled(cancelToken);
             throw ex;
         }
 
