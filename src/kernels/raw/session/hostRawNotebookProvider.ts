@@ -38,6 +38,7 @@ import { KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher } from '../types';
 import { RawJupyterSession } from './rawJupyterSession';
 import { noop } from '../../../client/common/utils/misc';
+import { Cancellation } from '../../../client/common/cancellation';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -118,6 +119,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             }
             traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
             const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
             rawSession = new RawJupyterSession(
@@ -140,7 +142,9 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
             );
             await rawSession.connect({ token: cancelToken, ui });
-
+            if (cancelToken.isCancellationRequested) {
+                throw new vscode.CancellationError();
+            }
             if (rawSession.isConnected) {
                 // Create our notebook
                 const notebook = new JupyterNotebook(rawSession, this.rawConnection);

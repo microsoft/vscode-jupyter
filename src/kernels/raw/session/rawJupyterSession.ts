@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../../client/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../client/../extension/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../client/common/logger';
 import { getDisplayPath } from '../../../client/common/platform/fs-paths';
@@ -84,9 +84,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession(options);
-            if (options.token?.isCancellationRequested) {
-                throw new CancellationError();
-            }
+            Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);

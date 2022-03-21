@@ -17,7 +17,7 @@ import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } fro
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IPythonExtensionChecker } from '../../../client/api/types';
-import { createPromiseFromCancellation } from '../../../client/common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../../client/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -125,9 +125,7 @@ export class KernelProcess implements IKernelProcess {
 
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
-        if (cancelToken.isCancellationRequested) {
-            throw new CancellationError();
-        }
+        Cancellation.throwIfCanceled(cancelToken);
         const exeObs = await this.launchAsObservable(workingDirectory, cancelToken);
         if (cancelToken.isCancellationRequested) {
             throw new CancellationError();
@@ -431,10 +429,7 @@ export class KernelProcess implements IKernelProcess {
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
-
-            if (cancelToken.isCancellationRequested) {
-                throw new CancellationError();
-            }
+            Cancellation.throwIfCanceled(cancelToken);
         }
 
         // If we are not python just use the ProcessExecutionFactory

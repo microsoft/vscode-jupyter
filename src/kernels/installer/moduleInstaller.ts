@@ -55,6 +55,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const environmentService = this.serviceContainer.get<IEnvironmentVariablesService>(
             IEnvironmentVariablesService
         );
+        if (cancelTokenSource.token.isCancellationRequested) {
+            return;
+        }
         const install = async (
             progress: Progress<{
                 message?: string | undefined;
@@ -62,18 +65,21 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }>,
             token: CancellationToken
         ) => {
+            const deferred = createDeferred();
             // When the progress is canceled notify caller
             token.onCancellationRequested(() => {
                 cancelTokenSource.cancel();
+                deferred.resolve();
             });
-            // Args can be for a specific exe or for the interpreter. Both need to
-            // use an activated environment though
-            const deferred = createDeferred();
+
             let observable: ObservableExecutionResult<string> | undefined;
 
             // Some installers only work with shellexec
             if (args.useShellExec) {
                 const proc = await procFactory.create(undefined);
+                if (cancelTokenSource.token.isCancellationRequested) {
+                    return;
+                }
                 try {
                     const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
                     traceInfo(results.stdout);
@@ -82,15 +88,26 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     deferred.reject(ex);
                 }
             } else if (args.exe) {
+                // Args can be for a specific exe or for the interpreter. Both need to
+                // use an activated environment though
                 // For the exe, just figure out the environment variables.
                 const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
+                if (cancelTokenSource.token.isCancellationRequested) {
+                    return;
+                }
                 const env = { ...process.env };
                 environmentService.mergeVariables(envVars || {}, env);
                 environmentService.mergePaths(envVars || {}, env);
                 const proc = await procFactory.create(undefined);
+                if (cancelTokenSource.token.isCancellationRequested) {
+                    return;
+                }
                 observable = proc.execObservable(args.exe, args.args, { encoding: 'utf-8', token, env, cwd: args.cwd });
             } else {
                 const proc = await pythonFactory.createActivatedEnvironment({ interpreter });
+                if (cancelTokenSource.token.isCancellationRequested) {
+                    return;
+                }
                 observable = proc.execObservable(args.args, {
                     encoding: 'utf-8',
                     token,

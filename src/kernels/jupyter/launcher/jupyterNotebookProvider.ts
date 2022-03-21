@@ -15,6 +15,7 @@ import {
     INotebook
 } from '../../../client/datascience/types';
 import { isLocalConnection } from '../../types';
+import { Cancellation } from '../../../client/common/cancellation';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()
@@ -51,7 +52,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             token: options.token,
             localJupyter: isLocalConnection(options.kernelConnection)
         });
-
+        Cancellation.throwIfCanceled(options.token);
         if (server) {
             return server.createNotebook(options.resource, options.kernelConnection, options.token, options.ui);
         }

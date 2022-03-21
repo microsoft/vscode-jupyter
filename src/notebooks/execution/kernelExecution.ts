@@ -8,7 +8,7 @@ import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../client/common/application/types';
-import { traceInfo, traceWarning } from '../../client/common/logger';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../client/common/logger';
 import { IDisposable, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { StopWatch } from '../../client/common/utils/stopWatch';
@@ -19,6 +19,8 @@ import { captureTelemetry } from '../../client/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { traceCellMessage } from '../helpers';
+import { getDisplayPath } from '../../client/common/platform/fs-paths';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -61,6 +63,7 @@ export class KernelExecution implements IDisposable {
         sessionPromise: Promise<IJupyterSession>,
         cell: NotebookCell
     ): Promise<NotebookCellRunState> {
+        traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {
             return NotebookCellRunState.Success;
         }
@@ -70,9 +73,11 @@ export class KernelExecution implements IDisposable {
             await this._restartPromise;
         }
 
+        traceCellMessage(cell, `KernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
+        traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
         return result[0];
     }
     public async cancel() {
@@ -157,6 +162,7 @@ export class KernelExecution implements IDisposable {
         await this._restartPromise;
     }
     public dispose() {
+        traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
     private getOrCreateCellExecutionQueue(document: NotebookDocument, sessionPromise: Promise<IJupyterSession>) {
