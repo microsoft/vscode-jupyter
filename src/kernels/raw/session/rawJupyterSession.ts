@@ -65,7 +65,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     public async waitForIdle(timeout: number): Promise<void> {
-        // Wait until status says idle.
+        // Wait until status says idle.dd
         if (this.session) {
             return this.waitForIdleOnSession(this.session, timeout);
         }

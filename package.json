@@ -72,7 +72,7 @@
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive"
     ],
-    "main": "./out/extension",
+    "main": "./out/extension.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {

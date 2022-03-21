@@ -5,7 +5,9 @@
 
 import * as path from 'path';
 
-export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..');
+const webpacked = !path.basename(__dirname).includes('platform');
+
+export const EXTENSION_ROOT_DIR = webpacked ? path.join(__dirname, '..') : path.join(__dirname, '..', '..');
 
 export const HiddenFileFormatString = '_HiddenFile_{0}.py';
 
