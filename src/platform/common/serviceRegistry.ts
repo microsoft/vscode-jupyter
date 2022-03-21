@@ -4,8 +4,8 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
 import { IServiceManager } from '../ioc/types';
-import { ImportTracker } from '../telemetry/importTracker';
-import { IImportTracker } from '../telemetry/types';
+import { ImportTracker } from '../../telemetry/importTracker';
+import { IImportTracker } from '../../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ClipboardService } from './application/clipboard';
@@ -50,7 +50,7 @@ import {
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { PortAttributesProviders } from './net/portAttributeProvider';
-import { LanguageInitializer } from '../telemetry/languageInitializer';
+import { LanguageInitializer } from '../../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry';

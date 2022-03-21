@@ -31,7 +31,7 @@ import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';

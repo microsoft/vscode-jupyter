@@ -4,7 +4,6 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
@@ -26,8 +25,8 @@ import { InteractiveWindowMessages } from '../../platform/messageTypes';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { sendTelemetryEvent } from '../../platform/telemetry';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
@@ -42,7 +41,6 @@ import { IIPyWidgetMessageDispatcher } from './types';
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
  */
-@injectable()
 //
 export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

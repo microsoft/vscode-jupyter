@@ -14,7 +14,7 @@ import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource 
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
 import {
@@ -36,7 +36,7 @@ import {
     IGetSliceRequest
 } from './types';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
-import { CheckboxState } from '../../telemetry/constants';
+import { CheckboxState } from '../../../telemetry/constants';
 import { IKernel } from '../../../kernels/types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';

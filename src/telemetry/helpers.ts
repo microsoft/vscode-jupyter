@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as hashjs from 'hash.js';
-import { traceError } from '../common/logger';
-import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../datascience/constants';
+import { traceError } from '../platform/common/logger';
+import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../platform/datascience/constants';
 
 export function getTelemetrySafeLanguage(language: string = 'unknown') {
     language = (language || 'unknown').toLowerCase();

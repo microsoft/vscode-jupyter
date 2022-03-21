@@ -3,7 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import { injectable, unmanaged } from 'inversify';
 import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
 import {
@@ -18,7 +17,6 @@ import { noop } from '../../common/utils/misc';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewHost } from './webviewHost';
 
-@injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
         return this.disposed;
@@ -34,21 +32,20 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     private messageListener: IWebviewPanelMessageListener;
 
     constructor(
-        @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() private provider: IWebviewPanelProvider,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged()
+        protected configService: IConfigurationService,
+        private provider: IWebviewPanelProvider,
+        cssGenerator: ICodeCssGenerator,
+        protected themeFinder: IThemeFinder,
+        protected workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             viewChanged: (panel: IWebviewPanel) => void,
             disposed: () => void
         ) => IWebviewPanelMessageListener,
-        @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[],
-        @unmanaged() private _title: string,
-        @unmanaged() private viewColumn: ViewColumn
+        rootPath: string,
+        scripts: string[],
+        private _title: string,
+        private viewColumn: ViewColumn
     ) {
         super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts);
 

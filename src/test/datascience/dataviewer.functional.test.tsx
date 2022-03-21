@@ -18,7 +18,7 @@ suite('Dummy1a', () => {
 // import * as React from 'react';
 // import * as uuid from 'uuid/v4';
 // import { Disposable } from 'vscode';
-// const telemetry = require('../../platform/telemetry/index');
+// const telemetry = require('../../telemetry/index');
 // import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 // import {
 //     DataViewerMessages,
@@ -41,7 +41,7 @@ suite('Dummy1a', () => {
 // import { IMountedWebView } from './mountedWebView';
 // import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
 // import { Dropdown } from '@fluentui/react';
-// import { CheckboxState, SliceOperationSource } from '../../platform/telemetry/constants';
+// import { CheckboxState, SliceOperationSource } from '../../telemetry/constants';
 // import { range } from 'lodash';
 
 // interface ISliceControlTestInterface {

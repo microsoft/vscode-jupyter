@@ -17,7 +17,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { getResourceType } from '../../platform/datascience/common';
 import { KernelProgressReporter } from '../../platform/datascience/progress/kernelProgressReporter';
 import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from '../../platform/datascience/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';

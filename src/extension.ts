@@ -77,7 +77,7 @@ import { IFileSystem } from './platform/common/platform/types';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { IDataScience } from './platform/datascience/types';
 import { addOutputChannelLogging, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './platform/telemetry/extensionInstallTelemetry';
+import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';

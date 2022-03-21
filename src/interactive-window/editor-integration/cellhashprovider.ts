@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as hashjs from 'hash.js';
-import { inject, injectable, multiInject, optional } from 'inversify';
 import {
     Disposable,
     Event,
@@ -50,7 +49,6 @@ interface IRangedCellHash extends ICellHash {
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
-@injectable()
 export class CellHashProvider implements ICellHashProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -67,11 +65,11 @@ export class CellHashProvider implements ICellHashProvider {
     private executionCounts: Map<number, string> = new Map<number, string>();
 
     constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fs: IFileSystem,
-        @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined,
+        private documentManager: IDocumentManager,
+        private configService: IConfigurationService,
+        private debugService: IDebugService,
+        private fs: IFileSystem,
+        private listeners: ICellHashListener[] | undefined,
         private readonly kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes

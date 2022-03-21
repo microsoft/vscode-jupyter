@@ -9,7 +9,7 @@ import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Common, DataScience } from '../common/utils/localize';
 import { Telemetry } from '../datascience/constants';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 
 type ApiExtensionInfo = {
     extensionId: string;

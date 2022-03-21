@@ -5,7 +5,7 @@
 import type { Uri } from 'vscode';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { LogLevel } from './levels';
 import { ILogger, logToAll } from './logger';
 import { argsToLogString, returnValueToLogString } from './util';

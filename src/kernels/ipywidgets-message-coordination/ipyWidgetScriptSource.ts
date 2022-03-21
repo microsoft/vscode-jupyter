@@ -23,7 +23,7 @@ import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/mes
 import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { getOSType, OSType } from '../../test/common';
 import { IKernel, IKernelProvider } from '../types';

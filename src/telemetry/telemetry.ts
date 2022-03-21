@@ -4,24 +4,29 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { getOSType } from '../common/utils/platform';
-import { KernelConnectionMetadata } from '../../kernels/types';
-import { Resource } from '../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../telemetry';
-import { StopWatch } from '../common/utils/stopWatch';
+import { getOSType } from '../platform/common/utils/platform';
+import { KernelConnectionMetadata } from '../platform/../kernels/types';
+import { Resource } from '../platform/common/types';
+import {
+    IEventNamePropertyMapping,
+    sendTelemetryEvent,
+    setSharedProperty,
+    waitBeforeSending
+} from '../platform/../telemetry';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { PYTHON_LANGUAGE } from '../common/constants';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../telemetry/helpers';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers';
+import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
-import { populateTelemetryWithErrorInfo } from '../../platform/errors';
-import { createDeferred } from '../common/utils/async';
-import { getNormalizedInterpreterPath } from '../pythonEnvironments/info/interpreter';
-import { Telemetry } from '../datascience/constants';
-import { getResourceType } from '../datascience/common';
-import { InterruptResult } from '../datascience/types';
+import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
+import { createDeferred } from '../platform/common/utils/async';
+import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
+import { Telemetry } from '../platform/datascience/constants';
+import { getResourceType } from '../platform/datascience/common';
+import { InterruptResult } from '../platform/datascience/types';
 
 /**
  * This information is sent with each telemetry event.

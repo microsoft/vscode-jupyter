@@ -11,7 +11,6 @@ import { NotebookCellLanguageService } from '../intellisense/cellLanguageService
 import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
-import { PythonKernelCompletionProvider } from '../intellisense/pythonKernelCompletionProvider';
 import { KernelProvider } from '../kernels/kernelProvider';
 import { IKernelProvider } from '../kernels/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -27,6 +26,7 @@ import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { INotebookLanguageClientProvider, INotebookControllerManager } from './types';
+import { NotebookUsageTracker } from './notebookUsageTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -49,10 +49,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookCellBangInstallDiagnosticsProvider
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addSingleton<PythonKernelCompletionProvider>(
-        PythonKernelCompletionProvider,
-        PythonKernelCompletionProvider
-    );
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
@@ -76,4 +72,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         ErrorRendererCommunicationHandler
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        NotebookUsageTracker
+    );
 }

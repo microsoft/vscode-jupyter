@@ -18,7 +18,7 @@ import {
     isTelemetryDisabled,
     sendTelemetryEvent,
     setSharedProperty
-} from '../../platform/telemetry';
+} from '../../telemetry';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;

@@ -9,10 +9,10 @@ import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
 import { DataScience } from '../common/utils/localize';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
 import { ICell } from './types';
-import { getTelemetrySafeLanguage } from '../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.

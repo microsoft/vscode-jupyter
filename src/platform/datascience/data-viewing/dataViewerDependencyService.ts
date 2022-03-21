@@ -16,7 +16,7 @@ import { IsCodeSpace } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { parseSemVer } from '../common';
 import { Telemetry } from '../constants';
 

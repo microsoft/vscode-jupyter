@@ -6,7 +6,7 @@
 import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { Telemetry } from '../../datascience/constants';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 

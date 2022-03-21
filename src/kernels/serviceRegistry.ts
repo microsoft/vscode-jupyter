@@ -45,7 +45,7 @@ import {
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../platform/debugger/extension/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { setSharedProperty } from '../platform/telemetry';
+import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger';
 import { JupyterDebugService } from './debugging/jupyterDebugService';
 import { isLocalLaunch } from './helpers';
@@ -78,6 +78,7 @@ import { HostJupyterServer } from './jupyter/launcher/liveshare/hostJupyterServe
 import { NotebookProvider } from './jupyter/launcher/notebookProvider';
 import { NotebookServerProvider } from './jupyter/launcher/notebookServerProvider';
 import { NotebookStarter } from './jupyter/launcher/notebookStarter';
+import { ServerPreload } from './jupyter/launcher/serverPreload';
 import { JupyterServerUriStorage } from './jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterSessionManagerFactory } from './jupyter/session/jupyterSessionManagerFactory';
@@ -270,6 +271,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
 
     // Subdirectories
     registerInstallerTypes(serviceManager);

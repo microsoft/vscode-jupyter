@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -14,6 +15,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 
 import { initialize } from './initialize';
+import { interfaces } from 'inversify/lib/interfaces/interfaces';
 
 /**
  * A TypeScript language service host
@@ -66,6 +68,7 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
     let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     let program = languageService.getProgram();
+    const classes = new Set<string>();
 
     // Visit every sourceFile in the program
     if (program) {
@@ -77,8 +80,6 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
         }
     }
 
-    let classes: string[] = [];
-
     /** visit nodes finding exported classes */
     function visit(sourceFile: ts.SourceFile, node: ts.Node) {
         // Only consider exported classes
@@ -89,7 +90,7 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
         if (ts.isClassDeclaration(node) && node.decorators) {
             // See if it has the 'injectable' decorator or not
             if (node.decorators.find((d) => d.getText(sourceFile).includes('injectable'))) {
-                classes.push(node.name?.getFullText(sourceFile) || '');
+                classes.add(node.name?.escapedText.toString().trim() || '');
             }
         } else if (ts.isModuleDeclaration(node)) {
             // This is a namespace, visit its children
@@ -110,7 +111,7 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
 
 async function getSourceFiles() {
     const files = await new Promise<string[]>((resolve, reject) => {
-        const globPattern = path.join(__dirname, '..', '**', '*.ts').replace('\\\\', '/');
+        const globPattern = path.join(__dirname, '..', '..', 'src', '**', '*.ts').replace(/\\/g, '/');
         glob(globPattern, (ex, res) => {
             if (ex) {
                 reject(ex);
@@ -149,7 +150,43 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
             target: ts.ScriptTarget.ES5,
             module: ts.ModuleKind.CommonJS
         });
-        const list = api.serviceManager.getAll('Symbol');
-        assert.equal(classes.length, list.length, `Classes not found`);
+        const map = (api.serviceManager.container as any)._bindingDictionary._map as Map<
+            number,
+            Array<interfaces.Binding<any>>
+        >;
+
+        // Go through all the classes and see that each one is an implementation type of something
+        const implementationTypes = new Set<string>();
+        const notFound = new Set<string>(classes);
+        [...map.entries()].forEach((e) => {
+            e[1].forEach((b) => {
+                let name: string | undefined;
+                const type = b.implementationType;
+                if (type) {
+                    name = type.name;
+                }
+                const cache = b.cache;
+                if (b.type === 'ConstantValue' && cache && cache.constructor) {
+                    name = cache.constructor.name;
+                }
+                if (name) {
+                    if (notFound.has(name)) {
+                        notFound.delete(name);
+                    }
+                    implementationTypes.add(name);
+                }
+            });
+        });
+
+        // There are set of known types that are expected to not be picked up because
+        // they only show up in dev mode
+        const devModeExceptions = ['LogReplayService'];
+        devModeExceptions.forEach((d) => notFound.delete(d));
+
+        assert.equal(
+            notFound.size,
+            0,
+            `List of classes not in registry that are marked as injectable: ${[...notFound].join('\n')}`
+        );
     });
 });

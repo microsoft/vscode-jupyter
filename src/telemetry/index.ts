@@ -5,28 +5,28 @@ import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
-import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceInfo } from '../common/logger';
-import { StopWatch } from '../common/utils/stopWatch';
+import { IWorkspaceService } from '../platform/common/application/types';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { traceError, traceInfo } from '../platform/common/logger';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../datascience/constants';
+} from '../platform/datascience/constants';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { ExportFormat } from '../datascience/export/types';
-import { InterruptResult } from '../datascience/types';
+import { ExportFormat } from '../platform/datascience/export/types';
+import { InterruptResult } from '../platform/datascience/types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
-import { noop } from '../common/utils/misc';
+import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
-import { DebuggingTelemetry } from '../debugger/constants';
-import { EnvironmentType } from '../pythonEnvironments/info';
-import { IExportedKernelService } from '../api/extension';
-import { populateTelemetryWithErrorInfo } from '../../platform/errors';
-import { TelemetryErrorProperties, ErrorCategory } from '../../platform/errors/types';
+import { DebuggingTelemetry } from '../platform/debugger/constants';
+import { EnvironmentType } from '../platform/pythonEnvironments/info';
+import { IExportedKernelService } from '../platform/api/extension';
+import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
+import { TelemetryErrorProperties, ErrorCategory } from '../platform/../platform/errors/types';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { IPythonExecutionFactory } from '../common/process/types';
-import { IDisposableRegistry, InterpreterUri } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { isResource, noop } from '../common/utils/misc';
-import { IInterpreterService } from '../interpreter/contracts';
-import { PythonEnvironment } from '../pythonEnvironments/info';
-import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
+import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IDisposableRegistry, InterpreterUri } from '../platform/common/types';
+import { createDeferred, Deferred } from '../platform/common/utils/async';
+import { isResource, noop } from '../platform/common/utils/misc';
+import { IInterpreterService } from '../platform/interpreter/contracts';
+import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../platform/../telemetry/helpers';
 
 const interestedPackages = new Set(
     [

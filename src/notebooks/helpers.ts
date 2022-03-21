@@ -33,7 +33,7 @@ import { IFileSystem } from '../platform/common/platform/types';
 import { Resource } from '../platform/common/types';
 import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../platform/datascience/types';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../platform/telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { splitMultilineString, concatMultilineString } from '../datascience-ui/common';
 import { Telemetry } from '../datascience-ui/common/constants';
 import {

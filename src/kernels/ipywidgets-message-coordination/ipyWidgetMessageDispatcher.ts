@@ -15,7 +15,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../platform/messageTypes';
 import { KernelSocketInformation } from '../../platform/datascience/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel, IKernelProvider } from '../types';
 import { WIDGET_MIMETYPE } from './constants';

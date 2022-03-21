@@ -49,7 +49,7 @@ import {
     translateCellDisplayOutput
 } from '../../notebooks/helpers';
 import { ICellHashProvider, IJupyterSession, ICellHash } from '../../platform/datascience/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { formatStreamText, concatMultilineString } from '../../datascience-ui/common';
 import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../datascience-ui/common/cellFactory';
 import { Telemetry } from '../../datascience-ui/common/constants';

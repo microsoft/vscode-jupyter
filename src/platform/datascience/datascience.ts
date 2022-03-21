@@ -11,7 +11,7 @@ import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';

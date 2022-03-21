@@ -6,7 +6,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
 import { ExportFormat } from './types';
 
@@ -43,7 +43,7 @@ export class ExportFileOpener {
         const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
         const editor = await this.documentManager.showTextDocument(doc);
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit((editBuilder) => {
+        await editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
     }

@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ExperimentationTelemetry } from '../../../platform/common/experiments/telemetry';
-import * as Telemetry from '../../../platform/telemetry';
+import * as Telemetry from '../../../telemetry';
 
 suite('Experimentation telemetry', () => {
     const event = 'SomeEventName';

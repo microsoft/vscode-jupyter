@@ -12,7 +12,7 @@ import {
     IJupyterVariablesResponse,
     IJupyterVariable
 } from '../../platform/datascience/types';
-import { captureTelemetry } from '../../platform/telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel } from '../types';
 

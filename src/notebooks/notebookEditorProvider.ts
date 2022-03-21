@@ -9,7 +9,7 @@ import { IVSCodeNotebook } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { INotebookEditorProvider } from '../platform/datascience/types';
-import { captureTelemetry } from '../platform/telemetry';
+import { captureTelemetry } from '../telemetry';
 import { Telemetry, defaultNotebookFormat } from '../datascience-ui/common/constants';
 import { JupyterNotebookView } from './constants';
 

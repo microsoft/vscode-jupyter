@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
@@ -11,7 +10,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { IMemento, GLOBAL_MEMENTO, ReadWrite } from '../../../platform/common/types';
+import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 import { IJupyterKernelSpec } from '../../../platform/datascience/types';
@@ -26,7 +25,6 @@ type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
-@injectable()
 export abstract class LocalKernelSpecFinderBase {
     private _oldKernelSpecsFolder?: string;
     protected get oldKernelSpecsFolder() {
@@ -51,10 +49,10 @@ export abstract class LocalKernelSpecFinderBase {
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
 
     constructor(
-        @inject(IFileSystem) protected readonly fs: IFileSystem,
-        @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService,
+        protected readonly fs: IFileSystem,
+        protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) protected readonly globalState: Memento
+        protected readonly globalState: Memento
     ) {}
 
     @testOnlyMethod()

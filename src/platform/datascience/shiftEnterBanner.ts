@@ -9,7 +9,7 @@ import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IConfigurationService, IJupyterExtensionBanner, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from './constants';
 
 export enum InteractiveShiftEnterStateKeys {

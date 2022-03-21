@@ -28,7 +28,7 @@ import { isUri } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { traceDecorators } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../platform/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../../platform/datascience/constants';

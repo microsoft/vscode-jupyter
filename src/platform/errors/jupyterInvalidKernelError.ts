@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DataScience } from '../../platform/common/utils/localize';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelConnectionMetadata } from '../../kernels/types';

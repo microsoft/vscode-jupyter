@@ -5,9 +5,9 @@ import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IServiceContainer } from './ioc/types';
-import { sendTelemetryEvent } from './telemetry';
-import { EventName } from './telemetry/constants';
-import { EditorLoadTelemetry } from './telemetry/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
+import { EditorLoadTelemetry } from '../telemetry/types';
 
 interface IStopWatch {
     elapsedTime: number;

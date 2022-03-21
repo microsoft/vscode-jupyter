@@ -24,7 +24,7 @@ import {
     JupyterServerUriHandle
 } from '../../platform/datascience/types';
 import { traceDecorators } from '../../platform/logging';
-import { captureTelemetry, sendTelemetryEvent } from '../../platform/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Identifiers } from '../../datascience-ui/common/constants';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';

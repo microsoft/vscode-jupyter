@@ -3,18 +3,17 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstaller, IProductPathService, ModuleNamePurpose, Product } from './types';
 
-@injectable()
 export abstract class BaseProductPathsService implements IProductPathService {
     protected readonly configService: IConfigurationService;
     protected readonly productInstaller: IInstaller;
-    constructor(@inject(IServiceContainer) protected serviceContainer: IServiceContainer) {
+    constructor(protected serviceContainer: IServiceContainer) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.productInstaller = serviceContainer.get<IInstaller>(IInstaller);
     }

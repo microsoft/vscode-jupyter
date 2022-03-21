@@ -47,7 +47,7 @@ import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines, parseForComments } from '../datascience-ui/common';
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../datascience-ui/common/cellFactory';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../platform/telemetry/telemetry';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';

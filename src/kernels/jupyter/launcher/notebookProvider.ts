@@ -8,7 +8,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { Settings } from '../../../platform/datascience/constants';
 import { DisplayOptions } from '../../../platform/datascience/displayOptions';
-import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../platform/telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
 import {
     INotebookProvider,
     IRawNotebookProvider,

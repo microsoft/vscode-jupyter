@@ -24,7 +24,7 @@ import { KernelProgressReporter } from '../../../platform/datascience/progress/k
 import { ReportableAction } from '../../../platform/datascience/progress/types';
 import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../platform/datascience/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../../platform/telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { WrappedError } from '../../../platform/errors/types';

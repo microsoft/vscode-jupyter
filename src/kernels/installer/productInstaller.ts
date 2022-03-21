@@ -32,8 +32,8 @@ import {
 } from '../../platform/common/types';
 import { isResource } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
-import { InterpreterPackages } from '../../platform/telemetry/interpreterPackages';
+import { sendTelemetryEvent } from '../../telemetry';
+import { InterpreterPackages } from '../../telemetry/interpreterPackages';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { noop, sleep } from '../../test/core';
 import { Telemetry } from '../../datascience-ui/common/constants';

@@ -5926,11 +5926,11 @@ action:
 
 -   // User chose to dismiss the prompt.
     resourceType?: 'notebook' | 'interactive';
--          /**
-            * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-            * If we run the same notebook tomorrow, the hash will be the same.
-            */
-           resourceHash?: string;
+-            /**
+              * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+              * If we run the same notebook tomorrow, the hash will be the same.
+              */
+             resourceHash?: string;
 
 ## Locations Used
 
@@ -7432,7 +7432,7 @@ No properties for event
 [src/client/telemetry/types.ts#L8](https://github.com/microsoft/vscode-jupyter/tree/main/src/client/telemetry/types.ts#L8)
 
 ```typescript
-import { IEventNamePropertyMapping } from '../telemetry/index';
+import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EXTENSION_LOAD];

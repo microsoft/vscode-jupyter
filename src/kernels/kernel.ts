@@ -39,7 +39,7 @@ import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
-} from '../platform/telemetry/telemetry';
+} from '../telemetry/telemetry';
 import {
     INotebookProviderConnection,
     KernelSocketInformation,
@@ -50,7 +50,7 @@ import {
     InterruptResult
 } from '../platform/datascience/types';
 import { calculateWorkingDirectory } from '../platform/datascience/utils';
-import { sendTelemetryEvent } from '../platform/telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
 import { sleep } from '../test/core';

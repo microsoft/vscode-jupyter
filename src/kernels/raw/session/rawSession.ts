@@ -11,7 +11,7 @@ import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
 import { ISessionWithSocket, KernelSocketInformation } from '../../../platform/datascience/types';
-import { sendTelemetryEvent } from '../../../platform/telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { KernelConnectionMetadata } from '../../types';
 import { IKernelProcess } from '../types';

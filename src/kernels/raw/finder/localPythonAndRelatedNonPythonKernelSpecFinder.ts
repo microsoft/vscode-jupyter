@@ -19,7 +19,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
-import { captureTelemetry } from '../../../platform/telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';

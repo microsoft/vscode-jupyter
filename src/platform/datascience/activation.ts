@@ -10,7 +10,7 @@ import '../common/extensions';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from '../../interactive-window/commands/activeEditorContext';
 import { IRawNotebookSupportedService } from './types';

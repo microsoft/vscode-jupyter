@@ -15,7 +15,7 @@ import { reportAction } from '../../../platform/datascience/progress/decorator';
 import { ReportableAction } from '../../../platform/datascience/progress/types';
 import { IJupyterCommandFactory } from '../../../platform/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../platform/telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';

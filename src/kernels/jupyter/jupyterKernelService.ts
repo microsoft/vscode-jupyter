@@ -25,7 +25,7 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { traceDecorators } from '../../platform/logging';
 import { logValue, ignoreLogging } from '../../platform/logging/trace';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../platform/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';

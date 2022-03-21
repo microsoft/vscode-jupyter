@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
 import { IPlotViewer, IPlotViewerProvider } from '../types';
 

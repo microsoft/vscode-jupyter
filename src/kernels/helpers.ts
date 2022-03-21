@@ -36,7 +36,7 @@ import { DataScience } from '../platform/common/utils/localize';
 import { getResourceType } from '../platform/datascience/common';
 import { Settings } from '../platform/datascience/constants';
 import { SysInfoReason } from '../platform/messageTypes';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../platform/telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import {
     IJupyterSession,
     IInteractiveWindowProvider,
@@ -52,8 +52,8 @@ import {
     getInterpreterHash,
     areInterpreterPathsSame
 } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../platform/telemetry';
-import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Commands } from '../datascience-ui/common/constants';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';

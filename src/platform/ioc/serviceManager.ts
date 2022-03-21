@@ -8,7 +8,7 @@ type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 
 @injectable()
 export class ServiceManager implements IServiceManager {
-    constructor(private container: Container) {}
+    constructor(public readonly container: Container) {}
     public add<T>(
         serviceIdentifier: identifier<T>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

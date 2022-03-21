@@ -22,7 +22,7 @@ import { DisplayOptions } from '../../../platform/datascience/displayOptions';
 import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { IJupyterConnection, IDisplayOptions, ISessionWithSocket } from '../../../platform/datascience/types';
-import { captureTelemetry } from '../../../platform/telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';

@@ -4,7 +4,7 @@ import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/trace';
-import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
+import { sendFileCreationTelemetry } from '../../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators, traceInfoIfCI, traceVerbose } from '../logger';
 import { IDisposableRegistry } from '../types';

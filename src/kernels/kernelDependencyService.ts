@@ -23,8 +23,8 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { traceDecorators } from '../platform/logging';
 import { ignoreLogging, logValue, TraceOptions } from '../platform/logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../platform/telemetry';
-import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { Telemetry } from '../datascience-ui/common/constants';
 import {
     isModulePresentInEnvironmentCache,

@@ -6,8 +6,8 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceVerbose } from '../logger';

@@ -3,7 +3,7 @@
 'use strict';
 
 import { DataScience } from '../../platform/common/utils/localize';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { BaseKernelError } from './types';

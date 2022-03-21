@@ -10,7 +10,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry } from '../../platform/telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,

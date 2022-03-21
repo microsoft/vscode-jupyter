@@ -15,7 +15,7 @@ import { createDeferredFromPromise, sleep } from '../utils/async';
 import { OSType } from '../utils/platform';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { logValue, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
@@ -27,7 +27,7 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IInterpreterService } from '../../interpreter/contracts';
 import { CurrentProcess } from './currentProcess';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { CondaService } from './condaService';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment';
 import { printEnvVariablesToFile } from './internal/scripts';

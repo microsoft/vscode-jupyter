@@ -3,7 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
@@ -18,7 +17,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerFactory } from '../data-viewing/types';
 import {
@@ -41,26 +40,25 @@ const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
 // to execution and changing of the active notebook
-@injectable()
 export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> implements IDisposable {
     private dataViewerChecker: DataViewerChecker;
     protected get owningResource(): Resource {
         return undefined;
     }
     constructor(
-        @unmanaged() configuration: IConfigurationService,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() themeFinder: IThemeFinder,
-        @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() provider: IWebviewViewProvider,
-        @unmanaged() private readonly variables: IJupyterVariables,
-        @unmanaged() private readonly disposables: IDisposableRegistry,
-        @unmanaged() private readonly appShell: IApplicationShell,
-        @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
-        @unmanaged() private readonly notebookWatcher: INotebookWatcher,
-        @unmanaged() private readonly commandManager: ICommandManager,
-        @unmanaged() private readonly documentManager: IDocumentManager
+        configuration: IConfigurationService,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        workspaceService: IWorkspaceService,
+        provider: IWebviewViewProvider,
+        private readonly variables: IJupyterVariables,
+        private readonly disposables: IDisposableRegistry,
+        private readonly appShell: IApplicationShell,
+        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        private readonly dataViewerFactory: IDataViewerFactory,
+        private readonly notebookWatcher: INotebookWatcher,
+        private readonly commandManager: ICommandManager,
+        private readonly documentManager: IDocumentManager
     ) {
         super(
             configuration,

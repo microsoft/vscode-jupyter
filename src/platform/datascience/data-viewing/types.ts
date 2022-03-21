@@ -5,8 +5,8 @@
 import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
 import { Event } from 'vscode';
-import { SliceOperationSource } from '../../telemetry/constants';
 import { IKernel } from '../../../kernels/types';
+import { SliceOperationSource } from '../../../telemetry/constants';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;

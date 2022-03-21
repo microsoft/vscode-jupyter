@@ -3,8 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { traceError } from '../logger';
 import { isFileNotFoundError } from '../platform/errors';
 import { IFileSystem } from '../platform/types';

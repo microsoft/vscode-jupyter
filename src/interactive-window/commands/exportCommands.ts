@@ -14,7 +14,7 @@ import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../../platform/datascience/constants';
 import { FileConverter } from '../../platform/datascience/export/fileConverter';
 import { ExportFormat, IFileConverter } from '../../platform/datascience/export/types';

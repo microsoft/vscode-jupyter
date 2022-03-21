@@ -10,7 +10,6 @@ import { registerTypes as dataScienceRegisterTypes } from './datascience/service
 import { registerLoggerTypes } from './logging/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { registerTypes as telemetryRegisterTypes } from './telemetry/serviceRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     // Logging should be done first so we get logging going asap
@@ -21,5 +20,4 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     commonRegisterTypes(serviceManager);
     dataScienceRegisterTypes(serviceManager, isDevMode);
     commonRegisterTerminalTypes(serviceManager);
-    telemetryRegisterTypes(serviceManager);
 }

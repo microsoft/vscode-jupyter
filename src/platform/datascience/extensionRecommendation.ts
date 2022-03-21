@@ -9,7 +9,7 @@ import { disposeAllDisposables } from '../common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
 import { Common, DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from './constants';
 import {
     getKernelConnectionLanguage,

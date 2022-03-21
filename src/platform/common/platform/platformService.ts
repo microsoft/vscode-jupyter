@@ -5,8 +5,8 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName, PlatformErrors } from '../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName, PlatformErrors } from '../../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';

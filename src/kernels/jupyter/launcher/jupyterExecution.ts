@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
@@ -26,7 +25,7 @@ import {
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry } from '../../../platform/telemetry';
+import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry, Identifiers } from '../../../datascience-ui/common/constants';
 import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
 
@@ -34,7 +33,6 @@ import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
-@injectable()
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;

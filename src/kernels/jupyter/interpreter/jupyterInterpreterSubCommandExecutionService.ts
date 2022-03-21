@@ -24,7 +24,7 @@ import {
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../platform/telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';

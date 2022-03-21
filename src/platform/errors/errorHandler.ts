@@ -25,7 +25,7 @@ import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../platform/datascience/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { translateProductToModule } from '../../kernels/installer/moduleInstaller';

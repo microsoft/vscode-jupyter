@@ -7,7 +7,7 @@ import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IConfigurationService, IExtensions } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';

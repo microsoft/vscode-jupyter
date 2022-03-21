@@ -47,7 +47,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/datascienc
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
-} from '../../platform/telemetry/telemetry';
+} from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, KernelSocketInformation } from '../../platform/datascience/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';

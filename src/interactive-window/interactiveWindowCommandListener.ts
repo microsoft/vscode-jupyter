@@ -27,7 +27,7 @@ import { traceError, traceInfo } from '../platform/common/logger';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
-import { captureTelemetry } from '../platform/telemetry';
+import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
 import { generateCellsFromDocument } from '../platform/datascience/cellFactory';
 import { Commands, Telemetry } from '../platform/datascience/constants';

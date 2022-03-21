@@ -10,7 +10,7 @@ import { traceInfo } from '../platform/common/logger';
 import { IDisposableRegistry, IConfigurationService, IDisposable } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
-import { trackKernelResourceInformation } from '../platform/telemetry/telemetry';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import {
     IDataScienceCommandListener,
     IStatusProvider,
@@ -18,7 +18,7 @@ import {
     IDataScienceErrorHandler
 } from '../platform/datascience/types';
 import { IServiceContainer } from '../platform/ioc/types';
-import { sendTelemetryEvent } from '../platform/telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { Commands, Telemetry } from '../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
 import { JupyterSession } from './jupyter/session/jupyterSession';

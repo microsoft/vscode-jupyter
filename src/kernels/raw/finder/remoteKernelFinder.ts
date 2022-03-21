@@ -17,7 +17,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceError, traceInfoIfCI } from '../../../platform/common/logger';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { getResourceType } from '../../../platform/datascience/common';
-import { sendKernelListTelemetry } from '../../../platform/telemetry/kernelTelemetry';
+import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
 import {
     IJupyterSessionManagerFactory,
     INotebookProviderConnection,
@@ -27,8 +27,8 @@ import {
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging } from '../../../platform/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
-import { getTelemetrySafeLanguage } from '../../../platform/telemetry/helpers';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IRemoteKernelFinder } from '../types';
 import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';

@@ -3,7 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import { injectable, unmanaged } from 'inversify';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
 import {
@@ -17,7 +16,6 @@ import { IConfigurationService, IDisposable, Resource } from '../../common/types
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { WebviewHost } from './webviewHost';
 
-@injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
         return this.disposed;
@@ -31,18 +29,17 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
     private messageListener: IWebviewViewMessageListener;
 
     constructor(
-        @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged()
+        protected configService: IConfigurationService,
+        cssGenerator: ICodeCssGenerator,
+        protected themeFinder: IThemeFinder,
+        protected workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             disposed: () => void
         ) => IWebviewViewMessageListener,
-        @unmanaged() protected provider: IWebviewViewProvider,
-        @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[]
+        protected provider: IWebviewViewProvider,
+        rootPath: string,
+        scripts: string[]
     ) {
         super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts);
 

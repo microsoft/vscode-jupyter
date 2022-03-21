@@ -14,7 +14,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel, IKernelProvider } from '../../kernels/types';

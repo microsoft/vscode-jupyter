@@ -18,7 +18,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../p
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { CodeLensCommands, EditorContexts, Telemetry } from '../../platform/datascience/constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../platform/datascience/types';
 import { traceInfoIfCI } from '../../platform/common/logger';

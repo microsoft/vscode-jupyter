@@ -19,7 +19,7 @@ import {
     IJupyterVariablesResponse
 } from '../../platform/datascience/types';
 import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';

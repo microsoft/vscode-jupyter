@@ -40,7 +40,7 @@ import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPo
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace';
-import { captureTelemetry } from '../../../platform/telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../datascience-ui/common/constants';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon';
 import { IJupyterKernelSpec } from '../../../platform/datascience/types';

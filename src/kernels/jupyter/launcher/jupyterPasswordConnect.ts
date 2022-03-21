@@ -11,7 +11,7 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platfo
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../../../platform/datascience/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 
 @injectable()

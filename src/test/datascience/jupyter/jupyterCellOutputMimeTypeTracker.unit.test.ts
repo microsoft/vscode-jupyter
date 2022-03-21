@@ -13,7 +13,7 @@ export const __ = '';
 // import { CellOutputMimeTypeTracker } from '../../../platform/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
 // import { NativeEditorNotebookModel } from '../../../notebooksStorage/notebookModel';
 // import { CellState, ICell, INotebookEditor } from '../../../platform/datascience/types';
-// import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+// import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 // import { IVSCodeNotebook } from '../../../platform/common/application/types';
 // import { IDisposable } from '../../../platform/common/types';
 // import { disposeAllDisposables } from '../../../platform/common/helpers';

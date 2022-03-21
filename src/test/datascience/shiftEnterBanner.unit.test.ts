@@ -18,7 +18,7 @@ import {
     InteractiveShiftEnterBanner,
     InteractiveShiftEnterStateKeys
 } from '../../platform/datascience/shiftEnterBanner';
-import { clearTelemetryReporter } from '../../platform/telemetry';
+import { clearTelemetryReporter } from '../../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;

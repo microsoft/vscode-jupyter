@@ -8,7 +8,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../platform/telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { LanguagesSupportedByPythonkernel, Telemetry, PythonExtension } from '../../datascience-ui/common/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../helpers';
 

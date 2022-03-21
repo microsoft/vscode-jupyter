@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { EnvironmentType } from '../pythonEnvironments/info';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { EnvironmentType } from '../platform/pythonEnvironments/info';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName } from './constants';
 

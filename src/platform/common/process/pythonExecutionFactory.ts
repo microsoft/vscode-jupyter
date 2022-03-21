@@ -6,8 +6,8 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IServiceContainer } from '../../ioc/types';
 import { ignoreLogging, TraceOptions } from '../../logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators, traceError, traceInfo } from '../logger';
 import { getDisplayPath } from '../platform/fs-paths';

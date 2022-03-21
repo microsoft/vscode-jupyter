@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Commands, EditorContexts, Telemetry } from '../constants';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { ICommandManager } from '../../common/application/types';

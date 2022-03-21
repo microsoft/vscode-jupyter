@@ -26,7 +26,7 @@ import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterSession } from '../../datascience/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import {
     IDebuggingDelegate,

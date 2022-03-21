@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
@@ -27,14 +25,13 @@ export type ExecutionInstallArgs = {
     useShellExec?: boolean;
 };
 
-@injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;
     public abstract get displayName(): string;
     public abstract get type(): ModuleInstallerType;
 
-    constructor(@inject(IServiceContainer) protected serviceContainer: IServiceContainer) {}
+    constructor(protected serviceContainer: IServiceContainer) {}
 
     public async installModule(
         productOrModuleName: Product | string,

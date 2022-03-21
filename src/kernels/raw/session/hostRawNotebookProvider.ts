@@ -28,8 +28,8 @@ import {
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { trackKernelResourceInformation } from '../../../platform/telemetry/telemetry';
-import { captureTelemetry, sendTelemetryEvent } from '../../../platform/telemetry';
+import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';

@@ -13,7 +13,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterService } from '../interpreter/contracts';
-import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
+import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry';
 import {
     IExtensionActivationManager,
     IExtensionActivationService,

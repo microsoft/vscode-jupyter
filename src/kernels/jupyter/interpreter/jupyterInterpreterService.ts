@@ -11,7 +11,7 @@ import '../../../platform/common/extensions';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../platform/telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import {

@@ -5,7 +5,6 @@
 
 import '../../common/extensions';
 
-import { injectable, unmanaged } from 'inversify';
 import {
     ConfigurationChangeEvent,
     EventEmitter,
@@ -23,7 +22,7 @@ import { IConfigurationService, IDisposable, Resource } from '../../common/types
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
@@ -31,7 +30,6 @@ import { testOnlyMethod } from '../../common/utils/decorators';
 import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-@injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
     protected abstract get owningResource(): Resource;
 
@@ -61,12 +59,12 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected _onDidDisposeWebviewPanel = new EventEmitter<void>();
 
     constructor(
-        @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() private cssGenerator: ICodeCssGenerator,
-        @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged() protected rootPath: string,
-        @unmanaged() protected scripts: string[]
+        protected configService: IConfigurationService,
+        private cssGenerator: ICodeCssGenerator,
+        protected themeFinder: IThemeFinder,
+        protected workspaceService: IWorkspaceService,
+        protected rootPath: string,
+        protected scripts: string[]
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));

@@ -14,7 +14,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/common/logger';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry } from '../../../platform/telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 

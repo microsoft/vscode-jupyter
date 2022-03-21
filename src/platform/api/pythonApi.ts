@@ -27,7 +27,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { TraceOptions } from '../logging/trace';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     ILanguageServer,
     ILanguageServerProvider,
