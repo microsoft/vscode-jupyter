@@ -34,7 +34,6 @@ module.exports = {
         'build/tslint-rules/baseRuleWalker.js',
         'src/test/mocks/process.ts',
         'src/test/mocks/moduleInstaller.ts',
-        'src/test/mocks/proc.ts',
         'src/test/mocks/autoSelector.ts',
         'src/test/mocks/vsc/uuid.ts',
         'src/test/mocks/vsc/strings.ts',
