@@ -39,7 +39,7 @@ import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
-} from '../platform/datascience/telemetry/telemetry';
+} from '../platform/telemetry/telemetry';
 import {
     INotebookProviderConnection,
     KernelSocketInformation,

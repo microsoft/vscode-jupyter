@@ -17,7 +17,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts'
+        extension: './src/extension.ts'
     },
     devtool: 'source-map',
     node: {

@@ -15,10 +15,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { DisplayOptions } from '../../../platform/datascience/displayOptions';
 import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
-import {
-    trackKernelResourceInformation,
-    sendKernelTelemetryEvent
-} from '../../../platform/datascience/telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../platform/telemetry/telemetry';
 import { IDisplayOptions, ISessionWithSocket } from '../../../platform/datascience/types';
 import { sendTelemetryEvent, captureTelemetry } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';

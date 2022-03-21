@@ -21,7 +21,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platfo
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { sendKernelTelemetryWhenDone } from '../../../platform/datascience/telemetry/telemetry';
+import { sendKernelTelemetryWhenDone } from '../../../platform/telemetry/telemetry';
 import { sendTelemetryEvent } from '../../../platform/telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import {

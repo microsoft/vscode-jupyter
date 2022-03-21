@@ -16,7 +16,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../datascience/constants';
-import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/types';
+import { ResourceSpecificTelemetryProperties } from './types';
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';

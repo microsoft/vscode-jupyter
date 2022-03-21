@@ -17,7 +17,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceError, traceInfoIfCI } from '../../../platform/common/logger';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { getResourceType } from '../../../platform/datascience/common';
-import { sendKernelListTelemetry } from '../../../platform/datascience/telemetry/kernelTelemetry';
+import { sendKernelListTelemetry } from '../../../platform/telemetry/kernelTelemetry';
 import {
     IJupyterSessionManagerFactory,
     INotebookProviderConnection,

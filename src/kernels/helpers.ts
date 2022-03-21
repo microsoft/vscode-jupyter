@@ -36,7 +36,7 @@ import { DataScience } from '../platform/common/utils/localize';
 import { getResourceType } from '../platform/datascience/common';
 import { Settings } from '../platform/datascience/constants';
 import { SysInfoReason } from '../platform/messageTypes';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../platform/datascience/telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../platform/telemetry/telemetry';
 import {
     IJupyterSession,
     IInteractiveWindowProvider,

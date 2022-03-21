@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IDisposableRegistry, IExtensions, Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IExtensionSyncActivationService } from '../../activation/types';
-import { IWorkspaceService } from '../../common/application/types';
+import { IDisposableRegistry, IExtensions, Resource } from '../common/types';
+import { PythonEnvironment } from '../pythonEnvironments/info';
+import { IExtensionSyncActivationService } from '../activation/types';
+import { IWorkspaceService } from '../common/application/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IPythonExtensionChecker } from '../../api/types';
-import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
+import { IInterpreterService } from '../interpreter/contracts';
+import { IPythonExtensionChecker } from '../api/types';
+import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {

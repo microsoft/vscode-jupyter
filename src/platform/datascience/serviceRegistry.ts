@@ -44,13 +44,11 @@ import { PreReleaseChecker } from './prereleaseChecker';
 import { ProgressReporter } from './progress/progressReporter';
 import { LogReplayService } from '../../intellisense/logReplayService';
 
-// README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
-
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
-    // This condition is temporary.
+    // This file should go away soon.
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

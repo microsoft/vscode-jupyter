@@ -49,6 +49,7 @@ import { setSharedProperty } from '../platform/telemetry';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger';
 import { JupyterDebugService } from './debugging/jupyterDebugService';
 import { isLocalLaunch } from './helpers';
+import { registerInstallerTypes } from './installer/serviceRegistry';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets-message-coordination/ipyWidgetMessageDispatcherFactory';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { JupyterExporter } from './jupyter/import-export/jupyterExporter';
@@ -101,6 +102,10 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+    serviceManager.addSingleton<IRawNotebookSupportedService>(
+        IRawNotebookSupportedService,
+        RawNotebookSupportedService
+    );
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
     const packageJson: { engines: { vscode: string } } | undefined = vscode.extensions.getExtension(JVSC_EXTENSION_ID)
         ?.packageJSON;
@@ -120,10 +125,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 
-    serviceManager.addSingleton<IRawNotebookSupportedService>(
-        IRawNotebookSupportedService,
-        RawNotebookSupportedService
-    );
     serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(
         NotebookIPyWidgetCoordinator,
         NotebookIPyWidgetCoordinator
@@ -269,4 +270,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+
+    // Subdirectories
+    registerInstallerTypes(serviceManager);
 }

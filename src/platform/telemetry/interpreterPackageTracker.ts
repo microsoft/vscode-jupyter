@@ -3,16 +3,16 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
-import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../common/types';
-import { isResource, noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../api/types';
+import { IExtensions, IDisposableRegistry, InterpreterUri } from '../common/types';
+import { isResource, noop } from '../common/utils/misc';
+import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterPackages } from './interpreterPackages';
-import { INotebookControllerManager } from '../../../notebooks/types';
+import { INotebookControllerManager } from '../../notebooks/types';
 import { trackKernelResourceInformation } from './telemetry';
-import { IInstaller, Product } from '../../../kernels/installer/types';
-import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
+import { IInstaller, Product } from '../../kernels/installer/types';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {

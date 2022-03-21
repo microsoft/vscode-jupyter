@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Resource } from '../../common/types';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { EnvironmentType } from '../../pythonEnvironments/info';
-import { Telemetry } from '../constants';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { Resource } from '../common/types';
+import { StopWatch } from '../common/utils/stopWatch';
+import { EnvironmentType } from '../pythonEnvironments/info';
+import { KernelConnectionMetadata } from '../../kernels/types';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
+import { Telemetry } from '../datascience/constants';
 
 export function sendKernelListTelemetry(
     resource: Resource,

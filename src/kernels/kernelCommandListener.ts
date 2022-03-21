@@ -10,7 +10,7 @@ import { traceInfo } from '../platform/common/logger';
 import { IDisposableRegistry, IConfigurationService, IDisposable } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
-import { trackKernelResourceInformation } from '../platform/datascience/telemetry/telemetry';
+import { trackKernelResourceInformation } from '../platform/telemetry/telemetry';
 import {
     IDataScienceCommandListener,
     IStatusProvider,

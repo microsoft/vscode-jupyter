@@ -13,10 +13,7 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
-import {
-    trackKernelResourceInformation,
-    sendKernelTelemetryEvent
-} from '../../platform/datascience/telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../platform/telemetry/telemetry';
 import { InterruptResult, IJupyterSession } from '../../platform/datascience/types';
 import { captureTelemetry } from '../../platform/telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';

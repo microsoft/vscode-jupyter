@@ -19,7 +19,7 @@ import { Deferred, createDeferred, sleep } from '../../../../platform/common/uti
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
-import { sendKernelTelemetryEvent } from '../../../../platform/datascience/telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../../../platform/telemetry/telemetry';
 import {
     INotebookServer,
     IJupyterConnection,

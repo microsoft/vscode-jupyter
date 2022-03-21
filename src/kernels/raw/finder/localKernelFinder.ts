@@ -22,7 +22,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { getResourceType } from '../../../platform/datascience/common';
 import { isPythonNotebook } from '../../../notebooks/helpers';
-import { sendKernelListTelemetry } from '../../../platform/datascience/telemetry/kernelTelemetry';
+import { sendKernelListTelemetry } from '../../../platform/telemetry/kernelTelemetry';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace';

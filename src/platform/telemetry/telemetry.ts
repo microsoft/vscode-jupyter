@@ -4,24 +4,24 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { getOSType } from '../../common/utils/platform';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { Resource } from '../../common/types';
-import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../../telemetry';
-import { StopWatch } from '../../common/utils/stopWatch';
+import { getOSType } from '../common/utils/platform';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { Resource } from '../common/types';
+import { IEventNamePropertyMapping, sendTelemetryEvent, setSharedProperty, waitBeforeSending } from '../telemetry';
+import { StopWatch } from '../common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { Telemetry } from '../constants';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { InterruptResult } from '../types';
-import { getResourceType } from '../common';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../telemetry/helpers';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages';
-import { populateTelemetryWithErrorInfo } from '../../../platform/errors';
-import { createDeferred } from '../../common/utils/async';
-import { getNormalizedInterpreterPath } from '../../pythonEnvironments/info/interpreter';
+import { populateTelemetryWithErrorInfo } from '../../platform/errors';
+import { createDeferred } from '../common/utils/async';
+import { getNormalizedInterpreterPath } from '../pythonEnvironments/info/interpreter';
+import { Telemetry } from '../datascience/constants';
+import { getResourceType } from '../datascience/common';
+import { InterruptResult } from '../datascience/types';
 
 /**
  * This information is sent with each telemetry event.
