@@ -2088,7 +2088,7 @@ export async function wrapKernelMethod(
         });
 
     connections.set(notebook, { kernel: deferred, options });
-    return verifyKernelState(deferred.promise);
+    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise);
 }
 
 export async function wrapKernelMethodImpl(
