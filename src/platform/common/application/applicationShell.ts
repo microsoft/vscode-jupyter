@@ -104,7 +104,7 @@ export class ApplicationShell implements IApplicationShell {
         return window.showInputBox(options, token);
     }
     public openUrl(url: string): void {
-        env.openExternal(Uri.parse(url));
+        void env.openExternal(Uri.parse(url));
     }
 
     public setStatusBarMessage(text: string, hideAfterTimeout: number): Disposable;

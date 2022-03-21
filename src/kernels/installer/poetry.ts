@@ -7,9 +7,8 @@ import * as path from 'path';
 import { isTestExecution } from '../../platform/common/constants';
 import { traceVerbose, traceError } from '../../platform/common/logger';
 import { cache } from '../../platform/common/utils/decorators';
-import { getUserHomeDir } from '../../platform/common/utils/platform';
+import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { getOSType, OSType } from '../../test/common';
 import {
     getPythonSetting,
     shellExecute,

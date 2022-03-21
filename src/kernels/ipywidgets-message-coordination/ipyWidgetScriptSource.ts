@@ -25,10 +25,10 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
-import { getOSType, OSType } from '../../test/common';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 

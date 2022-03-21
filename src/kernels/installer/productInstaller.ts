@@ -30,14 +30,14 @@ import {
     IOutputChannel,
     InterpreterUri
 } from '../../platform/common/types';
-import { isResource } from '../../platform/common/utils/misc';
+import { isResource, noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { noop, sleep } from '../../test/core';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
+import { sleep } from '../../platform/common/utils/async';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.

@@ -25,7 +25,7 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
 import { Resource, IDisposableRegistry, IConfigurationService, IDisposable } from '../platform/common/types';
-import { Deferred } from '../platform/common/utils/async';
+import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -54,7 +54,6 @@ import { calculateWorkingDirectory } from '../platform/datascience/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../datascience-ui/common/constants';
-import { sleep } from '../test/core';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import {
     executeSilently,

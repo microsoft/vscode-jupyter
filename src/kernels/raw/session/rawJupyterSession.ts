@@ -10,7 +10,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/common/logger';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
-import { TimedOutError, createDeferred } from '../../../platform/common/utils/async';
+import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { DisplayOptions } from '../../../platform/datascience/displayOptions';
@@ -21,7 +21,6 @@ import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
-import { sleep } from '../../../test/core';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession';

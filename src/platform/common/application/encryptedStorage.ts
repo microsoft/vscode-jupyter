@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { ExtensionMode } from 'vscode';
-import { IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
+import { isCI } from '../constants';
 import { traceError } from '../logger';
 import { IExtensionContext } from '../types';
 import { IEncryptedStorage } from './types';
@@ -19,7 +19,7 @@ export class EncryptedStorage implements IEncryptedStorage {
 
     public async store(service: string, key: string, value: string | undefined): Promise<void> {
         // On CI we don't need to use keytar for testing (else it hangs).
-        if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
+        if (isCI && this.extensionContext.extensionMode !== ExtensionMode.Production) {
             this.testingState.set(`${service}#${key}`, value || '');
             return;
         }
@@ -36,7 +36,7 @@ export class EncryptedStorage implements IEncryptedStorage {
     }
     public async retrieve(service: string, key: string): Promise<string | undefined> {
         // On CI we don't need to use keytar for testing (else it hangs).
-        if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
+        if (isCI && this.extensionContext.extensionMode !== ExtensionMode.Production) {
             return this.testingState.get(`${service}#${key}`);
         }
         try {

@@ -10,7 +10,7 @@ import { env, Uri } from 'vscode';
 import { IBrowserService } from '../types';
 
 export function launch(url: string) {
-    env.openExternal(Uri.parse(url));
+    void env.openExternal(Uri.parse(url));
 }
 
 @injectable()

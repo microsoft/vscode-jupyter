@@ -33,7 +33,6 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec
 } from '../../../platform/datascience/types';
-import { sleep } from '../../../test/core';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { KernelConnectionMetadata } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
@@ -41,6 +40,7 @@ import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { sleep } from '../../../platform/common/utils/async';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
