@@ -12,7 +12,7 @@ suite('Dummy8', () => {
 // import { ReactWrapper } from 'enzyme';
 // import * as React from 'react';
 // import * as sinon from 'sinon';
-// import { PYTHON_LANGUAGE } from '../../client/common/constants';
+// import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 // import { getNamesAndValues } from '../utils/enum';
 // import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 // import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';

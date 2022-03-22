@@ -1,7 +1,5 @@
-import { injectable } from 'inversify';
 import { Memento } from 'vscode';
 
-@injectable()
 export class MockMemento implements Memento {
     // Note: This has to be called _value so that it matches
     // what VS code has for a memento. We use this to eliminate a bad bug

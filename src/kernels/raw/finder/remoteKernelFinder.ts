@@ -13,22 +13,22 @@ import {
     LiveKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceError, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposableRegistry, Resource } from '../../../client/common/types';
-import { getResourceType } from '../../../client/datascience/common';
-import { sendKernelListTelemetry } from '../../../client/datascience/telemetry/kernelTelemetry';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceError, traceInfoIfCI } from '../../../platform/common/logger';
+import { IDisposableRegistry, Resource } from '../../../platform/common/types';
+import { getResourceType } from '../../../platform/datascience/common';
+import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
 import {
     IJupyterSessionManagerFactory,
     INotebookProviderConnection,
     IJupyterSessionManager,
     IJupyterKernelSpec
-} from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { traceDecorators } from '../../../client/logging';
-import { ignoreLogging } from '../../../client/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../../client/telemetry';
-import { getTelemetrySafeLanguage } from '../../../client/telemetry/helpers';
+} from '../../../platform/datascience/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { traceDecorators } from '../../../platform/logging';
+import { ignoreLogging } from '../../../platform/logging/trace';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 import { IRemoteKernelFinder } from '../types';
 import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';

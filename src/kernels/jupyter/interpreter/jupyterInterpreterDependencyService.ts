@@ -5,19 +5,19 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { createPromiseFromCancellation, Cancellation } from '../../../client/common/cancellation';
-import { traceError } from '../../../client/common/logger';
-import { DataScience, Common } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { HelpLinks } from '../../../client/datascience/constants';
-import { reportAction } from '../../../client/datascience/progress/decorator';
-import { ReportableAction } from '../../../client/datascience/progress/types';
-import { IJupyterCommandFactory } from '../../../client/datascience/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../client/telemetry';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation';
+import { traceError } from '../../../platform/common/logger';
+import { DataScience, Common } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { HelpLinks } from '../../../platform/datascience/constants';
+import { reportAction } from '../../../platform/datascience/progress/decorator';
+import { ReportableAction } from '../../../platform/datascience/progress/types';
+import { IJupyterCommandFactory } from '../../../platform/datascience/types';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
-import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
+import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 

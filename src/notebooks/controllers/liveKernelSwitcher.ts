@@ -3,10 +3,10 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { IVSCodeNotebook, ICommandManager } from '../../client/common/application/types';
-import { traceError } from '../../client/common/logger';
-import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../client/common/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
+import { traceError } from '../../platform/common/logger';
+import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
 import { IKernelProvider, LiveKernelConnectionMetadata } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { switchKernel } from './kernelSelector';

@@ -5,7 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { KernelConnectionMetadata } from '../../client/../kernels/types';
+import { KernelConnectionMetadata } from '../../platform/../kernels/types';
 import {
     ICell,
     ICellHashProvider,
@@ -15,8 +15,8 @@ import {
     INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
-} from '../../client/datascience/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+} from '../../platform/datascience/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { noop } from '../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

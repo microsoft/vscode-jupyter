@@ -19,18 +19,18 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { IPythonExtensionChecker } from '../../client/api/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
     IApplicationShell
-} from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
+} from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
     IConfigurationService,
@@ -38,28 +38,26 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IPathUtils
-} from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { chainable } from '../../client/common/utils/decorators';
-import { DataScience, Common } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../client/datascience/common';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
+} from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { chainable } from '../../platform/common/utils/decorators';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/datascience/common';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
-} from '../../client/datascience/telemetry/telemetry';
-import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { traceDecorators } from '../../client/logging';
-import { TraceOptions } from '../../client/logging/trace';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
-import { EnvironmentType } from '../../client/pythonEnvironments/info';
+} from '../../telemetry/telemetry';
+import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../platform/datascience/types';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { traceDecorators } from '../../platform/logging';
+import { TraceOptions } from '../../platform/logging/trace';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
+import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
-import { displayErrorsInCell } from '../../extension/errors/errorUtils';
-import { KernelDeadError } from '../../extension/errors/kernelDeadError';
-import { WrappedError } from '../../extension/errors/types';
-import { IPyWidgetMessages } from '../../extension/messageTypes';
+import { displayErrorsInCell } from '../../platform/errors/errorUtils';
+import { WrappedError } from '../../platform/errors/types';
+import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     getKernelConnectionPath,
@@ -84,6 +82,8 @@ import {
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{

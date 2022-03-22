@@ -240,7 +240,7 @@ jobs:
       - name: 'Check for telemetry edit'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:
-          prereq-pattern: './src/client/telemetry/index.ts'
+          prereq-pattern: './src/telemetry/index.ts'
           file-pattern: 'telemetry.md'
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'

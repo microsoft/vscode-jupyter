@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-import { AsyncDisposableRegistry } from '../../../client/common/asyncDisposableRegistry';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
 

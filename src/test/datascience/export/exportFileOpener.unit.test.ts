@@ -5,12 +5,12 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { TextEditor, Uri } from 'vscode';
-import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IBrowserService, IDisposable } from '../../../client/common/types';
-import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
-import { ExportFormat } from '../../../client/datascience/export/types';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
+import { IApplicationShell, IDocumentManager } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IBrowserService, IDisposable } from '../../../platform/common/types';
+import { ExportFileOpener } from '../../../platform/datascience/export/exportFileOpener';
+import { ExportFormat } from '../../../platform/datascience/export/types';
+import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
 suite('DataScience - Export File Opener', () => {

@@ -4,15 +4,15 @@
 import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IDisposableRegistry } from '../../client/common/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 import {
     IJupyterVariables,
     IConditionalJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
     IJupyterVariable
-} from '../../client/datascience/types';
-import { captureTelemetry } from '../../client/telemetry';
+} from '../../platform/datascience/types';
+import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel } from '../types';
 

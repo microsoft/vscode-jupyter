@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { isShortNamePath } from '../../../client/debugger/jupyter/helper';
+import { isShortNamePath } from '../../../platform/debugger/jupyter/helper';
 
 suite('Debugging - Helpers', () => {
     suite('isShortNamePath', async () => {

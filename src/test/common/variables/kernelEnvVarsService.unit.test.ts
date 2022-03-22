@@ -8,13 +8,13 @@
 import { assert, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
-import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment';
+import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from '../../../kernels/raw/launcher/kernelEnvVarsService';
 

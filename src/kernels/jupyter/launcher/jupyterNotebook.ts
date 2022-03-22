@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { INotebook, INotebookProviderConnection, IJupyterSession } from '../../../client/datascience/types';
+import { INotebook, INotebookProviderConnection, IJupyterSession } from '../../../platform/datascience/types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services

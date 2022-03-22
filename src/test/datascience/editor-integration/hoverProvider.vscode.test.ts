@@ -10,17 +10,17 @@ import {
     IJupyterSettings,
     IVariableTooltipFields,
     ReadWrite
-} from '../../../client/common/types';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../../../client/datascience/types';
+} from '../../../platform/common/types';
+import { IInteractiveWindowProvider, IJupyterVariables } from '../../../platform/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
-import { Identifiers } from '../../../client/datascience/constants';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { IKernelProvider } from '../../../client/../kernels/types';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { Identifiers } from '../../../platform/datascience/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 suite('Hover provider', async () => {
     const file = path.join(

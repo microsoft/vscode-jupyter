@@ -6,8 +6,8 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento } from 'vscode';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import {
     JupyterInterpreterDependencyService,
     JupyterInterpreterDependencyResponse

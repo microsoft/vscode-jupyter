@@ -1,26 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../client/common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { traceError } from '../../../client/common/logger';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IDisposableRegistry, IConfigurationService } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { traceError } from '../../../platform/common/logger';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     INotebookImporter,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { Identifiers, CodeSnippets } from '../../../datascience-ui/common/constants';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { noop } from '../../../client/common/utils/misc';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { noop } from '../../../platform/common/utils/misc';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {

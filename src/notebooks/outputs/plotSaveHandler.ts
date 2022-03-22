@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
 import * as path from 'path';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { traceError } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IFileSystem } from '../../client/common/platform/types';
-import { DataScience } from '../../client/common/utils/localize';
-import { saveSvgToPdf } from '../../client/datascience/plotting/plotViewer';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { traceError } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { saveSvgToPdf } from '../../platform/datascience/plotting/plotViewer';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {

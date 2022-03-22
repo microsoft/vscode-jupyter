@@ -3,8 +3,8 @@
 'use strict';
 import * as React from 'react';
 
-import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/messages';
-import { IJupyterExtraSettings } from '../../client/datascience/types';
+import { CssMessages, IGetCssResponse, SharedMessages } from '../../platform/datascience/messages';
+import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
 import { detectBaseTheme } from './themeDetector';
 

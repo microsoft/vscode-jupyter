@@ -1,12 +1,12 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, when } from 'ts-mockito';
-import { MigrateDataScienceSettingsService } from '../../client/activation/migrateDataScienceSettingsService';
-import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
-import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
-import { WorkspaceService } from '../../client/common/application/workspace';
-import { PersistentStateFactory, PersistentState } from '../../client/common/persistentState';
-import { IPersistentStateFactory } from '../../client/common/types';
-import { IJupyterServerUriStorage } from '../../client/datascience/types';
+import { MigrateDataScienceSettingsService } from '../../platform/activation/migrateDataScienceSettingsService';
+import { ApplicationEnvironment } from '../../platform/common/application/applicationEnvironment';
+import { IApplicationEnvironment, IWorkspaceService } from '../../platform/common/application/types';
+import { WorkspaceService } from '../../platform/common/application/workspace';
+import { PersistentStateFactory, PersistentState } from '../../platform/common/persistentState';
+import { IPersistentStateFactory } from '../../platform/common/types';
+import { IJupyterServerUriStorage } from '../../platform/datascience/types';
 import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage';
 import { MockFileSystem } from '../datascience/mockFileSystem';
 

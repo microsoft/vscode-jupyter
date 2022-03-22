@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../platform/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
@@ -39,7 +39,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
-import { buildDataViewerFilterRegex } from '../../client/common/utils/regexp';
+import { buildDataViewerFilterRegex } from '../../platform/common/utils/regexp';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`

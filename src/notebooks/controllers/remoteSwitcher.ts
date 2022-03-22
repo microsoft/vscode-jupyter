@@ -4,17 +4,17 @@
 import { inject, injectable } from 'inversify';
 import { noop } from 'lodash';
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import {
     IDocumentManager,
     IVSCodeNotebook,
     ICommandManager,
     IApplicationShell
-} from '../../client/common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { DataScience } from '../../client/common/utils/localize';
-import { Settings } from '../../client/datascience/constants';
-import { IJupyterServerUriStorage } from '../../client/datascience/types';
+} from '../../platform/common/application/types';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { Settings } from '../../platform/datascience/constants';
+import { IJupyterServerUriStorage } from '../../platform/datascience/types';
 import { Commands } from '../../datascience-ui/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 import { isJupyterNotebook } from '../helpers';

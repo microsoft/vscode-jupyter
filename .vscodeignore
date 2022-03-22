@@ -72,7 +72,7 @@ news/**
 node_modules/**
 obj/**
 out/**/*.stats.json
-out/client/**/*.analyzer.html
+out/**/*.analyzer.html
 out/coverconfig.json
 out/datascience-ui/**/*.analyzer.html
 out/datascience-ui/common/**

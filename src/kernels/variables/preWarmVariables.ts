@@ -4,15 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { IPythonExtensionChecker, IPythonApiProvider } from '../../client/api/types';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { CondaService } from '../../client/common/process/condaService';
-import { IDisposableRegistry } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
-import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { IRawNotebookSupportedService } from '../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { CondaService } from '../../platform/common/process/condaService';
+import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
+import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
+import { IRawNotebookSupportedService } from '../../platform/datascience/types';
+import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
 
 @injectable()

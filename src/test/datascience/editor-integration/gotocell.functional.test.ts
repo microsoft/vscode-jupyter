@@ -15,14 +15,14 @@ suite('Dummy12', () => {
 // import { CancellationToken } from 'vscode-jsonrpc';
 
 // import { range } from 'lodash';
-// import { IDocumentManager } from '../../../client/common/application/types';
-// import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-// import { traceError } from '../../../client/common/logger';
-// import { IJupyterSettings } from '../../../client/common/types';
-// import * as CellFactory from '../../../client/datascience/cellFactory';
-// import { Commands } from '../../../client/datascience/constants';
-// import { InteractiveWindowMessages } from '../../../extension/messageTypes';
-// import { getDefaultInteractiveIdentity } from '../../../client/datascience/interactive-window/identity';
+// import { IDocumentManager } from '../../../platform/common/application/types';
+// import { EXTENSION_ROOT_DIR } from '../../../platform/common/constants';
+// import { traceError } from '../../../platform/common/logger';
+// import { IJupyterSettings } from '../../../platform/common/types';
+// import * as CellFactory from '../../../platform/datascience/cellFactory';
+// import { Commands } from '../../../platform/datascience/constants';
+// import { InteractiveWindowMessages } from '../../../platform/messageTypes';
+// import { getDefaultInteractiveIdentity } from '../../../platform/datascience/interactive-window/identity';
 // import {
 //     ICell,
 //     ICodeLensFactory,
@@ -30,7 +30,7 @@ suite('Dummy12', () => {
 //     IInteractiveWindowListener,
 //     INotebook,
 //     INotebookProvider
-// } from '../../../client/datascience/types';
+// } from '../../../platform/datascience/types';
 // import { DataScienceIocContainer } from '../dataScienceIocContainer';
 // import { MockDocumentManager } from '../mockDocumentManager';
 

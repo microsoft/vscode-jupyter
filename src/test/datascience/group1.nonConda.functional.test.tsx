@@ -10,7 +10,7 @@ suite('Dummy4', () => {
 // import * as assert from 'assert';
 // import { Disposable } from 'vscode';
 
-// import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+// import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { takeSnapshot, writeDiffSnapshot } from './helpers';
 // import { addCode, getOrCreateInteractiveWindow, runTest } from './interactiveWindowTestHelpers';

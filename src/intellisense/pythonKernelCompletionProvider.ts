@@ -14,16 +14,16 @@ import {
     workspace
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import { IVSCodeNotebook } from '../client/common/application/types';
-import { createPromiseFromCancellation } from '../client/common/cancellation';
-import { traceError, traceInfoIfCI, traceVerbose } from '../client/common/logger';
-import { getDisplayPath } from '../client/common/platform/fs-paths';
-import { IConfigurationService, IDisposableRegistry } from '../client/common/types';
-import { waitForPromise } from '../client/common/utils/async';
-import { isNotebookCell } from '../client/common/utils/misc';
-import { StopWatch } from '../client/common/utils/stopWatch';
-import { Settings } from '../client/datascience/constants';
-import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../client/datascience/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { createPromiseFromCancellation } from '../platform/common/cancellation';
+import { traceError, traceInfoIfCI, traceVerbose } from '../platform/common/logger';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
+import { waitForPromise } from '../platform/common/utils/async';
+import { isNotebookCell } from '../platform/common/utils/misc';
+import { StopWatch } from '../platform/common/utils/stopWatch';
+import { Settings } from '../platform/datascience/constants';
+import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../platform/datascience/types';
 import { IKernelProvider } from '../kernels/types';
 import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider } from '../notebooks/types';

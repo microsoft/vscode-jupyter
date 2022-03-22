@@ -1,9 +1,9 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../client/api';
-import { disposeAllDisposables } from '../client/common/helpers';
-import type { IDisposable } from '../client/common/types';
-import { PythonExtension } from '../client/datascience/constants';
+import type { IExtensionApi } from '../platform/api';
+import { disposeAllDisposables } from '../platform/common/helpers';
+import type { IDisposable } from '../platform/common/types';
+import { PythonExtension } from '../platform/datascience/constants';
 import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
@@ -58,7 +58,7 @@ export async function initializeTest(): Promise<any> {
     await closeActiveWindows();
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../client/common/configSettings');
+        const configSettings = await import('../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }

@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 
-import { IJupyterVariable } from '../../client/datascience/types';
+import { IJupyterVariable } from '../../platform/datascience/types';
 import { VariableExplorer } from './variableExplorer';
 
 export interface IVariablePanelProps {

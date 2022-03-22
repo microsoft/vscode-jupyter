@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 
-import { buildDataViewerFilterRegex, verboseRegExp } from '../../../client/common/utils/regexp';
+import { buildDataViewerFilterRegex, verboseRegExp } from '../../../platform/common/utils/regexp';
 
 suite('Utils for regular expressions - verboseRegExp()', () => {
     test('whitespace removed in multiline pattern (example of typical usage)', () => {

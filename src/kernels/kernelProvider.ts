@@ -5,21 +5,21 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../client/common/application/types';
-import { traceInfoIfCI, traceVerbose, traceWarning } from '../client/common/logger';
-import { getDisplayPath } from '../client/common/platform/fs-paths';
-import { IFileSystem } from '../client/common/platform/types';
-import { IPythonExecutionFactory } from '../client/common/process/types';
+import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IFileSystem } from '../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../platform/common/process/types';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IDisposableRegistry,
     IConfigurationService
-} from '../client/common/types';
-import { noop } from '../client/common/utils/misc';
+} from '../platform/common/types';
+import { noop } from '../platform/common/utils/misc';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { INotebookProvider, IStatusProvider } from '../client/datascience/types';
+import { INotebookProvider, IStatusProvider } from '../platform/datascience/types';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';

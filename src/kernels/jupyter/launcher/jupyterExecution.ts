@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { Cancellation } from '../../../client/common/cancellation';
-import { WrappedError } from '../../../client/../extension/errors/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposableRegistry, IConfigurationService, Resource } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { JupyterSelfCertsError } from '../../../extension/errors/jupyterSelfCertsError';
-import { JupyterWaitForIdleError } from '../../../extension/errors/jupyterWaitForIdleError';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { Cancellation } from '../../../platform/common/cancellation';
+import { WrappedError } from '../../../platform/errors/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
+import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
 import {
     IJupyterExecution,
     IJupyterSubCommandExecutionService,
@@ -22,11 +21,11 @@ import {
     INotebookServer,
     IJupyterConnection,
     JupyterServerUriHandle
-} from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry } from '../../../client/telemetry';
+} from '../../../platform/datascience/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry, Identifiers } from '../../../datascience-ui/common/constants';
 import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
 
@@ -34,7 +33,6 @@ import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
-@injectable()
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;

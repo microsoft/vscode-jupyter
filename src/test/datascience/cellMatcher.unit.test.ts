@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { IJupyterSettings } from '../../client/common/types';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { IJupyterSettings } from '../../platform/common/types';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { defaultDataScienceSettings } from './helpers';
 
 suite('DataScience CellMatcher', () => {

@@ -4,12 +4,12 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { KernelFailure } from '../../client/../extension/errors/errorUtils';
+import { KernelFailure } from '../../platform/errors/errorUtils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
-import '../../client/common/extensions';
-import { IJupyterSettings } from '../../client/common/types';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import '../../platform/common/extensions';
+import { IJupyterSettings } from '../../platform/common/types';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines, removeLinesFromFrontAndBackNoConcat } from './index';
 
 export function uncommentMagicCommands(line: string): string {
@@ -69,7 +69,7 @@ export function createCodeCell(code?: string | string[], options?: boolean | nbf
     // If we get a string, then no need to append line feeds. Leave as is (to preserve existing functionality).
     // If we get an array, the append a linefeed.
     const source = Array.isArray(code)
-        ? appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined)
+        ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
         : code;
     return {
         cell_type: 'code',
@@ -94,6 +94,7 @@ export function generateInteractiveCode(code: string, settings: IJupyterSettings
     // Uncomment magics while adding linefeeds
     const withMagicsAndLinefeeds = appendLineFeed(
         noLeadingOrTrailing,
+        '\n',
         settings.magicCommandsAsComments ? uncommentMagicCommands : undefined
     );
 

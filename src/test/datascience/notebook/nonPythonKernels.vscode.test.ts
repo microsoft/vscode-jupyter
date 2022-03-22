@@ -8,11 +8,11 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as assert from 'assert';
 import { Uri } from 'vscode';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IDisposable } from '../../../platform/common/types';
+import { INotebookEditorProvider } from '../../../platform/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
@@ -31,7 +31,7 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput
 } from './helper';
-import { PythonExtensionChecker } from '../../../client/api/pythonApi';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

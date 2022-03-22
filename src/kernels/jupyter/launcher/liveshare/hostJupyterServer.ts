@@ -1,40 +1,40 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../../client/common/extensions';
+import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode-jsonrpc';
 import { injectable, inject, named } from 'inversify';
-import { IWorkspaceService } from '../../../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../client/common/constants';
-import { traceInfo, traceError, traceInfoIfCI } from '../../../../client/common/logger';
+import { IWorkspaceService } from '../../../../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
+import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/common/logger';
 import {
     IAsyncDisposableRegistry,
     IOutputChannel,
     IDisposableRegistry,
     Resource,
     IDisposable
-} from '../../../../client/common/types';
-import { Deferred, createDeferred, sleep } from '../../../../client/common/utils/async';
-import { DataScience } from '../../../../client/common/utils/localize';
-import { StopWatch } from '../../../../client/common/utils/stopWatch';
-import { SessionDisposedError } from '../../../../extension/errors/sessionDisposedError';
-import { sendKernelTelemetryEvent } from '../../../../client/datascience/telemetry/telemetry';
+} from '../../../../platform/common/types';
+import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { StopWatch } from '../../../../platform/common/utils/stopWatch';
+import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
+import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
 import {
     INotebookServer,
     IJupyterConnection,
     INotebook,
     IJupyterSessionManagerFactory,
     IDisplayOptions
-} from '../../../../client/datascience/types';
+} from '../../../../platform/datascience/types';
 import { Telemetry } from '../../../../datascience-ui/common/constants';
 import { KernelConnectionMetadata, isLocalConnection } from '../../../types';
 import { computeWorkingDirectory } from '../../jupyterUtils';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook';
-import { noop } from '../../../../client/common/utils/misc';
-import { getDisplayPath } from '../../../../client/common/platform/fs-paths';
-import { Cancellation } from '../../../../client/common/cancellation';
+import { noop } from '../../../../platform/common/utils/misc';
+import { Cancellation } from '../../../../platform/common/cancellation';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()

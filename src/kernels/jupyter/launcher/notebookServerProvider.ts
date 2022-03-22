@@ -6,15 +6,15 @@
 import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationToken } from 'vscode';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo } from '../../../client/common/logger';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../client/common/types';
-import { testOnlyMethod } from '../../../client/common/utils/decorators';
-import { DataScience } from '../../../client/common/utils/localize';
-import { Settings } from '../../../client/datascience/constants';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceInfo } from '../../../platform/common/logger';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../platform/common/types';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { Settings } from '../../../platform/datascience/constants';
+import { DisplayOptions } from '../../../platform/datascience/displayOptions';
+import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
+import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
 import {
     IJupyterServerProvider,
     INotebookServer,
@@ -22,8 +22,8 @@ import {
     IJupyterServerUriStorage,
     GetServerOptions,
     INotebookServerOptions
-} from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+} from '../../../platform/datascience/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 @injectable()

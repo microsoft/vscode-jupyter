@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as hashjs from 'hash.js';
-import { inject, injectable, multiInject, optional } from 'inversify';
 import {
     Disposable,
     Event,
@@ -15,22 +14,22 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../client/common/utils/localize';
+import * as localize from '../../platform/common/utils/localize';
 
 import { splitMultilineString } from '../../datascience-ui/common';
 import { uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
-import { IDebugService, IDocumentManager } from '../../client/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService } from '../../client/common/types';
-import { getCellResource } from '../../client/datascience/cellFactory';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { IConfigurationService } from '../../platform/common/types';
+import { getCellResource } from '../../platform/datascience/cellFactory';
+import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../client/datascience/types';
-import { stripAnsi } from '../../client/common/utils/regexp';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../platform/datascience/types';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
@@ -50,7 +49,6 @@ interface IRangedCellHash extends ICellHash {
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
-@injectable()
 export class CellHashProvider implements ICellHashProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -67,11 +65,11 @@ export class CellHashProvider implements ICellHashProvider {
     private executionCounts: Map<number, string> = new Map<number, string>();
 
     constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fs: IFileSystem,
-        @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined,
+        private documentManager: IDocumentManager,
+        private configService: IConfigurationService,
+        private debugService: IDebugService,
+        private fs: IFileSystem,
+        private listeners: ICellHashListener[] | undefined,
         private readonly kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import { assert } from 'chai';
 import * as path from 'path';
-import { traceInfo } from '../../client/common/logger';
-import { IDisposable } from '../../client/common/types';
+import { traceInfo } from '../../platform/common/logger';
+import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -18,7 +18,7 @@ import {
 import { initialize } from '../initialize';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common';
-import { IVSCodeNotebook } from '../../client/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants';
 import { Uri, workspace } from 'vscode';
 

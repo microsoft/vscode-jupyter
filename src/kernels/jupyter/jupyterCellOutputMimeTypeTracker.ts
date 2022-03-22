@@ -6,12 +6,12 @@ import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { IVSCodeNotebook } from '../../client/common/application/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposableRegistry } from '../../client/common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
-import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposableRegistry } from '../../platform/common/types';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires

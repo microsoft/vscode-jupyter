@@ -21,8 +21,8 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
-import { IDocumentManager } from '../../client/common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IDocumentManager } from '../../platform/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 

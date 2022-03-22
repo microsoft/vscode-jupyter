@@ -3,10 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, NotebookCellExecutionState } from 'vscode';
-import { IExtensionSingleActivationService } from '../client/activation/types';
-import { IVSCodeNotebook } from '../client/common/application/types';
-import { IDisposableRegistry } from '../client/common/types';
-import { sendTelemetryEvent } from '../client/telemetry';
+import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { IDisposableRegistry } from '../platform/common/types';
+import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from '../datascience-ui/common/constants';
 import { isJupyterNotebook } from './helpers';
 

@@ -3,8 +3,8 @@
 
 import { expect } from 'chai';
 import { PassThrough } from 'stream';
-import { createDeferred } from '../../../client/common/utils/async';
-import { ProtocolParser } from '../../../client/debugger/extension/helpers/protocolParser';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { ProtocolParser } from '../../../platform/debugger/extension/helpers/protocolParser';
 import { sleep } from '../../common';
 
 suite('Debugging - Protocol Parser', () => {

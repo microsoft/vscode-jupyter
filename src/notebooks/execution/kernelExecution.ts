@@ -7,20 +7,20 @@ import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, Noteb
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
-import { IApplicationShell } from '../../client/common/application/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../client/common/logger';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
-import { StopWatch } from '../../client/common/utils/stopWatch';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../client/datascience/telemetry/telemetry';
-import { InterruptResult, IJupyterSession } from '../../client/datascience/types';
-import { captureTelemetry } from '../../client/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
+import { InterruptResult, IJupyterSession } from '../../platform/datascience/types';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { traceCellMessage } from '../helpers';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * Separate class that deals just with kernel execution.

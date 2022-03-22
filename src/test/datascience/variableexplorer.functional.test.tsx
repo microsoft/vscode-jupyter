@@ -14,9 +14,9 @@ suite('Dummy11', () => {
 // import * as React from 'react';
 // import * as AdazzleReactDataGrid from 'react-data-grid';
 // import { Disposable } from 'vscode';
-// import { sleep } from '../../client/common/utils/async';
-// import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-// import { IJupyterVariable } from '../../client/datascience/types';
+// import { sleep } from '../../platform/common/utils/async';
+// import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';
+// import { IJupyterVariable } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 // import { addCell, createNewEditor } from './nativeEditorTestHelpers';

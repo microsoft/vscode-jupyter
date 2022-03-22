@@ -17,7 +17,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts'
+        extension: './src/extension.ts'
     },
     devtool: 'source-map',
     node: {
@@ -112,7 +112,7 @@ const config = {
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
-        new removeFilesWebpackPlugin({ after: { include: ['./out/client/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
@@ -134,7 +134,7 @@ const config = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
+        path: path.resolve(constants.ExtensionRootDir, 'out'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }

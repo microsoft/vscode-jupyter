@@ -5,9 +5,9 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
-import { ExportFormat, INbConvertExport } from '../../../client/datascience/export/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { ExportInterpreterFinder } from '../../../platform/datascience/export/exportInterpreterFinder';
+import { ExportFormat, INbConvertExport } from '../../../platform/datascience/export/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';

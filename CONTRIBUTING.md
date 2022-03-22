@@ -5,6 +5,7 @@
 | `main` branch |
 | ------------- |
 
+
 ## | ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
@@ -214,7 +215,7 @@ Clone the repo into any directory, open that directory in VSCode, and use the `E
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-jupyter/blob/main/CODING_STANDARDS.md).
 We have CI tests to ensure the code committed will adhere to the above coding standards.
 
-Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/client/common/utils/localize.ts) file.
+Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/platform/common/utils/localize.ts) file.
 
 ## Development process
 

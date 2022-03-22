@@ -10,10 +10,10 @@ suite('Dummy3', () => {
 // import { assert } from 'chai';
 // import * as sinon from 'sinon';
 // import * as TypeMoq from 'typemoq';
-// import { IDocumentManager } from '../../client/common/application/types';
-// import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-// import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
-// import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+// import { IDocumentManager } from '../../platform/common/application/types';
+// import { JupyterInterpreterSubCommandExecutionService } from '../../platform/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+// import { JupyterInstallError } from '../../platform/datascience/jupyter/jupyterInstallError';
+// import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { MockDocumentManager } from './mockDocumentManager';
 

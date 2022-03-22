@@ -5,27 +5,26 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
-import { IApplicationShell } from '../client/common/application/types';
-import { createPromiseFromCancellation } from '../client/common/cancellation';
-import { traceInfo, traceError, traceInfoIfCI } from '../client/common/logger';
-import { getDisplayPath } from '../client/common/platform/fs-paths';
-import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource } from '../client/common/types';
-import { DataScience, Common } from '../client/common/utils/localize';
-import { noop } from '../client/common/utils/misc';
-import { getResourceType } from '../client/datascience/common';
-import { KernelProgressReporter } from '../client/datascience/progress/kernelProgressReporter';
+import { IApplicationShell } from '../platform/common/application/types';
+import { createPromiseFromCancellation } from '../platform/common/cancellation';
+import { traceInfo, traceError, traceInfoIfCI } from '../platform/common/logger';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource } from '../platform/common/types';
+import { DataScience, Common } from '../platform/common/utils/localize';
+import { getResourceType } from '../platform/datascience/common';
+import { KernelProgressReporter } from '../platform/datascience/progress/kernelProgressReporter';
 import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse,
     IRawNotebookSupportedService,
     IDisplayOptions
-} from '../client/datascience/types';
-import { IServiceContainer } from '../client/ioc/types';
-import { traceDecorators } from '../client/logging';
-import { ignoreLogging, logValue } from '../client/logging/trace';
-import { EnvironmentType, PythonEnvironment } from '../client/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../client/telemetry';
-import { getTelemetrySafeHashedString } from '../client/telemetry/helpers';
+} from '../platform/datascience/types';
+import { IServiceContainer } from '../platform/ioc/types';
+import { traceDecorators } from '../platform/logging';
+import { ignoreLogging, logValue } from '../platform/logging/trace';
+import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { Telemetry } from '../datascience-ui/common/constants';
 import {
     isModulePresentInEnvironmentCache,
@@ -35,6 +34,7 @@ import {
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { KernelConnectionMetadata } from './types';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.

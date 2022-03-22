@@ -4,10 +4,10 @@
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { Experiments } from '../../client/common/experiments/groups';
-import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Experiments } from '../../platform/common/experiments/groups';
+import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -15,7 +15,7 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
     IJupyterSession
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 import { Identifiers } from '../../datascience-ui/common/constants';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IKernel } from '../types';

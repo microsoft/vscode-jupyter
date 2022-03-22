@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import type * as vsc from 'vscode-languageclient/node';
-import { Resource } from '../client/common/types';
+import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../kernels/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { VSCodeNotebookController } from './controllers/vscodeNotebookController';

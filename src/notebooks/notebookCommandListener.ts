@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../client/common/extensions';
+import '../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
 import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
-import { IVSCodeNotebook, ICommandManager } from '../client/common/application/types';
-import { IDisposableRegistry } from '../client/common/types';
-import { IDataScienceCommandListener } from '../client/datascience/types';
+import { IVSCodeNotebook, ICommandManager } from '../platform/common/application/types';
+import { IDisposableRegistry } from '../platform/common/types';
+import { IDataScienceCommandListener } from '../platform/datascience/types';
 import { Commands } from '../datascience-ui/common/constants';
 import { chainWithPendingUpdates } from './execution/notebookUpdater';
 import { getNotebookMetadata } from './helpers';
-import { noop } from '../client/common/utils/misc';
+import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 
 @injectable()

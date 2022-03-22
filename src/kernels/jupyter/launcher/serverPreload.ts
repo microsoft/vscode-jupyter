@@ -3,19 +3,24 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../client/activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfo, traceError } from '../../../client/common/logger';
-import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../../client/common/types';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfo, traceError } from '../../../platform/common/logger';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../../platform/common/types';
+import { DisplayOptions } from '../../../platform/datascience/displayOptions';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
 import {
     IInteractiveWindowProvider,
     INotebookProvider,
     IRawNotebookProvider,
     IInteractiveWindow
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { getKernelConnectionLanguage } from '../../helpers';
 import { IKernel, IKernelProvider } from '../../types';
 

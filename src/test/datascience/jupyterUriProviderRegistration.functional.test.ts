@@ -10,15 +10,15 @@ suite('Dummy7', () => {
 // import * as assert from 'assert';
 
 // import { Event, EventEmitter, Extension, ExtensionKind, QuickPickItem, Uri } from 'vscode';
-// import { IExtensions } from '../../client/common/types';
-// import { sleep } from '../../client/common/utils/async';
-// import { Identifiers } from '../../client/datascience/constants';
+// import { IExtensions } from '../../platform/common/types';
+// import { sleep } from '../../platform/common/utils/async';
+// import { Identifiers } from '../../platform/datascience/constants';
 // import {
 //     IJupyterExecution,
 //     IJupyterServerUri,
 //     IJupyterUriProvider,
 //     IJupyterUriProviderRegistration
-// } from '../../client/datascience/types';
+// } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // const TestUriProviderId = 'TestUriProvider_Id';

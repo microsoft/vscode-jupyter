@@ -4,7 +4,7 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 
-import { InteractiveWindowMessages } from '../../../extension/messageTypes';
+import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 import { BaseReduxActionPayload } from '../../../webviews/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';

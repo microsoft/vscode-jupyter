@@ -3,15 +3,15 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceInfo, traceError } from '../../../client/common/logger';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { Resource } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
-import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { traceInfo, traceError } from '../../../platform/common/logger';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { Resource } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 @injectable()
 export class KernelEnvironmentVariablesService {

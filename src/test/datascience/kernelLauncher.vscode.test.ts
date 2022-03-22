@@ -6,19 +6,19 @@ import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { createDeferred } from '../../client/common/utils/async';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { IJupyterKernelSpec } from '../../platform/datascience/types';
 import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
-import { traceInfo } from '../../client/common/logger';
+import { traceInfo } from '../../platform/common/logger';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
-import { PortAttributesProviders } from '../../client/common/net/portAttributeProvider';
-import { IDisposable } from '../../client/common/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
+import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider';
+import { IDisposable } from '../../platform/common/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
 import { createRawKernel } from '../../kernels/raw/session/rawKernel';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';

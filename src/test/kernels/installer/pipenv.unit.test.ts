@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as pathModule from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../client/common/utils/platform';
-import * as fileUtils from '../../../client/common/platform/fileUtils';
+import * as platformApis from '../../../platform/common/utils/platform';
+import * as fileUtils from '../../../platform/common/platform/fileUtils';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import {
     isPipenvEnvironmentRelatedToFolder,

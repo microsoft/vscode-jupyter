@@ -8,20 +8,20 @@ export const __ = '';
 // import * as fakeTimers from '@sinonjs/fake-timers';
 // import * as sinon from 'sinon';
 // import { anything, instance, mock, when, verify, resetCalls } from 'ts-mockito';
-// import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../client/common/application/types';
-// import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+// import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
+// import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../platform/common/types';
 // import {
 //     BannerType,
 //     DataScienceSurveyBanner,
 //     DSSurveyStateKeys,
 //     InsidersNotebookSurveyStateKeys,
 //     ShowBannerWithExpiryTime
-// } from '../../client/datascience/dataScienceSurveyBanner';
-// import { INotebookEditorProvider, INotebookExtensibility } from '../../client/datascience/types';
-// import { noop } from '../../client/common/utils/misc';
+// } from '../../platform/datascience/dataScienceSurveyBanner';
+// import { INotebookEditorProvider, INotebookExtensibility } from '../../platform/datascience/types';
+// import { noop } from '../../platform/common/utils/misc';
 // import { UIKind } from 'vscode';
-// import * as localize from '../../client/common/utils/localize';
-// import { MillisecondsInADay } from '../../client/constants';
+// import * as localize from '../../platform/common/utils/localize';
+// import { MillisecondsInADay } from '../../platform/constants';
 // import { TestPersistentStateFactory } from './testPersistentStateFactory';
 // import { MockMemento } from '../mocks/mementos';
 

@@ -5,7 +5,7 @@ import './cellFormatter.css';
 
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
-import { ColumnType } from '../../client/datascience/data-viewing/types';
+import { ColumnType } from '../../platform/datascience/data-viewing/types';
 import { ISlickRow } from './reactSlickGrid';
 
 interface ICellFormatterProps {

@@ -6,22 +6,22 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
-import { IDisposable, IJupyterSettings } from '../../client/common/types';
+import { IDisposable, IJupyterSettings } from '../../platform/common/types';
 import rewiremock from 'rewiremock';
 import {
     IProcessService,
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
-} from '../../client/common/process/types';
+} from '../../platform/common/process/types';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { LocalKernelSpecConnectionMetadata } from '../../client/../kernels/types';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExtensionChecker } from '../../client/api/types';
+import { LocalKernelSpecConnectionMetadata } from '../../platform/../kernels/types';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceInfo } from '../../client/common/logger';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceInfo } from '../../platform/common/logger';
 import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';

@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
-import { IApplicationShell } from '../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
-import { traceError, traceInfo } from '../../client/common/logger';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
+import { traceError, traceInfo } from '../../platform/common/logger';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
-} from '../../client/common/process/types';
-import { IOutputChannel } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { Products } from '../../client/common/utils/localize';
-import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+} from '../../platform/common/process/types';
+import { IOutputChannel } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { Products } from '../../platform/common/utils/localize';
+import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
+import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 
 export type ExecutionInstallArgs = {
@@ -27,14 +25,13 @@ export type ExecutionInstallArgs = {
     useShellExec?: boolean;
 };
 
-@injectable()
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;
     public abstract get displayName(): string;
     public abstract get type(): ModuleInstallerType;
 
-    constructor(@inject(IServiceContainer) protected serviceContainer: IServiceContainer) {}
+    constructor(protected serviceContainer: IServiceContainer) {}
 
     public async installModule(
         productOrModuleName: Product | string,

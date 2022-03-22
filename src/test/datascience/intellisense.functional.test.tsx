@@ -12,11 +12,11 @@ suite('Dummy5', () => {
 // import { Disposable } from 'vscode';
 
 // import type * as nbformat from '@jupyterlab/nbformat';
-// import { ILanguageServerProvider } from '../../client/api/types';
-// import { createDeferred } from '../../client/common/utils/async';
-// import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-// import { INotebookEditorProvider } from '../../client/datascience/types';
-// import { IInterpreterService } from '../../client/interpreter/contracts';
+// import { ILanguageServerProvider } from '../../platform/api/types';
+// import { createDeferred } from '../../platform/common/utils/async';
+// import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';
+// import { INotebookEditorProvider } from '../../platform/datascience/types';
+// import { IInterpreterService } from '../../platform/interpreter/contracts';
 // import { noop } from '../core';
 // import { InterpreterService } from '../interpreters/interpreterService';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -26,7 +26,7 @@ suite('Dummy5', () => {
 // import * as NativeHelpers from './nativeEditorTestHelpers';
 // import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
 // import { ITestNativeEditorProvider } from './testNativeEditorProvider';
-// import { IDisposable } from '../../client/common/types';
+// import { IDisposable } from '../../platform/common/types';
 
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 // suite(`DataScience Intellisense tests with LanguageServer mocked`, () => {

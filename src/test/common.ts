@@ -10,13 +10,13 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../client/api';
-import { IProcessService } from '../client/common/process/types';
-import { IDisposable, IJupyterSettings } from '../client/common/types';
-import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import { IExtensionApi } from '../platform/api';
+import { IProcessService } from '../platform/common/process/types';
+import { IDisposable, IJupyterSettings } from '../platform/common/types';
+import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
-import { isCI } from '../client/common/constants';
+import { isCI } from '../platform/common/constants';
 
 const StreamZip = require('node-stream-zip');
 
@@ -90,7 +90,7 @@ function getWorkspaceRoot() {
 }
 
 export function getExtensionSettings(resource: Uri | undefined): IJupyterSettings {
-    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
+    const pythonSettings = require('../platform/common/configSettings') as typeof import('../platform/common/configSettings');
     return pythonSettings.JupyterSettings.getInstance(resource);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
@@ -187,8 +187,8 @@ export function getOSType(): OSType {
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../client/common/process/decoder');
-    const proc = await import('../client/common/process/proc');
+    const decoder = await import('../platform/common/process/decoder');
+    const proc = await import('../platform/common/process/proc');
 
     const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];

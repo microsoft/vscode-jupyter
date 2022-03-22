@@ -2,10 +2,10 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceVerbose } from '../../../client/common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../client/common/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceVerbose } from '../../../platform/common/logger';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 
 @injectable()

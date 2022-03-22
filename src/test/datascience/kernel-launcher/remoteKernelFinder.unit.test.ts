@@ -6,20 +6,20 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/../kernels/helpers';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
-import { CryptoUtils } from '../../../client/common/crypto';
+import { CryptoUtils } from '../../../platform/common/crypto';
 import {
     IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSessionManager
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { noop } from '../../core';
 import { LiveKernelConnectionMetadata } from '../../../kernels/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder';

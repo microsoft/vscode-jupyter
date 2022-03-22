@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystemUtils';
+import { FileSystemUtils, RawFileSystem } from '../../../platform/common/platform/fileSystemUtils';
 import {
     FileStat,
     FileType,
@@ -17,7 +17,7 @@ import {
     ITempFileSystem,
     ReadStream,
     WriteStream
-} from '../../../client/common/platform/types';
+} from '../../../platform/common/platform/types';
 
 /* eslint-disable  */
 

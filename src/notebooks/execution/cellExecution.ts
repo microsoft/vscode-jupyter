@@ -29,16 +29,16 @@ import {
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { IApplicationShell } from '../../client/common/application/types';
-import { analyzeKernelErrors } from '../../client/../extension/errors/errorUtils';
-import { BaseError } from '../../client/../extension/errors/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceError, traceInfoIfCI, traceWarning } from '../../client/common/logger';
-import { RefBool } from '../../client/common/refBool';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { Deferred, createDeferred } from '../../client/common/utils/async';
-import * as localize from '../../client/common/utils/localize';
-import { StopWatch } from '../../client/common/utils/stopWatch';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { analyzeKernelErrors } from '../../platform/errors/errorUtils';
+import { BaseError } from '../../platform/errors/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceError, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
+import { RefBool } from '../../platform/common/refBool';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import * as localize from '../../platform/common/utils/localize';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import {
@@ -48,13 +48,13 @@ import {
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput
 } from '../../notebooks/helpers';
-import { ICellHashProvider, IJupyterSession, ICellHash } from '../../client/datascience/types';
-import { sendTelemetryEvent } from '../../client/telemetry';
+import { ICellHashProvider, IJupyterSession, ICellHash } from '../../platform/datascience/types';
+import { sendTelemetryEvent } from '../../telemetry';
 import { formatStreamText, concatMultilineString } from '../../datascience-ui/common';
 import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../datascience-ui/common/cellFactory';
 import { Telemetry } from '../../datascience-ui/common/constants';
-import { swallowExceptions } from '../../client/common/utils/decorators';
-import { noop } from '../../client/common/utils/misc';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
+import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';

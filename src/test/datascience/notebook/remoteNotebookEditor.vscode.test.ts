@@ -8,9 +8,9 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as path from 'path';
 import { commands, Memento, Uri } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
+import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
@@ -29,9 +29,9 @@ import {
     createEmptyPythonNotebook
 } from './helper';
 import { openNotebook } from '../helpers';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { Settings } from '../../../client/datascience/constants';
-import { RemoteKernelSpecConnectionMetadata } from '../../../client/../kernels/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { Settings } from '../../../platform/datascience/constants';
+import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { JupyterServer } from '../jupyterServer';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';

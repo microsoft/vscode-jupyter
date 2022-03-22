@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../extension/messageTypes';
-import { CssMessages, SharedMessages } from '../../../../client/datascience/messages';
+import { InteractiveWindowMessages } from '../../../../platform/messageTypes';
+import { CssMessages, SharedMessages } from '../../../../platform/datascience/messages';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';

@@ -7,10 +7,10 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { InterpreterUri, IOutputChannel } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { DataScienceInstaller } from '../../../kernels/installer/productInstaller';
 import {
     Product,

@@ -8,8 +8,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IDisposable } from '../../../client/common/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
@@ -22,8 +22,8 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../../extension/messageTypes';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { INotebookCommunication } from '../../../notebooks/types';
 

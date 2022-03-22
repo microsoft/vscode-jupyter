@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IJupyterExtraSettings } from '../../client/datascience/types';
+import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {

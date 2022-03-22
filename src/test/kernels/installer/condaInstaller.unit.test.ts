@@ -5,13 +5,13 @@
 
 import * as assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
-import { JupyterSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { CondaService } from '../../../client/common/process/condaService';
-import { IConfigurationService } from '../../../client/common/types';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { CondaService } from '../../../platform/common/process/condaService';
+import { IConfigurationService } from '../../../platform/common/types';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { CondaInstaller } from '../../../kernels/installer/condaInstaller';
 import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller';
 import { ModuleInstallFlags } from '../../../kernels/installer/types';

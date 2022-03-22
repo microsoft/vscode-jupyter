@@ -4,13 +4,12 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
     IDisposableRegistry,
     IOutputChannel,
@@ -18,16 +17,16 @@ import {
     IHttpClient,
     IPersistentStateFactory,
     IExtensionContext
-} from '../../client/common/types';
-import { Common, DataScience } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { stripAnsi } from '../../client/common/utils/regexp';
-import { InteractiveWindowMessages } from '../../extension/messageTypes';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { IServiceContainer } from '../../client/ioc/types';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
-import { sendTelemetryEvent } from '../../client/telemetry';
-import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
+} from '../../platform/common/types';
+import { Common, DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { stripAnsi } from '../../platform/common/utils/regexp';
+import { InteractiveWindowMessages } from '../../platform/messageTypes';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
@@ -42,7 +41,6 @@ import { IIPyWidgetMessageDispatcher } from './types';
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
  */
-@injectable()
 //
 export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

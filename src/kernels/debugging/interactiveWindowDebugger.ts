@@ -4,21 +4,21 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
-import { IPythonDebuggerPathProvider } from '../../client/api/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../client/common/logger';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService } from '../../client/common/types';
-import { DataScience } from '../../client/common/utils/localize';
+import { IPythonDebuggerPathProvider } from '../../platform/api/types';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
+import { IPlatformService } from '../../platform/common/platform/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
 import {
     IInteractiveWindowDebugger,
     ICellHashListener,
     IJupyterDebugService,
     IFileHashes,
     ISourceMapRequest
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
-import { JupyterDebuggerNotInstalledError } from '../../extension/errors/jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupportedError } from '../../extension/errors/jupyterDebuggerRemoteNotSupportedError';
+import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
+import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently } from '../helpers';
 import { getPlainTextOrStreamOutput } from '../kernel';
 import { IKernel, isLocalConnection } from '../types';

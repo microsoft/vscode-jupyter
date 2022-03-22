@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { traceError } from '../../../client/common/logger';
-import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../client/common/process/types';
-import { reportAction } from '../../../client/datascience/progress/decorator';
-import { ReportableAction } from '../../../client/datascience/progress/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { traceError } from '../../../platform/common/logger';
+import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types';
+import { reportAction } from '../../../platform/datascience/progress/decorator';
+import { ReportableAction } from '../../../platform/datascience/progress/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterDaemonModule } from '../../../datascience-ui/common/constants';
 
 @injectable()

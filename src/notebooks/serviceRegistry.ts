@@ -3,16 +3,14 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../client/activation/types';
-import { IDataScienceCommandListener, INotebookEditorProvider } from '../client/datascience/types';
-import { IServiceManager } from '../client/ioc/types';
-import { GitHubIssueCodeLensProvider } from '../client/logging/gitHubIssueCodeLensProvider';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IDataScienceCommandListener, INotebookEditorProvider } from '../platform/datascience/types';
+import { IServiceManager } from '../platform/ioc/types';
+import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
-import { PythonKernelCompletionProvider } from '../intellisense/pythonKernelCompletionProvider';
-import { PythonKernelCompletionProviderRegistration } from '../intellisense/pythonKernelCompletionProviderRegistration';
 import { KernelProvider } from '../kernels/kernelProvider';
 import { IKernelProvider } from '../kernels/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -28,6 +26,7 @@ import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { INotebookLanguageClientProvider, INotebookControllerManager } from './types';
+import { NotebookUsageTracker } from './notebookUsageTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -50,14 +49,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookCellBangInstallDiagnosticsProvider
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addSingleton<PythonKernelCompletionProvider>(
-        PythonKernelCompletionProvider,
-        PythonKernelCompletionProvider
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PythonKernelCompletionProviderRegistration
-    );
     serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
@@ -81,4 +72,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         ErrorRendererCommunicationHandler
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        NotebookUsageTracker
+    );
 }

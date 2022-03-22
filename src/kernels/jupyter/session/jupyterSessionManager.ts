@@ -14,17 +14,17 @@ import { JSONObject } from '@lumino/coreutils';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { CancellationToken, EventEmitter } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { traceInfo, traceError } from '../../../client/common/logger';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { traceInfo, traceError } from '../../../platform/common/logger';
 import {
     IPersistentState,
     IConfigurationService,
     IOutputChannel,
     IPersistentStateFactory,
     Resource
-} from '../../../client/common/types';
-import { Common, DataScience } from '../../../client/common/utils/localize';
-import { SessionDisposedError } from '../../../extension/errors/sessionDisposedError';
+} from '../../../platform/common/types';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import {
     IJupyterSessionManager,
     IJupyterConnection,
@@ -32,8 +32,7 @@ import {
     IDisplayOptions,
     IJupyterKernel,
     IJupyterKernelSpec
-} from '../../../client/datascience/types';
-import { sleep } from '../../../test/core';
+} from '../../../platform/datascience/types';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { KernelConnectionMetadata } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
@@ -41,6 +40,7 @@ import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { sleep } from '../../../platform/common/utils/async';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';

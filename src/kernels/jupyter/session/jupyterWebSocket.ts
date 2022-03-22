@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceError } from '../../../client/common/logger';
-import { noop } from '../../../client/common/utils/misc';
-import { IKernelSocket } from '../../../client/datascience/types';
+import { traceError } from '../../../platform/common/logger';
+import { noop } from '../../../platform/common/utils/misc';
+import { IKernelSocket } from '../../../platform/datascience/types';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
