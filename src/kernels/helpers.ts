@@ -178,6 +178,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
+                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                     const pythonVersion = `Python ${
                         getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
@@ -187,9 +188,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                         : oldDisplayName;
                 } else {
                     // Non-Python kernelspec that launches via python interpreter
-                    return kernelConnection.interpreter.envName
-                        ? `${oldDisplayName} (${kernelConnection.interpreter.envName})`
-                        : oldDisplayName;
+                    return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;
                 }
             } else {
                 return oldDisplayName;
@@ -212,12 +211,20 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return kernelConnection.kernelSpec.display_name;
                 }
                 const pythonDisplayName = pythonVersion.trim();
-                return kernelConnection.interpreter.envName
-                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
-                    : pythonDisplayName;
+                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+                return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
             }
     }
     return oldDisplayName;
+}
+function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
+    // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
+    // In such cases the envName is empty, but it has a path.
+    let envName = pythonEnv.envName;
+    if (pythonEnv.envPath && pythonEnv.envType === EnvironmentType.Conda && !pythonEnv.envName) {
+        envName = path.basename(pythonEnv.envPath);
+    }
+    return envName;
 }
 function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {
