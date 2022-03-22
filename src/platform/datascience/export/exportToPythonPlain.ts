@@ -56,7 +56,7 @@ export class ExportToPythonPlain implements IExport {
         // Check to see if we should comment out Shell / Magic commands
         const commentMagic = this.configuration.getSettings(cell.notebook.uri).pythonExportMethod === 'commentMagics';
 
-        return appendLineFeed(code, commentMagic ? commentMagicCommands : undefined).join('');
+        return appendLineFeed(code, os.EOL, commentMagic ? commentMagicCommands : undefined).join('');
     }
 
     // Convert one Markup cell to a string
@@ -64,7 +64,7 @@ export class ExportToPythonPlain implements IExport {
         let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
 
         // Comment out lines of markdown cells
-        return appendLineFeed(code, commentLine).join('');
+        return appendLineFeed(code, os.EOL, commentLine).join('');
     }
 
     // Determine the cell marker for a notebook cell, if it's in the metadata use that

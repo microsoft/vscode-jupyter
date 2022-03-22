@@ -149,7 +149,7 @@ export function generateCellsFromNotebookDocument(
             const data = createJupyterCellFromVSCNotebookCell(cell);
             data.source =
                 cell.kind === NotebookCellKind.Code
-                    ? appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined)
+                    ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
                     : appendLineFeed(code);
             return {
                 data,
