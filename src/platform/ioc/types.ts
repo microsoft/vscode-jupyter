@@ -67,7 +67,7 @@ export interface IServiceManager extends IDisposable {
         instance: T,
         name?: string | number | symbol
     ): void;
-    readonly container: Container; // For testing
+    getContainer(): Container; // For testing
 }
 
 export const IServiceContainer = Symbol('IServiceContainer');

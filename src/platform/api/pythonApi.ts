@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line
 /* eslint-disable comma-dangle */
 // eslint-disable-next-line
@@ -35,7 +36,8 @@ import {
     IPythonDebuggerPathProvider,
     IPythonExtensionChecker,
     IPythonProposedApi,
-    PythonApi
+    PythonApi,
+    RefreshInterpretersOptions
 } from './types';
 
 /* eslint-disable max-classes-per-file */
@@ -89,6 +91,17 @@ export class PythonApiProvider implements IPythonApiProvider {
         const unifiedApi: PythonApi = {} as any;
         Object.assign(unifiedApi, pythonProposedApi.environment);
         Object.assign(unifiedApi, api);
+
+        // Workaround API name changes (only used in test code at the moment)
+        if (!unifiedApi.refreshInterpreters && (unifiedApi as any).refreshEnvironment) {
+            unifiedApi.refreshInterpreters = (options: RefreshInterpretersOptions) => {
+                return (unifiedApi as any).refreshEnvironment(options);
+            };
+            unifiedApi.setActiveInterpreter = (path: string, resource?: Resource) => {
+                return (unifiedApi as any).setActiveEnvironment(path, resource);
+            };
+        }
+
         this.api.resolve(unifiedApi);
 
         // Log experiment status here. Python extension is definitely loaded at this point.
@@ -278,9 +291,15 @@ export class InterpreterService implements IInterpreterService {
     public async refreshInterpreters() {
         const api = await this.apiProvider.getApi();
         try {
-            const newItems = await api.refreshInterpreters({ clearCache: false });
-            this.interpreterListCachePromise = undefined;
-            traceVerbose(`Refreshed Environments and got ${newItems}`);
+            if (api.refreshInterpreters) {
+                const newItems = await api.refreshInterpreters({ clearCache: false });
+                this.interpreterListCachePromise = undefined;
+                traceVerbose(`Refreshed Environments and got ${newItems}`);
+            } else if ((api as any).refreshEnvironment) {
+                const newItems = await (api as any).refreshEnvironment({ clearCache: false });
+                this.interpreterListCachePromise = undefined;
+                traceVerbose(`Refreshed Environments and got ${newItems}`);
+            }
         } catch (ex) {
             traceError(`Failed to refresh the list of interpreters`);
         }

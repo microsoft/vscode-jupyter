@@ -10,10 +10,10 @@ type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 @injectable()
 export class ServiceManager implements IServiceManager {
     @testOnlyMethod()
-    public get container() {
-        return this._container;
+    public getContainer() {
+        return this.container;
     }
-    constructor(private readonly _container: Container) {}
+    constructor(private readonly container: Container) {}
     public add<T>(
         serviceIdentifier: identifier<T>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

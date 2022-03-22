@@ -150,7 +150,7 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
             target: ts.ScriptTarget.ES5,
             module: ts.ModuleKind.CommonJS
         });
-        const map = (api.serviceManager.container as any)._bindingDictionary._map as Map<
+        const map = (api.serviceManager.getContainer() as any)._bindingDictionary._map as Map<
             number,
             Array<interfaces.Binding<any>>
         >;

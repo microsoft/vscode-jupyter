@@ -126,7 +126,7 @@ export type PythonApi = {
     setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
 };
 
-type RefreshInterpretersOptions = {
+export type RefreshInterpretersOptions = {
     clearCache?: boolean;
 };
 export type IPythonProposedApi = {
