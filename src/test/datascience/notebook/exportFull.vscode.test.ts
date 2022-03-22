@@ -111,12 +111,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}${os.EOL}`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -145,12 +143,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}${os.EOL}`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -179,12 +175,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n\n`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -218,7 +212,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`, 'Exported text does not match');
+        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}${os.EOL}`, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -257,7 +251,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n\n`,
             'Exported text does not match'
         );
 

@@ -3,6 +3,7 @@
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { noop } from '../../platform/common/utils/misc';
+import * as os from 'os';
 
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';
@@ -108,7 +109,7 @@ export function formatStreamText(str: string): string {
 export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
     return arr.map((s: string, i: number) => {
         const out = modifier ? modifier(s) : s;
-        return i === arr.length - 1 ? `${out}` : `${out}\n`;
+        return i === arr.length - 1 ? `${out}` : `${out}${os.EOL}`;
     });
 }
 
