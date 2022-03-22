@@ -514,7 +514,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             );
         }
 
-        await this._kernelPromise.promise;
         const cells =
             firstNonMarkdown > 0
                 ? [split.slice(0, firstNonMarkdown).join('\n'), split.slice(firstNonMarkdown).join('\n')]
