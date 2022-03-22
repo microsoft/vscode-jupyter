@@ -235,8 +235,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._kernelPromise.resolve(kernel);
             } catch (ex) {
                 this.finishSysInfoMessage(ex, sysInfoCell, SysInfoReason.Start);
-                this._kernelPromise.resolve(undefined);
-                this.disconnectKernel();
+                this._kernelPromise.reject(ex);
                 this._kernelConnectionId = controller.id;
             }
         }
@@ -515,6 +514,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             );
         }
 
+        await this._kernelPromise.promise;
         const cells =
             firstNonMarkdown > 0
                 ? [split.slice(0, firstNonMarkdown).join('\n'), split.slice(firstNonMarkdown).join('\n')]
@@ -537,7 +537,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private disconnectKernel() {
         this.kernelDisposables.forEach((d) => d.dispose());
         this.kernelDisposables = [];
-        if (this._kernelPromise.resolved) {
+        if (this._kernelPromise.completed) {
             this._kernelPromise = createDeferred<IKernel>();
         }
     }
