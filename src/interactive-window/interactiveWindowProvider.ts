@@ -35,7 +35,8 @@ import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
     IInteractiveWindowDebugger,
-    INotebookExporter
+    INotebookExporter,
+    IDataScienceErrorHandler
 } from '../platform/datascience/types';
 import { InteractiveWindow } from './interactiveWindow';
 
@@ -136,6 +137,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.notebookControllerManager,
             this.serviceContainer,
             this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
+            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
             connection
         );
         this._windows.push(result);

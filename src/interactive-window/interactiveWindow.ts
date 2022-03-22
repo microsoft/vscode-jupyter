@@ -41,7 +41,8 @@ import { INotebookControllerManager } from '../notebooks/types';
 import {
     IInteractiveWindowLoadable,
     IInteractiveWindowDebugger,
-    INotebookExporter
+    INotebookExporter,
+    IDataScienceErrorHandler
 } from '../platform/datascience/types';
 import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines, parseForComments } from '../datascience-ui/common';
@@ -136,6 +137,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly serviceContainer: IServiceContainer,
         private readonly interactiveWindowDebugger: IInteractiveWindowDebugger,
+        public readonly errorHandler: IDataScienceErrorHandler,
         public readonly originalConnection?: KernelConnectionMetadata
     ) {
         // Set our owner and first submitter
@@ -234,7 +236,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.finishSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
                 this._kernelPromise.resolve(kernel);
             } catch (ex) {
-                this.finishSysInfoMessage(ex, sysInfoCell, SysInfoReason.Start);
+                await this.finishWithFailureMessage(ex, sysInfoCell);
                 this._kernelPromise.resolve(undefined);
                 this.disconnectKernel();
                 this._kernelConnectionId = controller.id;
@@ -310,17 +312,22 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private finishSysInfoMessage(
-        kernelOrError: IKernel | Error,
+        kernel: IKernel,
         cellPromise: Promise<NotebookCell | undefined>,
         reason: SysInfoReason
     ) {
-        const kernelName =
-            'info' in kernelOrError ? kernelOrError.kernelConnectionMetadata.interpreter?.displayName : '';
-        const kernelInfo =
-            'info' in kernelOrError && kernelOrError.info?.status === 'ok' ? kernelOrError.info : undefined;
-        const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernelOrError.toString();
+        const kernelName = 'info' in kernel ? kernel.kernelConnectionMetadata.interpreter?.displayName : '';
+        const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
+        const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
         const message =
             reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader().format(kernelName || '') : banner;
+        this.updateSysInfoMessage(message, true, cellPromise);
+    }
+
+    private async finishWithFailureMessage(error: Error, cellPromise: Promise<NotebookCell | undefined>) {
+        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start');
+        // As message is displayed in markdown, ensure linebreaks are formatted accordingly.
+        message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
     }
 
