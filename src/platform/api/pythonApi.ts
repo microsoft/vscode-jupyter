@@ -357,7 +357,11 @@ export class InterpreterService implements IInterpreterService {
         // we want all interpreters regardless of workspace folder so call this multiple times
         const folders = this.workspace.workspaceFolders;
         const all = folders
-            ? await Promise.all(folders.map((f) => this.apiProvider.getApi().then((api) => api.getInterpreters(f.uri))))
+            ? await Promise.all(
+                  [...folders, undefined].map((f) =>
+                      this.apiProvider.getApi().then((api) => api.getInterpreters(f?.uri))
+                  )
+              )
             : await Promise.all([this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
 
         // Remove dupes
