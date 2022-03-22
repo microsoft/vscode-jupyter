@@ -181,14 +181,14 @@ export class CellExecution implements IDisposable {
         );
         workspace.onDidChangeNotebookDocument(
             (e) => {
-                if (!isJupyterNotebook(e.notebook) || e.cellChanges.length === 0) {
+                if (!isJupyterNotebook(e.notebook)) {
                     return;
                 }
-                const thisCellChange = e.cellChanges.find((item) => item.cell === this.cell);
+                const thisCellChange = e.cellChanges.find(({ cell }) => cell === this.cell);
                 if (!thisCellChange) {
                     return;
                 }
-                if (!thisCellChange.outputs || thisCellChange.outputs.length === 0) {
+                if (thisCellChange.outputs?.length === 0) {
                     // keep track of the fact that user has cleared the output.
                     this.clearLastUsedStreamOutput();
                 }
