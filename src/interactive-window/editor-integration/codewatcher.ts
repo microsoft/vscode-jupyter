@@ -272,14 +272,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(
-                iw,
-                normalizedCode,
-                this.document.uri,
-                activeEditor.selection.start.line,
-                0,
-                activeEditor
-            );
+            await this.addCode(iw, normalizedCode, this.document.uri, activeEditor.selection.start.line, 0);
         }
     }
 
@@ -1012,16 +1005,15 @@ export class CodeWatcher implements ICodeWatcher {
         file: Uri,
         line: number,
         leftCount: number,
-        editor?: TextEditor,
         debug?: boolean
     ): Promise<boolean> {
         let result = false;
         const stopWatch = new StopWatch();
         try {
             if (debug) {
-                result = await interactiveWindow.debugCode(code, file, line, editor);
+                result = await interactiveWindow.debugCode(code, file, line);
             } else {
-                result = await interactiveWindow.addCode(code, file, line, editor);
+                result = await interactiveWindow.addCode(code, file, line);
             }
         } catch (err) {
             if (err instanceof InteractiveCellResultError) {
@@ -1099,7 +1091,6 @@ export class CodeWatcher implements ICodeWatcher {
                     this.document.uri,
                     currentRunCellLens.range.start.line,
                     0,
-                    this.documentManager.activeTextEditor,
                     debug
                 );
             }
@@ -1173,19 +1164,11 @@ export class CodeWatcher implements ICodeWatcher {
                 // Adds should get started in order with the map call, so just await
                 // all of them
                 const adds = ranges.map((r) =>
-                    this.addCode(
-                        iw,
-                        this.document!.getText(r.range),
-                        this.document!.uri,
-                        r.range.start.line,
-                        0,
-                        undefined,
-                        debug
-                    )
+                    this.addCode(iw, this.document!.getText(r.range), this.document!.uri, r.range.start.line, 0, debug)
                 );
                 await Promise.all(adds);
             } else {
-                await this.addCode(iw, code, this.document.uri, 0, 0, undefined, debug);
+                await this.addCode(iw, code, this.document.uri, 0, 0, debug);
             }
         }
     }

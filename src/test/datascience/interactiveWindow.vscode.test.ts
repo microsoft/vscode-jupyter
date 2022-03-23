@@ -303,13 +303,6 @@ for i in range(10):
         );
         const secondCell = notebookDocument?.cellAt(2);
         await waitForExecutionCompletedWithErrors(secondCell!);
-        await waitForCondition(
-            async () => {
-                return notebookDocument?.cellCount == 5;
-            },
-            defaultNotebookTestTimeout,
-            `Markdown error didnt appear`
-        );
     });
 
     test('Multiple interactive windows', async () => {
