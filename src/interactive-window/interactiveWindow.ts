@@ -60,6 +60,8 @@ import { SysInfoReason } from '../platform/messageTypes';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { updateNotebookMetadata } from '../notebooks/helpers';
+import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
+import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 
 type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -235,9 +237,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.finishSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
                 this._kernelPromise.resolve(kernel);
             } catch (ex) {
-                await this.finishWithFailureMessage(ex, sysInfoCell);
-                this._kernelPromise.resolve(undefined);
-                this.disconnectKernel();
+                this._kernelPromise.reject(ex);
+                if (this.owner) {
+                    // The actual error will be displayed in the cell, hence no need to display the actual
+                    // error here, else we'd just be duplicating the error messages.
+                    await this.deleteSysInfoCell(sysInfoCell);
+                } else {
+                    // We don't have a cell when starting IW without an *.py file,
+                    // hence display error where the sysinfo is displayed.
+                    await this.finishWithFailureMessage(ex, sysInfoCell);
+                }
                 this._kernelConnectionId = controller.id;
             }
         }
@@ -286,8 +295,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return this._insertSysInfoPromise;
     }
-
     private updateSysInfoMessage(newMessage: string, finish: boolean, cellPromise: Promise<NotebookCell | undefined>) {
+        if (finish) {
+            this._insertSysInfoPromise = undefined;
+        }
         cellPromise
             .then((cell) =>
                 chainWithPendingUpdates(this._notebookDocument!, (edit) => {
@@ -302,6 +313,30 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                                 isInteractiveWindowMessageCell: true,
                                 isPlaceholder: !finish
                             });
+                            return;
+                        }
+                    }
+                })
+            )
+            .ignoreErrors();
+    }
+
+    private deleteSysInfoCell(cellPromise: Promise<NotebookCell | undefined>) {
+        this._insertSysInfoPromise = undefined;
+        cellPromise
+            .then((cell) =>
+                chainWithPendingUpdates(this._notebookDocument!, (edit) => {
+                    if (cell !== undefined && cell.index >= 0) {
+                        if (
+                            cell.kind === NotebookCellKind.Markup &&
+                            cell.metadata.isInteractiveWindowMessageCell &&
+                            cell.metadata.isPlaceholder
+                        ) {
+                            edit.replaceNotebookCells(
+                                cell.notebook.uri,
+                                new NotebookRange(cell.index, cell.index + 1),
+                                []
+                            );
                             return;
                         }
                     }
@@ -436,19 +471,32 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.disconnectKernel();
     }
 
-    // Add message to the notebook document in a markdown cell
     @chainable()
-    public async addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void> {
+    public async addErrorMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
-        const edit = new WorkspaceEdit();
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         const index = getIndex ? getIndex(notebookEditor) : -1;
         const insertionIndex = index >= 0 ? index : notebookEditor.document.cellCount;
-        edit.replaceNotebookCells(notebookEditor.document.uri, new NotebookRange(insertionIndex, insertionIndex), [
-            markdownCell
-        ]);
-        await workspace.applyEdit(edit);
+        // If possible display the error message in the cell.
+        const cellToBeUpdated =
+            notebookEditor.document.cellCount && index >= 0 ? notebookEditor.document.cellAt(index) : undefined;
+        const controller = this.notebookControllerManager.getSelectedNotebookController(notebookEditor.document);
+        const output = createOutputWithErrorMessageForDisplay(message);
+        if (notebookEditor.document.cellCount === 0 || !controller || !output || !cellToBeUpdated) {
+            const edit = new WorkspaceEdit();
+            edit.replaceNotebookCells(notebookEditor.document.uri, new NotebookRange(insertionIndex, insertionIndex), [
+                markdownCell
+            ]);
+            await workspace.applyEdit(edit);
+        } else {
+            const execution = CellExecutionCreator.getOrCreate(cellToBeUpdated, controller.controller);
+            if (!execution.started) {
+                execution.start();
+            }
+            void execution.appendOutput(output);
+            void execution.end(false);
+        }
     }
 
     public changeMode(mode: InteractiveWindowMode): void {
@@ -543,7 +591,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private disconnectKernel() {
         this.kernelDisposables.forEach((d) => d.dispose());
         this.kernelDisposables = [];
-        if (this._kernelPromise.resolved) {
+        if (this._kernelPromise.completed) {
             this._kernelPromise = createDeferred<IKernel>();
         }
     }
@@ -554,11 +602,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         isDebug: boolean
     ) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
-        const [kernel, { cell, wasScrolled }, editor] = await Promise.all([
-            this._kernelPromise.promise,
-            notebookCellPromise,
-            this._editorReadyPromise
-        ]);
+        // Wait for the cell to get created (required to insert error messages into cell output).
+        const { cell, wasScrolled } = await notebookCellPromise;
+
+        const [kernel, editor] = await Promise.all([this._kernelPromise.promise, this._editorReadyPromise]);
         if (!kernel) {
             return false;
         }

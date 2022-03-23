@@ -995,6 +995,17 @@ export class CodeWatcher implements ICodeWatcher {
         return this.interactiveWindowProvider.getOrCreate(this.document?.uri);
     }
 
+    private getMatchingCell(file: Uri, line: number, editor: NotebookEditor) {
+        // Index of message should be after the cell that we just inserted.
+        // Possible user is executing the same cell multiple times, in this case get the last matching cell.
+        const matchingCell = editor.document
+            .getCells()
+            .reverse()
+            .find(
+                (c) => c.metadata?.interactive?.uristring === file.toString() && c.metadata?.interactive?.line === line
+            );
+        return matchingCell ? matchingCell.index + 1 : -1;
+    }
     private async addCode(
         interactiveWindow: IInteractiveWindow,
         code: string,
@@ -1014,25 +1025,20 @@ export class CodeWatcher implements ICodeWatcher {
             }
         } catch (err) {
             if (err instanceof InteractiveCellResultError) {
-                // If our cell result was a failure show an error
-                // for the count of cells cancelled
-                await this.addErrorMessage(
-                    interactiveWindow,
-                    (e) => {
-                        // Index of message should be after the cell that we just inserted.
-                        const matchingCell = e.document
-                            .getCells()
-                            .find(
-                                (c) =>
-                                    c.metadata?.interactive?.uristring === file.toString() &&
-                                    c.metadata?.interactive?.line === line
-                            );
-                        return matchingCell ? matchingCell.index + 1 : -1;
-                    },
-                    leftCount
-                );
+                // Only show an error message if any left
+                if (leftCount > 0) {
+                    const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
+
+                    // If our cell result was a failure show an error
+                    // for the count of cells cancelled
+                    await this.addErrorMessage(interactiveWindow, (e) => this.getMatchingCell(file, line, e), message);
+                }
             } else {
                 await this.dataScienceErrorHandler.handleError(err);
+                // If our cell result was a failure show an error
+                // for the count of cells cancelled
+                const message = await this.dataScienceErrorHandler.getErrorMessageForDisplayInCell(err, 'execution');
+                await this.addErrorMessage(interactiveWindow, (e) => this.getMatchingCell(file, line, e), message);
             }
         } finally {
             this.sendPerceivedCellExecute(stopWatch);
@@ -1044,16 +1050,12 @@ export class CodeWatcher implements ICodeWatcher {
     private async addErrorMessage(
         interactiveWindow: IInteractiveWindow,
         getIndex: (editor: NotebookEditor) => number,
-        leftCount: number
+        message: string
     ): Promise<void> {
-        // Only show an error message if any left
-        if (leftCount > 0) {
-            const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
-            try {
-                await interactiveWindow.addMessage(message, getIndex);
-            } catch (err) {
-                await this.dataScienceErrorHandler.handleError(err);
-            }
+        try {
+            await interactiveWindow.addErrorMessage(message, getIndex);
+        } catch (err) {
+            await this.dataScienceErrorHandler.handleError(err);
         }
     }
 
