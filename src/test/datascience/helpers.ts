@@ -127,7 +127,7 @@ export async function submitFromPythonFile(
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
     )) as InteractiveWindow;
-    await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
+    await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
     await waitForInteractiveWindow(activeInteractiveWindow);
     return { activeInteractiveWindow, untitledPythonFile };
 }
