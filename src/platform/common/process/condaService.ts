@@ -90,7 +90,7 @@ export class CondaService {
         return this._previousFileCall;
     }
 
-    @traceDecorators.verbose('getCondaFile', TraceOptions.BeforeCall)
+    @traceDecorators.verbose('getCondaBatchFile', TraceOptions.BeforeCall)
     async getCondaBatchFile() {
         if (this._batchFile) {
             return this._batchFile;
