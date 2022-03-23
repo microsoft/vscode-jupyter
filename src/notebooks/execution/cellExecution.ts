@@ -527,6 +527,7 @@ export class CellExecution implements IDisposable {
             this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
+            traceError('Error in waiting for cell to complete', ex);
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (
@@ -534,10 +535,9 @@ export class CellExecution implements IDisposable {
                 ex instanceof Error &&
                 (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
             ) {
-                this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
+                this.completedWithErrors(ex);
             } else {
-                traceError('Error in waiting for cell to complete', ex);
                 traceCellMessage(this.cell, 'Some other execution error');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.completedWithErrors(ex as any);
