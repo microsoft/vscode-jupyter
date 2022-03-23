@@ -24,7 +24,6 @@ import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './help
 import { JupyterSession } from './jupyter/session/jupyterSession';
 import { RawJupyterSession } from './raw/session/rawJupyterSession';
 import { IKernel, IKernelProvider } from './types';
-import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -186,13 +185,12 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
             } catch (ex) {
                 if (currentCell) {
-                    const cellExecution = CellExecutionCreator.getOrCreate(currentCell, kernel.controller);
                     displayErrorsInCell(
                         currentCell,
-                        cellExecution,
-                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, context)
+                        kernel.controller,
+                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                        false
                     );
-                    cellExecution.end(false);
                 } else {
                     void this.applicationShell.showErrorMessage(ex.toString());
                 }
