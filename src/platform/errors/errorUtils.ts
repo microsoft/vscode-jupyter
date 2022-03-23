@@ -573,28 +573,36 @@ export function displayErrorsInCell(
     errorMessage: string,
     isCancelled: boolean
 ) {
+    const output = createOutputWithErrorMessageForDisplay(errorMessage);
+    if (!output) {
+        return;
+    }
     const execution = CellExecutionCreator.getOrCreate(cell, controller);
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
-    execution.start();
+    execution.start(cell.executionSummary?.timing?.endTime);
+    execution.executionOrder = cell.executionSummary?.executionOrder;
 
-    if (errorMessage) {
-        // If we have markdown links to run a command, turn that into a link.
-        const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
-        let matches: RegExpExecArray | undefined | null;
-        while ((matches = regex.exec(errorMessage)) !== null) {
-            if (matches.length === 3) {
-                errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
-            }
-        }
-        void execution.clearOutput(cell);
-        const output = new NotebookCellOutput([
-            NotebookCellOutputItem.error({
-                message: '',
-                name: '',
-                stack: `\u001b[1;31m${errorMessage.trim()}`
-            })
-        ]);
-        void execution.appendOutput(output);
+    void execution.appendOutput(output);
+    execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
+}
+
+export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
+    if (!errorMessage) {
+        return;
     }
-    execution.end(isCancelled ? undefined : false);
+    // If we have markdown links to run a command, turn that into a link.
+    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    let matches: RegExpExecArray | undefined | null;
+    while ((matches = regex.exec(errorMessage)) !== null) {
+        if (matches.length === 3) {
+            errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
+        }
+    }
+    return new NotebookCellOutput([
+        NotebookCellOutputItem.error({
+            message: '',
+            name: '',
+            stack: `\u001b[1;31m${errorMessage.trim()}`
+        })
+    ]);
 }
