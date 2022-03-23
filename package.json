@@ -86,7 +86,7 @@
                 "id": "jupyterWelcome",
                 "title": "Get started with Jupyter Notebooks",
                 "description": "Your first steps to set up a Jupyter project with all the powerful tools and features that the Jupyter extension has to offer!",
-                "when": "false",
+                "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "ipynb.newUntitledIpynb",
