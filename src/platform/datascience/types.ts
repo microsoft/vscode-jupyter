@@ -464,7 +464,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly ready: Promise<void>;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
-    addErrorMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;
+    addErrorMessage(message: string, getCell?: (editor: NotebookEditor) => NotebookCell | undefined): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;

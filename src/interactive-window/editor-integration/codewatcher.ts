@@ -8,6 +8,7 @@ import {
     commands,
     Event,
     EventEmitter,
+    NotebookCell,
     NotebookEditor,
     Position,
     Range,
@@ -989,15 +990,11 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private getMatchingCell(file: Uri, line: number, editor: NotebookEditor) {
-        // Index of message should be after the cell that we just inserted.
-        // Possible user is executing the same cell multiple times, in this case get the last matching cell.
-        const matchingCell = editor.document
+        return editor.document
             .getCells()
-            .reverse()
             .find(
                 (c) => c.metadata?.interactive?.uristring === file.toString() && c.metadata?.interactive?.line === line
             );
-        return matchingCell ? matchingCell.index + 1 : -1;
     }
     private async addCode(
         interactiveWindow: IInteractiveWindow,
@@ -1041,11 +1038,11 @@ export class CodeWatcher implements ICodeWatcher {
 
     private async addErrorMessage(
         interactiveWindow: IInteractiveWindow,
-        getIndex: (editor: NotebookEditor) => number,
+        getCell: (editor: NotebookEditor) => NotebookCell | undefined,
         message: string
     ): Promise<void> {
         try {
-            await interactiveWindow.addErrorMessage(message, getIndex);
+            await interactiveWindow.addErrorMessage(message, getCell);
         } catch (err) {
             await this.dataScienceErrorHandler.handleError(err);
         }
@@ -1085,14 +1082,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(
-                    iw,
-                    code,
-                    this.document.uri,
-                    currentRunCellLens.range.start.line,
-                    0,
-                    debug
-                );
+                await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, 0, debug);
             }
         }
     }

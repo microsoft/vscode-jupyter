@@ -473,25 +473,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     @chainable()
-    public async addErrorMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void> {
+    public async addErrorMessage(message: string, getCell?: (editor: NotebookEditor) => NotebookCell | undefined  ): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
-        const index = getIndex ? getIndex(notebookEditor) : -1;
-        const insertionIndex = index >= 0 ? index : notebookEditor.document.cellCount;
+        const notebookCell = getCell ? getCell(notebookEditor) : undefined;
+        const insertionIndex =
+            notebookCell && notebookCell.index >= 0 ? notebookCell.index : notebookEditor.document.cellCount;
         // If possible display the error message in the cell.
-        const cellToBeUpdated =
-            notebookEditor.document.cellCount && index >= 0 ? notebookEditor.document.cellAt(index) : undefined;
         const controller = this.notebookControllerManager.getSelectedNotebookController(notebookEditor.document);
         const output = createOutputWithErrorMessageForDisplay(message);
-        if (notebookEditor.document.cellCount === 0 || !controller || !output || !cellToBeUpdated) {
+        if (notebookEditor.document.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();
             edit.replaceNotebookCells(notebookEditor.document.uri, new NotebookRange(insertionIndex, insertionIndex), [
                 markdownCell
             ]);
             await workspace.applyEdit(edit);
         } else {
-            const execution = CellExecutionCreator.getOrCreate(cellToBeUpdated, controller.controller);
+            const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
             if (!execution.started) {
                 execution.start();
             }
