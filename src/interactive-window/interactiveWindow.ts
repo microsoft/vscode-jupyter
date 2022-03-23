@@ -177,7 +177,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return editor;
     }
 
-    @chainable()
     private async startKernel(notebook: NotebookDocument, controller: VSCodeNotebookController): Promise<void> {
         if (controller.id !== this._kernelConnectionId) {
             this._kernelConnectionId = controller.id;
