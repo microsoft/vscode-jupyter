@@ -189,21 +189,34 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             try {
                 // Try creating a kernel
                 initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, controller.connection);
-                const kernel = await connectToKernel(controller, this.serviceContainer, this.owner, notebook);
+
+                const updateMessage = (_: unknown, k: IKernel) => {
+                    this.updateSysInfoMessage(
+                        this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
+                        false,
+                        sysInfoCell
+                    );
+                };
+                // When connecting, we need to update the sys info message
+                this.updateSysInfoMessage(
+                    this.getSysInfoMessage(controller.connection, SysInfoReason.Start),
+                    false,
+                    sysInfoCell
+                );
+                const kernel = await connectToKernel(
+                    controller,
+                    this.serviceContainer,
+                    this.owner,
+                    notebook,
+                    undefined,
+                    updateMessage
+                );
 
                 // Save connection metadata
                 this._kernelConnectMetadata = { ...kernel.kernelConnectionMetadata };
 
                 // Id may be different if the user switched controllers
                 this._kernelConnectionId = kernel.controller.id;
-
-                // After connecting, we need to update the sys info message. It may have changed because
-                // the controller may have changed
-                this.updateSysInfoMessage(
-                    this.getSysInfoMessage(kernel.kernelConnectionMetadata, SysInfoReason.Start),
-                    false,
-                    sysInfoCell
-                );
 
                 if (!this._kernelPromise.resolved || this._kernelPromise.value !== kernel) {
                     // Hook pre interrupt so we can stick in a message
@@ -472,7 +485,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     @chainable()
-    public async addErrorMessage(message: string, getCell?: (editor: NotebookEditor) => NotebookCell | undefined  ): Promise<void> {
+    public async addErrorMessage(
+        message: string,
+        getCell?: (editor: NotebookEditor) => NotebookCell | undefined
+    ): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };

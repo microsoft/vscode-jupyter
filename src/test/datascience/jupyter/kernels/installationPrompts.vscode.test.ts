@@ -246,7 +246,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell (third time)'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
+    test.only('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }

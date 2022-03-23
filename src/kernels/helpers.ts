@@ -74,6 +74,7 @@ import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKer
 import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
 import { DisplayOptions } from '../platform/datascience/displayOptions';
 import { KernelDeadError } from '../platform/errors/kernelDeadError';
+import { noop } from '../platform/common/utils/misc';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -2019,7 +2020,8 @@ async function verifyKernelState(
         kernel: IKernel;
         controller: VSCodeNotebookController;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
-    }>
+    }>,
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<IKernel> {
     const { kernel, controller, deadKernelAction } = await promise;
     // Before returning, but without disposing the kernel, double check it's still valid
@@ -2037,7 +2039,7 @@ async function verifyKernelState(
             return kernel;
         }
         // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
-        return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options);
+        return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options, onAction);
     }
     return kernel;
 }
@@ -2048,7 +2050,8 @@ export async function wrapKernelMethod(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<IKernel> {
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
@@ -2067,7 +2070,14 @@ export async function wrapKernelMethod(
 
     // Wrap the kernel method again to interrupt/restart this kernel.
     if (currentPromise && initialContext !== 'restart' && initialContext !== 'interrupt') {
-        return verifyKernelState(serviceContainer, resource, notebook, options, currentPromise.kernel.promise);
+        return verifyKernelState(
+            serviceContainer,
+            resource,
+            notebook,
+            options,
+            currentPromise.kernel.promise,
+            onAction
+        );
     }
 
     const promise = wrapKernelMethodImpl(
@@ -2076,7 +2086,8 @@ export async function wrapKernelMethod(
         serviceContainer,
         resource,
         notebook,
-        options
+        options,
+        onAction
     );
     const deferred = createDeferredFromPromise(promise);
     // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
@@ -2095,7 +2106,7 @@ export async function wrapKernelMethod(
         });
 
     connections.set(notebook, { kernel: deferred, options });
-    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise);
+    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction);
 }
 
 export async function wrapKernelMethodImpl(
@@ -2104,7 +2115,8 @@ export async function wrapKernelMethodImpl(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<{
     kernel: IKernel;
     controller: VSCodeNotebookController;
@@ -2138,6 +2150,7 @@ export async function wrapKernelMethodImpl(
                     deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
                 };
             } else {
+                onAction(context, kernel);
                 await currentMethod(kernel);
 
                 // If the kernel is dead, ask the user if they want to restart
@@ -2168,7 +2181,8 @@ export async function connectToKernel(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
-    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook, options);
+    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook, options, onAction);
 }
