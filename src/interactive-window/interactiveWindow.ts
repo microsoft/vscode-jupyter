@@ -618,12 +618,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     ) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Wait for the cell to get created (required to insert error messages into cell output).
+        // When we wait for kernel to start, its possible it will fail, and
+        // higher up, we insert errors into the cell (but the cell needs to have been inserted).
         const { cell, wasScrolled } = await notebookCellPromise;
 
         const [kernel, editor] = await Promise.all([this._kernelPromise.promise, this._editorReadyPromise]);
-        if (!kernel) {
-            return false;
-        }
         let result = true;
         let kernelBeginDisposable = undefined;
 
