@@ -2051,7 +2051,7 @@ export async function wrapKernelMethod(
     resource: Resource,
     notebook: NotebookDocument,
     options: IDisplayOptions = new DisplayOptions(false),
-    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
