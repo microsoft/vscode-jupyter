@@ -101,7 +101,7 @@ export class VSCodeNotebookController implements Disposable {
      */
     public static kernelAssociatedWithDocument?: boolean;
     private isDisposed = false;
-    private runningCellExecution: NotebookCellExecution | undefined;
+    private runningCellExecutions = new Map<NotebookDocument, NotebookCellExecution>();
     get id() {
         return this.controller.id;
     }
@@ -425,19 +425,21 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private startCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
-        // Only have one cell in the 'running' state.
-        if (!this.runningCellExecution || this.runningCellExecution.cell === cell) {
-            this.runningCellExecution?.end(undefined, undefined);
-            this.runningCellExecution = CellExecutionCreator.getOrCreate(cell, controller);
+        // Only have one cell in the 'running' state for this notebook
+        let currentExecution = this.runningCellExecutions.get(cell.notebook);
+        if (!currentExecution || currentExecution.cell === cell) {
+            currentExecution?.end(undefined, undefined);
+            currentExecution = CellExecutionCreator.getOrCreate(cell, controller);
+            this.runningCellExecutions.set(cell.notebook, currentExecution);
 
             // When this execution ends, we don't have a current one anymore.
-            const originalEnd = this.runningCellExecution.end.bind(this.runningCellExecution);
-            this.runningCellExecution.end = (success: boolean | undefined, endTime?: number | undefined) => {
-                this.runningCellExecution = undefined;
+            const originalEnd = currentExecution.end.bind(currentExecution);
+            currentExecution.end = (success: boolean | undefined, endTime?: number | undefined) => {
+                this.runningCellExecutions.delete(cell.notebook);
                 originalEnd(success, endTime);
             };
-            this.runningCellExecution.start(new Date().getTime());
-            void this.runningCellExecution.clearOutput(cell);
+            currentExecution.start(new Date().getTime());
+            void currentExecution.clearOutput(cell);
         }
     }
 
