@@ -10,13 +10,10 @@ import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { LogLevel, resolveLevel } from './levels';
 import { Arguments } from './util';
 
-const folderPath = path.dirname(__dirname);
-const folderName = path.basename(folderPath);
-const EXTENSION_ROOT_DIR =
-    folderName === 'client' ? path.join(folderPath, '..', '..') : path.join(folderPath, '..', '..', '..', '..');
 const formattedMessage = Symbol.for('message');
 
 export function isConsoleTransport(transport: unknown): boolean {

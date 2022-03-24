@@ -399,7 +399,6 @@ export class VSCodeNotebookController implements Disposable {
                 join(
                     this.context.extensionPath,
                     'out',
-                    'client',
                     'node_modules',
                     '@vscode',
                     'jupyter-ipywidgets',
