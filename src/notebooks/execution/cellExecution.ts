@@ -534,8 +534,9 @@ export class CellExecution implements IDisposable {
                 ex instanceof Error &&
                 (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
             ) {
-                this.completedSuccessfully();
+                traceWarning('Error in waiting for cell to complete', ex);
                 traceCellMessage(this.cell, 'Cancellation execution error');
+                this.completedWithErrors(ex);
             } else {
                 traceError('Error in waiting for cell to complete', ex);
                 traceCellMessage(this.cell, 'Some other execution error');
