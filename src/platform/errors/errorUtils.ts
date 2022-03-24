@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    NotebookCell,
-    NotebookCellExecution,
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    WorkspaceFolder
-} from 'vscode';
+import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, NotebookController, WorkspaceFolder } from 'vscode';
+import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
@@ -572,25 +567,34 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export function displayErrorsInCell(cell: NotebookCell, execution: NotebookCellExecution, errorMessage: string) {
-    if (!errorMessage) {
-        return;
-    }
-    // If we have markdown links to run a command, turn that into a link.
-    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
-    let matches: RegExpExecArray | undefined | null;
-    while ((matches = regex.exec(errorMessage)) !== null) {
-        if (matches.length === 3) {
-            errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
+export function displayErrorsInCell(
+    cell: NotebookCell,
+    controller: NotebookController,
+    errorMessage: string,
+    isCancelled: boolean
+) {
+    const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
+    execution.start();
+
+    if (errorMessage) {
+        // If we have markdown links to run a command, turn that into a link.
+        const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+        let matches: RegExpExecArray | undefined | null;
+        while ((matches = regex.exec(errorMessage)) !== null) {
+            if (matches.length === 3) {
+                errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
+            }
         }
+        void execution.clearOutput(cell);
+        const output = new NotebookCellOutput([
+            NotebookCellOutputItem.error({
+                message: '',
+                name: '',
+                stack: `\u001b[1;31m${errorMessage.trim()}`
+            })
+        ]);
+        void execution.appendOutput(output);
     }
-    void execution.clearOutput(cell);
-    const output = new NotebookCellOutput([
-        NotebookCellOutputItem.error({
-            message: '',
-            name: '',
-            stack: `\u001b[1;31m${errorMessage.trim()}`
-        })
-    ]);
-    void execution.appendOutput(output);
+    execution.end(isCancelled ? undefined : false);
 }

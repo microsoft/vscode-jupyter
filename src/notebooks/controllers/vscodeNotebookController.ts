@@ -10,6 +10,7 @@ import {
     ExtensionMode,
     languages,
     NotebookCell,
+    NotebookCellExecution,
     NotebookCellExecutionState,
     NotebookCellKind,
     NotebookController,
@@ -100,6 +101,7 @@ export class VSCodeNotebookController implements Disposable {
      */
     public static kernelAssociatedWithDocument?: boolean;
     private isDisposed = false;
+    private runningCellExecutions = new Map<NotebookDocument, NotebookCellExecution>();
     get id() {
         return this.controller.id;
     }
@@ -422,24 +424,40 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
+    private startCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
+        // Only have one cell in the 'running' state for this notebook
+        let currentExecution = this.runningCellExecutions.get(cell.notebook);
+        if (!currentExecution || currentExecution.cell === cell) {
+            currentExecution?.end(undefined, undefined);
+            currentExecution = CellExecutionCreator.getOrCreate(cell, controller);
+            this.runningCellExecutions.set(cell.notebook, currentExecution);
+
+            // When this execution ends, we don't have a current one anymore.
+            const originalEnd = currentExecution.end.bind(currentExecution);
+            currentExecution.end = (success: boolean | undefined, endTime?: number | undefined) => {
+                this.runningCellExecutions.delete(cell.notebook);
+                originalEnd(success, endTime);
+            };
+            currentExecution.start(new Date().getTime());
+            void currentExecution.clearOutput(cell);
+        }
+    }
+
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
-        const startTime = new Date().getTime();
         // Start execution now (from the user's point of view)
-        let execution = CellExecutionCreator.getOrCreate(cell, this.controller);
-        execution.start(startTime);
-        void execution.clearOutput(cell);
+        this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let context: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
+        let controller = this.controller;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
             // If the controller changed, then ensure to create a new cell execution object.
-            if (kernel && kernel.controller.id !== execution.controllerId) {
-                execution.end(undefined);
-                execution = CellExecutionCreator.getOrCreate(cell, kernel.controller);
-                execution.start(startTime);
+            if (kernel && kernel.controller.id !== controller.id) {
+                controller = kernel.controller;
+                this.startCellExecutionIfNecessary(cell, kernel.controller);
             }
             context = 'execution';
             if (kernel.controller.id === this.id) {
@@ -448,13 +466,16 @@ export class VSCodeNotebookController implements Disposable {
             return await kernel.executeCell(cell);
         } catch (ex) {
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-            // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex, context));
             ex = WrappedError.unwrap(ex);
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
-            // If user cancels the execution, then don't show error status against cell.
-            execution.end(isCancelled ? undefined : false);
+            // If there was a failure connecting or executing the kernel, stick it in this cell
+            displayErrorsInCell(
+                cell,
+                controller,
+                await errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                isCancelled
+            );
             return NotebookCellExecutionState.Idle;
         }
 
