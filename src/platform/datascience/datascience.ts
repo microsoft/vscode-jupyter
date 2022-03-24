@@ -14,6 +14,7 @@ import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
+import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
 import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from './types';
 
@@ -31,9 +32,11 @@ export class GlobalActivation implements IDataScience {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(CommandRegistry) private commandRegistry: CommandRegistry,
+        @inject(PlatformCommandRegistry) private platformCommandRegistry: PlatformCommandRegistry,
         @inject(IRawNotebookSupportedService) private rawSupported: IRawNotebookSupportedService
     ) {
         this.disposableRegistry.push(this.commandRegistry);
+        this.disposableRegistry.push(this.platformCommandRegistry);
     }
 
     public get activationStartTime(): number {
@@ -42,6 +45,7 @@ export class GlobalActivation implements IDataScience {
 
     public async activate(): Promise<void> {
         this.commandRegistry.register();
+        this.platformCommandRegistry.register();
 
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
