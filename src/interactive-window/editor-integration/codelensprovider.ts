@@ -22,6 +22,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { CodeLensCommands, EditorContexts, Telemetry } from '../../platform/datascience/constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../platform/datascience/types';
 import { traceInfoIfCI } from '../../platform/common/logger';
+import { PYTHON_FILE, PYTHON_UNTITLED } from '../../platform/common/constants';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -70,6 +71,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
+        if (document.uri.scheme != PYTHON_FILE.scheme && document.uri.scheme !== PYTHON_UNTITLED.scheme) {
+            return [];
+        }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }
