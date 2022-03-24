@@ -74,8 +74,10 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     test('Initialize Code Lenses one document', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
+        const uri = Uri.file('test.py');
         document.setup((d) => d.fileName).returns(() => 'test.py');
         document.setup((d) => d.version).returns(() => 1);
+        document.setup((d) => d.uri).returns(() => uri);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
         targetCodeWatcher
