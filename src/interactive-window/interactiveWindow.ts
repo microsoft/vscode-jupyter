@@ -507,10 +507,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else {
             const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
             if (!execution.started) {
-                execution.start();
+                execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
+            execution.executionOrder = notebookCell.executionSummary?.executionOrder;
             void execution.appendOutput(output);
-            void execution.end(false);
+            void execution.end(false, notebookCell.executionSummary?.timing?.endTime);
         }
     }
 
