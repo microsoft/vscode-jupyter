@@ -14,6 +14,7 @@ import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
+import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry';
 import { pruneCell } from '../../platform/datascience/common';
 import { GlobalActivation } from '../../platform/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
@@ -29,6 +30,7 @@ suite('DataScience Tests', () => {
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
     let cmdRegistry: CommandRegistry;
+    let platformCmdRegistry: PlatformCommandRegistry;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
@@ -39,6 +41,7 @@ suite('DataScience Tests', () => {
         configService = mock(ConfigurationService);
         workspaceService = mock(WorkspaceService);
         cmdRegistry = mock(CommandRegistry);
+        platformCmdRegistry = mock(PlatformCommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
@@ -54,6 +57,7 @@ suite('DataScience Tests', () => {
             instance(docManager),
             instance(workspaceService),
             instance(cmdRegistry),
+            instance(platformCmdRegistry),
             instance(rawNotebookSupported)
         );
 
