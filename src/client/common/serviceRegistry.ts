@@ -10,6 +10,7 @@ import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
+import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { EncryptedStorage } from './application/encryptedStorage';
@@ -87,6 +88,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RunInDedicatedExtensionHostCommandHandler
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

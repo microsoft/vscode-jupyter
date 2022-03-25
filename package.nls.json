@@ -171,6 +171,7 @@
     "DataScience.expandVariableExplorerTooltip": "Show variables active in jupyter kernel",
     "DataScience.close": "Close",
     "DataScience.interactiveCopyCell": "Copy Cell",
+    "DataScience.runInDedicatedExtensionHost": "Run in Dedicated Extension Host",
     "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
