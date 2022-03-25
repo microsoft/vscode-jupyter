@@ -3,9 +3,10 @@
 
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
+import { EOL } from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Memento, workspace, window, Uri, NotebookCell } from 'vscode';
+import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocument, NotebookCellKind } from 'vscode';
 import { IPythonApiProvider } from '../../../../platform/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Kernel } from '../../../../platform/../kernels/kernel';
@@ -20,7 +21,7 @@ import {
     IWatchableJupyterSettings,
     ReadWrite
 } from '../../../../platform/common/types';
-import { createDeferred } from '../../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
@@ -30,7 +31,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platfor
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
-import { openNotebook, submitFromPythonFile } from '../../helpers';
+import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatcher } from '../../helpers';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
@@ -50,9 +51,13 @@ import {
     waitForExecutionCompletedSuccessfully,
     getCellOutputs,
     waitForCellHavingOutput,
-    insertCodeCell
+    insertCodeCell,
+    WindowPromptStub,
+    WindowPromptStubButtonClickOptions,
+    waitForTextOutput
 } from '../../notebook/helper';
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
+import { noop } from '../../../core';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -137,8 +142,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 .toString('utf8')
                 .replace('<hash>', getInterpreterHash({ path: venvPythonPath }))
         );
-        await installIPyKernel(venvKernelPath);
-        await uninstallIPyKernel(venvPythonPath);
+        await Promise.all([
+            installIPyKernel(venvKernelPath),
+            uninstallIPyKernel(venvPythonPath),
+            uninstallIPyKernel(venvNoRegPath)
+        ]);
         await closeActiveWindows();
         await Promise.all([
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, venvPythonPath),
@@ -246,12 +254,24 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell (third time)'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window', async function () {
+    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        // This is a complex test that tests the following workflow (which used to fail)
+        // Verify errors are displayed against the cells being executed.
+        // 1. Run cell against env that does not have ipykernel
+        // 2. Ensure we get a prompt
+        // 3. Dismiss the prompt (at this point we'd get yet another prompt).
+        // 4. Run another cell & we should get another prompt (this didn't work)
+        // 5. Run another cell & we should get another prompt (this didn't work)
+        // 6. Run another cell & select another kernel without ipykernel
+        // 7. We should get a prompt, however we used to get prompt for the previous env
+        // 8. We should get a prompt, however we used to get prompt for the previous env
+        // 9. Finally click ok to install and run & verify we install ipykernel into the right place, (this didn't work either)
+
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
-        const prompt = await hijackPrompt(
+        let prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
             { dismissPrompt: true },
@@ -259,7 +279,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const source = 'print(__file__)';
-        const { activeInteractiveWindow } = await submitFromPythonFile(
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
             source,
             disposables,
@@ -272,20 +292,201 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // The prompt should be displayed when we run a cell.
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await verifyErrorInCellOutput(notebookDocument, venvPythonPath);
 
-        const cell = notebookDocument.cellAt(0)!;
-        assert.equal(cell.outputs.length, 0);
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await verifyErrorInCellOutput(notebookDocument, venvPythonPath);
 
-        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
-        await waitForCondition(
-            async () => assertVSCCellIsNotRunning(cell),
-            defaultNotebookTestTimeout,
-            'No errors in cell'
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await verifyErrorInCellOutput(notebookDocument, venvPythonPath);
+
+        await sleep(1_000);
+
+        // Verify we didn't get a prompt again.
+        // In the past when we dismissed the prompt, we would get a prompt again.
+        assert.strictEqual(prompt.getDisplayCount(), 1, 'Should not display additional prompts');
+
+        prompt.dispose();
+        // Next, lets try to run again, but select a kernel that doesn't have ipykernel.
+        // At this point we should get the prompt again for this new kernel.
+        const promptOptions: WindowPromptStubButtonClickOptions = {
+            text: DataScience.selectKernel(),
+            clickImmediately: true
+        };
+        prompt = await hijackPrompt(
+            'showInformationMessage',
+            { contains: expectedPromptMessageSuffix },
+            promptOptions,
+            disposables
         );
 
-        // Prompt should only be displayed once
-        assert.equal(prompt.getDisplayCount(), 1, 'Display prompt shown more than once');
+        // Hijack the select kernel functionality so it selects the correct kernel
+        const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(async function () {
+            // Now that we have selected a kernel, next time we get the prompt again, just dismiss the prompt.
+            promptOptions.dismissPrompt = true;
+            delete promptOptions.text;
+            // In tests, things hang as the IW isn't focused.
+            void activeInteractiveWindow.show(false);
+            await waitForKernelToChange({ interpreterPath: venvNoRegPath, isInteractiveController: true });
+            return true;
+        } as any);
+        disposables.push({ dispose: () => stub.restore() });
+
+        // Submitting code again should display the same prompt again, but this time we're going to select another kernel.
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+
+        await Promise.all([
+            // The prompt should be displayed when we run a cell.
+            waitForCondition(() => prompt.displayed, delayForUITest, 'Prompt not displayed'),
+            // The prompt should be displayed twice (one for first kernel, second for the second kernel).
+            // This is because the second kernel we switched to, also doesn't have ipykernel (& we should auto run the same against that).
+            waitForCondition(() => prompt.getDisplayCount() === 2, delayForUITest, 'Prompt not displayed twice'),
+            // Verify kernel picker was displayed
+            waitForCondition(() => stub.called, delayForUITest, 'Prompt not displayed twice'),
+            // Verify the the name of the new env is included in the prompt displayed (instead of the old message);
+            waitForCondition(
+                () =>
+                    prompt.messages.some((message) =>
+                        message.includes(path.basename(path.dirname(path.dirname(venvPythonPath))))
+                    ),
+                delayForUITest,
+                `Prompts '${prompt.messages}' do not include ${path.basename(
+                    path.dirname(path.dirname(venvPythonPath))
+                )}`
+            ),
+            // Verify the the name of the new env is included in the prompt displayed (instead of the old message);
+            waitForCondition(
+                () =>
+                    prompt.messages.some((message) =>
+                        message.includes(path.basename(path.dirname(path.dirname(venvNoRegPath))))
+                    ),
+                delayForUITest,
+                `Prompts '${prompt.messages}' do not include ${path.basename(
+                    path.dirname(path.dirname(venvNoRegPath))
+                )}`
+            )
+        ]);
+
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath);
+        await verifyErrorInCellOutput(notebookDocument, venvNoRegPath);
+
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath);
+        await verifyErrorInCellOutput(notebookDocument, venvNoRegPath);
+
+        // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
+        prompt.reset();
+        promptOptions.dismissPrompt = false;
+        promptOptions.text = Common.install();
+
+        await activeInteractiveWindow
+            .addCode(`import sys${EOL}print(sys.executable)`, untitledPythonFile.uri, 0)
+            .catch(noop);
+        await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
+        const lastCodeCell = notebookDocument
+            .getCells()
+            .reverse()
+            .find((cell) => cell.kind == NotebookCellKind.Code)!;
+        await waitForExecutionCompletedSuccessfully(lastCodeCell);
+        const sysExecutable = getCellOutputs(lastCodeCell).trim().toLowerCase();
+
+        assert.ok(
+            areInterpreterPathsSame(venvNoRegPath.toLowerCase(), sysExecutable.toLowerCase()),
+            `Python paths do not match ${venvNoRegPath}, ${sysExecutable}.`
+        );
     });
+
+    test('Get a single prompt when running all cells in a .py file without ipykernel and will run all cells upon installation', async () => {
+        // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
+        let prompt = await hijackPrompt(
+            'showInformationMessage',
+            { contains: expectedPromptMessageSuffix },
+            {},
+            disposables
+        );
+
+        const source = '# %%\nprint(1)\n# %%\nprint(2)\n# %%\nprint(3)';
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+            source,
+            disposables,
+            venvPythonPath
+        );
+        const notebookDocument = workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        )!;
+
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await sleep(500);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await sleep(500);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+
+        // Now lets install, all cells should run successfully.
+        prompt.clickButton(Common.install());
+
+        // Wait for the 3 cells to run successfully.
+        const [cell1, cell2, cell3] = notebookDocument!
+            .getCells()
+            .filter((cell) => cell.kind === NotebookCellKind.Code);
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForExecutionCompletedSuccessfully(cell3),
+            waitForTextOutput(cell1, '1', 0, false),
+            waitForTextOutput(cell2, '2', 0, false),
+            waitForTextOutput(cell3, '3', 0, false)
+        ]);
+    });
+
+    test('Get a single prompt when running all cells in a .py file without ipykernel and errors in all cells', async () => {
+        // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
+        const prompt = await hijackPrompt(
+            'showInformationMessage',
+            { contains: expectedPromptMessageSuffix },
+            { dismissPrompt: true },
+            disposables
+        );
+
+        const source = '# %%\nprint(1)\n# %%\nprint(2)\n# %%\nprint(3)';
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+            source,
+            disposables,
+            venvPythonPath
+        );
+        const notebookDocument = workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        )!;
+
+        // Verify and wait a few seconds, in the past we'd get a couple of prompts.
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await sleep(500);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+        await sleep(500);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath);
+
+        // Verify all cells have errors.
+        const [cell1, cell2, cell3] = notebookDocument!
+            .getCells()
+            .filter((cell) => cell.kind === NotebookCellKind.Code);
+        await Promise.all([
+            verifyErrorInCellOutput(notebookDocument, venvPythonPath, cell1),
+            verifyErrorInCellOutput(notebookDocument, venvPythonPath, cell2),
+            verifyErrorInCellOutput(notebookDocument, venvPythonPath, cell3)
+        ]);
+    });
+
     test('Ensure ipykernel install prompt is displayed even after uninstalling ipykernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
@@ -495,6 +696,42 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         console.log('Step7');
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath);
     });
+
+    async function verifyErrorInCellOutput(notebook: NotebookDocument, venvPath: string, cell?: NotebookCell) {
+        const venvName = path.basename(path.dirname(path.dirname(venvPath)));
+        const codeCell =
+            cell ||
+            notebook
+                .getCells()
+                .reverse()
+                .find((cell) => cell.kind === NotebookCellKind.Code)!;
+
+        // Once ipykernel prompt has been dismissed, execution should stop due to missing dependencies.
+        await waitForCondition(
+            async () => assertVSCCellIsNotRunning(codeCell),
+            defaultNotebookTestTimeout,
+            'No errors in cell'
+        );
+
+        // Verify we have an error in the cell output about missing ipykernel & the env name.
+        await Promise.all([
+            waitForTextOutput(codeCell, 'Run the following command to install', 0, false),
+            waitForTextOutput(codeCell, 'requires ipykernel package', 0, false),
+            waitForTextOutput(codeCell, venvName, 0, false)
+        ]);
+    }
+    async function verifyIPyKernelPromptDisplayed(prompt: WindowPromptStub, venvPath: string) {
+        // The prompt should be displayed when we run a cell.
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
+
+        assert.equal(prompt.getDisplayCount(), 1, 'Display prompt shown more than once');
+
+        // Verify the the name of the env is displayed in the prompt.
+        // This ensures we display the prompt for the right environment.
+        const venvName = path.basename(path.dirname(path.dirname(venvPath)));
+        assert.include(prompt.messages.join(' '), venvName);
+    }
+
     async function uninstallIPyKernel(pythonExecPath: string) {
         // Uninstall ipykernel from the virtual env.
         const proc = new ProcessService(new BufferDecoder());

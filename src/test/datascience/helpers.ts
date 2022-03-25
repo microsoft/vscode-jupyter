@@ -23,6 +23,7 @@ import {
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
+import { initialize } from '../initialize';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -133,15 +134,22 @@ export async function submitFromPythonFile(
 }
 
 export async function submitFromPythonFileUsingCodeWatcher(
-    interactiveWindowProvider: IInteractiveWindowProvider,
-    codeWatcherProvider: IDataScienceCodeLensProvider,
     source: string,
-    disposables: vscode.Disposable[]
+    disposables: vscode.Disposable[],
+    activeInterpreterPath?: string
 ) {
+    const api = await initialize();
+    const interactiveWindowProvider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+    const codeWatcherProvider = api.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
     const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
     disposables.push(tempFile);
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     const editor = await vscode.window.showTextDocument(untitledPythonFile);
+    if (activeInterpreterPath) {
+        const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
+        const pythonApi = await pythonApiProvider.getApi();
+        await pythonApi.setActiveInterpreter(activeInterpreterPath, untitledPythonFile.uri);
+    }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
     )) as InteractiveWindow;

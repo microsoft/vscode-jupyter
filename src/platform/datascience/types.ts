@@ -460,11 +460,9 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookUri?: Uri;
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
-    readonly originalConnection?: KernelConnectionMetadata;
-    readonly ready: Promise<void>;
     closed: Event<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
-    addErrorMessage(message: string, getCell?: (editor: NotebookEditor) => NotebookCell | undefined): Promise<void>;
+    addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;

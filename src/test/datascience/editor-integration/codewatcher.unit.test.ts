@@ -1133,7 +1133,7 @@ testing2`;
                     TypeMoq.It.isValue(0)
                 )
             )
-            .returns(() => Promise.reject(new InteractiveCellResultError()))
+            .returns(() => Promise.reject(new InteractiveCellResultError(undefined as any)))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
@@ -1174,7 +1174,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                     TypeMoq.It.isValue(0)
                 )
             )
-            .returns(() => Promise.reject(new InteractiveCellResultError()))
+            .returns(() => Promise.reject(new InteractiveCellResultError(undefined as any)))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
