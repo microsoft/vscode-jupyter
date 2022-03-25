@@ -1,5 +1,69 @@
 # Changelog
 
+## 2022.3.100 (25 March 2022)
+
+### Enhancements
+
+
+### Fixes
+
+1. Add support for named index in dataframe viewer for DataFrames and Series.
+   ([#5348](https://github.com/Microsoft/vscode-jupyter/issues/5348))
+1. Fix interactive window such that if a new kernel is picked when opening or the kernel is canceled, the interactive window will run with the new kernel or show the canceled state (instead of just showing no status at all).
+   ([#8817](https://github.com/Microsoft/vscode-jupyter/issues/8817))
+1. Fix 'ipykernel_launcher' not found when using a global python environment and '.env' file exists.
+   ([#9127](https://github.com/Microsoft/vscode-jupyter/issues/9127))
+1. Support conda installations that require using conda.bat instead of conda.exe on windows.
+   ([#9133](https://github.com/Microsoft/vscode-jupyter/issues/9133))
+1. Register kernelspecs in a private directory without cluttering user kernelspecs.
+   ([#9141](https://github.com/Microsoft/vscode-jupyter/issues/9141))
+1. Hide Notebook Editor icons contributed by the Jupyter extension when selecting a Kernel contributed by another extension.
+   ([#9155](https://github.com/Microsoft/vscode-jupyter/issues/9155))
+1. Only append SVG to the figure format if required. If not required, don't mess with the default.
+   ([#9191](https://github.com/Microsoft/vscode-jupyter/issues/9191))
+1. Deprecated the "Jupyter: Create new Jupyter notebook" Command since it has moved to the built-in ipynb extension in VS Code.
+   ([#9250](https://github.com/Microsoft/vscode-jupyter/issues/9250))
+1. Fix auto scrolling in the interactive window.
+   ([#9259](https://github.com/Microsoft/vscode-jupyter/issues/9259))
+1. Fix problem with double install ipykernel message when cancelling.
+   ([#9267](https://github.com/Microsoft/vscode-jupyter/issues/9267))
+1. Ensure the handle to the kernel connection file is disposed.
+   ([#9298](https://github.com/Microsoft/vscode-jupyter/issues/9298))
+1. Fix notebook intellisense to work again after recent regression.
+   ([#9385](https://github.com/Microsoft/vscode-jupyter/issues/9385))
+1. Fix all cells to not show a timer when queueing up multiple.
+   ([#9405](https://github.com/Microsoft/vscode-jupyter/issues/9405))
+1. Fixes intellisense provided by the kernel missing.
+   ([#9424](https://github.com/Microsoft/vscode-jupyter/issues/9424))
+1. Fixes IPyWidgets not working after refactor of source tree.
+   ([#9475](https://github.com/Microsoft/vscode-jupyter/issues/9475))
+1. Register platform commands.
+   ([#9476](https://github.com/Microsoft/vscode-jupyter/issues/9476))
+
+### Code Health
+
+1. Eliminate unused parameter for concatMultilineString.
+   ([#5144](https://github.com/Microsoft/vscode-jupyter/issues/5144))
+1. Move installation of python packages into the Jupyter extension (stop using an API from the python extension).
+   ([#8457](https://github.com/Microsoft/vscode-jupyter/issues/8457))
+1. Re-use the same codeWatchers per document when providing code lenses.
+   ([#8919](https://github.com/Microsoft/vscode-jupyter/issues/8919))
+1. Refactor kernel related code into a 'kernels' subfolder.
+   ([#8970](https://github.com/Microsoft/vscode-jupyter/issues/8970))
+1. Refactor 'notebook' related code into a 'notebooks' folder.
+   ([#8971](https://github.com/Microsoft/vscode-jupyter/issues/8971))
+1. Move interactive window related code to its own root folder.
+   ([#8972](https://github.com/Microsoft/vscode-jupyter/issues/8972))
+1. Refactor client code into a 'platform' directory and organize serviceRegistry files in a hierarchical structure.
+   ([#8981](https://github.com/Microsoft/vscode-jupyter/issues/8981))
+1. Update to Typescript 4.6.
+   ([#9173](https://github.com/Microsoft/vscode-jupyter/issues/9173))
+1. Match the node version used by VS code to build.
+   ([#9325](https://github.com/Microsoft/vscode-jupyter/issues/9325))
+1. Remove ```src\ipywidgets``` from repository and move to a separate npm module.
+   ([#9337](https://github.com/Microsoft/vscode-jupyter/issues/9337))
+
+
 ## 2022.2.103 (7 March 2022)
 
 ### Fixes
