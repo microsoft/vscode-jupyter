@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { Disposable, NotebookCell, NotebookController, NotebookControllerAffinity, NotebookDocument } from 'vscode';
-import { IPythonExtensionChecker } from '../../client/api/types';
-import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../../client/common/application/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { DataScience, Common } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { sendTelemetryEvent } from '../../client/telemetry';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../../platform/common/application/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
 import { LanguagesSupportedByPythonkernel, Telemetry, PythonExtension } from '../../datascience-ui/common/constants';
 import { getNotebookMetadata, isPythonNotebook } from '../helpers';
 

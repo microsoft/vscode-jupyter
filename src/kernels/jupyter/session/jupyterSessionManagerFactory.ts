@@ -5,19 +5,19 @@ import { inject, injectable, named } from 'inversify';
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
 import { JupyterSessionManager } from './jupyterSessionManager';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     IConfigurationService,
     IOutputChannel,
     IPersistentStateFactory,
     IDisposableRegistry
-} from '../../../client/common/types';
+} from '../../../platform/common/types';
 import {
     IJupyterSessionManagerFactory,
     IJupyterPasswordConnect,
     IJupyterConnection,
     IJupyterSessionManager
-} from '../../../client/datascience/types';
+} from '../../../platform/datascience/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../datascience-ui/common/constants';
 import { JupyterKernelService } from '../jupyterKernelService';
 

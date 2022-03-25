@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../client/common/extensions';
+import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
-import { IConfigurationService, IDisposable } from '../../../client/common/types';
-import { Cancellation } from '../../../client/common/cancellation';
-import { traceInfo, traceError, traceWarning } from '../../../client/common/logger';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
-import { Deferred, createDeferred } from '../../../client/common/utils/async';
-import { DataScience } from '../../../client/common/utils/localize';
-import { IJupyterConnection } from '../../../client/datascience/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { Cancellation } from '../../../platform/common/cancellation';
+import { traceInfo, traceError, traceWarning } from '../../../platform/common/logger';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { ObservableExecutionResult, Output } from '../../../platform/common/process/types';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { IJupyterConnection } from '../../../platform/datascience/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
 import { RegExpValues } from '../../../datascience-ui/common/constants';
-import { JupyterConnectError } from '../../../extension/errors/jupyterConnectError';
+import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');

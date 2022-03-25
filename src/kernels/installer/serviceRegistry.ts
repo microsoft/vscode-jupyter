@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IServiceManager } from '../../client/ioc/types';
+import { IServiceManager } from '../../platform/ioc/types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';

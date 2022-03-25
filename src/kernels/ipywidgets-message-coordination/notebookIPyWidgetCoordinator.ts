@@ -10,17 +10,17 @@ import {
     EventEmitter,
     CancellationTokenSource
 } from 'vscode';
-import { IVSCodeNotebook } from '../../client/common/application/types';
-import { Cancellation } from '../../client/common/cancellation';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceInfo, traceVerbose, traceInfoIfCI } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../extension/messageTypes';
-import { IServiceContainer } from '../../client/ioc/types';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { Cancellation } from '../../platform/common/cancellation';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 import { INotebookCommunication } from '../../notebooks/types';

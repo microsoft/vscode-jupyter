@@ -4,8 +4,8 @@
 'use strict';
 
 import { Event } from 'vscode';
-import { IDisposable } from '../../client/common/types';
-import { IPyWidgetMessages } from '../../extension/messageTypes';
+import { IDisposable } from '../../platform/common/types';
+import { IPyWidgetMessages } from '../../platform/messageTypes';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;

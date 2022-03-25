@@ -25,12 +25,12 @@ import {
     HoverProvider,
     Diagnostic
 } from 'vscode';
-import { IExtensionSyncActivationService } from '../client/activation/types';
-import { IVSCodeNotebook, IDocumentManager } from '../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../client/common/constants';
-import { disposeAllDisposables } from '../client/common/helpers';
-import { IDisposableRegistry } from '../client/common/types';
-import { DataScience } from '../client/common/utils/localize';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { disposeAllDisposables } from '../platform/common/helpers';
+import { IDisposableRegistry } from '../platform/common/types';
+import { DataScience } from '../platform/common/utils/localize';
 import { JupyterNotebookView } from '../notebooks/constants';
 import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
 

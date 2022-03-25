@@ -6,7 +6,7 @@
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CryptoUtils } from '../../client/common/crypto';
+import { CryptoUtils } from '../../platform/common/crypto';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const RANDOM_WORDS = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');

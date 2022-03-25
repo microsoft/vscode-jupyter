@@ -4,12 +4,12 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
-import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
-import { registerTypes } from '../../../client/common/variables/serviceRegistry';
-import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { ServiceManager } from '../../../client/ioc/serviceManager';
-import { IServiceManager } from '../../../client/ioc/types';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment';
+import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider';
+import { registerTypes } from '../../../platform/common/variables/serviceRegistry';
+import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../../platform/common/variables/types';
+import { ServiceManager } from '../../../platform/ioc/serviceManager';
+import { IServiceManager } from '../../../platform/ioc/types';
 
 suite('Common variables Service Registry', () => {
     let serviceManager: IServiceManager;

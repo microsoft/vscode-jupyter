@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { NotebookDocument, Uri } from 'vscode';
-import { TemporaryFile } from '../../client/common/platform/types';
-import { IJupyterConnection, INotebook, INotebookServer } from '../../client/datascience/types';
+import { TemporaryFile } from '../../platform/common/platform/types';
+import { IJupyterConnection, INotebook, INotebookServer } from '../../platform/datascience/types';
 import { MockJupyterNotebook } from './mockJupyterNotebook';
 
 export class MockJupyterServer implements INotebookServer {

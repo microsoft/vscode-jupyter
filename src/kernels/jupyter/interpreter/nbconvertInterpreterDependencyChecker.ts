@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
-import { parseSemVer } from '../../../client/datascience/common';
-import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../../../client/datascience/types';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { parseSemVer } from '../../../platform/datascience/common';
+import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../../../platform/datascience/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands } from '../../../datascience-ui/common/constants';
 import { IInstaller, Product } from '../../installer/types';
 

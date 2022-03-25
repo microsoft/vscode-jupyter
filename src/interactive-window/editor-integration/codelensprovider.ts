@@ -9,19 +9,20 @@ import {
     IDebugService,
     IDocumentManager,
     IWorkspaceService
-} from '../../client/common/application/types';
-import { ContextKey } from '../../client/common/contextKey';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IFileSystem } from '../../client/common/platform/types';
+} from '../../platform/common/application/types';
+import { ContextKey } from '../../platform/common/contextKey';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
-import { StopWatch } from '../../client/common/utils/stopWatch';
-import { IServiceContainer } from '../../client/ioc/types';
-import { sendTelemetryEvent } from '../../client/telemetry';
-import { CodeLensCommands, EditorContexts, Telemetry } from '../../client/datascience/constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../client/datascience/types';
-import { traceInfoIfCI } from '../../client/common/logger';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { CodeLensCommands, EditorContexts, Telemetry } from '../../platform/datascience/constants';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../platform/datascience/types';
+import { traceInfoIfCI } from '../../platform/common/logger';
+import { PYTHON_FILE, PYTHON_UNTITLED } from '../../platform/common/constants';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -70,6 +71,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
+        if (document.uri.scheme != PYTHON_FILE.scheme && document.uri.scheme !== PYTHON_UNTITLED.scheme) {
+            return [];
+        }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }

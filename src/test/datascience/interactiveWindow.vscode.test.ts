@@ -6,13 +6,13 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { IPythonApiProvider } from '../../client/api/types';
-import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IDisposable } from '../../client/common/types';
+import { IPythonApiProvider } from '../../platform/api/types';
+import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IKernelProvider } from '../../client/../kernels/types';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IKernelProvider } from '../../platform/../kernels/types';
+import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {

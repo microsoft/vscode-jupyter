@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../client/datascience/constants';
-import { IEditorContentChange, InteractiveWindowMessages, IShowDataViewer } from '../../../../extension/messageTypes';
+import {
+    NativeKeyboardCommandTelemetry,
+    NativeMouseCommandTelemetry
+} from '../../../../platform/datascience/constants';
+import { IEditorContentChange, InteractiveWindowMessages, IShowDataViewer } from '../../../../platform/messageTypes';
 import { BaseReduxActionPayload } from '../../../../webviews/types';
-import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
+import { IJupyterVariablesRequest } from '../../../../platform/datascience/types';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 

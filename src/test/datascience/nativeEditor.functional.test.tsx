@@ -28,18 +28,18 @@ suite('Dummy8', () => {
 //     ICustomEditorService,
 //     IDocumentManager,
 //     IWorkspaceService
-// } from '../../client/common/application/types';
-// import { IFileSystem } from '../../client/common/platform/types';
-// import { ICryptoUtils, IDisposable, IExtensionContext } from '../../client/common/types';
-// import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
-// import { noop } from '../../client/common/utils/misc';
-// import { Commands, Identifiers } from '../../client/datascience/constants';
-// import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-// import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
-// import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-// import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
-// import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-// import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
+// } from '../../platform/common/application/types';
+// import { IFileSystem } from '../../platform/common/platform/types';
+// import { ICryptoUtils, IDisposable, IExtensionContext } from '../../platform/common/types';
+// import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
+// import { noop } from '../../platform/common/utils/misc';
+// import { Commands, Identifiers } from '../../platform/datascience/constants';
+// import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';
+// import { NativeEditor as NativeEditorWebView } from '../../platform/datascience/interactive-ipynb/nativeEditor';
+// import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../platform/datascience/jupyter/kernels/types';
+// import { KeyPrefix } from '../../platform/datascience/notebookStorage/nativeEditorStorage';
+// import { NativeEditorNotebookModel } from '../../platform/datascience/notebookStorage/notebookModel';
+// import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../platform/datascience/types';
 // import { concatMultilineString } from '../../datascience-ui/common';
 // import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
 // import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';

@@ -17,7 +17,7 @@ import {
     ViewColumn
 } from 'vscode';
 
-import { noop } from '../../client/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 

@@ -10,6 +10,7 @@ import {
     ExtensionMode,
     languages,
     NotebookCell,
+    NotebookCellExecution,
     NotebookCellExecutionState,
     NotebookCellKind,
     NotebookController,
@@ -19,18 +20,18 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { IPythonExtensionChecker } from '../../client/api/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
     IApplicationShell
-} from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
+} from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
     IConfigurationService,
@@ -38,28 +39,26 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IPathUtils
-} from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { chainable } from '../../client/common/utils/decorators';
-import { DataScience, Common } from '../../client/common/utils/localize';
-import { noop } from '../../client/common/utils/misc';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../client/datascience/common';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
+} from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { chainable } from '../../platform/common/utils/decorators';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/datascience/common';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
-} from '../../client/datascience/telemetry/telemetry';
-import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { traceDecorators } from '../../client/logging';
-import { TraceOptions } from '../../client/logging/trace';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
-import { EnvironmentType } from '../../client/pythonEnvironments/info';
+} from '../../telemetry/telemetry';
+import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../platform/datascience/types';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { traceDecorators } from '../../platform/logging';
+import { TraceOptions } from '../../platform/logging/trace';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
+import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../datascience-ui/common/constants';
-import { displayErrorsInCell } from '../../extension/errors/errorUtils';
-import { KernelDeadError } from '../../extension/errors/kernelDeadError';
-import { WrappedError } from '../../extension/errors/types';
-import { IPyWidgetMessages } from '../../extension/messageTypes';
+import { displayErrorsInCell } from '../../platform/errors/errorUtils';
+import { WrappedError } from '../../platform/errors/types';
+import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     getKernelConnectionPath,
@@ -84,6 +83,8 @@ import {
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -100,6 +101,7 @@ export class VSCodeNotebookController implements Disposable {
      */
     public static kernelAssociatedWithDocument?: boolean;
     private isDisposed = false;
+    private runningCellExecutions = new Map<NotebookDocument, NotebookCellExecution>();
     get id() {
         return this.controller.id;
     }
@@ -397,7 +399,6 @@ export class VSCodeNotebookController implements Disposable {
                 join(
                     this.context.extensionPath,
                     'out',
-                    'client',
                     'node_modules',
                     '@vscode',
                     'jupyter-ipywidgets',
@@ -422,24 +423,40 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
+    private startCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
+        // Only have one cell in the 'running' state for this notebook
+        let currentExecution = this.runningCellExecutions.get(cell.notebook);
+        if (!currentExecution || currentExecution.cell === cell) {
+            currentExecution?.end(undefined, undefined);
+            currentExecution = CellExecutionCreator.getOrCreate(cell, controller);
+            this.runningCellExecutions.set(cell.notebook, currentExecution);
+
+            // When this execution ends, we don't have a current one anymore.
+            const originalEnd = currentExecution.end.bind(currentExecution);
+            currentExecution.end = (success: boolean | undefined, endTime?: number | undefined) => {
+                this.runningCellExecutions.delete(cell.notebook);
+                originalEnd(success, endTime);
+            };
+            currentExecution.start(new Date().getTime());
+            void currentExecution.clearOutput(cell);
+        }
+    }
+
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
-        const startTime = new Date().getTime();
         // Start execution now (from the user's point of view)
-        let execution = CellExecutionCreator.getOrCreate(cell, this.controller);
-        execution.start(startTime);
-        void execution.clearOutput(cell);
+        this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let context: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
+        let controller = this.controller;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
             // If the controller changed, then ensure to create a new cell execution object.
-            if (kernel && kernel.controller.id !== execution.controllerId) {
-                execution.end(undefined);
-                execution = CellExecutionCreator.getOrCreate(cell, kernel.controller);
-                execution.start(startTime);
+            if (kernel && kernel.controller.id !== controller.id) {
+                controller = kernel.controller;
+                this.startCellExecutionIfNecessary(cell, kernel.controller);
             }
             context = 'execution';
             if (kernel.controller.id === this.id) {
@@ -448,13 +465,16 @@ export class VSCodeNotebookController implements Disposable {
             return await kernel.executeCell(cell);
         } catch (ex) {
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-            // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(cell, execution, await errorHandler.getErrorMessageForDisplayInCell(ex, context));
             ex = WrappedError.unwrap(ex);
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
-            // If user cancels the execution, then don't show error status against cell.
-            execution.end(isCancelled ? undefined : false);
+            // If there was a failure connecting or executing the kernel, stick it in this cell
+            displayErrorsInCell(
+                cell,
+                controller,
+                await errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                isCancelled
+            );
             return NotebookCellExecutionState.Idle;
         }
 

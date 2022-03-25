@@ -2,22 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceError } from '../../../client/common/logger';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IMemento, GLOBAL_MEMENTO, ReadWrite } from '../../../client/common/types';
-import { testOnlyMethod } from '../../../client/common/utils/decorators';
-import { noop } from '../../../client/common/utils/misc';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { traceDecorators } from '../../../client/logging';
-import { ignoreLogging } from '../../../client/logging/trace';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { ReadWrite } from '../../../platform/common/types';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
+import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { traceDecorators } from '../../../platform/logging';
+import { ignoreLogging } from '../../../platform/logging/trace';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
@@ -26,7 +25,6 @@ type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
-@injectable()
 export abstract class LocalKernelSpecFinderBase {
     private _oldKernelSpecsFolder?: string;
     protected get oldKernelSpecsFolder() {
@@ -51,10 +49,10 @@ export abstract class LocalKernelSpecFinderBase {
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
 
     constructor(
-        @inject(IFileSystem) protected readonly fs: IFileSystem,
-        @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService,
+        protected readonly fs: IFileSystem,
+        protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) protected readonly globalState: Memento
+        protected readonly globalState: Memento
     ) {}
 
     @testOnlyMethod()

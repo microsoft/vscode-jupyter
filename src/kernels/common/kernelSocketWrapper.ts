@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as WebSocketWS from 'ws';
-import { IKernelSocket } from '../../client/datascience/types';
-import { ClassType } from '../../client/ioc/types';
+import { IKernelSocket } from '../../platform/datascience/types';
+import { ClassType } from '../../platform/ioc/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type IWebSocketLike = {

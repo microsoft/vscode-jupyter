@@ -3,17 +3,17 @@
 
 import { inject, injectable } from 'inversify';
 import { commands, NotebookRange, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
-import { IExtensionSyncActivationService } from '../../client/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IDocumentManager,
     ICommandManager,
     IApplicationShell,
     IVSCodeNotebook
-} from '../../client/common/application/types';
-import { arePathsSame } from '../../client/common/platform/fileUtils';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposableRegistry } from '../../client/common/types';
-import { InteractiveWindowMessages } from '../../extension/messageTypes';
+} from '../../platform/common/application/types';
+import { arePathsSame } from '../../platform/common/platform/fileUtils';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../platform/common/types';
+import { InteractiveWindowMessages } from '../../platform/messageTypes';
 import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 
 @injectable()

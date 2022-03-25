@@ -5,12 +5,12 @@
 // import { expect } from 'chai';
 // import { anything, instance, mock, when } from 'ts-mockito';
 // import { EventEmitter, Memento, Uri } from 'vscode';
-// import { NotebookModelChange } from '../../extension/messageTypes';
-// import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
-// import { NativeEditorViewTracker } from '../../client/datascience/interactive-ipynb/nativeEditorViewTracker';
+// import { NotebookModelChange } from '../../platform/messageTypes';
+// import { NativeEditor } from '../../platform/datascience/interactive-ipynb/nativeEditor';
+// import { NativeEditorViewTracker } from '../../platform/datascience/interactive-ipynb/nativeEditorViewTracker';
 // import { NativeEditorProvider } from '../../notebooksStorage/nativeEditorProvider';
 // import { NativeEditorNotebookModel } from '../../notebooksStorage/notebookModel';
-// import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
+// import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../platform/datascience/types';
 // import { MockMemento } from '../mocks/mementos';
 
 // suite('DataScience - View tracker', () => {

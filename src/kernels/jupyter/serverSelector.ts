@@ -6,25 +6,25 @@
 import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IClipboard } from '../../client/common/application/types';
-import { traceError } from '../../client/common/logger';
-import { DataScience } from '../../client/common/utils/localize';
+import { IClipboard } from '../../platform/common/application/types';
+import { traceError } from '../../platform/common/logger';
+import { DataScience } from '../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
     InputStep,
     IQuickPickParameters,
     InputFlowAction
-} from '../../client/common/utils/multiStepInput';
-import { Settings } from '../../client/datascience/constants';
+} from '../../platform/common/utils/multiStepInput';
+import { Settings } from '../../platform/datascience/constants';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     JupyterServerUriHandle
-} from '../../client/datascience/types';
-import { traceDecorators } from '../../client/logging';
-import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
+} from '../../platform/datascience/types';
+import { traceDecorators } from '../../platform/logging';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Identifiers } from '../../datascience-ui/common/constants';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';

@@ -25,18 +25,18 @@ import {
     ICommandManager,
     IVSCodeNotebook,
     IApplicationShell
-} from '../client/common/application/types';
-import { PYTHON_LANGUAGE, isCI } from '../client/common/constants';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../client/common/logger';
-import { getDisplayPath } from '../client/common/platform/fs-paths';
-import { IPythonExecutionFactory } from '../client/common/process/types';
-import { IPathUtils, IConfigurationService, Resource, IMemento, GLOBAL_MEMENTO } from '../client/common/types';
-import { createDeferred, createDeferredFromPromise, Deferred } from '../client/common/utils/async';
-import { DataScience } from '../client/common/utils/localize';
-import { getResourceType } from '../client/datascience/common';
-import { Settings } from '../client/datascience/constants';
-import { SysInfoReason } from '../extension/messageTypes';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../client/datascience/telemetry/telemetry';
+} from '../platform/common/application/types';
+import { PYTHON_LANGUAGE, isCI } from '../platform/common/constants';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IPathUtils, IConfigurationService, Resource, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
+import { DataScience } from '../platform/common/utils/localize';
+import { getResourceType } from '../platform/datascience/common';
+import { Settings } from '../platform/datascience/constants';
+import { SysInfoReason } from '../platform/messageTypes';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import {
     IJupyterSession,
     IInteractiveWindowProvider,
@@ -46,15 +46,15 @@ import {
     KernelInterpreterDependencyResponse,
     IJupyterKernelSpec,
     IDisplayOptions
-} from '../client/datascience/types';
-import { IServiceContainer } from '../client/ioc/types';
+} from '../platform/datascience/types';
+import { IServiceContainer } from '../platform/ioc/types';
 import {
     getNormalizedInterpreterPath,
     getInterpreterHash,
     areInterpreterPathsSame
-} from '../client/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../client/telemetry';
-import { getTelemetrySafeVersion } from '../client/telemetry/helpers';
+} from '../platform/pythonEnvironments/info/interpreter';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { concatMultilineString } from '../datascience-ui/common';
 import { Telemetry, Commands } from '../datascience-ui/common/constants';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
@@ -66,14 +66,14 @@ import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
 } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { EnvironmentType, PythonEnvironment } from '../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { isPythonNotebook } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
-import { DisplayOptions } from '../client/datascience/displayOptions';
-import { KernelDeadError } from '../extension/errors/kernelDeadError';
+import { DisplayOptions } from '../platform/datascience/displayOptions';
+import { KernelDeadError } from '../platform/errors/kernelDeadError';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -178,6 +178,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 kernelConnection.interpreter?.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
+                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                     const pythonVersion = `Python ${
                         getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
@@ -187,9 +188,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                         : oldDisplayName;
                 } else {
                     // Non-Python kernelspec that launches via python interpreter
-                    return kernelConnection.interpreter.envName
-                        ? `${oldDisplayName} (${kernelConnection.interpreter.envName})`
-                        : oldDisplayName;
+                    return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;
                 }
             } else {
                 return oldDisplayName;
@@ -212,12 +211,20 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return kernelConnection.kernelSpec.display_name;
                 }
                 const pythonDisplayName = pythonVersion.trim();
-                return kernelConnection.interpreter.envName
-                    ? `${kernelConnection.interpreter.envName} (${pythonDisplayName})`
-                    : pythonDisplayName;
+                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+                return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
             }
     }
     return oldDisplayName;
+}
+function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
+    // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
+    // In such cases the envName is empty, but it has a path.
+    let envName = pythonEnv.envName;
+    if (pythonEnv.envPath && pythonEnv.envType === EnvironmentType.Conda && !pythonEnv.envName) {
+        envName = path.basename(pythonEnv.envPath);
+    }
+    return envName;
 }
 function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {

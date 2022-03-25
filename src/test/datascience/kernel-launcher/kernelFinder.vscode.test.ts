@@ -6,14 +6,14 @@
 import * as path from 'path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { getKernelConnectionLanguage } from '../../../client/../kernels/helpers';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { getKernelConnectionLanguage } from '../../../platform/../kernels/helpers';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
-import { traceInfo } from '../../../client/common/logger';
-import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { traceInfo } from '../../../platform/common/logger';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

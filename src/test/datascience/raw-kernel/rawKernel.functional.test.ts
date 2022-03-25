@@ -11,16 +11,16 @@ suite('Dummy13', () => {
 // import { noop } from 'jquery';
 // import * as portfinder from 'portfinder';
 // import * as uuid from 'uuid/v4';
-// import { IPythonExtensionChecker } from '../../../client/api/types';
-// import { IFileSystem } from '../../../client/common/platform/types';
-// import { IProcessServiceFactory } from '../../../client/common/process/types';
-// import { createDeferred, sleep } from '../../../client/common/utils/async';
-// import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
-// import { KernelEnvironmentVariablesService } from '../../../client/datascience/kernel-launcher/kernelEnvVarsService';
-// import { KernelProcess } from '../../../client/datascience/kernel-launcher/kernelProcess';
-// import { createRawKernel, RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
-// import { IJupyterKernelSpec } from '../../../client/datascience/types';
-// import { IInterpreterService } from '../../../client/interpreter/contracts';
+// import { IPythonExtensionChecker } from '../../../platform/api/types';
+// import { IFileSystem } from '../../../platform/common/platform/types';
+// import { IProcessServiceFactory } from '../../../platform/common/process/types';
+// import { createDeferred, sleep } from '../../../platform/common/utils/async';
+// import { KernelDaemonPool } from '../../../platform/datascience/kernel-launcher/kernelDaemonPool';
+// import { KernelEnvironmentVariablesService } from '../../../platform/datascience/kernel-launcher/kernelEnvVarsService';
+// import { KernelProcess } from '../../../platform/datascience/kernel-launcher/kernelProcess';
+// import { createRawKernel, RawKernel } from '../../../platform/datascience/raw-kernel/rawKernel';
+// import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+// import { IInterpreterService } from '../../../platform/interpreter/contracts';
 // import { DataScienceIocContainer } from '../dataScienceIocContainer';
 // import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 

@@ -4,22 +4,22 @@
 import { inject, injectable, named } from 'inversify';
 
 import * as vscode from 'vscode';
-import { IExtensionSyncActivationService } from '../../client/activation/types';
-import { IVSCodeNotebook } from '../../client/common/application/types';
-import { Cancellation } from '../../client/common/cancellation';
-import { PYTHON } from '../../client/common/constants';
-import { traceError } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposableRegistry } from '../../client/common/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { Cancellation } from '../../platform/common/cancellation';
+import { PYTHON } from '../../platform/common/constants';
+import { traceError } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 
-import { sleep } from '../../client/common/utils/async';
-import { StopWatch } from '../../client/common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../client/telemetry';
-import { Identifiers, Telemetry } from '../../client/datascience/constants';
+import { sleep } from '../../platform/common/utils/async';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../../client/datascience/types';
+import { IInteractiveWindowProvider, IJupyterVariables } from '../../platform/datascience/types';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();

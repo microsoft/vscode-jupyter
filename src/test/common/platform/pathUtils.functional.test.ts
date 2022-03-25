@@ -6,8 +6,8 @@
 /* eslint-disable  */
 
 import { expect } from 'chai';
-import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
-import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { FileSystemPathUtils } from '../../../platform/common/platform/fs-paths';
+import { PathUtils } from '../../../platform/common/platform/pathUtils';
 import { WINDOWS as IS_WINDOWS } from './utils';
 
 suite('FileSystem - PathUtils', () => {

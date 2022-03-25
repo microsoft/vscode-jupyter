@@ -7,7 +7,7 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 
-import { IJupyterVariable } from '../../client/datascience/types';
+import { IJupyterVariable } from '../../platform/datascience/types';
 import './variableExplorerButtonCellFormatter.css';
 
 export interface IButtonCellValue {

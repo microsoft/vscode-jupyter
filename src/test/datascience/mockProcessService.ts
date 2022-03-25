@@ -3,7 +3,7 @@
 'use strict';
 import { Observable } from 'rxjs/Observable';
 
-import { Cancellation, CancellationError } from '../../client/common/cancellation';
+import { Cancellation, CancellationError } from '../../platform/common/cancellation';
 import {
     ExecutionResult,
     IProcessService,
@@ -11,7 +11,7 @@ import {
     Output,
     ShellOptions,
     SpawnOptions
-} from '../../client/common/process/types';
+} from '../../platform/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {

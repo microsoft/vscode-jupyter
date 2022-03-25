@@ -5,23 +5,23 @@
 export const __ = '';
 // import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 // import { EventEmitter } from 'vscode';
-// import { IExtensionSingleActivationService } from '../../client/activation/types';
-// import { PythonExtensionChecker } from '../../client/api/pythonApi';
-// import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-// import { IPythonExecutionFactory } from '../../client/common/process/types';
-// import { sleep } from '../../client/common/utils/async';
-// import { Activation } from '../../client/datascience/activation';
-// import { JupyterDaemonModule } from '../../client/datascience/constants';
-// import { ActiveEditorContextService } from '../../client/datascience/commands/activeEditorContext';
-// import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-// import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
+// import { IExtensionSingleActivationService } from '../../platform/activation/types';
+// import { PythonExtensionChecker } from '../../platform/api/pythonApi';
+// import { PythonExecutionFactory } from '../../platform/common/process/pythonExecutionFactory';
+// import { IPythonExecutionFactory } from '../../platform/common/process/types';
+// import { sleep } from '../../platform/common/utils/async';
+// import { Activation } from '../../platform/datascience/activation';
+// import { JupyterDaemonModule } from '../../platform/datascience/constants';
+// import { ActiveEditorContextService } from '../../platform/datascience/commands/activeEditorContext';
+// import { JupyterInterpreterService } from '../../platform/datascience/jupyter/interpreter/jupyterInterpreterService';
+// import { KernelDaemonPreWarmer } from '../../platform/datascience/kernel-launcher/kernelDaemonPreWarmer';
 // import {
 //     INotebookCreationTracker,
 //     INotebookEditor,
 //     INotebookEditorProvider,
 //     IRawNotebookSupportedService
-// } from '../../client/datascience/types';
-// import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+// } from '../../platform/datascience/types';
+// import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 // import { FakeClock } from '../common';
 // import { createPythonInterpreter } from '../utils/interpreters';
 

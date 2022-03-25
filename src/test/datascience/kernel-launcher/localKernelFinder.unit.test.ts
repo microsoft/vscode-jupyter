@@ -8,34 +8,34 @@ import * as path from 'path';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
-import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
-import { InterpreterService, PythonExtensionChecker } from '../../../client/api/pythonApi';
+import { PathUtils } from '../../../platform/common/platform/pathUtils';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider';
+import { InterpreterService, PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
     getInterpreterKernelSpecName,
     getKernelId,
     getKernelRegistrationInfo
-} from '../../../client/../kernels/helpers';
-import { PlatformService } from '../../../client/common/platform/platformService';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
+} from '../../../platform/../kernels/helpers';
+import { PlatformService } from '../../../platform/common/platform/platformService';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { FileSystem } from '../../../platform/common/platform/fileSystem';
 import type { KernelSpec } from '@jupyterlab/services';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext } from '../../../client/common/types';
-import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
-import { OSType } from '../../../client/common/utils/platform';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../client/../kernels/types';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { arePathsSame } from '../../../client/common/platform/fileUtils';
+import { IDisposable, IExtensionContext } from '../../../platform/common/types';
+import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
+import { OSType } from '../../../platform/common/utils/platform';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder';
 import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase';

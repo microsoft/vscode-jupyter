@@ -11,23 +11,23 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { IDisposable } from '@fluentui/react';
-import { Cancellation, createPromiseFromCancellation } from '../../../client/common/cancellation';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo, traceError } from '../../../client/common/logger';
-import { IFileSystem, TemporaryDirectory } from '../../../client/common/platform/types';
-import { IOutputChannel, Resource } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { StopWatch } from '../../../client/common/utils/stopWatch';
-import { JupyterConnectError } from '../../../extension/errors/jupyterConnectError';
-import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../client/datascience/progress/kernelProgressReporter';
-import { ReportableAction } from '../../../client/datascience/progress/types';
-import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../client/datascience/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { sendTelemetryEvent } from '../../../client/telemetry';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceInfo, traceError } from '../../../platform/common/logger';
+import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
+import { IOutputChannel, Resource } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
+import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
+import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
+import { ReportableAction } from '../../../platform/datascience/progress/types';
+import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../platform/datascience/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection';
-import { WrappedError } from '../../../client/../extension/errors/types';
+import { WrappedError } from '../../../platform/errors/types';
 
 /**
  * Responsible for starting a notebook.

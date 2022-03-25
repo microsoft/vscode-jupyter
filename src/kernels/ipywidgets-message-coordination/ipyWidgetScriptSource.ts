@@ -6,10 +6,10 @@ import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { traceError, traceInfo, traceVerbose } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { traceError, traceInfo, traceVerbose } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -17,18 +17,18 @@ import {
     IPersistentStateFactory,
     IExtensionContext,
     IDisposable
-} from '../../client/common/types';
-import { Deferred, createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../extension/messageTypes';
-import { ILocalResourceUriConverter } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
-import { sendTelemetryEvent } from '../../client/telemetry';
+} from '../../platform/common/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
+import { ILocalResourceUriConverter } from '../../platform/datascience/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../datascience-ui/common/constants';
-import { getOSType, OSType } from '../../test/common';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 

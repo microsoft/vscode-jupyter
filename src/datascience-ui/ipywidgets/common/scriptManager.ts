@@ -6,11 +6,11 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
-import '../../../client/common/extensions';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../extension/messageTypes';
-import { SharedMessages } from '../../../client/datascience/messages';
-import { IJupyterExtraSettings } from '../../../client/datascience/types';
+import '../../../platform/common/extensions';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../platform/datascience/messages';
+import { IJupyterExtraSettings } from '../../../platform/datascience/types';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts } from '../common/requirejsRegistry';

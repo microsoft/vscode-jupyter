@@ -5,10 +5,10 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { DataScience } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/common/logger';
+import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
@@ -18,7 +18,7 @@ import {
     workAroundVSCodeNotebookStartPages
 } from './helper';
 import { NotebookDocument, Range } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../client/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

@@ -4,10 +4,10 @@
 import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
-import { traceInfo } from '../../../client/common/logger';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../client/common/types';
-import { sendTelemetryEvent } from '../../../client/telemetry';
+import { traceInfo } from '../../../platform/common/logger';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../platform/common/types';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../datascience-ui/common/constants';
 
 export const ActiveKernelIdList = 'Active_Kernel_Id_List';

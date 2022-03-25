@@ -22,36 +22,40 @@ import {
     window,
     ThemeColor
 } from 'vscode';
-import { IPythonExtensionChecker } from '../client/api/types';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../client/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../client/common/constants';
-import '../client/common/extensions';
-import { traceInfo, traceInfoIfCI } from '../client/common/logger';
-import { IFileSystem } from '../client/common/platform/types';
+import { IPythonExtensionChecker } from '../platform/api/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
+import '../platform/common/extensions';
+import { traceInfo, traceInfoIfCI } from '../platform/common/logger';
+import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, Resource } from '../client/common/types';
-import { noop } from '../client/common/utils/misc';
-import { generateCellsFromNotebookDocument } from '../client/datascience/cellFactory';
-import { CellMatcher } from '../client/datascience/cellMatcher';
-import { Commands, defaultNotebookFormat } from '../client/datascience/constants';
-import { ExportFormat, IExportDialog } from '../client/datascience/export/types';
+import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
+import { noop } from '../platform/common/utils/misc';
+import { generateCellsFromNotebookDocument } from '../platform/datascience/cellFactory';
+import { CellMatcher } from '../platform/datascience/cellMatcher';
+import { Commands, defaultNotebookFormat } from '../platform/datascience/constants';
+import { ExportFormat, IExportDialog } from '../platform/datascience/export/types';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, INotebookExporter } from '../client/datascience/types';
+import {
+    IInteractiveWindowLoadable,
+    IInteractiveWindowDebugger,
+    INotebookExporter
+} from '../platform/datascience/types';
 import { getInteractiveWindowTitle } from './identity';
 import { generateMarkdownFromCodeLines, parseForComments } from '../datascience-ui/common';
 import { INativeInteractiveWindow } from './types';
 import { generateInteractiveCode } from '../datascience-ui/common/cellFactory';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../client/datascience/telemetry/telemetry';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { chainable } from '../client/common/utils/decorators';
-import { InteractiveCellResultError } from '../extension/errors/interactiveCellResultError';
-import { DataScience } from '../client/common/utils/localize';
-import { createDeferred } from '../client/common/utils/async';
+import { chainable } from '../platform/common/utils/decorators';
+import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
+import { DataScience } from '../platform/common/utils/localize';
+import { createDeferred } from '../platform/common/utils/async';
 import { connectToKernel } from '../kernels/helpers';
-import { IServiceContainer } from '../client/ioc/types';
-import { SysInfoReason } from '../extension/messageTypes';
+import { IServiceContainer } from '../platform/ioc/types';
+import { SysInfoReason } from '../platform/messageTypes';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { updateNotebookMetadata } from '../notebooks/helpers';
@@ -173,7 +177,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return editor;
     }
 
-    @chainable()
     private async startKernel(notebook: NotebookDocument, controller: VSCodeNotebookController): Promise<void> {
         if (controller.id !== this._kernelConnectionId) {
             this._kernelConnectionId = controller.id;

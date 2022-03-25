@@ -6,28 +6,28 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo } from '../../../platform/common/logger';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     EnvironmentActivationService,
     EnvironmentVariablesCacheInformation
-} from '../../../client/common/process/environmentActivationService';
+} from '../../../platform/common/process/environmentActivationService';
 import * as path from 'path';
-import { IS_WINDOWS } from '../../../client/common/platform/constants';
-import { IProcessServiceFactory } from '../../../client/common/process/types';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
-import { IPythonApiProvider, PythonApi } from '../../../client/api/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { CondaService } from '../../../client/common/process/condaService';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
-import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { IS_WINDOWS } from '../../../platform/common/platform/constants';
+import { IProcessServiceFactory } from '../../../platform/common/process/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { CondaService } from '../../../platform/common/process/condaService';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { CurrentProcess } from '../../../platform/common/process/currentProcess';
+import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { Disposable, Memento } from 'vscode';
 import { instance, mock, verify } from 'ts-mockito';

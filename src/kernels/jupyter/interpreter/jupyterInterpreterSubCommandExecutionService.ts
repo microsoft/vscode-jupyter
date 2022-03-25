@@ -6,27 +6,27 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { traceWarning } from '../../../client/common/logger';
+import { traceWarning } from '../../../platform/common/logger';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
     ObservableExecutionResult,
     IPythonDaemonExecutionService
-} from '../../../client/common/process/types';
-import { IOutputChannel, IPathUtils } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+} from '../../../platform/common/process/types';
+import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import {
     IJupyterSubCommandExecutionService,
     IJupyterInterpreterDependencyManager
-} from '../../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../client/telemetry';
+} from '../../../platform/datascience/types';
+import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry, JupyterDaemonModule } from '../../../datascience-ui/common/constants';
-import { JupyterInstallError } from '../../../extension/errors/jupyterInstallError';
+import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths';
 import { JupyterServerInfo } from '../launcher/jupyterConnection';

@@ -5,8 +5,8 @@
 
 import { assert } from 'chai';
 import { workspace, Disposable } from 'vscode';
-import { traceInfo } from '../../client/common/logger';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { traceInfo } from '../../platform/common/logger';
+import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile } from './helpers';
 import {

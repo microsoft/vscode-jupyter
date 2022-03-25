@@ -9,30 +9,30 @@ export const __ = '';
 // import * as TypeMoq from 'typemoq';
 // import * as uuid from 'uuid/v4';
 // import { EventEmitter, Uri } from 'vscode';
-// import { ApplicationShell } from '../../client/common/application/applicationShell';
-// import { IApplicationShell } from '../../client/common/application/types';
-// import { ConfigurationService } from '../../client/common/configuration/service';
-// import { FileSystem } from '../../client/common/platform/fileSystem';
-// import { IFileSystem } from '../../client/common/platform/types';
-// import { IConfigurationService, IDisposable } from '../../client/common/types';
-// import * as localize from '../../client/common/utils/localize';
-// import { generateCells } from '../../client/datascience/cellFactory';
-// import { Commands } from '../../client/datascience/constants';
-// import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-// import { ExportDialog } from '../../client/datascience/export/exportDialog';
-// import { ExportFormat, IExportDialog, IExportManager } from '../../client/datascience/export/types';
-// import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
-// import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
-// import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
+// import { ApplicationShell } from '../../platform/common/application/applicationShell';
+// import { IApplicationShell } from '../../platform/common/application/types';
+// import { ConfigurationService } from '../../platform/common/configuration/service';
+// import { FileSystem } from '../../platform/common/platform/fileSystem';
+// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IConfigurationService, IDisposable } from '../../platform/common/types';
+// import * as localize from '../../platform/common/utils/localize';
+// import { generateCells } from '../../platform/datascience/cellFactory';
+// import { Commands } from '../../platform/datascience/constants';
+// import { DataScienceErrorHandler } from '../../platform/datascience/errorHandler/errorHandler';
+// import { ExportDialog } from '../../platform/datascience/export/exportDialog';
+// import { ExportFormat, IExportDialog, IExportManager } from '../../platform/datascience/export/types';
+// import { NotebookProvider } from '../../platform/datascience/interactive-common/notebookProvider';
+// import { JupyterExporter } from '../../platform/datascience/jupyter/jupyterExporter';
+// import { HostJupyterExecution } from '../../platform/datascience/jupyter/liveshare/hostJupyterExecution';
 // import {
 //     IInteractiveWindow,
 //     IJupyterExecution,
 //     INotebook,
 //     INotebookEditorProvider,
 //     INotebookServer
-// } from '../../client/datascience/types';
-// import { IInterpreterService } from '../../client/interpreter/contracts';
-// import { ServiceContainer } from '../../client/ioc/container';
+// } from '../../platform/datascience/types';
+// import { IInterpreterService } from '../../platform/interpreter/contracts';
+// import { ServiceContainer } from '../../platform/ioc/container';
 // import { MockCommandManager } from './mockCommandManager';
 // import { MockDocumentManager } from './mockDocumentManager';
 // import { MockJupyterSettings } from './mockJupyterSettings';

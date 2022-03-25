@@ -6,21 +6,21 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { Common, DataScience } from '../../../../client/common/utils/localize';
-import { getResourceType } from '../../../../client/datascience/common';
-import { DisplayOptions } from '../../../../client/datascience/displayOptions';
-import { createInterpreterKernelSpec } from '../../../../client/../kernels/helpers';
-import { KernelDependencyService } from '../../../../client/../kernels/kernelDependencyService';
-import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../client/../kernels/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
+import { getResourceType } from '../../../../platform/datascience/common';
+import { DisplayOptions } from '../../../../platform/datascience/displayOptions';
+import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers';
+import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService';
+import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
     IRawNotebookSupportedService,
     KernelInterpreterDependencyResponse
-} from '../../../../client/datascience/types';
-import { IServiceContainer } from '../../../../client/ioc/types';
-import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
+} from '../../../../platform/datascience/types';
+import { IServiceContainer } from '../../../../platform/ioc/types';
+import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 

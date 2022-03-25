@@ -7,7 +7,7 @@
 
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { noop } from '../client/common/utils/misc';
+import { noop } from '../platform/common/utils/misc';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
 const Module = require('module');
@@ -148,7 +148,7 @@ mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).notebook = { notebookDocuments: [] };
 mockedVSCode.workspace;
-// This API is used in src/client/telemetry/telemetry.ts
+// This API is used in src/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
 extensions.setup((e) => e.all).returns(() => []);
 const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();

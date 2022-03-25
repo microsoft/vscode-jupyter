@@ -7,12 +7,12 @@ import * as download from 'download';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError, traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
-import { IConfigurationService, WidgetCDNs } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { ILocalResourceUriConverter } from '../../client/datascience/types';
-import { ConsoleForegroundColors } from '../../client/logging/_global';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { IFileSystem, TemporaryFile } from '../../platform/common/platform/types';
+import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
+import { createDeferred } from '../../platform/common/utils/async';
+import { ILocalResourceUriConverter } from '../../platform/datascience/types';
+import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33

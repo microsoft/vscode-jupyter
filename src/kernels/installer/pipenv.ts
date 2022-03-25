@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../client/common/logger';
-import { getEnvironmentVariable } from '../../client/common/utils/platform';
-import { pathExists, readFile, arePathsSame, normCasePath } from '../../client/common/platform/fileUtils';
+import { traceError } from '../../platform/common/logger';
+import { getEnvironmentVariable } from '../../platform/common/utils/platform';
+import { pathExists, readFile, arePathsSame, normCasePath } from '../../platform/common/platform/fileUtils';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for

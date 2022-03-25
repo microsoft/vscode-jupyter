@@ -3,11 +3,11 @@
 
 'use strict';
 
-// IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
-// delete everything in '../client' except for '../client/logging' before running smoke tests.
+// IMPORTANT: This file should only be importing from the '../platform/logging' directory, as we
+// delete everything in '../platform' except for '../platform/logging' before running smoke tests.
 
-import { LogLevel } from '../client/logging/levels';
-import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../client/logging/logger';
+import { LogLevel } from '../platform/logging/levels';
+import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../platform/logging/logger';
 
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const monkeyPatchLogger = createLogger();

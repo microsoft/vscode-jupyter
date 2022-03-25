@@ -6,17 +6,17 @@ import { Subject } from 'rxjs/Subject';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
-import { JupyterSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
-import { IConfigurationService, IJupyterSettings } from '../../../client/common/types';
-import { DataScience } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { FileSystem } from '../../../platform/common/platform/fileSystem';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { ObservableExecutionResult, Output } from '../../../platform/common/process/types';
+import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { ServiceContainer } from '../../../platform/ioc/container';
+import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterServerInfo, JupyterConnectionWaiter } from '../../../kernels/jupyter/launcher/jupyterConnection';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */

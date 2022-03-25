@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../client/activation/types';
-import { IVSCodeNotebook } from '../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../client/common/constants';
-import { traceError } from '../client/common/logger';
-import { IDisposableRegistry } from '../client/common/types';
-import { noop } from '../client/common/utils/misc';
-import { translateKernelLanguageToMonaco } from '../client/datascience/common';
+import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { traceError } from '../platform/common/logger';
+import { IDisposableRegistry } from '../platform/common/types';
+import { noop } from '../platform/common/utils/misc';
+import { translateKernelLanguageToMonaco } from '../platform/datascience/common';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { isJupyterNotebook } from '../notebooks/helpers';

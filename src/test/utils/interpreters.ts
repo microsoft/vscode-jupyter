@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 /**
  * Creates a PythonInterpreter object for testing purposes, with unique name, version and path.

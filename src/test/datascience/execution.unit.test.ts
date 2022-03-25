@@ -12,15 +12,15 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
-import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { WorkspaceService } from '../../client/common/application/workspace';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
-import { ProcessServiceFactory } from '../../client/common/process/processFactory';
-import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
+import { ApplicationShell } from '../../platform/common/application/applicationShell';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { WorkspaceService } from '../../platform/common/application/workspace';
+import { ConfigurationService } from '../../platform/common/configuration/service';
+import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState';
+import { FileSystem } from '../../platform/common/platform/fileSystem';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { ProcessServiceFactory } from '../../platform/common/process/processFactory';
+import { PythonExecutionFactory } from '../../platform/common/process/pythonExecutionFactory';
 import {
     ExecutionResult,
     IProcessService,
@@ -30,20 +30,25 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel, IPathUtils } from '../../client/common/types';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
+} from '../../platform/common/process/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IOutputChannel,
+    IPathUtils
+} from '../../platform/common/types';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
+import { DisplayOptions } from '../../platform/datascience/displayOptions';
 import {
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
     INotebookServer
-} from '../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { ServiceContainer } from '../../client/ioc/container';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
+} from '../../platform/datascience/types';
+import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { ServiceContainer } from '../../platform/ioc/container';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 import { getKernelId } from '../../kernels/helpers';
 import { Product } from '../../kernels/installer/types';
 import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';

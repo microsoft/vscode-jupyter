@@ -4,8 +4,8 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../../client/common/utils/platform';
-import * as fileUtils from '../../../client/common/platform/fileUtils';
+import * as platformUtils from '../../../platform/common/utils/platform';
+import * as fileUtils from '../../../platform/common/platform/fileUtils';
 import {
     isPyenvEnvironment,
     IPyenvVersionStrings,

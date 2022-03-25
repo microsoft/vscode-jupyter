@@ -6,31 +6,31 @@
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IShowDataViewerFromVariablePanel } from '../../extension/messageTypes';
+import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables';
 import { DataViewerChecker } from '../../webviews/dataviewer/dataViewerChecker';
-import { ICommandNameArgumentTypeMapping } from '../../client/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import {
     IApplicationShell,
     ICommandManager,
     IDebugService,
     IDocumentManager,
     IWorkspaceService
-} from '../../client/common/application/types';
-import { traceError } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
+} from '../../platform/common/application/types';
+import { traceError } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService, IDisposable, IOutputChannel } from '../../client/common/types';
-import { DataScience } from '../../client/common/utils/localize';
-import { isUri, noop } from '../../client/common/utils/misc';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { LogLevel } from '../../client/logging/levels';
-import { captureTelemetry, sendTelemetryEvent } from '../../client/telemetry';
-import { EventName } from '../../client/telemetry/constants';
-import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../client/datascience/constants';
-import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
-import { IDataViewerFactory } from '../../client/datascience/data-viewing/types';
+import { IConfigurationService, IDisposable, IOutputChannel } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { isUri, noop } from '../../platform/common/utils/misc';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { LogLevel } from '../../platform/logging/levels';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
+import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../platform/datascience/constants';
+import { DataViewerDependencyService } from '../../platform/datascience/data-viewing/dataViewerDependencyService';
+import { IDataViewerFactory } from '../../platform/datascience/data-viewing/types';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -40,7 +40,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables
-} from '../../client/datascience/types';
+} from '../../platform/datascience/types';
 import { ExportCommands } from './exportCommands';
 
 @injectable()

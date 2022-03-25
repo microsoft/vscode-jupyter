@@ -10,24 +10,24 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
+import { PathUtils } from '../../../../platform/common/platform/pathUtils';
+import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory';
 import {
     IPythonDaemonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../../../client/common/process/types';
-import { DataScience } from '../../../../client/common/utils/localize';
-import { noop } from '../../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { JupyterDaemonModule } from '../../../../client/datascience/constants';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
+} from '../../../../platform/common/process/types';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { noop } from '../../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
+import { JupyterDaemonModule } from '../../../../platform/datascience/constants';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product } from '../../../../kernels/installer/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
-import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
+import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';

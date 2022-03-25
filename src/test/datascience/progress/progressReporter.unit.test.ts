@@ -6,11 +6,11 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
-import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { getUserMessageForAction } from '../../../client/datascience/progress/messages';
-import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { ReportableAction } from '../../../client/datascience/progress/types';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { getUserMessageForAction } from '../../../platform/datascience/progress/messages';
+import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
+import { ReportableAction } from '../../../platform/datascience/progress/types';
 import { noop, sleep } from '../../core';
 type Task<R> = (
     progress: VSCProgress<{ message?: string; increment?: number }>,

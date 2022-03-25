@@ -9,16 +9,16 @@ import * as TypeMoq from 'typemoq';
 
 import { instance, mock, verify, when } from 'ts-mockito';
 import { WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { WorkspaceService } from '../../client/common/application/workspace';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { WorkspaceService } from '../../platform/common/application/workspace';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
 import {
     _resetSharedProperties,
     clearTelemetryReporter,
     isTelemetryDisabled,
     sendTelemetryEvent,
     setSharedProperty
-} from '../../client/telemetry';
+} from '../../telemetry';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../client/common/application/types';
-import { Commands } from '../../../client/datascience/constants';
-import { JupyterServerSelectorCommand } from '../../../extension/commands/serverSelector';
+import { CommandManager } from '../../../platform/common/application/commandManager';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { Commands } from '../../../platform/datascience/constants';
+import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 
 /* eslint-disable  */

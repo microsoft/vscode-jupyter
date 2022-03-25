@@ -7,10 +7,10 @@ import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
+import { ApplicationShell } from '../../platform/common/application/applicationShell';
+import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
+import { ConfigurationService } from '../../platform/common/configuration/service';
+import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';

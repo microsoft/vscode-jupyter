@@ -6,12 +6,12 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../client/common/logger';
-import { IDisposable } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
+import { traceInfo } from '../../platform/common/logger';
+import { IDisposable } from '../../platform/common/types';
+import { Commands } from '../../platform/datascience/constants';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../platform/datascience/types';
+import { IVariableViewProvider } from '../../platform/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {

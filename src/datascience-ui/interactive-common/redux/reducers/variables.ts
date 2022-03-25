@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { Reducer } from 'redux';
-import { IFinishCell, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../extension/messageTypes';
+import { IFinishCell, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../platform/messageTypes';
 import { BaseReduxActionPayload } from '../../../../webviews/types';
 import {
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
-} from '../../../../client/datascience/types';
+} from '../../../../platform/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
 import {

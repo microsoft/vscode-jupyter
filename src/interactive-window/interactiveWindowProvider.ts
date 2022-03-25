@@ -3,16 +3,16 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter, Memento, Uri, window } from 'vscode';
-import { IPythonExtensionChecker } from '../client/api/types';
+import { IPythonExtensionChecker } from '../platform/api/types';
 
 import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
     IWorkspaceService
-} from '../client/common/application/types';
-import { traceInfo } from '../client/common/logger';
-import { IFileSystem } from '../client/common/platform/types';
+} from '../platform/common/application/types';
+import { traceInfo } from '../platform/common/logger';
+import { IFileSystem } from '../platform/common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -23,12 +23,12 @@ import {
     IMemento,
     InteractiveWindowMode,
     Resource
-} from '../client/common/types';
-import { chainable } from '../client/common/utils/decorators';
-import * as localize from '../client/common/utils/localize';
-import { noop } from '../client/common/utils/misc';
-import { IServiceContainer } from '../client/ioc/types';
-import { IExportDialog } from '../client/datascience/export/types';
+} from '../platform/common/types';
+import { chainable } from '../platform/common/utils/decorators';
+import * as localize from '../platform/common/utils/localize';
+import { noop } from '../platform/common/utils/misc';
+import { IServiceContainer } from '../platform/ioc/types';
+import { IExportDialog } from '../platform/datascience/export/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import {
@@ -36,7 +36,7 @@ import {
     IInteractiveWindowProvider,
     IInteractiveWindowDebugger,
     INotebookExporter
-} from '../client/datascience/types';
+} from '../platform/datascience/types';
 import { InteractiveWindow } from './interactiveWindow';
 
 // Export for testing

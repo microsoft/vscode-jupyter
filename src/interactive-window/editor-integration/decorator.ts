@@ -4,12 +4,12 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { IPythonExtensionChecker } from '../../client/api/types';
-import { IDocumentManager } from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../client/common/types';
-import { generateCellRangesFromDocument } from '../../client/datascience/cellFactory';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IDocumentManager } from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { generateCellRangesFromDocument } from '../../platform/datascience/cellFactory';
 import { getAssociatedJupyterNotebook } from '../../notebooks/helpers';
 
 @injectable()

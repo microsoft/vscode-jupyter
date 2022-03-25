@@ -18,13 +18,13 @@ import {
     StreamMessageReader,
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
-import { IPythonExecutionService } from '../../../client/common/process/types';
-import { IDisposable } from '../../../client/common/types';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { PythonEnvironment, PythonVersionInfo } from '../../../client/pythonEnvironments/info';
-import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { PythonDaemonExecutionService } from '../../../platform/common/process/pythonDaemon';
+import { IPythonExecutionService } from '../../../platform/common/process/types';
+import { IDisposable } from '../../../platform/common/types';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { PythonEnvironment, PythonVersionInfo } from '../../../platform/pythonEnvironments/info';
+import { parsePythonVersion } from '../../../platform/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);

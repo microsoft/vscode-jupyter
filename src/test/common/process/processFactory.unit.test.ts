@@ -4,16 +4,16 @@
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
 
-import { BufferDecoder } from '../../../client/common/process/decoder';
-import { ProcessLogger } from '../../../client/common/process/logger';
-import { ProcessService } from '../../../client/common/process/proc';
-import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { IBufferDecoder, IProcessLogger } from '../../../client/common/process/types';
-import { IDisposableRegistry } from '../../../client/common/types';
-import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
-import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { BufferDecoder } from '../../../platform/common/process/decoder';
+import { ProcessLogger } from '../../../platform/common/process/logger';
+import { ProcessService } from '../../../platform/common/process/proc';
+import { ProcessServiceFactory } from '../../../platform/common/process/processFactory';
+import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider';
+import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
