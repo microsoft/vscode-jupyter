@@ -29,9 +29,7 @@ suite('DataScience - Export HTML', function () {
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
-    test('Export To HTML', async function () {
-        // See this issue: https://github.com/microsoft/vscode-jupyter/issues/9468
-        this.skip();
+    test('Export To HTML', async () => {
         const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
         const exportToHTML = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.html);
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
