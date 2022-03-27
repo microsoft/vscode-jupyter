@@ -6,7 +6,7 @@ import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { createDeferred, Deferred } from './async';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
-import { TraceInfo, tracing } from './misc';
+import { noop, TraceInfo, tracing } from './misc';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -288,12 +288,15 @@ export function chainable() {
             (this as any)[chainedKey] = currentValue;
 
             // If promise fails, clear it.
-            return currentValue
+            const promise = currentValue
                 .then((r) => r)
                 .catch((e) => {
                     (this as any)[chainedKey] = undefined;
                     throw e;
                 });
+            // Handle the exception to prevent node from warning about unhandled exceptions.
+            promise.catch(noop);
+            return promise;
         };
 
         return descriptor;

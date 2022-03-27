@@ -23,7 +23,8 @@ import {
     WorkspaceEdit,
     Hover,
     HoverProvider,
-    Diagnostic
+    Diagnostic,
+    workspace
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
@@ -94,17 +95,16 @@ export class NotebookCellBangInstallDiagnosticsProvider
         );
 
         this.notebooks.onDidOpenNotebookDocument((e) => this.analyzeNotebook(e), this, this.disposables);
-        this.notebooks.onDidChangeNotebookDocument(
+        workspace.onDidChangeNotebookDocument(
             (e) => {
-                if (e.type === 'changeCells') {
-                    const cells = this.notebooksProcessed.get(e.document);
-                    e.changes.forEach((change) => {
-                        change.deletedItems.forEach((cell) => {
-                            cells?.delete(cell.document.uri.toString());
-                        });
-                        change.items.forEach((cell) => this.queueCellForProcessing(cell));
+                const cells = this.notebooksProcessed.get(e.notebook);
+                e.contentChanges.forEach((change) => {
+                    change.removedCells.forEach((cell) => {
+                        cells?.delete(cell.document.uri.toString());
                     });
-                }
+                    change.addedCells.forEach((cell) => this.queueCellForProcessing(cell));
+                });
+                e.cellChanges.forEach((change) => this.queueCellForProcessing(change.cell));
             },
             this,
             this.disposables

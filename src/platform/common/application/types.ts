@@ -57,11 +57,7 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
-    NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
-    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
-    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookDocument,
-    NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
@@ -1218,17 +1214,6 @@ export interface IClipboard {
     writeText(value: string): Promise<void>;
 }
 
-export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
-export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
-export type NotebookCellMetadataChangeEvent = { type: 'changeCellMetadata' } & VSCNotebookCellMetadataChangeEvent;
-export type NotebookDocumentMetadataChangeEvent = {
-    type: 'changeNotebookMetadata';
-} & VSCNotebookDocumentMetadataChangeEvent;
-export type NotebookCellChangedEvent =
-    | NotebookCellsChangeEvent
-    | NotebookCellOutputsChangeEvent
-    | NotebookCellMetadataChangeEvent
-    | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidChangeNotebookCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
@@ -1239,7 +1224,6 @@ export interface IVSCodeNotebook {
     readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
     registerNotebookSerializer(

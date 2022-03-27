@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../platform/common/logger';
+import { traceVerbose, traceError, traceInfo } from '../../../platform/common/logger';
 import { Resource, IOutputChannel } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -29,7 +29,6 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
 import { JupyterWebSockets } from './jupyterWebSocket';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -256,11 +255,6 @@ export class JupyterSession extends BaseJupyterSession {
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
-        traceInfoIfCI(
-            `JupyterSession.createSession for ${getDisplayPath(this.resource)}, options.ui.disableUI=${
-                options.ui.disableUI
-            }`
-        );
         // Create our backing file for the notebook
         const backingFile = await this.createBackingFile();
 
@@ -268,11 +262,6 @@ export class JupyterSession extends BaseJupyterSession {
         if (this.kernelConnectionMetadata?.interpreter && isLocalConnection(this.kernelConnectionMetadata)) {
             // Make sure the kernel actually exists and is up to date.
             try {
-                traceInfoIfCI(
-                    `JupyterSession.createSession ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
-                        this.resource
-                    )}, options.ui.disableUI=${options.ui.disableUI}`
-                );
                 await this.kernelService.ensureKernelIsUsable(
                     this.resource,
                     this.kernelConnectionMetadata,
@@ -304,11 +293,6 @@ export class JupyterSession extends BaseJupyterSession {
             type: 'notebook'
         };
 
-        traceInfo(
-            `Starting a new session for kernel id = ${
-                this.kernelConnectionMetadata?.id
-            }, name = ${kernelName} for ${getDisplayPath(this.resource)}`
-        );
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(sessionOptions, {

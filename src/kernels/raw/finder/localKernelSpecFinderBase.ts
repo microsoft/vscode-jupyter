@@ -7,7 +7,7 @@ import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
+import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ReadWrite } from '../../../platform/common/types';
@@ -88,9 +88,6 @@ export abstract class LocalKernelSpecFinderBase {
                 string,
                 LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
             >();
-            traceInfoIfCI(
-                `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
-            );
             items.map((kernelSpec) => {
                 // Check if we have already seen this.
                 if (!distinctKernelMetadata.has(kernelSpec.id)) {

@@ -202,7 +202,6 @@ export class Kernel implements IKernel {
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
-        traceInfoIfCI(`Execute hidden code ${code}`);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
         const promise = sessionPromise.then((session) => executeSilently(session, code));
@@ -301,7 +300,6 @@ export class Kernel implements IKernel {
             await (this._notebookPromise
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start(new DisplayOptions(false)));
-            traceInfoIfCI(`Restarted ${getDisplayPath(this.notebookDocument.uri)}`);
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.notebookDocument.uri)}`, ex);
@@ -324,11 +322,9 @@ export class Kernel implements IKernel {
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(this.notebook, this.notebookDocument);
-        traceInfoIfCI(`Initialized after restart ${this.notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
-        traceInfoIfCI(`Event fired after restart ${this.notebookDocument.uri}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -353,9 +349,6 @@ export class Kernel implements IKernel {
     }
     private async startNotebook(options: IDisplayOptions = new DisplayOptions(false)): Promise<INotebook> {
         this._startedAtLeastOnce = true;
-        traceInfoIfCI(
-            `Start Notebook (options.disableUI=${options.disableUI}) for ${getDisplayPath(this.notebookDocument.uri)}.`
-        );
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
@@ -389,7 +382,6 @@ export class Kernel implements IKernel {
         if (!this._notebookPromise) {
             // Don't create a new one unnecessarily.
             if (this.startCancellation.token.isCancellationRequested) {
-                traceInfoIfCI(`Create new cancellation token for ${getDisplayPath(this.notebookDocument.uri)}`);
                 this.startCancellation = new CancellationTokenSource();
             }
             this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
