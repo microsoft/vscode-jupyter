@@ -266,8 +266,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // 4. Run another cell & we should get another prompt (this didn't work)
         // 5. Run another cell & we should get another prompt (this didn't work)
         // 6. Run another cell & select another kernel without ipykernel
-        // 7. We should get a prompt, however we used to get prompt for the previous env
-        // 8. We should get a prompt, however we used to get prompt for the previous env
+        // 7. We should get two prompts: one for the original env, and one for the new one we switched to
         // 9. Finally click ok to install and run & verify we install ipykernel into the right place, (this didn't work either)
 
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
