@@ -139,7 +139,11 @@ suite('3rd Party Kernel Service API', function () {
 
         let kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
-        assert.strictEqual(kernels![0].owner.toString(), nb.uri.toString(), 'Kernel notebook is not the active notebook');
+        assert.strictEqual(
+            kernels![0].owner.toString(),
+            nb.uri.toString(),
+            'Kernel notebook is not the active notebook'
+        );
 
         assert.strictEqual(kernels![0].metadata, pythonKernel, 'Kernel Connection is not the same');
         const kernel = kernelService?.getKernel(nb.uri);
