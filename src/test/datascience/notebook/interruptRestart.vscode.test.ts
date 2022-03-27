@@ -28,10 +28,7 @@ import {
     waitForQueuedForExecution,
     runCell,
     waitForOutputs,
-    clickOKForRestartPrompt,
-    waitForCellExecutionToComplete,
-    assertVSCCellStateIsUndefinedOrIdle,
-    defaultNotebookTestTimeout
+    clickOKForRestartPrompt
 } from './helper';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
 
