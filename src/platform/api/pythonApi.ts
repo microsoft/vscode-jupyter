@@ -16,7 +16,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isCI } from '../common/constants';
-import { traceDecorators, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../common/logger';
+import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -352,7 +352,7 @@ export class InterpreterService implements IInterpreterService {
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
-    private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(_resource?: Uri): Promise<PythonEnvironment[]> {
         // Python uses the resource to look up the workspace folder. For Jupyter
         // we want all interpreters regardless of workspace folder so call this multiple times
         const folders = this.workspace.workspaceFolders;
@@ -371,7 +371,6 @@ export class InterpreterService implements IInterpreterService {
                 result.push(p);
             }
         });
-        traceInfoIfCI(`Interpreter list for ${resource?.toString()} is ${result.map((i) => i.path).join('\n')}`);
         return result;
     }
 

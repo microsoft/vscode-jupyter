@@ -14,7 +14,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceError, traceInfoIfCI } from '../../../platform/common/logger';
+import { traceError } from '../../../platform/common/logger';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { getResourceType } from '../../../platform/datascience/common';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
@@ -167,13 +167,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 // Filter out excluded ids
                 const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
                 const items = [...filtered, ...mappedSpecs];
-                traceInfoIfCI(
-                    `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
-                        items,
-                        undefined,
-                        4
-                    )}`
-                );
 
                 sendKernelListTelemetry(resource, items);
                 return items;
