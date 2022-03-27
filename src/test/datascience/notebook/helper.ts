@@ -234,7 +234,6 @@ async function waitForKernelToChangeImpl(
     criteria: { labelOrId: string } | { interpreterPath: string },
     timeout = defaultNotebookTestTimeout
 ) {
-    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria)}`);
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -249,9 +248,6 @@ async function waitForKernelToChangeImpl(
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
     const notebookControllers = notebookControllerManager.registeredNotebookControllers();
-
-    // Get the list of kernels possible
-    traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
@@ -623,10 +619,7 @@ export async function waitForEmptyCellExecutionCompleted(
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        () =>
-            `Cell ${
-                cell.index + 1
-            } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
+        () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -721,7 +714,8 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return isExactMatch
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());
-    } catch {
+    } catch (ex) {
+        traceInfoIfCI(`Looking for value ${value}, but failed with error`, ex);
         return false;
     }
 }
@@ -729,12 +723,10 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
     const result = cell.outputs[index].items.some((item) => hasTextOutputValue(item, text, isExactMatch));
-    assert.isTrue(
-        result,
-        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].items
-            .map((o) => (o.data ? Buffer.from(o.data).toString('utf8') : ''))
-            .join(' ')}`
-    );
+    if (result) {
+        return result;
+    }
+    assert.isTrue(result, `${text} not found in outputs of cell ${cell.index} ${getCellOutputs(cell)}`);
     return result;
 }
 export async function waitForTextOutput(
@@ -748,9 +740,13 @@ export async function waitForTextOutput(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
         () =>
-            `A after ${timeout}ms output does not contain provided text '${text}' for Cell ${
+            `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${
                 cell.index + 1
-            }, it is ${getCellOutputs(cell)}`
+            } in output index ${index}, it is ${cell.outputs
+                .map(
+                    (output, index) => `Output for Index "${index}" is "${output.items.map(getOutputText).join('\n')}"`
+                )
+                .join('\n')}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {

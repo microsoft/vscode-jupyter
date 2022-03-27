@@ -64,7 +64,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
-        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`, options.env);
+        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {

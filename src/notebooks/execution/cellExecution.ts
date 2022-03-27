@@ -559,34 +559,23 @@ export class CellExecution implements IDisposable {
 
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                traceInfoIfCI('KernelMessage = ExecuteResult');
                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                traceInfoIfCI('KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
                 const statusMsg = msg as KernelMessage.IStatusMsg;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                traceInfoIfCI(
-                    'KernelMessage = StreamMessage',
-                    `Cell Index ${this.cell.index}, Stream '${msg.content.name}`,
-                    msg.content.text
-                );
                 this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                traceInfoIfCI('KernelMessage = DisplayMessage');
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                traceInfoIfCI('KernelMessage = UpdateDisplayMessage');
                 this.handleUpdateDisplayDataMessage(msg);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                traceInfoIfCI('KernelMessage = CleanOutput');
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                traceInfoIfCI('KernelMessage = ErrorMessage');
                 this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // Noop.
@@ -600,7 +589,6 @@ export class CellExecution implements IDisposable {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
-                traceInfoIfCI(`Exec Count = ${msg.content.execution_count}`);
                 this.execution.executionOrder = msg.content.execution_count;
             }
         } catch (err) {
