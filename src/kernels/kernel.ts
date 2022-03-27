@@ -624,15 +624,6 @@ export class Kernel implements IKernel {
 
             // Have our debug cell script run first for safety
             result.push(...debugCellScripts);
-
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                // Append the global site_packages to the kernel's sys.path
-                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
-                // Basically all we're doing here is ensuring the global site_packages is at the bottom of sys.path and not somewhere halfway down.
-                // Note: We have excluded site_pacakges via the env variable `PYTHONNOUSERSITE`
-                result.push(...CodeSnippets.AppendSitePackages.splitLines({ trim: false }));
-            }
-
             result.push(...changeDirScripts);
 
             // Set the ipynb file
