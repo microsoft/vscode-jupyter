@@ -360,7 +360,6 @@
     "DataScience.jupyterDebuggerInstallUpdateRunByLine": "安装的 {0} 版本不支持按行运行。更新 {0} 到最新版本，并继续按行运行？",
     "DataScience.jupyterDebuggerInstallYes": "是",
     "DataScience.jupyterDebuggerInstallNo": "否",
-    "DataScience.cellStopOnErrorFormatMessage": "{0} 单元由于前一个单元的错误而被取消。",
     "DataScience.instructionComments": "# 要添加一个新单元，输入 '{0}'\n# 要添加一个新的标记单元，输入 '{0} [markdown]'\n",
     "DataScience.scrollToCellTitleFormatMessage": "转到 [{0}]",
     "DataScience.remoteDebuggerNotSupported": "目前不支持连接到远程服务器时进行调试。",

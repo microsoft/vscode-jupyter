@@ -19,7 +19,7 @@ import {
     IKernelProvider,
     isLocalConnection
 } from './types';
-import { Uri, Memento, NotebookDocument } from 'vscode';
+import { Uri, Memento, NotebookDocument, NotebookController } from 'vscode';
 import {
     IWorkspaceService,
     ICommandManager,
@@ -1867,7 +1867,7 @@ function handleExecuteSilentErrors(
 async function switchController(
     resource: Resource,
     serviceContainer: IServiceContainer
-): Promise<VSCodeNotebookController | undefined> {
+): Promise<{ controller: NotebookController; metadata: KernelConnectionMetadata } | undefined> {
     const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     const editor = findNotebookEditor(resource, notebooks, serviceContainer.get(IInteractiveWindowProvider));
@@ -1888,7 +1888,7 @@ async function switchController(
         controller = await waitForSelection.promise;
     }
     disposable.dispose();
-    return controller;
+    return controller ? { controller: controller.controller, metadata: controller.connection } : undefined;
 }
 
 export async function notifyAndRestartDeadKernel(
@@ -1933,27 +1933,23 @@ export async function handleKernelError(
     context: 'start' | 'interrupt' | 'restart' | 'execution',
     resource: Resource,
     kernel: IKernel,
-    controller: VSCodeNotebookController
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata
 ) {
     const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-    let resultController: VSCodeNotebookController = controller;
 
-    if (controller.connection.interpreter && context === 'start') {
+    if (metadata.interpreter && context === 'start') {
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
-        clearInstalledIntoInterpreterMemento(
-            memento,
-            Product.ipykernel,
-            controller.connection.interpreter.path
-        ).ignoreErrors();
+        clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.path).ignoreErrors();
     }
 
-    const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
+    const handleResult = await errorHandler.handleKernelError(error, 'start', metadata, resource);
 
     // Send telemetry for handling the error (if raw)
-    const isLocal = isLocalConnection(controller?.connection);
+    const isLocal = isLocalConnection(metadata);
     const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
     if (rawLocalKernel && context === 'start') {
         sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
@@ -1973,17 +1969,17 @@ export async function handleKernelError(
             // Loop around and create the new one. The user wants to switch
 
             // Update to the selected controller
-            const newController = await switchController(resource, serviceContainer);
-            if (!newController) {
+            const result = await switchController(resource, serviceContainer);
+            if (!result) {
                 throw error;
-            } else {
-                resultController = newController;
             }
+            controller = result.controller;
+            metadata = result.metadata;
             break;
         }
     }
 
-    return resultController;
+    return { controller, metadata };
 }
 
 function convertContextToFunction(context: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
@@ -2004,7 +2000,6 @@ const connections = new WeakMap<
     {
         kernel: Deferred<{
             kernel: IKernel;
-            controller: VSCodeNotebookController;
             deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
         }>;
         options: IDisplayOptions;
@@ -2018,12 +2013,11 @@ async function verifyKernelState(
     options: IDisplayOptions = new DisplayOptions(false),
     promise: Promise<{
         kernel: IKernel;
-        controller: VSCodeNotebookController;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
     }>,
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<IKernel> {
-    const { kernel, controller, deadKernelAction } = await promise;
+    const { kernel, deadKernelAction } = await promise;
     // Before returning, but without disposing the kernel, double check it's still valid
     // If a restart didn't happen, then we can't connect. Throw an error.
     // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
@@ -2039,13 +2033,23 @@ async function verifyKernelState(
             return kernel;
         }
         // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
-        return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options, onAction);
+        return wrapKernelMethod(
+            kernel.controller,
+            kernel.kernelConnectionMetadata,
+            'start',
+            serviceContainer,
+            resource,
+            notebook,
+            options,
+            onAction
+        );
     }
     return kernel;
 }
 
 export async function wrapKernelMethod(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     initialContext: 'start' | 'interrupt' | 'restart',
     serviceContainer: IServiceContainer,
     resource: Resource,
@@ -2081,7 +2085,8 @@ export async function wrapKernelMethod(
     }
 
     const promise = wrapKernelMethodImpl(
-        initialController,
+        controller,
+        metadata,
         initialContext,
         serviceContainer,
         resource,
@@ -2110,7 +2115,8 @@ export async function wrapKernelMethod(
 }
 
 export async function wrapKernelMethodImpl(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     initialContext: 'start' | 'interrupt' | 'restart',
     serviceContainer: IServiceContainer,
     resource: Resource,
@@ -2119,19 +2125,17 @@ export async function wrapKernelMethodImpl(
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<{
     kernel: IKernel;
-    controller: VSCodeNotebookController;
     deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
 }> {
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     let kernel: IKernel | undefined;
-    let controller: VSCodeNotebookController = initialController;
     let currentMethod = convertContextToFunction(initialContext, options);
     let context = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook, {
-            metadata: controller.connection,
-            controller: controller.controller,
+            metadata,
+            controller,
             resourceUri: resource
         });
 
@@ -2146,7 +2150,6 @@ export async function wrapKernelMethodImpl(
                 const restarted = await notifyAndRestartDeadKernel(kernel, serviceContainer);
                 return {
                     kernel,
-                    controller,
                     deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
                 };
             } else {
@@ -2162,8 +2165,17 @@ export async function wrapKernelMethodImpl(
             if (options.disableUI) {
                 throw error;
             }
-            controller = await handleKernelError(serviceContainer, error, context, resource, kernel, controller);
-
+            const result = await handleKernelError(
+                serviceContainer,
+                error,
+                context,
+                resource,
+                kernel,
+                controller,
+                metadata
+            );
+            controller = result.controller;
+            metadata = result.metadata;
             // When we wrap around, update the current method to start. This
             // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
             currentMethod = (k) => k.start(options);
@@ -2173,16 +2185,17 @@ export async function wrapKernelMethodImpl(
             kernel = undefined;
         }
     }
-    return { kernel, controller };
+    return { kernel };
 }
 
 export async function connectToKernel(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
     options: IDisplayOptions = new DisplayOptions(false),
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
-    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook, options, onAction);
+    return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
 }

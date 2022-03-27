@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, Uri, window } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, NotebookEditor, Uri, ViewColumn, window } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
 
 import {
@@ -39,6 +39,13 @@ import {
     IDataScienceErrorHandler
 } from '../platform/datascience/types';
 import { InteractiveWindow } from './interactiveWindow';
+import { InteractiveWindowView } from '../notebooks/constants';
+import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
+import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { INativeInteractiveWindow } from './types';
+import { getInteractiveWindowTitle } from './identity';
+import { createDeferred } from '../platform/common/utils/async';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -64,6 +71,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
+    private pendingCreations: Promise<void>[] = [];
     private _windows: InteractiveWindow[] = [];
 
     constructor(
@@ -91,14 +99,17 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const mode = await this.getInteractiveMode(resource);
 
         // See if we already have a match
+        if (this.pendingCreations.length) {
+            // Possible its still in the process of getting created, hence wait on the creations to complete.
+            // But ignore errors.
+            const promises = Promise.all(this.pendingCreations.map((item) => item.catch(noop)));
+            await promises.catch(noop);
+        }
         let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            result = this.create(resource, mode, connection);
+            result = await this.create(resource, mode, connection);
         }
-
-        // wait for the notebook to show up
-        await result.ready;
 
         return result;
     }
@@ -120,40 +131,86 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     // the interactive window ctor and adding the interactive window to the provider's list of known windows.
     // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
     // instantiating multiples.
-    private create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
-        // Set it as soon as we create it. The .ctor for the interactive window
-        // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        const result = new InteractiveWindow(
-            this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-            this.serviceContainer.get<IFileSystem>(IFileSystem),
-            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
-            this.serviceContainer.get<ICommandManager>(ICommandManager),
-            this.serviceContainer.get<INotebookExporter>(INotebookExporter),
-            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
-            resource,
-            mode,
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IExportDialog>(IExportDialog),
-            this.notebookControllerManager,
-            this.serviceContainer,
-            this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
-            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
-            connection
-        );
-        this._windows.push(result);
+    private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
+        const creationInProgress = createDeferred<void>();
+        // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
+        this.pendingCreations.push(creationInProgress.promise);
+        try {
+            traceInfo(`Starting interactive window for resoruce ${getDisplayPath(resource)}`);
 
-        // This is the last interactive window at the moment (as we're about to create it)
-        this.lastActiveInteractiveWindow = result;
+            // Set it as soon as we create it. The .ctor for the interactive window
+            // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
+            // Find our preferred controller
+            const preferredController = connection
+                ? this.notebookControllerManager.getControllerForConnection(connection, 'interactive')
+                : await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
+                      InteractiveWindowView,
+                      resource
+                  );
 
-        // When shutting down, we fire an event
-        const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
-        this.disposables.push(result);
-        this.disposables.push(handler);
-        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
+            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
-        // fire created event
-        this._onDidCreateInteractiveWindow.fire(result);
-        return result;
+            const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
+            const result = new InteractiveWindow(
+                this.serviceContainer.get<IDocumentManager>(IDocumentManager),
+                this.serviceContainer.get<IFileSystem>(IFileSystem),
+                this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+                commandManager,
+                this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+                this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+                resource,
+                mode,
+                this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+                this.serviceContainer.get<IExportDialog>(IExportDialog),
+                this.notebookControllerManager,
+                this.serviceContainer,
+                this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
+                this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
+                preferredController,
+                editor,
+                inputUri
+            );
+            this._windows.push(result);
+
+            // This is the last interactive window at the moment (as we're about to create it)
+            this.lastActiveInteractiveWindow = result;
+
+            // When shutting down, we fire an event
+            const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
+            this.disposables.push(result);
+            this.disposables.push(handler);
+            this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
+
+            // fire created event
+            this._onDidCreateInteractiveWindow.fire(result);
+            return result;
+        } finally {
+            creationInProgress.resolve();
+            this.pendingCreations = this.pendingCreations.filter((item) => item !== creationInProgress.promise);
+        }
+    }
+    private async createEditor(
+        preferredController: VSCodeNotebookController | undefined,
+        resource: Resource,
+        mode: InteractiveWindowMode,
+        commandManager: ICommandManager
+    ): Promise<[Uri, NotebookEditor]> {
+        const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        const hasOwningFile = resource !== undefined;
+        const { inputUri, notebookEditor } = ((await commandManager.executeCommand(
+            'interactive.open',
+            // Keep focus on the owning file if there is one
+            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+            undefined,
+            controllerId,
+            resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
+        )) as unknown) as INativeInteractiveWindow;
+        if (!notebookEditor) {
+            // This means VS Code failed to create an interactive window.
+            // This should never happen.
+            throw new Error('Failed to request creation of interactive window from VS Code.');
+        }
+        return [inputUri, notebookEditor];
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {
@@ -217,7 +274,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 return true;
             }
             if (owner && w.owner && this.fs.areLocalPathsSame(owner.fsPath, w.owner.fsPath)) {
-                return !connection || w.originalConnection?.id === connection.id;
+                return !connection || w.kernelConnectionMetadata?.id === connection.id;
             }
             return false;
         });

@@ -395,7 +395,7 @@
     "DataScience.jupyterDebuggerInstallUpdateRunByLine": "The version of {0} installed does not support running by line. Update {0} to newest version and continue to run by line?",
     "DataScience.jupyterDebuggerInstallYes": "Yes",
     "DataScience.jupyterDebuggerInstallNo": "No",
-    "DataScience.cellStopOnErrorFormatMessage": "{0} cells were canceled due to an error in the previous cell.",
+    "DataScience.cellStopOnErrorMessage": "Cell was canceled due to an error in a previous cell.",
     "DataScience.instructionComments": "# To add a new cell, type '{0}'\n# To add a new markdown cell, type '{0} [markdown]'\n",
     "DataScience.scrollToCellTitleFormatMessage": "Go to [{0}]",
     "DataScience.remoteDebuggerNotSupported": "Debugging while attached to a remote server is not currently supported.",

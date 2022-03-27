@@ -618,7 +618,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const condaVersion = await this.condaService.getCondaVersion();
-        if (!condaVersionSupportsLiveStreaming(condaVersion)) {
+        if (condaVersionSupportsLiveStreaming(condaVersion)) {
             return this.getActivatedEnvVarsUsingActivationCommands(resource, interpreter);
         }
         return this.getCondaEnvVariablesImpl(interpreter, resource);
