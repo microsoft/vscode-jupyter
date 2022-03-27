@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { Disposable, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Disposable, Event, EventEmitter, NotebookCell, NotebookDocument, NotebookRange, Uri, workspace } from 'vscode';
 import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper';
 import {
     IKernelProvider,
@@ -26,6 +26,7 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
+import { getDisplayPath } from '../common/platform/fs-paths';
 
 @injectable()
 export class JupyterKernelServiceFactory {
@@ -62,6 +63,7 @@ export class JupyterKernelServiceFactory {
 class JupyterKernelService implements IExportedKernelService {
     private readonly _onDidChangeKernelSpecifications = new EventEmitter<void>();
     private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private readonly dummyNotebooks = new Map<string, NotebookDocument>();
     private readonly translatedConnections = new WeakMap<
         Readonly<IKernelKernelConnectionMetadata>,
         KernelConnectionMetadata
@@ -105,7 +107,7 @@ class JupyterKernelService implements IExportedKernelService {
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
-    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]> {
+    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; owner: Uri }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
@@ -115,18 +117,16 @@ class JupyterKernelService implements IExportedKernelService {
             .map((item) => {
                 return {
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    notebook: item.notebookDocument
+                    owner: item.notebookDocument.uri
                 };
             });
     }
-    getKernel(
-        notebook: NotebookDocument
-    ): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
+    getKernel(owner: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = this.kernelProvider.get(this.getAssociatedNotebook(owner));
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
@@ -135,19 +135,36 @@ class JupyterKernelService implements IExportedKernelService {
             };
         }
     }
-    async startKernel(spec: KernelConnectionMetadata, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+    async startKernel(spec: KernelConnectionMetadata, owner: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'startKernel'
         });
-        return this.startOrConnect(spec, notebook);
+        return this.startOrConnect(spec, this.getAssociatedNotebook(owner, true));
     }
-    async connect(spec: ActiveKernel, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+    async connect(spec: ActiveKernel, owner: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'connect'
         });
-        return this.startOrConnect(spec, notebook);
+        return this.startOrConnect(spec, this.getAssociatedNotebook(owner, true));
+    }
+    private getAssociatedNotebook(uri: Uri, create: boolean = false) {
+        // Find the notebook associated with this Uri.
+        let notebook =
+            workspace.notebookDocuments.find((item) => item.uri.toString() === uri.toString()) ||
+            this.dummyNotebooks.get(uri.toString());
+        if (!notebook) {
+            if (!create) {
+                throw new Error(`No kernel associated with the provided resource '${getDisplayPath(uri)}'.`);
+            }
+
+            // Create a dummy object that looks like a notebook.
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            notebook = new DummyNotebook(uri);
+            this.dummyNotebooks.set(uri.toString(), notebook);
+        }
+        return notebook!;
     }
     private async startOrConnect(
         spec: KernelConnectionMetadata | ActiveKernel,
@@ -273,5 +290,25 @@ class KernelSocketWrapper implements IKernelSocket {
         }
         this.receiveHooks.forEach((hook) => this.socket?.addReceiveHook(hook));
         this.sendHooks.forEach((hook) => this.socket?.addSendHook(hook));
+    }
+}
+
+class DummyNotebook implements NotebookDocument {
+    public readonly notebookType = 'dummy';
+    public readonly version = 1;
+    public readonly isDirty = false;
+    public readonly isUntitled = false;
+    public readonly isClosed = false;
+    public readonly metadata = {};
+    public readonly cellCount = 0;
+    constructor(public readonly uri: Uri) {}
+    public cellAt(_index: number): NotebookCell {
+        throw new Error('Not implemented');
+    }
+    public getCells(_range?: NotebookRange): NotebookCell[] {
+        return [];
+    }
+    public async save(): Promise<boolean> {
+        return true;
     }
 }

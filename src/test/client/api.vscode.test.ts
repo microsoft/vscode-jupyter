@@ -94,13 +94,13 @@ suite('3rd Party Kernel Service API', function () {
         kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
-            kernels![0].notebook,
-            vscodeNotebook.activeNotebookEditor?.document,
+            kernels![0].owner.toString(),
+            vscodeNotebook.activeNotebookEditor?.document.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
 
         assert.isObject(kernels![0].metadata, 'Kernel Connection is undefined');
-        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.document);
+        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.document!.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -130,7 +130,7 @@ suite('3rd Party Kernel Service API', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         const nbFile = await createTemporaryNotebook(templatePythonNbFile, disposables);
         const nb = await workspace.openNotebookDocument(Uri.file(nbFile));
-        const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb!);
+        const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb.uri!);
 
         assert.isOk(kernelInfo!.connection, 'Kernel Connection is undefined');
         assert.isOk(kernelInfo!.kernelSocket, 'Kernel Socket is undefined');
@@ -139,10 +139,10 @@ suite('3rd Party Kernel Service API', function () {
 
         let kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
-        assert.strictEqual(kernels![0].notebook, nb, 'Kernel notebook is not the active notebook');
+        assert.strictEqual(kernels![0].owner.toString(), nb.uri.toString(), 'Kernel notebook is not the active notebook');
 
         assert.strictEqual(kernels![0].metadata, pythonKernel, 'Kernel Connection is not the same');
-        const kernel = kernelService?.getKernel(nb);
+        const kernel = kernelService?.getKernel(nb.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
