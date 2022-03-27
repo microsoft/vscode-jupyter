@@ -97,7 +97,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         runCell(cell).catch(noop);
         traceInfo('Step 2');
 
-        await waitForTextOutput(cell, '1', 0, false, undefined, true);
+        await waitForTextOutput(cell, '1', 0, false);
         traceInfo('Step 3');
 
         // Interrupt the kernel.
@@ -231,7 +231,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell1),
-            waitForTextOutput(cell2, '1', 0, false, undefined, true),
+            waitForTextOutput(cell2, '1', 0, false),
             waitForQueuedForExecution(cell3)
         ]);
         console.log('Step2');
@@ -259,7 +259,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
                 30_000,
                 'Execution order of cell 1 should be greater than previous execution count'
             ),
-            waitForTextOutput(cell2, '1', 0, false, undefined, true),
+            waitForTextOutput(cell2, '1', 0, false),
             waitForCondition(
                 async () => getTextOutputValue(cell2.outputs[0]).trim() != cell2Output,
                 30_000,
@@ -320,7 +320,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([
             runCell(cell3),
             waitForExecutionCompletedSuccessfully(cell3),
-            waitForTextOutput(cell3, '3', 0, false, undefined, true)
+            waitForTextOutput(cell3, '3', 0, false)
         ]);
         console.log('Step12');
     });
