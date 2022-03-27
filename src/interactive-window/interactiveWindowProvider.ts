@@ -45,6 +45,7 @@ import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { INativeInteractiveWindow } from './types';
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -135,6 +136,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations.push(creationInProgress.promise);
         try {
+            traceInfo(`Starting interactive window for resoruce ${getDisplayPath(resource)}`);
+
             // Set it as soon as we create it. The .ctor for the interactive window
             // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
@@ -193,7 +196,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         commandManager: ICommandManager
     ): Promise<[Uri, NotebookEditor]> {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-        traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = resource !== undefined;
         const { inputUri, notebookEditor } = ((await commandManager.executeCommand(
             'interactive.open',
