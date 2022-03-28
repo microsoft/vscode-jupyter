@@ -80,7 +80,7 @@ export class NotebookProvider implements INotebookProvider {
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawLocalKernel
             ? this.rawNotebookProvider.createNotebook(
-                  options.document,
+                  options.owner,
                   options.resource,
                   options.kernelConnection,
                   options.ui,

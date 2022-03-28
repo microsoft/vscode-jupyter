@@ -506,7 +506,11 @@ export class CellHashProvider implements ICellHashProvider {
                     /.*?\n/,
                     `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
-            } else if (this.kernel && this.kernel.notebookDocument.notebookType !== InteractiveWindowView) {
+            } else if (
+                this.kernel &&
+                this.kernel.notebookDocument &&
+                this.kernel.notebookDocument.notebookType !== InteractiveWindowView
+            ) {
                 const matchingCellUri = this.executionCounts.get(executionCount);
                 const cellIndex = this.kernel.notebookDocument
                     .getCells()

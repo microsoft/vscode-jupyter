@@ -5,7 +5,7 @@
 
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem } from 'vscode';
+import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem, Uri } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import {
@@ -128,7 +128,8 @@ export interface IKernel extends IAsyncDisposable {
      * Notebook that owns this kernel.
      * Closing the notebook will dispose this kernel (except in the case of remote kernels).
      */
-    readonly notebookDocument: NotebookDocument;
+    readonly notebookDocument?: NotebookDocument;
+    readonly owner: Uri;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
@@ -210,10 +211,10 @@ export interface IKernelProvider extends IAsyncDisposable {
     /**
      * Get hold of the active kernel for a given Notebook.
      */
-    get(notebook: NotebookDocument): IKernel | undefined;
+    get(owner: NotebookDocument | Uri): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+    getOrCreate(owner: NotebookDocument | Uri, options: KernelOptions): IKernel;
 }

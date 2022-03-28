@@ -68,7 +68,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     public async detach(kernel: IKernel): Promise<void> {
-        if (!kernel.session) {
+        if (!kernel.session || !kernel.notebookDocument) {
             return;
         }
         const config = this.configs.get(kernel.notebookDocument);
@@ -169,7 +169,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
-        if (!kernel) {
+        if (!kernel || !kernel.notebookDocument) {
             return;
         }
         // If we already have configuration, we're already attached, don't do it again.

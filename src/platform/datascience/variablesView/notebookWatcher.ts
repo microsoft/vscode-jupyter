@@ -93,7 +93,11 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebooks.onDidCloseNotebookDocument(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
-            (kernel) => this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebookDocument }),
+            (kernel) => {
+                if (kernel.notebookDocument) {
+                    this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebookDocument });
+                }
+            },
             this,
             this.disposables
         );

@@ -205,10 +205,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
-        if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
+        if (kernel.notebookDocument?.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
-            kernel.notebookDocument.notebookType === JupyterNotebookView &&
+            kernel.notebookDocument?.notebookType === JupyterNotebookView &&
             kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
         ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);

@@ -165,6 +165,10 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
+        if (!kernel.notebookDocument) {
+            throw new Error('Unable to start a kernel that is not attached to a notebook document');
+        }
+        const notebook = kernel.notebookDocument;
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);
         if (pendingPromise) {
@@ -173,7 +177,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const promise = (async () => {
             // Get currently executing cell and controller
             const currentCell = kernel.pendingCells[0];
-            const controller = this.notebookControllerManager.getSelectedNotebookController(kernel.notebookDocument);
+            const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
             try {
                 if (!controller) {
                     throw new Error('No kernel associated with the notebook');
@@ -185,7 +189,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     context,
                     this.serviceContainer,
                     kernel.resourceUri,
-                    kernel.notebookDocument
+                    notebook
                 );
             } catch (ex) {
                 if (currentCell) {

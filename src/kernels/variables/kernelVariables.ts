@@ -80,7 +80,7 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
-        const cache = this.notebookState.get(kernel.notebookDocument);
+        const cache = kernel.notebookDocument ? this.notebookState.get(kernel.notebookDocument) : undefined;
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
@@ -171,7 +171,7 @@ export class KernelVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        let list = this.notebookState.get(kernel.notebookDocument);
+        let list = kernel.notebookDocument ? this.notebookState.get(kernel.notebookDocument) : undefined;
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -204,7 +204,7 @@ export class KernelVariables implements IJupyterVariables {
         };
 
         // Use the list of names to fetch the page of data
-        if (list) {
+        if (list && kernel.notebookDocument) {
             type SortableColumn = 'name' | 'type';
             const sortColumn = request.sortColumn as SortableColumn;
             const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {

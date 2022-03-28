@@ -57,7 +57,9 @@ export class KernelExecution implements IDisposable {
         return this._onPreExecute.event;
     }
     public get queue() {
-        return this.documentExecutions.get(this.kernel.notebookDocument)?.queue || [];
+        return this.kernel.notebookDocument
+            ? this.documentExecutions.get(this.kernel.notebookDocument)?.queue || []
+            : [];
     }
     public async executeCell(
         sessionPromise: Promise<IJupyterSession>,
@@ -81,6 +83,9 @@ export class KernelExecution implements IDisposable {
         return result[0];
     }
     public async cancel() {
+        if (!this.kernel.notebookDocument){
+            return;
+        }
         const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
         if (executionQueue) {
             await executionQueue.cancel(true);
@@ -93,8 +98,8 @@ export class KernelExecution implements IDisposable {
      */
     public async interrupt(sessionPromise?: Promise<IJupyterSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
-        const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
-        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+        const executionQueue = this.kernel.notebookDocument ? this.documentExecutions.get(this.kernel.notebookDocument) : undefined;
+        if (this.kernel.notebookDocument && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             return InterruptResult.Success;
         }
         // Possible we don't have a notebook.
@@ -131,8 +136,8 @@ export class KernelExecution implements IDisposable {
      */
     public async restart(sessionPromise?: Promise<IJupyterSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
-        const executionQueue = this.documentExecutions.get(this.kernel.notebookDocument);
-        if (!executionQueue) {
+        const executionQueue = this.kernel.notebookDocument ? this.documentExecutions.get(this.kernel.notebookDocument) : undefined;
+        if (!executionQueue && this.kernel.notebookDocument) {
             return;
         }
         // Possible we don't have a notebook.
@@ -142,7 +147,7 @@ export class KernelExecution implements IDisposable {
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
-        const pendingCells = executionQueue.cancel(true).then(() => executionQueue.waitForCompletion());
+        const pendingCells = executionQueue ? executionQueue.cancel(true).then(() => executionQueue.waitForCompletion()) : Promise.resolve();
 
         if (!session) {
             traceInfo('No notebook to interrupt');

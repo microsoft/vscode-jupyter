@@ -15,7 +15,8 @@ import {
     NotebookController,
     NotebookDocument,
     ColorThemeKind,
-    Disposable
+    Disposable,
+    Uri
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
@@ -151,7 +152,8 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
     constructor(
-        public readonly notebookDocument: NotebookDocument,
+        public readonly notebookDocument: NotebookDocument | undefined,
+        public readonly owner: Uri,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
@@ -217,12 +219,12 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             traceInfo(
                 `Interrupt requested & currently restarting ${(
-                    this.resourceUri || this.notebookDocument.uri
+                    this.resourceUri || this.owner
                 ).toString()}`
             );
             await this.restarting.promise;
         }
-        traceInfo(`Interrupt requested ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
+        traceInfo(`Interrupt requested ${(this.resourceUri || this.owner).toString()}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(
             this._notebookPromise?.then((item) => item.session)
@@ -231,7 +233,7 @@ export class Kernel implements IKernel {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
         let result: InterruptResult | undefined;
         try {
-            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.notebookDocument.uri)} in notebookEditor.`);
+            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.owner)} in notebookEditor.`);
             result = await interruptResultPromise;
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
@@ -247,7 +249,7 @@ export class Kernel implements IKernel {
         }
     }
     public async dispose(): Promise<void> {
-        traceInfoIfCI(`Dispose Kernel ${getDisplayPath(this.notebookDocument.uri)}`);
+        traceInfoIfCI(`Dispose Kernel ${getDisplayPath(this.owner)}`);
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -255,7 +257,7 @@ export class Kernel implements IKernel {
         this._ignoreNotebookDisposedErrors = true;
         this.startCancellation.cancel();
         const disposeImpl = async () => {
-            traceInfo(`Dispose kernel ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
+            traceInfo(`Dispose kernel ${(this.resourceUri || this.owner).toString()}`);
             this.restarting = undefined;
             const promises: Promise<void>[] = [];
             promises.push(this.kernelExecution.cancel());
@@ -283,7 +285,7 @@ export class Kernel implements IKernel {
             return this.restarting.promise;
         }
         await Promise.all(this.eventHooks.map((h) => h('willRestart')));
-        traceInfo(`Restart requested ${this.notebookDocument.uri}`);
+        traceInfo(`Restart requested ${this.owner}`);
         this.startCancellation.cancel();
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
@@ -300,9 +302,10 @@ export class Kernel implements IKernel {
             await (this._notebookPromise
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start(new DisplayOptions(false)));
+            traceInfoIfCI(`Restarted ${getDisplayPath(this.owner)}`);
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
-            traceError(`Restart failed ${getDisplayPath(this.notebookDocument.uri)}`, ex);
+            traceError(`Restart failed ${getDisplayPath(this.owner)}`, ex);
             this._ignoreNotebookDisposedErrors = true;
             // If restart fails, kill the associated notebook.
             const notebook = this.notebook;
@@ -321,10 +324,12 @@ export class Kernel implements IKernel {
         }
 
         // Interactive window needs a restart sys info
-        await this.initializeAfterStart(this.notebook, this.notebookDocument);
+        await this.initializeAfterStart(this.notebook);
+        traceInfoIfCI(`Initialized after restart ${this.owner}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
+        traceInfoIfCI(`Event fired after restart ${this.owner}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -349,6 +354,9 @@ export class Kernel implements IKernel {
     }
     private async startNotebook(options: IDisplayOptions = new DisplayOptions(false)): Promise<INotebook> {
         this._startedAtLeastOnce = true;
+        traceInfoIfCI(
+            `Start Notebook (options.disableUI=${options.disableUI}) for ${getDisplayPath(this.owner)}.`
+        );
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
@@ -386,7 +394,7 @@ export class Kernel implements IKernel {
             }
             this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
                 traceInfoIfCI(
-                    `Failed to create Notebook in Kernel.startNotebook for ${getDisplayPath(this.notebookDocument.uri)}`
+                    `Failed to create Notebook in Kernel.startNotebook for ${getDisplayPath(this.owner)}`
                 );
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
@@ -403,14 +411,14 @@ export class Kernel implements IKernel {
             // No need to block kernel startup on UI updates.
             traceInfo(
                 `Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
-                    this.notebookDocument.uri
+                    this.owner
                 )}`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
             const notebook = await this.notebookProvider.createNotebook({
-                document: this.notebookDocument,
+                owner: this.owner,
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
@@ -422,7 +430,7 @@ export class Kernel implements IKernel {
                 // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                 throw new Error('Kernel has not been started');
             }
-            await this.initializeAfterStart(notebook, this.notebookDocument);
+            await this.initializeAfterStart(notebook);
 
             sendKernelTelemetryEvent(
                 this.resourceUri,
@@ -482,8 +490,8 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async initializeAfterStart(notebook: INotebook | undefined, notebookDocument: NotebookDocument) {
-        traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.notebookDocument.uri)}`);
+    private async initializeAfterStart(notebook: INotebook | undefined) {
+        traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.owner)}`);
         if (!notebook) {
             traceVerbose('Not running kernel initialization');
             return;
@@ -494,14 +502,14 @@ export class Kernel implements IKernel {
             notebook.session.onDidDispose(() => {
                 traceInfoIfCI(
                     `Kernel got disposed as a result of notebook.onDisposed ${(
-                        this.resourceUri || this.notebookDocument.uri
+                        this.resourceUri || this.owner
                     ).toString()}`
                 );
                 // Ignore when notebook is disposed as a result of failed restarts.
                 if (!this._ignoreNotebookDisposedErrors) {
                     traceInfo(
                         `Kernel got disposed as a result of notebook.onDisposed ${(
-                            this.resourceUri || this.notebookDocument.uri
+                            this.resourceUri || this.owner
                         ).toString()} & _ignoreNotebookDisposedErrors = false.`
                     );
                     const isActiveNotebookDead = this.notebook === notebook;
@@ -543,7 +551,7 @@ export class Kernel implements IKernel {
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherInternalStartupCode(notebookDocument);
+            const startupCode = await this.gatherInternalStartupCode();
             await this.executeSilently(notebook, startupCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing jupyter extension internal startup code',
@@ -600,7 +608,7 @@ export class Kernel implements IKernel {
         }
     }
 
-    private async gatherInternalStartupCode(notebookDocument: NotebookDocument): Promise<string[]> {
+    private async gatherInternalStartupCode(): Promise<string[]> {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
@@ -611,7 +619,7 @@ export class Kernel implements IKernel {
                 this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri),
                 // Initialize debug cell support.
                 // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
-                this.getDebugCellHook(notebookDocument)
+                this.getDebugCellHook()
             ]);
 
             // Have our debug cell script run first for safety
@@ -658,17 +666,17 @@ export class Kernel implements IKernel {
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
             traceInfoIfCI(
-                `Initialize config for plots for ${(this.resourceUri || this.notebookDocument.uri).toString()}`
+                `Initialize config for plots for ${(this.resourceUri || this.owner).toString()}`
             );
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
-            traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookDocument.uri).toString()}`);
+            traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.owner).toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             results.push(...matplotInit.splitLines({ trim: false }));
 
-            // TODO: This must be joined with the previous request (else we send two seprate requests unnecessarily).
+            // TODO: This must be joined with the previous request (else we send two separate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.
@@ -689,10 +697,10 @@ export class Kernel implements IKernel {
         return results;
     }
 
-    private async getDebugCellHook(notebookDocument: NotebookDocument): Promise<string[]> {
+    private async getDebugCellHook(): Promise<string[]> {
         // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
         // notebooks
-        if (notebookDocument.notebookType === InteractiveWindowView) {
+        if (this.notebookDocument?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {

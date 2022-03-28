@@ -64,7 +64,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        const fileName = path.basename(kernel.notebookDocument.uri.path);
+        const fileName = path.basename(kernel.owner.path);
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -208,7 +208,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     private async importDataFrameScripts(kernel: IKernel): Promise<void> {
         const key = kernel.notebookDocument;
-        if (!this.importedDataFrameScripts.get(key)) {
+        if (key && !this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {
@@ -227,7 +227,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
         const key = kernel.notebookDocument;
-        if (!this.importedGetVariableInfoScripts.get(key)) {
+        if (key && !this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {

@@ -123,7 +123,7 @@ export class DebuggerVariables extends DebugLocationTracker
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.notebookDocument.uri.fsPath.endsWith('.ipynb')) {
+            if (result && kernel?.notebookDocument?.uri.fsPath.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
@@ -163,7 +163,7 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
-        let fileName = kernel ? path.basename(kernel.notebookDocument.uri.fsPath) : '';
+        let fileName = kernel && kernel.notebookDocument ? path.basename(kernel.notebookDocument.uri.fsPath) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
@@ -278,7 +278,7 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     private watchKernel(kernel: IKernel) {
-        const key = kernel.notebookDocument.uri.toString();
+        const key = kernel.notebookDocument ? kernel.notebookDocument.uri.toString() : '';
         if (!this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
             disposables.push(kernel.onRestarted(this.resetImport.bind(this, key)));
