@@ -737,9 +737,9 @@ export namespace DataScience {
     );
     export const jupyterDebuggerInstallYes = localize('DataScience.jupyterDebuggerInstallYes', 'Yes');
     export const jupyterDebuggerInstallNo = localize('DataScience.jupyterDebuggerInstallNo', 'No');
-    export const cellStopOnErrorFormatMessage = localize(
-        'DataScience.cellStopOnErrorFormatMessage',
-        '{0} cells were canceled due to an error in the previous cell.'
+    export const cellStopOnErrorMessage = localize(
+        'DataScience.cellStopOnErrorMessage',
+        'Cell was canceled due to an error in a previous cell.'
     );
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
     export const instructionComments = localize(

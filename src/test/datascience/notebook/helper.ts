@@ -55,6 +55,7 @@ import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeN
 import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
 import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
 import { INotebookControllerManager, CellOutputMimeTypes } from '../../../notebooks/types';
+import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -219,7 +220,9 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 let waitForKernelPendingPromise: Promise<void> | undefined;
 
 export async function waitForKernelToChange(
-    criteria: { labelOrId: string } | { interpreterPath: string },
+    criteria:
+        | { labelOrId: string; isInteractiveController?: boolean }
+        | { interpreterPath: string; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -231,7 +234,9 @@ export async function waitForKernelToChange(
 }
 
 async function waitForKernelToChangeImpl(
-    criteria: { labelOrId: string } | { interpreterPath: string },
+    criteria:
+        | { labelOrId: string; isInteractiveController?: boolean }
+        | { interpreterPath: string; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
@@ -251,9 +256,11 @@ async function waitForKernelToChangeImpl(
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
-    const labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+    let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
     if (labelOrId) {
-        id = notebookControllers?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
+        id = notebookControllers
+            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
         if (!id) {
             // Try includes instead
             id = notebookControllers?.find(
@@ -265,6 +272,7 @@ async function waitForKernelToChangeImpl(
     if (interpreterPath && !id) {
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
+            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
             .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
@@ -625,14 +633,17 @@ export async function waitForEmptyCellExecutionCompleted(
 }
 export async function waitForExecutionCompletedWithErrors(
     cell: NotebookCell,
-    timeout: number = defaultNotebookTestTimeout
+    timeout: number = defaultNotebookTestTimeout,
+    executionOderShouldChange: boolean = true
 ) {
     await waitForCondition(
-        async () => assertHasExecutionCompletedWithErrors(cell),
+        async () => assertHasExecutionCompletedWithErrors(cell, executionOderShouldChange),
         timeout,
         () => `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
+    if (executionOderShouldChange) {
+        await waitForCellExecutionToComplete(cell);
+    }
 }
 
 export async function waitForDiagnostics(
@@ -677,10 +688,11 @@ export async function waitForHover(
     return hovers;
 }
 
-function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
+function assertHasExecutionCompletedWithErrors(cell: NotebookCell, executionOderShouldChange = true) {
     return (
-        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
-        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
+        (executionOderShouldChange ? (cell.executionSummary?.executionOrder ?? 0) > 0 : true) &&
+        (NotebookCellStateTracker.getCellState(cell) || NotebookCellExecutionState.Idle) ===
+            NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
 }
@@ -693,6 +705,7 @@ function getOutputText(output: NotebookCellOutputItem) {
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
         output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== CellOutputMimeTypes.error &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
@@ -704,6 +717,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
         output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== CellOutputMimeTypes.error &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
@@ -811,6 +825,22 @@ export async function runAllCellsInActiveNotebook() {
     void commands.executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri);
 }
 
+export type WindowPromptStub = {
+    dispose: Function;
+    displayed: Promise<boolean>;
+    /**
+     * Gets the messages that were displayed. Access this once the promise `displayed` has resolved to get latest stuff.
+     */
+    messages: string[];
+    clickButton(text?: string | undefined): void;
+    reset(): void;
+    getDisplayCount(): number;
+};
+export type WindowPromptStubButtonClickOptions = {
+    text?: string;
+    clickImmediately?: boolean;
+    dismissPrompt?: boolean;
+};
 /**
  * Ability to stub prompts for VS Code tests.
  * We can confirm prompt was displayed & invoke a button click.
@@ -818,21 +848,14 @@ export async function runAllCellsInActiveNotebook() {
 export async function hijackPrompt(
     promptType: 'showErrorMessage' | 'showInformationMessage',
     message: { exactMatch: string } | { endsWith: string } | { contains: string },
-    buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
+    buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []
-): Promise<{
-    dispose: Function;
-    displayed: Promise<boolean>;
-    clickButton(text?: string): void;
-    getDisplayCount(): number;
-}> {
+): Promise<WindowPromptStub> {
     const api = await initialize();
     const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-    const displayed = createDeferred<boolean>();
-    const clickButton = createDeferred<string>();
-    if (buttonToClick?.clickImmediately && buttonToClick.text) {
-        clickButton.resolve(buttonToClick.text);
-    }
+    let displayed = createDeferred<boolean>();
+    let clickButton = createDeferred<string>();
+    const messageDisplayed: string[] = [];
     let displayCount = 0;
     // eslint-disable-next-line
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
@@ -842,10 +865,17 @@ export async function hijackPrompt(
             ('contains' in message && msg.trim().includes(message.contains.trim())) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
+            messageDisplayed.push(msg);
             traceInfo(`Exact Message found '${msg}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
+                if (!buttonToClick.dismissPrompt && buttonToClick?.clickImmediately === true && buttonToClick.text) {
+                    if (clickButton.completed) {
+                        clickButton = createDeferred<string>();
+                    }
+                    clickButton.resolve(buttonToClick.text);
+                }
                 return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
             }
         }
@@ -859,7 +889,17 @@ export async function hijackPrompt(
     return {
         dispose: () => stub.restore(),
         getDisplayCount: () => displayCount,
-        displayed: displayed.promise,
+        get displayed() {
+            return displayed.promise;
+        },
+        get messages() {
+            return messageDisplayed;
+        },
+        reset: () => {
+            messageDisplayed.splice(0, messageDisplayed.length);
+            displayCount = 0;
+            displayed = createDeferred<boolean>();
+        },
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };
 }

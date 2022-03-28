@@ -338,7 +338,7 @@ export function clearPendingTimers() {
  * @returns {Promise<void>}
  */
 export async function waitForCondition(
-    condition: () => Promise<boolean>,
+    condition: () => Promise<boolean> | boolean,
     timeoutMs: number,
     errorMessage: string | (() => string),
     intervalTimeoutMs: number = 10,
@@ -357,7 +357,8 @@ export async function waitForCondition(
         const timerFunc = async () => {
             let success = false;
             try {
-                success = await condition();
+                const promise = condition();
+                success = typeof promise === 'boolean' ? promise : await promise;
             } catch (exc) {
                 if (throwOnError) {
                     reject(exc);

@@ -175,9 +175,13 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             const currentCell = kernel.pendingCells[0];
             const controller = this.notebookControllerManager.getSelectedNotebookController(kernel.notebookDocument);
             try {
+                if (!controller) {
+                    throw new Error('No kernel associated with the notebook');
+                }
                 // Wrap the restart/interrupt in a loop that allows the user to switch
                 await wrapKernelMethod(
-                    controller!,
+                    controller.controller,
+                    controller.connection,
                     context,
                     this.serviceContainer,
                     kernel.resourceUri,

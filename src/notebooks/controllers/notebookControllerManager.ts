@@ -70,6 +70,7 @@ import { VSCodeNotebookController } from './vscodeNotebookController';
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
+export const InteractiveControllerIdSuffix = ' (Interactive)';
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -82,7 +83,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }>;
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
-    private readonly interactiveControllerIdSuffix = ' (Interactive)';
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -171,9 +171,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ) {
         const id =
-            notebookType === 'jupyter-notebook'
-                ? connection.id
-                : `${connection.id}${this.interactiveControllerIdSuffix}`;
+            notebookType === 'jupyter-notebook' ? connection.id : `${connection.id}${InteractiveControllerIdSuffix}`;
         return this.registeredControllers.get(id);
     }
     get onNotebookControllerSelected() {
@@ -644,7 +642,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (preferredConnection) {
                 const preferredId =
                     document.notebookType === 'interactive'
-                        ? `${preferredConnection.id}${this.interactiveControllerIdSuffix}`
+                        ? `${preferredConnection.id}${InteractiveControllerIdSuffix}`
                         : preferredConnection.id;
                 targetController = this.registeredControllers.get(preferredId);
             }
@@ -718,7 +716,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Create notebook selector
             [
                 [kernelConnection.id, JupyterNotebookView],
-                [`${kernelConnection.id}${this.interactiveControllerIdSuffix}`, InteractiveWindowView]
+                [`${kernelConnection.id}${InteractiveControllerIdSuffix}`, InteractiveWindowView]
             ]
                 .filter(([id]) => {
                     const controller = this.registeredControllers.get(id);
@@ -864,9 +862,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if (controller && connection.kind === 'connectToLiveKernel') {
                 controller.updateRemoteKernelDetails(connection);
             }
-            const iwController = this.registeredControllers.get(
-                `${connection.id}${this.interactiveControllerIdSuffix}`
-            );
+            const iwController = this.registeredControllers.get(`${connection.id}${InteractiveControllerIdSuffix}`);
             if (iwController && connection.kind === 'connectToLiveKernel') {
                 iwController.updateRemoteKernelDetails(connection);
             }

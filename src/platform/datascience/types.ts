@@ -30,7 +30,6 @@ import type { Data as WebSocketData } from 'ws';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode, Resource } from '../common/types';
-import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
@@ -461,18 +460,10 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly notebookUri?: Uri;
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
-    readonly originalConnection?: KernelConnectionMetadata;
-    readonly ready: Promise<void>;
     closed: Event<void>;
-    addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
-    addMessage(message: string, getIndex?: (editor: NotebookEditor) => number): Promise<void>;
-    debugCode(
-        code: string,
-        file: Uri,
-        line: number,
-        editor?: TextEditor,
-        runningStopWatch?: StopWatch
-    ): Promise<boolean>;
+    addCode(code: string, file: Uri, line: number): Promise<boolean>;
+    addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
+    debugCode(code: string, file: Uri, line: number): Promise<boolean>;
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;
     scrollToCell(id: string): void;
