@@ -223,6 +223,7 @@ jobs:
         run: |
           python -m pip install click==8.0.4
           python -m pip install -U black
+          python -m click==8.0.4
           python -m black . --check
         working-directory: pythonFiles
 
