@@ -294,7 +294,8 @@ export class JupyterInterpreterDependencyService {
             JupyterCommands.KernelSpecCommand,
             'jupyter',
             ['-m', 'jupyter', 'kernelspec'],
-            interpreter
+            interpreter,
+            false
         );
         return command
             .exec(['--version'], { throwOnStdErr: true })

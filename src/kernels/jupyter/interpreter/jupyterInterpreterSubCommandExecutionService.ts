@@ -10,7 +10,8 @@ import { traceWarning } from '../../../platform/common/logger';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
-    ObservableExecutionResult
+    ObservableExecutionResult,
+    IPythonDaemonExecutionService
 } from '../../../platform/common/process/types';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -111,9 +112,9 @@ export class JupyterInterpreterSubCommandExecutionService
                 notebookArgs.join(' ')
             )
         );
-        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter: interpreter,
-            allowEnvironmentFetchExceptions: true
+        const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
+            interpreter: interpreter
         });
         // We should never set token for long running processes.
         // We don't want the process to die when the token is cancelled.
@@ -135,14 +136,15 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter
+        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
+            interpreter: interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
-        const serverInfoString = await executionService.exec([file], newOptions);
+        const serverInfoString = await daemon.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {
