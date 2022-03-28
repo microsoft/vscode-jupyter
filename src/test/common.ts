@@ -358,7 +358,7 @@ export async function waitForCondition(
             let success = false;
             try {
                 const promise = condition();
-                success = typeof promise === 'boolean' ? promise : await condition();
+                success = typeof promise === 'boolean' ? promise : await promise;
             } catch (exc) {
                 if (throwOnError) {
                     reject(exc);
