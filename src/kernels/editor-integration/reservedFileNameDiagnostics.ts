@@ -12,6 +12,7 @@ import {
     commands,
     Diagnostic,
     DiagnosticCollection,
+    DiagnosticSeverity,
     EventEmitter,
     FileDecoration,
     FileDecorationProvider,
@@ -25,14 +26,14 @@ import {
     window,
     workspace
 } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { disposeAllDisposables } from '../../common/helpers';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../common/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { DiagnosticSeverity } from 'vscode-languageserver-protocol';
-import { DataScience } from '../../common/utils/localize';
-import { InterpreterPackages } from '../telemetry/interpreterPackages';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IDisposable } from '@fluentui/react';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IMemento, GLOBAL_MEMENTO } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { InterpreterPackages } from '../../telemetry/interpreterPackages';
 import { BuiltInModules } from './constants';
 
 const PYTHON_PACKAGES_MEMENTO_KEY = 'jupyter.pythonPackages';

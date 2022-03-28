@@ -50,6 +50,7 @@ import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger
 import { JupyterDebugService } from './debugging/jupyterDebugService';
 import { isLocalLaunch } from './helpers';
 import { registerInstallerTypes } from './installer/serviceRegistry';
+import { registerTypes as registerEditorIntegration } from './editor-integration/serviceRegistry';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets-message-coordination/ipyWidgetMessageDispatcherFactory';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { JupyterExporter } from './jupyter/import-export/jupyterExporter';
@@ -275,4 +276,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
 
     // Subdirectories
     registerInstallerTypes(serviceManager);
+    registerEditorIntegration(serviceManager);
 }

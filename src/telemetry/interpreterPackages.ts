@@ -4,12 +4,14 @@
 import { inject, injectable } from 'inversify';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
-import { IDisposableRegistry, InterpreterUri } from '../platform/common/types';
+import { IDisposableRegistry, InterpreterUri, Resource } from '../platform/common/types';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { isResource, noop } from '../platform/common/utils/misc';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../platform/../telemetry/helpers';
+import { IWorkspaceService } from '../platform/common/application/types';
+import { traceWarning, traceError } from '../platform/common/logger';
 
 const interestedPackages = new Set(
     [
