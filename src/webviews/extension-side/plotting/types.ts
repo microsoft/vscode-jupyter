@@ -29,3 +29,16 @@ export class IPlotViewerMapping {
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
 }
+
+export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
+export interface IPlotViewerProvider {
+    showPlot(imageHtml: string): Promise<void>;
+}
+export const IPlotViewer = Symbol('IPlotViewer');
+
+export interface IPlotViewer extends IDisposable {
+    closed: Event<IPlotViewer>;
+    removed: Event<number>;
+    addPlot(imageHtml: string): Promise<void>;
+    show(): Promise<void>;
+}

@@ -12,7 +12,7 @@ import { startJupyterServer } from './datascience/notebook/helper';
 
 export * from './constants';
 export * from './ciConstants';
-export const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
+export const multirootPath = path.join(__dirname, '..', '..', 'src', 'test', 'testMultiRootWkspc');
 
 //First thing to be executed.
 process.env.VSC_JUPYTER_CI_TEST = '1';

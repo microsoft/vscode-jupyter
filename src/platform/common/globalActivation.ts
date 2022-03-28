@@ -4,19 +4,19 @@
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from '../common/constants';
-import { ContextKey } from '../common/contextKey';
-import '../common/extensions';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
-import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import { noop } from '../common/utils/misc';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
+import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
+import { ContextKey } from './contextKey';
+import './extensions';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from './types';
+import { debounceAsync, swallowExceptions } from './utils/decorators';
+import { noop } from './utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
-import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry';
+import { CommandRegistry as PlatformCommandRegistry } from '../commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
-import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from './types';
+import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../datascience/types';
 
 @injectable()
 export class GlobalActivation implements IDataScience {

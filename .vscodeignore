@@ -95,7 +95,6 @@ out/datascience-ui/widgetTester/**
 out/pythonFiles/**
 out/src/**
 out/test/**
-out/testMultiRootWkspc/**
 precommit.hook
 pythonFiles/**/*.pyc
 pythonFiles/lib/**/*.dist-info/**

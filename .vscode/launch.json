@@ -83,7 +83,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
+                "${workspaceFolder}/src/test/testMultiRootWkspc/smokeTests",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"

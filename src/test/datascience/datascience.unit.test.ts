@@ -16,7 +16,7 @@ import { IConfigurationService, IWatchableJupyterSettings } from '../../platform
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry';
 import { pruneCell } from '../../platform/datascience/common';
-import { GlobalActivation } from '../../platform/datascience/datascience';
+import { GlobalActivation } from '../../platform/common/globalActivation';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../../platform/datascience/types';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService';

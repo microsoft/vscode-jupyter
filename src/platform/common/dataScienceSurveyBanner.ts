@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
 import { isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
-import '../common/extensions';
-import { traceError } from '../common/logger';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
+import './extensions';
+import { traceError } from './logger';
 import {
     IBrowserService,
     IDisposableRegistry,
@@ -17,8 +17,8 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IsCodeSpace
-} from '../common/types';
-import * as localize from '../common/utils/localize';
+} from './types';
+import * as localize from './utils/localize';
 import { MillisecondsInADay } from '../constants';
 
 export enum InsidersNotebookSurveyStateKeys {

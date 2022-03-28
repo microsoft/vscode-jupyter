@@ -114,3 +114,14 @@ export interface IDataViewer extends IDisposable {
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
     refreshData(): Promise<void>;
 }
+
+export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
+export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    readonly kernel: IKernel | undefined;
+    setDependencies(variable: IJupyterVariable, kernel?: IKernel): void;
+}
+
+export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
+export interface IJupyterVariableDataProviderFactory {
+    create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
+}

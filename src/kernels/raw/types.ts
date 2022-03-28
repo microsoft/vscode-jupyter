@@ -97,3 +97,23 @@ export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;
     kill(): Promise<void>;
 }
+
+// Provides a service to determine if raw notebook is supported or not
+export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
+export interface IRawNotebookSupportedService {
+    isSupported: boolean;
+}
+
+// Provides notebooks that talk directly to kernels as opposed to a jupyter server
+export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
+export interface IRawNotebookProvider extends IAsyncDisposable {
+    isSupported: boolean;
+    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
+    createNotebook(
+        document: NotebookDocument,
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
+    ): Promise<INotebook>;
+}

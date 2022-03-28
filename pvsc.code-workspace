@@ -63,7 +63,7 @@
                 "request": "launch",
                 "name": "Jupyter + Python Smoke Tests",
                 "args": [
-                    "${workspaceFolder:vscode-jupyter}/src/testMultiRootWkspc/smokeTests",
+                    "${workspaceFolder:vscode-jupyter}/src/test/testMultiRootWkspc/smokeTests",
                     "--enable-proposed-api",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",

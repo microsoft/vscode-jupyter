@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IJupyterExtensionBanner, ISurveyBanner } from '../common/types';
-import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
+import { DataScienceSurveyBanner } from '../common/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';

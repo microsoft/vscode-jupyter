@@ -10,7 +10,7 @@ import { IFileSystem } from '../../../../platform/common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { INotebookServerOptions, INotebookServer } from '../../../../platform/datascience/types';
-import { calculateWorkingDirectory } from '../../../../platform/datascience/utils';
+import { calculateWorkingDirectory } from '../../../../platform/common/utils';
 import { sleep } from '../../../../platform/common/utils/async';
 
 interface IServerData {

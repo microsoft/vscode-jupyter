@@ -258,6 +258,27 @@ export interface INotebookModelVersionChange extends INotebookModelChange {
     kernelConnection?: KernelConnectionMetadata;
 }
 
+export enum CssMessages {
+    GetCssRequest = 'get_css_request',
+    GetCssResponse = 'get_css_response'
+}
+
+export enum SharedMessages {
+    UpdateSettings = 'update_settings',
+    Started = 'started',
+    LocInit = 'loc_init'
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
+}
+
+
 export type NotebookModelChange =
     | INotebookModelSaved
     | INotebookModelSavedAs
