@@ -574,6 +574,7 @@ export interface IStatusProvider {
 }
 
 export interface IJupyterCommand {
+    interpreter(): Promise<PythonEnvironment | undefined>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
@@ -583,7 +584,8 @@ export interface IJupyterCommandFactory {
         command: JupyterCommands,
         moduleName: string,
         args: string[],
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        isActiveInterpreter: boolean
     ): IJupyterCommand;
 }
 
