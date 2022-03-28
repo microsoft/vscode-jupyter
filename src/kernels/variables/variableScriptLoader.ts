@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants';
-import { IJupyterVariable } from '../../platform/datascience/types';
+import { IJupyterVariable } from './types';
 
 export class VariableScriptLoader {
     private fetchVariableShapeScript?: string;

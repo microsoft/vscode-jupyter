@@ -16,10 +16,10 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IJupyterDebugService } from '../../kernels/debugging/types';
 import { ICommandManager, IDebugService } from '../common/application/types';
+import { Identifiers } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
-import { Identifiers } from './constants';
-import { IJupyterDebugService } from './types';
 
 /**
  * IJupyterDebugService that will pick the correct debugger based on if doing run by line or normal debugging.

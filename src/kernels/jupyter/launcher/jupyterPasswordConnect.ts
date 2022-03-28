@@ -10,9 +10,9 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../../../platform/datascience/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {

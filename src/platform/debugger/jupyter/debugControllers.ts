@@ -4,16 +4,16 @@
 import * as path from 'path';
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { parseForComments } from '../../../datascience-ui/common';
+import { parseForComments } from '../../../webviews/webview-side/common';
 import { ICommandManager } from '../../common/application/types';
 import { traceInfoIfCI, traceVerbose } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../../kernels/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
+import { Commands } from '../../common/constants';
 
 export class DebugCellController implements IDebuggingDelegate {
     constructor(

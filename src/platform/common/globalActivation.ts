@@ -12,14 +12,16 @@ import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionCont
 import { debounceAsync, swallowExceptions } from './utils/decorators';
 import { noop } from './utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { hasCells } from './cellFactory';
 import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { CommandRegistry as PlatformCommandRegistry } from '../commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
-import { IDataScience, IDataScienceCodeLensProvider, IRawNotebookSupportedService } from '../datascience/types';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
+import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 
 @injectable()
-export class GlobalActivation implements IDataScience {
+export class GlobalActivation implements IExtensionSingleActivationService {
     public isDisposed: boolean = false;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();

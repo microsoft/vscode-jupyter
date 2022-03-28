@@ -13,12 +13,15 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging } from '../../../platform/logging/trace';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };

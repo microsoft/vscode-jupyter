@@ -7,23 +7,19 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { Uri } from 'vscode';
+import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory';
+import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
+import { INotebookEditorProvider } from '../../../notebooks/types';
 import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/common/logger';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
-import { IConfigurationService } from '../../../platform/common/types';
+import { ICell, IConfigurationService } from '../../../platform/common/types';
+import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { CellMatcher } from '../../../platform/datascience/cellMatcher';
-import { pruneCell } from '../../../platform/datascience/common';
-import {
-    INotebookExporter,
-    IJupyterExecution,
-    INotebookEditorProvider,
-    IDataScienceErrorHandler,
-    ICell
-} from '../../../platform/datascience/types';
-import { concatMultilineString } from '../../../datascience-ui/common';
-import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
-import { defaultNotebookFormat, CodeSnippets } from '../../../datascience-ui/common/constants';
+import { IDataScienceErrorHandler } from '../../../platform/errors/types';
+import { concatMultilineString } from '../../../webviews/webview-side/common';
+import { defaultNotebookFormat, CodeSnippets } from '../../../webviews/webview-side/common/constants';
+import { INotebookExporter, IJupyterExecution } from '../types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {

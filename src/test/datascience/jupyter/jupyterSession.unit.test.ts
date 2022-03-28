@@ -22,12 +22,16 @@ import { ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
-import { KernelConnectionMetadata, LiveKernelModel } from '../../../platform/../kernels/types';
-import { IJupyterConnection, ISessionWithSocket } from '../../../platform/datascience/types';
+import {
+    IJupyterConnection,
+    ISessionWithSocket,
+    KernelConnectionMetadata,
+    LiveKernelModel
+} from '../../../platform/../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {

@@ -5,8 +5,6 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { Commands } from '../../../platform/datascience/constants';
-import { IVariableViewProvider } from '../../../platform/datascience/variablesView/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
@@ -23,9 +21,11 @@ import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../platform/common/logger';
-import { DataViewer } from '../../../platform/datascience/data-viewing/dataViewer';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { Commands } from '../../../platform/common/constants';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
+import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;

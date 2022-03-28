@@ -9,23 +9,15 @@ import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { traceInfo, traceError, traceInfoIfCI } from '../platform/common/logger';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource } from '../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
-import { getResourceType } from '../platform/datascience/common';
-import { KernelProgressReporter } from '../platform/datascience/progress/kernelProgressReporter';
-import {
-    IKernelDependencyService,
-    KernelInterpreterDependencyResponse,
-    IRawNotebookSupportedService,
-    IDisplayOptions
-} from '../platform/datascience/types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { traceDecorators } from '../platform/logging';
 import { ignoreLogging, logValue } from '../platform/logging/trace';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
-import { Telemetry } from '../datascience-ui/common/constants';
+import { Telemetry } from '../webviews/webview-side/common/constants';
 import {
     isModulePresentInEnvironmentCache,
     trackPackageInstalledIntoInterpreter,
@@ -33,8 +25,11 @@ import {
 } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
-import { KernelConnectionMetadata } from './types';
+import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
 import { noop } from '../platform/common/utils/misc';
+import { getResourceType } from '../platform/common/utils';
+import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
+import { IRawNotebookSupportedService } from './raw/types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.

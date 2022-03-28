@@ -19,10 +19,10 @@ import {
 import { noop } from '../platform/common/utils/misc';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { INotebookProvider, IStatusProvider } from '../platform/datascience/types';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel';
-import { IKernel, IKernelProvider, KernelOptions } from './types';
+import { IKernel, IKernelProvider, INotebookProvider, KernelOptions } from './types';
+import { IStatusProvider } from '../platform/progress/types';
 
 @injectable()
 export class KernelProvider implements IKernelProvider {

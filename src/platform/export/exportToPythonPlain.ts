@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
-import { appendLineFeed } from '../../../datascience-ui/common';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { appendLineFeed } from '../../webviews/webview-side/common';
+import { IFileSystem } from '../common/platform/types';
+import { IConfigurationService } from '../common/types';
 import { IExport } from './types';
 
 // Handles exporting a NotebookDocument to python

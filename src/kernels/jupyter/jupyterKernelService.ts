@@ -12,25 +12,25 @@ import '../../platform/common/extensions';
 import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { Resource, ReadWrite } from '../../platform/common/types';
+import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
-import {
-    IKernelDependencyService,
-    IDisplayOptions,
-    KernelInterpreterDependencyResponse,
-    IJupyterKernelSpec
-} from '../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { traceDecorators } from '../../platform/logging';
 import { logValue, ignoreLogging } from '../../platform/logging/trace';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths';
-import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../types';
+import {
+    IJupyterKernelSpec,
+    IKernelDependencyService,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse,
+    LocalKernelConnectionMetadata
+} from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 /**

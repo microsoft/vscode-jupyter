@@ -10,7 +10,6 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../pl
 import { traceInfo } from '../../../platform/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { Commands } from '../../../platform/datascience/constants';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -31,6 +30,7 @@ import {
     clickOKForRestartPrompt
 } from './helper';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
+import { Commands } from '../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*

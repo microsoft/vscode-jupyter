@@ -19,9 +19,9 @@ import {
     IConfigurationService
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
-import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../../../platform/datascience/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../../platform/ioc/types';
+import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

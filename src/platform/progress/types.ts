@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { Disposable } from 'vscode';
+
 export type Progress = { action: ReportableAction; phase: 'started' | 'completed' };
 export interface IProgressReporter {
     report(progress: Progress): void;

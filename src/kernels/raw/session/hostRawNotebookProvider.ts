@@ -5,14 +5,6 @@ import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid/v4';
-import {
-    ConnectNotebookProviderOptions,
-    IDisplayOptions,
-    INotebook,
-    IRawConnection,
-    IRawNotebookProvider,
-    IRawNotebookSupportedService
-} from '../../../platform/datascience/types';
 import { injectable, inject, named } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -24,18 +16,19 @@ import {
     IConfigurationService,
     IOutputChannel,
     IDisposableRegistry,
-    Resource
+    Resource,
+    IDisplayOptions
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
-import { KernelConnectionMetadata } from '../../types';
-import { IKernelLauncher } from '../types';
+import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
+import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession';
 import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';

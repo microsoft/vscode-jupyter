@@ -8,17 +8,17 @@ import { SemVer } from 'semver';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
-import { IApplicationShell } from '../../common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../common/cancellation';
-import { traceWarning } from '../../common/logger';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { IsCodeSpace } from '../../common/types';
-import { Common, DataScience } from '../../common/utils/localize';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { traceWarning } from '../../../platform/common/logger';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types';
+import { IsCodeSpace } from '../../../platform/common/types';
+import { parseSemVer } from '../../../platform/common/utils';
+import { DataScience, Common } from '../../../platform/common/utils/localize';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { parseSemVer } from '../common';
-import { Telemetry } from '../constants';
+import { Telemetry } from '../../webview-side/common/constants';
 
 const minimumSupportedPandaVersion = '0.20.0';
 

@@ -1981,7 +1981,7 @@
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
-                "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
@@ -1990,7 +1990,7 @@
             },
             {
                 "id": "jupyter-error-renderer",
-                "entrypoint": "./out/datascience-ui/errorRenderer/errorRenderer.js",
+                "entrypoint": "./out/webviews/webview-side/errorRenderer/errorRenderer.js",
                 "displayName": "Jupyter Error Renderer",
                 "requiresMessaging": "always",
                 "mimeTypes": [
@@ -2056,9 +2056,9 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.webviews/webview-side.config.js --watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
-        "compile-widgetTester": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-widgetTester.config.js --watch",
+        "compile-widgetTester": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.webviews/webview-side-widgetTester.config.js --watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
         "preinstall": "npx npm-force-resolutions",

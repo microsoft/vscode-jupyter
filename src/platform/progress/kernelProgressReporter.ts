@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
-import { IExtensionSyncActivationService } from '../../activation/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
-import { disposeAllDisposables } from '../../common/helpers';
-import { traceError } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
+import { IExtensionSyncActivationService } from '../activation/types';
+import { createPromiseFromCancellation } from '../common/cancellation';
+import { disposeAllDisposables } from '../common/helpers';
+import { traceError } from '../common/logger';
+import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
+import { createDeferred } from '../common/utils/async';
+import { noop } from '../common/utils/misc';
 import { getUserMessageForAction } from './messages';
 import { ReportableAction } from './types';
 

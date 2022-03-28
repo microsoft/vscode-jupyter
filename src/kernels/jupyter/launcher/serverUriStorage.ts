@@ -7,9 +7,9 @@ import {
     IEncryptedStorage,
     IApplicationEnvironment
 } from '../../../platform/common/application/types';
+import { Settings } from '../../../platform/common/constants';
 import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { Settings } from '../../../platform/datascience/constants';
-import { IJupyterServerUriStorage } from '../../../platform/datascience/types';
+import { IJupyterServerUriStorage } from '../types';
 
 /**
  * Class for storing Jupyter Server URI values

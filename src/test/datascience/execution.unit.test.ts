@@ -38,12 +38,6 @@ import {
     IPathUtils
 } from '../../platform/common/types';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants';
-import { DisplayOptions } from '../../platform/datascience/displayOptions';
-import {
-    IJupyterKernelSpec,
-    IJupyterSubCommandExecutionService,
-    INotebookServer
-} from '../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
@@ -60,13 +54,15 @@ import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter'
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder';
 import { ILocalKernelFinder } from '../../kernels/raw/types';
-import { LocalKernelConnectionMetadata } from '../../kernels/types';
+import { IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { getOSType, OSType } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { INotebookServer, IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {

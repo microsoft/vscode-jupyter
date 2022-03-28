@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
+import { IDisposable } from '../../../platform/common/types';
+import { Event } from 'vscode';
+import { SharedMessages, CssMessages, IGetCssRequest, IGetCssResponse } from '../../../platform/messageTypes';
 
 export namespace PlotViewerMessages {
     export const Started = SharedMessages.Started;

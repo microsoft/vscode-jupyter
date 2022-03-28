@@ -35,7 +35,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 

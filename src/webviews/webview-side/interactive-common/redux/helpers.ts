@@ -4,9 +4,13 @@
 'use strict';
 
 import * as Redux from 'redux';
-import { CssMessages, SharedMessages } from '../../../platform/datascience/messages';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../platform/messageTypes';
-import { BaseReduxActionPayload } from '../../../webviews/types';
+import {
+    InteractiveWindowMessages,
+    CssMessages,
+    SharedMessages,
+    IInteractiveWindowMapping
+} from '../../../../platform/messageTypes';
+import { BaseReduxActionPayload } from '../../../types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { IServiceContainer } from '../../ioc/types';
-import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from '../types';
 import { IKernel } from '../../../kernels/types';
+import { IJupyterVariable } from '../../../kernels/variables/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { IJupyterVariableDataProviderFactory, IJupyterVariableDataProvider } from './types';
 
 @injectable()
 export class JupyterVariableDataProviderFactory implements IJupyterVariableDataProviderFactory {

@@ -7,7 +7,6 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
 import { RegExpValues } from '../common/constants';
-import { IJupyterVariable } from '../../platform/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
@@ -20,6 +19,7 @@ import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
 import { VariableExplorerLoadingRowsView } from './variableExplorerLoadingRows';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
 interface IVariableExplorerProps {
     baseTheme: string;
@@ -308,7 +308,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         // Subtract another 10px to take into acount the 5px margin in .variable-explorer
-        // src\datascience-ui\interactive-common\variableExplorer.css
+        // src\webviews/webview-side\interactive-common\variableExplorer.css
         return baseHeight - variableExplorerMenuBar.clientHeight - 10;
     }
 

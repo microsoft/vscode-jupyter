@@ -5,8 +5,8 @@ import './cellFormatter.css';
 
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
-import { ColumnType } from '../../platform/datascience/data-viewing/types';
 import { ISlickRow } from './reactSlickGrid';
+import { ColumnType } from '../../extension-side/dataviewer/types';
 
 interface ICellFormatterProps {
     value: string | number | object | boolean;
@@ -14,6 +14,7 @@ interface ICellFormatterProps {
 }
 
 class CellFormatter extends React.Component<ICellFormatterProps> {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(props: ICellFormatterProps) {
         super(props);
     }

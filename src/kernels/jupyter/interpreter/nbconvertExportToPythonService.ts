@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { traceError } from '../../../platform/common/logger';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types';
-import { reportAction } from '../../../platform/datascience/progress/decorator';
-import { ReportableAction } from '../../../platform/datascience/progress/types';
+import { reportAction } from '../../../platform/progress/decorator';
+import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterDaemonModule } from '../../../datascience-ui/common/constants';
+import { JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
 
 @injectable()
 export class NbConvertExportToPythonService {

@@ -28,8 +28,8 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants';
-import { IJupyterDebugService } from '../../platform/datascience/types';
 import { IProtocolParser } from '../../platform/debugger/extension/types';
+import { IJupyterDebugService } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

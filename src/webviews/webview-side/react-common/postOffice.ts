@@ -5,8 +5,8 @@
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { VSCodeEvent } from 'vscode-notebook-renderer/events';
-import { WebviewMessage } from '../../platform/common/application/types';
-import { IDisposable } from '../../platform/common/types';
+import { WebviewMessage } from '../../../platform/common/application/types';
+import { IDisposable } from '../../../platform/common/types';
 import { logMessage, logMessageOnlyOnCI } from './logger';
 
 export interface IVsCodeApi {
@@ -62,7 +62,7 @@ class VsCodeMessageApi implements IMessageApi {
             try {
                 // For testing, we might use a  browser to load  the stuff.
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
-                // See ./src/datascience-ui/native-editor/index.html
+                // See ./src/webviews/webview-side/native-editor/index.html
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {

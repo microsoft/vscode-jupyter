@@ -18,28 +18,27 @@ import { IApplicationShell, IWorkspaceService } from '../../platform/common/appl
 import { traceWarning } from '../../platform/common/logger';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
-import { DisplayOptions } from '../../platform/datascience/displayOptions';
-import {
-    IDataScienceErrorHandler,
-    IJupyterInterpreterDependencyManager,
-    IKernelDependencyService,
-    KernelInterpreterDependencyResponse
-} from '../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry, Commands } from '../../datascience-ui/common/constants';
+import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { translateProductToModule } from '../../kernels/installer/moduleInstaller';
 import { ProductNames } from '../../kernels/installer/productNames';
 import { Product } from '../../kernels/installer/types';
 import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import {
+    IKernelDependencyService,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from '../../kernels/types';
 import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
 import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import { WrappedError, BaseKernelError, WrappedKernelError, BaseError } from './types';
+import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { IJupyterInterpreterDependencyManager } from '../../kernels/jupyter/types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {

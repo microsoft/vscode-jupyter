@@ -9,8 +9,8 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { generateCellRangesFromDocument } from '../../platform/datascience/cellFactory';
 import { getAssociatedJupyterNotebook } from '../../notebooks/helpers';
+import { generateCellRangesFromDocument } from './cellFactory';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {

@@ -8,17 +8,16 @@ import { Uri } from 'vscode';
 import { traceError } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
-import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,
     isPythonKernelConnection,
     getKernelPathFromKernelConnection
 } from '../helpers';
 import { IKernel } from '../types';
-import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
  * Widget scripts are found in <python folder>/share/jupyter/nbextensions.

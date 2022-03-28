@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import { RegExpValues } from '../../platform/common/constants';
+import '../../platform/common/extensions';
+import { IJupyterSettings } from '../../platform/common/types';
 
-import { IJupyterSettings } from '../common/types';
-import { noop } from '../common/utils/misc';
-import { RegExpValues } from './constants';
+import { noop } from '../../platform/common/utils/misc';
 
 export class CellMatcher {
     public codeExecRegEx: RegExp;

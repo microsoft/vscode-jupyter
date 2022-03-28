@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../platform/messageTypes';
-import { IGetCssResponse } from '../../../../platform/datascience/messages';
+import { IGetCssResponse, InteractiveWindowMessages } from '../../../../../platform/messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';

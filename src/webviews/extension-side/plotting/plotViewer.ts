@@ -1,27 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
-import { traceInfo } from '../../../platform/common/logger';
+import { traceError, traceInfo } from '../../../platform/common/logger';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
-
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
-import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
-import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
+import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
+import {
+    IWebviewPanelProvider,
+    IWorkspaceService,
+    IApplicationShell
+} from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import * as localize from '../../../platform/common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { WebviewPanelHost } from '../webviewPanelHost';
 
-const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();

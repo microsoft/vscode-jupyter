@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookEditor, Uri } from 'vscode';
+import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { IKernel, KernelConnectionMetadata } from '../kernels/types';
+import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 

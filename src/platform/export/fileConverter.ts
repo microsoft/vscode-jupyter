@@ -1,19 +1,19 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri, workspace } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { traceError } from '../../common/logger';
-import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IConfigurationService, IExtensions } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../constants';
+import { IApplicationShell } from '../common/application/types';
+import { traceError } from '../common/logger';
+import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
+import { IConfigurationService, IExtensions } from '../common/types';
+import * as localize from '../common/utils/localize';
+import { PythonEnvironment } from '../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
 import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
+import { Telemetry } from '../common/constants';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()

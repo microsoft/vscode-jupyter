@@ -3,10 +3,13 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisposable, Resource } from '../../platform/common/types';
-import { INotebookProviderConnection } from '../../platform/datascience/types';
+import { CancellationToken, Event, NotebookDocument } from 'vscode';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
+    ConnectNotebookProviderOptions,
+    INotebook,
+    INotebookProviderConnection,
+    IRawConnection,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,

@@ -11,9 +11,8 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logg
 import { IFileSystem, TemporaryFile } from '../../platform/common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';

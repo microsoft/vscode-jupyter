@@ -12,6 +12,15 @@ import { IDisposableRegistry, IConfigurationService, Resource } from '../../../p
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
+import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
+import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
+
+import { NotebookStarter } from './notebookStarter';
+import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,
     IJupyterSubCommandExecutionService,
@@ -19,17 +28,8 @@ import {
     IJupyterServerUri,
     INotebookServerOptions,
     INotebookServer,
-    IJupyterConnection,
     JupyterServerUriHandle
-} from '../../../platform/datascience/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { IServiceContainer } from '../../../platform/ioc/types';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry, Identifiers } from '../../../datascience-ui/common/constants';
-import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
-
-import { NotebookStarter } from './notebookStarter';
+} from '../types';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 

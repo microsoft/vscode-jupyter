@@ -17,7 +17,7 @@ suite('Dummy10', () => {
 // import { Disposable } from 'vscode';
 
 // import { IPlotViewerProvider } from '../../platform/datascience/types';
-// import { MainPanel } from '../../datascience-ui/plot/mainPanel';
+// import { MainPanel } from '../../webviews/webview-side/plot/mainPanel';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // // import { asyncDump } from '../common/asyncDump';

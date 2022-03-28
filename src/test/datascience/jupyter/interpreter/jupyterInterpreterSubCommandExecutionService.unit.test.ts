@@ -20,7 +20,6 @@ import {
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
-import { JupyterDaemonModule } from '../../../../platform/datascience/constants';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -33,6 +32,7 @@ import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpret
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterServerInfo } from '../../../../kernels/jupyter/launcher/jupyterConnection';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths';
+import { JupyterDaemonModule } from '../../../../platform/common/constants';
 use(chaiPromise);
 
 /* eslint-disable  */

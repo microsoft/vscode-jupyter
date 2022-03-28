@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
+import { Resource } from '../common/types';
 
 export abstract class BaseError extends Error {
     public stdErr?: string;

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { IGetSliceRequest } from '../../platform/datascience/data-viewing/types';
-import { SliceOperationSource } from '../../telemetry/constants';
+import { SliceOperationSource } from '../../../telemetry/constants';
+import { IGetSliceRequest } from '../../extension-side/dataviewer/types';
 import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';
 import {
@@ -267,6 +268,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     }
                 } else {
                     // Unset dropdowns
+                    // eslint-disable-next-line no-restricted-syntax
                     for (const key in this.state) {
                         if (key.startsWith('selected')) {
                             (state as any)[key] = null;
@@ -314,6 +316,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
 
     private generateAxisDropdownOptions = () => {
         const selectedAxes = new Set();
+        // eslint-disable-next-line no-restricted-syntax
         for (const key in this.state) {
             if (key.startsWith('selectedAxis')) {
                 selectedAxes.add(this.state[key]);

@@ -4,7 +4,6 @@
 'use strict';
 
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
-import { IDataScienceCommandListener, INotebookEditorProvider } from '../platform/datascience/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
@@ -25,8 +24,9 @@ import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms'
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
 import { RendererCommunication } from './outputs/rendererCommunication';
-import { INotebookLanguageClientProvider, INotebookControllerManager } from './types';
+import { INotebookLanguageClientProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
+import { IDataScienceCommandListener } from '../platform/common/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);

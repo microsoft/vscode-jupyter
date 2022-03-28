@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { window } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IExtensionContext } from '../../common/types';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionContext } from '../../../platform/common/types';
 import { IVariableViewProvider } from './types';
 
 // Responsible for registering our Native Notebook variable view

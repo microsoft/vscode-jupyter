@@ -23,7 +23,7 @@ import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,

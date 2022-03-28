@@ -11,9 +11,9 @@ import {
     ExecutionResult
 } from '../../../platform/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../platform/datascience/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterCommands } from '../../../datascience-ui/common/constants';
+import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 class InterpreterJupyterCommand implements IJupyterCommand {
     private pythonLauncher: Promise<IPythonExecutionService>;

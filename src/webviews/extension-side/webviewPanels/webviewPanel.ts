@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../extensions';
+import '../../../platform/common/extensions';
 
 import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { IFileSystem } from '../../platform/types';
-import { IDisposableRegistry } from '../../types';
-import { IWebviewPanel, IWebviewPanelOptions } from '../types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import { IWebviewPanel, IWebviewPanelOptions } from '../../../platform/common/application/types';
 import { Webview } from '../webviews/webview';
 
 export class WebviewPanel extends Webview implements IWebviewPanel {

@@ -14,18 +14,17 @@ import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { getResourceType } from '../../platform/datascience/common';
-import { KernelProgressReporter } from '../../platform/datascience/progress/kernelProgressReporter';
-import { IJupyterSession, ISessionWithSocket, KernelSocketInformation } from '../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { suppressShutdownErrors } from '../raw/session/rawKernel';
-import { KernelConnectionMetadata } from '../types';
+import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
+import { getResourceType } from '../../platform/common/utils';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 
 /**
  * Exception raised when starting a Jupyter Session fails.

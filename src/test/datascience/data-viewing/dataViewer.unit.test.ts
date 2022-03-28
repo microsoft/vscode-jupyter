@@ -11,17 +11,18 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { WebviewPanelProvider } from '../../../platform/common/application/webviewPanels/webviewPanelProvider';
+import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service';
 import { IConfigurationService } from '../../../platform/common/types';
-import { CodeCssGenerator } from '../../../platform/datascience/codeCssGenerator';
-import { DataViewer } from '../../../platform/datascience/data-viewing/dataViewer';
-import { JupyterVariableDataProvider } from '../../../platform/datascience/data-viewing/jupyterVariableDataProvider';
-import { IDataViewer, IDataViewerDataProvider } from '../../../platform/datascience/data-viewing/types';
-import { ThemeFinder } from '../../../platform/datascience/themeFinder';
-import { ICodeCssGenerator, IDataScienceErrorHandler, IThemeFinder } from '../../../platform/datascience/types';
+import { IDataScienceErrorHandler } from '../../../platform/errors/types';
+import { CodeCssGenerator } from '../../../webviews/extension-side/codeCssGenerator';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
+import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
+import { ThemeFinder } from '../../../webviews/extension-side/themeFinder';
+import { ICodeCssGenerator, IThemeFinder } from '../../../webviews/extension-side/types';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - DataViewer', () => {

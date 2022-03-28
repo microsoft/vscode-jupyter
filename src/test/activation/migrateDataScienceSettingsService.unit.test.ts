@@ -6,9 +6,9 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../platform/commo
 import { WorkspaceService } from '../../platform/common/application/workspace';
 import { PersistentStateFactory, PersistentState } from '../../platform/common/persistentState';
 import { IPersistentStateFactory } from '../../platform/common/types';
-import { IJupyterServerUriStorage } from '../../platform/datascience/types';
 import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage';
 import { MockFileSystem } from '../datascience/mockFileSystem';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 
 suite('Migrate data science settings', () => {
     const fs = new MockFileSystem();

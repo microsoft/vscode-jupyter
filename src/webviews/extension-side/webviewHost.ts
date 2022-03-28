@@ -3,7 +3,7 @@
 
 'use strict';
 
-import '../../common/extensions';
+import '../../platform/common/extensions';
 
 import {
     ConfigurationChangeEvent,
@@ -14,20 +14,19 @@ import {
     WebviewView as vscodeWebviewView,
     WorkspaceConfiguration
 } from 'vscode';
+import { IWebview, IWorkspaceService } from '../../platform/common/application/types';
+import { isTestExecution } from '../../platform/common/constants';
+import { traceInfo } from '../../platform/common/logger';
+import { Resource, IConfigurationService, IDisposable } from '../../platform/common/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { testOnlyMethod } from '../../platform/common/utils/decorators';
+import * as localize from '../../platform/common/utils/localize';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { InteractiveWindowMessages, SharedMessages, CssMessages, IGetCssRequest } from '../../platform/messageTypes';
+import { sendTelemetryEvent, captureTelemetry } from '../../telemetry';
+import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
+import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
 
-import { IWebview, IWorkspaceService } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
-import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
-import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
-import { testOnlyMethod } from '../../common/utils/decorators';
-import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export abstract class WebviewHost<IMapping> implements IDisposable {

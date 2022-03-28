@@ -11,20 +11,20 @@ import { traceInfo } from '../../../platform/common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { Settings } from '../../../platform/datascience/constants';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { Settings } from '../../../platform/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { DisplayOptions } from '../../displayOptions';
+import { GetServerOptions } from '../../types';
 import {
     IJupyterServerProvider,
     INotebookServer,
     IJupyterExecution,
     IJupyterServerUriStorage,
-    GetServerOptions,
     INotebookServerOptions
-} from '../../../platform/datascience/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+} from '../types';
 
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {

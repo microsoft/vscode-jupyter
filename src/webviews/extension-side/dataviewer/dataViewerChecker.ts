@@ -1,8 +1,8 @@
 import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
-import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
-import { ColumnWarningSize } from '../../platform/datascience/data-viewing/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { IConfigurationService, Resource } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { ColumnWarningSize } from './types';
 
 // This helper class validates requests to show large data in the data viewer and configures related settings.
 export class DataViewerChecker {

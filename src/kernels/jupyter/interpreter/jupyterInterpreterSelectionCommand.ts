@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { ICommandManager } from '../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
 @injectable()

@@ -20,7 +20,7 @@ import {
 import { IDocumentManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
+import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
 import { isUri } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -28,17 +28,12 @@ import { traceDecorators } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/trace';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
-import { CellMatcher } from '../../platform/datascience/cellMatcher';
-import { Commands, Identifiers, Telemetry } from '../../platform/datascience/constants';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
-import {
-    ICellRange,
-    ICodeLensFactory,
-    ICodeWatcher,
-    IDataScienceErrorHandler,
-    IInteractiveWindow,
-    IInteractiveWindowProvider
-} from '../../platform/datascience/types';
+import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
+import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
+import { CellMatcher } from './cellMatcher';
+import { ICodeWatcher, ICodeLensFactory } from './types';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing

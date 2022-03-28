@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../../platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../../types';
-import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { WebviewPanel } from './webviewPanel';
 
 @injectable()

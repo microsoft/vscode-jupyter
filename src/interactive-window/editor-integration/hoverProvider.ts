@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation';
-import { PYTHON } from '../../platform/common/constants';
+import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -15,11 +15,11 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../../platform/datascience/types';
+import { IJupyterVariables } from '../../kernels/variables/types';
+import { IInteractiveWindowProvider } from '../types';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();

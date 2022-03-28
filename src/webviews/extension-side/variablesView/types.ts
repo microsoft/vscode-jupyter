@@ -1,9 +1,17 @@
 import { Event } from 'vscode';
-import { IVariableExplorerHeight } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { InteractiveWindowMessages, IShowDataViewer, IFinishCell } from '../../../platform/messageTypes';
+import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
+import {
+    InteractiveWindowMessages,
+    IShowDataViewer,
+    IFinishCell,
+    CssMessages,
+    IGetCssRequest,
+    IGetCssResponse,
+    SharedMessages
+} from '../../../platform/messageTypes';
 import { IKernel } from '../../../kernels/types';
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { IJupyterVariablesRequest, IJupyterVariablesResponse, IVSCWebviewViewProvider } from '../types';
+import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
+import { IVSCWebviewViewProvider } from '../types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {

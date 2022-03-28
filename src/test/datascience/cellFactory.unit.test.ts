@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { generateCells } from '../../platform/datascience/cellFactory';
-import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
+import { removeLinesFromFrontAndBack, stripComments } from '../../webviews/webview-side/common';
 import * as vscode from 'vscode';
+import { generateCells } from '../../interactive-window/editor-integration/cellFactory';
 
 /* eslint-disable  */
 suite('DataScience CellFactory', () => {

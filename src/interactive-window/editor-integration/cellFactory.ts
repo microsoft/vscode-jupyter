@@ -1,18 +1,68 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../platform/common/extensions';
 
+import type * as nbformat from '@jupyterlab/nbformat';
 import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
-import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
-import { createCodeCell, createMarkdownCell, uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
-import { IJupyterSettings, Resource } from '../common/types';
-import { noop } from '../common/utils/misc';
+import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from '../../webviews/webview-side/common';
 import { CellMatcher } from './cellMatcher';
-import { ICell, ICellRange } from './types';
 import { getInteractiveCellMetadata } from '../../interactive-window/interactiveWindow';
 import { createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
+import { ICell, ICellRange, IJupyterSettings, Resource } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
+
+export function createCodeCell(): nbformat.ICodeCell;
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export function createCodeCell(code: string): nbformat.ICodeCell;
+export function createCodeCell(code: string[], outputs: nbformat.IOutput[]): nbformat.ICodeCell;
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export function createCodeCell(code: string[], magicCommandsAsComments: boolean): nbformat.ICodeCell;
+export function createCodeCell(code?: string | string[], options?: boolean | nbformat.IOutput[]): nbformat.ICodeCell {
+    const magicCommandsAsComments = typeof options === 'boolean' ? options : false;
+    const outputs = typeof options === 'boolean' ? [] : options || [];
+    code = code || '';
+    // If we get a string, then no need to append line feeds. Leave as is (to preserve existing functionality).
+    // If we get an array, the append a linefeed.
+    const source = Array.isArray(code)
+        ? appendLineFeed(code, '\n', magicCommandsAsComments ? uncommentMagicCommands : undefined)
+        : code;
+    return {
+        cell_type: 'code',
+        execution_count: null,
+        metadata: {},
+        outputs,
+        source
+    };
+}
+
+export function createMarkdownCell(code: string | string[], useSourceAsIs: boolean = false): nbformat.IMarkdownCell {
+    code = Array.isArray(code) ? code : [code];
+    return {
+        cell_type: 'markdown',
+        metadata: {},
+        source: useSourceAsIs ? code : generateMarkdownFromCodeLines(code)
+    };
+}
+
+export function uncommentMagicCommands(line: string): string {
+    // Uncomment lines that are shell assignments (starting with #!),
+    // line magic (starting with #!%) or cell magic (starting with #!%%).
+    if (/^#\s*!/.test(line)) {
+        // If the regex test passes, it's either line or cell magic.
+        // Hence, remove the leading # and ! including possible white space.
+        if (/^#\s*!\s*%%?/.test(line)) {
+            return line.replace(/^#\s*!\s*/, '');
+        }
+        // If the test didn't pass, it's a shell assignment. In this case, only
+        // remove leading # including possible white space.
+        return line.replace(/^#\s*/, '');
+    } else {
+        // If it's regular Python code, just return it.
+        return line;
+    }
+}
 
 function generateCodeCell(code: string[], uri: Uri | undefined, magicCommandsAsComments: boolean): ICell {
     // Code cells start out with just source and no outputs.

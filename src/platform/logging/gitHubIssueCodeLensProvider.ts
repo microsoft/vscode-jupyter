@@ -1,10 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { GITHUB_ISSUE_MARKDOWN_FILE } from '../common/constants';
+import { Commands, GITHUB_ISSUE_MARKDOWN_FILE } from '../common/constants';
 import { IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
-import { Commands } from '../datascience/constants';
 import { generateCommand } from '../../interactive-window/editor-integration/codeLensFactory';
 
 @injectable()

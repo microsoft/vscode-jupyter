@@ -1,3 +1,30 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+import type * as nbformat from '@jupyterlab/nbformat';
+import type { Kernel, Session } from '@jupyterlab/services';
+import { Event } from 'vscode';
+import { SemVer } from 'semver';
+import { Uri, QuickPickItem } from 'vscode';
+import { CancellationToken, Disposable } from 'vscode-jsonrpc';
+import { JupyterCommands } from '../../platform/common/constants';
+import { SpawnOptions, ExecutionResult, ObservableExecutionResult } from '../../platform/common/process/types';
+import { IAsyncDisposable, ICell, IDisplayOptions, Resource } from '../../platform/common/types';
+import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import {
+    KernelConnectionMetadata,
+    INotebook,
+    IJupyterConnection,
+    ConnectNotebookProviderOptions,
+    NotebookCreationOptions,
+    IJupyterSession,
+    IJupyterKernelSpec,
+    GetServerOptions
+} from '../types';
+import { JupyterInterpreterDependencyResponse } from './interpreter/jupyterInterpreterDependencyService';
+import { JupyterServerInfo } from './launcher/jupyterConnection';
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {

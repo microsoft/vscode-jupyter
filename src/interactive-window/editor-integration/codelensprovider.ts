@@ -19,10 +19,16 @@ import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CodeLensCommands, EditorContexts, Telemetry } from '../../platform/datascience/constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../platform/datascience/types';
 import { traceInfoIfCI } from '../../platform/common/logger';
-import { PYTHON_FILE, PYTHON_UNTITLED } from '../../platform/common/constants';
+import {
+    CodeLensCommands,
+    EditorContexts,
+    PYTHON_FILE,
+    PYTHON_UNTITLED,
+    Telemetry
+} from '../../platform/common/constants';
+import { IDebugLocationTracker } from '../../platform/debugger/types';
+import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {

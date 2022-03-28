@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
+import { DebugConfiguration, Event } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebugService } from '../../platform/common/application/types';
+
 export interface ISourceMapMapping {
     line: number;
     endLine: number;

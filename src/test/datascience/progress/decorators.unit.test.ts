@@ -5,13 +5,9 @@
 
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
 import { createDeferred } from '../../../platform/common/utils/async';
-import {
-    disposeRegisteredReporters,
-    registerReporter,
-    reportAction
-} from '../../../platform/datascience/progress/decorator';
-import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
-import { IProgressReporter, ReportableAction } from '../../../platform/datascience/progress/types';
+import { reportAction, registerReporter, disposeRegisteredReporters } from '../../../platform/progress/decorator';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { IProgressReporter, ReportableAction } from '../../../platform/progress/types';
 import { noop } from '../../core';
 
 suite('DataScience - Progress Reporter Decorator', () => {

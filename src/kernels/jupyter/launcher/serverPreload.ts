@@ -13,16 +13,12 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
-import {
-    IInteractiveWindowProvider,
-    INotebookProvider,
-    IRawNotebookProvider,
-    IInteractiveWindow
-} from '../../../platform/datascience/types';
 import { getKernelConnectionLanguage } from '../../helpers';
-import { IKernel, IKernelProvider } from '../../types';
+import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
+import { DisplayOptions } from '../../displayOptions';
+import { IRawNotebookProvider } from '../../raw/types';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';

@@ -20,14 +20,15 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
-import { ReportableAction } from '../../../platform/datascience/progress/types';
-import { IJupyterSubCommandExecutionService, IJupyterConnection } from '../../../platform/datascience/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../webviews/webview-side/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { WrappedError } from '../../../platform/errors/types';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { ReportableAction } from '../../../platform/progress/types';
+import { IJupyterConnection } from '../../types';
+import { IJupyterSubCommandExecutionService } from '../types';
 
 /**
  * Responsible for starting a notebook.

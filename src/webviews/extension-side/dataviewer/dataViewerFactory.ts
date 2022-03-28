@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../../telemetry';
-import { Commands, EditorContexts, Telemetry } from '../constants';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
-import { ICommandManager } from '../../common/application/types';
-import { ContextKey } from '../../common/contextKey';
 import { debounce } from 'lodash';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { ContextKey } from '../../../platform/common/contextKey';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { EditorContexts, Commands, Telemetry } from '../../webview-side/common/constants';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {

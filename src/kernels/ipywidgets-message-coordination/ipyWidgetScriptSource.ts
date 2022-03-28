@@ -20,14 +20,13 @@ import {
 } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
-import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
-import { WidgetScriptSource } from './types';
+import { ILocalResourceUriConverter, WidgetScriptSource } from './types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');

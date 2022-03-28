@@ -1,13 +1,13 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
-import { IFileSystem } from '../../common/platform/types';
+import { IJupyterSubCommandExecutionService, INotebookImporter } from '../../kernels/jupyter/types';
+import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
 
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportFormat, INbConvertExport } from './types';
 
 @injectable()

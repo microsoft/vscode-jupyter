@@ -1,4 +1,4 @@
-import { OSType } from '../../platform/common/utils/platform';
+import { OSType } from '../../../platform/common/utils/platform';
 
 // Javascript keyCodes
 export const KeyCodes = {

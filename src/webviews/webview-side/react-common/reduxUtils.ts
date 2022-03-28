@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Action, AnyAction, Middleware, Reducer } from 'redux';
-import { BaseReduxActionPayload } from '../../webviews/types';
+import { BaseReduxActionPayload } from '../../types';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 interface TypedAnyAction<T> extends Action<T> {

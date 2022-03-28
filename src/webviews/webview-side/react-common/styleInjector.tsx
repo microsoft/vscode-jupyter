@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
+import { CssMessages, SharedMessages, IGetCssResponse } from '../../../platform/messageTypes';
+import { IJupyterExtraSettings } from '../../extension-side/types';
 
-import { CssMessages, IGetCssResponse, SharedMessages } from '../../platform/datascience/messages';
-import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
 import { detectBaseTheme } from './themeDetector';
 

@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
+import type * as nbformat from '@jupyterlab/nbformat';
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
-import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { BannerType } from './dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';

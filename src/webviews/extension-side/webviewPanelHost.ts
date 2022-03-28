@@ -1,21 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../platform/common/extensions';
 
 import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
+import { WebviewHost } from './webviewHost';
 import {
-    IWebview,
     IWebviewPanel,
     IWebviewPanelMessageListener,
     IWebviewPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
-import { WebviewHost } from './webviewHost';
+    IWorkspaceService,
+    IWebview
+} from '../../platform/common/application/types';
+import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs, IJupyterExtraSettings } from './types';
 
 export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
@@ -93,7 +92,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     }
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
-        noop();
+        // Nothing to do here
     }
 
     protected async provideWebview(

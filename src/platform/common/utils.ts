@@ -2,13 +2,24 @@
 // Licensed under the MIT License.
 'use strict';
 
+import type * as nbformat from '@jupyterlab/nbformat';
+import * as os from 'os';
 import * as path from 'path';
+import * as fsExtra from 'fs-extra';
+import { SemVer, parse } from 'semver';
 import untildify = require('untildify');
+import { Uri } from 'vscode';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { splitMultilineString } from '../../webviews/webview-side/common';
 
 import { IWorkspaceService } from './application/types';
+import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
+import { traceError, traceInfo } from './logger';
 import { IFileSystem } from './platform/types';
 
-import { IConfigurationService, Resource } from './types';
+import { ICell, IConfigurationService, Resource } from './types';
+import { DataScience } from './utils/localize';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,

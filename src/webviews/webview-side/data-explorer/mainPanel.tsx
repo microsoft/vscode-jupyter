@@ -5,20 +5,6 @@ import './mainPanel.css';
 
 import * as React from 'react';
 
-import {
-    CellFetchAllLimit,
-    CellFetchSizeFirst,
-    CellFetchSizeSubsequent,
-    ColumnType,
-    DataViewerMessages,
-    IDataFrameInfo,
-    IDataViewerMapping,
-    IGetRowsResponse,
-    IGetSliceRequest,
-    IRowsResponse
-} from '../../platform/datascience/data-viewing/types';
-import { SharedMessages } from '../../platform/datascience/messages';
-import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
@@ -34,6 +20,20 @@ import { debounce } from 'lodash';
 import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
+import { SharedMessages } from '../../../platform/messageTypes';
+import {
+    IDataViewerMapping,
+    DataViewerMessages,
+    IRowsResponse,
+    IGetRowsResponse,
+    IDataFrameInfo,
+    CellFetchAllLimit,
+    CellFetchSizeFirst,
+    CellFetchSizeSubsequent,
+    ColumnType,
+    IGetSliceRequest
+} from '../../extension-side/dataviewer/types';
+import { IJupyterExtraSettings } from '../../extension-side/types';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);

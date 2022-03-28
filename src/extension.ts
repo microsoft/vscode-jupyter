@@ -64,12 +64,12 @@ import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './datascience-ui/common/constants';
+import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry';
-import { registerTypes as registerWebviewTypes } from './webviews/serviceRegistry';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry';
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry';
 import { IExtensionActivationManager } from './platform/activation/types';
@@ -77,7 +77,6 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/cons
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import { IFileSystem } from './platform/common/platform/types';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
-import { IDataScience } from './platform/datascience/types';
 import { addOutputChannelLogging, setLoggingLevel } from './platform/logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { Container } from 'inversify/lib/container/container';
@@ -157,7 +156,7 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        const { activationPromise } = await activateComponents(context, serviceManager, serviceContainer);
+        const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================
         // activation ends here
@@ -323,15 +322,11 @@ async function activateLegacy(
     manager.activateSync();
     const activationPromise = manager.activate();
 
-    // Activate data science features after base features.
-    const dataScience = serviceManager.get<IDataScience>(IDataScience);
-    const dsActivationPromise = dataScience.activate();
-
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
 
-    return { activationPromise: activationPromise.then(() => dsActivationPromise) };
+    return activationPromise;
 }
 
 function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {

@@ -9,11 +9,11 @@ import { isTestExecution } from '../../../platform/common/constants';
 import { traceError, traceInfo } from '../../../platform/common/logger';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { IKernelSocket } from '../../../platform/datascience/types';
 import { getNameOfKernelConnection } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket';
+import { IKernelSocket } from '../../types';
 
 export function suppressShutdownErrors(realKernel: any) {
     // When running under a test, mark all futures as done so we

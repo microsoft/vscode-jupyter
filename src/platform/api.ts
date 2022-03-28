@@ -4,14 +4,15 @@
 'use strict';
 
 import { ExtensionMode } from 'vscode';
+import { IJupyterUriProvider, IJupyterUriProviderRegistration } from '../kernels/jupyter/types';
+import { INotebookEditorProvider } from '../notebooks/types';
+import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './api/extension';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';
-import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookEditorProvider } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*

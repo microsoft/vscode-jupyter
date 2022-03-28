@@ -9,9 +9,10 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { Resource } from '../../platform/common/types';
 import { SystemVariables } from '../../platform/common/variables/systemVariables';
-import { IJupyterServerUri, IJupyterConnection } from '../../platform/datascience/types';
 import { getJupyterConnectionDisplayName } from './launcher/jupyterConnection';
 import { noop } from '../../platform/common/utils/misc';
+import { IJupyterConnection } from '../types';
+import { IJupyterServerUri } from './types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,

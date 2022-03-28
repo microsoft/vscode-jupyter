@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IJupyterExtraSettings } from '../../platform/datascience/types';
+
+import { IJupyterExtraSettings } from '../../extension-side/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests

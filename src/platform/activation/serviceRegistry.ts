@@ -3,12 +3,12 @@
 
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IJupyterExtensionBanner, ISurveyBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../common/dataScienceSurveyBanner';
-import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 import { MigrateDataScienceSettingsService } from './migrateDataScienceSettingsService';
 
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import { InteractiveShiftEnterBanner } from '../../interactive-window/shiftEnterBanner';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {

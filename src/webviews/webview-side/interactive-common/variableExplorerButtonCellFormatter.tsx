@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 
-import { IJupyterVariable } from '../../platform/datascience/types';
 import './variableExplorerButtonCellFormatter.css';
 
 export interface IButtonCellValue {

@@ -5,19 +5,16 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
+import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../interactive-window/shiftEnterBanner';
 
 import { IApplicationShell } from '../../platform/common/application/types';
+import { Telemetry } from '../../platform/common/constants';
 import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { Telemetry } from '../../platform/datascience/constants';
-import {
-    InteractiveShiftEnterBanner,
-    InteractiveShiftEnterStateKeys
-} from '../../platform/datascience/shiftEnterBanner';
 import { clearTelemetryReporter } from '../../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {

@@ -3,10 +3,9 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
-
-import { IExtensions } from '../common/types';
+import { traceError } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IExtensions } from '../../platform/common/types';
 import { IThemeFinder } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

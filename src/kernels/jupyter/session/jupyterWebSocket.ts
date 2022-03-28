@@ -4,8 +4,8 @@
 import * as WebSocketWS from 'ws';
 import { traceError } from '../../../platform/common/logger';
 import { noop } from '../../../platform/common/utils/misc';
-import { IKernelSocket } from '../../../platform/datascience/types';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
+import { IKernelSocket } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR

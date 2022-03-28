@@ -2,13 +2,16 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type * as nbformat from '@jupyterlab/nbformat';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../platform/messageTypes';
-import { SharedMessages } from '../../../platform/datascience/messages';
 import { logMessage } from '../../react-common/logger';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
+import {
+    SharedMessages,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../../../platform/messageTypes';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;

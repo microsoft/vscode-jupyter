@@ -3,8 +3,8 @@
 'use strict';
 
 import * as React from 'react';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 
-import { IJupyterVariable } from '../../platform/datascience/types';
 import { VariableExplorer } from './variableExplorer';
 
 export interface IVariablePanelProps {

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { WebviewViewProvider } from 'vscode';
+import { Resource, IJupyterSettings } from '../../platform/common/types';
+
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string>;

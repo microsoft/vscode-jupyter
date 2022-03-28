@@ -22,12 +22,13 @@ import { IConfigurationService, IDisposableRegistry } from '../platform/common/t
 import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { Settings } from '../platform/datascience/constants';
-import { IInteractiveWindowProvider, IJupyterSession, INotebookCompletion } from '../platform/datascience/types';
-import { IKernelProvider } from '../kernels/types';
+import { IJupyterSession, IKernelProvider } from '../kernels/types';
 import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion';
+import { IInteractiveWindowProvider } from '../interactive-window/types';
+import { Settings } from '../platform/common/constants';
+import { INotebookCompletion } from './types';
 
 // Type that holds extra string (makes it quicker to filter). Exported for testing
 export type JupyterCompletionItem = CompletionItem & {

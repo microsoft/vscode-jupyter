@@ -4,20 +4,19 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../activation/types';
-import { IPythonExtensionChecker } from '../api/types';
-import '../common/extensions';
-import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
-import { IDisposableRegistry } from '../common/types';
-import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterDaemonModule, Telemetry } from './constants';
-import { ActiveEditorContextService } from '../../interactive-window/commands/activeEditorContext';
-import { IRawNotebookSupportedService } from './types';
-import { IVSCodeNotebook } from '../common/application/types';
 import { NotebookDocument } from 'vscode';
-import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import { isJupyterNotebook } from '../../notebooks/helpers';
+import { ActiveEditorContextService } from '../interactive-window/commands/activeEditorContext';
+import { isJupyterNotebook } from '../notebooks/helpers';
+import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IPythonExtensionChecker } from '../platform/api/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { Telemetry, JupyterDaemonModule } from '../platform/common/constants';
+import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types';
+import { IDisposableRegistry } from '../platform/common/types';
+import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators';
+import { sendTelemetryEvent } from '../telemetry';
+import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
+import { IRawNotebookSupportedService } from './raw/types';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {

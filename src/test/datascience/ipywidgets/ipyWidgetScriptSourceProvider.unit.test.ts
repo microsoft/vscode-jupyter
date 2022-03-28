@@ -15,12 +15,12 @@ import { IPythonExecutionFactory } from '../../../platform/common/process/types'
 import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
-import { ILocalResourceUriConverter } from '../../../platform/datascience/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
+import { ILocalResourceUriConverter } from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 

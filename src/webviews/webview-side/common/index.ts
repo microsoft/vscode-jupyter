@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { noop } from '../../platform/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';
@@ -68,7 +67,9 @@ export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
         str.splitLines({ trim: false, removeEmptyEntries: false }),
-        (_s) => noop,
+        (_s) => {
+            // Do nothing
+        },
         (s) => (result = result.concat(`${s}\n`))
     );
     return result;
@@ -189,7 +190,9 @@ function extractComments(lines: string[]): string[] {
     parseForComments(
         lines,
         (s) => result.push(s),
-        (_s) => noop()
+        (_s) => {
+            // Do nothing
+        }
     );
     return result;
 }

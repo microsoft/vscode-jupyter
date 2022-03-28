@@ -5,12 +5,11 @@ import type { JSONArray, JSONObject } from '@lumino/coreutils';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IWorkspaceService } from '../common/application/types';
-import { traceError, traceInfo, traceWarning } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
-
-import { IConfigurationService, Resource } from '../common/types';
-import { DefaultTheme } from './constants';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { traceInfo, traceError, traceWarning } from '../../platform/common/logger';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IConfigurationService, Resource } from '../../platform/common/types';
+import { DefaultTheme } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

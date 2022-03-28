@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IDisposable } from '../../common/types';
-import { SharedMessages } from '../messages';
 import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
+import { IJupyterVariable } from '../../../kernels/variables/types';
+import { IDisposable } from '../../../platform/common/types';
+import { SharedMessages } from '../../../platform/messageTypes';
 import { SliceOperationSource } from '../../../telemetry/constants';
 
 export const CellFetchAllLimit = 100000;

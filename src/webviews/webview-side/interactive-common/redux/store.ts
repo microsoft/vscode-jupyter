@@ -3,9 +3,9 @@
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
+import { InteractiveWindowMessages } from '../../../../platform/messageTypes';
+import { BaseReduxActionPayload } from '../../../types';
 
-import { InteractiveWindowMessages } from '../../../platform/messageTypes';
-import { BaseReduxActionPayload } from '../../../webviews/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';

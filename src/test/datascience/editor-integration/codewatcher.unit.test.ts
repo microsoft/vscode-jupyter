@@ -27,17 +27,9 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService } from '../../../platform/common/types';
-import { Commands, EditorContexts } from '../../../platform/datascience/constants';
 import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../interactive-window/editor-integration/codewatcher';
-import {
-    ICodeWatcher,
-    IDataScienceErrorHandler,
-    IDebugLocationTracker,
-    IInteractiveWindow,
-    IInteractiveWindowProvider
-} from '../../../platform/datascience/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { ICodeExecutionHelper } from '../../../platform/terminals/types';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -48,6 +40,11 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
+import { ICodeWatcher } from '../../../interactive-window/editor-integration/types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
+import { Commands, EditorContexts } from '../../../platform/common/constants';
+import { IDebugLocationTracker } from '../../../platform/debugger/types';
+import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

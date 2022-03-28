@@ -1,41 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IWebviewViewProvider,
-    IWorkspaceService
-} from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../constants';
-import { IDataViewer, IDataViewerFactory } from '../data-viewing/types';
-import {
-    ICodeCssGenerator,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
-    IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    IThemeFinder
-} from '../types';
-import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
-import { ContextKey } from '../../common/contextKey';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
-import { DataViewerChecker } from '../../../webviews/dataviewer/dataViewerChecker';
+import {
+    IJupyterVariables,
+    IJupyterVariablesRequest,
+    IJupyterVariablesResponse
+} from '../../../kernels/variables/types';
+import {
+    IWorkspaceService,
+    IWebviewViewProvider,
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager
+} from '../../../platform/common/application/types';
+import { ContextKey } from '../../../platform/common/contextKey';
+import { traceError } from '../../../platform/common/logger';
+import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
+import * as localize from '../../../platform/common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { Telemetry } from '../../webview-side/common/constants';
+import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
+import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
+import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { WebviewViewHost } from '../webviewViewHost';
 
-const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection

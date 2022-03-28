@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../platform/common/extensions';
 
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
+import { WebviewHost } from './webviewHost';
 import {
-    IWebview,
     IWebviewView,
     IWebviewViewMessageListener,
+    IWorkspaceService,
     IWebviewViewProvider,
-    IWorkspaceService
-} from '../../common/application/types';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
-import { WebviewHost } from './webviewHost';
+    IWebview
+} from '../../platform/common/application/types';
+import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
+import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
 
 export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {

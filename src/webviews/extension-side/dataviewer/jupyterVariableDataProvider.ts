@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { Identifiers } from '../constants';
-import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
-import { traceError } from '../../common/logger';
+import { ColumnType, IDataFrameInfo, IJupyterVariableDataProvider, IRowsResponse } from './types';
 import { IKernel } from '../../../kernels/types';
+import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
+import { traceError } from '../../../platform/common/logger';
+import { Identifiers } from '../../webview-side/common/constants';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {

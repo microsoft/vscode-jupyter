@@ -11,16 +11,16 @@ import {
     NotebookDocument,
     NotebookEditor
 } from 'vscode';
-import { IVSCodeNotebook } from '../../common/application/types';
-import '../../common/extensions';
-import { IDisposableRegistry } from '../../common/types';
-import { IDataViewerFactory } from '../data-viewing/types';
+import '../../../platform/common/extensions';
 import { getActiveInteractiveWindow } from '../../../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
-import { IInteractiveWindowProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
+import { IInteractiveWindowProvider } from '../../../interactive-window/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import { IDataViewerFactory } from '../dataviewer/types';
 
 type KernelStateEventArgs = {
     notebook: NotebookDocument;

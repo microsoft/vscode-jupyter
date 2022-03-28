@@ -3,21 +3,24 @@
 
 'use strict';
 
-import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { Disposable, Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem } from 'vscode';
+import type { JSONObject } from '@lumino/coreutils';
+import type {
+    CancellationToken,
+    Disposable,
+    Event,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    QuickPickItem
+} from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
-import {
-    IDisplayOptions,
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterSession,
-    INotebookProviderConnection,
-    KernelSocketInformation
-} from '../platform/datascience/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
+import { WebSocketData } from '../platform/api/extension';
+import { IJupyterKernel } from './jupyter/types';
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };

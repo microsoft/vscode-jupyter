@@ -7,7 +7,6 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
 import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../platform/common/types';
-import { IInteractiveWindowProvider } from '../platform/datascience/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
@@ -15,6 +14,7 @@ import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNoteboo
 import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider, INotebookControllerManager } from '../notebooks/types';
 import { LanguageServer } from './languageServer';
+import { IInteractiveWindowProvider } from '../interactive-window/types';
 
 const EmptyWorkspaceKey = '';
 

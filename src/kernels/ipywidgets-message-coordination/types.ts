@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Event } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 

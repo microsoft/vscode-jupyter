@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, EventEmitter } from 'vscode';
-import { IDisplayOptions } from './types';
+import { IDisplayOptions } from '../platform/common/types';
 
 export class DisplayOptions implements IDisplayOptions {
     private _disableUI: boolean;

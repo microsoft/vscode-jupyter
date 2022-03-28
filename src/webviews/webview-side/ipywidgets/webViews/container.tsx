@@ -5,9 +5,8 @@
 
 import * as React from 'react';
 import { Store } from 'redux';
-import '../../../platform/common/extensions';
-import { SharedMessages } from '../../../platform/datascience/messages';
-import { IJupyterExtraSettings } from '../../../platform/datascience/types';
+import { SharedMessages } from '../../../../platform/messageTypes';
+import { IJupyterExtraSettings } from '../../../extension-side/types';
 import {
     CommonAction,
     CommonActionType,

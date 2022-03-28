@@ -16,20 +16,19 @@ import {
 } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 
-import { splitMultilineString } from '../../datascience-ui/common';
-import { uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
+import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import { IConfigurationService } from '../../platform/common/types';
-import { getCellResource } from '../../platform/datascience/cellFactory';
-import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../platform/datascience/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
+import { getCellResource, uncommentMagicCommands } from './cellFactory';
+import { CellMatcher } from './cellMatcher';
+import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

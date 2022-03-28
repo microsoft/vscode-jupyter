@@ -1,4 +1,6 @@
 import { JupyterNotebookView } from '../../notebooks/constants';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR } from '../constants';
 
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
@@ -62,7 +64,7 @@ export function isUnitTestExecution(): boolean {
 
 export * from '../constants';
 
-export * from '../../datascience-ui/common/constants';
+export * from '../../webviews/webview-side/common/constants';
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';

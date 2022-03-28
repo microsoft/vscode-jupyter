@@ -13,14 +13,10 @@ import { traceError } from '../../../platform/common/logger';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import {
-    INotebookImporter,
-    INbConvertInterpreterDependencyChecker,
-    INbConvertExportToPythonService
-} from '../../../platform/datascience/types';
-import { Identifiers, CodeSnippets } from '../../../datascience-ui/common/constants';
+import { Identifiers, CodeSnippets } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
+import { INotebookImporter, INbConvertInterpreterDependencyChecker, INbConvertExportToPythonService } from '../types';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {

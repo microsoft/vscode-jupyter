@@ -3,7 +3,7 @@
 'use strict';
 export const __ = '';
 // import { expect } from 'chai';
-// import { fixMarkdown } from '../../datascience-ui/interactive-common/markdownManipulation';
+// import { fixMarkdown } from '../../webviews/webview-side/interactive-common/markdownManipulation';
 
 // /* eslint-disable  */
 // suite('DataScience - Markdown Manipulation', () => {

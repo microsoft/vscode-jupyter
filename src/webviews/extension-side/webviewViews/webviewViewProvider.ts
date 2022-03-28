@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../platform/types';
-import { IDisposableRegistry } from '../../types';
-import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../types';
+import { IWebviewViewProvider, IWebviewViewOptions, IWebviewView } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { WebviewView } from './webviewView';
 
 @injectable()

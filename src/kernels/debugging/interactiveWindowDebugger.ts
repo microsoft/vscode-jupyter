@@ -9,19 +9,15 @@ import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/lo
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import {
-    IInteractiveWindowDebugger,
-    ICellHashListener,
-    IJupyterDebugService,
-    IFileHashes,
-    ISourceMapRequest
-} from '../../platform/datascience/types';
-import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
+import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently } from '../helpers';
 import { getPlainTextOrStreamOutput } from '../kernel';
 import { IKernel, isLocalConnection } from '../types';
+import { IInteractiveWindowDebugger } from '../../interactive-window/types';
+import { ICellHashListener, IFileHashes } from '../../interactive-window/editor-integration/types';
+import { IJupyterDebugService, ISourceMapRequest } from './types';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {

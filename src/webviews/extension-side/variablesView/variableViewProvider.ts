@@ -4,19 +4,20 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 import {
+    IWorkspaceService,
+    IWebviewViewProvider,
     IApplicationShell,
     ICommandManager,
-    IDocumentManager,
-    IWebviewViewProvider,
-    IWorkspaceService
-} from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { Identifiers } from '../constants';
-import { IDataViewerFactory } from '../data-viewing/types';
-import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
+    IDocumentManager
+} from '../../../platform/common/application/types';
+import { isTestExecution } from '../../../platform/common/constants';
+import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { Identifiers } from '../../webview-side/common/constants';
+import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
+import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 

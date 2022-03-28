@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { CancellationToken, Event } from 'vscode';
+import { IKernel } from '../types';
+import type { JSONObject } from '@lumino/coreutils';
+
 // Get variables from the currently running active Jupyter server or debugger
 // Note: This definition is used implicitly by getJupyterVariableValue.py file
 // Changes here may need to be reflected there as well

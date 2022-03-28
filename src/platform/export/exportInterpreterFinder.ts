@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
-import { JupyterInterpreterService } from '../../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import * as localize from '../../common/utils/localize';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IJupyterInterpreterDependencyManager, INbConvertInterpreterDependencyChecker } from '../types';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import {
+    IJupyterInterpreterDependencyManager,
+    INbConvertInterpreterDependencyChecker
+} from '../../kernels/jupyter/types';
+import * as localize from '../common/utils/localize';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 
 @injectable()
 export class ExportInterpreterFinder {

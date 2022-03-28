@@ -5,7 +5,7 @@
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { getOSType } from '../platform/common/utils/platform';
-import { KernelConnectionMetadata } from '../platform/../kernels/types';
+import { InterruptResult, KernelConnectionMetadata } from '../platform/../kernels/types';
 import { Resource } from '../platform/common/types';
 import {
     IEventNamePropertyMapping,
@@ -16,7 +16,7 @@ import {
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
@@ -24,9 +24,7 @@ import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
 import { createDeferred } from '../platform/common/utils/async';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
-import { Telemetry } from '../platform/datascience/constants';
-import { getResourceType } from '../platform/datascience/common';
-import { InterruptResult } from '../platform/datascience/types';
+import { getResourceType } from '../platform/common/utils';
 
 /**
  * This information is sent with each telemetry event.

@@ -9,10 +9,12 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types';
 import { IKernel } from '../../../platform/../kernels/types';
-import { ILocalResourceUriConverter } from '../../../platform/datascience/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/types';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider
+} from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {

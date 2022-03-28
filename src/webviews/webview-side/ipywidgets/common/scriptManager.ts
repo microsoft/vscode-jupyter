@@ -6,17 +6,16 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
-import '../../../platform/common/extensions';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../platform/messageTypes';
-import { SharedMessages } from '../../../platform/datascience/messages';
-import { IJupyterExtraSettings } from '../../../platform/datascience/types';
+import '../../../../platform/common/extensions';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
-import { WidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
+import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
+import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
+import { IJupyterExtraSettings } from '../../../extension-side/types';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();

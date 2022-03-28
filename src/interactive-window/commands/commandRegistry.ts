@@ -9,7 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables';
-import { DataViewerChecker } from '../../webviews/dataviewer/dataViewerChecker';
+import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import {
     IApplicationShell,
@@ -21,27 +21,30 @@ import {
 import { traceError } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 
-import { IConfigurationService, IDisposable, IOutputChannel } from '../../platform/common/types';
+import {
+    IConfigurationService,
+    IDataScienceCommandListener,
+    IDisposable,
+    IOutputChannel
+} from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { LogLevel } from '../../platform/logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { Commands, Identifiers, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../platform/datascience/constants';
-import { DataViewerDependencyService } from '../../platform/datascience/data-viewing/dataViewerDependencyService';
-import { IDataViewerFactory } from '../../platform/datascience/data-viewing/types';
-import {
-    ICodeWatcher,
-    IDataScienceCodeLensProvider,
-    IDataScienceCommandListener,
-    IDataScienceErrorHandler,
-    IInteractiveWindowProvider,
-    IJupyterServerUriStorage,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables
-} from '../../platform/datascience/types';
 import { ExportCommands } from './exportCommands';
+import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
+import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService';
+import {
+    IDataViewerFactory,
+    IJupyterVariableDataProviderFactory
+} from '../../webviews/extension-side/dataviewer/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterVariables } from '../../kernels/variables/types';
+import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
+import { IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CommandRegistry implements IDisposable {

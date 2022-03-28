@@ -33,13 +33,13 @@ suite('Dummy1a', () => {
 //     INotebook,
 //     INotebookProvider
 // } from '../../platform/datascience/types';
-// import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
-// import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
+// import { MainPanel } from '../../webviews/webview-side/data-explorer/mainPanel';
+// import { ReactSlickGrid } from '../../webviews/webview-side/data-explorer/reactSlickGrid';
 // import { noop, sleep } from '../core';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { takeSnapshot, writeDiffSnapshot } from './helpers';
 // import { IMountedWebView } from './mountedWebView';
-// import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
+// import { SliceControl } from '../../webviews/webview-side/data-explorer/sliceControl';
 // import { Dropdown } from '@fluentui/react';
 // import { CheckboxState, SliceOperationSource } from '../../telemetry/constants';
 // import { range } from 'lodash';

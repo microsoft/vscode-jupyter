@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../extensions';
 
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
-import { IFileSystem } from '../../platform/types';
-import { IDisposableRegistry } from '../../types';
-import { IWebviewView, IWebviewViewOptions } from '../types';
+import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { Webview } from '../webviews/webview';
 
 export class WebviewView extends Webview implements IWebviewView {

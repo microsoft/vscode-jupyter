@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
-import { IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
+import { IWebviewPanel, IWebviewPanelMessageListener } from '../../../platform/common/application/types';
+import '../../../platform/common/extensions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

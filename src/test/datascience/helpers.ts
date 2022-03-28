@@ -8,14 +8,8 @@ import { IPythonApiProvider } from '../../platform/api/types';
 import { traceInfo } from '../../platform/common/logger';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IJupyterSettings } from '../../platform/common/types';
-import { Commands } from '../../platform/datascience/constants';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import {
-    IDataScienceCodeLensProvider,
-    IInteractiveWindow,
-    IInteractiveWindowProvider
-} from '../../platform/datascience/types';
 import { waitForCondition } from '../common';
 import {
     createTemporaryFile,
@@ -24,6 +18,9 @@ import {
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
 import { initialize } from '../initialize';
+import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
+import { Commands } from '../../platform/common/constants';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {

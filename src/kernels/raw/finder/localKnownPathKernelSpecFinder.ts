@@ -5,7 +5,11 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
@@ -15,8 +19,7 @@ import { traceInfo, traceError } from '../../../platform/common/logger';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.

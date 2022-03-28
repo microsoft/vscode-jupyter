@@ -7,11 +7,6 @@ import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
-import { createDeferred } from '../../platform/common/utils/async';
-import { RegExpValues } from '../../platform/datascience/constants';
-import { SharedMessages } from '../../platform/datascience/messages';
-import { IPlotViewerMapping, PlotViewerMessages } from '../../platform/datascience/plotting/types';
-import { IJupyterExtraSettings } from '../../platform/datascience/types';
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
@@ -20,6 +15,11 @@ import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { SharedMessages } from '../../../platform/messageTypes';
+import { IPlotViewerMapping, PlotViewerMessages } from '../../extension-side/plotting/types';
+import { IJupyterExtraSettings } from '../../extension-side/types';
+import { RegExpValues } from '../common/constants';
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {

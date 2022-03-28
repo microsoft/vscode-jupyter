@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, NotebookCell, Range, TextDocument } from 'vscode';
+import { ICellRange, IDisposable } from '../../platform/common/types';
+
 // Wraps the vscode CodeLensProvider base class
 export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider');
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {

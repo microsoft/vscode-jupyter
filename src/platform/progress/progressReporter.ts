@@ -5,10 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { IDisposable } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
+import { IApplicationShell } from '../common/application/types';
+import { IDisposable } from '../common/types';
+import { createDeferred } from '../common/utils/async';
+import { noop } from '../common/utils/misc';
 import { registerReporter } from './decorator';
 import { getUserMessageForAction } from './messages';
 import { IProgressReporter, Progress, ReportableAction } from './types';

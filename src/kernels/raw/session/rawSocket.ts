@@ -8,8 +8,8 @@ import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { traceError } from '../../../platform/common/logger';
 import { noop } from '../../../platform/common/utils/misc';
-import { IKernelSocket } from '../../../platform/datascience/types';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
+import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 
 function formConnectionString(config: IKernelConnection, channel: string) {

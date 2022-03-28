@@ -3,16 +3,16 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, NotebookDocument } from 'vscode';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/datascience/constants';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
-import { IKernelVariableRequester, IJupyterVariable } from '../../platform/datascience/types';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
+import { IKernelVariableRequester, IJupyterVariable } from './types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];

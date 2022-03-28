@@ -1,30 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
-import {
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
-    IJupyterVariableDataProvider,
-    IThemeFinder,
-    WebViewViewChangeEventArgs
-} from '../types';
-import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
     DataViewerMessages,
@@ -33,14 +17,34 @@ import {
     IDataViewerDataProvider,
     IDataViewerMapping,
     IGetRowsRequest,
-    IGetSliceRequest
+    IGetSliceRequest,
+    IJupyterVariableDataProvider
 } from './types';
-import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
+import {
+    isValidSliceExpression,
+    preselectedSliceExpression
+} from '../../../webviews/webview-side/data-explorer/helpers';
 import { CheckboxState } from '../../../telemetry/constants';
 import { IKernel } from '../../../kernels/types';
+import {
+    IWebviewPanelProvider,
+    IWorkspaceService,
+    IApplicationShell
+} from '../../../platform/common/application/types';
+import { HelpLinks } from '../../../platform/common/constants';
+import { traceError, traceInfo } from '../../../platform/common/logger';
+import { IConfigurationService, IMemento, GLOBAL_MEMENTO, Resource, IDisposable } from '../../../platform/common/types';
+import * as localize from '../../../platform/common/utils/localize';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { IDataScienceErrorHandler } from '../../../platform/errors/types';
+import { Telemetry } from '../../webview-side/common/constants';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { WebviewPanelHost } from '../webviewPanelHost';
+import { noop } from '../../../platform/common/utils/misc';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
-const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;

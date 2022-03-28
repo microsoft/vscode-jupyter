@@ -5,9 +5,8 @@ import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceInfo, traceError } from '../../platform/common/logger';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from '../../notebooks/helpers';
-import { IJupyterSession } from '../../platform/datascience/types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 
 /**
  * A queue responsible for execution of cells.
