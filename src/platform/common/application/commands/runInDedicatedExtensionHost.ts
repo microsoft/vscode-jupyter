@@ -18,17 +18,19 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSing
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         this.commandManager.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
     }
     private async updateAffinity() {
-        const affinity = this.workspaceService.getConfiguration('extensions').get('experimental.affinity') as { [key: string]: number } | undefined;
+        const affinity = this.workspaceService.getConfiguration('extensions').get('experimental.affinity') as
+            | { [key: string]: number }
+            | undefined;
         let maxAffinity = 0;
         if (affinity) {
-            for (let value in affinity) {
-                maxAffinity = Math.max(maxAffinity, affinity[value]);
-            }
+            Object.values(affinity).forEach((value) => {
+                maxAffinity = Math.max(maxAffinity, value);
+            });
         }
 
         const targetAffinity = maxAffinity + 1;
@@ -46,10 +48,14 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSing
             update[PylanceExtension] = targetAffinity;
         }
 
-        await this.workspaceService.getConfiguration('extensions').update('experimental.affinity', {
-            ...(affinity ?? {}),
-            ...update
-        }, ConfigurationTarget.Global);
+        await this.workspaceService.getConfiguration('extensions').update(
+            'experimental.affinity',
+            {
+                ...(affinity ?? {}),
+                ...update
+            },
+            ConfigurationTarget.Global
+        );
 
         this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
     }
