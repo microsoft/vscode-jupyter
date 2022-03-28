@@ -45,7 +45,8 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
             JupyterCommands.ConvertCommand,
             'jupyter',
             ['-m', 'jupyter', 'nbconvert'],
-            interpreter
+            interpreter,
+            false
         );
 
         const result = await command.exec(['--version'], { throwOnStdErr: true });
