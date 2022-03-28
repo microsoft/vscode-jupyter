@@ -13,7 +13,7 @@ import {
 } from '../../../platform/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { JupyterCommands, JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 class InterpreterJupyterCommand implements IJupyterCommand {
