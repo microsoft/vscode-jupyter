@@ -112,14 +112,26 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        return this.kernelProvider.kernels
+        const kernels: { metadata: KernelConnectionMetadata; owner: Uri }[] = [];
+        this.kernelProvider.kernels
             .filter((item) => item.startedAtLeastOnce)
-            .map((item) => {
-                return {
+            .forEach((item) => {
+                kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
                     owner: item.notebookDocument.uri
-                };
+                });
             });
+
+        Array.from(this.dummyNotebooks.values()).forEach((nb) => {
+            const kernel = this.kernelProvider.get(nb);
+            if (kernel) {
+                kernels.push({
+                    metadata: this.translateKernelConnectionMetadataToExportedType(kernel.kernelConnectionMetadata),
+                    owner: nb.uri
+                });
+            }
+        });
+        return kernels;
     }
     getKernel(owner: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
