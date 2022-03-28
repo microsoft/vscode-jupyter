@@ -21,6 +21,7 @@ import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { IInteractiveWindowProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
+import { Kernel } from '../../../kernels/kernel';
 
 type KernelStateEventArgs = {
     notebook: NotebookDocument;
@@ -69,7 +70,7 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     public get activeNotebookExecutionCount(): number | undefined {
-        const activeNotebook = this.activeKernel?.notebookDocument;
+        const activeNotebook = Kernel.getAssociatedNotebook(this.activeKernel);
         return activeNotebook ? this._executionCountTracker.get(activeNotebook) : undefined;
     }
 
@@ -94,8 +95,9 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebooks.onDidCloseNotebookDocument(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
             (kernel) => {
-                if (kernel.notebookDocument) {
-                    this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebookDocument });
+                const notebook = Kernel.getAssociatedNotebook(kernel);
+                if (notebook) {
+                    this.handleRestart({ state: KernelState.restarted, notebook });
                 }
             },
             this,
@@ -201,6 +203,6 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // Check to see if this event was on the active notebook
     private isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): boolean {
-        return this.activeKernel?.notebookDocument === kernelStateEvent.notebook;
+        return Kernel.getAssociatedNotebook(this.activeKernel) === kernelStateEvent.notebook;
     }
 }

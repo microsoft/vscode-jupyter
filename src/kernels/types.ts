@@ -124,12 +124,7 @@ export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata
 
 export interface IKernel extends IAsyncDisposable {
     readonly connection: INotebookProviderConnection | undefined;
-    /**
-     * Notebook that owns this kernel.
-     * Closing the notebook will dispose this kernel (except in the case of remote kernels).
-     */
-    readonly notebookDocument?: NotebookDocument;
-    readonly owner: Uri;
+    readonly id: Uri;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).

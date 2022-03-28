@@ -24,6 +24,7 @@ import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './help
 import { JupyterSession } from './jupyter/session/jupyterSession';
 import { RawJupyterSession } from './raw/session/rawJupyterSession';
 import { IKernel, IKernelProvider } from './types';
+import { Kernel } from './kernel';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -165,10 +166,10 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
-        if (!kernel.notebookDocument) {
+        const notebook = Kernel.getAssociatedNotebook(kernel);
+        if (!notebook) {
             throw new Error('Unable to start a kernel that is not attached to a notebook document');
         }
-        const notebook = kernel.notebookDocument;
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);
         if (pendingPromise) {

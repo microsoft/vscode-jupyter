@@ -116,7 +116,7 @@ class JupyterKernelService implements IExportedKernelService {
             .forEach((item) => {
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    owner: item.owner
+                    owner: item.id
                 });
             });
 

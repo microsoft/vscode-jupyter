@@ -17,6 +17,7 @@ import { getActiveInteractiveWindow } from '../helpers';
 import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../platform/datascience/types';
+import { Kernel } from '../../kernels/kernel';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -205,11 +206,12 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
-        if (kernel.notebookDocument?.notebookType === InteractiveWindowView) {
+        const notebook = Kernel.getAssociatedNotebook(kernel)
+        if (notebook?.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
-            kernel.notebookDocument?.notebookType === JupyterNotebookView &&
-            kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
+            notebook?.notebookType === JupyterNotebookView &&
+            notebook === this.vscNotebook.activeNotebookEditor?.document
         ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }
