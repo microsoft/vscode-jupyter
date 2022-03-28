@@ -318,7 +318,7 @@ class DummyNotebook implements NotebookDocument {
         throw new Error('Not implemented');
     }
     public getCells(_range?: NotebookRange): NotebookCell[] {
-        return [];
+        throw new Error('Not implemented');
     }
     public async save(): Promise<boolean> {
         return true;
