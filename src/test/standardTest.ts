@@ -129,8 +129,8 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
-            .concat(['--user-data-dir', userDataDirectory])
-            .concat(['--verbose']),
+            .concat(['--user-data-dir', userDataDirectory]),
+        // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });

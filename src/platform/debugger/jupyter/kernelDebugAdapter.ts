@@ -16,9 +16,9 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     NotebookCellKind,
-    NotebookCellsChangeEvent,
     NotebookDocument,
-    notebooks
+    notebooks,
+    workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
@@ -116,10 +116,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         );
 
         this.disposables.push(
-            notebooks.onDidChangeNotebookCells(
-                (e: NotebookCellsChangeEvent) => {
-                    e.changes.forEach((change) => {
-                        change.deletedItems.forEach((cell: NotebookCell) => {
+            workspace.onDidChangeNotebookDocument(
+                (e) => {
+                    e.contentChanges.forEach((change) => {
+                        change.removedCells.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
                                 void this.disconnect();
                             }

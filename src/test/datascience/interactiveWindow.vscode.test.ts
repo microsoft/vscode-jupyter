@@ -12,7 +12,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { IKernelProvider } from '../../platform/../kernels/types';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../platform/datascience/types';
+import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -41,7 +41,6 @@ suite('Interactive window', async function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
-    let codeWatcherProvider: IDataScienceCodeLensProvider;
 
     setup(async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -50,7 +49,6 @@ suite('Interactive window', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
 
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -283,33 +281,27 @@ for i in range(10):
     });
 
     test('Cells with errors cancel execution for others', async () => {
-        const source = '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)';
-        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
-            interactiveWindowProvider,
-            codeWatcherProvider,
-            source,
-            disposables
-        );
+        const source =
+            '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)\n# %%\nprint(3)';
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
 
         await waitForCondition(
             async () => {
-                return notebookDocument?.cellCount == 4;
+                return notebookDocument?.cellCount == 5;
             },
             defaultNotebookTestTimeout,
             `Cells should be added`
         );
-        const secondCell = notebookDocument?.cellAt(2);
-        await waitForExecutionCompletedWithErrors(secondCell!);
-        await waitForCondition(
-            async () => {
-                return notebookDocument?.cellCount == 5;
-            },
-            defaultNotebookTestTimeout,
-            `Markdown error didnt appear`
-        );
+        const [, , secondCell, thirdCell, fourthCell] = notebookDocument!.getCells();
+        // Other remaining cells will also fail with errors.
+        await Promise.all([
+            waitForExecutionCompletedWithErrors(secondCell!),
+            waitForExecutionCompletedWithErrors(thirdCell!, undefined, false),
+            waitForExecutionCompletedWithErrors(fourthCell!, undefined, false)
+        ]);
     });
 
     test('Multiple interactive windows', async () => {

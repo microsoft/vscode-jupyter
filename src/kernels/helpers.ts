@@ -19,7 +19,7 @@ import {
     IKernelProvider,
     isLocalConnection
 } from './types';
-import { Uri, Memento, NotebookDocument } from 'vscode';
+import { Uri, Memento, NotebookDocument, NotebookController } from 'vscode';
 import {
     IWorkspaceService,
     ICommandManager,
@@ -74,6 +74,7 @@ import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKer
 import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
 import { DisplayOptions } from '../platform/datascience/displayOptions';
 import { KernelDeadError } from '../platform/errors/kernelDeadError';
+import { noop } from '../platform/common/utils/misc';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1317,356 +1318,6 @@ function interpreterMatchesThatInNotebookMetadata(
     );
 }
 
-export function _findPreferredKernel(
-    kernels: KernelConnectionMetadata[],
-    resource: Resource,
-    notebookMetadata: nbformat.INotebookMetadata | undefined,
-    preferredInterpreter: PythonEnvironment | undefined,
-    remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
-): KernelConnectionMetadata | undefined {
-    traceInfo(
-        `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
-            notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.path)}`
-    );
-    let index = -1;
-
-    // First try remote
-    if (index < 0 && resource && remoteKernelPreferredProvider) {
-        const preferredKernelId = remoteKernelPreferredProvider.getPreferredRemoteKernelId(resource);
-        if (preferredKernelId) {
-            // Find the kernel that matches
-            index = kernels.findIndex(
-                (k) => k.kind === 'connectToLiveKernel' && k.kernelModel.id === preferredKernelId
-            );
-        }
-    }
-
-    // If this is an interactive window & we don't have metadata, then just return the preferred interpreter.
-    if (!notebookMetadata && getResourceType(resource) === 'interactive' && preferredInterpreter) {
-        //  Find kernel that matches the preferred interpreter.
-        const kernelMatchingPreferredInterpreter = kernels.find(
-            (kernel) =>
-                kernel.kind === 'startUsingPythonInterpreter' &&
-                areInterpreterPathsSame(kernel.interpreter.path, preferredInterpreter.path)
-        );
-        if (kernelMatchingPreferredInterpreter) {
-            return kernelMatchingPreferredInterpreter;
-        }
-        // Telemetry to see if this happens in the real world, this should not be possible.
-        sendTelemetryEvent(Telemetry.FailedToFindKernelSpecInterpreterForInteractive);
-    }
-
-    // If still not found, look for a match based on notebook metadata and interpreter
-    if (index < 0) {
-        const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
-        let nbMetadataLanguage: string | undefined;
-        // Interactive window always defaults to Python kernels.
-        if (getResourceType(resource) === 'interactive') {
-            nbMetadataLanguage = PYTHON_LANGUAGE;
-        } else {
-            nbMetadataLanguage =
-                !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
-                    ? PYTHON_LANGUAGE
-                    : (
-                          ((notebookMetadata?.kernelspec as any)?.language as string) ||
-                          notebookMetadata?.language_info?.name
-                      )?.toLowerCase();
-        }
-        let bestScore = -1;
-
-        // Find index of the kernelspec that matches the preferred interpreter.
-        const preferredInterpreterKernelSpecIndex = preferredInterpreter
-            ? kernels.findIndex((spec) => {
-                  if (
-                      spec.kind === 'startUsingPythonInterpreter' &&
-                      spec.kernelSpec &&
-                      spec.kernelSpec.language === PYTHON_LANGUAGE &&
-                      areInterpreterPathsSame(spec.interpreter.path, preferredInterpreter.path)
-                  ) {
-                      return true;
-                  }
-                  return false;
-              })
-            : -1;
-
-        traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
-
-        if (
-            getResourceType(resource) === 'notebook' &&
-            preferredInterpreterKernelSpecIndex >= 0 &&
-            !remoteKernelPreferredProvider
-        ) {
-            // If we don't have any kernelspec, then just return the preferred interpreter for notebooks.
-            if (!notebookMetadata?.kernelspec) {
-                traceInfoIfCI("Using preferred interpreter as there's no kernelspec in notebook metadata");
-                return kernels[preferredInterpreterKernelSpecIndex];
-            }
-
-            // // Check if we have any interperter information in the kernelspec.
-            // const hasInterpreterInfo =
-            //     'interpreter' in notebookMetadata &&
-            //     typeof notebookMetadata.interpreter === 'object' &&
-            //     notebookMetadata.interpreter !== null;
-            // // If we have a kernelspec (with just the name & display name) & no intepreter information
-            // // & we cannot find a matching kernel (for the provided name & display name), then just return the preferred interpreter for notebooks.
-            // const kernelSpec = notebookMetadata.kernelspec;
-            // // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            // const definedValuesForKernelSpec = new Set(Object.keys(kernelSpec) as any);
-            // definedValuesForKernelSpec.delete('name');
-            // definedValuesForKernelSpec.delete('display_name');
-            // if (
-            //     hasInterpreterInfo &&
-            //     definedValuesForKernelSpec.size === 0 &&
-            //     !kernels.find((item) => {
-            //         if (item.kind === 'startUsingLocalKernelSpec') {
-            //             return (
-            //                 item.kernelSpec.display_name === kernelSpec.display_name ||
-            //                 item.kernelSpec.name === kernelSpec.name
-            //             );
-            //         } else if (item.kind === 'startUsingPythonInterpreter') {
-            //             return (
-            //                 item.kernelSpec.display_name === kernelSpec.display_name ||
-            //                 item.kernelSpec.name === kernelSpec.name ||
-            //                 item.interpreter.displayName === kernelSpec.display_name ||
-            //                 item.interpreter.displayName === kernelSpec.name
-            //             );
-            //         }
-            //     })
-            // ) {
-            //     traceInfoIfCI("Using preferred interpreter as there's no kernelspec in notebook metadata");
-            //     return kernels[preferredInterpreterKernelSpecIndex];
-            // }
-        }
-
-        for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
-            const metadata = kernels[i];
-            const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
-            const speclanguage = getKernelConnectionLanguage(metadata);
-            let score = -1;
-            let subScore = 0;
-
-            if (spec) {
-                traceInfoIfCI(`Checking kernel Spec ${JSON.stringify(spec)}`);
-                traceInfoIfCI(`isPythonKernelSpec(spec) = ${isPythonKernelSpec(spec)}`);
-                traceInfoIfCI(`isKernelRegisteredByUs(spec) = ${getKernelRegistrationInfo(spec)}`);
-
-                // Check if the kernel spec name matches the hash of the generated kernel spec name.
-                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
-                if (
-                    !notebookMetadata && // If we don't have metadata, only then should we compare against the interpreter.
-                    (getKernelRegistrationInfo(spec) === 'registeredByNewVersionOfExt' ||
-                        getKernelRegistrationInfo(spec) === 'registeredByNewVersionOfExtForCustomKernelSpec') &&
-                    isPythonKernelSpec(spec) &&
-                    preferredInterpreter &&
-                    spec.name.includes(getInterpreterKernelSpecName(preferredInterpreter))
-                ) {
-                    // This is a perfect match.
-                    traceInfoIfCI('Increased score by +100 for matching names without notebook metadata');
-                    score += 100;
-                }
-
-                // If the user has kernelspec in metadata & this is a kernelspec we generated & names match, then use that kernelspec.
-                // Reason we are only interested kernelspecs we generate is because user can have kernelspecs named `python`.
-                // Such kernelspecs are ambiguous (we have no idea what `python` kernel means, its not necessarily tied to a specific interpreter).
-                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
-                if (
-                    notebookMetadata?.kernelspec?.name &&
-                    getKernelRegistrationInfo(spec) &&
-                    notebookMetadata.kernelspec.name === spec.name
-                ) {
-                    // This is a perfect match.
-                    traceInfoIfCI('Increased score by +100 for matching names in notbeook metadata');
-                    score += 100;
-                }
-
-                // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
-                // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
-                const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
-                if (
-                    (metadata.kind === 'startUsingLocalKernelSpec' ||
-                        metadata.kind === 'startUsingRemoteKernelSpec' ||
-                        metadata.kind === 'startUsingPythonInterpreter') &&
-                    metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === interpreterHashInMetadata
-                ) {
-                    // This is a perfect match.
-                    traceInfoIfCI('Increased score by +100 for matching interpreter in notbeook metadata');
-                    score += 100;
-                }
-
-                // See if the path matches.
-                if (
-                    spec &&
-                    spec.path &&
-                    spec.path.length > 0 &&
-                    preferredInterpreter &&
-                    areInterpreterPathsSame(spec.path, preferredInterpreter.path) &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE
-                ) {
-                    // Path match. This is worth more if no notebook metadata as that should
-                    // match first.
-                    traceInfoIfCI(
-                        `Increased score by ${notebookMetadata ? 1 : 8} for matching spec.path in notbeook metadata`
-                    );
-                    score += notebookMetadata ? 1 : 8;
-                }
-
-                // See if the display name already matches.
-                if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
-                    traceInfoIfCI('Increased score by +16 for matching display_name with metadata');
-                    score += 16;
-                }
-                // See if the name of the environments match (kernel name == environment name).
-                // At this point we dont care about version numbers of the Python environments.
-                // E.g. assume user opens notebook with metadata pointing to kernelspec with the name `condaPytoch`,
-                // & the user has such an environment (with the same name), then its a match.
-                if (
-                    metadata.interpreter?.envName &&
-                    metadata.interpreter?.envName === notebookMetadata?.kernelspec?.name &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE &&
-                    !notebookMetadata?.kernelspec?.name.toLowerCase().match(isDefaultPythonKernelSpecName)
-                ) {
-                    traceInfoIfCI('Increased score by +16 for matching env name');
-                    score += 16;
-                }
-
-                // See if interpreter should be tried instead.
-                if (
-                    spec.display_name &&
-                    spec.display_name === preferredInterpreter?.displayName &&
-                    !notebookMetadata?.kernelspec?.display_name &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE
-                ) {
-                    traceInfoIfCI('Increased score by +16 for matching display_name with interpreter');
-                    score += 10;
-                }
-
-                // Find a kernel spec that matches the language in the notebook metadata.
-                if (score <= 0 && nbMetadataLanguage && speclanguage === (nbMetadataLanguage || '')) {
-                    traceVerbose(
-                        `findPreferredKernel score for speclanguage=${nbMetadataLanguage}, ${getDisplayNameOrNameOfKernelConnection(
-                            metadata
-                        )} is ${score}`
-                    );
-                    traceInfoIfCI('Increased score by +1 for matching language');
-                    subScore = 1;
-                    score = +1;
-                }
-
-                // See if the version is the same
-                if (
-                    preferredInterpreter &&
-                    preferredInterpreter.version &&
-                    spec &&
-                    spec.name &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE &&
-                    !getKernelRegistrationInfo(spec)
-                ) {
-                    // Search for a digit on the end of the name. It should match our major version
-                    const match = /\D+(\d+)/.exec(spec.name);
-                    if (match && match !== null && match.length > 0) {
-                        // See if the version number matches
-                        const nameVersion = parseInt(match[1][0], 10);
-                        if (nameVersion && nameVersion === preferredInterpreter.version.major) {
-                            traceInfoIfCI('Increased score by +4 for matching major version');
-                            score += 4;
-                        }
-                    }
-                }
-
-                // Give python 3 environments a higher priority over others.
-                // E.g. if we end up just looking at the suppof ot ehe languages, then Python2 & Python3 will both get 1.
-                // But Python 3 is definitely preferred over Python 2.
-                if (
-                    nbMetadataLanguage === PYTHON_LANGUAGE &&
-                    (metadata.interpreter?.sysVersion?.startsWith('3') ||
-                        metadata.interpreter?.version?.major === 3 ||
-                        metadata.interpreter?.displayName?.toLowerCase().includes('python 3') ||
-                        metadata.interpreter?.displayName?.toLowerCase().includes('python3') ||
-                        metadata.interpreter?.path?.toLowerCase().includes('python3') ||
-                        spec.argv[0].toLocaleLowerCase().includes('python3'))
-                ) {
-                    traceInfoIfCI('Increased score by +1 for matching major version 3');
-                    score += 1;
-                    subScore += 1;
-                    traceVerbose(
-                        `findPreferredKernel score for Python3, ${getDisplayNameOrNameOfKernelConnection(
-                            metadata
-                        )} is ${score}`
-                    );
-
-                    // If the versions match exactly, then increase the score by another 1
-                    if (
-                        typeof notebookMetadata === 'object' &&
-                        'interpreter' in notebookMetadata &&
-                        (notebookMetadata as any).interpreter &&
-                        typeof (notebookMetadata as any).interpreter === 'object' &&
-                        metadata.kind === 'startUsingPythonInterpreter'
-                    ) {
-                        const nbMetadataInterpreter = (notebookMetadata as any).interpreter as Partial<
-                            PythonEnvironment
-                        >;
-                        if (
-                            nbMetadataInterpreter.version?.raw &&
-                            nbMetadataInterpreter.version?.raw === metadata.interpreter.version?.raw
-                        ) {
-                            traceInfoIfCI(
-                                'Increased score by +3 for matching raw version in notebook metadata interpreter'
-                            );
-                            score += 3;
-                        }
-                    } else if (
-                        metadata.interpreter?.version?.raw &&
-                        metadata.interpreter?.version?.raw === preferredInterpreter?.version?.raw
-                    ) {
-                        traceInfoIfCI('Increased score by +3 for matching raw version in preferred interpreter');
-                        score += 3;
-                    }
-                }
-
-                // If ther'es no kernelspec in the metadata (e.g. blank notebooks),
-                // & its a python notebook (language in the notebook metatadata will be Python),
-                // Then give preference to the preferred (active) interpreter.
-                if (
-                    !notebookMetadata?.kernelspec &&
-                    preferredInterpreter &&
-                    areInterpreterPathsSame(spec.interpreterPath, preferredInterpreter?.path)
-                ) {
-                    traceInfoIfCI('Increased score by +10 for matching spec.interpreterPath');
-                    score += 10;
-                }
-            }
-
-            // Trace score for kernel
-            traceVerbose(
-                `findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`
-            );
-
-            // If we have a score of 5, this can only happen if we match against language and find a Python 3 kernel.
-            // In such cases, use our preferred interpreter kernel if we have one.
-            // I.e. give preference to the preferred interpreter kernelspec if we dont have any matches.
-            if (
-                subScore === 5 && // This is a bit flakey. Number isn't consistent. Should probably just make the order of kernelspecs have the preferred one first
-                score === 5 &&
-                (metadata.kind === 'startUsingPythonInterpreter' ||
-                    ((metadata.kind === 'startUsingLocalKernelSpec' ||
-                        metadata.kind === 'startUsingRemoteKernelSpec') &&
-                        metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
-                preferredInterpreterKernelSpecIndex >= 0 &&
-                bestScore <= 2
-            ) {
-                index = preferredInterpreterKernelSpecIndex;
-            } else if (score > bestScore) {
-                index = i;
-                bestScore = score;
-            }
-        }
-    }
-
-    traceInfoIfCI(isCI && index >= 0, `Preferred kernel is ${JSON.stringify(kernels[index])}`);
-    return index >= 0 ? kernels[index] : undefined;
-}
 export async function sendTelemetryForPythonKernelExecutable(
     kernel: IKernel,
     resource: Resource,
@@ -1866,7 +1517,7 @@ function handleExecuteSilentErrors(
 async function switchController(
     resource: Resource,
     serviceContainer: IServiceContainer
-): Promise<VSCodeNotebookController | undefined> {
+): Promise<{ controller: NotebookController; metadata: KernelConnectionMetadata } | undefined> {
     const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     const editor = findNotebookEditor(resource, notebooks, serviceContainer.get(IInteractiveWindowProvider));
@@ -1887,7 +1538,7 @@ async function switchController(
         controller = await waitForSelection.promise;
     }
     disposable.dispose();
-    return controller;
+    return controller ? { controller: controller.controller, metadata: controller.connection } : undefined;
 }
 
 export async function notifyAndRestartDeadKernel(
@@ -1932,27 +1583,23 @@ export async function handleKernelError(
     context: 'start' | 'interrupt' | 'restart' | 'execution',
     resource: Resource,
     kernel: IKernel,
-    controller: VSCodeNotebookController
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata
 ) {
     const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-    let resultController: VSCodeNotebookController = controller;
 
-    if (controller.connection.interpreter && context === 'start') {
+    if (metadata.interpreter && context === 'start') {
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
-        clearInstalledIntoInterpreterMemento(
-            memento,
-            Product.ipykernel,
-            controller.connection.interpreter.path
-        ).ignoreErrors();
+        clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.path).ignoreErrors();
     }
 
-    const handleResult = await errorHandler.handleKernelError(error, 'start', controller.connection, resource);
+    const handleResult = await errorHandler.handleKernelError(error, 'start', metadata, resource);
 
     // Send telemetry for handling the error (if raw)
-    const isLocal = isLocalConnection(controller?.connection);
+    const isLocal = isLocalConnection(metadata);
     const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
     if (rawLocalKernel && context === 'start') {
         sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
@@ -1972,17 +1619,17 @@ export async function handleKernelError(
             // Loop around and create the new one. The user wants to switch
 
             // Update to the selected controller
-            const newController = await switchController(resource, serviceContainer);
-            if (!newController) {
+            const result = await switchController(resource, serviceContainer);
+            if (!result) {
                 throw error;
-            } else {
-                resultController = newController;
             }
+            controller = result.controller;
+            metadata = result.metadata;
             break;
         }
     }
 
-    return resultController;
+    return { controller, metadata };
 }
 
 function convertContextToFunction(context: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
@@ -2003,7 +1650,6 @@ const connections = new WeakMap<
     {
         kernel: Deferred<{
             kernel: IKernel;
-            controller: VSCodeNotebookController;
             deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
         }>;
         options: IDisplayOptions;
@@ -2017,11 +1663,11 @@ async function verifyKernelState(
     options: IDisplayOptions = new DisplayOptions(false),
     promise: Promise<{
         kernel: IKernel;
-        controller: VSCodeNotebookController;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
-    }>
+    }>,
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<IKernel> {
-    const { kernel, controller, deadKernelAction } = await promise;
+    const { kernel, deadKernelAction } = await promise;
     // Before returning, but without disposing the kernel, double check it's still valid
     // If a restart didn't happen, then we can't connect. Throw an error.
     // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
@@ -2037,18 +1683,29 @@ async function verifyKernelState(
             return kernel;
         }
         // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
-        return wrapKernelMethod(controller, 'start', serviceContainer, resource, notebook, options);
+        return wrapKernelMethod(
+            kernel.controller,
+            kernel.kernelConnectionMetadata,
+            'start',
+            serviceContainer,
+            resource,
+            notebook,
+            options,
+            onAction
+        );
     }
     return kernel;
 }
 
 export async function wrapKernelMethod(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     initialContext: 'start' | 'interrupt' | 'restart',
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
@@ -2067,16 +1724,25 @@ export async function wrapKernelMethod(
 
     // Wrap the kernel method again to interrupt/restart this kernel.
     if (currentPromise && initialContext !== 'restart' && initialContext !== 'interrupt') {
-        return verifyKernelState(serviceContainer, resource, notebook, options, currentPromise.kernel.promise);
+        return verifyKernelState(
+            serviceContainer,
+            resource,
+            notebook,
+            options,
+            currentPromise.kernel.promise,
+            onAction
+        );
     }
 
     const promise = wrapKernelMethodImpl(
-        initialController,
+        controller,
+        metadata,
         initialContext,
         serviceContainer,
         resource,
         notebook,
-        options
+        options,
+        onAction
     );
     const deferred = createDeferredFromPromise(promise);
     // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
@@ -2095,31 +1761,31 @@ export async function wrapKernelMethod(
         });
 
     connections.set(notebook, { kernel: deferred, options });
-    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise);
+    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction);
 }
 
 export async function wrapKernelMethodImpl(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     initialContext: 'start' | 'interrupt' | 'restart',
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<{
     kernel: IKernel;
-    controller: VSCodeNotebookController;
     deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
 }> {
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     let kernel: IKernel | undefined;
-    let controller: VSCodeNotebookController = initialController;
     let currentMethod = convertContextToFunction(initialContext, options);
     let context = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook, {
-            metadata: controller.connection,
-            controller: controller.controller,
+            metadata,
+            controller,
             resourceUri: resource
         });
 
@@ -2134,10 +1800,10 @@ export async function wrapKernelMethodImpl(
                 const restarted = await notifyAndRestartDeadKernel(kernel, serviceContainer);
                 return {
                     kernel,
-                    controller,
                     deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
                 };
             } else {
+                onAction(context, kernel);
                 await currentMethod(kernel);
 
                 // If the kernel is dead, ask the user if they want to restart
@@ -2149,8 +1815,17 @@ export async function wrapKernelMethodImpl(
             if (options.disableUI) {
                 throw error;
             }
-            controller = await handleKernelError(serviceContainer, error, context, resource, kernel, controller);
-
+            const result = await handleKernelError(
+                serviceContainer,
+                error,
+                context,
+                resource,
+                kernel,
+                controller,
+                metadata
+            );
+            controller = result.controller;
+            metadata = result.metadata;
             // When we wrap around, update the current method to start. This
             // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
             currentMethod = (k) => k.start(options);
@@ -2160,15 +1835,17 @@ export async function wrapKernelMethodImpl(
             kernel = undefined;
         }
     }
-    return { kernel, controller };
+    return { kernel };
 }
 
 export async function connectToKernel(
-    initialController: VSCodeNotebookController,
+    controller: NotebookController,
+    metadata: KernelConnectionMetadata,
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false)
+    options: IDisplayOptions = new DisplayOptions(false),
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
-    return wrapKernelMethod(initialController, 'start', serviceContainer, resource, notebook, options);
+    return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
 }

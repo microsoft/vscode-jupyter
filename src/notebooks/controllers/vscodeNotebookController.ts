@@ -227,7 +227,6 @@ export class VSCodeNotebookController implements Disposable {
     @traceDecorators.verbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            traceInfoIfCI('No cells passed to handleExecution');
             return;
         }
         // Found on CI that sometimes VS Code calls this with old deleted cells.
@@ -243,11 +242,6 @@ export class VSCodeNotebookController implements Disposable {
             }
             return true;
         });
-        traceInfoIfCI(
-            `VSCodeNotebookController::handleExecution for ${getDisplayPath(notebook.uri)} for cells ${
-                cells.length
-            } with data ${cells.map((cell) => cell.document.getText()).join('\n#CELL\n')}`
-        );
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         if (!this.workspace.isTrusted) {
@@ -486,7 +480,7 @@ export class VSCodeNotebookController implements Disposable {
         // executeCell can get called multiple times before the first one is resolved. Since we only want
         // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
         // all of the cells if it fails.
-        return connectToKernel(this, this.serviceContainer, doc.uri, doc, options);
+        return connectToKernel(this.controller, this.kernelConnection, this.serviceContainer, doc.uri, doc, options);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

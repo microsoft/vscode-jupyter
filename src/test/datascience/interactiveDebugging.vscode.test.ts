@@ -10,7 +10,7 @@ import { traceInfo } from '../../platform/common/logger';
 import { IDisposable } from '../../platform/common/types';
 import { Commands } from '../../platform/datascience/constants';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../platform/datascience/types';
+import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { IVariableViewProvider } from '../../platform/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
@@ -31,7 +31,6 @@ suite('Interactive window debugging', async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     let variableViewProvider: ITestVariableViewProvider;
-    let codeWatcherProvider: IDataScienceCodeLensProvider;
     let debugAdapterTracker: vscode.DebugAdapterTracker | undefined;
     const tracker: vscode.DebugAdapterTrackerFactory = {
         createDebugAdapterTracker: function (
@@ -53,7 +52,6 @@ suite('Interactive window debugging', async function () {
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
-        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
     });
     teardown(async function () {
         // Make sure that debugging is shut down
@@ -510,8 +508,6 @@ def foo():
 foo()
 `;
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFileUsingCodeWatcher(
-            interactiveWindowProvider,
-            codeWatcherProvider,
             source,
             disposables
         );

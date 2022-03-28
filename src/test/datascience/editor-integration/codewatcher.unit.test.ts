@@ -458,11 +458,7 @@ fourth line
                 h.addCode(
                     TypeMoq.It.isValue(testString),
                     TypeMoq.It.is((u) => u.fsPath == fileName),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -493,9 +489,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -506,9 +500,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -539,9 +531,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -552,9 +542,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(3),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(3)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -589,9 +577,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => {
@@ -605,9 +591,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => {
@@ -621,9 +605,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting3'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(4),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(4)
                 )
             )
             .returns(() => {
@@ -659,11 +641,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -704,9 +682,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -717,9 +693,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(4),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(4)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -759,9 +733,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(1),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(1)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -772,9 +744,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(3),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(3)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -809,9 +779,7 @@ testing1`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -841,9 +809,7 @@ print('testing')`;
                 h.addCode(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isAnyNumber(),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isAnyNumber()
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -881,9 +847,7 @@ testing3`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -924,11 +888,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('testing2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(3),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(3)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -973,11 +933,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('text arg'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(3),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(3)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -1012,11 +968,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -1067,11 +1019,7 @@ testing1
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1\n'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.is((ed: TextEditor) => {
-                        return textEditor.object === ed;
-                    }),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -1182,12 +1130,10 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText1),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
-            .returns(() => Promise.reject(new InteractiveCellResultError()))
+            .returns(() => Promise.reject(new InteractiveCellResultError(undefined as any)))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
@@ -1195,9 +1141,7 @@ testing2`;
                 h.addCode(
                     TypeMoq.It.isValue(targetText2),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))
@@ -1227,12 +1171,10 @@ testing2`; // Command tests override getText, so just need the ranges here
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting1'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(0),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(0)
                 )
             )
-            .returns(() => Promise.reject(new InteractiveCellResultError()))
+            .returns(() => Promise.reject(new InteractiveCellResultError(undefined as any)))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
@@ -1240,9 +1182,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                 h.addCode(
                     TypeMoq.It.isValue('#%%\ntesting2'),
                     TypeMoq.It.is((u) => u.fsPath == fileName.fsPath),
-                    TypeMoq.It.isValue(2),
-                    TypeMoq.It.isAny(),
-                    TypeMoq.It.isAny()
+                    TypeMoq.It.isValue(2)
                 )
             )
             .returns(() => Promise.resolve(true))

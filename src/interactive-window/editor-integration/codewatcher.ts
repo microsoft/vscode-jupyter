@@ -8,7 +8,6 @@ import {
     commands,
     Event,
     EventEmitter,
-    NotebookEditor,
     Position,
     Range,
     Selection,
@@ -23,7 +22,6 @@ import { IFileSystem } from '../../platform/common/platform/types';
 
 import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
-import * as localize from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { traceDecorators } from '../../platform/logging';
@@ -168,7 +166,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                finished = this.addCode(iw, code, this.document.uri, range.start.line, leftCount);
+                finished = this.addCode(iw, code, this.document.uri, range.start.line);
             }
         }
 
@@ -219,7 +217,7 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(range);
-                finished = this.addCode(iw, code, this.document.uri, lens.range.start.line, leftCount);
+                finished = this.addCode(iw, code, this.document.uri, lens.range.start.line);
             } else {
                 // If we get a cell past or at the stop point stop
                 break;
@@ -247,7 +245,7 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                finished = this.addCode(iw, code, this.document.uri, lens.range.start.line, leftCount);
+                finished = this.addCode(iw, code, this.document.uri, lens.range.start.line);
             }
         }
 
@@ -272,14 +270,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(
-                iw,
-                normalizedCode,
-                this.document.uri,
-                activeEditor.selection.start.line,
-                0,
-                activeEditor
-            );
+            await this.addCode(iw, normalizedCode, this.document.uri, activeEditor.selection.start.line);
         }
     }
 
@@ -293,7 +284,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(iw, code, this.document.uri, 0, 0);
+                await this.addCode(iw, code, this.document.uri, 0);
             }
         }
     }
@@ -308,7 +299,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(iw, code, this.document.uri, targetLine, 0);
+                await this.addCode(iw, code, this.document.uri, targetLine);
             }
         }
     }
@@ -994,44 +985,23 @@ export class CodeWatcher implements ICodeWatcher {
         // This should be chained so that a queue forms when getting the interactive window
         return this.interactiveWindowProvider.getOrCreate(this.document?.uri);
     }
-
     private async addCode(
         interactiveWindow: IInteractiveWindow,
         code: string,
         file: Uri,
         line: number,
-        leftCount: number,
-        editor?: TextEditor,
         debug?: boolean
     ): Promise<boolean> {
         let result = false;
         const stopWatch = new StopWatch();
         try {
             if (debug) {
-                result = await interactiveWindow.debugCode(code, file, line, editor);
+                result = await interactiveWindow.debugCode(code, file, line);
             } else {
-                result = await interactiveWindow.addCode(code, file, line, editor);
+                result = await interactiveWindow.addCode(code, file, line);
             }
         } catch (err) {
-            if (err instanceof InteractiveCellResultError) {
-                // If our cell result was a failure show an error
-                // for the count of cells cancelled
-                await this.addErrorMessage(
-                    interactiveWindow,
-                    (e) => {
-                        // Index of message should be after the cell that we just inserted.
-                        const matchingCell = e.document
-                            .getCells()
-                            .find(
-                                (c) =>
-                                    c.metadata?.interactive?.uristring === file.toString() &&
-                                    c.metadata?.interactive?.line === line
-                            );
-                        return matchingCell ? matchingCell.index + 1 : -1;
-                    },
-                    leftCount
-                );
-            } else {
+            if (!(err instanceof InteractiveCellResultError)) {
                 await this.dataScienceErrorHandler.handleError(err);
             }
         } finally {
@@ -1040,23 +1010,6 @@ export class CodeWatcher implements ICodeWatcher {
 
         return result;
     }
-
-    private async addErrorMessage(
-        interactiveWindow: IInteractiveWindow,
-        getIndex: (editor: NotebookEditor) => number,
-        leftCount: number
-    ): Promise<void> {
-        // Only show an error message if any left
-        if (leftCount > 0) {
-            const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
-            try {
-                await interactiveWindow.addMessage(message, getIndex);
-            } catch (err) {
-                await this.dataScienceErrorHandler.handleError(err);
-            }
-        }
-    }
-
     private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
         if (runningStopWatch) {
             if (!CodeWatcher.sentExecuteCellTelemetry) {
@@ -1091,15 +1044,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(
-                    iw,
-                    code,
-                    this.document.uri,
-                    currentRunCellLens.range.start.line,
-                    0,
-                    this.documentManager.activeTextEditor,
-                    debug
-                );
+                await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, debug);
             }
         }
     }
@@ -1171,19 +1116,11 @@ export class CodeWatcher implements ICodeWatcher {
                 // Adds should get started in order with the map call, so just await
                 // all of them
                 const adds = ranges.map((r) =>
-                    this.addCode(
-                        iw,
-                        this.document!.getText(r.range),
-                        this.document!.uri,
-                        r.range.start.line,
-                        0,
-                        undefined,
-                        debug
-                    )
+                    this.addCode(iw, this.document!.getText(r.range), this.document!.uri, r.range.start.line, debug)
                 );
                 await Promise.all(adds);
             } else {
-                await this.addCode(iw, code, this.document.uri, 0, 0, undefined, debug);
+                await this.addCode(iw, code, this.document.uri, 0, debug);
             }
         }
     }
