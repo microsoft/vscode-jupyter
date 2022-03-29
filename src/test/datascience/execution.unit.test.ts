@@ -62,7 +62,8 @@ import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { DisplayOptions } from '../../kernels/displayOptions.node';
-import { INotebookServer, IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types';
+import { INotebookServer } from '../../kernels/jupyter/types';
+import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {

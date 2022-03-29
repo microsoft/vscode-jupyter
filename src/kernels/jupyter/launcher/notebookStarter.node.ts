@@ -28,7 +28,7 @@ import { WrappedError } from '../../../platform/errors/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
-import { IJupyterSubCommandExecutionService } from '../types';
+import { IJupyterSubCommandExecutionService } from '../types.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /**

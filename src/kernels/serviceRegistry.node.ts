@@ -87,7 +87,6 @@ import {
 } from '../webviews/extension-side/dataviewer/types';
 import { IJupyterDebugService } from './debugging/types';
 import {
-    IJupyterCommandFactory,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -99,12 +98,12 @@ import {
     INbConvertExportToPythonService,
     IJupyterServerProvider,
     IJupyterInterpreterDependencyManager,
-    IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage
 } from './jupyter/types';
 import { IKernelDependencyService, INotebookProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './jupyter/types.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(

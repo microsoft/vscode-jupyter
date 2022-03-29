@@ -36,10 +36,10 @@ import {
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import {
     IJupyterInterpreterDependencyManager,
-    IJupyterSubCommandExecutionService,
     JupyterInterpreterDependencyResponse,
     JupyterServerInfo
 } from '../types';
+import { IJupyterSubCommandExecutionService } from '../types.node';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

@@ -16,11 +16,8 @@ import {
     InterpreterJupyterKernelSpecCommand
 } from '../../../../kernels/jupyter/interpreter/jupyterCommand.node';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
-import {
-    IJupyterCommand,
-    IJupyterCommandFactory,
-    JupyterInterpreterDependencyResponse
-} from '../../../../kernels/jupyter/types';
+import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

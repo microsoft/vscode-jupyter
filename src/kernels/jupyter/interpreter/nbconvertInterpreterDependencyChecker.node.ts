@@ -10,7 +10,8 @@ import { parseSemVer } from '../../../platform/common/utils.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { IInstaller, Product } from '../../installer/types';
-import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../types';
+import { INbConvertInterpreterDependencyChecker } from '../types';
+import { IJupyterCommandFactory } from '../types.node';
 
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {
