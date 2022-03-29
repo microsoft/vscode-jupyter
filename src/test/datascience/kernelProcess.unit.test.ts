@@ -5,6 +5,7 @@
 
 import * as os from 'os';
 import { assert } from 'chai';
+import * as path from 'path';
 import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
@@ -109,7 +110,11 @@ suite('kernel Process', () => {
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(daemon));
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
-
+        when(fs.createTemporaryLocalFile(anything())).thenResolve({
+            dispose: noop,
+            filePath: 'connection.json'
+        });
+        when(jupyterPaths.getRuntimeDir()).thenResolve();
         kernelProcess = new KernelProcess(
             instance(processServiceFactory),
             connection,
