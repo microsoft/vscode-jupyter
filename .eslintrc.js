@@ -178,7 +178,8 @@ module.exports = {
         'eslint-plugin-prefer-arrow',
         'eslint-plugin-react',
         '@typescript-eslint',
-        '@typescript-eslint/tslint'
+        '@typescript-eslint/tslint',
+        'eslint-plugin-local-rules'
     ],
     rules: {
         // Overriding ESLint rules with Typescript-specific ones
@@ -290,6 +291,7 @@ module.exports = {
                 ]
             }
         ],
+        'local-rules/node-imports': 'error',
         strict: 'off'
     },
     settings: {
