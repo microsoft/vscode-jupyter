@@ -72,10 +72,10 @@ export function findNotebookEditor(
     return targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
 }
 
-export function getAssociatedNotebookDocument(kernel: IKernel | undefined, notebooks = workspace.notebookDocuments) {
+export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
     if (!kernel) {
         return;
     }
 
-    return notebooks.find((nb) => nb.uri.toString() === kernel.id.toString());
+    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.id.toString());
 }
