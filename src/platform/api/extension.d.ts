@@ -261,14 +261,14 @@ export interface IExportedKernelService {
      */
     getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]>;
     /**
-     * Gets a list of all active kernel connections associated with a notebook.
+     * Gets a list of all active kernel connections associated with a resource.
      */
-    getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; owner: Uri }[]>;
+    getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri }[]>;
     /**
      * Gets the Kernel connection & the metadata that's associated with a given resource.
      * (only successfully started/active connections are returned).
      */
-    getKernel(owner: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined;
+    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined;
     /**
      * Starts a kernel for a given resource.
      * The promise is resolved only after the kernel has successfully started.
@@ -276,7 +276,7 @@ export interface IExportedKernelService {
      */
     startKernel(
         metadata: KernelConnectionMetadata,
-        owner: Uri,
+        uri: Uri,
         token?: CancellationToken
     ): Promise<IKernelConnectionInfo>;
     /**
@@ -284,5 +284,5 @@ export interface IExportedKernelService {
      * The promise is resolved only after the kernel is successfully attached to a resource.
      * If one attempts to start another kernel or connect another kernel for the same resource, the same promise is returned.
      */
-    connect(metadata: LiveRemoteKernelConnectionMetadata, owner: Uri): Promise<IKernelConnectionInfo>;
+    connect(metadata: LiveRemoteKernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo>;
 }

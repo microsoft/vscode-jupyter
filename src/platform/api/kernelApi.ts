@@ -105,29 +105,29 @@ class JupyterKernelService implements IExportedKernelService {
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
-    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; owner: Uri }[]> {
+    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        const kernels: { metadata: KernelConnectionMetadata; owner: Uri }[] = [];
+        const kernels: { metadata: KernelConnectionMetadata; uri: Uri }[] = [];
         this.kernelProvider.kernels
             .filter((item) => item.startedAtLeastOnce)
             .forEach((item) => {
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    owner: item.id
+                    uri: item.id
                 });
             });
 
         return kernels;
     }
-    getKernel(owner: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
+    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
-        const kernel = this.kernelProvider.get(owner);
+        const kernel = this.kernelProvider.get(uri);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
@@ -136,23 +136,23 @@ class JupyterKernelService implements IExportedKernelService {
             };
         }
     }
-    async startKernel(spec: KernelConnectionMetadata, owner: Uri): Promise<IKernelConnectionInfo> {
+    async startKernel(spec: KernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'startKernel'
         });
-        return this.startOrConnect(spec, owner);
+        return this.startOrConnect(spec, uri);
     }
-    async connect(spec: ActiveKernel, owner: Uri): Promise<IKernelConnectionInfo> {
+    async connect(spec: ActiveKernel, uri: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'connect'
         });
-        return this.startOrConnect(spec, owner);
+        return this.startOrConnect(spec, uri);
     }
     private async startOrConnect(
         spec: KernelConnectionMetadata | ActiveKernel,
-        owner: Uri
+        uri: Uri
     ): Promise<IKernelConnectionInfo> {
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
@@ -165,10 +165,10 @@ class JupyterKernelService implements IExportedKernelService {
         if (!controller) {
             throw new Error('Not found');
         }
-        const kernel = await this.kernelProvider.getOrCreate(owner, {
+        const kernel = await this.kernelProvider.getOrCreate(uri, {
             metadata,
             controller: controller.controller,
-            resourceUri: owner
+            resourceUri: uri
         });
         let wrappedConnection = JupyterKernelService.wrappedKernelConnections.get(kernel);
         if (wrappedConnection) {
