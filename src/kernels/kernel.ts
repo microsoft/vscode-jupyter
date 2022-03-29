@@ -14,7 +14,8 @@ import {
     NotebookController,
     ColorThemeKind,
     Disposable,
-    Uri} from 'vscode';
+    Uri
+} from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
@@ -46,7 +47,8 @@ import {
     INotebookProvider,
     IStatusProvider,
     InterruptResult,
-    IDisplayOptions} from '../platform/datascience/types';
+    IDisplayOptions
+} from '../platform/datascience/types';
 import { calculateWorkingDirectory } from '../platform/datascience/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
