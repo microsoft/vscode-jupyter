@@ -29,6 +29,7 @@ import { Observable, Subject } from 'rxjs';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon';
+import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
@@ -59,6 +60,7 @@ suite('kernel Process', () => {
     let observableOutput: Observable<Output<string>>;
     let daemon: PythonKernelInterruptDaemon;
     let proc: ChildProcess;
+    let jupyterPaths: JupyterPaths;
     setup(() => {
         tempFileDisposable = mock<IDisposable>();
         token = new CancellationTokenSource();
@@ -83,6 +85,7 @@ suite('kernel Process', () => {
                 eventEmitter.removeAllListeners();
             }
         });
+        jupyterPaths = mock<JupyterPaths>();
         when(proc.on).thenReturn(noop as any);
         when(proc.stdout).thenReturn(eventEmitter as any);
         when(proc.stderr).thenReturn(eventEmitter as any);
@@ -117,7 +120,8 @@ suite('kernel Process', () => {
             instance(kernelEnvVarsService),
             instance(pythonExecFactory),
             instance(outputChannel),
-            instance(jupyterSettings)
+            instance(jupyterSettings),
+            instance(jupyterPaths)
         );
     });
     teardown(() => {

@@ -26,6 +26,7 @@ import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
+import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;
@@ -78,6 +79,7 @@ suite('DataScience - Kernel Process', () => {
                 on: noop
             } as any
         };
+        const jupyterPaths = mock<JupyterPaths>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
@@ -98,7 +100,8 @@ suite('DataScience - Kernel Process', () => {
             instance(kernelEnvVarsService),
             instance(pythonExecFactory),
             undefined,
-            instance(settings)
+            instance(settings),
+            instance(jupyterPaths)
         );
     }
     test('Launch from kernelspec (linux)', async function () {

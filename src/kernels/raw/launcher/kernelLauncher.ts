@@ -32,6 +32,7 @@ import {
 import { IKernelLauncher, IKernelProcess, IKernelConnection } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
+import { JupyterPaths } from '../finder/jupyterPaths';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -54,7 +55,8 @@ export class KernelLauncher implements IKernelLauncher {
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
 
     public static async cleanupStartPort() {
@@ -194,7 +196,8 @@ export class KernelLauncher implements IKernelLauncher {
             this.kernelEnvVarsService,
             this.pythonExecFactory,
             outputChannel,
-            jupyterSettings
+            jupyterSettings,
+            this.jupyterPaths
         );
 
         try {
