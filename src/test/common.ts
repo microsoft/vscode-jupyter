@@ -90,7 +90,7 @@ function getWorkspaceRoot() {
 }
 
 export function getExtensionSettings(resource: Uri | undefined): IJupyterSettings {
-    const pythonSettings = require('../platform/common/configSettings') as typeof import('../platform/common/configSettings.node');
+    const pythonSettings = require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings.node');
     return pythonSettings.JupyterSettings.getInstance(resource);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
