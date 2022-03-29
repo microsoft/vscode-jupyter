@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
 
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
-import '../../common/extensions';
+import '../../common/extensions.node';
 import { isTestExecution } from '../constants.node';
 import { traceError, traceVerbose } from '../logger.node';
 import { createDeferred, Deferred } from './async.node';

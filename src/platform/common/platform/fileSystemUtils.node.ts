@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
-import '../extensions';
+import '../extensions.node';
 import { traceError } from '../logger.node';
 import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors.node';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';

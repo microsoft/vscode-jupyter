@@ -3,7 +3,7 @@
 
 'use strict';
 
-import '../common/extensions';
+import '../common/extensions.node';
 import { inject, injectable, named } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';

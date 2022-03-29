@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
 import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants.node';
 import { ContextKey } from './contextKey.node';
-import './extensions';
+import './extensions.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from './types';
 import { debounceAsync, swallowExceptions } from './utils/decorators.node';
 import { noop } from './utils/misc.node';

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import '../../common/extensions';
+import '../../common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 import { Position, Range, TextEditor, Uri } from 'vscode';

@@ -9,7 +9,7 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import '../common/extensions';
+import '../common/extensions.node';
 import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace.node';
