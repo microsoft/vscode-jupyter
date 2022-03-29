@@ -14,7 +14,7 @@ import {
 import '../../../platform/common/extensions.node';
 import { getActiveInteractiveWindow } from '../../../interactive-window/helpers.node';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
-import { JupyterNotebookView } from '../../../notebooks/constants.node';
+import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers.node';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';

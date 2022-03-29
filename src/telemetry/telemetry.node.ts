@@ -7,12 +7,6 @@ import { Uri } from 'vscode';
 import { getOSType } from '../platform/common/utils/platform';
 import { InterruptResult, KernelConnectionMetadata } from '../platform/../kernels/types';
 import { Resource } from '../platform/common/types';
-import {
-    IEventNamePropertyMapping,
-    sendTelemetryEvent,
-    setSharedProperty,
-    waitBeforeSending
-} from '../platform/../telemetry';
 import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker.node';
@@ -21,10 +15,11 @@ import { InterpreterCountTracker } from './interpreterCountTracker.node';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages.node';
-import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors.node';
 import { createDeferred } from '../platform/common/utils/async.node';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter.node';
 import { getResourceType } from '../platform/common/utils.node';
+import { populateTelemetryWithErrorInfo } from '../platform/errors/index.node';
+import { setSharedProperty, IEventNamePropertyMapping, sendTelemetryEvent, waitBeforeSending } from './index.node';
 
 /**
  * This information is sent with each telemetry event.

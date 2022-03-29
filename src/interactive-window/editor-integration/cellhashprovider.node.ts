@@ -24,7 +24,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernel } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants.node';
+import { InteractiveWindowView } from '../../notebooks/constants';
 import { stripAnsi } from '../../platform/common/utils/regexp.node';
 import { getCellResource, uncommentMagicCommands } from './cellFactory.node';
 import { CellMatcher } from './cellMatcher.node';

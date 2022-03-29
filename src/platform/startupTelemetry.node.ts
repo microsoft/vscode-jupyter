@@ -5,9 +5,8 @@ import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants.node';
 import { traceError } from './common/logger.node';
 import { IServiceContainer } from './ioc/types';
-import { sendTelemetryEvent } from '../telemetry/index.node';
+import { IEventNamePropertyMapping, sendTelemetryEvent } from '../telemetry/index.node';
 import { EventName } from '../telemetry/constants.node';
-import { EditorLoadTelemetry } from '../telemetry/types';
 
 interface IStopWatch {
     elapsedTime: number;
@@ -55,7 +54,9 @@ export async function sendErrorTelemetry(
     }
 }
 
-async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
+async function getActivationTelemetryProps(
+    serviceContainer: IServiceContainer
+): Promise<IEventNamePropertyMapping[EventName.EXTENSION_LOAD]> {
     // eslint-disable-next-line
     // TODO: Not all of this data is showing up in the database...
     // eslint-disable-next-line

@@ -10,7 +10,7 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants.node';
 import '../platform/common/extensions.node';
 import { captureTelemetry } from '../telemetry/index.node';
 import { Telemetry, defaultNotebookFormat } from '../webviews/webview-side/common/constants';
-import { JupyterNotebookView } from './constants.node';
+import { JupyterNotebookView } from './constants';
 import { INotebookEditorProvider } from './types';
 
 /**

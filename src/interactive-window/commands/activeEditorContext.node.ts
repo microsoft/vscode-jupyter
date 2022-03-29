@@ -13,7 +13,7 @@ import { ContextKey } from '../../platform/common/contextKey.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isNotebookCell, noop } from '../../platform/common/utils/misc.node';
 import { getActiveInteractiveWindow } from '../helpers.node';
-import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants.node';
+import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';

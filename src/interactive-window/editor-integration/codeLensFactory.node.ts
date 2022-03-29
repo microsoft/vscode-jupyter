@@ -21,7 +21,7 @@ import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from
 import * as localize from '../../platform/common/utils/localize.node';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernelProvider } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants.node';
+import { InteractiveWindowView } from '../../notebooks/constants';
 import { CellHashProviderFactory } from './cellHashProviderFactory.node';
 import { CodeLensCommands, Commands } from '../../platform/common/constants.node';
 import { generateCellRangesFromDocument } from './cellFactory.node';

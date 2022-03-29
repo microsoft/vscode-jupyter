@@ -18,7 +18,7 @@ import {
 } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc.node';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory.node';
-import { InteractiveWindowView } from '../notebooks/constants.node';
+import { InteractiveWindowView } from '../notebooks/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
 import { Kernel } from './kernel.node';
 import { IKernel, IKernelProvider, INotebookProvider, KernelOptions } from './types';

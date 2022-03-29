@@ -10,9 +10,9 @@ import { isResource, noop } from '../platform/common/utils/misc.node';
 import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { InterpreterPackages } from './interpreterPackages.node';
 import { INotebookControllerManager } from '../platform/../notebooks/types';
-import { trackKernelResourceInformation } from './telemetry/index.node';
 import { IInstaller, Product } from '../platform/../kernels/installer/types';
-import { VSCodeNotebookController } from '../platform/../notebooks/controllers/vscodeNotebookController.node';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { trackKernelResourceInformation } from './telemetry.node';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -41,7 +41,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
     }
     private async onNotebookControllerSelected(event: {
         notebook: NotebookDocument;
-        controller: VSCodeNotebookController;
+        controller: IVSCodeNotebookController;
     }) {
         if (!event.controller.connection.interpreter) {
             return;

@@ -24,7 +24,6 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.no
 import { translateProductToModule } from '../../kernels/installer/moduleInstaller.node';
 import { ProductNames } from '../../kernels/installer/productNames.node';
 import { Product } from '../../kernels/installer/types';
-import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -38,7 +37,10 @@ import { noop } from '../../platform/common/utils/misc.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError.node';
 import { DisplayOptions } from '../../kernels/displayOptions.node';
-import { IJupyterInterpreterDependencyManager } from '../../kernels/jupyter/types';
+import {
+    IJupyterInterpreterDependencyManager,
+    JupyterInterpreterDependencyResponse
+} from '../../kernels/jupyter/types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
