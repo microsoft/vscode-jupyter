@@ -8,10 +8,11 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service';
 import { IJupyterSettings } from '../../../platform/common/types';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
-import { KernelConnectionMetadata } from '../../../platform/../kernels/types';
-import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../platform/datascience/types';
+import { INotebook, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
+import { IRawNotebookProvider } from '../../../kernels/raw/types';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -66,7 +67,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -83,7 +83,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -92,7 +91,6 @@ suite('DataScience - NotebookProvider', () => {
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),

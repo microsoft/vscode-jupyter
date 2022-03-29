@@ -52,8 +52,8 @@ suite('Dummy9', () => {
 // } from '../../platform/datascience/types';
 // import { IInterpreterService } from '../../platform/interpreter/contracts';
 // import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-// import { concatMultilineString } from '../../datascience-ui/common';
-// import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
+// import { concatMultilineString } from '../../webviews/webview-side/common';
+// import { generateTestState, ICellViewModel } from '../../webviews/webview-side/interactive-common/mainState';
 // import { sleep } from '../core';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { SupportedCommands } from './mockJupyterManager';

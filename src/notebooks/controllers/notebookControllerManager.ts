@@ -31,16 +31,14 @@ import { debounceAsync } from '../../platform/common/utils/decorators';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { DisplayOptions } from '../../platform/datascience/displayOptions';
 import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { INotebookProvider, IJupyterServerUriStorage } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     isLocalLaunch,
@@ -58,7 +56,8 @@ import {
     IKernelProvider,
     KernelConnectionMetadata,
     PythonKernelConnectionMetadata,
-    isLocalConnection
+    isLocalConnection,
+    INotebookProvider
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../constants';
 import { isPythonNotebook, getNotebookMetadata } from '../helpers';
@@ -66,6 +65,8 @@ import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { VSCodeNotebookController } from './vscodeNotebookController';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

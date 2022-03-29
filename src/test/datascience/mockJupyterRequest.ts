@@ -4,11 +4,11 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { ICell } from '../../platform/common/types';
 
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
-import { ICell } from '../../platform/datascience/types';
-import { concatMultilineString } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../webviews/webview-side/common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMessageResult {

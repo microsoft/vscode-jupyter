@@ -6,21 +6,21 @@
 import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IConfigurationService } from '../../../platform/common/types';
-import { Settings } from '../../../platform/datascience/constants';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
 import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
-    INotebookProvider,
-    IRawNotebookProvider,
-    IJupyterNotebookProvider,
     ConnectNotebookProviderOptions,
+    INotebook,
+    INotebookProvider,
     INotebookProviderConnection,
-    NotebookCreationOptions,
-    INotebook
-} from '../../../platform/datascience/types';
-import { Telemetry } from '../../../datascience-ui/common/constants';
-import { isLocalConnection } from '../../../kernels/types';
+    isLocalConnection,
+    NotebookCreationOptions
+} from '../../../kernels/types';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { Settings } from '../../../platform/common/constants';
+import { DisplayOptions } from '../../displayOptions';
+import { IRawNotebookProvider } from '../../raw/types';
+import { IJupyterNotebookProvider } from '../types';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
@@ -80,7 +80,6 @@ export class NotebookProvider implements INotebookProvider {
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawLocalKernel
             ? this.rawNotebookProvider.createNotebook(
-                  options.document,
                   options.resource,
                   options.kernelConnection,
                   options.ui,

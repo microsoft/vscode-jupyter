@@ -9,6 +9,8 @@ import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
 import {
+    IJupyterKernelSpec,
+    INotebookProviderConnection,
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -16,22 +18,17 @@ import {
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceError } from '../../../platform/common/logger';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
-import { getResourceType } from '../../../platform/datascience/common';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
-import {
-    IJupyterSessionManagerFactory,
-    INotebookProviderConnection,
-    IJupyterSessionManager,
-    IJupyterKernelSpec
-} from '../../../platform/datascience/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging } from '../../../platform/logging/trace';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../types';
 import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
+import { getResourceType } from '../../../platform/common/utils';
+import { IJupyterSessionManagerFactory, IJupyterSessionManager } from '../../jupyter/types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,

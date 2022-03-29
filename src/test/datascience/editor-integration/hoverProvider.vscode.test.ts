@@ -11,16 +11,17 @@ import {
     IVariableTooltipFields,
     ReadWrite
 } from '../../../platform/common/types';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../../../platform/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
-import { Identifiers } from '../../../platform/datascience/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { IInteractiveWindowProvider } from '../../../interactive-window/types';
+import { IJupyterVariables } from '../../../kernels/variables/types';
+import { Identifiers } from '../../../platform/common/constants';
 
 suite('Hover provider', async () => {
     const file = path.join(

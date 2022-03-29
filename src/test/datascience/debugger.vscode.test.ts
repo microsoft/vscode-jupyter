@@ -4,8 +4,6 @@
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
-import { Commands } from '../../platform/datascience/constants';
-import { IVariableViewProvider } from '../../platform/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -29,6 +27,8 @@ import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
+import { Commands } from '../../platform/common/constants';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;

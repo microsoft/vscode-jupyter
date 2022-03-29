@@ -2,15 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 
+import type * as nbformat from '@jupyterlab/nbformat';
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
-import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { BannerType } from '../datascience/dataScienceSurveyBanner';
+import { BannerType } from './dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
+import { ICommandManager } from './application/types';
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsPreRelease = Symbol('IsPreRelease');
@@ -366,3 +368,31 @@ export interface IExperimentService {
 }
 
 export type InterpreterUri = Resource | PythonEnvironment;
+
+export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');
+export interface IDataScienceCommandListener {
+    register(commandManager: ICommandManager): void;
+}
+
+export interface IDisplayOptions {
+    disableUI: boolean;
+    onDidChangeDisableUI: Event<void>;
+}
+
+// Basic structure for a cell from a notebook
+export interface ICell {
+    uri?: Uri;
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
+}
+
+// CellRange is used as the basis for creating new ICells.
+// Was only intended to aggregate together ranges to create an ICell
+// However the "range" aspect is useful when working with plain text document
+// Ultimately, it would probably be ideal to be ICell and change line to range.
+// Specificially see how this is being used for the ICodeLensFactory to
+// provide cells for the CodeWatcher to use.
+export interface ICellRange {
+    range: Range;
+    title: string;
+    cell_type: string;
+}

@@ -8,21 +8,21 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { getResourceType } from '../../../../platform/datascience/common';
-import { DisplayOptions } from '../../../../platform/datascience/displayOptions';
 import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService';
-import { IKernelProvider, PythonKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IRawNotebookSupportedService,
-    KernelInterpreterDependencyResponse
-} from '../../../../platform/datascience/types';
+    IKernelProvider,
+    KernelInterpreterDependencyResponse,
+    PythonKernelConnectionMetadata
+} from '../../../../platform/../kernels/types';
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../../interactive-window/types';
+import { DisplayOptions } from '../../../../kernels/displayOptions';
+import { IRawNotebookSupportedService } from '../../../../kernels/raw/types';
+import { getResourceType } from '../../../../platform/common/utils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

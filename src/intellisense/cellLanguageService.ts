@@ -14,8 +14,10 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceWarning } from '../platform/common/logger';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/decorators';
-import { translateKernelLanguageToMonaco } from '../platform/datascience/common';
-import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../datascience-ui/common/constants';
+import {
+    LanguagesSupportedByPythonkernel,
+    VSCodeKnownNotebookLanguages
+} from '../webviews/webview-side/common/constants';
 import {
     isPythonKernelConnection,
     getKernelConnectionLanguage,
@@ -23,6 +25,7 @@ import {
 } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { isJupyterNotebook, getNotebookMetadata } from '../notebooks/helpers';
+import { translateKernelLanguageToMonaco } from '../platform/common/utils';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**

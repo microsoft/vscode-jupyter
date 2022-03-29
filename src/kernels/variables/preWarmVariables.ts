@@ -11,9 +11,9 @@ import { CondaService } from '../../platform/common/process/condaService';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
-import { IRawNotebookSupportedService } from '../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
+import { IRawNotebookSupportedService } from '../raw/types';
 
 @injectable()
 export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {

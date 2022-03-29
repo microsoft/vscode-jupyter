@@ -12,7 +12,6 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { IKernelProvider } from '../../platform/../kernels/types';
-import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -35,6 +34,7 @@ import {
 } from './notebook/helper';
 import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
@@ -153,7 +153,7 @@ suite('Interactive window', async function () {
 
         // Restart kernel
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const kernel = kernelProvider.get(notebookDocument);
+        const kernel = kernelProvider.get(notebookDocument.uri);
         const handler = createEventHandler(kernel!, 'onRestarted', disposables);
         await vscode.commands.executeCommand('jupyter.restartkernel');
         // Wait for restart to finish

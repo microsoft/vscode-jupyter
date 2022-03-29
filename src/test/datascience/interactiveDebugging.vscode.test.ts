@@ -8,10 +8,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo } from '../../platform/common/logger';
 import { IDisposable } from '../../platform/common/types';
-import { Commands } from '../../platform/datascience/constants';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../platform/datascience/types';
-import { IVariableViewProvider } from '../../platform/datascience/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import {
@@ -24,6 +21,9 @@ import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCell
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { Commands } from '../../platform/common/constants';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('Interactive window debugging', async function () {
     this.timeout(120_000);

@@ -20,15 +20,15 @@ import {
 } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
-import { ILocalResourceUriConverter } from '../../platform/datascience/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
-import { WidgetScriptSource } from './types';
+import { ILocalResourceUriConverter, WidgetScriptSource } from './types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 
@@ -85,7 +85,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
-                if (e.notebookDocument === this.document) {
+                if (getAssociatedNotebookDocument(e) === this.document) {
                     this.initialize().catch(traceError.bind('Failed to initialize'));
                 }
             },
@@ -173,7 +173,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         }
 
         if (!this.kernel) {
-            this.kernel = await this.kernelProvider.get(this.document);
+            this.kernel = await this.kernelProvider.get(this.document.uri);
         }
         if (!this.kernel) {
             return;

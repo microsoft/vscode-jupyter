@@ -17,7 +17,10 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IKernelProvider,
-    isLocalConnection
+    isLocalConnection,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    KernelInterpreterDependencyResponse
 } from './types';
 import { Uri, Memento, NotebookDocument, NotebookController } from 'vscode';
 import {
@@ -26,27 +29,22 @@ import {
     IVSCodeNotebook,
     IApplicationShell
 } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, isCI } from '../platform/common/constants';
+import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
-import { IPathUtils, IConfigurationService, Resource, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
+import {
+    IPathUtils,
+    IConfigurationService,
+    Resource,
+    IMemento,
+    GLOBAL_MEMENTO,
+    IDisplayOptions
+} from '../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
-import { getResourceType } from '../platform/datascience/common';
-import { Settings } from '../platform/datascience/constants';
 import { SysInfoReason } from '../platform/messageTypes';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry';
-import {
-    IJupyterSession,
-    IInteractiveWindowProvider,
-    IStatusProvider,
-    IDataScienceErrorHandler,
-    IRawNotebookProvider,
-    KernelInterpreterDependencyResponse,
-    IJupyterKernelSpec,
-    IDisplayOptions
-} from '../platform/datascience/types';
 import { IServiceContainer } from '../platform/ioc/types';
 import {
     getNormalizedInterpreterPath,
@@ -55,8 +53,8 @@ import {
 } from '../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../telemetry';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
-import { concatMultilineString } from '../datascience-ui/common';
-import { Telemetry, Commands } from '../datascience-ui/common/constants';
+import { concatMultilineString } from '../webviews/webview-side/common';
+import { Telemetry, Commands } from '../webviews/webview-side/common/constants';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
 import { Product } from './installer/types';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
@@ -72,9 +70,14 @@ import { isPythonNotebook } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
-import { DisplayOptions } from '../platform/datascience/displayOptions';
 import { KernelDeadError } from '../platform/errors/kernelDeadError';
 import { noop } from '../platform/common/utils/misc';
+import { IInteractiveWindowProvider } from '../interactive-window/types';
+import { getResourceType } from '../platform/common/utils';
+import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IStatusProvider } from '../platform/progress/types';
+import { IRawNotebookProvider } from './raw/types';
+import { DisplayOptions } from './displayOptions';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1783,7 +1786,7 @@ export async function wrapKernelMethodImpl(
     let context = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
-        kernel = kernelProvider.getOrCreate(notebook, {
+        kernel = kernelProvider.getOrCreate(notebook.uri, {
             metadata,
             controller,
             resourceUri: resource

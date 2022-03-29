@@ -23,11 +23,10 @@ import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ContextKey } from '../../common/contextKey';
-import { EditorContexts } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
-import { Commands as DSCommands } from '../../datascience/constants';
+import { Commands as DSCommands, EditorContexts } from '../../../webviews/webview-side/common/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
@@ -429,9 +428,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         await this.notebookControllerManager.loadNotebookControllers();
         const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 
-        let kernel = this.kernelProvider.get(doc);
+        let kernel = this.kernelProvider.get(doc.uri);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc, {
+            kernel = this.kernelProvider.getOrCreate(doc.uri, {
                 metadata: controller.connection,
                 controller: controller?.controller,
                 resourceUri: doc.uri
@@ -446,13 +445,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
-            let kernel = this.kernelProvider.get(doc);
+            let kernel = this.kernelProvider.get(doc.uri);
             if (!kernel) {
                 const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
-                kernel = this.kernelProvider.getOrCreate(doc, {
+                kernel = this.kernelProvider.getOrCreate(doc.uri, {
                     metadata: controller.connection,
                     controller: controller?.controller,
                     resourceUri: doc.uri

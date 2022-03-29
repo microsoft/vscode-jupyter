@@ -8,25 +8,68 @@ import { traceError } from '../../../platform/common/logger';
 import {
     IPythonExecutionService,
     IPythonExecutionFactory,
+    IPythonDaemonExecutionService,
     ExecutionResult
 } from '../../../platform/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../platform/datascience/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterCommands } from '../../../datascience-ui/common/constants';
+import { JupyterCommands, JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
+import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 class InterpreterJupyterCommand implements IJupyterCommand {
+    protected interpreterPromise: Promise<PythonEnvironment>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
     constructor(
         protected readonly moduleName: string,
         protected args: string[],
         protected readonly pythonExecutionFactory: IPythonExecutionFactory,
-        public readonly interpreter: PythonEnvironment
+        private readonly _interpreter: PythonEnvironment,
+        isActiveInterpreter: boolean
     ) {
-        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({
-            interpreter
+        this.interpreterPromise = Promise.resolve(this._interpreter);
+        this.pythonLauncher = this.interpreterPromise.then(async (interpreter) => {
+            // Create a daemon only if the interpreter is the same as the current interpreter.
+            // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
+            if (isActiveInterpreter) {
+                const svc = await pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+                    daemonModule: JupyterDaemonModule,
+                    interpreter
+                });
+
+                // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
+                if (
+                    (moduleName.toLowerCase() === 'jupyter' &&
+                        args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
+                    (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))
+                ) {
+                    try {
+                        const output = await svc.exec(
+                            [
+                                path.join(
+                                    EXTENSION_ROOT_DIR,
+                                    'pythonFiles',
+                                    'vscode_datascience_helpers',
+                                    'jupyter_nbInstalled.py'
+                                )
+                            ],
+                            {}
+                        );
+                        if (output.stdout.toLowerCase().includes('available')) {
+                            return svc;
+                        }
+                    } catch (ex) {
+                        traceError('Checking whether notebook is importable failed', ex);
+                    }
+                }
+            }
+            return pythonExecutionFactory.createActivatedEnvironment({
+                interpreter: this._interpreter
+            });
         });
+    }
+    public interpreter(): Promise<PythonEnvironment | undefined> {
+        return this.interpreterPromise;
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
@@ -53,9 +96,10 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        isActiveInterpreter: boolean
     ) {
-        super(moduleName, args, pythonExecutionFactory, interpreter);
+        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 }
 
@@ -73,9 +117,10 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        isActiveInterpreter: boolean
     ) {
-        super(moduleName, args, pythonExecutionFactory, interpreter);
+        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 
     /**
@@ -122,7 +167,9 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         };
 
         // We're only interested in `python -m jupyter kernelspec`
+        const interpreter = await this.interpreter();
         if (
+            !interpreter ||
             this.moduleName.toLowerCase() !== 'jupyter' ||
             this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase()
         ) {
@@ -133,11 +180,11 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         try {
             if (args.join(' ').toLowerCase() === 'list --json') {
                 // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
-                output = await this.getKernelSpecList(this.interpreter, options);
+                output = await this.getKernelSpecList(interpreter, options);
                 return output;
             } else if (args.join(' ').toLowerCase() === '--version') {
                 // Try getting kernelspec version using python script, if that fails (even if there's output in stderr) rethrow original exception.
-                output = await this.getKernelSpecVersion(this.interpreter, options);
+                output = await this.getKernelSpecVersion(interpreter, options);
                 return output;
             }
         } catch (innerEx) {
@@ -184,13 +231,26 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
         command: JupyterCommands,
         moduleName: string,
         args: string[],
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        isActiveInterpreter: boolean
     ): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand) {
-            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter);
+            return new InterpreterJupyterNotebookCommand(
+                moduleName,
+                args,
+                this.executionFactory,
+                interpreter,
+                isActiveInterpreter
+            );
         } else if (command === JupyterCommands.KernelSpecCommand) {
-            return new InterpreterJupyterKernelSpecCommand(moduleName, args, this.executionFactory, interpreter);
+            return new InterpreterJupyterKernelSpecCommand(
+                moduleName,
+                args,
+                this.executionFactory,
+                interpreter,
+                isActiveInterpreter
+            );
         }
-        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
     }
 }

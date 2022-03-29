@@ -13,7 +13,6 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
-import { Settings } from '../../../platform/datascience/constants';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
@@ -24,6 +23,7 @@ import { MockEncryptedStorage } from '../mockEncryptedStorage';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
+import { Settings } from '../../../platform/common/constants';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {

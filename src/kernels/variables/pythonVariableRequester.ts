@@ -3,16 +3,17 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, NotebookDocument } from 'vscode';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/datascience/constants';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
-import { IKernelVariableRequester, IJupyterVariable } from '../../platform/datascience/types';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
+import { IKernelVariableRequester, IJupyterVariable } from './types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -64,7 +65,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        const fileName = path.basename(kernel.notebookDocument.uri.path);
+        const fileName = path.basename(
+            getAssociatedNotebookDocument(kernel)?.uri.fsPath || kernel.resourceUri?.fsPath || kernel.id.path
+        );
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -207,8 +210,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     private async importDataFrameScripts(kernel: IKernel): Promise<void> {
-        const key = kernel.notebookDocument;
-        if (!this.importedDataFrameScripts.get(key)) {
+        const key = getAssociatedNotebookDocument(kernel);
+        if (key && !this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {
@@ -221,13 +224,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             // First put the code from our helper files into the notebook
             await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
 
-            this.importedDataFrameScripts.set(kernel.notebookDocument, true);
+            this.importedDataFrameScripts.set(key, true);
         }
     }
 
     private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
-        const key = kernel.notebookDocument;
-        if (!this.importedGetVariableInfoScripts.get(key)) {
+        const key = getAssociatedNotebookDocument(kernel);
+        if (key && !this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {
@@ -239,7 +242,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
             await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
 
-            this.importedGetVariableInfoScripts.set(kernel.notebookDocument, true);
+            this.importedGetVariableInfoScripts.set(key, true);
         }
     }
 

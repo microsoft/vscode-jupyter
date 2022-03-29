@@ -15,14 +15,13 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { isCI } from '../common/constants';
+import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { PythonExtension, Telemetry } from '../datascience/constants';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { TraceOptions } from '../logging/trace';

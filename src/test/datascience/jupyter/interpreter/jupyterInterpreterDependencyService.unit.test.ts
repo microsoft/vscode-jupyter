@@ -8,7 +8,6 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { DataScience } from '../../../../platform/common/utils/localize';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../platform/datascience/types';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
@@ -20,6 +19,7 @@ import {
     JupyterInterpreterDependencyService,
     JupyterInterpreterDependencyResponse
 } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
@@ -41,9 +41,9 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         command = mock(InterpreterJupyterKernelSpecCommand);
         instance(commandFactory as any).then = undefined;
         instance(command as any).then = undefined;
-        when(commandFactory.createInterpreterCommand(anything(), anything(), anything(), anything())).thenReturn(
-            instance(command)
-        );
+        when(
+            commandFactory.createInterpreterCommand(anything(), anything(), anything(), anything(), anything())
+        ).thenReturn(instance(command));
         when(command.exec(anything(), anything())).thenResolve({ stdout: '' });
 
         configuration = new JupyterInterpreterDependencyService(

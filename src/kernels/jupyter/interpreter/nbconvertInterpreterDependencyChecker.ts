@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
-import { parseSemVer } from '../../../platform/datascience/common';
-import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../../../platform/datascience/types';
+import { parseSemVer } from '../../../platform/common/utils';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterCommands } from '../../../datascience-ui/common/constants';
+import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { IInstaller, Product } from '../../installer/types';
+import { INbConvertInterpreterDependencyChecker, IJupyterCommandFactory } from '../types';
 
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {
@@ -45,7 +45,8 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
             JupyterCommands.ConvertCommand,
             'jupyter',
             ['-m', 'jupyter', 'nbconvert'],
-            interpreter
+            interpreter,
+            false
         );
 
         const result = await command.exec(['--version'], { throwOnStdErr: true });

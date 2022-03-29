@@ -13,14 +13,13 @@ import {
     workspace,
     WorkspaceEdit
 } from 'vscode';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
-import { MARKDOWN_LANGUAGE } from '../common/constants';
+import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
+import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
-import { Commands } from '../datascience/constants';
-import { IDataScienceCommandListener, IInteractiveWindowProvider } from '../datascience/types';
 import { IInterpreterService } from '../interpreter/contracts';
 
 @injectable()

@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { JupyterCommandLineSelector } from '../../kernels/jupyter/launcher/commandLineSelector';
 import { ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
-import { Commands } from '../../platform/datascience/constants';
+import { Commands } from '../common/constants';
 
 @injectable()
 export class JupyterCommandLineSelectorCommand implements IDisposable {

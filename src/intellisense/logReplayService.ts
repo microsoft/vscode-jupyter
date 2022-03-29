@@ -14,7 +14,7 @@ import { ContextKey } from '../platform/common/contextKey';
 import { traceInfo } from '../platform/common/logger';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
-import { Commands, EditorContexts } from '../datascience-ui/common/constants';
+import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
 import { sleep, waitForCondition } from '../platform/common/utils/async';
 
 /**

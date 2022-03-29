@@ -31,20 +31,20 @@ import { traceInfoIfCI, traceError, traceWarning } from '../platform/common/logg
 import { arePathsSame } from '../platform/common/platform/fileUtils';
 import { IFileSystem } from '../platform/common/platform/types';
 import { Resource } from '../platform/common/types';
-import { IInteractiveWindowProvider, IJupyterKernelSpec } from '../platform/datascience/types';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../telemetry';
-import { splitMultilineString, concatMultilineString } from '../datascience-ui/common';
-import { Telemetry } from '../datascience-ui/common/constants';
+import { splitMultilineString, concatMultilineString } from '../webviews/webview-side/common';
+import { Telemetry } from '../webviews/webview-side/common/constants';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../kernels/helpers';
-import { KernelConnectionMetadata } from '../kernels/types';
+import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from './constants';
 import { CellOutputMimeTypes } from './types';
+import { IInteractiveWindowProvider } from '../interactive-window/types';
 
 /**
  * Whether this is a Notebook we created/manage/use.

@@ -8,9 +8,9 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { getUserMessageForAction } from '../../../platform/datascience/progress/messages';
-import { ProgressReporter } from '../../../platform/datascience/progress/progressReporter';
-import { ReportableAction } from '../../../platform/datascience/progress/types';
+import { getUserMessageForAction } from '../../../platform/progress/messages';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { ReportableAction } from '../../../platform/progress/types';
 import { noop, sleep } from '../../core';
 type Task<R> = (
     progress: VSCProgress<{ message?: string; increment?: number }>,

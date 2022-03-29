@@ -14,10 +14,10 @@ suite('Dummy8', () => {
 // import * as sinon from 'sinon';
 // import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 // import { getNamesAndValues } from '../utils/enum';
-// import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
-// import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
-// import { INativeEditorToolbarProps, Toolbar } from '../../datascience-ui/native-editor/toolbar';
-// import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+// import { ServerStatus } from '../../webviews/webview-side/interactive-common/mainState';
+// import { TrustMessage } from '../../webviews/webview-side/interactive-common/trustMessage';
+// import { INativeEditorToolbarProps, Toolbar } from '../../webviews/webview-side/native-editor/toolbar';
+// import { ImageButton } from '../../webviews/webview-side/react-common/imageButton';
 // import { noop } from '../core';
 // import { mountComponent } from './testHelpers';
 

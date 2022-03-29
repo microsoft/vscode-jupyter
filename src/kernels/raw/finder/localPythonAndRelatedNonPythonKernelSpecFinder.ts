@@ -6,7 +6,11 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
@@ -20,8 +24,7 @@ import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/typ
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;

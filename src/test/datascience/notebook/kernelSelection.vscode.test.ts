@@ -279,7 +279,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         // Very this kernel gets disposed when we switch the notebook kernel.
-        const kernel = kernelProvider.get(window.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(window.activeNotebookEditor!.document.uri)!;
         assert.ok(kernel, 'Kernel is not defined');
         const eventListener = createEventHandler(kernel, 'onDisposed');
 
@@ -301,7 +301,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Verify the new kernel is not the same as the old.
         assert.isFalse(
-            kernel === kernelProvider.get(window.activeNotebookEditor!.document),
+            kernel === kernelProvider.get(window.activeNotebookEditor!.document.uri),
             'Kernels should not be the same'
         );
     });

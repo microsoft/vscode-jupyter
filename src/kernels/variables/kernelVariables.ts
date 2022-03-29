@@ -3,22 +3,21 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
-import { CancellationError, CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { Identifiers } from '../../webviews/webview-side/common/constants';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
+import { IJupyterSession, IKernel } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
     IKernelVariableRequester,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    IJupyterSession
-} from '../../platform/datascience/types';
-import { Identifiers } from '../../datascience-ui/common/constants';
-import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel } from '../types';
+    IJupyterVariablesResponse
+} from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -49,7 +48,7 @@ interface INotebookState {
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
-    private notebookState = new WeakMap<NotebookDocument, INotebookState>();
+    private cachedVariables = new Map<string, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
     private enhancedTooltipsExperimentPromise: boolean | undefined;
 
@@ -80,7 +79,7 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
-        const cache = this.notebookState.get(kernel.notebookDocument);
+        const cache = this.cachedVariables.get(kernel.id.toString());
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
@@ -171,7 +170,7 @@ export class KernelVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        let list = this.notebookState.get(kernel.notebookDocument);
+        let list = this.cachedVariables.get(kernel.id.toString());
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -242,7 +241,7 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Save in our cache
-            this.notebookState.set(kernel.notebookDocument, list);
+            this.cachedVariables.set(kernel.id.toString(), list);
 
             // Update total count (exclusions will change this as types are computed)
             result.totalCount = list.variables.length;

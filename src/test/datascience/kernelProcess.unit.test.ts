@@ -16,12 +16,15 @@ import {
     Output
 } from '../../platform/common/process/types';
 import { IKernelConnection } from '../../kernels/raw/types';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../kernels/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';
-import { IJupyterKernelSpec } from '../../platform/datascience/types';
 import { CancellationTokenSource } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { noop } from '../core';

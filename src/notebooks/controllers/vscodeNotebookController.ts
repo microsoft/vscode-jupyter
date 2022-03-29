@@ -35,6 +35,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
     IConfigurationService,
+    IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
     IExtensionContext,
@@ -44,20 +45,18 @@ import { createDeferred } from '../../platform/common/utils/async';
 import { chainable } from '../../platform/common/utils/decorators';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/datascience/common';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
 } from '../../telemetry/telemetry';
-import { IDataScienceErrorHandler, IDisplayOptions, KernelSocketInformation } from '../../platform/datascience/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/trace';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { Telemetry, Commands } from '../../datascience-ui/common/constants';
+import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import { displayErrorsInCell } from '../../platform/errors/errorUtils';
-import { WrappedError } from '../../platform/errors/types';
+import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
@@ -76,6 +75,7 @@ import {
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
+    KernelSocketInformation,
     LiveKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -83,8 +83,9 @@ import {
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
-import { DisplayOptions } from '../../platform/datascience/displayOptions';
 import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -292,7 +293,7 @@ export class VSCodeNotebookController implements Disposable {
         if (!event.selected) {
             // If user has selected another controller, then kill the current kernel.
             // Possible user selected a controller that's not contributed by us at all.
-            const kernel = this.kernelProvider.get(event.notebook);
+            const kernel = this.kernelProvider.get(event.notebook.uri);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
                 traceInfo(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
@@ -367,14 +368,18 @@ export class VSCodeNotebookController implements Disposable {
         const scripts: string[] = [];
 
         // Put require.js first
-        scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'));
+        scripts.push(
+            join(this.context.extensionPath, 'out', 'webviews/webview-side', 'ipywidgetsKernel', 'require.js')
+        );
 
         // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||
             this.context.extensionMode === ExtensionMode.Test
         ) {
-            scripts.push(join(this.context.extensionPath, 'out', 'datascience-ui', 'widgetTester', 'widgetTester.js'));
+            scripts.push(
+                join(this.context.extensionPath, 'out', 'webviews/webview-side', 'widgetTester', 'widgetTester.js')
+            );
 
             // In development mode, ipywidgets is not under the 'out' folder.
             scripts.push(
@@ -403,7 +408,13 @@ export class VSCodeNotebookController implements Disposable {
         }
         scripts.push(
             ...[
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
+                join(
+                    this.context.extensionPath,
+                    'out',
+                    'webviews/webview-side',
+                    'ipywidgetsKernel',
+                    'ipywidgetsKernel.js'
+                ),
                 join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
             ]
         );
@@ -549,7 +560,7 @@ export class VSCodeNotebookController implements Disposable {
     }
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-        const existingKernel = this.kernelProvider.get(document);
+        const existingKernel = this.kernelProvider.get(document.uri);
         if (
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
@@ -607,7 +618,7 @@ export class VSCodeNotebookController implements Disposable {
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        const newKernel = this.kernelProvider.getOrCreate(document, {
+        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata,
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.

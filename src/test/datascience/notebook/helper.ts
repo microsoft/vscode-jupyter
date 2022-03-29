@@ -40,7 +40,6 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/
 import { createDeferred } from '../../../platform/common/utils/async';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { INotebookEditorProvider } from '../../../platform/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
@@ -54,7 +53,7 @@ import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguag
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
 import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
-import { INotebookControllerManager, CellOutputMimeTypes } from '../../../notebooks/types';
+import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 
 // Running in Conda environments, things can be a little slower.
@@ -938,7 +937,7 @@ export async function waitForDebugEvent<T>(
 }
 
 export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
-    assert.ok(debugAdapter, `No debug adapter when waiting for stoppped event`);
+    assert.ok(debugAdapter, `No debug adapter when waiting for stopped event`);
     return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
 

@@ -6,13 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { applyEdits, ModificationOptions, modify, parse, ParseError } from 'jsonc-parser';
 import * as path from 'path';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
+import { Settings } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
-import { Settings } from '../datascience/constants';
-import { IJupyterServerUriStorage } from '../datascience/types';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 

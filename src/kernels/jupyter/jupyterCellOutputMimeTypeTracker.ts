@@ -12,7 +12,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');

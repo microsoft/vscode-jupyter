@@ -5,14 +5,6 @@ import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid/v4';
-import {
-    ConnectNotebookProviderOptions,
-    IDisplayOptions,
-    INotebook,
-    IRawConnection,
-    IRawNotebookProvider,
-    IRawNotebookSupportedService
-} from '../../../platform/datascience/types';
 import { injectable, inject, named } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -24,18 +16,19 @@ import {
     IConfigurationService,
     IOutputChannel,
     IDisposableRegistry,
-    Resource
+    Resource,
+    IDisplayOptions
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
-import { KernelConnectionMetadata } from '../../types';
-import { IKernelLauncher } from '../types';
+import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
+import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession';
 import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -92,18 +85,17 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
-        document: vscode.NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
     ): Promise<INotebook> {
-        traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
+        traceInfo(`Creating raw notebook for ${getDisplayPath(resource)}`);
         const notebookPromise = createDeferred<INotebook>();
         this.trackDisposable(notebookPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceInfo(`Getting preferred kernel for ${getDisplayPath(document.uri)}`);
+        traceInfo(`Getting preferred kernel for ${getDisplayPath(resource)}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -117,7 +109,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                     });
                 }
             }
-            traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
+            traceInfo(`Computing working directory ${getDisplayPath(resource)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -139,7 +131,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 trackKernelResourceInformation(resource, { kernelConnection });
             }
             traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
+                `Connecting to raw session for ${getDisplayPath(resource)} with connection ${kernelConnection.id}`
             );
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {

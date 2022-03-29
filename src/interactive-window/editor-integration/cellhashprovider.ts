@@ -16,20 +16,20 @@ import {
 } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 
-import { splitMultilineString } from '../../datascience-ui/common';
-import { uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
+import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import { IConfigurationService } from '../../platform/common/types';
-import { getCellResource } from '../../platform/datascience/cellFactory';
-import { CellMatcher } from '../../platform/datascience/cellMatcher';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../platform/datascience/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
+import { getCellResource, uncommentMagicCommands } from './cellFactory';
+import { CellMatcher } from './cellMatcher';
+import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
@@ -493,6 +493,7 @@ export class CellHashProvider implements ICellHashProvider {
                     break;
                 }
             }
+            const notebook = getAssociatedNotebookDocument(this.kernel);
             if (matchHash && matchUri) {
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
@@ -506,11 +507,9 @@ export class CellHashProvider implements ICellHashProvider {
                     /.*?\n/,
                     `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
-            } else if (this.kernel && this.kernel.notebookDocument.notebookType !== InteractiveWindowView) {
+            } else if (this.kernel && notebook && notebook.notebookType !== InteractiveWindowView) {
                 const matchingCellUri = this.executionCounts.get(executionCount);
-                const cellIndex = this.kernel.notebookDocument
-                    .getCells()
-                    .findIndex((c) => c.document.uri.toString() === matchingCellUri);
+                const cellIndex = notebook.getCells().findIndex((c) => c.document.uri.toString() === matchingCellUri);
                 if (matchingCellUri && cellIndex >= 0) {
                     // Parse string to a real URI so we can use pieces of it.
                     matchUri = Uri.parse(matchingCellUri);

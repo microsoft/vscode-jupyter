@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import * as vscode from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../platform/datascience/types';
+import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from './types';
 
 /**
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show

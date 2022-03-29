@@ -28,24 +28,24 @@ import { chainable } from '../platform/common/utils/decorators';
 import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
-import { IExportDialog } from '../platform/datascience/export/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IInteractiveWindowDebugger,
-    INotebookExporter,
-    IDataScienceErrorHandler
-} from '../platform/datascience/types';
 import { InteractiveWindow } from './interactiveWindow';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { INativeInteractiveWindow } from './types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowProvider,
+    INativeInteractiveWindow
+} from './types';
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { INotebookExporter } from '../kernels/jupyter/types';
+import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IExportDialog } from '../platform/export/types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';

@@ -1987,7 +1987,7 @@
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
-                "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
@@ -1996,7 +1996,7 @@
             },
             {
                 "id": "jupyter-error-renderer",
-                "entrypoint": "./out/datascience-ui/errorRenderer/errorRenderer.js",
+                "entrypoint": "./out/webviews/webview-side/errorRenderer/errorRenderer.js",
                 "displayName": "Jupyter Error Renderer",
                 "requiresMessaging": "always",
                 "mimeTypes": [

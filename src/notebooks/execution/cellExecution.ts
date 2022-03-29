@@ -29,7 +29,7 @@ import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { analyzeKernelErrors } from '../../platform/errors/errorUtils';
+import { analyzeKernelErrors, KernelFailure } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
@@ -48,16 +48,15 @@ import {
     translateCellDisplayOutput,
     isJupyterNotebook
 } from '../../notebooks/helpers';
-import { ICellHashProvider, IJupyterSession, ICellHash } from '../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { formatStreamText, concatMultilineString } from '../../datascience-ui/common';
-import { createErrorOutput, createErrorOutputFromFailureInfo } from '../../datascience-ui/common/cellFactory';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { formatStreamText, concatMultilineString } from '../../webviews/webview-side/common';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
+import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -72,6 +71,24 @@ type ExecuteResult = nbformat.IExecuteResult & {
 type DisplayData = nbformat.IDisplayData & {
     transient?: { display_id?: string };
 };
+
+function createErrorOutput(error: Partial<Error>): nbformat.IError {
+    return {
+        output_type: 'error',
+        ename: error.name || error.message || 'Error',
+        evalue: error.message || error.name || 'Error',
+        traceback: (error.stack || '').splitLines()
+    };
+}
+
+function createErrorOutputFromFailureInfo(info: KernelFailure): nbformat.IError {
+    return {
+        output_type: 'error',
+        ename: info.message || 'Error',
+        evalue: info.message || 'Error',
+        traceback: []
+    };
+}
 
 export class CellExecutionFactory {
     constructor(

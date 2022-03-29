@@ -9,13 +9,12 @@ import { Observable } from 'rxjs/Observable';
 import { noop } from '../../platform/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
-import { KernelConnectionMetadata } from '../../platform/../kernels/types';
-import { IJupyterSession, KernelSocketInformation } from '../../platform/datascience/types';
+import { IJupyterSession, KernelConnectionMetadata, KernelSocketInformation } from '../../platform/../kernels/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../platform/common/types';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { concatMultilineString } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../webviews/webview-side/common';
 import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 
 const LineFeedRegEx = /(\r\n|\n)/g;

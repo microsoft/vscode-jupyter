@@ -3,25 +3,19 @@
 'use strict';
 import { Uri } from 'vscode';
 import type { KernelMessage } from '@jupyterlab/services';
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../platform/datascience/messages';
-import {
-    IJupyterVariable,
-    KernelSocketOptions,
-    IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    ICell
-} from '../platform/datascience/types';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../datascience-ui/common/constants';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../webviews/webview-side/common/constants';
 import {
     IVariableExplorerHeight,
     CommonActionType,
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
-} from '../datascience-ui/interactive-common/redux/reducers/types';
+} from '../webviews/webview-side/interactive-common/redux/reducers/types';
 import { WidgetScriptSource } from '../kernels/ipywidgets-message-coordination/types';
-import { KernelConnectionMetadata } from '../kernels/types';
+import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
 import { BaseReduxActionPayload } from '../webviews/types';
+import { ICell } from './common/types';
+import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../kernels/variables/types';
 
 export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',
@@ -256,6 +250,26 @@ export interface INotebookModelEditChange extends INotebookModelChange {
 export interface INotebookModelVersionChange extends INotebookModelChange {
     kind: 'version';
     kernelConnection?: KernelConnectionMetadata;
+}
+
+export enum CssMessages {
+    GetCssRequest = 'get_css_request',
+    GetCssResponse = 'get_css_response'
+}
+
+export enum SharedMessages {
+    UpdateSettings = 'update_settings',
+    Started = 'started',
+    LocInit = 'loc_init'
+}
+
+export interface IGetCssRequest {
+    isDark: boolean;
+}
+
+export interface IGetCssResponse {
+    css: string;
+    theme: string;
 }
 
 export type NotebookModelChange =

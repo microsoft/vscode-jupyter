@@ -10,21 +10,22 @@ import { traceWarning } from '../../../platform/common/logger';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
-    ObservableExecutionResult
+    ObservableExecutionResult,
+    IPythonDaemonExecutionService
 } from '../../../platform/common/process/types';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import {
-    IJupyterSubCommandExecutionService,
-    IJupyterInterpreterDependencyManager
-} from '../../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../datascience-ui/common/constants';
+import {
+    JupyterDaemonModule,
+    JUPYTER_OUTPUT_CHANNEL,
+    Telemetry
+} from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths';
@@ -35,6 +36,7 @@ import {
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
+import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../types';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -114,9 +116,9 @@ export class JupyterInterpreterSubCommandExecutionService
                 notebookArgs.join(' ')
             )
         );
-        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter: interpreter,
-            allowEnvironmentFetchExceptions: true
+        const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
+            interpreter: interpreter
         });
         // We should never set token for long running processes.
         // We don't want the process to die when the token is cancelled.
@@ -138,14 +140,15 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            interpreter
+        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
+            interpreter: interpreter
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
-        const serverInfoString = await executionService.exec([file], newOptions);
+        const serverInfoString = await daemon.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {

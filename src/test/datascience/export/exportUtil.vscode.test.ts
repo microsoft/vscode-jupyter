@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
-import { ExportUtil } from '../../../platform/datascience/export/exportUtil';
+import { ExportUtil } from '../../../platform/export/exportUtil';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';

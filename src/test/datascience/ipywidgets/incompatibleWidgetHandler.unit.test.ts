@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../datascience-ui/ipywidgets/common/incompatibleWidgetHandler';
+import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../webviews/webview-side/ipywidgets/common/incompatibleWidgetHandler';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Incompatible Widgets', () => {

@@ -17,15 +17,16 @@ import {
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI } from '../../platform/common/logger';
 
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
+import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
-import { generateCellRangesFromDocument } from '../../platform/datascience/cellFactory';
-import { CodeLensCommands, Commands } from '../../platform/datascience/constants';
 import { getInteractiveCellMetadata } from '../interactiveWindow';
 import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../../platform/datascience/types';
 import { CellHashProviderFactory } from './cellHashProviderFactory';
+import { CodeLensCommands, Commands } from '../../platform/common/constants';
+import { generateCellRangesFromDocument } from './cellFactory';
+import { ICodeLensFactory, ICellHashProvider, IFileHashes } from './types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -63,7 +64,12 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeKernel(
-            (kernel) => this.notebookData.delete(kernel.notebookDocument.uri.toString()),
+            (kernel) => {
+                const notebook = getAssociatedNotebookDocument(kernel);
+                if (notebook) {
+                    this.notebookData.delete(notebook.uri.toString());
+                }
+            },
             this,
             disposables
         );

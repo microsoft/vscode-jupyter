@@ -10,16 +10,16 @@ import { createPromiseFromCancellation, Cancellation } from '../../../platform/c
 import { traceError } from '../../../platform/common/logger';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { HelpLinks } from '../../../platform/datascience/constants';
-import { reportAction } from '../../../platform/datascience/progress/decorator';
-import { ReportableAction } from '../../../platform/datascience/progress/types';
-import { IJupyterCommandFactory } from '../../../platform/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry, JupyterCommands } from '../../../datascience-ui/common/constants';
+import { Telemetry, JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
+import { HelpLinks } from '../../../platform/common/constants';
+import { reportAction } from '../../../platform/progress/decorator';
+import { ReportableAction } from '../../../platform/progress/types';
+import { IJupyterCommandFactory } from '../types';
 
 export enum JupyterInterpreterDependencyResponse {
     ok,
@@ -294,7 +294,8 @@ export class JupyterInterpreterDependencyService {
             JupyterCommands.KernelSpecCommand,
             'jupyter',
             ['-m', 'jupyter', 'kernelspec'],
-            interpreter
+            interpreter,
+            false
         );
         return command
             .exec(['--version'], { throwOnStdErr: true })

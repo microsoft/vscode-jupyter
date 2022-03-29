@@ -10,7 +10,6 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../pl
 import { traceInfo } from '../../../platform/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { Commands } from '../../../platform/datascience/constants';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -31,6 +30,7 @@ import {
     clickOKForRestartPrompt
 } from './helper';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
+import { Commands } from '../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '1', 0, false)]);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook.uri);
         if (!kernel) {
             throw new Error('Kernel not available');
         }
@@ -364,7 +364,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await sleep(500);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook.uri);
         if (!kernel) {
             throw new Error('Kernel not available');
         }

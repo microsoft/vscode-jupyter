@@ -35,7 +35,7 @@
 // import { instance, mock, when } from 'ts-mockito';
 // import { Subject } from 'rxjs-compat/Subject';
 // import { EventEmitter, NotebookDocument } from 'vscode';
-// import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+// import { ServerStatus } from '../../../webviews/webview-side/interactive-common/mainState';
 // import { MockJupyterSession } from '../mockJupyterSession';
 // import type * as nbformat from '@jupyterlab/nbformat';
 

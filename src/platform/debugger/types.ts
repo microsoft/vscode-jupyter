@@ -73,3 +73,15 @@ export interface IKernelDebugAdapterConfig extends DebugConfiguration {
     __mode: KernelDebugMode;
     __cellIndex?: number;
 }
+
+export interface IDebugLocation {
+    fileName: string;
+    lineNumber: number;
+    column: number;
+}
+
+export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
+export interface IDebugLocationTracker {
+    updated: Event<void>;
+    getLocation(debugSession: DebugSession): IDebugLocation | undefined;
+}

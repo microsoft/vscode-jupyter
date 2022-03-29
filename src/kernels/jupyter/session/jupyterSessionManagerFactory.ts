@@ -12,14 +12,10 @@ import {
     IPersistentStateFactory,
     IDisposableRegistry
 } from '../../../platform/common/types';
-import {
-    IJupyterSessionManagerFactory,
-    IJupyterPasswordConnect,
-    IJupyterConnection,
-    IJupyterSessionManager
-} from '../../../platform/datascience/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../../../datascience-ui/common/constants';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
 import { JupyterKernelService } from '../jupyterKernelService';
+import { IJupyterConnection } from '../../types';
+import { IJupyterSessionManagerFactory, IJupyterPasswordConnect, IJupyterSessionManager } from '../types';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {

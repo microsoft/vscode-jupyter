@@ -2,46 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
-import { Identifiers } from '../datascience-ui/common/constants';
+import { Identifiers } from '../webviews/webview-side/common/constants';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { JupyterCommandLineSelectorCommand } from '../platform/commands/commandLineSelector';
 import { JupyterServerSelectorCommand } from '../platform/commands/serverSelector';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { IConfigurationService } from '../platform/common/types';
-import { JupyterVariableDataProvider } from '../platform/datascience/data-viewing/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from '../platform/datascience/data-viewing/jupyterVariableDataProviderFactory';
-import { MultiplexingDebugService } from '../platform/datascience/multiplexingDebugService';
-import {
-    IRawNotebookSupportedService,
-    IJupyterCommandFactory,
-    INotebookExporter,
-    INotebookImporter,
-    INotebookServer,
-    IRawNotebookProvider,
-    IJupyterNotebookProvider,
-    IDataScienceCommandListener,
-    IInteractiveWindowDebugger,
-    ICellHashListener,
-    IJupyterExecution,
-    IJupyterPasswordConnect,
-    IJupyterSessionManagerFactory,
-    IJupyterVariables,
-    IKernelVariableRequester,
-    INbConvertInterpreterDependencyChecker,
-    INbConvertExportToPythonService,
-    IJupyterServerProvider,
-    IJupyterInterpreterDependencyManager,
-    IJupyterSubCommandExecutionService,
-    IKernelDependencyService,
-    IJupyterDebugService,
-    IJupyterVariableDataProvider,
-    IJupyterVariableDataProviderFactory,
-    IJupyterUriProviderRegistration,
-    IJupyterServerUriStorage,
-    INotebookProvider
-} from '../platform/datascience/types';
+import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
+
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../platform/debugger/extension/types';
 import { IServiceManager } from '../platform/ioc/types';
@@ -94,13 +63,48 @@ import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsS
 import { KernelLauncher } from './raw/launcher/kernelLauncher';
 import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider';
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService';
-import { IKernelLauncher, ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
+import {
+    IKernelLauncher,
+    ILocalKernelFinder,
+    IRawNotebookProvider,
+    IRawNotebookSupportedService,
+    IRemoteKernelFinder
+} from './raw/types';
 import { DebuggerVariableRegistration } from './variables/debuggerVariableRegistration';
 import { DebuggerVariables } from './variables/debuggerVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { ICellHashListener } from '../interactive-window/editor-integration/types';
+import { IInteractiveWindowDebugger } from '../interactive-window/types';
+import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
+import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
+import {
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory
+} from '../webviews/extension-side/dataviewer/types';
+import { IJupyterDebugService } from './debugging/types';
+import {
+    IJupyterCommandFactory,
+    INotebookExporter,
+    INotebookImporter,
+    INotebookServer,
+    IJupyterNotebookProvider,
+    IJupyterExecution,
+    IJupyterPasswordConnect,
+    IJupyterSessionManagerFactory,
+    INbConvertInterpreterDependencyChecker,
+    INbConvertExportToPythonService,
+    IJupyterServerProvider,
+    IJupyterInterpreterDependencyManager,
+    IJupyterSubCommandExecutionService,
+    IJupyterUriProviderRegistration,
+    IJupyterServerUriStorage
+} from './jupyter/types';
+import { IKernelDependencyService, INotebookProvider } from './types';
+import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(

@@ -22,31 +22,25 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../platform/common/application/types';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo } from '../platform/common/logger';
 import { IFileSystem } from '../platform/common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
+import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
-import { generateCellsFromDocument } from '../platform/datascience/cellFactory';
-import { Commands, Telemetry } from '../platform/datascience/constants';
-import { ExportFormat, IExportDialog, IFileConverter } from '../platform/datascience/export/types';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
-import {
-    IDataScienceCommandListener,
-    IDataScienceErrorHandler,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebookEditorProvider,
-    INotebookExporter,
-    IStatusProvider
-} from '../platform/datascience/types';
 import { getActiveInteractiveWindow } from './helpers';
-import { INotebookControllerManager } from '../notebooks/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { JupyterNotebookView } from '../notebooks/constants';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
+import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
+import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
+import { IStatusProvider } from '../platform/progress/types';
+import { generateCellsFromDocument } from './editor-integration/cellFactory';
+import { IInteractiveWindowProvider } from './types';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {

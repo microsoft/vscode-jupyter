@@ -4,9 +4,12 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisposable, Resource } from '../../platform/common/types';
-import { INotebookProviderConnection } from '../../platform/datascience/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
+    ConnectNotebookProviderOptions,
+    INotebook,
+    INotebookProviderConnection,
+    IRawConnection,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -96,4 +99,23 @@ export interface IRemoteKernelFinder {
 export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;
     kill(): Promise<void>;
+}
+
+// Provides a service to determine if raw notebook is supported or not
+export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
+export interface IRawNotebookSupportedService {
+    isSupported: boolean;
+}
+
+// Provides notebooks that talk directly to kernels as opposed to a jupyter server
+export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
+export interface IRawNotebookProvider extends IAsyncDisposable {
+    isSupported: boolean;
+    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
+    createNotebook(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
+    ): Promise<INotebook>;
 }
