@@ -9,7 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 // Initialize the logger first.
-require('./platform/common/logger');
+require('./platform/common/logger.node');
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
