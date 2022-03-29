@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, NotebookDocument } from 'vscode';
+import { CancellationToken, Event, Uri } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
 
@@ -261,30 +261,28 @@ export interface IExportedKernelService {
      */
     getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]>;
     /**
-     * Gets a list of all active kernel connections associated with a notebook.
+     * Gets a list of all active kernel connections associated with a resource.
      */
-    getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]>;
+    getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri }[]>;
     /**
-     * Gets the Kernel connection & the metadata that's associated with a give notebook.
+     * Gets the Kernel connection & the metadata that's associated with a given resource.
      * (only successfully started/active connections are returned).
      */
-    getKernel(
-        notebook: NotebookDocument
-    ): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined;
+    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined;
     /**
-     * Starts a kernel for a give notebook.
+     * Starts a kernel for a given resource.
      * The promise is resolved only after the kernel has successfully started.
-     * If one attempts to start another kernel for the same notebook, the same promise is returned.
+     * If one attempts to start another kernel for the same resource, the same promise is returned.
      */
     startKernel(
         metadata: KernelConnectionMetadata,
-        notebook: NotebookDocument,
+        uri: Uri,
         token?: CancellationToken
     ): Promise<IKernelConnectionInfo>;
     /**
-     * Connects an existing kernel to a notebook.
-     * The promise is resolved only after the kernel is successfully attached to a notebook.
-     * If one attempts to start another kernel or connect another kernel for the same notebook, the same promise is returned.
+     * Connects an existing kernel to a resource.
+     * The promise is resolved only after the kernel is successfully attached to a resource.
+     * If one attempts to start another kernel or connect another kernel for the same resource, the same promise is returned.
      */
-    connect(metadata: LiveRemoteKernelConnectionMetadata, notebook: NotebookDocument): Promise<IKernelConnectionInfo>;
+    connect(metadata: LiveRemoteKernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo>;
 }

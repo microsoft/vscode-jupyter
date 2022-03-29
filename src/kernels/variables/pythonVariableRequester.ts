@@ -13,6 +13,7 @@ import { IKernelVariableRequester, IJupyterVariable } from '../../platform/datas
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -64,7 +65,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        const fileName = path.basename(kernel.notebookDocument.uri.path);
+        const fileName = path.basename(
+            getAssociatedNotebookDocument(kernel)?.uri.fsPath || kernel.resourceUri?.fsPath || kernel.id.path
+        );
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -207,8 +210,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     private async importDataFrameScripts(kernel: IKernel): Promise<void> {
-        const key = kernel.notebookDocument;
-        if (!this.importedDataFrameScripts.get(key)) {
+        const key = getAssociatedNotebookDocument(kernel);
+        if (key && !this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {
@@ -221,13 +224,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             // First put the code from our helper files into the notebook
             await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
 
-            this.importedDataFrameScripts.set(kernel.notebookDocument, true);
+            this.importedDataFrameScripts.set(key, true);
         }
     }
 
     private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
-        const key = kernel.notebookDocument;
-        if (!this.importedGetVariableInfoScripts.get(key)) {
+        const key = getAssociatedNotebookDocument(kernel);
+        if (key && !this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
             const handler = () => {
@@ -239,7 +242,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
             await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
 
-            this.importedGetVariableInfoScripts.set(kernel.notebookDocument, true);
+            this.importedGetVariableInfoScripts.set(key, true);
         }
     }
 

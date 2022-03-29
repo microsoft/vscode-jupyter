@@ -64,7 +64,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     private onLiveRefresh(liveConnections: LiveKernelConnectionMetadata[]) {
         // When a refresh happens, remember the live connection id for all notebooks
         this.vscNotebook.notebookDocuments.forEach(async (n) => {
-            const kernel = this.kernelProvider.get(n);
+            const kernel = this.kernelProvider.get(n.uri);
             if (kernel) {
                 const match = liveConnections.find((c) => c.kernelModel.id === kernel.session?.kernelId);
                 if (match) {

@@ -21,6 +21,7 @@ import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { IInteractiveWindowProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
+import { getAssociatedNotebookDocument } from '../../../notebooks/controllers/kernelSelector';
 
 type KernelStateEventArgs = {
     notebook: NotebookDocument;
@@ -49,14 +50,16 @@ export class NotebookWatcher implements INotebookWatcher {
     public get activeKernel(): IKernel | undefined {
         const activeNotebook = this.notebooks.activeNotebookEditor?.document;
         const activeJupyterNotebookKernel =
-            activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;
+            activeNotebook?.notebookType == JupyterNotebookView
+                ? this.kernelProvider.get(activeNotebook.uri)
+                : undefined;
 
         if (activeJupyterNotebookKernel) {
             return activeJupyterNotebookKernel;
         }
         const interactiveWindowDoc = this.getActiveInteractiveWindowDocument();
         const activeInteractiveWindowKernel = interactiveWindowDoc
-            ? this.kernelProvider.get(interactiveWindowDoc)
+            ? this.kernelProvider.get(interactiveWindowDoc.uri)
             : undefined;
 
         if (activeInteractiveWindowKernel) {
@@ -69,7 +72,7 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     public get activeNotebookExecutionCount(): number | undefined {
-        const activeNotebook = this.activeKernel?.notebookDocument;
+        const activeNotebook = getAssociatedNotebookDocument(this.activeKernel);
         return activeNotebook ? this._executionCountTracker.get(activeNotebook) : undefined;
     }
 
@@ -93,7 +96,12 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebooks.onDidCloseNotebookDocument(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
-            (kernel) => this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebookDocument }),
+            (kernel) => {
+                const notebook = getAssociatedNotebookDocument(kernel);
+                if (notebook) {
+                    this.handleRestart({ state: KernelState.restarted, notebook });
+                }
+            },
             this,
             this.disposables
         );
@@ -197,6 +205,6 @@ export class NotebookWatcher implements INotebookWatcher {
 
     // Check to see if this event was on the active notebook
     private isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): boolean {
-        return this.activeKernel?.notebookDocument === kernelStateEvent.notebook;
+        return getAssociatedNotebookDocument(this.activeKernel) === kernelStateEvent.notebook;
     }
 }

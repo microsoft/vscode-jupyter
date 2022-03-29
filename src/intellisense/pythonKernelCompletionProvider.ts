@@ -83,7 +83,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
             return [];
         }
 
-        const kernel = this.kernelProvider.get(notebookDocument);
+        const kernel = this.kernelProvider.get(notebookDocument.uri);
         if (!kernel || !kernel.session) {
             traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];

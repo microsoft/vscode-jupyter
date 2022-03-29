@@ -26,6 +26,7 @@ import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../../platform/datascience/types';
 import { CellHashProviderFactory } from './cellHashProviderFactory';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -63,7 +64,12 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeKernel(
-            (kernel) => this.notebookData.delete(kernel.notebookDocument.uri.toString()),
+            (kernel) => {
+                const notebook = getAssociatedNotebookDocument(kernel);
+                if (notebook) {
+                    this.notebookData.delete(notebook.uri.toString());
+                }
+            },
             this,
             disposables
         );

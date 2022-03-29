@@ -66,7 +66,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -83,7 +82,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -92,7 +90,6 @@ suite('DataScience - NotebookProvider', () => {
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),

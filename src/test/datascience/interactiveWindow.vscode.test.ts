@@ -153,7 +153,7 @@ suite('Interactive window', async function () {
 
         // Restart kernel
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const kernel = kernelProvider.get(notebookDocument);
+        const kernel = kernelProvider.get(notebookDocument.uri);
         const handler = createEventHandler(kernel!, 'onRestarted', disposables);
         await vscode.commands.executeCommand('jupyter.restartkernel');
         // Wait for restart to finish

@@ -429,9 +429,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         await this.notebookControllerManager.loadNotebookControllers();
         const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 
-        let kernel = this.kernelProvider.get(doc);
+        let kernel = this.kernelProvider.get(doc.uri);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc, {
+            kernel = this.kernelProvider.getOrCreate(doc.uri, {
                 metadata: controller.connection,
                 controller: controller?.controller,
                 resourceUri: doc.uri
@@ -446,13 +446,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
     private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
-            let kernel = this.kernelProvider.get(doc);
+            let kernel = this.kernelProvider.get(doc.uri);
             if (!kernel) {
                 const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
-                kernel = this.kernelProvider.getOrCreate(doc, {
+                kernel = this.kernelProvider.getOrCreate(doc.uri, {
                     metadata: controller.connection,
                     controller: controller?.controller,
                     resourceUri: doc.uri
