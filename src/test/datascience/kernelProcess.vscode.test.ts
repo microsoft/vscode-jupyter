@@ -81,6 +81,7 @@ suite('DataScience - Kernel Process', () => {
         };
         const jupyterPaths = mock<JupyterPaths>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
+        when(jupyterPaths.getRuntimeDir()).thenResolve();
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
         when(fs.writeFile(anything(), anything())).thenResolve();
