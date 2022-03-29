@@ -10,29 +10,29 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { PathUtils } from '../../../../platform/common/platform/pathUtils';
-import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory';
+import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';
+import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory.node';
 import {
     IPythonDaemonExecutionService,
     ObservableExecutionResult,
     Output
 } from '../../../../platform/common/process/types';
-import { DataScience } from '../../../../platform/common/utils/localize';
-import { noop } from '../../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { DataScience } from '../../../../platform/common/utils/localize.node';
+import { noop } from '../../../../platform/common/utils/misc.node';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
-import { ProductNames } from '../../../../kernels/installer/productNames';
+import { ProductNames } from '../../../../kernels/installer/productNames.node';
 import { Product } from '../../../../kernels/installer/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
-import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-import { JupyterServerInfo } from '../../../../kernels/jupyter/launcher/jupyterConnection';
-import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths';
-import { JupyterDaemonModule } from '../../../../platform/common/constants';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.node';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { JupyterDaemonModule } from '../../../../platform/common/constants.node';
+import { JupyterServerInfo } from '../../../../kernels/jupyter/types';
 use(chaiPromise);
 
 /* eslint-disable  */

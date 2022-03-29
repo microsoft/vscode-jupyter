@@ -6,16 +6,16 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { PythonExtensionChecker } from '../../platform/api/pythonApi';
+import { PythonExtensionChecker } from '../../platform/api/pythonApi.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
-import { CondaService } from '../../platform/common/process/condaService';
-import { createDeferred } from '../../platform/common/utils/async';
+import { CondaService } from '../../platform/common/process/condaService.node';
+import { createDeferred } from '../../platform/common/utils/async.node';
 import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/variables/preWarmVariables';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/variables/preWarmVariables.node';
 import { sleep } from '../core';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 

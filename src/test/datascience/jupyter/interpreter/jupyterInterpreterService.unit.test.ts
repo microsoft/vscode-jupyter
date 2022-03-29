@@ -6,18 +6,16 @@
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento } from 'vscode';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import {
-    JupyterInterpreterDependencyService,
-    JupyterInterpreterDependencyResponse
-} from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterInterpreterOldCacheStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
-import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector';
-import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterOldCacheStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';
+import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector.node';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
 
 /* eslint-disable  */
 

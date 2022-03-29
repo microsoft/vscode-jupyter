@@ -11,7 +11,7 @@ import {
     isFileNotFoundError,
     isNoPermissionsError,
     isNotDirError
-} from '../../../platform/common/platform/errors';
+} from '../../../platform/common/platform/errors.node';
 import { SystemError } from './utils';
 
 suite('FileSystem - errors', () => {

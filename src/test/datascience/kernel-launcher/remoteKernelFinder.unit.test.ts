@@ -6,19 +6,19 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
-import { CryptoUtils } from '../../../platform/common/crypto';
+import { CryptoUtils } from '../../../platform/common/crypto.node';
 import { noop } from '../../core';
 import { IJupyterConnection, IJupyterKernelSpec, LiveKernelConnectionMetadata } from '../../../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
-import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
+import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
+import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder.node';
 import { IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 
 suite(`Remote Kernel Finder`, () => {

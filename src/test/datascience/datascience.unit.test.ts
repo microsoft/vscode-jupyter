@@ -6,21 +6,21 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { CommandManager } from '../../platform/common/application/commandManager';
-import { DocumentManager } from '../../platform/common/application/documentManager';
+import { CommandManager } from '../../platform/common/application/commandManager.node';
+import { DocumentManager } from '../../platform/common/application/documentManager.node';
 import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace';
-import { JupyterSettings } from '../../platform/common/configSettings';
-import { ConfigurationService } from '../../platform/common/configuration/service';
+import { WorkspaceService } from '../../platform/common/application/workspace.node';
+import { JupyterSettings } from '../../platform/common/configSettings.node';
+import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
-import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry';
-import { GlobalActivation } from '../../platform/common/globalActivation';
-import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
-import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry.node';
+import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry.node';
+import { GlobalActivation } from '../../platform/common/globalActivation.node';
+import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider.node';
+import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { pruneCell } from '../../platform/common/utils';
+import { pruneCell } from '../../platform/common/utils.node';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {

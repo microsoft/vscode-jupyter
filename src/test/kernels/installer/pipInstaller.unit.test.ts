@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { PipInstaller } from '../../../kernels/installer/pipInstaller';
+import { PipInstaller } from '../../../kernels/installer/pipInstaller.node';
 
 suite('Pip installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

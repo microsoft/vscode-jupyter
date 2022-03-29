@@ -6,20 +6,20 @@ import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { createDeferred } from '../../platform/common/utils/async';
+import { createDeferred } from '../../platform/common/utils/async.node';
 import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
-import { traceInfo } from '../../platform/common/logger';
+import { traceInfo } from '../../platform/common/logger.node';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
-import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider';
+import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';
 import { IDisposable } from '../../platform/common/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
-import { createRawKernel } from '../../kernels/raw/session/rawKernel';
+import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
 use(chaiAsPromised);

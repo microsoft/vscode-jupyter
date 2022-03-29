@@ -9,10 +9,10 @@ import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocument, NotebookCellKind } from 'vscode';
 import { IPythonApiProvider } from '../../../../platform/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { Kernel } from '../../../../platform/../kernels/kernel';
-import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
-import { BufferDecoder } from '../../../../platform/common/process/decoder';
-import { ProcessService } from '../../../../platform/common/process/proc';
+import { Kernel } from '../../../../platform/../kernels/kernel.node';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths.node';
+import { BufferDecoder } from '../../../../platform/common/process/decoder.node';
+import { ProcessService } from '../../../../platform/common/process/proc.node';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -21,12 +21,15 @@ import {
     IWatchableJupyterSettings,
     ReadWrite
 } from '../../../../platform/common/types';
-import { createDeferred, sleep } from '../../../../platform/common/utils/async';
-import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
-import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';
+import { createDeferred, sleep } from '../../../../platform/common/utils/async.node';
+import { Common, DataScience } from '../../../../platform/common/utils/localize.node';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
+import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
+import {
+    areInterpreterPathsSame,
+    getInterpreterHash
+} from '../../../../platform/pythonEnvironments/info/interpreter.node';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
@@ -34,8 +37,8 @@ import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatche
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
-import { ProductNames } from '../../../../kernels/installer/productNames';
+import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller.node';
+import { ProductNames } from '../../../../kernels/installer/productNames.node';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 import {
     createTemporaryNotebook,
@@ -54,10 +57,10 @@ import {
     WindowPromptStubButtonClickOptions,
     waitForTextOutput
 } from '../../notebook/helper';
-import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
+import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector.node';
 import { noop } from '../../../core';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
-import { Commands } from '../../../../platform/common/constants';
+import { Commands } from '../../../../platform/common/constants.node';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

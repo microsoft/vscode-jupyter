@@ -7,7 +7,7 @@ import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../platform/messageTypes';
-import { SliceOperationSource } from '../../../telemetry/constants';
+import { SliceOperationSource } from '../../../telemetry/constants.node';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;

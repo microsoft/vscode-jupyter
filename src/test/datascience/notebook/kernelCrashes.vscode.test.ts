@@ -8,9 +8,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { DataScience } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize.node';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -32,12 +32,12 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { createDeferred } from '../../../platform/common/utils/async.node';
 import { sleep } from '../../core';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
 import { Uri, window, workspace } from 'vscode';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../notebooks/helpers';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const codeToKillKernel = dedent`

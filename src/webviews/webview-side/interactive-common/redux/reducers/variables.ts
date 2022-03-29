@@ -11,7 +11,7 @@ import {
     InteractiveWindowMessages,
     IFinishCell,
     IInteractiveWindowMapping
-} from '../../../../../platform/messageTypes.node';
+} from '../../../../../platform/messageTypes';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';

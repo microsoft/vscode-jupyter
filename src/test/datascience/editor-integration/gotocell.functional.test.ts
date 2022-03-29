@@ -17,7 +17,7 @@ suite('Dummy12', () => {
 // import { range } from 'lodash';
 // import { IDocumentManager } from '../../../platform/common/application/types';
 // import { EXTENSION_ROOT_DIR } from '../../../platform/common/constants';
-// import { traceError } from '../../../platform/common/logger';
+// import { traceError } from '../../../platform/common/logger.node';
 // import { IJupyterSettings } from '../../../platform/common/types';
 // import * as CellFactory from '../../../platform/datascience/cellFactory';
 // import { Commands } from '../../../platform/datascience/constants';

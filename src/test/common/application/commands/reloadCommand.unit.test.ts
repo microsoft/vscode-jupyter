@@ -4,11 +4,11 @@
 'use strict';
 
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
-import { CommandManager } from '../../../../platform/common/application/commandManager';
-import { ReloadVSCodeCommandHandler } from '../../../../platform/common/application/commands/reloadCommand';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
+import { CommandManager } from '../../../../platform/common/application/commandManager.node';
+import { ReloadVSCodeCommandHandler } from '../../../../platform/common/application/commands/reloadCommand.node';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
-import { Common } from '../../../../platform/common/utils/localize';
+import { Common } from '../../../../platform/common/utils/localize.node';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Common Commands ReloadCommand', () => {

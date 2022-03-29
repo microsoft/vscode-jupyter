@@ -5,11 +5,11 @@
 import { noop } from 'lodash';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { traceInfo } from '../../platform/common/logger';
-import { arePathsSame } from '../../platform/common/platform/fileUtils';
+import { traceInfo } from '../../platform/common/logger.node';
+import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { IJupyterSettings } from '../../platform/common/types';
-import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
-import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
+import { InteractiveWindow } from '../../interactive-window/interactiveWindow.node';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { waitForCondition } from '../common';
 import {
     createTemporaryFile,
@@ -20,7 +20,7 @@ import {
 import { initialize } from '../initialize';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
-import { Commands } from '../../platform/common/constants';
+import { Commands } from '../../platform/common/constants.node';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {

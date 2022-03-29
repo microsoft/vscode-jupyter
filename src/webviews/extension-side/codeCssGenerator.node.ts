@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../platform/common/application/types';
 import { traceInfo, traceError, traceWarning } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DefaultTheme } from '../webview-side/common/constants.node';
+import { DefaultTheme } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

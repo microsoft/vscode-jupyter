@@ -3,10 +3,10 @@
 
 import * as path from 'path';
 import '../../platform/common/extensions.node';
-import { traceError } from '../../platform/common/logger';
-import { BufferDecoder } from '../../platform/common/process/decoder';
-import { PythonEnvInfo } from '../../platform/common/process/internal/scripts';
-import { ProcessService } from '../../platform/common/process/proc';
+import { traceError } from '../../platform/common/logger.node';
+import { BufferDecoder } from '../../platform/common/process/decoder.node';
+import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/index.node';
+import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion';
 import { getOSType, OSType } from '../common';

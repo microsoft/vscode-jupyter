@@ -12,7 +12,7 @@ import {
     createCondaEnv,
     createPythonEnv,
     createWindowsStoreEnv
-} from '../../../platform/common/process/pythonEnvironment';
+} from '../../../platform/common/process/pythonEnvironment.node';
 import { IProcessService, StdErrError } from '../../../platform/common/process/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 

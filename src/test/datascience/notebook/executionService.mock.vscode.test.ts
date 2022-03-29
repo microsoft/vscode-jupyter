@@ -8,7 +8,7 @@
 // import * as sinon from 'sinon';
 // import { Common } from '../../../platform/common/utils/localize';
 // import { IVSCodeNotebook } from '../../../platform/common/application/types';
-// import { traceInfo } from '../../../platform/common/logger';
+// import { traceInfo } from '../../../platform/common/logger.node';
 // import { IDisposable, Product } from '../../../platform/common/types';
 // import { IExtensionTestApi } from '../../common';
 // import { initialize } from '../../initialize';

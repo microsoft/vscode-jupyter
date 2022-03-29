@@ -5,21 +5,21 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
-import { FileSystem } from '../../../../platform/common/platform/fileSystem';
+import { FileSystem } from '../../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../../platform/common/platform/types';
-import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService';
+import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
-import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from 'path';
 import { getOSType, OSType } from '../../../common';
 import { CancellationTokenSource } from 'vscode';
-import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment';
-import { arePathsSame } from '../../../../platform/common/platform/fileUtils';
-import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService';
-import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths';
-import { DisplayOptions } from '../../../../kernels/displayOptions';
+import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
+import { arePathsSame } from '../../../../platform/common/platform/fileUtils.node';
+import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { DisplayOptions } from '../../../../kernels/displayOptions.node';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {

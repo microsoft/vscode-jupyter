@@ -5,21 +5,22 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
 import { IApplicationShell } from '../../../../platform/common/application/types';
-import { DataScience } from '../../../../platform/common/utils/localize';
+import { DataScience } from '../../../../platform/common/utils/localize.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
+import { ProductInstaller } from '../../../../kernels/installer/productInstaller.node';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import {
     JupyterCommandFactory,
     InterpreterJupyterKernelSpecCommand
-} from '../../../../kernels/jupyter/interpreter/jupyterCommand';
+} from '../../../../kernels/jupyter/interpreter/jupyterCommand.node';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import {
-    JupyterInterpreterDependencyService,
+    IJupyterCommand,
+    IJupyterCommandFactory,
     JupyterInterpreterDependencyResponse
-} from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types';
+} from '../../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

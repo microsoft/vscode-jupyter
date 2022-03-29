@@ -24,7 +24,7 @@ import * as localize from '../../platform/common/utils/localize.node';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { InteractiveWindowMessages, SharedMessages, CssMessages, IGetCssRequest } from '../../platform/messageTypes';
 import { sendTelemetryEvent, captureTelemetry } from '../../telemetry/index.node';
-import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants.node';
+import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

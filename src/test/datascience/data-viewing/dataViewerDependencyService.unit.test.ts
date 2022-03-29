@@ -7,16 +7,16 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory';
+import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { Common, DataScience } from '../../../platform/common/utils/localize.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { ProductInstaller } from '../../../kernels/installer/productInstaller';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
 import { IInstaller, Product } from '../../../kernels/installer/types';
-import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
+import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;

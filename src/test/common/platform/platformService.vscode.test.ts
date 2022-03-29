@@ -7,7 +7,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as os from 'os';
 import { parse } from 'semver';
-import { PlatformService } from '../../../platform/common/platform/platformService';
+import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { OSType } from '../../../platform/common/utils/platform';
 
 use(chaiAsPromised);

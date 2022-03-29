@@ -17,11 +17,11 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { ReadWrite, Resource } from '../../../platform/common/types';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { noop } from '../../../platform/common/utils/misc.node';
 import {
     IJupyterConnection,
     ISessionWithSocket,
@@ -29,9 +29,9 @@ import {
     LiveKernelModel
 } from '../../../platform/../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
-import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService';
-import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
-import { DisplayOptions } from '../../../kernels/displayOptions';
+import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
+import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
+import { DisplayOptions } from '../../../kernels/displayOptions.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {

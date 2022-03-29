@@ -4,7 +4,7 @@ import { Resource } from '../../platform/common/types';
 // Licensed under the MIT License.
 
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../platform/interpreter/configuration/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {

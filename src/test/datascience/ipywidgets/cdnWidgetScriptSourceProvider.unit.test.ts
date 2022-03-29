@@ -8,15 +8,15 @@ import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { JupyterSettings } from '../../../platform/common/configSettings';
-import { ConfigurationService } from '../../../platform/common/configuration/service';
-import { FileSystem } from '../../../platform/common/platform/fileSystem';
+import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
-import { noop } from '../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource';
+import { noop } from '../../../platform/common/utils/misc.node';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
+import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.node';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider

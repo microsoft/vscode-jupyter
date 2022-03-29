@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { clearCache, InMemoryCache } from '../../../platform/common/utils/cacheUtils';
+import { clearCache, InMemoryCache } from '../../../platform/common/utils/cacheUtils.node';
 
 type CacheUtilsTestScenario = {
     scenarioDesc: string;

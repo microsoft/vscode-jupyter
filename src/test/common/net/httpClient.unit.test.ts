@@ -12,7 +12,7 @@ import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { HttpClient } from '../../../platform/common/net/httpClient';
+import { HttpClient } from '../../../platform/common/net/httpClient.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 
 // eslint-disable-next-line

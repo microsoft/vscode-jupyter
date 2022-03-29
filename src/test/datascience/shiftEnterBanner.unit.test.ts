@@ -5,17 +5,20 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
-import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../interactive-window/shiftEnterBanner';
+import {
+    InteractiveShiftEnterBanner,
+    InteractiveShiftEnterStateKeys
+} from '../../interactive-window/shiftEnterBanner.node';
 
 import { IApplicationShell } from '../../platform/common/application/types';
-import { Telemetry } from '../../platform/common/constants';
+import { Telemetry } from '../../platform/common/constants.node';
 import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { clearTelemetryReporter } from '../../telemetry';
+import { clearTelemetryReporter } from '../../telemetry/index.node';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;

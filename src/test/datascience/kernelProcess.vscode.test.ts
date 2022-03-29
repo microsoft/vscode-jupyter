@@ -20,12 +20,12 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo } from '../../platform/common/logger';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { traceInfo } from '../../platform/common/logger.node';
 import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';
-import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';
-import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
+import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
+import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
 
 suite('DataScience - Kernel Process', () => {
     let processService: IProcessService;

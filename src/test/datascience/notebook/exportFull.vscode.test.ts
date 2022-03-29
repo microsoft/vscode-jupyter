@@ -8,9 +8,9 @@ import { assert, expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { Common } from '../../../platform/common/utils/localize';
+import { Common } from '../../../platform/common/utils/localize.node';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
@@ -24,9 +24,9 @@ import {
     workAroundVSCodeNotebookStartPages
 } from './helper';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { createDeferred } from '../../../platform/common/utils/async.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { ProductNames } from '../../../kernels/installer/productNames';
+import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

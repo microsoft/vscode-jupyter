@@ -7,9 +7,9 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { Extensions } from '../../platform/common/application/extensions';
-import { FileSystem } from '../../platform/common/platform/fileSystem';
-import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { Extensions } from '../../platform/common/application/extensions.node';
+import { FileSystem } from '../../platform/common/platform/fileSystem.node';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration.node';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../../kernels/jupyter/types';
 
 class MockProvider implements IJupyterUriProvider {

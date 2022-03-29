@@ -27,7 +27,7 @@ import { traceError } from '../../../platform/common/logger.node';
 import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { Telemetry } from '../../webview-side/common/constants.node';
+import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker.node';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';

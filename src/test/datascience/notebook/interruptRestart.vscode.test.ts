@@ -7,9 +7,9 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookCellExecutionState, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
-import { noop } from '../../../platform/common/utils/misc';
+import { noop } from '../../../platform/common/utils/misc.node';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -29,8 +29,8 @@ import {
     waitForOutputs,
     clickOKForRestartPrompt
 } from './helper';
-import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
-import { Commands } from '../../../platform/common/constants';
+import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers.node';
+import { Commands } from '../../../platform/common/constants.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*

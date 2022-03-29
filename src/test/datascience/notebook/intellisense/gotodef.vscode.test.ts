@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../../../platform/common/logger';
+import { traceInfo } from '../../../../platform/common/logger.node';
 import { IDisposable } from '../../../../platform/common/types';
 import { captureScreenShot, createEventHandler, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';

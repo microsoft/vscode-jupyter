@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { assert } from 'chai';
 import * as path from 'path';
-import { traceInfo } from '../../platform/common/logger';
+import { traceInfo } from '../../platform/common/logger.node';
 import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,

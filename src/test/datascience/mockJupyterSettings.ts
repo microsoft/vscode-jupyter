@@ -1,4 +1,4 @@
-import { JupyterSettings } from '../../platform/common/configSettings';
+import { JupyterSettings } from '../../platform/common/configSettings.node';
 import { IJupyterSettings } from '../../platform/common/types';
 
 export class MockJupyterSettings extends JupyterSettings {

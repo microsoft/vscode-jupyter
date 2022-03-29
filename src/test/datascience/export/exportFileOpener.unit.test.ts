@@ -8,9 +8,9 @@ import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
+import { ExportFileOpener } from '../../../platform/export/exportFileOpener.node';
 import { ExportFormat } from '../../../platform/export/types';
-import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
 import { getLocString } from '../../../webviews/webview-side/react-common/locReactSide';
 
 suite('DataScience - Export File Opener', () => {

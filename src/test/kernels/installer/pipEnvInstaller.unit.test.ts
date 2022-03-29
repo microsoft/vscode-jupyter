@@ -9,11 +9,11 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
-import { PipEnvInstaller } from '../../../kernels/installer/pipEnvInstaller';
-import * as pipEnvHelper from '../../../kernels/installer/pipenv';
+import { PipEnvInstaller } from '../../../kernels/installer/pipEnvInstaller.node';
+import * as pipEnvHelper from '../../../kernels/installer/pipenv.node';
 
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

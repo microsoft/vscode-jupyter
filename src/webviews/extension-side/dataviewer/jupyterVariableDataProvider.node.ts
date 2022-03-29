@@ -10,7 +10,7 @@ import { ColumnType, IDataFrameInfo, IJupyterVariableDataProvider, IRowsResponse
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { traceError } from '../../../platform/common/logger.node';
-import { Identifiers } from '../../webview-side/common/constants.node';
+import { Identifiers } from '../../webview-side/common/constants';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {

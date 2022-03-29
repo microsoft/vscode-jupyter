@@ -1,14 +1,14 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../platform/api';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import type { IExtensionApi } from '../platform/api.node';
+import { disposeAllDisposables } from '../platform/common/helpers.node';
 import type { IDisposable } from '../platform/common/types';
-import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
+import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater.node';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
-import { PythonExtension } from '../platform/common/constants';
+import { PythonExtension } from '../platform/common/constants.node';
 
 export * from './constants';
 export * from './ciConstants';
@@ -58,7 +58,7 @@ export async function initializeTest(): Promise<any> {
     await closeActiveWindows();
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../platform/common/configSettings');
+        const configSettings = await import('../platform/common/configSettings.node');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }

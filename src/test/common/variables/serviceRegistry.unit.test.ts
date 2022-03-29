@@ -4,11 +4,11 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { EnvironmentVariablesService } from '../../../platform/common/variables/environment';
-import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider';
-import { registerTypes } from '../../../platform/common/variables/serviceRegistry';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
+import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
+import { registerTypes } from '../../../platform/common/variables/serviceRegistry.node';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../../platform/common/variables/types';
-import { ServiceManager } from '../../../platform/ioc/serviceManager';
+import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
 import { IServiceManager } from '../../../platform/ioc/types';
 
 suite('Common variables Service Registry', () => {

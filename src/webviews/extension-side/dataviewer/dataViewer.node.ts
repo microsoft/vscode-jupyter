@@ -38,7 +38,7 @@ import * as localize from '../../../platform/common/utils/localize.node';
 import { StopWatch } from '../../../platform/common/utils/stopWatch.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
-import { Telemetry } from '../../webview-side/common/constants.node';
+import { Telemetry } from '../../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 import { noop } from '../../../platform/common/utils/misc.node';

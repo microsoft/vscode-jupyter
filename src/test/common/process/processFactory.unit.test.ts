@@ -6,13 +6,13 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
-import { BufferDecoder } from '../../../platform/common/process/decoder';
-import { ProcessLogger } from '../../../platform/common/process/logger';
-import { ProcessService } from '../../../platform/common/process/proc';
-import { ProcessServiceFactory } from '../../../platform/common/process/processFactory';
+import { BufferDecoder } from '../../../platform/common/process/decoder.node';
+import { ProcessLogger } from '../../../platform/common/process/logger.node';
+import { ProcessService } from '../../../platform/common/process/proc.node';
+import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
 import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider';
+import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 
 suite('Process - ProcessServiceFactory', () => {

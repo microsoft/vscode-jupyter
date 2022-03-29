@@ -10,7 +10,7 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as net from 'net';
-import { SocketStream } from '../../platform/common/net/socket/SocketStream';
+import { SocketStream } from '../../platform/common/net/socket/SocketStream.node';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 const uint64be = require('uint64be');
 

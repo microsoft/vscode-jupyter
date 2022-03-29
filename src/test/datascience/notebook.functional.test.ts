@@ -24,7 +24,7 @@ suite('Dummy9', () => {
 // import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 // import { Cancellation } from '../../platform/common/cancellation';
 // import { EXTENSION_ROOT_DIR } from '../../platform/common/constants';
-// import { traceError, traceInfo } from '../../platform/common/logger';
+// import { traceError, traceInfo } from '../../platform/common/logger.node';
 // import { IFileSystem } from '../../platform/common/platform/types';
 // import { IPythonExecutionFactory } from '../../platform/common/process/types';
 // import { Product } from '../../platform/common/types';

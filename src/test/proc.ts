@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as cp from 'child_process';
-import { sleep } from '../platform/common/utils/async';
+import { sleep } from '../platform/common/utils/async.node';
 
 type OutStream = 'stdout' | 'stderr';
 

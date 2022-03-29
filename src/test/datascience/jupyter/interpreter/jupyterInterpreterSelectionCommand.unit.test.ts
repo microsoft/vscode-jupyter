@@ -7,11 +7,11 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../platform/activation/types';
-import { CommandManager } from '../../../../platform/common/application/commandManager';
+import { CommandManager } from '../../../../platform/common/application/commandManager.node';
 import { ICommandManager } from '../../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../../platform/common/types';
-import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand';
-import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand.node';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 
 suite('DataScience - Jupyter Interpreter Command', () => {
     let interpreterCommand: IExtensionSingleActivationService;

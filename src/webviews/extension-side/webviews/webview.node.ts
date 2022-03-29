@@ -18,7 +18,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { Identifiers } from '../../webview-side/common/constants.node';
+import { Identifiers } from '../../webview-side/common/constants';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {

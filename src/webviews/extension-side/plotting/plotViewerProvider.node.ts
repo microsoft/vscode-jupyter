@@ -8,7 +8,7 @@ import { IPlotViewer, IPlotViewerProvider } from './types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { Telemetry } from '../../webview-side/common/constants.node';
+import { Telemetry } from '../../webview-side/common/constants';
 
 @injectable()
 export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable {

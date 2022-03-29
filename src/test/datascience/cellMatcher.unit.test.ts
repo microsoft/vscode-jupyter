@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
+import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher.node';
 import { IJupyterSettings } from '../../platform/common/types';
 import { defaultDataScienceSettings } from './helpers';
 

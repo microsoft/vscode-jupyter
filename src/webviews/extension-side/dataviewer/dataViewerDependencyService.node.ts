@@ -18,7 +18,7 @@ import { DataScience, Common } from '../../../platform/common/utils/localize.nod
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { Telemetry } from '../../webview-side/common/constants.node';
+import { Telemetry } from '../../webview-side/common/constants';
 
 const minimumSupportedPandaVersion = '0.20.0';
 

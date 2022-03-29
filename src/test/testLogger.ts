@@ -7,7 +7,7 @@
 // delete everything in '../platform' except for '../platform/logging' before running smoke tests.
 
 import { LogLevel } from '../platform/logging/levels';
-import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../platform/logging/logger';
+import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../platform/logging/logger.node';
 
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const monkeyPatchLogger = createLogger();

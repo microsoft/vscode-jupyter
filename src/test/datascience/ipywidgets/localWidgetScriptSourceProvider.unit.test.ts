@@ -4,13 +4,13 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { FileSystem } from '../../../platform/common/platform/fileSystem';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types';
 import { IKernel } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider

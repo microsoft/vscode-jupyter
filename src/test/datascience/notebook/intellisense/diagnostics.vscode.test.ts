@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { traceInfo } from '../../../../platform/common/logger';
+import { traceInfo } from '../../../../platform/common/logger.node';
 import { IDisposable } from '../../../../platform/common/types';
 import { IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';

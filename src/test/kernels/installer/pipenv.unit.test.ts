@@ -2,13 +2,13 @@ import * as assert from 'assert';
 import * as pathModule from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform';
-import * as fileUtils from '../../../platform/common/platform/fileUtils';
+import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import {
     isPipenvEnvironmentRelatedToFolder,
     isPipenvEnvironment,
     _getAssociatedPipfile
-} from '../../../kernels/installer/pipenv';
+} from '../../../kernels/installer/pipenv.node';
 
 const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 
