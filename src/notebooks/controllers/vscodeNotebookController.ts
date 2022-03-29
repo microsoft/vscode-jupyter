@@ -292,7 +292,7 @@ export class VSCodeNotebookController implements Disposable {
         if (!event.selected) {
             // If user has selected another controller, then kill the current kernel.
             // Possible user selected a controller that's not contributed by us at all.
-            const kernel = this.kernelProvider.get(event.notebook);
+            const kernel = this.kernelProvider.get(event.notebook.uri);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
                 traceInfo(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
@@ -549,7 +549,7 @@ export class VSCodeNotebookController implements Disposable {
     }
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-        const existingKernel = this.kernelProvider.get(document);
+        const existingKernel = this.kernelProvider.get(document.uri);
         if (
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)

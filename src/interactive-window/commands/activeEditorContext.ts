@@ -168,7 +168,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
             activeEditor && activeEditor.document.notebookType === JupyterNotebookView
-                ? this.kernelProvider.get(activeEditor.document)
+                ? this.kernelProvider.get(activeEditor.document.uri)
                 : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
@@ -193,7 +193,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateContextOfActiveInteractiveWindowKernel() {
         const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
-        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
+        const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
             this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();

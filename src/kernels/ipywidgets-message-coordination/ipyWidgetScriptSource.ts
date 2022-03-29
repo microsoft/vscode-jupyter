@@ -174,7 +174,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         }
 
         if (!this.kernel) {
-            this.kernel = await this.kernelProvider.get(this.document);
+            this.kernel = await this.kernelProvider.get(this.document.uri);
         }
         if (!this.kernel) {
             return;

@@ -5,7 +5,7 @@
 
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { Event, NotebookCell, NotebookController, NotebookDocument, QuickPickItem, Uri } from 'vscode';
+import type { Event, NotebookCell, NotebookController, QuickPickItem, Uri } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import {
@@ -206,7 +206,7 @@ export interface IKernelProvider extends IAsyncDisposable {
     /**
      * Get hold of the active kernel for a given Notebook.
      */
-    get(uri: NotebookDocument | Uri): IKernel | undefined;
+    get(uri: Uri): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.

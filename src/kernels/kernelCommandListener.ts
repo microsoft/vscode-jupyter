@@ -112,7 +112,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             return;
         }
 
-        const kernel = this.kernelProvider.get(document);
+        const kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
@@ -134,7 +134,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         }
 
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        const kernel = this.kernelProvider.get(document);
+        const kernel = this.kernelProvider.get(document.uri);
 
         if (kernel) {
             trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
