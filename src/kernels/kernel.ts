@@ -14,8 +14,7 @@ import {
     NotebookController,
     ColorThemeKind,
     Disposable,
-    Uri
-} from 'vscode';
+    Uri} from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
@@ -47,8 +46,7 @@ import {
     INotebookProvider,
     IStatusProvider,
     InterruptResult,
-    IDisplayOptions
-} from '../platform/datascience/types';
+    IDisplayOptions} from '../platform/datascience/types';
 import { calculateWorkingDirectory } from '../platform/datascience/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../datascience-ui/common';
@@ -69,8 +67,9 @@ import {
     NotebookCellRunState
 } from './types';
 import { KernelExecution } from '../notebooks/execution/kernelExecution';
-import { findNotebook, traceCellMessage } from '../notebooks/helpers';
+import { traceCellMessage } from '../notebooks/helpers';
 import { Cancellation } from '../platform/common/cancellation';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -176,10 +175,6 @@ export class Kernel implements IKernel {
         this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
-
-    public static getAssociatedNotebook(kernel?: IKernel) {
-        return kernel ? findNotebook(kernel.id) : undefined;
-    }
 
     public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks.push(hook);
@@ -682,7 +677,7 @@ export class Kernel implements IKernel {
     private async getDebugCellHook(): Promise<string[]> {
         // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
         // notebooks
-        if (Kernel.getAssociatedNotebook(this)?.notebookType === InteractiveWindowView) {
+        if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {

@@ -3,7 +3,7 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
-import { CancellationError, CancellationToken, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
@@ -19,7 +19,6 @@ import {
 import { Identifiers } from '../../datascience-ui/common/constants';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IKernel } from '../types';
-import { Kernel } from '../kernel';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -50,7 +49,7 @@ interface INotebookState {
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
-    private notebookState = new WeakMap<NotebookDocument, INotebookState>();
+    private cachedVariables = new WeakMap<IKernel, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
     private enhancedTooltipsExperimentPromise: boolean | undefined;
 
@@ -81,8 +80,7 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
-        const notebook = Kernel.getAssociatedNotebook(kernel);
-        const cache = notebook ? this.notebookState.get(notebook) : undefined;
+        const cache = this.cachedVariables.get(kernel);
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
@@ -173,8 +171,7 @@ export class KernelVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        const notebook = Kernel.getAssociatedNotebook(kernel);
-        let list = notebook ? this.notebookState.get(notebook) : undefined;
+        let list = this.cachedVariables.get(kernel);
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -207,7 +204,7 @@ export class KernelVariables implements IJupyterVariables {
         };
 
         // Use the list of names to fetch the page of data
-        if (list && notebook) {
+        if (list) {
             type SortableColumn = 'name' | 'type';
             const sortColumn = request.sortColumn as SortableColumn;
             const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
@@ -245,7 +242,7 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Save in our cache
-            this.notebookState.set(notebook, list);
+            this.cachedVariables.set(kernel, list);
 
             // Update total count (exclusions will change this as types are computed)
             result.totalCount = list.variables.length;

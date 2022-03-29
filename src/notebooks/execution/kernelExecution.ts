@@ -21,7 +21,7 @@ import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { traceCellMessage } from '../helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { Kernel } from '../../kernels/kernel';
+import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -58,7 +58,7 @@ export class KernelExecution implements IDisposable {
         return this._onPreExecute.event;
     }
     public get queue() {
-        const notebook = Kernel.getAssociatedNotebook(this.kernel);
+        const notebook = getAssociatedNotebookDocument(this.kernel);
         return notebook ? this.documentExecutions.get(notebook)?.queue || [] : [];
     }
     public async executeCell(
@@ -83,7 +83,7 @@ export class KernelExecution implements IDisposable {
         return result[0];
     }
     public async cancel() {
-        const notebook = Kernel.getAssociatedNotebook(this.kernel);
+        const notebook = getAssociatedNotebookDocument(this.kernel);
         if (!notebook) {
             return;
         }
@@ -99,7 +99,7 @@ export class KernelExecution implements IDisposable {
      */
     public async interrupt(sessionPromise?: Promise<IJupyterSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
-        const notebook = Kernel.getAssociatedNotebook(this.kernel);
+        const notebook = getAssociatedNotebookDocument(this.kernel);
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
         if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
             return InterruptResult.Success;
@@ -138,7 +138,7 @@ export class KernelExecution implements IDisposable {
      */
     public async restart(sessionPromise?: Promise<IJupyterSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
-        const notebook = Kernel.getAssociatedNotebook(this.kernel);
+        const notebook = getAssociatedNotebookDocument(this.kernel);
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;

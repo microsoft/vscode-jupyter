@@ -8,7 +8,8 @@ import { Resource } from '../../platform/common/types';
 import { getResourceType } from '../../platform/datascience/common';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IInteractiveWindowProvider } from '../../platform/datascience/types';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
+import { workspace } from 'vscode';
 
 // TODO: This should probably move to a 'notebook' subsection
 
@@ -69,4 +70,12 @@ export function findNotebookEditor(
             : undefined;
 
     return targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+}
+
+export function getAssociatedNotebookDocument(kernel: IKernel | undefined, notebooks = workspace.notebookDocuments) {
+    if (!kernel) {
+        return;
+    }
+
+    return notebooks.find((nb) => nb.uri.toString() === kernel.id.toString());
 }

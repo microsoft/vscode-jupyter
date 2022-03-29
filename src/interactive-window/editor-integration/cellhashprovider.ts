@@ -30,7 +30,7 @@ import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../../platform/datascience/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { Kernel } from '../../kernels/kernel';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
@@ -494,7 +494,7 @@ export class CellHashProvider implements ICellHashProvider {
                     break;
                 }
             }
-            const notebook = Kernel.getAssociatedNotebook(this.kernel);
+            const notebook = getAssociatedNotebookDocument(this.kernel);
             if (matchHash && matchUri) {
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {

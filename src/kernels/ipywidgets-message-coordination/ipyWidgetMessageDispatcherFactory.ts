@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
-import { Kernel } from '../kernel';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
@@ -122,7 +122,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         if (this.disposed) {
             return;
         }
-        const notebook = Kernel.getAssociatedNotebook(kernel);
+        const notebook = getAssociatedNotebookDocument(kernel);
         if (notebook) {
             const item = this.messageDispatchers.get(notebook);
             this.messageDispatchers.delete(notebook);

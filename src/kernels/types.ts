@@ -206,10 +206,10 @@ export interface IKernelProvider extends IAsyncDisposable {
     /**
      * Get hold of the active kernel for a given Notebook.
      */
-    get(owner: NotebookDocument | Uri): IKernel | undefined;
+    get(uri: NotebookDocument | Uri): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(owner: NotebookDocument | Uri, options: KernelOptions): IKernel;
+    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
 }

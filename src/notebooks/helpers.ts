@@ -1007,7 +1007,3 @@ export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDo
         (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
     );
 }
-
-export function findNotebook(uri: Uri, notebooks = workspace.notebookDocuments) {
-    return notebooks.find((nb) => nb.uri.toString() === uri.toString());
-}

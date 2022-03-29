@@ -20,7 +20,7 @@ import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel, IKernelProvider } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { Kernel } from '../kernel';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -81,7 +81,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.pendingTargetNames.add('jupyter.widget');
         kernelProvider.onDidStartKernel(
             (e) => {
-                if (Kernel.getAssociatedNotebook(e) === document) {
+                if (getAssociatedNotebookDocument(e) === document) {
                     this.initialize();
                 }
             },

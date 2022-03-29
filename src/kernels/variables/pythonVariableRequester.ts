@@ -13,7 +13,7 @@ import { IKernelVariableRequester, IJupyterVariable } from '../../platform/datas
 import { Telemetry } from '../../datascience-ui/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
-import { Kernel } from '../kernel';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -208,7 +208,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     private async importDataFrameScripts(kernel: IKernel): Promise<void> {
-        const key = Kernel.getAssociatedNotebook(kernel);
+        const key = getAssociatedNotebookDocument(kernel);
         if (key && !this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
@@ -227,7 +227,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
-        const key = Kernel.getAssociatedNotebook(kernel);
+        const key = getAssociatedNotebookDocument(kernel);
         if (key && !this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];

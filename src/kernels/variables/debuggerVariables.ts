@@ -23,7 +23,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';
-import { Kernel } from '../kernel';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 const DataViewableTypes: Set<string> = new Set<string>([
     'DataFrame',
@@ -164,7 +164,7 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
-        const notebook = Kernel.getAssociatedNotebook(kernel);
+        const notebook = getAssociatedNotebookDocument(kernel);
         let fileName = notebook ? path.basename(notebook.uri.fsPath) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
@@ -280,7 +280,7 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     private watchKernel(kernel: IKernel) {
-        const key = Kernel.getAssociatedNotebook(kernel)?.uri.toString();
+        const key = getAssociatedNotebookDocument(kernel)?.uri.toString();
         if (key && !this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
             disposables.push(kernel.onRestarted(this.resetImport.bind(this, key)));

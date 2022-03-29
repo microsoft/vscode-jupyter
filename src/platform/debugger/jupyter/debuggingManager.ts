@@ -431,7 +431,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
         let kernel = this.kernelProvider.get(doc);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc, {
+            kernel = this.kernelProvider.getOrCreate(doc.uri, {
                 metadata: controller.connection,
                 controller: controller?.controller,
                 resourceUri: doc.uri
@@ -452,7 +452,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
-                kernel = this.kernelProvider.getOrCreate(doc, {
+                kernel = this.kernelProvider.getOrCreate(doc.uri, {
                     metadata: controller.connection,
                     controller: controller?.controller,
                     resourceUri: doc.uri

@@ -20,8 +20,9 @@ import { Identifiers, Telemetry } from '../../datascience-ui/common/constants';
 import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError';
 import { executeSilently } from '../helpers';
-import { getPlainTextOrStreamOutput, Kernel } from '../kernel';
+import { getPlainTextOrStreamOutput } from '../kernel';
 import { IKernel, isLocalConnection } from '../types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
@@ -68,7 +69,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     public async detach(kernel: IKernel): Promise<void> {
-        const notebook = Kernel.getAssociatedNotebook(kernel);
+        const notebook = getAssociatedNotebookDocument(kernel);
         if (!kernel.session || !notebook) {
             return;
         }
@@ -170,7 +171,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
-        const notebook = Kernel.getAssociatedNotebook(kernel);
+        const notebook = getAssociatedNotebookDocument(kernel);
         if (!kernel || !notebook) {
             return;
         }
