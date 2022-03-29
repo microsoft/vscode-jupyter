@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, extensions } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { PylanceExtension, PythonExtension } from '../../../datascience/constants';
+import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
 import { ICommandManager, IWorkspaceService } from '../types';
 
