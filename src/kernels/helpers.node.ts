@@ -1664,7 +1664,7 @@ async function verifyKernelState(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     promise: Promise<{
         kernel: IKernel;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
@@ -1711,8 +1711,11 @@ export async function wrapKernelMethod(
     options: IDisplayOptions = new DisplayOptions(false),
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
+    traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
+
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
+        traceVerbose(`${context} the kernel, change options.disableUI`);
         currentPromise.options.disableUI = false;
     }
     // If the current kernel has been disposed or in the middle of being disposed, then create another one.
@@ -1775,7 +1778,7 @@ export async function wrapKernelMethodImpl(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<{
     kernel: IKernel;
@@ -1816,6 +1819,10 @@ export async function wrapKernelMethodImpl(
                 }
             }
         } catch (error) {
+            traceWarning(
+                `Error occurred while trying to ${context} the kernel, options.disableUI=${options.disableUI}`,
+                error
+            );
             if (options.disableUI) {
                 throw error;
             }

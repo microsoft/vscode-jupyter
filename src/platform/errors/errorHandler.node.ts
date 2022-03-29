@@ -53,9 +53,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
+    private handledErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
         err = WrappedError.unwrap(err);
+        if (this.handledErrors.has(err)) {
+            return;
+        }
+        this.handledErrors.add(err);
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
@@ -151,12 +156,22 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
-        traceWarning('Kernel Error', err);
+        traceWarning(`Kernel Error, context = ${context}`, err);
         err = WrappedError.unwrap(err);
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
         if (err instanceof JupyterKernelDependencyError) {
-            return err.reason;
+            traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
+            if (err.reason === KernelInterpreterDependencyResponse.uiHidden) {
+                // At this point we're handling the error, and if the error was initially swallowed due to
+                // auto start (ui hidden), now we need to display the error to the user.
+                const response = await this.dependencyManager.installMissingDependencies(err);
+                return response === JupyterInterpreterDependencyResponse.ok
+                    ? KernelInterpreterDependencyResponse.ok
+                    : KernelInterpreterDependencyResponse.cancel;
+            } else {
+                return err.reason;
+            }
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
         } else if ((context === 'start' || context === 'restart') && err instanceof JupyterInstallError) {
             const response = await this.dependencyManager.installMissingDependencies(err);

@@ -342,11 +342,15 @@ export class Kernel implements IKernel {
         }
     }
     private async startNotebook(options: IDisplayOptions = new DisplayOptions(false)): Promise<INotebook> {
+        traceVerbose(`Start Notebook in kernel.ts with disableUI = ${options.disableUI}`);
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
         options.onDidChangeDisableUI(() => {
+            traceVerbose(
+                `Disable UI changed to ${options.disableUI} & this.startupUI.disableUI=${this.startupUI.disableUI}`
+            );
             if (!options.disableUI && this.startupUI.disableUI) {
                 this.startupUI.disableUI = false;
             }
@@ -394,7 +398,9 @@ export class Kernel implements IKernel {
         try {
             // No need to block kernel startup on UI updates.
             traceInfo(
-                `Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(this.id)}`
+                `Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                    this.id
+                )} (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
