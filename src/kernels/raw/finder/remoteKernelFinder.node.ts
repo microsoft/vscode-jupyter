@@ -20,7 +20,7 @@ import { traceError } from '../../../platform/common/logger.node';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { traceDecorators } from '../../../platform/logging';
+import { traceDecorators } from '../../../platform/logging/index.node';
 import { ignoreLogging } from '../../../platform/logging/trace.node';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers.node';

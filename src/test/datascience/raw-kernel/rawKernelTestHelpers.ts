@@ -3,7 +3,7 @@
 'use strict';
 import { KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { RawKernel } from '../../../kernels/raw/session/rawKernel.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

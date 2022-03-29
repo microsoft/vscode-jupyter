@@ -14,7 +14,7 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { ExperimentService } from '../../../platform/common/experiments/service.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import * as Telemetry from '../../../telemetry/index.node';
-import { EventName } from '../../../telemetry/constants.node';
+import { EventName } from '../../../telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';

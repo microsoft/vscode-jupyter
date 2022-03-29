@@ -9,7 +9,7 @@ import { TraceOptions } from '../../logging/trace.node';
 import { traceDecorators, traceError, traceVerbose } from '../logger.node';
 import { IFileSystem, IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
-import { createDeferredFromPromise } from '../utils/async.node';
+import { createDeferredFromPromise } from '../utils/async';
 import * as path from 'path';
 import { swallowExceptions } from '../utils/decorators.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

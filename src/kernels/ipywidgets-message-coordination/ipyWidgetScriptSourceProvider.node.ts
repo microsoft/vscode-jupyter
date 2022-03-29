@@ -16,7 +16,7 @@ import {
     IPersistentStateFactory,
     IHttpClient
 } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize.node';
 import { noop } from '../../platform/common/utils/misc.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';

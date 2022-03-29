@@ -4,7 +4,7 @@
 import { noop } from 'lodash';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 
 /**
  * Use this class to perform updates on all cells.

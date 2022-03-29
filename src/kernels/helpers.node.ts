@@ -41,7 +41,7 @@ import {
     GLOBAL_MEMENTO,
     IDisplayOptions
 } from '../platform/common/types';
-import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async.node';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize.node';
 import { SysInfoReason } from '../platform/messageTypes';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry.node';

@@ -19,7 +19,7 @@ import { isCI, PythonExtension, Telemetry } from '../common/constants.node';
 import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger.node';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
-import { createDeferred } from '../common/utils/async.node';
+import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize.node';
 import { noop } from '../common/utils/misc.node';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';

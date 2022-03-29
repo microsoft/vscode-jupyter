@@ -18,7 +18,7 @@ import {
     IExtensionContext,
     IDisposable
 } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { ConsoleForegroundColors } from '../../platform/logging/_global.node';

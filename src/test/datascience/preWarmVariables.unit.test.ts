@@ -10,7 +10,7 @@ import { PythonExtensionChecker } from '../../platform/api/pythonApi.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

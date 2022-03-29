@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
 import { traceError, traceInfo } from '../../../platform/common/logger.node';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { PlotViewerMessageListener } from './plotViewerMessageListener.node';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
 import {

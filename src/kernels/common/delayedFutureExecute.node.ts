@@ -5,7 +5,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationError } from '../../platform/common/cancellation.node';
 import { traceInfoIfCI } from '../../platform/common/logger.node';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute

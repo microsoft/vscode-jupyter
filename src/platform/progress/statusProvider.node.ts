@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
-import { createDeferred, Deferred } from '../common/utils/async.node';
+import { createDeferred, Deferred } from '../common/utils/async';
 import { IStatusProvider } from './types';
 
 class StatusItem implements Disposable {

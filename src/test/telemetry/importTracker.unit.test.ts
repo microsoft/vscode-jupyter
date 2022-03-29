@@ -11,7 +11,7 @@ import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable } from '../../platform/common/types';
-import { EventName } from '../../telemetry/constants.node';
+import { EventName } from '../../telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
 import { ImportTracker } from '../../telemetry/importTracker.node';
 import { createDocument } from '../datascience/editor-integration/helpers';

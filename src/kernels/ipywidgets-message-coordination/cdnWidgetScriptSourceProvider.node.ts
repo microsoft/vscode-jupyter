@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
 import { IFileSystem, TemporaryFile } from '../../platform/common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 

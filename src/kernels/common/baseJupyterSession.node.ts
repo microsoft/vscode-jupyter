@@ -11,7 +11,7 @@ import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/common/logger.node';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async.node';
+import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize.node';
 import { noop } from '../../platform/common/utils/misc.node';
 import { sendTelemetryEvent } from '../../telemetry/index.node';

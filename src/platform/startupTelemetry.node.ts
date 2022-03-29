@@ -6,7 +6,7 @@ import { isTestExecution } from './common/constants.node';
 import { traceError } from './common/logger.node';
 import { IServiceContainer } from './ioc/types';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../telemetry/index.node';
-import { EventName } from '../telemetry/constants.node';
+import { EventName } from '../telemetry/constants';
 
 interface IStopWatch {
     elapsedTime: number;

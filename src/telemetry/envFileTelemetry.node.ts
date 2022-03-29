@@ -9,7 +9,7 @@ import { SystemVariables } from '../platform/common/variables/systemVariables.no
 
 import { sendTelemetryEvent } from './index.node';
 import { IFileSystem } from '../platform/common/platform/types';
-import { EventName } from './constants.node';
+import { EventName } from './constants';
 
 let _defaultEnvFileSetting: string | undefined;
 let envFileTelemetrySent = false;

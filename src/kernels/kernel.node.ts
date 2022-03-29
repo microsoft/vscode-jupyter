@@ -30,7 +30,7 @@ import {
     IDisposable,
     IDisplayOptions
 } from '../platform/common/types';
-import { Deferred, sleep } from '../platform/common/utils/async.node';
+import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize.node';
 import { noop } from '../platform/common/utils/misc.node';
 import { StopWatch } from '../platform/common/utils/stopWatch.node';

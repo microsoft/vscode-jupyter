@@ -19,7 +19,7 @@ import { createPromiseFromCancellation } from '../platform/common/cancellation.n
 import { traceError, traceInfoIfCI, traceVerbose } from '../platform/common/logger.node';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
-import { waitForPromise } from '../platform/common/utils/async.node';
+import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc.node';
 import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';

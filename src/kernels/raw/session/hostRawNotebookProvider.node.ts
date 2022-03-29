@@ -19,7 +19,7 @@ import {
     Resource,
     IDisplayOptions
 } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { trackKernelResourceInformation } from '../../../telemetry/telemetry.node';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';

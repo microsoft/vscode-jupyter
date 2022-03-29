@@ -23,7 +23,7 @@ import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/typ
 import { isPythonNotebook } from '../../../notebooks/helpers.node';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { traceDecorators } from '../../../platform/logging';
+import { traceDecorators } from '../../../platform/logging/index.node';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';

@@ -8,7 +8,7 @@ import { TraceOptions } from '../../logging/trace.node';
 import { traceDecorators, traceInfoIfCI } from '../logger.node';
 
 import { IDisposable } from '../types';
-import { createDeferred } from '../utils/async.node';
+import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants.node';
 import {

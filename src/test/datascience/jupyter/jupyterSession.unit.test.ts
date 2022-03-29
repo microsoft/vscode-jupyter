@@ -19,7 +19,7 @@ import { CancellationTokenSource, Uri } from 'vscode';
 
 import { traceInfo } from '../../../platform/common/logger.node';
 import { ReadWrite, Resource } from '../../../platform/common/types';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { noop } from '../../../platform/common/utils/misc.node';
 import {

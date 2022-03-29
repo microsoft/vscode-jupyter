@@ -6,7 +6,7 @@ import * as net from 'net';
 import { SocketCallbackHandler } from '../../platform/common/net/socket/socketCallbackHandler.node';
 import { SocketServer } from '../../platform/common/net/socket/socketServer.node';
 import { SocketStream } from '../../platform/common/net/socket/SocketStream.node';
-import { createDeferred, Deferred } from '../../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
 
 const uint64be = require('uint64be');
 

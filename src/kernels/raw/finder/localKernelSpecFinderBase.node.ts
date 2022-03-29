@@ -13,7 +13,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators.node';
 import { noop } from '../../../platform/common/utils/misc.node';
-import { traceDecorators } from '../../../platform/logging';
+import { traceDecorators } from '../../../platform/logging/index.node';
 import { ignoreLogging } from '../../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers.node';

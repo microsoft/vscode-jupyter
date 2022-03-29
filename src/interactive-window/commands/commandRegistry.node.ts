@@ -32,7 +32,7 @@ import { isUri, noop } from '../../platform/common/utils/misc.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { LogLevel } from '../../platform/logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
-import { EventName } from '../../telemetry/constants.node';
+import { EventName } from '../../telemetry/constants';
 import { ExportCommands } from './exportCommands.node';
 import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants.node';
 import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';

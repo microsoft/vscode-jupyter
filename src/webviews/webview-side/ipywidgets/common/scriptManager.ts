@@ -6,14 +6,13 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
-import '../../../../platform/common/extensions.node';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
 import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
-import { Deferred, createDeferred } from '../../../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
 import { IJupyterExtraSettings } from '../../../extension-side/types';
 

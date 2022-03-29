@@ -4,7 +4,7 @@
 'use strict';
 
 import { traceError } from '../common/logger.node';
-import { PromiseFunction } from '../common/utils/async.node';
+import { PromiseFunction } from '../common/utils/async';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 
 const _reporters = new Set<IProgressReporter>();

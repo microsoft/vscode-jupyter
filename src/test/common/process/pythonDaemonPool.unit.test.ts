@@ -18,7 +18,7 @@ import { PythonDaemonExecutionService } from '../../../platform/common/process/p
 import { PythonDaemonExecutionServicePool } from '../../../platform/common/process/pythonDaemonPool.node';
 import { IProcessLogger, IPythonExecutionService, Output } from '../../../platform/common/process/types';
 import { ReadWrite } from '../../../platform/common/types';
-import { sleep } from '../../../platform/common/utils/async.node';
+import { sleep } from '../../../platform/common/utils/async';
 import { InterpreterInformation, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../core';
 import { asyncDump } from '../asyncDump';

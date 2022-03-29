@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
-import { sleep } from '../common/utils/async.node';
+import { sleep } from '../common/utils/async';
 
 @injectable()
 export class ExportUtil {

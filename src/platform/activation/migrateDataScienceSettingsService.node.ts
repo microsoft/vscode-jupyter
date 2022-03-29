@@ -13,7 +13,7 @@ import { traceError } from '../common/logger.node';
 import { IFileSystem } from '../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators.node';
-import { traceDecorators } from '../logging';
+import { traceDecorators } from '../logging/index.node';
 import { IExtensionActivationService } from './types';
 
 interface IKeyBinding {

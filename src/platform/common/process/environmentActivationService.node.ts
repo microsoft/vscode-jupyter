@@ -11,7 +11,7 @@ import { IFileSystem, IPlatformService } from '../platform/types';
 import * as internalScripts from './internal/scripts/index.node';
 import { ExecutionResult, IProcessServiceFactory } from './types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../types';
-import { createDeferredFromPromise, sleep } from '../utils/async.node';
+import { createDeferredFromPromise, sleep } from '../utils/async';
 import { OSType } from '../utils/platform';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';

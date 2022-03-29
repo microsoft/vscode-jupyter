@@ -10,7 +10,7 @@ import {
     ObservableExecutionResult
 } from '../../platform/common/process/types';
 import { IOutputChannel } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { Products } from '../../platform/common/utils/localize.node';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';

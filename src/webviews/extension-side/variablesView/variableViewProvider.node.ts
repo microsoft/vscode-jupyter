@@ -14,7 +14,7 @@ import {
 } from '../../../platform/common/application/types';
 import { isTestExecution } from '../../../platform/common/constants.node';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Identifiers } from '../../webview-side/common/constants';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';

@@ -16,7 +16,7 @@ import {
     ProductInstallStatus,
     ProductType
 } from './types';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { logValue } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
@@ -37,7 +37,7 @@ import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
-import { sleep } from '../../platform/common/utils/async.node';
+import { sleep } from '../../platform/common/utils/async';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.

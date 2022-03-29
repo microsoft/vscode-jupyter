@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { EventName } from '../../../telemetry/constants.node';
+import { EventName } from '../../../telemetry/constants';
 import { traceError } from '../logger.node';
 import { isFileNotFoundError } from '../platform/errors.node';
 import { IFileSystem } from '../platform/types';

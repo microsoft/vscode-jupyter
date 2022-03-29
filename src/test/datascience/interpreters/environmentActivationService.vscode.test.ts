@@ -20,7 +20,7 @@ import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';

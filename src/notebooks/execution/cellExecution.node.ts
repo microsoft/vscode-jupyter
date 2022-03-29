@@ -35,7 +35,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/common/logger.node';
 import { RefBool } from '../../platform/common/refBool.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize.node';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory.node';

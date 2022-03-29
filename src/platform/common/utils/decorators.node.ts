@@ -4,7 +4,7 @@ import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions.node';
 import { isTestExecution } from '../constants.node';
 import { traceError, traceVerbose } from '../logger.node';
-import { createDeferred, Deferred } from './async.node';
+import { createDeferred, Deferred } from './async';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils.node';
 import { noop, TraceInfo, tracing } from './misc.node';
 

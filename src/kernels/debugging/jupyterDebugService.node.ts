@@ -25,7 +25,7 @@ import {
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceInfo, traceError } from '../../platform/common/logger.node';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc.node';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IProtocolParser } from '../../platform/debugger/extension/types';

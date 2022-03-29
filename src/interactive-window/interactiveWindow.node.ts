@@ -39,7 +39,7 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../te
 import { chainable } from '../platform/common/utils/decorators.node';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
 import { DataScience } from '../platform/common/utils/localize.node';
-import { createDeferred, Deferred } from '../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { connectToKernel } from '../kernels/helpers.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';

@@ -7,7 +7,7 @@ import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscod
 import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { Identifiers } from '../../webviews/webview-side/common/constants';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers.node';
 import { IJupyterSession, IKernel } from '../types';

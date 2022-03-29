@@ -24,7 +24,7 @@ import {
     isValidSliceExpression,
     preselectedSliceExpression
 } from '../../../webviews/webview-side/data-explorer/helpers';
-import { CheckboxState } from '../../../telemetry/constants.node';
+import { CheckboxState } from '../../../telemetry/constants';
 import { IKernel } from '../../../kernels/types';
 import {
     IWebviewPanelProvider,

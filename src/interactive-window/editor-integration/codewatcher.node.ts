@@ -24,7 +24,7 @@ import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../
 import { chainable } from '../../platform/common/utils/decorators.node';
 import { isUri } from '../../platform/common/utils/misc.node';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { TraceOptions } from '../../platform/logging/trace.node';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';

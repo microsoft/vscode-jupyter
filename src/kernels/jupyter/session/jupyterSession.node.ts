@@ -16,7 +16,7 @@ import { Cancellation } from '../../../platform/common/cancellation.node';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceInfo } from '../../../platform/common/logger.node';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
-import { waitForCondition } from '../../../platform/common/utils/async.node';
+import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError.node';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';

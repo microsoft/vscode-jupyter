@@ -27,7 +27,7 @@ import {
     Output
 } from '../../../platform/common/process/types';
 import { IDisposable } from '../../../platform/common/types';
-import { sleep } from '../../../platform/common/utils/async.node';
+import { sleep } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment, PythonVersionInfo } from '../../../platform/pythonEnvironments/info';

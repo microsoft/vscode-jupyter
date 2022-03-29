@@ -16,7 +16,7 @@ import '../platform/common/extensions.node';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc.node';
-import { EventName } from './constants.node';
+import { EventName } from './constants';
 import { getTelemetrySafeHashedString } from './helpers.node';
 
 /*

@@ -12,7 +12,7 @@ import { traceError } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 
-import { sleep } from '../../platform/common/utils/async.node';
+import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';

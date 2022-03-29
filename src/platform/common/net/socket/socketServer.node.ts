@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import * as net from 'net';
 import { ISocketServer } from '../../types';
-import { createDeferred, Deferred } from '../../utils/async.node';
+import { createDeferred, Deferred } from '../../utils/async';
 import { noop } from '../../utils/misc.node';
 
 export class SocketServer extends EventEmitter implements ISocketServer {

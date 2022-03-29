@@ -7,7 +7,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { ignoreLogging, TraceOptions } from '../../logging/trace.node';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { EventName } from '../../../telemetry/constants.node';
+import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators, traceError, traceInfo } from '../logger.node';
 import { getDisplayPath } from '../platform/fs-paths.node';

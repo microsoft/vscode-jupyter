@@ -36,13 +36,13 @@ import {
     IProcessService
 } from '../../../platform/common/process/types';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc.node';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
-import { traceDecorators } from '../../../platform/logging';
+import { traceDecorators } from '../../../platform/logging/index.node';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
 import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';

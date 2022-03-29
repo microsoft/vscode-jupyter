@@ -21,7 +21,7 @@ import {
     IWatchableJupyterSettings,
     ReadWrite
 } from '../../../../platform/common/types';
-import { createDeferred, sleep } from '../../../../platform/common/utils/async.node';
+import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize.node';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers.node';

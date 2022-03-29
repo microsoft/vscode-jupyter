@@ -11,7 +11,7 @@ import { PYTHON_LANGUAGE } from '../common/constants.node';
 import { traceDecorators } from '../common/logger.node';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, Resource } from '../common/types';
-import { Deferred } from '../common/utils/async.node';
+import { Deferred } from '../common/utils/async';
 import { IInterpreterService } from '../interpreter/contracts.node';
 import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import {

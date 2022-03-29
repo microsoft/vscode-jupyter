@@ -16,7 +16,7 @@ import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/type
 import { noop } from '../../platform/common/utils/misc.node';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { logValue, ignoreLogging } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';

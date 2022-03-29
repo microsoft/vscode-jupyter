@@ -15,7 +15,7 @@ import { traceInfo } from '../platform/common/logger.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
-import { sleep, waitForCondition } from '../platform/common/utils/async.node';
+import { sleep, waitForCondition } from '../platform/common/utils/async';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

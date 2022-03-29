@@ -24,7 +24,7 @@ import {
     workAroundVSCodeNotebookStartPages
 } from './helper';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';

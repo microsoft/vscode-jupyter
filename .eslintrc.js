@@ -271,49 +271,16 @@ module.exports = {
         'import/no-restricted-paths': [
             'error',
             {
-                basePath: './src',
                 zones: [
                     {
-                        target: './intellisense/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/intellisense, is not allowed.'
+                        target: './src/**[!test]**/**/*.ts',
+                        from: './src/test/**/*.ts',
+                        message: 'Importing test modules from ./src/test into extension code is not allowed.'
                     },
                     {
-                        target: './interactive-window/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/interactive-window, is not allowed.'
-                    },
-                    {
-                        target: './kernels/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/kernels, is not allowed.'
-                    },
-                    {
-                        target: './notebooks/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/notebooks, is not allowed.'
-                    },
-                    {
-                        target: './platform/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/platform, is not allowed.'
-                    },
-                    {
-                        target: './telemetry/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/telemetry, is not allowed.'
-                    },
-                    {
-                        target: './webviews/**/*.ts',
-                        from: './test',
-                        message:
-                            'Importing test modules from ./src/test into extension code in .src/webviews, is not allowed.'
+                        target: './src/**[!test]**/**/*[!.node].ts',
+                        from: './src/**/*.node.ts',
+                        message: 'Importing node modules into non node files is not allowed.'
                     }
                 ]
             }

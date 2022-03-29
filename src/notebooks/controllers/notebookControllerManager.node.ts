@@ -26,7 +26,7 @@ import {
     IBrowserService,
     Resource
 } from '../../platform/common/types';
-import { waitForCondition } from '../../platform/common/utils/async.node';
+import { waitForCondition } from '../../platform/common/utils/async';
 import { debounceAsync } from '../../platform/common/utils/decorators.node';
 import { DataScience } from '../../platform/common/utils/localize.node';
 import { noop } from '../../platform/common/utils/misc.node';
@@ -35,7 +35,7 @@ import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry.node';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
