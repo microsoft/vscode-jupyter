@@ -341,6 +341,6 @@ function hasNativeDependencies() {
 }
 
 gulp.task('generateTelemetryMd', async () => {
-    const generator = require('./out/tools/telemetryGenerator');
+    const generator = require('./out/platform/tools/telemetryGenerator');
     return generator.default();
 });
