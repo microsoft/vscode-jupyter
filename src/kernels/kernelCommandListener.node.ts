@@ -27,6 +27,7 @@ import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
+import { DisplayOptions } from './displayOptions.node';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -192,7 +193,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     context,
                     this.serviceContainer,
                     kernel.resourceUri,
-                    notebook
+                    notebook,
+                    new DisplayOptions(false)
                 );
             } catch (ex) {
                 if (currentCell) {

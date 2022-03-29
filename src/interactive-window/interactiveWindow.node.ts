@@ -55,6 +55,7 @@ import { CellMatcher } from './editor-integration/cellMatcher.node';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types';
 import { generateInteractiveCode } from './helpers.node';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { DisplayOptions } from '../kernels/displayOptions.node';
 
 export type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -191,7 +192,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.serviceContainer,
                 this.owner,
                 this.notebookDocument,
-                undefined,
+                new DisplayOptions(false),
                 onStartKernel
             );
             this.currentKernelInfo.controller = kernel.controller;

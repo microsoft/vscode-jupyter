@@ -77,7 +77,6 @@ import { getResourceType } from '../platform/common/utils.node';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
-import { DisplayOptions } from './displayOptions.node';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 // Helper functions for dealing with kernels and kernelspecs
@@ -1708,7 +1707,7 @@ export async function wrapKernelMethod(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
@@ -1855,7 +1854,7 @@ export async function connectToKernel(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
