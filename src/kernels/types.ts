@@ -3,21 +3,24 @@
 
 'use strict';
 
-import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { Event, NotebookCell, NotebookController, QuickPickItem, Uri } from 'vscode';
+import type { JSONObject } from '@lumino/coreutils';
+import type {
+    CancellationToken,
+    Disposable,
+    Event,
+    NotebookCell,
+    NotebookController,
+    QuickPickItem,
+    Uri
+} from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
-import {
-    IDisplayOptions,
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterSession,
-    INotebookProviderConnection,
-    KernelSocketInformation
-} from '../platform/datascience/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
+import { WebSocketData } from '../platform/api/extension';
+import { IJupyterKernel } from './jupyter/types';
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
@@ -212,4 +215,305 @@ export interface IKernelProvider extends IAsyncDisposable {
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(uri: Uri, options: KernelOptions): IKernel;
+}
+
+export interface IRawConnection {
+    readonly type: 'raw';
+    readonly localLaunch: true;
+    readonly displayName: string;
+}
+
+export interface IJupyterConnection extends Disposable {
+    readonly type: 'jupyter';
+    readonly localLaunch: boolean;
+    readonly displayName: string;
+    disconnected: Event<number>;
+
+    // Jupyter specific members
+    readonly baseUrl: string;
+    readonly token: string;
+    readonly hostName: string;
+    readonly rootDirectory: string; // Directory where the notebook server was started.
+    readonly url?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getAuthHeader?(): any; // Snould be a json object
+}
+
+export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
+
+export enum InterruptResult {
+    Success = 'success',
+    TimedOut = 'timeout',
+    Restarted = 'restart'
+}
+
+export interface INotebook {
+    readonly connection: INotebookProviderConnection | undefined;
+    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
+}
+
+// Options for connecting to a notebook provider
+export type ConnectNotebookProviderOptions = {
+    ui: IDisplayOptions;
+    kind: 'localJupyter' | 'remoteJupyter';
+    token: CancellationToken;
+    resource: Resource;
+};
+
+export const IJupyterSession = Symbol('IJupyterSession');
+/**
+ * Closely represents Jupyter Labs Kernel.IKernelConnection.
+ */
+export interface IJupyterSession extends IAsyncDisposable {
+    readonly disposed: boolean;
+    readonly kernel?: Kernel.IKernelConnection;
+    readonly status: KernelMessage.Status;
+    readonly kernelId: string;
+    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    onSessionStatusChanged: Event<KernelMessage.Status>;
+    onDidDispose: Event<void>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
+    interrupt(): Promise<void>;
+    restart(): Promise<void>;
+    waitForIdle(timeout: number): Promise<void>;
+    requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+    requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>;
+    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
+    requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
+    sendInputReply(content: KernelMessage.IInputReply): void;
+    registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
+    shutdown(): Promise<void>;
+}
+
+export type ISessionWithSocket = Session.ISessionConnection & {
+    /**
+     * The resource associated with this session.
+     */
+    resource: Resource;
+    /**
+     * Whether this is a remote session that we attached to.
+     */
+    isRemoteSession?: boolean;
+    /**
+     * Socket information used for hooking messages to the kernel.
+     */
+    kernelSocketInformation: KernelSocketInformation;
+    kernelConnectionMetadata: KernelConnectionMetadata;
+};
+
+export interface IJupyterKernelSpec {
+    /**
+     * Id of an existing (active) Kernel from an active session.
+     *
+     * @type {string}
+     * @memberof IJupyterKernel
+     */
+    id?: string;
+    name: string;
+    language?: string;
+    path: string;
+    env?: NodeJS.ProcessEnv | undefined;
+    /**
+     * Kernel display name.
+     *
+     * @type {string}
+     * @memberof IJupyterKernelSpec
+     */
+    readonly display_name: string;
+    /**
+     * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
+     * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readonly metadata?: Record<string, any> & {
+        vscode?: {
+            /**
+             * Optionally where the original user-created kernel spec json is located on the local FS.
+             * Remember when using non-raw we create kernelspecs from the original spec.
+             */
+            originalSpecFile?: string;
+            /**
+             * E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
+             * However we give this a completely different name, and at that point its not possible to determine
+             * whether this is a default kernel or not.
+             * Hence keep track of the original name in the metadata.
+             */
+            originalDisplayName?: string;
+        };
+        interpreter?: Partial<PythonEnvironment>;
+        /**
+         * @deprecated (use metadata.jupyter.originalSpecFile)
+         */
+        originalSpecFile?: string;
+    };
+    readonly argv: string[];
+    /**
+     * Optionally where this kernel spec json is located on the local FS.
+     */
+    specFile?: string;
+    /**
+     * Optionally the Interpreter this kernel spec belongs to.
+     * You can have kernel specs that are scoped to an interpreter.
+     * E.g. if you have Python in `c:\Python\Python3.8`
+     * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
+     * Plenty of conda packages ship kernels in this manner (beakerx, etc).
+     */
+    interpreterPath?: string;
+    readonly interrupt_mode?: 'message' | 'signal';
+    /**
+     * Whether the kernelspec is registered by VS Code
+     */
+    readonly isRegisteredByVSC?:
+        | 'registeredByNewVersionOfExt'
+        | 'registeredByOldVersionOfExt'
+        | 'registeredByNewVersionOfExtForCustomKernelSpec';
+}
+
+export type GetServerOptions = {
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: boolean;
+    token: CancellationToken;
+    resource: Resource;
+};
+
+/**
+ * Options for getting a notebook
+ */
+export type NotebookCreationOptions = {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+};
+
+export const INotebookProvider = Symbol('INotebookProvider');
+export interface INotebookProvider {
+    /**
+     * Creates a notebook.
+     */
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined>;
+    /**
+     * Connect to a notebook provider to prepare its connection and to get connection information
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
+}
+
+export interface IKernelSocket {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
+    /**
+     * Adds a listener to a socket that will be called before the socket's onMessage is called. This
+     * allows waiting for a callback before processing messages
+     * @param listener
+     */
+    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
+     * @param listener
+     */
+    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
+     * @param patch
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+    /**
+     * Removes a send hook from the socket.
+     * @param hook
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+}
+
+export type KernelSocketOptions = {
+    /**
+     * Kernel Id.
+     */
+    readonly id: string;
+    /**
+     * Kernel ClientId.
+     */
+    readonly clientId: string;
+    /**
+     * Kernel UserName.
+     */
+    readonly userName: string;
+    /**
+     * Kernel model.
+     */
+    readonly model: {
+        /**
+         * Unique identifier of the kernel server session.
+         */
+        readonly id: string;
+        /**
+         * The name of the kernel.
+         */
+        readonly name: string;
+    };
+};
+export type KernelSocketInformation = {
+    /**
+     * Underlying socket used by jupyterlab/services to communicate with kernel.
+     * See jupyterlab/services/kernel/default.ts
+     */
+    readonly socket?: IKernelSocket;
+    /**
+     * Options used to clone a kernel.
+     */
+    readonly options: KernelSocketOptions;
+};
+
+/**
+ * Response for installation of kernel dependencies such as ipykernel.
+ * (these values are used in telemetry)
+ */
+export enum KernelInterpreterDependencyResponse {
+    ok = 0, // Used in telemetry.
+    cancel = 1, // Used in telemetry.
+    failed = 2, // Used in telemetry.
+    selectDifferentKernel = 3, // Used in telemetry.
+    uiHidden = 4 // Used in telemetry.
+}
+
+export const IKernelDependencyService = Symbol('IKernelDependencyService');
+export interface IKernelDependencyService {
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
+    installMissingDependencies(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        token: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<KernelInterpreterDependencyResponse>;
+    /**
+     * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
+     */
+    areDependenciesInstalled(
+        kernelConnection: KernelConnectionMetadata,
+        token?: CancellationToken,
+        ignoreCache?: boolean
+    ): Promise<boolean>;
 }

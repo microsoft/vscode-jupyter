@@ -21,26 +21,20 @@ import {
     IConfigurationService,
     IOutputChannel,
     IPersistentStateFactory,
-    Resource
+    Resource,
+    IDisplayOptions
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import {
-    IJupyterSessionManager,
-    IJupyterConnection,
-    IJupyterPasswordConnect,
-    IDisplayOptions,
-    IJupyterKernel,
-    IJupyterKernelSpec
-} from '../../../platform/datascience/types';
 import { createInterpreterKernelSpec } from '../../helpers';
-import { KernelConnectionMetadata } from '../../types';
+import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { sleep } from '../../../platform/common/utils/async';
+import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';

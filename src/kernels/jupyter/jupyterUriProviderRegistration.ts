@@ -4,13 +4,13 @@ import { inject, injectable } from 'inversify';
 
 import { IExtensions } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
+import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
-} from '../../platform/datascience/types';
-import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
+} from './types';
 
 @injectable()
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {

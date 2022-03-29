@@ -12,11 +12,11 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { DataViewerDependencyService } from '../../../platform/datascience/data-viewing/dataViewerDependencyService';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../kernels/installer/productInstaller';
 import { IInstaller, Product } from '../../../kernels/installer/types';
+import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;

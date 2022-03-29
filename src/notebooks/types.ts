@@ -54,3 +54,10 @@ export const INotebookLanguageClientProvider = Symbol('INotebookLanguageClientPr
 export interface INotebookLanguageClientProvider {
     getLanguageClient(notebook: NotebookDocument): Promise<vsc.LanguageClient | undefined>;
 }
+
+// For native editing, the provider acts like the IDocumentManager for normal docs
+export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
+export interface INotebookEditorProvider {
+    open(file: Uri): Promise<void>;
+    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
+}

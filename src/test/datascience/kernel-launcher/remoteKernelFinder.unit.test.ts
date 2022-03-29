@@ -11,20 +11,15 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
 import { CryptoUtils } from '../../../platform/common/crypto';
-import {
-    IJupyterConnection,
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterSessionManager
-} from '../../../platform/datascience/types';
 import { noop } from '../../core';
-import { LiveKernelConnectionMetadata } from '../../../kernels/types';
+import { IJupyterConnection, IJupyterKernelSpec, LiveKernelConnectionMetadata } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder';
 import { IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

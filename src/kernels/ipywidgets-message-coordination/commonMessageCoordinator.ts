@@ -27,12 +27,12 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { ConsoleForegroundColors } from '../../platform/logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry, Commands } from '../../datascience-ui/common/constants';
+import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
-} from '../../datascience-ui/interactive-common/redux/reducers/types';
+} from '../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';

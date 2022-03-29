@@ -9,11 +9,11 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceError } from '../platform/common/logger';
 import { IDisposableRegistry } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import { translateKernelLanguageToMonaco } from '../platform/datascience/common';
 import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { isJupyterNotebook } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
+import { translateKernelLanguageToMonaco } from '../platform/common/utils';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.

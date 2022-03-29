@@ -10,12 +10,11 @@ import { IApplicationShell, IWorkspaceService } from '../../platform/common/appl
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IBrowserService, IConfigurationService } from '../../platform/common/types';
-import { KernelConnectionMetadata } from '../../platform/../kernels/types';
 import {
-    IJupyterInterpreterDependencyManager,
     IKernelDependencyService,
+    KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
-} from '../../platform/datascience/types';
+} from '../../platform/../kernels/types';
 import { getOSType, OSType } from '../common';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
@@ -25,6 +24,7 @@ import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { KernelDiedError } from '../../platform/errors/kernelDiedError';
+import { IJupyterInterpreterDependencyManager } from '../../kernels/jupyter/types';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

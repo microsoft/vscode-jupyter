@@ -8,7 +8,6 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { DataScience } from '../../../../platform/common/utils/localize';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../platform/datascience/types';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../../kernels/installer/productInstaller';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
@@ -20,6 +19,7 @@ import {
     JupyterInterpreterDependencyService,
     JupyterInterpreterDependencyResponse
 } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

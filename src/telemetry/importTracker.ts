@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
-import { splitMultilineString } from '../datascience-ui/common';
+import { splitMultilineString } from '../webviews/webview-side/common';
 import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../platform/common/application/types';

@@ -15,10 +15,12 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import { ILocalResourceUriConverter } from '../../../platform/datascience/types';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/types';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider
+} from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');

@@ -6,8 +6,6 @@
 import { assert } from 'chai';
 import { Disposable, CancellationTokenSource } from 'vscode';
 import { traceInfo } from '../../platform/common/logger';
-import { DisplayOptions } from '../../platform/datascience/displayOptions';
-import { IJupyterExecution, IJupyterServerProvider } from '../../platform/datascience/types';
 import { IS_NON_RAW_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
@@ -20,6 +18,8 @@ import { JupyterSettings } from '../../platform/common/configSettings';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider';
+import { IJupyterExecution, IJupyterServerProvider } from '../../kernels/jupyter/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 suite('Jupyter CLI Tests', async () => {
     let jupyterServerProvider: NotebookServerProvider;

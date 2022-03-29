@@ -9,21 +9,20 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/common/logger';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
+import { IDisplayOptions, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
-import { KernelProgressReporter } from '../../../platform/datascience/progress/kernelProgressReporter';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
-import { IDisplayOptions, ISessionWithSocket } from '../../../platform/datascience/types';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { DisplayOptions } from '../../displayOptions';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of

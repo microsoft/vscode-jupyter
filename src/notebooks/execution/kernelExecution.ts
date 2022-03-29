@@ -14,11 +14,16 @@ import { createDeferred, waitForPromise } from '../../platform/common/utils/asyn
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
-import { InterruptResult, IJupyterSession } from '../../platform/datascience/types';
 import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../../datascience-ui/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IJupyterSession,
+    IKernel,
+    InterruptResult,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../../kernels/types';
 import { traceCellMessage } from '../helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';

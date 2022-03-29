@@ -7,9 +7,10 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IDebugService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { IJupyterDebugService, IJupyterVariables } from '../../platform/datascience/types';
 import { pythonKernelDebugAdapter } from '../../platform/debugger/constants';
-import { Identifiers } from '../../datascience-ui/common/constants';
+import { Identifiers } from '../../webviews/webview-side/common/constants';
+import { IJupyterDebugService } from '../debugging/types';
+import { IJupyterVariables } from './types';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {

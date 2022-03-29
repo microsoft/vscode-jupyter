@@ -14,8 +14,7 @@ import { disposeAllDisposables } from '../common/helpers';
 import { traceInfo } from '../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
-import { Telemetry } from '../datascience/constants';
-import { IKernelSocket as ExtensionKernelSocket } from '../datascience/types';
+import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ApiAccessService } from './apiAccessService';
 import {
@@ -26,6 +25,7 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
+import { Telemetry } from '../common/constants';
 
 @injectable()
 export class JupyterKernelServiceFactory {

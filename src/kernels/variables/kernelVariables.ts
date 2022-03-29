@@ -8,17 +8,16 @@ import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { Identifiers } from '../../webviews/webview-side/common/constants';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
+import { IJupyterSession, IKernel } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
     IKernelVariableRequester,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    IJupyterSession
-} from '../../platform/datascience/types';
-import { Identifiers } from '../../datascience-ui/common/constants';
-import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel } from '../types';
+    IJupyterVariablesResponse
+} from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 

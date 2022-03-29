@@ -3,16 +3,16 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import type { IDisposable } from '../platform/common/types';
-import { PythonExtension } from '../platform/datascience/constants';
 import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
+import { PythonExtension } from '../platform/common/constants';
 
 export * from './constants';
 export * from './ciConstants';
-export const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
+export const multirootPath = path.join(__dirname, '..', '..', 'src', 'test', 'testMultiRootWkspc');
 
 //First thing to be executed.
 process.env.VSC_JUPYTER_CI_TEST = '1';

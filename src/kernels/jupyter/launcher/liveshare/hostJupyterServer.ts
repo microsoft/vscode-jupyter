@@ -13,28 +13,23 @@ import {
     IOutputChannel,
     IDisposableRegistry,
     Resource,
-    IDisposable
+    IDisposable,
+    IDisplayOptions
 } from '../../../../platform/common/types';
 import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
 import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
-import {
-    INotebookServer,
-    IJupyterConnection,
-    INotebook,
-    IJupyterSessionManagerFactory,
-    IDisplayOptions
-} from '../../../../platform/datascience/types';
-import { Telemetry } from '../../../../datascience-ui/common/constants';
-import { KernelConnectionMetadata, isLocalConnection } from '../../../types';
+import { Telemetry } from '../../../../webviews/webview-side/common/constants';
+import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, INotebook } from '../../../types';
 import { computeWorkingDirectory } from '../../jupyterUtils';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook';
 import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
+import { INotebookServer, IJupyterSessionManagerFactory } from '../../types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()

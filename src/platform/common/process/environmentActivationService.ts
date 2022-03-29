@@ -20,7 +20,6 @@ import { logValue, TraceOptions } from '../../logging/trace';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
-import { Telemetry } from '../../datascience/constants';
 import { Memento } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -34,8 +33,9 @@ import { printEnvVariablesToFile } from './internal/scripts';
 import { ProcessService } from './proc';
 import { BufferDecoder } from './decoder';
 import { testOnlyMethod } from '../utils/decorators';
-import { KernelProgressReporter } from '../../datascience/progress/kernelProgressReporter';
 import { DataScience } from '../utils/localize';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
+import { Telemetry } from '../constants';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;

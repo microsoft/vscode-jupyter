@@ -13,7 +13,11 @@ import {
     findIndexOfConnectionFile,
     isPythonKernelConnection
 } from '../../../kernels/helpers';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
@@ -41,9 +45,8 @@ import { KernelProcessExitedError } from '../../../platform/errors/kernelProcess
 import { traceDecorators } from '../../../platform/logging';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry, KernelInterruptDaemonModule } from '../../../datascience-ui/common/constants';
+import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.

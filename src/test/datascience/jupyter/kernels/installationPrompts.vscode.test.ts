@@ -25,7 +25,6 @@ import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
-import { IInteractiveWindowProvider } from '../../../../platform/datascience/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
@@ -35,7 +34,6 @@ import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatche
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
-import { Commands } from '../../../../platform/datascience/constants';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
@@ -58,6 +56,8 @@ import {
 } from '../../notebook/helper';
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 import { noop } from '../../../core';
+import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
+import { Commands } from '../../../../platform/common/constants';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

@@ -7,13 +7,13 @@ import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { DisplayOptions } from '../../../platform/datascience/displayOptions';
-import { IJupyterExecution, INotebookServer } from '../../../platform/datascience/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {

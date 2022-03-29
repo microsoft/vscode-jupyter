@@ -6,7 +6,7 @@ import { StopWatch } from '../platform/common/utils/stopWatch';
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../platform/../kernels/types';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
-import { Telemetry } from '../platform/datascience/constants';
+import { Telemetry } from '../platform/common/constants';
 
 export function sendKernelListTelemetry(
     resource: Resource,

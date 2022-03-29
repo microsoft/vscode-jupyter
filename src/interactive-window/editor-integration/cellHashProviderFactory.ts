@@ -7,8 +7,8 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { ICellHashListener } from '../../platform/datascience/types';
 import { CellHashProvider } from './cellhashprovider';
+import { ICellHashListener } from './types';
 
 @injectable()
 export class CellHashProviderFactory {

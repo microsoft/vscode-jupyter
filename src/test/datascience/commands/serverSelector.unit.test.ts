@@ -4,9 +4,9 @@ import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../platform/common/application/types';
-import { Commands } from '../../../platform/datascience/constants';
 import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { Commands } from '../../../platform/common/constants';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {

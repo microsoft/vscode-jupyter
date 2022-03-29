@@ -14,7 +14,17 @@ import { IEnvironmentVariablesService } from '../../../platform/common/variables
 
 use(chaiAsPromised);
 
-const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace4');
+const envFilesFolderPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    '..',
+    'src',
+    'test',
+    'testMultiRootWkspc',
+    'workspace4'
+);
 
 // Functional tests that do not run code using the VS Code API are found
 // in envVarsService.test.ts.

@@ -36,10 +36,10 @@ suite('Dummy6', () => {
 // import { AskedForPerFileSettingKey } from '../../platform/datascience/interactive-window/interactiveWindowProvider';
 // import { IInteractiveWindowProvider, IWebviewExtensibility } from '../../platform/datascience/types';
 // import { IInterpreterService } from '../../platform/interpreter/contracts';
-// import { concatMultilineString } from '../../datascience-ui/common';
-// import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-// import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
-// import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+// import { concatMultilineString } from '../../webviews/webview-side/common';
+// import { InteractivePanel } from '../../webviews/webview-side/history-react/interactivePanel';
+// import { IKeyboardEvent } from '../../webviews/webview-side/react-common/event';
+// import { ImageButton } from '../../webviews/webview-side/react-common/imageButton';
 // import { InterpreterService } from '../interpreters/interpreterService';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { createDocument } from './editor-integration/helpers';

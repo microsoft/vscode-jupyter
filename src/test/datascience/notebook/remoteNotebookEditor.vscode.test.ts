@@ -29,8 +29,7 @@ import {
     createEmptyPythonNotebook
 } from './helper';
 import { openNotebook } from '../helpers';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { Settings } from '../../../platform/datascience/constants';
+import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { JupyterServer } from '../jupyterServer';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';

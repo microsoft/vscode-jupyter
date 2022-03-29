@@ -31,12 +31,13 @@ class TestRunner {
         // When running smoke tests, we won't have access to unbundled files.
         const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
         await fs.ensureDir(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'testMultiRootWkspc', 'smokeTests', '.vscode')
         );
         await fs.writeFile(
             path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src',
+                'test',
                 'testMultiRootWkspc',
                 'smokeTests',
                 '.vscode',
@@ -54,6 +55,7 @@ class TestRunner {
                 CODE_TESTS_WORKSPACE: path.join(
                     EXTENSION_ROOT_DIR_FOR_TESTS,
                     'src',
+                    'test',
                     'testMultiRootWkspc',
                     'smokeTests'
                 ),

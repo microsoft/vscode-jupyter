@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Event } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 
@@ -48,4 +48,26 @@ export interface IWidgetScriptSourceProvider extends IDisposable {
      * This is called when ipywidgets needs a source for a particular widget.
      */
     getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<Readonly<WidgetScriptSource>>;
+}
+
+/**
+ * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
+ */
+export interface ILocalResourceUriConverter {
+    /**
+     * Root folder that scripts should be copied to.
+     */
+    readonly rootScriptFolder: Uri;
+    /**
+     * Convert a uri for the local file system to one that can be used inside webviews.
+     *
+     * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The
+     * `asWebviewUri` function takes a local `file:` uri and converts it into a uri that can be used inside of
+     * a webview to load the same resource:
+     *
+     * ```ts
+     * webview.html = `<img src="${webview.asWebviewUri(vscode.Uri.file('/Users/codey/workspace/cat.gif'))}">`
+     * ```
+     */
+    asWebviewUri(localResource: Uri): Promise<Uri>;
 }

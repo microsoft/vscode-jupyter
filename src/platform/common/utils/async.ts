@@ -5,6 +5,9 @@
 
 import { BaseError } from '../../../platform/errors/types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PromiseFunction = (...any: any[]) => Promise<any>;
+
 /**
  * Error type thrown when a timeout occurs
  */

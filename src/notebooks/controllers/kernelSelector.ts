@@ -5,10 +5,10 @@ import { IVSCodeNotebook, ICommandManager } from '../../platform/common/applicat
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
 import { Resource } from '../../platform/common/types';
-import { getResourceType } from '../../platform/datascience/common';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
-import { IInteractiveWindowProvider } from '../../platform/datascience/types';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { getResourceType } from '../../platform/common/utils';
 import { workspace } from 'vscode';
 
 // TODO: This should probably move to a 'notebook' subsection

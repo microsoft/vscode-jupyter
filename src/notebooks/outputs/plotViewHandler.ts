@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../platform/common/logger';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IPlotViewerProvider } from '../../platform/datascience/types';
+import { IPlotViewerProvider } from '../../webviews/extension-side/plotting/types';
 
 const svgMimeType = 'image/svg+xml';
 const pngMimeType = 'image/png';

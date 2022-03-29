@@ -6,19 +6,20 @@ import type { JSONObject } from '@lumino/coreutils';
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { IWorkspaceService } from '../platform/common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { traceError, traceInfo } from '../platform/common/logger';
-import { StopWatch } from '../platform/common/utils/stopWatch';
 import {
+    AppinsightsKey,
+    isTestExecution,
+    isUnitTestExecution,
     JupyterCommands,
+    JVSC_EXTENSION_ID,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../platform/datascience/constants';
+} from '../platform/common/constants';
+import { traceError, traceInfo } from '../platform/common/logger';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { ExportFormat } from '../platform/datascience/export/types';
-import { InterruptResult, KernelInterpreterDependencyResponse } from '../platform/datascience/types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
 import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
@@ -27,6 +28,8 @@ import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { IExportedKernelService } from '../platform/api/extension';
 import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/../platform/errors/types';
+import { ExportFormat } from '../platform/export/types';
+import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

@@ -14,7 +14,7 @@ import {
     ViewColumn
 } from 'vscode';
 import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
-import { Commands as DSCommands } from '../../datascience/constants';
+import { Commands as DSCommands } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Channel } from './types';

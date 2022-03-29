@@ -6,16 +6,14 @@
 import { inject, injectable } from 'inversify';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import {
-    IJupyterNotebookProvider,
-    IJupyterServerProvider,
-    IJupyterServerUriStorage,
     ConnectNotebookProviderOptions,
     IJupyterConnection,
-    NotebookCreationOptions,
-    INotebook
-} from '../../../platform/datascience/types';
-import { isLocalConnection } from '../../types';
+    INotebook,
+    isLocalConnection,
+    NotebookCreationOptions
+} from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { IJupyterNotebookProvider, IJupyterServerProvider, IJupyterServerUriStorage } from '../types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()

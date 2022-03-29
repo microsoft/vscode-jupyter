@@ -8,10 +8,10 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IJupyterKernelSpec } from '../../types';
 
 @injectable()
 export class KernelEnvironmentVariablesService {

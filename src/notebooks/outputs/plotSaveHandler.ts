@@ -6,7 +6,7 @@ import { traceError } from '../../platform/common/logger';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { saveSvgToPdf } from '../../platform/datascience/plotting/plotViewer';
+import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {

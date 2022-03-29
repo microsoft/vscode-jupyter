@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { traceInfo, traceError } from '../../../platform/common/logger';
 import { IConfigurationService } from '../../../platform/common/types';
-import { IRawNotebookSupportedService } from '../../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { IRawNotebookSupportedService } from '../types';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()

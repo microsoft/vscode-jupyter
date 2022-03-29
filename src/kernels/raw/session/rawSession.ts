@@ -10,10 +10,9 @@ import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
-import { ISessionWithSocket, KernelSocketInformation } from '../../../platform/datascience/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../datascience-ui/common/constants';
-import { KernelConnectionMetadata } from '../../types';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
 

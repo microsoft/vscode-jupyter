@@ -24,7 +24,7 @@ import {
 } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { traceInfoIfCI } from '../platform/common/logger';
 import { IFileSystem } from '../platform/common/platform/types';
@@ -32,20 +32,9 @@ import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import { generateCellsFromNotebookDocument } from '../platform/datascience/cellFactory';
-import { CellMatcher } from '../platform/datascience/cellMatcher';
-import { Commands, defaultNotebookFormat } from '../platform/datascience/constants';
-import { ExportFormat, IExportDialog } from '../platform/datascience/export/types';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import {
-    IInteractiveWindowLoadable,
-    IInteractiveWindowDebugger,
-    INotebookExporter,
-    IDataScienceErrorHandler
-} from '../platform/datascience/types';
-import { generateMarkdownFromCodeLines, parseForComments } from '../datascience-ui/common';
-import { generateInteractiveCode } from '../datascience-ui/common/cellFactory';
+import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
@@ -59,6 +48,13 @@ import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater'
 import { updateNotebookMetadata } from '../notebooks/helpers';
 import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
+import { INotebookExporter } from '../kernels/jupyter/types';
+import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IExportDialog, ExportFormat } from '../platform/export/types';
+import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
+import { CellMatcher } from './editor-integration/cellMatcher';
+import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types';
+import { generateInteractiveCode } from './helpers';
 
 export type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;

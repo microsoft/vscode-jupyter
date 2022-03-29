@@ -7,9 +7,8 @@ import { inject, injectable } from 'inversify';
 
 import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
 import { IVSCodeNotebook, ICommandManager } from '../platform/common/application/types';
-import { IDisposableRegistry } from '../platform/common/types';
-import { IDataScienceCommandListener } from '../platform/datascience/types';
-import { Commands } from '../datascience-ui/common/constants';
+import { IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
+import { Commands } from '../webviews/webview-side/common/constants';
 import { chainWithPendingUpdates } from './execution/notebookUpdater';
 import { getNotebookMetadata } from './helpers';
 import { noop } from '../platform/common/utils/misc';

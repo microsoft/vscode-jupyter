@@ -11,12 +11,12 @@ import * as path from 'path';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { IJupyterKernelSpec } from '../../../platform/datascience/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from '../../../kernels/raw/launcher/kernelEnvVarsService';
+import { IJupyterKernelSpec } from '../../../kernels/types';
 
 use(chaiAsPromised);
 

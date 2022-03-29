@@ -13,8 +13,8 @@ import {
     GLOBAL_MEMENTO,
     IExtensionContext
 } from '../../../platform/common/types';
+import { tryGetRealPath } from '../../../platform/common/utils';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { tryGetRealPath } from '../../../platform/datascience/common';
 import { traceDecorators } from '../../../platform/logging';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
