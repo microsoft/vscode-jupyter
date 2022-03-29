@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { traceWarning } from '../../../platform/common/logger';
+import { traceWarning } from '../../../platform/common/logger.node';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
@@ -14,13 +14,13 @@ import {
     IPythonDaemonExecutionService
 } from '../../../platform/common/process/types';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { noop } from '../../../platform/common/utils/misc.node';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
 import {
     JupyterDaemonModule,
     JUPYTER_OUTPUT_CHANNEL,
@@ -28,15 +28,18 @@ import {
 } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
-import { JupyterPaths } from '../../raw/finder/jupyterPaths';
-import { JupyterServerInfo } from '../launcher/jupyterConnection';
+import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
 import {
     getMessageForLibrariesNotInstalled,
-    JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
-} from './jupyterInterpreterDependencyService';
-import { JupyterInterpreterService } from './jupyterInterpreterService';
-import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../types';
+} from './jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterService } from './jupyterInterpreterService.node';
+import {
+    IJupyterInterpreterDependencyManager,
+    IJupyterSubCommandExecutionService,
+    JupyterInterpreterDependencyResponse,
+    JupyterServerInfo
+} from '../types';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

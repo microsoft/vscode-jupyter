@@ -5,11 +5,11 @@ import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceError } from '../../platform/common/logger';
+import { traceError } from '../../platform/common/logger.node';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
 import { IKernelProvider, LiveKernelConnectionMetadata } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
-import { switchKernel } from './kernelSelector';
+import { switchKernel } from './kernelSelector.node';
 
 const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
 

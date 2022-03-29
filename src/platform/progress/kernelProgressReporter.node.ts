@@ -4,13 +4,13 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { createPromiseFromCancellation } from '../common/cancellation';
-import { disposeAllDisposables } from '../common/helpers';
-import { traceError } from '../common/logger';
+import { createPromiseFromCancellation } from '../common/cancellation.node';
+import { disposeAllDisposables } from '../common/helpers.node';
+import { traceError } from '../common/logger.node';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
-import { createDeferred } from '../common/utils/async';
-import { noop } from '../common/utils/misc';
-import { getUserMessageForAction } from './messages';
+import { createDeferred } from '../common/utils/async.node';
+import { noop } from '../common/utils/misc.node';
+import { getUserMessageForAction } from './messages.node';
 import { ReportableAction } from './types';
 
 type ProgressReporter = IDisposable & { show?: () => void };

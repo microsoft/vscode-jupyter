@@ -4,8 +4,8 @@
 
 import * as net from 'net';
 import { EventEmitter } from 'events';
-import { SocketStream } from './SocketStream';
-import { SocketServer } from './socketServer';
+import { SocketStream } from './SocketStream.node';
+import { SocketServer } from './socketServer.node';
 
 export abstract class SocketCallbackHandler extends EventEmitter {
     private _stream!: SocketStream;

@@ -10,14 +10,14 @@ import {
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
 
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { traceDecorators, traceError, traceVerbose } from '../logger';
+import { traceDecorators, traceError, traceVerbose } from '../logger.node';
 import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
-import { createDeferred } from '../utils/async';
-import { BasePythonDaemon } from './baseDaemon';
-import { PythonDaemonExecutionService } from './pythonDaemon';
+import { createDeferred } from '../utils/async.node';
+import { BasePythonDaemon } from './baseDaemon.node';
+import { PythonDaemonExecutionService } from './pythonDaemon.node';
 import { DaemonExecutionFactoryCreationOptions, IPythonDaemonExecutionService, IPythonExecutionService } from './types';
 
 export class PythonDaemonFactory {

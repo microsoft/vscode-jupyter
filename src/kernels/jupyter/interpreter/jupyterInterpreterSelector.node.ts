@@ -7,12 +7,12 @@ import { inject, injectable } from 'inversify';
 import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { Cancellation } from '../../../platform/common/cancellation.node';
 import { IPathUtils } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize.node';
 import { IInterpreterSelector } from '../../../platform/interpreter/configuration/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 
 /**
  * Displays interpreter select and returns the selection to the user.

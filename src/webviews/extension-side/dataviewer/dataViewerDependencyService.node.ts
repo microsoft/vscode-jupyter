@@ -6,19 +6,19 @@
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { ProductNames } from '../../../kernels/installer/productNames';
+import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { traceWarning } from '../../../platform/common/logger';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { traceWarning } from '../../../platform/common/logger.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types';
 import { IsCodeSpace } from '../../../platform/common/types';
-import { parseSemVer } from '../../../platform/common/utils';
-import { DataScience, Common } from '../../../platform/common/utils/localize';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { parseSemVer } from '../../../platform/common/utils.node';
+import { DataScience, Common } from '../../../platform/common/utils/localize.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../webview-side/common/constants';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { Telemetry } from '../../webview-side/common/constants.node';
 
 const minimumSupportedPandaVersion = '0.20.0';
 

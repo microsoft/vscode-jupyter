@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../platform/common/extensions';
+import '../../platform/common/extensions.node';
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { Resource } from '../../platform/common/types';
-import { SystemVariables } from '../../platform/common/variables/systemVariables';
-import { getJupyterConnectionDisplayName } from './launcher/jupyterConnection';
-import { noop } from '../../platform/common/utils/misc';
+import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
+import { getJupyterConnectionDisplayName } from './launcher/jupyterConnection.node';
+import { noop } from '../../platform/common/utils/misc.node';
 import { IJupyterConnection } from '../types';
 import { IJupyterServerUri } from './types';
 

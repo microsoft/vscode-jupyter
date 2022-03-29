@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { window } from 'vscode';
-import { NotebookCellScheme } from '../platform/common/constants';
+import { NotebookCellScheme } from '../platform/common/constants.node';
 import { IJupyterSettings } from '../platform/common/types';
 import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
-import { uncommentMagicCommands } from './editor-integration/cellFactory';
-import { CellMatcher } from './editor-integration/cellMatcher';
+import { uncommentMagicCommands } from './editor-integration/cellFactory.node';
+import { CellMatcher } from './editor-integration/cellMatcher.node';
 import { IInteractiveWindowProvider, IInteractiveWindow } from './types';
 
 export function getActiveInteractiveWindow(

@@ -5,12 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { TraceOptions } from '../../logging/trace';
+import { TraceOptions } from '../../logging/trace.node';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators } from '../logger';
+import { traceDecorators } from '../logger.node';
 import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
-import { ProcessService } from './proc';
+import { ProcessService } from './proc.node';
 import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types';
 
 @injectable()

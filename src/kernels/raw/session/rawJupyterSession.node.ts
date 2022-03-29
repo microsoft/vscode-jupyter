@@ -5,24 +5,24 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/common/logger';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils.node';
+import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/common/logger.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IDisplayOptions, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
-import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
-import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
+import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { StopWatch } from '../../../platform/common/utils/stopWatch.node';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry.node';
+import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
 import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
-import { BaseJupyterSession } from '../../common/baseJupyterSession';
+import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
 import { IKernelLauncher, IKernelProcess } from '../types';
-import { RawSession } from './rawSession';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
-import { DisplayOptions } from '../../displayOptions';
+import { RawSession } from './rawSession.node';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
+import { DisplayOptions } from '../../displayOptions.node';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of

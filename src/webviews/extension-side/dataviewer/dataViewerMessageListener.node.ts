@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { IWebviewPanel, IWebviewPanelMessageListener } from '../../../platform/common/application/types';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

@@ -5,7 +5,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { EXTENSION_ROOT_DIR } from '../../constants.node';
 
 // External callers of localize use these tables to retrieve localized values.
 

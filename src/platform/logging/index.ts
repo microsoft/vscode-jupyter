@@ -15,4 +15,4 @@ export {
     logWarning,
     traceDecorators,
     tracing
-} from './_global';
+} from './_global.node';

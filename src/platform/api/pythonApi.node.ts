@@ -15,19 +15,19 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger';
-import { getDisplayPath } from '../common/platform/fs-paths';
+import { isCI, PythonExtension, Telemetry } from '../common/constants.node';
+import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger.node';
+import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
-import { createDeferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
+import { createDeferred } from '../common/utils/async.node';
+import * as localize from '../common/utils/localize.node';
+import { noop } from '../common/utils/misc.node';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts';
-import { TraceOptions } from '../logging/trace';
+import { IInterpreterService } from '../interpreter/contracts.node';
+import { TraceOptions } from '../logging/trace.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
 import {
     ILanguageServer,
     ILanguageServerProvider,

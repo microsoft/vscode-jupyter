@@ -8,10 +8,10 @@
 import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
-import { getFormatter } from './formatters';
+import { getFormatter } from './formatters.node';
 import { LogLevel, resolveLevelName } from './levels';
-import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
-import { Arguments } from './util';
+import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports.node';
+import { Arguments } from './util.node';
 
 export type LoggerConfig = {
     level?: LogLevel;

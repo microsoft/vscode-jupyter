@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { NOTEBOOK_SELECTOR } from '../platform/common/constants';
+import { NOTEBOOK_SELECTOR } from '../platform/common/constants.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
-import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
+import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider.node';
 
 // Default set of trigger characters for jupyter
 const DefaultTriggerCharacters = ['.', '%'];

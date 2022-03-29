@@ -23,7 +23,7 @@ import {
     IInteractiveWindowMapping,
     IPyWidgetMessages,
     InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+} from '../../../../platform/messageTypes.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

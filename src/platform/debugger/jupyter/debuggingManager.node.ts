@@ -20,20 +20,20 @@ import {
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
-import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { KernelDebugAdapter } from './kernelDebugAdapter.node';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ContextKey } from '../../common/contextKey';
+import { ContextKey } from '../../common/contextKey.node';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger';
-import { DataScience } from '../../common/utils/localize';
+import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger.node';
+import { DataScience } from '../../common/utils/localize.node';
 import { Commands as DSCommands, EditorContexts } from '../../../webviews/webview-side/common/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
-import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebugCellController, RunByLineController } from './debugControllers';
-import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
-import { Debugger } from './debugger';
+import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants.node';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { DebugCellController, RunByLineController } from './debugControllers.node';
+import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper.node';
+import { Debugger } from './debugger.node';
 import { INotebookControllerManager } from '../../../notebooks/types';
 
 /**

@@ -8,11 +8,11 @@ import { applyEdits, ModificationOptions, modify, parse, ParseError } from 'json
 import * as path from 'path';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
-import { Settings } from '../common/constants';
-import { traceError } from '../common/logger';
+import { Settings } from '../common/constants.node';
+import { traceError } from '../common/logger.node';
 import { IFileSystem } from '../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
-import { swallowExceptions } from '../common/utils/decorators';
+import { swallowExceptions } from '../common/utils/decorators.node';
 import { traceDecorators } from '../logging';
 import { IExtensionActivationService } from './types';
 

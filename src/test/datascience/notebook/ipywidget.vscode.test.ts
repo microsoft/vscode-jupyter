@@ -23,7 +23,7 @@ import {
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { InteractiveWindowMessages } from '../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../platform/messageTypes.node';
 import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { INotebookCommunication } from '../../../notebooks/types';
 

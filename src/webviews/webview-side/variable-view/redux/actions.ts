@@ -3,7 +3,7 @@
 'use strict';
 
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../../kernels/variables/types';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../platform/messageTypes.node';
 import {
     CommonAction,
     CommonActionType,

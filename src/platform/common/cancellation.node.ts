@@ -4,8 +4,8 @@
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { BaseError } from '../../platform/errors/types';
-import { createDeferred } from './utils/async';
-import * as localize from './utils/localize';
+import { createDeferred } from './utils/async.node';
+import * as localize from './utils/localize.node';
 
 /**
  * Error type thrown when canceling.

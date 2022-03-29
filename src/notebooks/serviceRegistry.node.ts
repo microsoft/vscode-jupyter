@@ -5,27 +5,27 @@
 
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider';
-import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
-import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider';
-import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
-import { IntellisenseProvider } from '../intellisense/intellisenseProvider';
-import { KernelProvider } from '../kernels/kernelProvider';
+import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider.node';
+import { NotebookCellLanguageService } from '../intellisense/cellLanguageService.node';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider.node';
+import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService.node';
+import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
+import { KernelProvider } from '../kernels/kernelProvider.node';
 import { IKernelProvider } from '../kernels/types';
-import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
-import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
-import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
-import { NotebookControllerManager } from './controllers/notebookControllerManager';
-import { RemoteSwitcher } from './controllers/remoteSwitcher';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { NotebookCommandListener } from './notebookCommandListener';
-import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
-import { PlotSaveHandler } from './outputs/plotSaveHandler';
-import { PlotViewHandler } from './outputs/plotViewHandler';
-import { RendererCommunication } from './outputs/rendererCommunication';
+import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService.node';
+import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI.node';
+import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher.node';
+import { NotebookControllerManager } from './controllers/notebookControllerManager.node';
+import { RemoteSwitcher } from './controllers/remoteSwitcher.node';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker.node';
+import { NotebookCommandListener } from './notebookCommandListener.node';
+import { NotebookEditorProvider } from './notebookEditorProvider.node';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
+import { PlotSaveHandler } from './outputs/plotSaveHandler.node';
+import { PlotViewHandler } from './outputs/plotViewHandler.node';
+import { RendererCommunication } from './outputs/rendererCommunication.node';
 import { INotebookLanguageClientProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
-import { NotebookUsageTracker } from './notebookUsageTracker';
+import { NotebookUsageTracker } from './notebookUsageTracker.node';
 import { IDataScienceCommandListener } from '../platform/common/types';
 
 export function registerTypes(serviceManager: IServiceManager) {

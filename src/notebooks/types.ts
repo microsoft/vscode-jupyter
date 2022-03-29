@@ -4,14 +4,14 @@ import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import type * as vsc from 'vscode-languageclient/node';
 import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../kernels/types';
+import { IVSCodeNotebookController } from './controllers/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
-import { VSCodeNotebookController } from './controllers/vscodeNotebookController';
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
-    readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
     readonly onNotebookControllerSelectionChanged: Event<void>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
     readonly remoteRefreshed: Event<LiveKernelConnectionMetadata[]>;
@@ -19,18 +19,18 @@ export interface INotebookControllerManager {
      * @param {boolean} [refresh] Optionally forces a refresh of all local/remote kernels.
      */
     loadNotebookControllers(refresh?: boolean): Promise<void>;
-    getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
+    getSelectedNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers
-    registeredNotebookControllers(): VSCodeNotebookController[];
+    registeredNotebookControllers(): IVSCodeNotebookController[];
     getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         resource: Resource
-    ): Promise<VSCodeNotebookController | undefined>;
+    ): Promise<IVSCodeNotebookController | undefined>;
     getControllerForConnection(
         connection: KernelConnectionMetadata,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
-    ): VSCodeNotebookController | undefined;
-    getPreferredNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
+    ): IVSCodeNotebookController | undefined;
+    getPreferredNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

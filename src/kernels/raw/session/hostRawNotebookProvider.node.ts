@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid/v4';
 import { injectable, inject, named } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../platform/common/constants';
-import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../platform/common/constants.node';
+import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -19,19 +19,19 @@ import {
     Resource,
     IDisplayOptions
 } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { createDeferred } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { trackKernelResourceInformation } from '../../../telemetry/telemetry.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { isPythonKernelConnection } from '../../helpers';
-import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
+import { isPythonKernelConnection } from '../../helpers.node';
+import { computeWorkingDirectory } from '../../jupyter/jupyterUtils.node';
+import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook.node';
 import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
-import { RawJupyterSession } from './rawJupyterSession';
-import { noop } from '../../../platform/common/utils/misc';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { RawJupyterSession } from './rawJupyterSession.node';
+import { noop } from '../../../platform/common/utils/misc.node';
+import { Cancellation } from '../../../platform/common/cancellation.node';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */

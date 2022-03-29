@@ -28,15 +28,15 @@ import {
 } from 'vscode-languageclient/node';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy';
+import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import * as uuid from 'uuid/v4';
-import { PythonEnvironment } from '../platform/api/extension';
-import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceInfo } from '../platform/common/logger';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { noop } from '../platform/common/utils/misc';
-import { sleep } from '../platform/common/utils/async';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants.node';
+import { traceInfo } from '../platform/common/logger.node';
+import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
+import { noop } from '../platform/common/utils/misc.node';
+import { sleep } from '../platform/common/utils/async.node';
+import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {

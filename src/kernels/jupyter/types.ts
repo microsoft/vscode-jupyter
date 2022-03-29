@@ -7,7 +7,6 @@ import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
-import { JupyterCommands } from '../../platform/common/constants';
 import { SpawnOptions, ExecutionResult, ObservableExecutionResult } from '../../platform/common/process/types';
 import { IAsyncDisposable, ICell, IDisplayOptions, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -22,8 +21,25 @@ import {
     IJupyterKernelSpec,
     GetServerOptions
 } from '../types';
-import { JupyterInterpreterDependencyResponse } from './interpreter/jupyterInterpreterDependencyService';
-import { JupyterServerInfo } from './launcher/jupyterConnection';
+import { JupyterCommands } from '../../webviews/webview-side/common/constants';
+
+export type JupyterServerInfo = {
+    base_url: string;
+    notebook_dir: string;
+    hostname: string;
+    password: boolean;
+    pid: number;
+    port: number;
+    secure: boolean;
+    token: string;
+    url: string;
+};
+
+export enum JupyterInterpreterDependencyResponse {
+    ok,
+    selectAnotherInterpreter,
+    cancel
+}
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');

@@ -14,22 +14,22 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../platform/common/utils/localize';
+import * as localize from '../../platform/common/utils/localize.node';
 
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import { IConfigurationService } from '../../platform/common/types';
-import { getInteractiveCellMetadata } from '../interactiveWindow';
+import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernel } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
-import { stripAnsi } from '../../platform/common/utils/regexp';
-import { getCellResource, uncommentMagicCommands } from './cellFactory';
-import { CellMatcher } from './cellMatcher';
+import { InteractiveWindowView } from '../../notebooks/constants.node';
+import { stripAnsi } from '../../platform/common/utils/regexp.node';
+import { getCellResource, uncommentMagicCommands } from './cellFactory.node';
+import { CellMatcher } from './cellMatcher.node';
 import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

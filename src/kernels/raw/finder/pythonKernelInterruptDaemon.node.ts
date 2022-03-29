@@ -5,9 +5,9 @@
 
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { BasePythonDaemon } from '../../../platform/common/process/baseDaemon';
+import { BasePythonDaemon } from '../../../platform/common/process/baseDaemon.node';
 import { IPythonExecutionService } from '../../../platform/common/process/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonKernelDaemon } from '../types';

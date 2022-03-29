@@ -5,19 +5,19 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../platform/common/logger';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { traceInfo, traceError } from '../../../platform/common/logger.node';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
-import { getKernelConnectionLanguage } from '../../helpers';
+import { isJupyterNotebook } from '../../../notebooks/helpers.node';
+import { getKernelConnectionLanguage } from '../../helpers.node';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
-import { DisplayOptions } from '../../displayOptions';
+import { DisplayOptions } from '../../displayOptions.node';
 import { IRawNotebookProvider } from '../../raw/types';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';

@@ -21,12 +21,12 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger.node';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IJupyterSession, IKernel } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebuggingTelemetry } from '../constants';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { DebuggingTelemetry } from '../constants.node';
 import {
     IDebuggingDelegate,
     IDebugInfoResponse,
@@ -35,7 +35,12 @@ import {
     IKernelDebugAdapterConfig,
     KernelDebugMode
 } from '../types';
-import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
+import {
+    assertIsDebugConfig,
+    getMessageSourceAndHookIt,
+    isShortNamePath,
+    shortNameMatchesLongName
+} from './helper.node';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request

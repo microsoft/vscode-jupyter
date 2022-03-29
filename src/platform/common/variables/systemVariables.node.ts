@@ -7,7 +7,7 @@ import * as Path from 'path';
 import { Range, Uri } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../application/types';
-import * as Types from '../utils/sysTypes';
+import * as Types from '../utils/sysTypes.node';
 import { IStringDictionary, ISystemVariables } from './types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any, , jsdoc/check-alignment,jsdoc/check-indentation,jsdoc/newline-after-description, no-restricted-syntax, prefer-const,  */

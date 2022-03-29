@@ -26,19 +26,19 @@ import {
 } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
-import { CellExecutionCreator } from './cellExecutionCreator';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker.node';
+import { CellExecutionCreator } from './cellExecutionCreator.node';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { analyzeKernelErrors, KernelFailure } from '../../platform/errors/errorUtils';
+import { analyzeKernelErrors, KernelFailure } from '../../platform/errors/errorUtils.node';
 import { BaseError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
-import { RefBool } from '../../platform/common/refBool';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { traceError, traceInfoIfCI, traceWarning } from '../../platform/common/logger.node';
+import { RefBool } from '../../platform/common/refBool.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import * as localize from '../../platform/common/utils/localize';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
+import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import * as localize from '../../platform/common/utils/localize.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory.node';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import {
     NotebookCellStateTracker,
@@ -47,15 +47,15 @@ import {
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput,
     isJupyterNotebook
-} from '../../notebooks/helpers';
-import { sendTelemetryEvent } from '../../telemetry';
+} from '../../notebooks/helpers.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { formatStreamText, concatMultilineString } from '../../webviews/webview-side/common';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { swallowExceptions } from '../../platform/common/utils/decorators';
-import { noop } from '../../platform/common/utils/misc';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
+import { swallowExceptions } from '../../platform/common/utils/decorators.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers.node';
 import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
-import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
+import { handleTensorBoardDisplayDataOutput } from './executionHelpers.node';
 import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
 
 // Helper interface for the set_next_input execute reply payload

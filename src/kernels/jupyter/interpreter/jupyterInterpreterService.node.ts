@@ -6,21 +6,19 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import '../../../platform/common/extensions';
-import { noop } from '../../../platform/common/utils/misc';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import '../../../platform/common/extensions.node';
+import { noop } from '../../../platform/common/utils/misc.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import {
-    JupyterInterpreterDependencyResponse,
-    JupyterInterpreterDependencyService
-} from './jupyterInterpreterDependencyService';
-import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore';
-import { JupyterInterpreterSelector } from './jupyterInterpreterSelector';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
+import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';
+import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
+import { JupyterInterpreterDependencyResponse } from '../types';
 
 @injectable()
 export class JupyterInterpreterService {

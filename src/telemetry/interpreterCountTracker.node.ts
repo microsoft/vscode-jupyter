@@ -3,9 +3,9 @@
 
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../platform/interpreter/contracts';
+import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
-import { noop } from '../platform/common/utils/misc';
+import { noop } from '../platform/common/utils/misc.node';
 import { IDisposableRegistry } from '../platform/common/types';
 
 @injectable()

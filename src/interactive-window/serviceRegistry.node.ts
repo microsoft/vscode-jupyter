@@ -5,17 +5,17 @@
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { CommandRegistry } from './commands/commandRegistry';
-import { ExportCommands } from './commands/exportCommands';
-import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
-import { CodeLensFactory } from './editor-integration/codeLensFactory';
-import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
-import { CodeWatcher } from './editor-integration/codewatcher';
-import { Decorator } from './editor-integration/decorator';
-import { HoverProvider } from './editor-integration/hoverProvider';
+import { CommandRegistry } from './commands/commandRegistry.node';
+import { ExportCommands } from './commands/exportCommands.node';
+import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory.node';
+import { CodeLensFactory } from './editor-integration/codeLensFactory.node';
+import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider.node';
+import { CodeWatcher } from './editor-integration/codewatcher.node';
+import { Decorator } from './editor-integration/decorator.node';
+import { HoverProvider } from './editor-integration/hoverProvider.node';
 import { ICodeWatcher, ICodeLensFactory, IDataScienceCodeLensProvider } from './editor-integration/types';
-import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
-import { InteractiveWindowProvider } from './interactiveWindowProvider';
+import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener.node';
+import { InteractiveWindowProvider } from './interactiveWindowProvider.node';
 import { IInteractiveWindowProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

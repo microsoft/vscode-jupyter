@@ -26,13 +26,13 @@ import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
 import * as path from 'path';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants';
-import { traceInfoIfCI, traceError, traceWarning } from '../platform/common/logger';
-import { arePathsSame } from '../platform/common/platform/fileUtils';
+import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants.node';
+import { traceInfoIfCI, traceError, traceWarning } from '../platform/common/logger.node';
+import { arePathsSame } from '../platform/common/platform/fileUtils.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { Resource } from '../platform/common/types';
-import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../telemetry';
+import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter.node';
+import { sendTelemetryEvent } from '../telemetry/index.node';
 import { splitMultilineString, concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry } from '../webviews/webview-side/common/constants';
 import {
@@ -40,7 +40,7 @@ import {
     getInterpreterFromKernelConnectionMetadata,
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
-} from '../kernels/helpers';
+} from '../kernels/helpers.node';
 import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from './constants';
 import { CellOutputMimeTypes } from './types';

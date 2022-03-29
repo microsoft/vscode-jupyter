@@ -8,11 +8,11 @@ import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress } from 'vscode';
 import { IApplicationShell } from '../application/types';
-import { Octicons } from '../constants';
+import { Octicons } from '../constants.node';
 import { IFileSystem } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
-import { Http } from '../utils/localize';
-import { noop } from '../utils/misc';
+import { Http } from '../utils/localize.node';
+import { noop } from '../utils/misc.node';
 
 @injectable()
 export class FileDownloader implements IFileDownloader {

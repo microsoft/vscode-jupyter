@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { DataScience } from '../../platform/common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { BaseKernelError } from './types';

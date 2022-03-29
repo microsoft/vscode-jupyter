@@ -15,7 +15,7 @@ import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { CancellationToken, EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError } from '../../../platform/common/logger';
+import { traceInfo, traceError } from '../../../platform/common/logger.node';
 import {
     IPersistentState,
     IConfigurationService,
@@ -24,16 +24,16 @@ import {
     Resource,
     IDisplayOptions
 } from '../../../platform/common/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { createInterpreterKernelSpec } from '../../helpers';
+import { Common, DataScience } from '../../../platform/common/utils/localize.node';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
+import { createInterpreterKernelSpec } from '../../helpers.node';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
-import { JupyterKernelService } from '../jupyterKernelService';
-import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { createAuthorizingRequest } from './jupyterRequest';
-import { JupyterSession } from './jupyterSession';
-import { createJupyterWebSocket } from './jupyterWebSocket';
-import { sleep } from '../../../platform/common/utils/async';
+import { JupyterKernelService } from '../jupyterKernelService.node';
+import { JupyterKernelSpec } from '../jupyterKernelSpec.node';
+import { createAuthorizingRequest } from './jupyterRequest.node';
+import { JupyterSession } from './jupyterSession.node';
+import { createJupyterWebSocket } from './jupyterWebSocket.node';
+import { sleep } from '../../../platform/common/utils/async.node';
 import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
 
 // Key for our insecure connection global state

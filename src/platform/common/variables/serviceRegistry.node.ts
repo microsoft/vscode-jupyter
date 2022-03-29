@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../../ioc/types';
-import { EnvironmentVariablesService } from './environment';
-import { EnvironmentVariablesProvider } from './environmentVariablesProvider';
+import { EnvironmentVariablesService } from './environment.node';
+import { EnvironmentVariablesProvider } from './environmentVariablesProvider.node';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

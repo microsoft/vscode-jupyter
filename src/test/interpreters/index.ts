@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import '../../platform/common/extensions';
+import '../../platform/common/extensions.node';
 import { traceError } from '../../platform/common/logger';
 import { BufferDecoder } from '../../platform/common/process/decoder';
 import { PythonEnvInfo } from '../../platform/common/process/internal/scripts';

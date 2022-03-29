@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IConfigurationService } from '../../platform/common/types';
-import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers';
+import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
-import { isPoetryEnvironmentRelatedToFolder } from './poetry';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
+import { isPoetryEnvironmentRelatedToFolder } from './poetry.node';
 import { ModuleInstallerType } from './types';
 
 export const poetryName = 'poetry';

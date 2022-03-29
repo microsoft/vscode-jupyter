@@ -16,20 +16,20 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../platform/common/constants';
-import { traceError, traceInfo } from '../platform/common/logger';
-import { StopWatch } from '../platform/common/utils/stopWatch';
+} from '../platform/common/constants.node';
+import { traceError, traceInfo } from '../platform/common/logger.node';
+import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
-import { noop } from '../platform/common/utils/misc';
+import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants.node';
+import { noop } from '../platform/common/utils/misc.node';
 import { isPromise } from 'rxjs/internal-compatibility';
-import { DebuggingTelemetry } from '../platform/debugger/constants';
+import { DebuggingTelemetry } from '../platform/debugger/constants.node';
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
-import { IExportedKernelService } from '../platform/api/extension';
-import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/../platform/errors/types';
 import { ExportFormat } from '../platform/export/types';
 import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
+import { populateTelemetryWithErrorInfo } from '../platform/errors/index.node';
+import { IExportedKernelService } from '../platform/api/extension';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

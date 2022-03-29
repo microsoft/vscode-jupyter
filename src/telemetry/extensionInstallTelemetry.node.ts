@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { setSharedProperty } from '.';
+import { setSharedProperty } from '..node';
 import { IFileSystem } from '../platform/common/platform/types';
-import { EXTENSION_ROOT_DIR } from '../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 
 /**
  * Sets shared telemetry property about where the extension was installed from

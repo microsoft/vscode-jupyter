@@ -8,8 +8,8 @@ import { inject, injectable, named } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { GLOBAL_MEMENTO, IMemento, IsPreRelease } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { JVSC_EXTENSION_ID } from '../common/constants';
+import * as localize from '../common/utils/localize.node';
+import { JVSC_EXTENSION_ID } from '../common/constants.node';
 import * as vscode from 'vscode';
 
 const PRERELEASE_DONT_ASK_FLAG = 'dontAskForPrereleaseUpgrade';

@@ -11,7 +11,7 @@ import {
     SharedMessages,
     IInteractiveWindowMapping,
     InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+} from '../../../../platform/messageTypes.node';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;

@@ -6,12 +6,12 @@ import { inject, injectable } from 'inversify';
 import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import * as internalScripts from '../../common/process/internal/scripts';
+import { PYTHON_LANGUAGE } from '../../common/constants.node';
+import { traceError } from '../../common/logger.node';
+import * as internalScripts from '../../common/process/internal/scripts/index.node';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { createDeferred } from '../../common/utils/async';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { createDeferred } from '../../common/utils/async.node';
+import { IInterpreterService } from '../../interpreter/contracts.node';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 

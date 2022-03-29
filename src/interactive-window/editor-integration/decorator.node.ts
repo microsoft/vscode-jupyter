@@ -7,10 +7,10 @@ import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IDocumentManager } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { getAssociatedJupyterNotebook } from '../../notebooks/helpers';
-import { generateCellRangesFromDocument } from './cellFactory';
+import { getAssociatedJupyterNotebook } from '../../notebooks/helpers.node';
+import { generateCellRangesFromDocument } from './cellFactory.node';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {

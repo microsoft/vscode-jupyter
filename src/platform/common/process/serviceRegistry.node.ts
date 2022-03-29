@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../../ioc/types';
-import { CondaService } from './condaService';
-import { CurrentProcess } from './currentProcess';
-import { BufferDecoder } from './decoder';
-import { ProcessServiceFactory } from './processFactory';
-import { PythonExecutionFactory } from './pythonExecutionFactory';
+import { CondaService } from './condaService.node';
+import { CurrentProcess } from './currentProcess.node';
+import { BufferDecoder } from './decoder.node';
+import { ProcessServiceFactory } from './processFactory.node';
+import { PythonExecutionFactory } from './pythonExecutionFactory.node';
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

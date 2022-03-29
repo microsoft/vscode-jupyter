@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as Redux from 'redux';
-import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
+import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes.node';
 
 import { PostOffice } from '../../react-common/postOffice';
 import { isAllowedAction, unwrapPostableAction } from './helpers';

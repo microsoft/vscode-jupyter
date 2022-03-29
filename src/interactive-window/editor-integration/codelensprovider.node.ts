@@ -10,23 +10,23 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { ContextKey } from '../../platform/common/contextKey';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { ContextKey } from '../../platform/common/contextKey.node';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { noop } from '../../platform/common/utils/misc.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceInfoIfCI } from '../../platform/common/logger';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { traceInfoIfCI } from '../../platform/common/logger.node';
 import {
     CodeLensCommands,
     EditorContexts,
     PYTHON_FILE,
     PYTHON_UNTITLED,
     Telemetry
-} from '../../platform/common/constants';
+} from '../../platform/common/constants.node';
 import { IDebugLocationTracker } from '../../platform/debugger/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 

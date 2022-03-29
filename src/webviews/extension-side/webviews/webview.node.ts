@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import * as path from 'path';
 import {
@@ -13,12 +13,12 @@ import {
     WebviewView as vscodeWebviewView
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/common/logger';
+import { traceError } from '../../../platform/common/logger.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
-import { Identifiers } from '../../webview-side/common/constants';
+import * as localize from '../../../platform/common/utils/localize.node';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { Identifiers } from '../../webview-side/common/constants.node';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {

@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { DataScience } from '../../platform/common/utils/localize';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
 import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
 import { BaseKernelError } from './types';
 

@@ -6,26 +6,20 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation';
-import { traceError } from '../../../platform/common/logger';
-import { DataScience, Common } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
+import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation.node';
+import { traceError } from '../../../platform/common/logger.node';
+import { DataScience, Common } from '../../../platform/common/utils/localize.node';
+import { noop } from '../../../platform/common/utils/misc.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
 import { Telemetry, JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { ProductNames } from '../../installer/productNames';
+import { ProductNames } from '../../installer/productNames.node';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
-import { HelpLinks } from '../../../platform/common/constants';
-import { reportAction } from '../../../platform/progress/decorator';
+import { HelpLinks } from '../../../platform/common/constants.node';
+import { reportAction } from '../../../platform/progress/decorator.node';
 import { ReportableAction } from '../../../platform/progress/types';
-import { IJupyterCommandFactory } from '../types';
-
-export enum JupyterInterpreterDependencyResponse {
-    ok,
-    selectAnotherInterpreter,
-    cancel
-}
+import { IJupyterCommandFactory, JupyterInterpreterDependencyResponse } from '../types';
 
 /**
  * Sorts the given list of products (in place) in the order in which they need to be installed.

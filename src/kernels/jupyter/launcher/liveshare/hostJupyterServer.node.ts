@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../../platform/common/extensions';
+import '../../../../platform/common/extensions.node';
 
 import { CancellationToken } from 'vscode-jsonrpc';
 import { injectable, inject, named } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
-import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/common/logger';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants.node';
+import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/common/logger.node';
 import {
     IAsyncDisposableRegistry,
     IOutputChannel,
@@ -16,19 +16,19 @@ import {
     IDisposable,
     IDisplayOptions
 } from '../../../../platform/common/types';
-import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async';
-import { DataScience } from '../../../../platform/common/utils/localize';
-import { StopWatch } from '../../../../platform/common/utils/stopWatch';
-import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
-import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
+import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async.node';
+import { DataScience } from '../../../../platform/common/utils/localize.node';
+import { StopWatch } from '../../../../platform/common/utils/stopWatch.node';
+import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError.node';
+import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry.node';
 import { Telemetry } from '../../../../webviews/webview-side/common/constants';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, INotebook } from '../../../types';
-import { computeWorkingDirectory } from '../../jupyterUtils';
-import { JupyterSessionManager } from '../../session/jupyterSessionManager';
-import { JupyterNotebook } from '../jupyterNotebook';
-import { noop } from '../../../../platform/common/utils/misc';
-import { Cancellation } from '../../../../platform/common/cancellation';
-import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
+import { computeWorkingDirectory } from '../../jupyterUtils.node';
+import { JupyterSessionManager } from '../../session/jupyterSessionManager.node';
+import { JupyterNotebook } from '../jupyterNotebook.node';
+import { noop } from '../../../../platform/common/utils/misc.node';
+import { Cancellation } from '../../../../platform/common/cancellation.node';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths.node';
 import { INotebookServer, IJupyterSessionManagerFactory } from '../../types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

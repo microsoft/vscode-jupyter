@@ -8,8 +8,8 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables';
-import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables.node';
+import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker.node';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import {
     IApplicationShell,
@@ -18,7 +18,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { traceError } from '../../platform/common/logger';
+import { traceError } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import {
@@ -27,15 +27,15 @@ import {
     IDisposable,
     IOutputChannel
 } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
-import { isUri, noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { isUri, noop } from '../../platform/common/utils/misc.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { LogLevel } from '../../platform/logging/levels';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { ExportCommands } from './exportCommands';
-import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
-import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { EventName } from '../../telemetry/constants.node';
+import { ExportCommands } from './exportCommands.node';
+import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants.node';
+import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import {
     IDataViewerFactory,
     IJupyterVariableDataProviderFactory

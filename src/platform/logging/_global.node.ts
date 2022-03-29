@@ -3,15 +3,15 @@
 'use strict';
 
 import * as winston from 'winston';
-import { isCI } from '../common/constants';
+import { isCI } from '../common/constants.node';
 import { IOutputChannel } from '../common/types';
-import { CallInfo } from '../common/utils/decorators';
-import { getFormatter } from './formatters';
+import { CallInfo } from '../common/utils/decorators.node';
+import { getFormatter } from './formatters.node';
 import { LogLevel, resolveLevelName } from './levels';
-import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from './logger';
-import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
-import { getFileTransport, getJupyterOutputChannelTransport } from './transports';
-import { Arguments } from './util';
+import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from './logger.node';
+import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace.node';
+import { getFileTransport, getJupyterOutputChannelTransport } from './transports.node';
+import { Arguments } from './util.node';
 
 const globalLogger = createLogger();
 initialize();

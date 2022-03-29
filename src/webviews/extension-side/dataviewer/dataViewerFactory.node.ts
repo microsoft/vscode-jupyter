@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 
-import { captureTelemetry } from '../../../telemetry';
+import { captureTelemetry } from '../../../telemetry/index.node';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { debounce } from 'lodash';
 import { ICommandManager } from '../../../platform/common/application/types';
-import { ContextKey } from '../../../platform/common/contextKey';
+import { ContextKey } from '../../../platform/common/contextKey.node';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EditorContexts, Commands, Telemetry } from '../../webview-side/common/constants';

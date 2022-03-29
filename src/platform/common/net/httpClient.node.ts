@@ -9,7 +9,7 @@ import type * as requestTypes from 'request';
 import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
-import { traceError } from '../logger';
+import { traceError } from '../logger.node';
 
 @injectable()
 export class HttpClient implements IHttpClient {

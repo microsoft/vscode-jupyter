@@ -8,9 +8,9 @@ import { URLSearchParams } from 'url';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
 

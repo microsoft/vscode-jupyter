@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../platform/common/extensions';
+import '../platform/common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 
@@ -9,10 +9,10 @@ import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
 import { IVSCodeNotebook, ICommandManager } from '../platform/common/application/types';
 import { IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../webviews/webview-side/common/constants';
-import { chainWithPendingUpdates } from './execution/notebookUpdater';
-import { getNotebookMetadata } from './helpers';
-import { noop } from '../platform/common/utils/misc';
-import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
+import { chainWithPendingUpdates } from './execution/notebookUpdater.node';
+import { getNotebookMetadata } from './helpers.node';
+import { noop } from '../platform/common/utils/misc.node';
+import { NotebookCellLanguageService } from '../intellisense/cellLanguageService.node';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {

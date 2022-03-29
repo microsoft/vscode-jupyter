@@ -6,17 +6,17 @@
 import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationToken } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo } from '../../../platform/common/logger';
+import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../platform/common/types';
-import { testOnlyMethod } from '../../../platform/common/utils/decorators';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { Settings } from '../../../platform/common/constants';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { Settings } from '../../../platform/common/constants.node';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
-import { DisplayOptions } from '../../displayOptions';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
+import { DisplayOptions } from '../../displayOptions.node';
 import { GetServerOptions } from '../../types';
 import {
     IJupyterServerProvider,

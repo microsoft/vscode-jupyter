@@ -9,13 +9,13 @@ import * as lspConcat from '@vscode/lsp-notebook-concat';
 import * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
-import { ContextKey } from '../platform/common/contextKey';
-import { traceInfo } from '../platform/common/logger';
+import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants.node';
+import { ContextKey } from '../platform/common/contextKey.node';
+import { traceInfo } from '../platform/common/logger.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
-import { sleep, waitForCondition } from '../platform/common/utils/async';
+import { sleep, waitForCondition } from '../platform/common/utils/async.node';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

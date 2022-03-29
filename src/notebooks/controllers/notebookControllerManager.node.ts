@@ -13,10 +13,10 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { CondaService } from '../../platform/common/process/condaService';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
+import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { CondaService } from '../../platform/common/process/condaService.node';
 import {
     IDisposableRegistry,
     IExtensions,
@@ -26,30 +26,30 @@ import {
     IBrowserService,
     Resource
 } from '../../platform/common/types';
-import { waitForCondition } from '../../platform/common/utils/async';
-import { debounceAsync } from '../../platform/common/utils/decorators';
-import { DataScience } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { waitForCondition } from '../../platform/common/utils/async.node';
+import { debounceAsync } from '../../platform/common/utils/decorators.node';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry.node';
+import { trackKernelResourceInformation } from '../../telemetry/telemetry.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
+import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
 import {
     isLocalLaunch,
     createInterpreterKernelSpec,
     getKernelId,
     isPythonKernelConnection,
     getDisplayNameOrNameOfKernelConnection
-} from '../../kernels/helpers';
-import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
-import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+} from '../../kernels/helpers.node';
+import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator.node';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector.node';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernels/raw/types';
 import {
     LiveKernelConnectionMetadata,
@@ -60,13 +60,14 @@ import {
     INotebookProvider
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../constants';
-import { isPythonNotebook, getNotebookMetadata } from '../helpers';
+import { isPythonNotebook, getNotebookMetadata } from '../helpers.node';
 import { INotebookControllerManager } from '../types';
-import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
-import { VSCodeNotebookController } from './vscodeNotebookController';
-import { DisplayOptions } from '../../kernels/displayOptions';
+import { KernelFilterService } from './kernelFilter/kernelFilterService.node';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController.node';
+import { VSCodeNotebookController } from './vscodeNotebookController.node';
+import { DisplayOptions } from '../../kernels/displayOptions.node';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IVSCodeNotebookController } from './types';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -157,7 +158,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public async getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         resource: Resource
-    ): Promise<VSCodeNotebookController | undefined> {
+    ): Promise<IVSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
             traceInfoIfCI('CreateActiveInterpreterController');
             return this.createActiveInterpreterController(notebookType, resource);
@@ -172,7 +173,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ) {
         const id =
-            notebookType === 'jupyter-notebook' ? connection.id : `${connection.id}${InteractiveControllerIdSuffix}`;
+            notebookType === JupyterNotebookView ? connection.id : `${connection.id}${InteractiveControllerIdSuffix}`;
         return this.registeredControllers.get(id);
     }
     get onNotebookControllerSelected() {

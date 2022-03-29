@@ -6,8 +6,8 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
-import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
 import {
@@ -16,11 +16,11 @@ import {
     IDisposableRegistry,
     IConfigurationService
 } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../notebooks/constants';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
-import { Kernel } from './kernel';
+import { noop } from '../platform/common/utils/misc.node';
+import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory.node';
+import { InteractiveWindowView } from '../notebooks/constants.node';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
+import { Kernel } from './kernel.node';
 import { IKernel, IKernelProvider, INotebookProvider, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
 

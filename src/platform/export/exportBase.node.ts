@@ -5,7 +5,7 @@ import { IJupyterSubCommandExecutionService, INotebookImporter } from '../../ker
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
 
-import { reportAction } from '../progress/decorator';
+import { reportAction } from '../progress/decorator.node';
 import { ReportableAction } from '../progress/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportFormat, INbConvertExport } from './types';

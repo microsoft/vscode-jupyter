@@ -3,8 +3,8 @@
 'use strict';
 
 import { IServiceContainer, IServiceManager } from '../../ioc/types';
-import { initializeExternalDependencies } from './fileUtils';
-import { PlatformService } from './platformService';
+import { initializeExternalDependencies } from './fileUtils.node';
+import { PlatformService } from './platformService.node';
 import { IPlatformService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

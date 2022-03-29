@@ -28,12 +28,12 @@ import {
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { PYTHON_LANGUAGE } from '../platform/common/constants.node';
+import { disposeAllDisposables } from '../platform/common/helpers.node';
 import { IDisposableRegistry } from '../platform/common/types';
-import { DataScience } from '../platform/common/utils/localize';
+import { DataScience } from '../platform/common/utils/localize.node';
 import { JupyterNotebookView } from '../notebooks/constants';
-import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
+import { getAssociatedJupyterNotebook } from '../notebooks/helpers.node';
 
 type CellUri = string;
 type CellVersion = number;

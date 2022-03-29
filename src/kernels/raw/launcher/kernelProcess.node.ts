@@ -12,22 +12,22 @@ import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
     isPythonKernelConnection
-} from '../../../kernels/helpers';
+} from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { IKernelConnection, IKernelProcess } from '../types';
-import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
+import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
-} from '../../../platform/errors/errorUtils';
+} from '../../../platform/errors/errorUtils.node';
 import { BaseError } from '../../../platform/errors/types';
-import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/common/logger';
+import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/common/logger.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import {
     IProcessServiceFactory,
@@ -36,17 +36,17 @@ import {
     IProcessService
 } from '../../../platform/common/process/types';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
-import { KernelDiedError } from '../../../platform/errors/kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
+import { createDeferred } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc.node';
+import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
+import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
+import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
 import { traceDecorators } from '../../../platform/logging';
-import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace';
-import { captureTelemetry } from '../../../telemetry';
+import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
+import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';
-import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon';
+import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.

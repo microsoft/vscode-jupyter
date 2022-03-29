@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import {
     IJupyterInterpreterDependencyManager,
     INbConvertInterpreterDependencyChecker
 } from '../../kernels/jupyter/types';
-import * as localize from '../common/utils/localize';
+import * as localize from '../common/utils/localize.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 @injectable()

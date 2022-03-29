@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { EXTENSION_ROOT_DIR } from '../../../constants.node';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -31,7 +31,7 @@ const SCRIPTS_DIR = _SCRIPTS_DIR;
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
 
-export * as testing_tools from './testing_tools';
+export * as testing_tools from './testing_tools.node';
 
 //============================
 // interpreterInfo.py

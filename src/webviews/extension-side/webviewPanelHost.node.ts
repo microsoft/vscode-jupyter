@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../platform/common/extensions';
+import '../../platform/common/extensions.node';
 
 import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
-import { WebviewHost } from './webviewHost';
+import { WebviewHost } from './webviewHost.node';
 import {
     IWebviewPanel,
     IWebviewPanelMessageListener,

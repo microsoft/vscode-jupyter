@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../platform/common/extensions';
+import '../platform/common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 import {
@@ -22,25 +22,25 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../platform/common/application/types';
-import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
-import { traceError, traceInfo } from '../platform/common/logger';
+import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants.node';
+import { traceError, traceInfo } from '../platform/common/logger.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
-import * as localize from '../platform/common/utils/localize';
-import { captureTelemetry } from '../telemetry';
+import * as localize from '../platform/common/utils/localize.node';
+import { captureTelemetry } from '../telemetry/index.node';
 import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
-import { getActiveInteractiveWindow } from './helpers';
+import { getActiveInteractiveWindow } from './helpers.node';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
-import { JupyterNotebookView } from '../notebooks/constants';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater.node';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
 import { IStatusProvider } from '../platform/progress/types';
-import { generateCellsFromDocument } from './editor-integration/cellFactory';
+import { generateCellsFromDocument } from './editor-integration/cellFactory.node';
 import { IInteractiveWindowProvider } from './types';
+import { JupyterNotebookView } from '../notebooks/constants';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {

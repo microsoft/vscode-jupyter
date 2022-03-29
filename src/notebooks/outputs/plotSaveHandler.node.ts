@@ -2,11 +2,11 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
 import * as path from 'path';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { traceError } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { DataScience } from '../../platform/common/utils/localize';
-import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer.node';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {

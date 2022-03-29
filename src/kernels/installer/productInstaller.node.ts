@@ -3,8 +3,8 @@
 import { inject, injectable, named } from 'inversify';
 import * as semver from 'semver';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { translateProductToModule } from './moduleInstaller';
-import { ProductNames } from './productNames';
+import { translateProductToModule } from './moduleInstaller.node';
+import { ProductNames } from './productNames.node';
 import {
     IInstallationChannelManager,
     IInstaller,
@@ -17,10 +17,10 @@ import {
     ProductType
 } from './types';
 import { traceDecorators } from '../../platform/logging';
-import { logValue } from '../../platform/logging/trace';
+import { logValue } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError } from '../../platform/common/logger';
+import { traceError } from '../../platform/common/logger.node';
 import { IPythonExecutionFactory, IProcessServiceFactory } from '../../platform/common/process/types';
 import {
     IConfigurationService,
@@ -30,14 +30,14 @@ import {
     IOutputChannel,
     InterpreterUri
 } from '../../platform/common/types';
-import { isResource, noop } from '../../platform/common/utils/misc';
+import { isResource, noop } from '../../platform/common/utils/misc.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { InterpreterPackages } from '../../telemetry/interpreterPackages';
-import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
+import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { sleep } from '../../platform/common/utils/async';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
+import { sleep } from '../../platform/common/utils/async.node';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.

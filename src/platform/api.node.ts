@@ -8,10 +8,10 @@ import { IJupyterUriProvider, IJupyterUriProviderRegistration } from '../kernels
 import { INotebookEditorProvider } from '../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './api/extension';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
+import { JupyterKernelServiceFactory } from './api/kernelApi.node';
 import { IPythonApiProvider, PythonApi } from './api/types';
-import { isTestExecution } from './common/constants';
-import { traceError } from './common/logger';
+import { isTestExecution } from './common/constants.node';
+import { traceError } from './common/logger.node';
 import { IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 

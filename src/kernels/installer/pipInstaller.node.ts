@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller';
+import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller.node';
 import * as path from 'path';
 import { IWorkspaceService } from '../../platform/common/application/types';
-import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts';
+import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts/index.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';

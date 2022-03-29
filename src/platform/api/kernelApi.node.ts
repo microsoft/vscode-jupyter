@@ -3,20 +3,20 @@
 
 import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper';
+import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper.node';
 import {
     IKernelProvider,
     IKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
 } from '../../kernels/types';
 import { INotebookControllerManager } from '../../notebooks/types';
-import { disposeAllDisposables } from '../common/helpers';
-import { traceInfo } from '../common/logger';
+import { disposeAllDisposables } from '../common/helpers.node';
+import { traceInfo } from '../common/logger.node';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
-import { PromiseChain } from '../common/utils/async';
+import { PromiseChain } from '../common/utils/async.node';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { ApiAccessService } from './apiAccessService';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { ApiAccessService } from './apiAccessService.node';
 import {
     ActiveKernel,
     IExportedKernelService,
@@ -25,7 +25,7 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
-import { Telemetry } from '../common/constants';
+import { Telemetry } from '../common/constants.node';
 
 @injectable()
 export class JupyterKernelServiceFactory {

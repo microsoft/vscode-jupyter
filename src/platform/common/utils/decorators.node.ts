@@ -2,11 +2,11 @@
 
 import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
-import { isTestExecution } from '../constants';
-import { traceError, traceVerbose } from '../logger';
-import { createDeferred, Deferred } from './async';
-import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
-import { noop, TraceInfo, tracing } from './misc';
+import { isTestExecution } from '../constants.node';
+import { traceError, traceVerbose } from '../logger.node';
+import { createDeferred, Deferred } from './async.node';
+import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils.node';
+import { noop, TraceInfo, tracing } from './misc.node';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');

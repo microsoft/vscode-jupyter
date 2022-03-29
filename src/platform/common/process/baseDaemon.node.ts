@@ -11,10 +11,10 @@ import { MessageConnection, NotificationType, RequestType, RequestType0 } from '
 import { IPlatformService } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../../platform/errors/types';
-import { traceError, traceVerbose, traceWarning } from '../logger';
+import { traceError, traceVerbose, traceWarning } from '../logger.node';
 import { IDisposable } from '../types';
-import { createDeferred, Deferred } from '../utils/async';
-import { noop } from '../utils/misc';
+import { createDeferred, Deferred } from '../utils/async.node';
+import { noop } from '../utils/misc.node';
 import {
     ExecutionResult,
     IPythonExecutionService,

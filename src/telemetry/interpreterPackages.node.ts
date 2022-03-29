@@ -5,11 +5,11 @@ import { inject, injectable } from 'inversify';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
 import { IDisposableRegistry, InterpreterUri } from '../platform/common/types';
-import { createDeferred, Deferred } from '../platform/common/utils/async';
-import { isResource, noop } from '../platform/common/utils/misc';
-import { IInterpreterService } from '../platform/interpreter/contracts';
+import { createDeferred, Deferred } from '../platform/common/utils/async.node';
+import { isResource, noop } from '../platform/common/utils/misc.node';
+import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../platform/../telemetry/helpers';
+import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../platform/../telemetry/helpers.node';
 
 const interestedPackages = new Set(
     [

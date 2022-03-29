@@ -10,9 +10,9 @@ import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
-import { EXTENSION_ROOT_DIR } from '../constants';
+import { EXTENSION_ROOT_DIR } from '../constants.node';
 import { LogLevel, resolveLevel } from './levels';
-import { Arguments } from './util';
+import { Arguments } from './util.node';
 
 const formattedMessage = Symbol.for('message');
 

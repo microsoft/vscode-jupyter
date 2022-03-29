@@ -6,13 +6,13 @@ import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../platform/api/types';
 import { IExtensions, IDisposableRegistry, InterpreterUri } from '../platform/common/types';
-import { isResource, noop } from '../platform/common/utils/misc';
-import { IInterpreterService } from '../platform/interpreter/contracts';
-import { InterpreterPackages } from './interpreterPackages';
+import { isResource, noop } from '../platform/common/utils/misc.node';
+import { IInterpreterService } from '../platform/interpreter/contracts.node';
+import { InterpreterPackages } from './interpreterPackages.node';
 import { INotebookControllerManager } from '../platform/../notebooks/types';
-import { trackKernelResourceInformation } from './telemetry';
+import { trackKernelResourceInformation } from './telemetry/index.node';
 import { IInstaller, Product } from '../platform/../kernels/installer/types';
-import { VSCodeNotebookController } from '../platform/../notebooks/controllers/vscodeNotebookController';
+import { VSCodeNotebookController } from '../platform/../notebooks/controllers/vscodeNotebookController.node';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {

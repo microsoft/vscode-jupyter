@@ -4,14 +4,14 @@ import { IFileSystem } from '../platform/types';
 
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
-import { getExecutablePath } from '../../pythonEnvironments/info/executable';
-import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
-import { traceError, traceInfo } from '../logger';
-import * as internalPython from './internal/python';
+import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
+import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
+import { traceError, traceInfo } from '../logger.node';
+import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths';
+import { getDisplayPath } from '../platform/fs-paths.node';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 

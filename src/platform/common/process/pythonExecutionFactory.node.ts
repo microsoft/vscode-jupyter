@@ -4,20 +4,20 @@ import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ignoreLogging, TraceOptions } from '../../logging/trace';
+import { ignoreLogging, TraceOptions } from '../../logging/trace.node';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { EventName } from '../../../telemetry/constants.node';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators, traceError, traceInfo } from '../logger';
-import { getDisplayPath } from '../platform/fs-paths';
+import { traceDecorators, traceError, traceInfo } from '../logger.node';
+import { getDisplayPath } from '../platform/fs-paths.node';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
-import { ProcessService } from './proc';
-import { PythonDaemonFactory } from './pythonDaemonFactory';
-import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
-import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
-import { createPythonProcessService } from './pythonProcess';
+import { ProcessService } from './proc.node';
+import { PythonDaemonFactory } from './pythonDaemonFactory.node';
+import { PythonDaemonExecutionServicePool } from './pythonDaemonPool.node';
+import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment.node';
+import { createPythonProcessService } from './pythonProcess.node';
 import {
     DaemonExecutionFactoryCreationOptions,
     ExecutionFactoryCreateWithEnvironmentOptions,

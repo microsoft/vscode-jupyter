@@ -7,14 +7,14 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
 import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../platform/common/types';
-import { IInterpreterService } from '../platform/interpreter/contracts';
+import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
-import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
+import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers.node';
 import { INotebookLanguageClientProvider, INotebookControllerManager } from '../notebooks/types';
-import { LanguageServer } from './languageServer';
+import { LanguageServer } from './languageServer.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 const EmptyWorkspaceKey = '';
 
@@ -26,9 +26,9 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
     private interpreterIdCache: Map<string, string> = new Map<string, string>();
-    private knownControllers: WeakMap<NotebookDocument, VSCodeNotebookController> = new WeakMap<
+    private knownControllers: WeakMap<NotebookDocument, IVSCodeNotebookController> = new WeakMap<
         NotebookDocument,
-        VSCodeNotebookController
+        IVSCodeNotebookController
     >();
 
     constructor(
@@ -96,7 +96,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         return this.activeInterpreterCache.get(key);
     }
 
-    private async controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
+    private async controllerChanged(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
         // Create the language server for this connection
         const newServer = await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
 

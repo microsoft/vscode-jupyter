@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { traceError } from '../../platform/common/logger';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants.node';
+import { traceError } from '../../platform/common/logger.node';
 import { Resource } from '../../platform/common/types';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
+import { getActiveInteractiveWindow } from '../../interactive-window/helpers.node';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { getResourceType } from '../../platform/common/utils';
+import { getResourceType } from '../../platform/common/utils.node';
 import { workspace } from 'vscode';
 
 // TODO: This should probably move to a 'notebook' subsection

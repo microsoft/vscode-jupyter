@@ -4,13 +4,13 @@ import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
-import { TraceOptions } from '../../logging/trace';
-import { traceDecorators, traceInfoIfCI } from '../logger';
+import { TraceOptions } from '../../logging/trace.node';
+import { traceDecorators, traceInfoIfCI } from '../logger.node';
 
 import { IDisposable } from '../types';
-import { createDeferred } from '../utils/async';
+import { createDeferred } from '../utils/async.node';
 import { EnvironmentVariables } from '../variables/types';
-import { DEFAULT_ENCODING } from './constants';
+import { DEFAULT_ENCODING } from './constants.node';
 import {
     ExecutionResult,
     IBufferDecoder,

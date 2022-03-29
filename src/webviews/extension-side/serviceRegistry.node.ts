@@ -6,10 +6,10 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IVariableViewProvider } from './variablesView/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
+import { VariableViewActivationService } from './variablesView/variableViewActivationService.node';
+import { VariableViewProvider } from './variablesView/variableViewProvider.node';
+import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider.node';
+import { WebviewViewProvider } from './webviewViews/webviewViewProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);

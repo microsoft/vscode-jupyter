@@ -17,7 +17,7 @@ require('./platform/common/logger');
 // the same way as this.
 
 const durations: Record<string, number> = {};
-import { StopWatch } from './platform/common/utils/stopWatch';
+import { StopWatch } from './platform/common/utils/stopWatch.node';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 
@@ -41,9 +41,9 @@ import {
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
 import * as path from 'path';
-import { buildApi, IExtensionApi } from './platform/api';
+import { buildApi, IExtensionApi } from './platform/api.node';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
-import { traceError } from './platform/common/logger';
+import { traceError } from './platform/common/logger.node';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -59,29 +59,29 @@ import {
     IsPreRelease,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { createDeferred } from './platform/common/utils/async';
-import { Common, OutputChannelNames } from './platform/common/utils/localize';
+import { createDeferred } from './platform/common/utils/async.node';
+import { Common, OutputChannelNames } from './platform/common/utils/localize.node';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
-import { noop } from './platform/common/utils/misc';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry.node';
+import { noop } from './platform/common/utils/misc.node';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
-import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry';
-import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry';
-import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry';
-import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry';
-import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry';
+import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
+import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.node';
+import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
+import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
+import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.node';
+import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getDisplayPath } from './platform/common/platform/fs-paths';
+import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants.node';
+import { getDisplayPath } from './platform/common/platform/fs-paths.node';
 import { IFileSystem } from './platform/common/platform/types';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
+import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
 import { addOutputChannelLogging, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
+import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
-import { ServiceContainer } from './platform/ioc/container';
-import { ServiceManager } from './platform/ioc/serviceManager';
+import { ServiceContainer } from './platform/ioc/container.node';
+import { ServiceManager } from './platform/ioc/serviceManager.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 

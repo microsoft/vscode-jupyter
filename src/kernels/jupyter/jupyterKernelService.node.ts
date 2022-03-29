@@ -7,23 +7,23 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { Cancellation } from '../../platform/common/cancellation';
-import '../../platform/common/extensions';
-import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Cancellation } from '../../platform/common/cancellation.node';
+import '../../platform/common/extensions.node';
+import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc.node';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { traceDecorators } from '../../platform/logging';
-import { logValue, ignoreLogging } from '../../platform/logging/trace';
+import { logValue, ignoreLogging } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
-import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
-import { JupyterPaths } from '../raw/finder/jupyterPaths';
+import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError.node';
+import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers.node';
+import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
     IKernelDependencyService,
@@ -31,7 +31,7 @@ import {
     KernelInterpreterDependencyResponse,
     LocalKernelConnectionMetadata
 } from '../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { JupyterKernelSpec } from './jupyterKernelSpec.node';
 
 /**
  * Responsible for registering and updating kernels

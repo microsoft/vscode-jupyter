@@ -4,7 +4,7 @@
 import { sha256 } from 'hash.js';
 import { InterpreterInformation, PythonEnvironment } from '.';
 import { IFileSystem } from '../../common/platform/types';
-import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
+import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts/index.node';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 import { parsePythonVersion } from './pythonVersion';

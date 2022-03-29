@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
-import { traceError, traceInfo } from '../../../platform/common/logger';
-import { createDeferred } from '../../../platform/common/utils/async';
-import { PlotViewerMessageListener } from './plotViewerMessageListener';
+import { traceError, traceInfo } from '../../../platform/common/logger.node';
+import { createDeferred } from '../../../platform/common/utils/async.node';
+import { PlotViewerMessageListener } from './plotViewerMessageListener.node';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
 import {
     IWebviewPanelProvider,
@@ -18,10 +18,10 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import * as localize from '../../../platform/common/utils/localize.node';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost';
+import { WebviewPanelHost } from '../webviewPanelHost.node';
 
 const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
 @injectable()

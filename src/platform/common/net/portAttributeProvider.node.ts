@@ -4,10 +4,10 @@
 import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForwardAction } from 'vscode';
-import { NotebookStarter } from '../../../kernels/jupyter/launcher/notebookStarter';
-import { KernelLauncher } from '../../../kernels/raw/launcher/kernelLauncher';
+import { NotebookStarter } from '../../../kernels/jupyter/launcher/notebookStarter.node';
+import { KernelLauncher } from '../../../kernels/raw/launcher/kernelLauncher.node';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { traceError } from '../logger';
+import { traceError } from '../logger.node';
 import { IDisposableRegistry } from '../types';
 
 @injectable()

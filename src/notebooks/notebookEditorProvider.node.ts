@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import '../platform/common/extensions';
-import { captureTelemetry } from '../telemetry';
+import { PYTHON_LANGUAGE } from '../platform/common/constants.node';
+import '../platform/common/extensions.node';
+import { captureTelemetry } from '../telemetry/index.node';
 import { Telemetry, defaultNotebookFormat } from '../webviews/webview-side/common/constants';
-import { JupyterNotebookView } from './constants';
+import { JupyterNotebookView } from './constants.node';
 import { INotebookEditorProvider } from './types';
 
 /**

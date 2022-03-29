@@ -8,23 +8,23 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/common/logger';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/common/logger.node';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
-import * as localize from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
+import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async.node';
+import * as localize from '../../platform/common/utils/localize.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
-import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
-import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { suppressShutdownErrors } from '../raw/session/rawKernel';
+import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError.node';
+import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError.node';
+import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError.node';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError.node';
+import { suppressShutdownErrors } from '../raw/session/rawKernel.node';
 import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
-import { ChainingExecuteRequester } from './chainingExecuteRequester';
-import { getResourceType } from '../../platform/common/utils';
-import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
+import { ChainingExecuteRequester } from './chainingExecuteRequester.node';
+import { getResourceType } from '../../platform/common/utils.node';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter.node';
 
 /**
  * Exception raised when starting a Jupyter Session fails.

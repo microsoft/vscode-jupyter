@@ -18,7 +18,7 @@ import {
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IJupyterDebugService } from '../../kernels/debugging/types';
 import { ICommandManager, IDebugService } from '../common/application/types';
-import { Identifiers } from '../common/constants';
+import { Identifiers } from '../common/constants.node';
 import { IDisposableRegistry } from '../common/types';
 
 /**

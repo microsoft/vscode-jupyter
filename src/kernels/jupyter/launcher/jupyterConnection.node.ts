@@ -1,38 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo, traceError, traceWarning } from '../../../platform/common/logger';
+import { Cancellation } from '../../../platform/common/cancellation.node';
+import { traceInfo, traceError, traceWarning } from '../../../platform/common/logger.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types';
-import { Deferred, createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { RegExpValues } from '../../../webviews/webview-side/common/constants';
-import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
+import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError.node';
 import { IJupyterConnection } from '../../types';
+import { JupyterServerInfo } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
 const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
-
-export type JupyterServerInfo = {
-    base_url: string;
-    notebook_dir: string;
-    hostname: string;
-    password: boolean;
-    pid: number;
-    port: number;
-    secure: boolean;
-    token: string;
-    url: string;
-};
 
 export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;

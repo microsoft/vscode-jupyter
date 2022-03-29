@@ -7,12 +7,12 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
-import { CondaService } from '../../platform/common/process/condaService';
+import { CondaService } from '../../platform/common/process/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc.node';
 import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from '../raw/types';
 
 @injectable()

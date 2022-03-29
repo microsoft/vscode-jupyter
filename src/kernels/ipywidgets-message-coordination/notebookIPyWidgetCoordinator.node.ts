@@ -11,18 +11,18 @@ import {
     CancellationTokenSource
 } from 'vscode';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { Cancellation } from '../../platform/common/cancellation';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Cancellation } from '../../platform/common/cancellation.node';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc';
+import { createDeferred } from '../../platform/common/utils/async.node';
+import { noop } from '../../platform/common/utils/misc.node';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { CommonMessageCoordinator } from './commonMessageCoordinator';
-import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
+import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
+import { CommonMessageCoordinator } from './commonMessageCoordinator.node';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController.node';
 import { INotebookCommunication } from '../../notebooks/types';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {

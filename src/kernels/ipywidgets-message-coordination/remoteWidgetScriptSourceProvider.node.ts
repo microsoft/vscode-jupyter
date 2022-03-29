@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { traceWarning } from '../../platform/common/logger';
+import { traceWarning } from '../../platform/common/logger.node';
 import { IHttpClient } from '../../platform/common/types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 

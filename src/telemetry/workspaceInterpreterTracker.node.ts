@@ -7,9 +7,9 @@ import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../platform/interpreter/contracts';
+import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter.node';
 
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {

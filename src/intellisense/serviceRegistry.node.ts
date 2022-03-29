@@ -4,8 +4,8 @@
 
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
-import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
+import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider.node';
+import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<PythonKernelCompletionProvider>(

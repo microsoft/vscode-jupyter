@@ -3,7 +3,7 @@
 
 import * as iconv from 'iconv-lite';
 import { injectable } from 'inversify';
-import { DEFAULT_ENCODING } from './constants';
+import { DEFAULT_ENCODING } from './constants.node';
 import { IBufferDecoder } from './types';
 
 @injectable()

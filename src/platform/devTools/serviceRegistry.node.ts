@@ -4,7 +4,7 @@
 
 import { IExtensionContext } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { addClearCacheCommand } from './clearCache';
+import { addClearCacheCommand } from './clearCache.node';
 
 export function registerTypes(context: IExtensionContext, _serviceManager: IServiceManager, isDevMode: boolean) {
     addClearCacheCommand(context, isDevMode);

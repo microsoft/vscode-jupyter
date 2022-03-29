@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { IKernel, IKernelProvider } from '../types';
-import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
+import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher.node';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
 /**

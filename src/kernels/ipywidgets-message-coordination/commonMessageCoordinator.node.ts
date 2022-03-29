@@ -6,8 +6,8 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
@@ -18,15 +18,15 @@ import {
     IPersistentStateFactory,
     IExtensionContext
 } from '../../platform/common/types';
-import { Common, DataScience } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { stripAnsi } from '../../platform/common/utils/regexp';
+import { Common, DataScience } from '../../platform/common/utils/localize.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { stripAnsi } from '../../platform/common/utils/regexp.node';
 import { InteractiveWindowMessages } from '../../platform/messageTypes';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
@@ -34,8 +34,8 @@ import {
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { IKernelProvider } from '../types';
-import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
-import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
+import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory.node';
+import { IPyWidgetScriptSource } from './ipyWidgetScriptSource.node';
 import { IIPyWidgetMessageDispatcher } from './types';
 
 /**

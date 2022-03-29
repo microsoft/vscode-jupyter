@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
-import { JupyterSessionManager } from './jupyterSessionManager';
+import { JupyterSessionManager } from './jupyterSessionManager.node';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     IConfigurationService,
@@ -13,7 +13,7 @@ import {
     IDisposableRegistry
 } from '../../../platform/common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
-import { JupyterKernelService } from '../jupyterKernelService';
+import { JupyterKernelService } from '../jupyterKernelService.node';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSessionManagerFactory, IJupyterPasswordConnect, IJupyterSessionManager } from '../types';
 

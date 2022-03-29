@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../../../platform/common/application/types';
-import { WebviewPanel } from './webviewPanel';
+import { WebviewPanel } from './webviewPanel.node';
 
 @injectable()
 export class WebviewPanelProvider implements IWebviewPanelProvider {

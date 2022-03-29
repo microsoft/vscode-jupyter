@@ -4,21 +4,21 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { getKernelId } from '../../../kernels/helpers';
+import { getKernelId } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
-import { JupyterPaths } from './jupyterPaths';
+import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
+import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../platform/common/logger';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { traceInfo, traceError } from '../../../platform/common/logger.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry } from '../../../telemetry';
+import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 
 /**

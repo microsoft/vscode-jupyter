@@ -29,9 +29,9 @@ import {
     IVSCodeNotebook,
     IApplicationShell
 } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants.node';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
 import {
     IPathUtils,
@@ -41,43 +41,43 @@ import {
     GLOBAL_MEMENTO,
     IDisplayOptions
 } from '../platform/common/types';
-import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
-import { DataScience } from '../platform/common/utils/localize';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async.node';
+import { DataScience } from '../platform/common/utils/localize.node';
 import { SysInfoReason } from '../platform/messageTypes';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import {
     getNormalizedInterpreterPath,
     getInterpreterHash,
     areInterpreterPathsSame
-} from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../telemetry';
-import { getTelemetrySafeVersion } from '../telemetry/helpers';
+} from '../platform/pythonEnvironments/info/interpreter.node';
+import { sendTelemetryEvent } from '../telemetry/index.node';
+import { getTelemetrySafeVersion } from '../telemetry/helpers.node';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Commands } from '../webviews/webview-side/common/constants';
-import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
+import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller.node';
 import { Product } from './installer/types';
-import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
-import { removeNotebookSuffixAddedByExtension } from './jupyter/session/jupyterSession';
-import { SilentExecutionErrorOptions } from './kernel';
+import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec.node';
+import { removeNotebookSuffixAddedByExtension } from './jupyter/session/jupyterSession.node';
+import { SilentExecutionErrorOptions } from './kernel.node';
 import {
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName
-} from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder';
+} from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
-import { isPythonNotebook } from '../notebooks/helpers';
+import { isPythonNotebook } from '../notebooks/helpers.node';
 import { INotebookControllerManager } from '../notebooks/types';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
-import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
-import { KernelDeadError } from '../platform/errors/kernelDeadError';
-import { noop } from '../platform/common/utils/misc';
+import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider.node';
+import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector.node';
+import { KernelDeadError } from '../platform/errors/kernelDeadError.node';
+import { noop } from '../platform/common/utils/misc.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
-import { getResourceType } from '../platform/common/utils';
+import { getResourceType } from '../platform/common/utils.node';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
-import { DisplayOptions } from './displayOptions';
+import { DisplayOptions } from './displayOptions.node';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -1527,8 +1527,8 @@ async function switchController(
 
     // Listen for selection change events (may not fire if user cancels)
     const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-    let controller: VSCodeNotebookController | undefined;
-    const waitForSelection = createDeferred<VSCodeNotebookController>();
+    let controller: IVSCodeNotebookController | undefined;
+    const waitForSelection = createDeferred<IVSCodeNotebookController>();
     const disposable = controllerManager.onNotebookControllerSelected((e) => waitForSelection.resolve(e.controller));
 
     const selected = await selectKernel(

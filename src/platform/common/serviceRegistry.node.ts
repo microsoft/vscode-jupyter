@@ -2,20 +2,20 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
-import { AmlComputeContext } from './amlContext';
+import { AmlComputeContext } from './amlContext.node';
 import { IServiceManager } from '../ioc/types';
-import { ImportTracker } from '../../telemetry/importTracker';
+import { ImportTracker } from '../../telemetry/importTracker.node';
 import { IImportTracker } from '../../telemetry/types';
-import { ActiveResourceService } from './application/activeResource';
-import { ApplicationEnvironment } from './application/applicationEnvironment';
-import { ClipboardService } from './application/clipboard';
-import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
-import { DebugService } from './application/debugService';
-import { DocumentManager } from './application/documentManager';
-import { EncryptedStorage } from './application/encryptedStorage';
-import { Extensions } from './application/extensions';
-import { LanguageService } from './application/languageService';
-import { VSCodeNotebook } from './application/notebook';
+import { ActiveResourceService } from './application/activeResource.node';
+import { ApplicationEnvironment } from './application/applicationEnvironment.node';
+import { ClipboardService } from './application/clipboard.node';
+import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
+import { DebugService } from './application/debugService.node';
+import { DocumentManager } from './application/documentManager.node';
+import { EncryptedStorage } from './application/encryptedStorage.node';
+import { Extensions } from './application/extensions.node';
+import { LanguageService } from './application/languageService.node';
+import { VSCodeNotebook } from './application/notebook.node';
 import {
     IActiveResourceService,
     IApplicationEnvironment,
@@ -26,17 +26,17 @@ import {
     ILanguageService,
     IVSCodeNotebook
 } from './application/types';
-import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
-import { CryptoUtils } from './crypto';
-import { ExperimentService } from './experiments/service';
-import { FeatureDeprecationManager } from './featureDeprecationManager';
-import { BrowserService } from './net/browser';
-import { FileDownloader } from './net/fileDownloader';
-import { HttpClient } from './net/httpClient';
-import { PersistentStateFactory } from './persistentState';
-import { IS_WINDOWS } from './platform/constants';
-import { PathUtils } from './platform/pathUtils';
-import { ProcessLogger } from './process/logger';
+import { AsyncDisposableRegistry } from './asyncDisposableRegistry.node';
+import { CryptoUtils } from './crypto.node';
+import { ExperimentService } from './experiments/service.node';
+import { FeatureDeprecationManager } from './featureDeprecationManager.node';
+import { BrowserService } from './net/browser.node';
+import { FileDownloader } from './net/fileDownloader.node';
+import { HttpClient } from './net/httpClient.node';
+import { PersistentStateFactory } from './persistentState.node';
+import { IS_WINDOWS } from './platform/constants.node';
+import { PathUtils } from './platform/pathUtils.node';
+import { ProcessLogger } from './process/logger.node';
 import { IProcessLogger } from './process/types';
 import {
     IAsyncDisposableRegistry,
@@ -48,12 +48,12 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from './types';
-import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
-import { PortAttributesProviders } from './net/portAttributeProvider';
-import { LanguageInitializer } from '../../telemetry/languageInitializer';
-import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry';
-import { registerTypes as processRegisterTypes } from './process/serviceRegistry';
-import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry';
+import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput.node';
+import { PortAttributesProviders } from './net/portAttributeProvider.node';
+import { LanguageInitializer } from '../../telemetry/languageInitializer.node';
+import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
+import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
+import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {

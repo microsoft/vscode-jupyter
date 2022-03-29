@@ -1,25 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../../platform/common/extensions';
+import '../../../../platform/common/extensions.node';
 
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { JupyterExecutionBase } from '../jupyterExecution';
-import { NotebookStarter } from '../notebookStarter';
-import { ServerCache } from './serverCache';
+import { JupyterExecutionBase } from '../jupyterExecution.node';
+import { NotebookStarter } from '../notebookStarter.node';
+import { ServerCache } from './serverCache.node';
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo } from '../../../../platform/common/logger';
+import { traceInfo } from '../../../../platform/common/logger.node';
 import { IFileSystem } from '../../../../platform/common/platform/types';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
     IConfigurationService
 } from '../../../../platform/common/types';
-import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { testOnlyMethod } from '../../../../platform/common/utils/decorators.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../types';
 

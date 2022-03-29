@@ -21,18 +21,18 @@ import { IDocumentManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
-import { chainable } from '../../platform/common/utils/decorators';
-import { isUri } from '../../platform/common/utils/misc';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { chainable } from '../../platform/common/utils/decorators.node';
+import { isUri } from '../../platform/common/utils/misc.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { traceDecorators } from '../../platform/logging';
-import { TraceOptions } from '../../platform/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { TraceOptions } from '../../platform/logging/trace.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
-import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
-import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
+import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError.node';
+import { Telemetry, Commands, Identifiers } from '../../platform/common/constants.node';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
-import { CellMatcher } from './cellMatcher';
+import { CellMatcher } from './cellMatcher.node';
 import { ICodeWatcher, ICodeLensFactory } from './types';
 
 function getIndex(index: number, length: number): number {

@@ -9,4 +9,4 @@ export {
     logVerbose as traceVerbose,
     logWarning as traceWarning
 } from '../logging';
-export { TraceOptions as LogOptions } from '../logging/trace';
+export { TraceOptions as LogOptions } from '../logging/trace.node';

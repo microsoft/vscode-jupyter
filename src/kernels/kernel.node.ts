@@ -18,9 +18,9 @@ import {
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
-import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/common/logger';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { disposeAllDisposables } from '../platform/common/helpers.node';
+import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/common/logger.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types';
 import {
@@ -30,30 +30,30 @@ import {
     IDisposable,
     IDisplayOptions
 } from '../platform/common/types';
-import { Deferred, sleep } from '../platform/common/utils/async';
-import { DataScience } from '../platform/common/utils/localize';
-import { noop } from '../platform/common/utils/misc';
-import { StopWatch } from '../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
-import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
+import { Deferred, sleep } from '../platform/common/utils/async.node';
+import { DataScience } from '../platform/common/utils/localize.node';
+import { noop } from '../platform/common/utils/misc.node';
+import { StopWatch } from '../platform/common/utils/stopWatch.node';
+import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory.node';
+import { JupyterConnectError } from '../platform/errors/jupyterConnectError.node';
 import { InteractiveWindowView } from '../notebooks/constants';
 import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
-} from '../telemetry/telemetry';
-import { calculateWorkingDirectory } from '../platform/common/utils';
-import { sendTelemetryEvent } from '../telemetry';
+} from '../telemetry/telemetry.node';
+import { calculateWorkingDirectory } from '../platform/common/utils.node';
+import { sendTelemetryEvent } from '../telemetry/index.node';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     sendTelemetryForPythonKernelExecutable
-} from './helpers';
-import { expandWorkingDir } from './jupyter/jupyterUtils';
+} from './helpers.node';
+import { expandWorkingDir } from './jupyter/jupyterUtils.node';
 import {
     IJupyterSession,
     IKernel,
@@ -67,14 +67,14 @@ import {
     KernelSocketInformation,
     NotebookCellRunState
 } from './types';
-import { KernelExecution } from '../notebooks/execution/kernelExecution';
-import { traceCellMessage } from '../notebooks/helpers';
-import { Cancellation } from '../platform/common/cancellation';
-import { AddRunCellHook } from '../platform/common/constants';
-import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
+import { KernelExecution } from '../notebooks/execution/kernelExecution.node';
+import { traceCellMessage } from '../notebooks/helpers.node';
+import { Cancellation } from '../platform/common/cancellation.node';
+import { AddRunCellHook } from '../platform/common/constants.node';
+import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IStatusProvider } from '../platform/progress/types';
-import { DisplayOptions } from './displayOptions';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
+import { DisplayOptions } from './displayOptions.node';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {

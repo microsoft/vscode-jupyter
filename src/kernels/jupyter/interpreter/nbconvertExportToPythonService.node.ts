@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { traceError } from '../../../platform/common/logger';
+import { traceError } from '../../../platform/common/logger.node';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types';
-import { reportAction } from '../../../platform/progress/decorator';
+import { reportAction } from '../../../platform/progress/decorator.node';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';

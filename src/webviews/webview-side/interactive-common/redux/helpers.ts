@@ -9,7 +9,7 @@ import {
     CssMessages,
     SharedMessages,
     IInteractiveWindowMapping
-} from '../../../../platform/messageTypes';
+} from '../../../../platform/messageTypes.node';
 import { BaseReduxActionPayload } from '../../../types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';

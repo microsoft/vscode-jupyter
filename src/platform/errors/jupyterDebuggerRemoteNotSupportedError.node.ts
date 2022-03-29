@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { DataScience } from '../../platform/common/utils/localize';
+import { DataScience } from '../../platform/common/utils/localize.node';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { BaseKernelError } from './types';
 

@@ -7,7 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
+import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
@@ -15,19 +15,19 @@ import {
     LiveKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceError } from '../../../platform/common/logger';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { traceError } from '../../../platform/common/logger.node';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
-import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { traceDecorators } from '../../../platform/logging';
-import { ignoreLogging } from '../../../platform/logging/trace';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { ignoreLogging } from '../../../platform/logging/trace.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../types';
-import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
-import { getResourceType } from '../../../platform/common/utils';
+import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider.node';
+import { getResourceType } from '../../../platform/common/utils.node';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from '../../jupyter/types';
 
 // This class searches for a kernel that matches the given kernel name.

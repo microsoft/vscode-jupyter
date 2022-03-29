@@ -6,23 +6,23 @@ import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ReadWrite } from '../../../platform/common/types';
-import { testOnlyMethod } from '../../../platform/common/utils/decorators';
-import { noop } from '../../../platform/common/utils/misc';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators.node';
+import { noop } from '../../../platform/common/utils/misc.node';
 import { traceDecorators } from '../../../platform/logging';
-import { ignoreLogging } from '../../../platform/logging/trace';
+import { ignoreLogging } from '../../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
+import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
+import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec.node';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;

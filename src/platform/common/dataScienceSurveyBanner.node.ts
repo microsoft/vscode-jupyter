@@ -5,12 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
-import { isJupyterNotebook } from '../../notebooks/helpers';
+import { isJupyterNotebook } from '../../notebooks/helpers.node';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
-import './extensions';
-import { traceError } from './logger';
+import './extensions.node';
+import { traceError } from './logger.node';
 import {
+    BannerType,
     IBrowserService,
     IDisposableRegistry,
     IJupyterExtensionBanner,
@@ -18,8 +19,8 @@ import {
     IPersistentStateFactory,
     IsCodeSpace
 } from './types';
-import * as localize from './utils/localize';
-import { MillisecondsInADay } from '../constants';
+import * as localize from './utils/localize.node';
+import { MillisecondsInADay } from '../constants.node';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -29,11 +30,6 @@ export enum InsidersNotebookSurveyStateKeys {
 export enum ExperimentNotebookSurveyStateKeys {
     ShowBanner = 'ShowExperimentNotebookSurveyBanner',
     ExecutionCount = 'DS_ExperimentNotebookExecutionCount'
-}
-
-export enum BannerType {
-    InsidersNotebookSurvey,
-    ExperimentNotebookSurvey
 }
 
 enum DSSurveyLabelIndex {

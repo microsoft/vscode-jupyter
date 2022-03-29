@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IConfigurationService } from '../../../platform/common/types';
-import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
+import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     ConnectNotebookProviderOptions,
@@ -16,9 +16,9 @@ import {
     isLocalConnection,
     NotebookCreationOptions
 } from '../../../kernels/types';
-import { Cancellation } from '../../../platform/common/cancellation';
-import { Settings } from '../../../platform/common/constants';
-import { DisplayOptions } from '../../displayOptions';
+import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Settings } from '../../../platform/common/constants.node';
+import { DisplayOptions } from '../../displayOptions.node';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
 

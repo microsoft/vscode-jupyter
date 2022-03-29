@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { Common } from '../../utils/localize';
-import { noop } from '../../utils/misc';
+import { Common } from '../../utils/localize.node';
+import { noop } from '../../utils/misc.node';
 import { IApplicationShell, ICommandManager } from '../types';
 
 /**

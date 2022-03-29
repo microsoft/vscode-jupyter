@@ -3,14 +3,14 @@
 'use strict';
 
 import { IServiceManager } from '../../platform/ioc/types';
-import { InstallationChannelManager } from './channelManager';
-import { CondaInstaller } from './condaInstaller';
-import { PipEnvInstaller } from './pipEnvInstaller';
-import { PipInstaller } from './pipInstaller';
-import { PoetryInstaller } from './poetryInstaller';
-import { ProductInstaller } from './productInstaller';
-import { DataScienceProductPathService } from './productPath';
-import { ProductService } from './productService';
+import { InstallationChannelManager } from './channelManager.node';
+import { CondaInstaller } from './condaInstaller.node';
+import { PipEnvInstaller } from './pipEnvInstaller.node';
+import { PipInstaller } from './pipInstaller.node';
+import { PoetryInstaller } from './poetryInstaller.node';
+import { ProductInstaller } from './productInstaller.node';
+import { DataScienceProductPathService } from './productPath.node';
+import { ProductService } from './productService.node';
 import {
     IInstallationChannelManager,
     IInstaller,

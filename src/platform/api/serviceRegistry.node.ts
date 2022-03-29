@@ -4,14 +4,14 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentActivationService } from '../common/process/environmentActivationService';
+import { EnvironmentActivationService } from '../common/process/environmentActivationService.node';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts';
-import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter';
+import { IInterpreterService } from '../interpreter/contracts.node';
+import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
-import { ApiAccessService } from './apiAccessService';
-import { JupyterKernelServiceFactory } from './kernelApi';
+import { ApiAccessService } from './apiAccessService.node';
+import { JupyterKernelServiceFactory } from './kernelApi.node';
 import {
     InterpreterSelector,
     InterpreterService,
@@ -19,7 +19,7 @@ import {
     PythonApiProvider,
     PythonDebuggerPathProvider,
     PythonExtensionChecker
-} from './pythonApi';
+} from './pythonApi.node';
 import {
     ILanguageServerProvider,
     IPythonApiProvider,

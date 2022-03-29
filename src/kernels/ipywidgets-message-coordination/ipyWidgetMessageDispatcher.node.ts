@@ -8,18 +8,18 @@ import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceInfoIfCI, traceVerbose, traceError } from '../../platform/common/logger';
+import { traceInfoIfCI, traceVerbose, traceError } from '../../platform/common/logger.node';
 import { IDisposable } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc';
-import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
+import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers.node';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../platform/messageTypes';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
-import { WIDGET_MIMETYPE } from './constants';
+import { WIDGET_MIMETYPE } from './constants.node';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;

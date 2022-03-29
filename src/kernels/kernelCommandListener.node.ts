@@ -5,28 +5,28 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
-import { displayErrorsInCell } from '../platform/errors/errorUtils';
-import { traceInfo } from '../platform/common/logger';
+import { displayErrorsInCell } from '../platform/errors/errorUtils.node';
+import { traceInfo } from '../platform/common/logger.node';
 import {
     IDisposableRegistry,
     IConfigurationService,
     IDisposable,
     IDataScienceCommandListener
 } from '../platform/common/types';
-import { DataScience } from '../platform/common/utils/localize';
+import { DataScience } from '../platform/common/utils/localize.node';
 import { INotebookControllerManager } from '../notebooks/types';
-import { trackKernelResourceInformation } from '../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../telemetry/telemetry.node';
 import { IServiceContainer } from '../platform/ioc/types';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry/index.node';
 import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers';
-import { JupyterSession } from './jupyter/session/jupyterSession';
-import { RawJupyterSession } from './raw/session/rawJupyterSession';
+import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers.node';
+import { JupyterSession } from './jupyter/session/jupyterSession.node';
+import { RawJupyterSession } from './raw/session/rawJupyterSession.node';
 import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {

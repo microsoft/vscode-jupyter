@@ -5,20 +5,20 @@ import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
-import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
-import { ContextKey } from './contextKey';
+import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants.node';
+import { ContextKey } from './contextKey.node';
 import './extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from './types';
-import { debounceAsync, swallowExceptions } from './utils/decorators';
-import { noop } from './utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
-import { CommandRegistry as PlatformCommandRegistry } from '../commands/commandRegistry';
-import { EditorContexts, Telemetry } from './constants';
+import { debounceAsync, swallowExceptions } from './utils/decorators.node';
+import { noop } from './utils/misc.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry.node';
+import { CommandRegistry as PlatformCommandRegistry } from '../commands/commandRegistry.node';
+import { EditorContexts, Telemetry } from './constants.node';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
+import { hasCells } from '../../interactive-window/editor-integration/cellFactory.node';
 
 @injectable()
 export class GlobalActivation implements IExtensionSingleActivationService {

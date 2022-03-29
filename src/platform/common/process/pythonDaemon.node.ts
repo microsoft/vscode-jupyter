@@ -7,11 +7,11 @@ import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
-import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
-import { traceWarning } from '../logger';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
+import { traceWarning } from '../logger.node';
 import { IPlatformService } from '../platform/types';
-import { BasePythonDaemon, ConnectionClosedError, DaemonError } from './baseDaemon';
-import { PythonEnvInfo } from './internal/scripts';
+import { BasePythonDaemon, ConnectionClosedError, DaemonError } from './baseDaemon.node';
+import { PythonEnvInfo } from './internal/scripts/index.node';
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,

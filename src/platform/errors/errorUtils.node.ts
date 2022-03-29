@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, NotebookController, WorkspaceFolder } from 'vscode';
-import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { DataScience } from '../../platform/common/utils/localize';
-import { JupyterConnectError } from './jupyterConnectError';
+import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { DataScience } from '../../platform/common/utils/localize.node';
+import { JupyterConnectError } from './jupyterConnectError.node';
 import { BaseError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

@@ -5,8 +5,8 @@
 
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import '../../platform/common/extensions';
-import { traceError } from '../../platform/common/logger';
+import '../../platform/common/extensions.node';
+import { traceError } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
@@ -16,17 +16,17 @@ import {
     IPersistentStateFactory,
     IHttpClient
 } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { DataScience, Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { DataScience, Common } from '../../platform/common/utils/localize.node';
+import { noop } from '../../platform/common/utils/misc.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider';
-import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.node';
+import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
+import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider.node';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';

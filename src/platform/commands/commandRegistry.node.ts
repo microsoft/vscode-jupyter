@@ -7,8 +7,8 @@ import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../platform/common/application/types';
 
 import { IDisposable } from '../../platform/common/types';
-import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
-import { JupyterServerSelectorCommand } from './serverSelector';
+import { JupyterCommandLineSelectorCommand } from './commandLineSelector.node';
+import { JupyterServerSelectorCommand } from './serverSelector.node';
 
 @injectable()
 export class CommandRegistry implements IDisposable {

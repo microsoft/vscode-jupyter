@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { JupyterInstallError } from './jupyterInstallError';
-import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError.node';
 import {
     CancellationError,
     CancellationError as VscCancellationError,
@@ -10,34 +10,34 @@ import {
     ConfigurationTarget,
     workspace
 } from 'vscode';
-import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
-import { KernelDiedError } from './kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from './kernelProcessExitedError';
+import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError.node';
+import { KernelDiedError } from './kernelDiedError.node';
+import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
+import { KernelProcessExitedError } from './kernelProcessExitedError.node';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceWarning } from '../../platform/common/logger';
+import { traceWarning } from '../../platform/common/logger.node';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
-import { DataScience, Common } from '../../platform/common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
+import { DataScience, Common } from '../../platform/common/utils/localize.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { translateProductToModule } from '../../kernels/installer/moduleInstaller';
-import { ProductNames } from '../../kernels/installer/productNames';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { translateProductToModule } from '../../kernels/installer/moduleInstaller.node';
+import { ProductNames } from '../../kernels/installer/productNames.node';
 import { Product } from '../../kernels/installer/types';
-import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterDependencyResponse } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../kernels/types';
-import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
-import { JupyterConnectError } from './jupyterConnectError';
-import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
+import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils.node';
+import { JupyterConnectError } from './jupyterConnectError.node';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError.node';
 import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
-import { noop } from '../../platform/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { KernelDeadError } from './kernelDeadError';
-import { DisplayOptions } from '../../kernels/displayOptions';
+import { KernelDeadError } from './kernelDeadError.node';
+import { DisplayOptions } from '../../kernels/displayOptions.node';
 import { IJupyterInterpreterDependencyManager } from '../../kernels/jupyter/types';
 
 @injectable()

@@ -5,20 +5,20 @@ import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../common/application/types';
-import { disposeAllDisposables } from '../common/helpers';
+import { disposeAllDisposables } from '../common/helpers.node';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
-import { Common, DataScience } from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from './constants';
+import { Common, DataScience } from '../common/utils/localize.node';
+import { noop } from '../common/utils/misc.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { Telemetry } from './constants.node';
 import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
-} from '../../kernels/helpers';
-import { getNotebookMetadata, isJupyterNotebook } from '../../notebooks/helpers';
-import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
+} from '../../kernels/helpers.node';
+import { getNotebookMetadata, isJupyterNotebook } from '../../notebooks/helpers.node';
 import { INotebookControllerManager } from '../../notebooks/types';
+import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
 const knownExtensionsToRecommend = new Map<string, { displayName: string; extensionLink: string }>([
@@ -82,7 +82,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
         }
     }
 
-    private onNotebookControllerSelected({ controller }: { controller: VSCodeNotebookController }) {
+    private onNotebookControllerSelected({ controller }: { controller: IVSCodeNotebookController }) {
         if (
             controller.connection.kind !== 'startUsingLocalKernelSpec' &&
             controller.connection.kind !== 'startUsingRemoteKernelSpec'

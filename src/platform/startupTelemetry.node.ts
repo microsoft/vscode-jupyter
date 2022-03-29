@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { IWorkspaceService } from './common/application/types';
-import { isTestExecution } from './common/constants';
-import { traceError } from './common/logger';
+import { isTestExecution } from './common/constants.node';
+import { traceError } from './common/logger.node';
 import { IServiceContainer } from './ioc/types';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
+import { sendTelemetryEvent } from '../telemetry/index.node';
+import { EventName } from '../telemetry/constants.node';
 import { EditorLoadTelemetry } from '../telemetry/types';
 
 interface IStopWatch {

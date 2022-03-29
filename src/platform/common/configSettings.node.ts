@@ -12,8 +12,8 @@ import {
 import '../common/extensions';
 import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
-import { WorkspaceService } from './application/workspace';
-import { isTestExecution } from './constants';
+import { WorkspaceService } from './application/workspace.node';
+import { isTestExecution } from './constants.node';
 import {
     IExperiments,
     ILoggingSettings,
@@ -25,8 +25,8 @@ import {
     Resource,
     WidgetCDNs
 } from './types';
-import { debounceSync } from './utils/decorators';
-import { SystemVariables } from './variables/systemVariables';
+import { debounceSync } from './utils/decorators.node';
+import { SystemVariables } from './variables/systemVariables.node';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 

@@ -15,12 +15,12 @@ import {
 } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
-import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
-import { traceError } from '../common/logger';
+import { Commands, MARKDOWN_LANGUAGE } from '../common/constants.node';
+import { traceError } from '../common/logger.node';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
-import { GitHubIssue } from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
+import { GitHubIssue } from '../common/utils/localize.node';
+import { IInterpreterService } from '../interpreter/contracts.node';
 
 @injectable()
 export class GitHubIssueCommandListener implements IDataScienceCommandListener {

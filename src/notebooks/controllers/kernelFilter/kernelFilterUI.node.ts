@@ -4,18 +4,18 @@ import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { noop } from '../../../platform/common/utils/misc.node';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelConnectionPath,
     getRemoteKernelSessionInformation
-} from '../../../kernels/helpers';
+} from '../../../kernels/helpers.node';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../types';
-import { KernelFilterService } from './kernelFilterService';
+import { KernelFilterService } from './kernelFilterService.node';
 
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {

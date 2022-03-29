@@ -13,7 +13,7 @@ import {
     GLOBAL_MEMENTO,
     IExtensionContext
 } from '../../../platform/common/types';
-import { tryGetRealPath } from '../../../platform/common/utils';
+import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecorators } from '../../../platform/logging';
 

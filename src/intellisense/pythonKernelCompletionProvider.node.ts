@@ -15,19 +15,19 @@ import {
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { traceError, traceInfoIfCI, traceVerbose } from '../platform/common/logger';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
+import { traceError, traceInfoIfCI, traceVerbose } from '../platform/common/logger.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
-import { waitForPromise } from '../platform/common/utils/async';
-import { isNotebookCell } from '../platform/common/utils/misc';
-import { StopWatch } from '../platform/common/utils/stopWatch';
+import { waitForPromise } from '../platform/common/utils/async.node';
+import { isNotebookCell } from '../platform/common/utils/misc.node';
+import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';
-import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
+import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers.node';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
-import { mapJupyterKind } from './conversion';
+import { mapJupyterKind } from './conversion.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
-import { Settings } from '../platform/common/constants';
+import { Settings } from '../platform/common/constants.node';
 import { INotebookCompletion } from './types';
 
 // Type that holds extra string (makes it quicker to filter). Exported for testing

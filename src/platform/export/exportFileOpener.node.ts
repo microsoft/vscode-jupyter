@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Position, Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { IDocumentManager, IApplicationShell } from '../common/application/types';
-import { Telemetry, PYTHON_LANGUAGE } from '../common/constants';
+import { Telemetry, PYTHON_LANGUAGE } from '../common/constants.node';
 import { IFileSystem } from '../common/platform/types';
 import { IBrowserService } from '../common/types';
-import * as localize from '../common/utils/localize';
+import * as localize from '../common/utils/localize.node';
 import { ExportFormat } from './types';
 
 @injectable()

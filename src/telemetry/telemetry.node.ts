@@ -13,18 +13,18 @@ import {
     setSharedProperty,
     waitBeforeSending
 } from '../platform/../telemetry';
-import { StopWatch } from '../platform/common/utils/stopWatch';
+import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
-import { InterpreterCountTracker } from './interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers';
+import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker.node';
+import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants.node';
+import { InterpreterCountTracker } from './interpreterCountTracker.node';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { InterpreterPackages } from './interpreterPackages';
-import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors';
-import { createDeferred } from '../platform/common/utils/async';
-import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
-import { getResourceType } from '../platform/common/utils';
+import { InterpreterPackages } from './interpreterPackages.node';
+import { populateTelemetryWithErrorInfo } from '../platform/../platform/errors.node';
+import { createDeferred } from '../platform/common/utils/async.node';
+import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter.node';
+import { getResourceType } from '../platform/common/utils.node';
 
 /**
  * This information is sent with each telemetry event.

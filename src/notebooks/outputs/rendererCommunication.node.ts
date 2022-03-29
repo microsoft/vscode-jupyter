@@ -4,11 +4,11 @@
 import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { PlotSaveHandler } from './plotSaveHandler';
-import { PlotViewHandler } from './plotViewHandler';
+import { noop } from '../../platform/common/utils/misc.node';
+import { PlotSaveHandler } from './plotSaveHandler.node';
+import { PlotViewHandler } from './plotViewHandler.node';
 
 export type OpenImageInPlotViewer = {
     type: 'openImageInPlotViewer';

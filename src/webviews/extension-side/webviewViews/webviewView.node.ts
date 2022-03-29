@@ -6,7 +6,7 @@ import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewV
 import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { Webview } from '../webviews/webview';
+import { Webview } from '../webviews/webview.node';
 
 export class WebviewView extends Webview implements IWebviewView {
     public get visible(): boolean {

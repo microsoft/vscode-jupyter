@@ -5,8 +5,8 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
-import { JupyterSettings } from '../configSettings';
-import { isUnitTestExecution } from '../constants';
+import { JupyterSettings } from '../configSettings.node';
+import { isUnitTestExecution } from '../constants.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../types';
 
 @injectable()

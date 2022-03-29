@@ -28,10 +28,10 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import {
     IBrowserService,
     IConfigurationService,
@@ -41,24 +41,24 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async';
-import { chainable } from '../../platform/common/utils/decorators';
-import { DataScience, Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { createDeferred } from '../../platform/common/utils/async.node';
+import { chainable } from '../../platform/common/utils/decorators.node';
+import { DataScience, Common } from '../../platform/common/utils/localize.node';
+import { noop } from '../../platform/common/utils/misc.node';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
-} from '../../telemetry/telemetry';
+} from '../../telemetry/telemetry.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceDecorators } from '../../platform/logging';
-import { TraceOptions } from '../../platform/logging/trace';
-import { ConsoleForegroundColors } from '../../platform/logging/_global';
+import { TraceOptions } from '../../platform/logging/trace.node';
+import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { displayErrorsInCell } from '../../platform/errors/errorUtils';
+import { displayErrorsInCell } from '../../platform/errors/errorUtils.node';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
+import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,
@@ -67,9 +67,9 @@ import {
     connectToKernel,
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
-} from '../../kernels/helpers';
-import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+} from '../../kernels/helpers.node';
+import { NotebookIPyWidgetCoordinator } from '../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator.node';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
 import {
     IKernel,
     IKernelProvider,
@@ -81,11 +81,11 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { InteractiveWindowView } from '../constants';
-import { CellExecutionCreator } from '../execution/cellExecutionCreator';
-import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
-import { DisplayOptions } from '../../kernels/displayOptions';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
+import { CellExecutionCreator } from '../execution/cellExecutionCreator.node';
+import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers.node';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError.node';
+import { DisplayOptions } from '../../kernels/displayOptions.node';
+import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils.node';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{

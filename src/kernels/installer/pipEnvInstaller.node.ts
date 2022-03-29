@@ -5,12 +5,12 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { InterpreterUri } from '../../platform/common/types';
-import { isResource } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller';
+import { isResource } from '../../platform/common/utils/misc.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
-import { isPipenvEnvironmentRelatedToFolder } from './pipenv';
-import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers';
+import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
+import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 
 export const pipenvName = 'pipenv';

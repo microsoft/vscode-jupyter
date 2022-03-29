@@ -5,25 +5,25 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers';
+import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
-import { baseKernelPath, JupyterPaths } from './jupyterPaths';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
+import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
+import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/common/logger';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/common/logger.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
-import { captureTelemetry } from '../../../telemetry';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 

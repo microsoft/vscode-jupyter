@@ -10,10 +10,10 @@ import * as glob from 'glob';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import '../extensions';
-import { traceError } from '../logger';
-import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors';
-import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
-import { TemporaryFileSystem } from './fs-temp';
+import { traceError } from '../logger.node';
+import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors.node';
+import { FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';
+import { TemporaryFileSystem } from './fs-temp.node';
 import {
     FileStat,
     FileType,

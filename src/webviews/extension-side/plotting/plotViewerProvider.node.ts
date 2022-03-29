@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 
 import { inject, injectable } from 'inversify';
 import { IPlotViewer, IPlotViewerProvider } from './types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../webview-side/common/constants';
+import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { Telemetry } from '../../webview-side/common/constants.node';
 
 @injectable()
 export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable {

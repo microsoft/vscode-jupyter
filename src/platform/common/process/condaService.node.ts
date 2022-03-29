@@ -5,13 +5,13 @@ import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
-import { TraceOptions } from '../../logging/trace';
-import { traceDecorators, traceError, traceVerbose } from '../logger';
+import { TraceOptions } from '../../logging/trace.node';
+import { traceDecorators, traceError, traceVerbose } from '../logger.node';
 import { IFileSystem, IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
-import { createDeferredFromPromise } from '../utils/async';
+import { createDeferredFromPromise } from '../utils/async.node';
 import * as path from 'path';
-import { swallowExceptions } from '../utils/decorators';
+import { swallowExceptions } from '../utils/decorators.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

@@ -12,22 +12,22 @@ import type {
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { Cancellation } from '../../../platform/common/cancellation.node';
 import { BaseError } from '../../../platform/errors/types';
-import { traceVerbose, traceError, traceInfo } from '../../../platform/common/logger';
+import { traceVerbose, traceError, traceInfo } from '../../../platform/common/logger.node';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
-import { waitForCondition } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { captureTelemetry } from '../../../telemetry';
+import { waitForCondition } from '../../../platform/common/utils/async.node';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError.node';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
+import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
-import { getNameOfKernelConnection } from '../../helpers';
+import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession.node';
+import { getNameOfKernelConnection } from '../../helpers.node';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
-import { JupyterKernelService } from '../jupyterKernelService';
-import { JupyterWebSockets } from './jupyterWebSocket';
-import { DisplayOptions } from '../../displayOptions';
+import { JupyterKernelService } from '../jupyterKernelService.node';
+import { JupyterWebSockets } from './jupyterWebSocket.node';
+import { DisplayOptions } from '../../displayOptions.node';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {

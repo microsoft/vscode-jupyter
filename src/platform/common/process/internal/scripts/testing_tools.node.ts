@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { _SCRIPTS_DIR } from './index';
+import { _SCRIPTS_DIR } from './index.node';
 
 const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'testing_tools');
 

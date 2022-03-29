@@ -5,11 +5,11 @@
 
 import { IWorkspaceService } from '../platform/common/application/types';
 import { Resource } from '../platform/common/types';
-import { SystemVariables } from '../platform/common/variables/systemVariables';
+import { SystemVariables } from '../platform/common/variables/systemVariables.node';
 
-import { sendTelemetryEvent } from '.';
+import { sendTelemetryEvent } from '..node';
 import { IFileSystem } from '../platform/common/platform/types';
-import { EventName } from './constants';
+import { EventName } from './constants.node';
 
 let _defaultEnvFileSetting: string | undefined;
 let envFileTelemetrySent = false;

@@ -5,20 +5,20 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
 import { IPythonDebuggerPathProvider } from '../../platform/api/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/logger';
+import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/logger.node';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
+import { DataScience } from '../../platform/common/utils/localize.node';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError';
-import { executeSilently } from '../helpers';
-import { getPlainTextOrStreamOutput } from '../kernel';
+import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError.node';
+import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError.node';
+import { executeSilently } from '../helpers.node';
+import { getPlainTextOrStreamOutput } from '../kernel.node';
 import { IKernel, isLocalConnection } from '../types';
 import { IInteractiveWindowDebugger } from '../../interactive-window/types';
 import { ICellHashListener, IFileHashes } from '../../interactive-window/editor-integration/types';
 import { IJupyterDebugService, ISourceMapRequest } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {

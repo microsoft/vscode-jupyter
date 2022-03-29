@@ -8,12 +8,12 @@ import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
+import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers.node';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 

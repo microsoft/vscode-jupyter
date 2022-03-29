@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
+import { isJupyterNotebook } from '../../../notebooks/helpers.node';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';

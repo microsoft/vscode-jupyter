@@ -1,9 +1,9 @@
-import { ApplicationShell } from '../common/application/applicationShell';
-import { CommandManager } from '../common/application/commandManager';
+import { ApplicationShell } from '../common/application/applicationShell.node';
+import { CommandManager } from '../common/application/commandManager.node';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { WorkspaceService } from '../common/application/workspace';
-import { ConfigurationService } from '../common/configuration/service';
-import { FileSystem } from '../common/platform/fileSystem';
+import { WorkspaceService } from '../common/application/workspace.node';
+import { ConfigurationService } from '../common/configuration/service.node';
+import { FileSystem } from '../common/platform/fileSystem.node';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IServiceManager } from '../ioc/types';

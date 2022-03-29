@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ExportBase } from './exportBase';
+import { ExportBase } from './exportBase.node';
 import { ExportFormat } from './types';
 
 @injectable()

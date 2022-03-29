@@ -5,15 +5,15 @@ import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceError } from '../platform/common/logger';
+import { PYTHON_LANGUAGE } from '../platform/common/constants.node';
+import { traceError } from '../platform/common/logger.node';
 import { IDisposableRegistry } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc';
-import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
-import { isJupyterNotebook } from '../notebooks/helpers';
+import { noop } from '../platform/common/utils/misc.node';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater.node';
+import { isJupyterNotebook } from '../notebooks/helpers.node';
 import { INotebookControllerManager } from '../notebooks/types';
-import { translateKernelLanguageToMonaco } from '../platform/common/utils';
+import { translateKernelLanguageToMonaco } from '../platform/common/utils.node';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.
@@ -38,7 +38,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
 
     private async onDidChangeNotebookController(event: {
         notebook: NotebookDocument;
-        controller: VSCodeNotebookController;
+        controller: IVSCodeNotebookController;
     }) {
         const document = event.notebook;
         const connection = event.controller.connection;

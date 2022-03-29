@@ -5,17 +5,17 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError } from '../../platform/common/logger';
+import { traceError } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { captureTelemetry } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,
     isPythonKernelConnection,
     getKernelPathFromKernelConnection
-} from '../helpers';
+} from '../helpers.node';
 import { IKernel } from '../types';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 

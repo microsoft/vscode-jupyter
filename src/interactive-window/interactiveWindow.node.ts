@@ -24,37 +24,37 @@ import {
 } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
-import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
-import '../platform/common/extensions';
-import { traceInfoIfCI } from '../platform/common/logger';
+import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants.node';
+import '../platform/common/extensions.node';
+import { traceInfoIfCI } from '../platform/common/logger.node';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc';
+import { noop } from '../platform/common/utils/misc.node';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
-import { chainable } from '../platform/common/utils/decorators';
-import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
-import { DataScience } from '../platform/common/utils/localize';
-import { createDeferred, Deferred } from '../platform/common/utils/async';
-import { connectToKernel } from '../kernels/helpers';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry.node';
+import { chainable } from '../platform/common/utils/decorators.node';
+import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
+import { DataScience } from '../platform/common/utils/localize.node';
+import { createDeferred, Deferred } from '../platform/common/utils/async.node';
+import { connectToKernel } from '../kernels/helpers.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';
-import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
-import { updateNotebookMetadata } from '../notebooks/helpers';
-import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
-import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater.node';
+import { updateNotebookMetadata } from '../notebooks/helpers.node';
+import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator.node';
+import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils.node';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog, ExportFormat } from '../platform/export/types';
-import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
-import { CellMatcher } from './editor-integration/cellMatcher';
+import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory.node';
+import { CellMatcher } from './editor-integration/cellMatcher.node';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types';
-import { generateInteractiveCode } from './helpers';
+import { generateInteractiveCode } from './helpers.node';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 export type InteractiveCellMetadata = {
     interactiveWindowCellMarker: string;
@@ -123,7 +123,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly serviceContainer: IServiceContainer,
         private readonly interactiveWindowDebugger: IInteractiveWindowDebugger,
         private readonly errorHandler: IDataScienceErrorHandler,
-        preferredController: VSCodeNotebookController | undefined,
+        preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri
     ) {
@@ -348,7 +348,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
     }
-    private registerControllerChangeListener(controller: VSCodeNotebookController) {
+    private registerControllerChangeListener(controller: IVSCodeNotebookController) {
         const controllerChangeListener = controller.controller.onDidChangeSelectedNotebooks(
             (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                 // Controller was deselected for this InteractiveWindow's NotebookDocument
@@ -370,7 +370,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerManager.onNotebookControllerSelected(
-            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
+            (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
                 if (e.notebook !== this.notebookEditor.document) {
                     return;
                 }

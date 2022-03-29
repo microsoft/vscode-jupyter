@@ -5,21 +5,21 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { Cancellation } from '../../../platform/common/cancellation.node';
 import { WrappedError } from '../../../platform/errors/types';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError.node';
+import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
+import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
-import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
+import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils.node';
 
-import { NotebookStarter } from './notebookStarter';
+import { NotebookStarter } from './notebookStarter.node';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,

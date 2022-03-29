@@ -4,7 +4,7 @@
 'use strict';
 
 import { Position, Range } from 'vscode';
-import { isNumber } from './sysTypes';
+import { isNumber } from './sysTypes.node';
 
 /**
  * Return the range represented by the given string.

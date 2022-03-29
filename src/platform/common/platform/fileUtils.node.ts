@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types';
 import { IConfigurationService } from '../types';
-import { chain, iterable } from '../utils/async';
+import { chain, iterable } from '../utils/async.node';
 import { IServiceContainer } from '../../ioc/types';
 import { getOSType, OSType } from '../utils/platform';
 

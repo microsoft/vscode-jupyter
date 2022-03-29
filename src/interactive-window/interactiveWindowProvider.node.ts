@@ -11,7 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../platform/common/application/types';
-import { traceInfo } from '../platform/common/logger';
+import { traceInfo } from '../platform/common/logger.node';
 import { IFileSystem } from '../platform/common/platform/types';
 
 import {
@@ -24,28 +24,28 @@ import {
     InteractiveWindowMode,
     Resource
 } from '../platform/common/types';
-import { chainable } from '../platform/common/utils/decorators';
-import * as localize from '../platform/common/utils/localize';
-import { noop } from '../platform/common/utils/misc';
+import { chainable } from '../platform/common/utils/decorators.node';
+import * as localize from '../platform/common/utils/localize.node';
+import { noop } from '../platform/common/utils/misc.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import { InteractiveWindow } from './interactiveWindow';
-import { InteractiveWindowView } from '../notebooks/constants';
-import { VSCodeNotebookController } from '../notebooks/controllers/vscodeNotebookController';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { InteractiveWindow } from './interactiveWindow.node';
+import { JVSC_EXTENSION_ID } from '../platform/common/constants.node';
 import {
     IInteractiveWindow,
     IInteractiveWindowDebugger,
     IInteractiveWindowProvider,
     INativeInteractiveWindow
 } from './types';
-import { getInteractiveWindowTitle } from './identity';
-import { createDeferred } from '../platform/common/utils/async';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { getInteractiveWindowTitle } from './identity.node';
+import { createDeferred } from '../platform/common/utils/async.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog } from '../platform/export/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { InteractiveWindowView } from '../notebooks/constants';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -142,7 +142,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
             const preferredController = connection
-                ? this.notebookControllerManager.getControllerForConnection(connection, 'interactive')
+                ? this.notebookControllerManager.getControllerForConnection(connection, InteractiveWindowView)
                 : await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
                       InteractiveWindowView,
                       resource
@@ -190,7 +190,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
     private async createEditor(
-        preferredController: VSCodeNotebookController | undefined,
+        preferredController: IVSCodeNotebookController | undefined,
         resource: Resource,
         mode: InteractiveWindowMode,
         commandManager: ICommandManager

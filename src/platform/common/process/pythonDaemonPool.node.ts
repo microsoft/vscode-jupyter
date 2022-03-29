@@ -4,14 +4,14 @@
 import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths';
+import { getDisplayPath } from '../platform/fs-paths.node';
 import { IDisposableRegistry } from '../types';
-import { sleep } from '../utils/async';
-import { noop } from '../utils/misc';
-import { StopWatch } from '../utils/stopWatch';
-import { ProcessService } from './proc';
-import { PythonDaemonExecutionService } from './pythonDaemon';
-import { PythonDaemonFactory } from './pythonDaemonFactory';
+import { sleep } from '../utils/async.node';
+import { noop } from '../utils/misc.node';
+import { StopWatch } from '../utils/stopWatch.node';
+import { ProcessService } from './proc.node';
+import { PythonDaemonExecutionService } from './pythonDaemon.node';
+import { PythonDaemonFactory } from './pythonDaemonFactory.node';
 import {
     ExecutionResult,
     IProcessLogger,

@@ -10,7 +10,7 @@ import * as WebSocketWS from 'ws';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { serializeDataViews, deserializeDataViews } from '../../../../platform/common/utils/serializers';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../platform/messageTypes.node';
 import { logMessageOnlyOnCI } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 

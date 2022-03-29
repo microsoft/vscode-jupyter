@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
-import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths';
+import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

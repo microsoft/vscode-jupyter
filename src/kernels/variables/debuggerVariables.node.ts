@@ -6,18 +6,18 @@ import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants';
-import { traceError } from '../../platform/common/logger';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { traceError } from '../../platform/common/logger.node';
 import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker';
+import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker.node';
 import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IJupyterDebugService } from '../debugging/types';
 import { IKernel } from '../types';
-import { parseDataFrame } from './pythonVariableRequester';
+import { parseDataFrame } from './pythonVariableRequester.node';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,

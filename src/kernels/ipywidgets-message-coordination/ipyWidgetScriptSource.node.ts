@@ -7,7 +7,7 @@ import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError, traceInfo, traceVerbose } from '../../platform/common/logger';
+import { traceError, traceInfo, traceVerbose } from '../../platform/common/logger.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../../platform/common/process/types';
 import {
@@ -18,17 +18,17 @@ import {
     IExtensionContext,
     IDisposable
 } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { ConsoleForegroundColors } from '../../platform/logging/_global';
-import { sendTelemetryEvent } from '../../telemetry';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
+import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider } from '../types';
-import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
+import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider.node';
 import { ILocalResourceUriConverter, WidgetScriptSource } from './types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 

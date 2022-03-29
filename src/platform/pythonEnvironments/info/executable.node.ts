@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python';
+import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python.node';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
 type ExecResult = {

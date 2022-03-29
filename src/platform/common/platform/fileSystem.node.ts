@@ -4,10 +4,10 @@ import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
-import { traceError } from '../logger';
-import { createDirNotEmptyError, isFileNotFoundError } from './errors';
-import { convertFileType, convertStat, getHashString } from './fileSystemUtils';
-import { FileSystemPathUtils } from './fs-paths';
+import { traceError } from '../logger.node';
+import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
+import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
+import { FileSystemPathUtils } from './fs-paths.node';
 import { FileType, IFileSystem, IFileSystemPathUtils, TemporaryFile } from './types';
 
 const ENCODING = 'utf8';
