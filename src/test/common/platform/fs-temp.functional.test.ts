@@ -5,7 +5,7 @@
 
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
-import { TemporaryFileSystem } from '../../../platform/common/platform/fs-temp';
+import { TemporaryFileSystem } from '../../../platform/common/platform/fs-temp.node';
 import { TemporaryFile } from '../../../platform/common/platform/types';
 import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
 

@@ -10,17 +10,17 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
-import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types';
 import { IConfigurationService } from '../../../platform/common/types';
-import { ServiceContainer } from '../../../platform/ioc/container';
+import { ServiceContainer } from '../../../platform/ioc/container.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
-import * as fileUtils from '../../../platform/common/platform/fileUtils';
-import { JupyterSettings } from '../../../platform/common/configSettings';
-import { PoetryInstaller } from '../../../kernels/installer/poetryInstaller';
-import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller';
+import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
+import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { PoetryInstaller } from '../../../kernels/installer/poetryInstaller.node';
+import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../kernels/installer/types';
 
 suite('Module Installer - Poetry', () => {

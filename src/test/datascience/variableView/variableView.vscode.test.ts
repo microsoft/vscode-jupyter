@@ -20,11 +20,11 @@ import {
 import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
-import { traceInfo } from '../../../platform/common/logger';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { Commands } from '../../../platform/common/constants';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { Commands } from '../../../platform/common/constants.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 
 suite('DataScience - VariableView', function () {

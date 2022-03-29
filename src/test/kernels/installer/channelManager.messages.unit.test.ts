@@ -7,12 +7,12 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { ServiceContainer } from '../../../platform/ioc/container';
-import { ServiceManager } from '../../../platform/ioc/serviceManager';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { ServiceContainer } from '../../../platform/ioc/container.node';
+import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { InstallationChannelManager } from '../../../kernels/installer/channelManager';
+import { InstallationChannelManager } from '../../../kernels/installer/channelManager.node';
 import { IModuleInstaller, Product } from '../../../kernels/installer/types';
 
 const info: PythonEnvironment = {

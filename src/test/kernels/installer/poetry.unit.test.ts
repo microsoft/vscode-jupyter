@@ -7,8 +7,8 @@ import * as sinon from 'sinon';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import { ShellOptions, ExecutionResult } from '../../../platform/common/process/types';
 import * as platformApis from '../../../platform/common/utils/platform';
-import * as fileUtils from '../../../platform/common/platform/fileUtils';
-import { isPoetryEnvironment, Poetry } from '../../../kernels/installer/poetry';
+import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
+import { isPoetryEnvironment, Poetry } from '../../../kernels/installer/poetry.node';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
 const project1 = path.join(testPoetryDir, 'project1');

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EOL } from 'os';
 import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
 import { Resource } from '../common/types';
 
@@ -32,7 +31,7 @@ export class WrappedError extends BaseError {
         if (originalException) {
             // Retain call stack that trapped the error and rethrows this error.
             // Also retain the call stack of the original error.
-            this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
+            this.stack = `${new Error('').stack}\n\n${originalException.stack}`;
         }
     }
 

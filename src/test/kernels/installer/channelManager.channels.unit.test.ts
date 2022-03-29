@@ -6,11 +6,11 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { ServiceContainer } from '../../../platform/ioc/container';
-import { ServiceManager } from '../../../platform/ioc/serviceManager';
+import { ServiceContainer } from '../../../platform/ioc/container.node';
+import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { InstallationChannelManager } from '../../../kernels/installer/channelManager';
+import { InstallationChannelManager } from '../../../kernels/installer/channelManager.node';
 import { Product, IModuleInstaller } from '../../../kernels/installer/types';
 
 suite('Installation - installation channels', () => {

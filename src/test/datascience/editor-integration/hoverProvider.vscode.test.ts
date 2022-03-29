@@ -14,14 +14,14 @@ import {
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
-import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IJupyterVariables } from '../../../kernels/variables/types';
-import { Identifiers } from '../../../platform/common/constants';
+import { Identifiers } from '../../../platform/common/constants.node';
 
 suite('Hover provider', async () => {
     const file = path.join(

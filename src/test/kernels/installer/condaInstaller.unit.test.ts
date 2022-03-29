@@ -5,15 +5,15 @@
 
 import * as assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
-import { JupyterSettings } from '../../../platform/common/configSettings';
-import { ConfigurationService } from '../../../platform/common/configuration/service';
-import { CondaService } from '../../../platform/common/process/condaService';
+import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IConfigurationService } from '../../../platform/common/types';
-import { ServiceContainer } from '../../../platform/ioc/container';
+import { ServiceContainer } from '../../../platform/ioc/container.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { CondaInstaller } from '../../../kernels/installer/condaInstaller';
-import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller';
+import { CondaInstaller } from '../../../kernels/installer/condaInstaller.node';
+import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../kernels/installer/types';
 
 suite('Common - Conda Installer', () => {

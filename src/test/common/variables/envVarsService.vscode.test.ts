@@ -8,8 +8,8 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
-import { FileSystem } from '../../../platform/common/platform/fileSystem';
-import { EnvironmentVariablesService } from '../../../platform/common/variables/environment';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
 import { IEnvironmentVariablesService } from '../../../platform/common/variables/types';
 
 use(chaiAsPromised);

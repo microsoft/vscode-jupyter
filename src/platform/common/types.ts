@@ -7,12 +7,11 @@ import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { BannerType } from './dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
-import { Experiments } from './experiments/groups';
 import { ICommandManager } from './application/types';
+import { Experiments } from './experiments/groups';
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsPreRelease = Symbol('IsPreRelease');
@@ -34,6 +33,11 @@ export interface IPersistentState<T> {
 export type ReadWrite<T> = {
     -readonly [P in keyof T]: T[P];
 };
+
+export enum BannerType {
+    InsidersNotebookSurvey,
+    ExperimentNotebookSurvey
+}
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 

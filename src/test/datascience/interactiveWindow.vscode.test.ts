@@ -7,10 +7,10 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { traceInfo, traceInfoIfCI } from '../../platform/common/logger';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IDisposable } from '../../platform/common/types';
-import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { IKernelProvider } from '../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
 import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
@@ -32,7 +32,7 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
-import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
+import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 

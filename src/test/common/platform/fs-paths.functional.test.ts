@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
-import { Executables, FileSystemPaths, FileSystemPathUtils } from '../../../platform/common/platform/fs-paths';
+import { Executables, FileSystemPaths, FileSystemPathUtils } from '../../../platform/common/platform/fs-paths.node';
 import { WINDOWS as IS_WINDOWS } from './utils';
 
 suite('FileSystem - Paths', () => {

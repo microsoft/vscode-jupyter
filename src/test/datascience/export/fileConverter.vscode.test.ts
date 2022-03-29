@@ -15,12 +15,12 @@ import {
     IExtensions,
     IWatchableJupyterSettings
 } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
-import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder';
-import { ExportUtil } from '../../../platform/export/exportUtil';
-import { FileConverter } from '../../../platform/export/fileConverter';
+import { ExportFileOpener } from '../../../platform/export/exportFileOpener.node';
+import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
+import { ExportUtil } from '../../../platform/export/exportUtil.node';
+import { FileConverter } from '../../../platform/export/fileConverter.node';
 import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../platform/export/types';
-import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
 
 suite('DataScience - File Converter', () => {
     let fileConverter: FileConverter;

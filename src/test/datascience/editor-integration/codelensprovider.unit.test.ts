@@ -14,7 +14,7 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
+import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/types';
 import { IDebugLocationTracker } from '../../../platform/debugger/types';

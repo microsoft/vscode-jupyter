@@ -4,10 +4,7 @@
 
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { IEventNamePropertyMapping } from '../telemetry/index';
-import { EventName } from './constants';
 
-export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EXTENSION_LOAD];
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {}
 

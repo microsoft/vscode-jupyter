@@ -33,12 +33,12 @@ import {
     Diagnostic
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { createDeferred } from '../../../platform/common/utils/async.node';
+import { swallowExceptions } from '../../../platform/common/utils/misc.node';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
@@ -47,14 +47,15 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
-import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
-import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
-import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService.node';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController.node';
+import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater.node';
+import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers.node';
 import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
-import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
+import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager.node';
+import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -190,7 +191,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../../../platform/common/configSettings');
+        const configSettings = await import('../../../platform/common/configSettings.node');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }
@@ -339,7 +340,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     }
 
     // We don't have one, try to find the preferred one
-    let preferred: VSCodeNotebookController | undefined;
+    let preferred: IVSCodeNotebookController | undefined;
 
     // Wait for one of them to have affinity as the preferred (this may not happen)
     try {

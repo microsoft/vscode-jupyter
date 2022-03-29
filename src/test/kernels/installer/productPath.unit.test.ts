@@ -8,13 +8,13 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Memento, Uri } from 'vscode';
-import '../../../platform/common/extensions';
+import '../../../platform/common/extensions.node';
 import { IConfigurationService, IOutputChannel } from '../../../platform/common/types';
-import { InterpreterPackages } from '../../../telemetry/interpreterPackages';
+import { InterpreterPackages } from '../../../telemetry/interpreterPackages.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { ProductInstaller } from '../../../kernels/installer/productInstaller';
-import { BaseProductPathsService } from '../../../kernels/installer/productPath';
-import { ProductService } from '../../../kernels/installer/productService';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
+import { BaseProductPathsService } from '../../../kernels/installer/productPath.node';
+import { ProductService } from '../../../kernels/installer/productService.node';
 import { Product, ProductType, IInstaller, IProductService } from '../../../kernels/installer/types';
 import { getNamesAndValues } from '../../../test/utils/enum';
 

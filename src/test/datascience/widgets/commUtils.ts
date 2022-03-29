@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo } from '../../../platform/common/logger';
+import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { traceInfo } from '../../../platform/common/logger.node';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { createDeferred } from '../../../platform/common/utils/async.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 
 export function initializeWidgetComms(serviceContainer: IServiceContainer): Utils {

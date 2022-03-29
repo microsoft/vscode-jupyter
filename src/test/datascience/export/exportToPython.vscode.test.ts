@@ -7,7 +7,7 @@ import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder';
+import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { INbConvertExport, ExportFormat } from '../../../platform/export/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';

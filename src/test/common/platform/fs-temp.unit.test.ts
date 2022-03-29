@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { TemporaryFileSystem } from '../../../platform/common/platform/fs-temp';
+import { TemporaryFileSystem } from '../../../platform/common/platform/fs-temp.node';
 
 interface IDeps {
     // tmp module

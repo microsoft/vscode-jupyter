@@ -17,7 +17,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/extension.ts'
+        extension: './src/extension.node.ts'
     },
     devtool: 'source-map',
     node: {
@@ -133,7 +133,7 @@ const config = {
         }
     },
     output: {
-        filename: '[name].js',
+        filename: '[name].node.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'

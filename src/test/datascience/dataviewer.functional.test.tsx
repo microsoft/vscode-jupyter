@@ -8,7 +8,7 @@ suite('Dummy1a', () => {
     });
 });
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// import '../../platform/common/extensions';
+// import '../../platform/common/extensions.node';
 
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import * as assert from 'assert';

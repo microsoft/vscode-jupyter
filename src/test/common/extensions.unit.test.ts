@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import '../../platform/common/extensions';
+import '../../platform/common/extensions.node';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('String Extensions', () => {

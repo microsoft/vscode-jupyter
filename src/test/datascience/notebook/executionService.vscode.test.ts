@@ -10,9 +10,9 @@ import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
-import { Common } from '../../../platform/common/utils/localize';
+import { Common } from '../../../platform/common/utils/localize.node';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger';
+import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -45,13 +45,13 @@ import {
     waitForCellExecutionToComplete
 } from './helper';
 import { openNotebook } from '../helpers';
-import { noop } from '../../../platform/common/utils/misc';
-import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { ProductNames } from '../../../kernels/installer/productNames';
+import { noop } from '../../../platform/common/utils/misc.node';
+import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;

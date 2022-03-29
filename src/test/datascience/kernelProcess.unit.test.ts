@@ -7,7 +7,7 @@ import * as os from 'os';
 import { assert } from 'chai';
 import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
-import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess';
+import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
 import {
     IProcessService,
     IProcessServiceFactory,
@@ -23,15 +23,15 @@ import {
 } from '../../kernels/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService';
+import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';
 import { CancellationTokenSource } from 'vscode';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { noop } from '../core';
 import { Observable, Subject } from 'rxjs';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
-import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon';
+import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;

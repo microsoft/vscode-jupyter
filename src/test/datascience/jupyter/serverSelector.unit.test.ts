@@ -6,24 +6,24 @@ import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import * as os from 'os';
 import { QuickPickItem } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { ClipboardService } from '../../../platform/common/application/clipboard';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ClipboardService } from '../../../platform/common/application/clipboard.node';
 import { IClipboard } from '../../../platform/common/application/types';
-import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IJupyterSettings } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
+import { DataScience } from '../../../platform/common/utils/localize.node';
+import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput.node';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
-import { CryptoUtils } from '../../../platform/common/crypto';
-import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
+import { CryptoUtils } from '../../../platform/common/crypto.node';
+import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
-import { Settings } from '../../../platform/common/constants';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration.node';
+import { Settings } from '../../../platform/common/constants.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {

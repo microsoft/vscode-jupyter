@@ -3,8 +3,8 @@
 
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
 import { IJupyterKernelSpec } from '../../../kernels/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 suite('Notebook Controller Manager', () => {

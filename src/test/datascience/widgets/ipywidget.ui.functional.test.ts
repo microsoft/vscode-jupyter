@@ -17,7 +17,7 @@ suite('Dummy14', () => {
 // import * as path from 'path';
 // import * as sinon from 'sinon';
 // import { Disposable } from 'vscode';
-// import { traceInfo } from '../../../platform/common/logger';
+// import { traceInfo } from '../../../platform/common/logger.node';
 // import { sleep } from '../../../platform/common/utils/async';
 // import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 // import { retryIfFail as retryIfFailOriginal } from '../../common';

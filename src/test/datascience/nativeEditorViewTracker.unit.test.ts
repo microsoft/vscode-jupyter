@@ -5,7 +5,7 @@
 // import { expect } from 'chai';
 // import { anything, instance, mock, when } from 'ts-mockito';
 // import { EventEmitter, Memento, Uri } from 'vscode';
-// import { NotebookModelChange } from '../../platform/messageTypes';
+// import { NotebookModelChange } from '../../platform/messageTypes.node';
 // import { NativeEditor } from '../../platform/datascience/interactive-ipynb/nativeEditor';
 // import { NativeEditorViewTracker } from '../../platform/datascience/interactive-ipynb/nativeEditorViewTracker';
 // import { NativeEditorProvider } from '../../notebooksStorage/nativeEditorProvider';

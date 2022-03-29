@@ -4,16 +4,16 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { BufferDecoder } from '../../../platform/common/process/decoder';
-import { ProcessServiceFactory } from '../../../platform/common/process/processFactory';
-import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory';
-import { registerTypes } from '../../../platform/common/process/serviceRegistry';
+import { BufferDecoder } from '../../../platform/common/process/decoder.node';
+import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
+import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
+import { registerTypes } from '../../../platform/common/process/serviceRegistry.node';
 import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory
 } from '../../../platform/common/process/types';
-import { ServiceManager } from '../../../platform/ioc/serviceManager';
+import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
 import { IServiceManager } from '../../../platform/ioc/types';
 
 suite('Common Process Service Registry', () => {

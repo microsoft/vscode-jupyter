@@ -3,10 +3,10 @@
 import { expect } from 'chai';
 import * as getFreePort from 'get-port';
 import * as net from 'net';
-import { SocketCallbackHandler } from '../../platform/common/net/socket/socketCallbackHandler';
-import { SocketServer } from '../../platform/common/net/socket/socketServer';
-import { SocketStream } from '../../platform/common/net/socket/SocketStream';
-import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { SocketCallbackHandler } from '../../platform/common/net/socket/socketCallbackHandler.node';
+import { SocketServer } from '../../platform/common/net/socket/socketServer.node';
+import { SocketStream } from '../../platform/common/net/socket/SocketStream.node';
+import { createDeferred, Deferred } from '../../platform/common/utils/async.node';
 
 const uint64be = require('uint64be');
 

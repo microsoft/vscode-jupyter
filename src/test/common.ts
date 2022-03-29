@@ -10,13 +10,13 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../platform/api';
+import { IExtensionApi } from '../platform/api.node';
 import { IProcessService } from '../platform/common/process/types';
 import { IDisposable, IJupyterSettings } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
-import { isCI } from '../platform/common/constants';
+import { isCI } from '../platform/common/constants.node';
 
 const StreamZip = require('node-stream-zip');
 
@@ -90,7 +90,7 @@ function getWorkspaceRoot() {
 }
 
 export function getExtensionSettings(resource: Uri | undefined): IJupyterSettings {
-    const pythonSettings = require('../platform/common/configSettings') as typeof import('../platform/common/configSettings');
+    const pythonSettings = require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings.node');
     return pythonSettings.JupyterSettings.getInstance(resource);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
@@ -187,8 +187,8 @@ export function getOSType(): OSType {
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../platform/common/process/decoder');
-    const proc = await import('../platform/common/process/proc');
+    const decoder = await import('../platform/common/process/decoder.node');
+    const proc = await import('../platform/common/process/proc.node');
 
     const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];

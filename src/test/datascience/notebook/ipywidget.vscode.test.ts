@@ -22,9 +22,9 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async.node';
 import { InteractiveWindowMessages } from '../../../platform/messageTypes';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator.node';
 import { INotebookCommunication } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

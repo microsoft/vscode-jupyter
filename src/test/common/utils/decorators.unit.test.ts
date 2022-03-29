@@ -5,8 +5,12 @@
 
 import { expect, use } from 'chai';
 import * as chaiPromise from 'chai-as-promised';
-import { clearCache } from '../../../platform/common/utils/cacheUtils';
-import { cache, makeDebounceAsyncDecorator, makeDebounceDecorator } from '../../../platform/common/utils/decorators';
+import { clearCache } from '../../../platform/common/utils/cacheUtils.node';
+import {
+    cache,
+    makeDebounceAsyncDecorator,
+    makeDebounceDecorator
+} from '../../../platform/common/utils/decorators.node';
 import { sleep } from '../../core';
 use(chaiPromise);
 

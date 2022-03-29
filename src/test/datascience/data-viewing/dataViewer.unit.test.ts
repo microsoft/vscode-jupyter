@@ -5,23 +5,23 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
 import {
     IApplicationShell,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
-import { JupyterSettings } from '../../../platform/common/configSettings';
-import { ConfigurationService } from '../../../platform/common/configuration/service';
+import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider.node';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
+import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
-import { CodeCssGenerator } from '../../../webviews/extension-side/codeCssGenerator';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
-import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { CodeCssGenerator } from '../../../webviews/extension-side/codeCssGenerator.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider.node';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
-import { ThemeFinder } from '../../../webviews/extension-side/themeFinder';
+import { ThemeFinder } from '../../../webviews/extension-side/themeFinder.node';
 import { ICodeCssGenerator, IThemeFinder } from '../../../webviews/extension-side/types';
 import { MockMemento } from '../../mocks/mementos';
 
