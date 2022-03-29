@@ -122,7 +122,6 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
     isSupported: boolean;
     connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
-        owner: Uri,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
@@ -880,7 +879,6 @@ export type GetServerOptions = {
  */
 export type NotebookCreationOptions = {
     resource: Resource;
-    owner: Uri;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;

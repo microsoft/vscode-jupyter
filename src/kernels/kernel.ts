@@ -210,10 +210,10 @@ export class Kernel implements IKernel {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
-            traceInfo(`Interrupt requested & currently restarting ${(this.resourceUri || this.id).toString()}`);
+            traceInfo(`Interrupt requested & currently restarting ${getDisplayPath(this.resourceUri || this.id)}`);
             await this.restarting.promise;
         }
-        traceInfo(`Interrupt requested ${(this.resourceUri || this.id).toString()}`);
+        traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.id)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(
             this._notebookPromise?.then((item) => item.session)
@@ -291,7 +291,6 @@ export class Kernel implements IKernel {
             await (this._notebookPromise
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start(new DisplayOptions(false)));
-            traceInfoIfCI(`Restarted ${getDisplayPath(this.id)}`);
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
@@ -314,11 +313,9 @@ export class Kernel implements IKernel {
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(this.notebook);
-        traceInfoIfCI(`Initialized after restart ${this.id}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
-        traceInfoIfCI(`Event fired after restart ${this.id}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -343,7 +340,6 @@ export class Kernel implements IKernel {
     }
     private async startNotebook(options: IDisplayOptions = new DisplayOptions(false)): Promise<INotebook> {
         this._startedAtLeastOnce = true;
-        traceInfoIfCI(`Start Notebook (options.disableUI=${options.disableUI}) for ${getDisplayPath(this.id)}.`);
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
         }
@@ -401,7 +397,6 @@ export class Kernel implements IKernel {
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
             const notebook = await this.notebookProvider.createNotebook({
-                owner: this.id,
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
@@ -484,14 +479,16 @@ export class Kernel implements IKernel {
             notebook.session.kernelSocket.subscribe(this._kernelSocket);
             notebook.session.onDidDispose(() => {
                 traceInfoIfCI(
-                    `Kernel got disposed as a result of notebook.onDisposed ${(this.resourceUri || this.id).toString()}`
+                    `Kernel got disposed as a result of notebook.onDisposed ${getDisplayPath(
+                        this.resourceUri || this.id
+                    )}`
                 );
                 // Ignore when notebook is disposed as a result of failed restarts.
                 if (!this._ignoreNotebookDisposedErrors) {
                     traceInfo(
-                        `Kernel got disposed as a result of notebook.onDisposed ${(
+                        `Kernel got disposed as a result of notebook.onDisposed ${getDisplayPath(
                             this.resourceUri || this.id
-                        ).toString()} & _ignoreNotebookDisposedErrors = false.`
+                        )} & _ignoreNotebookDisposedErrors = false.`
                     );
                     const isActiveNotebookDead = this.notebook === notebook;
 
@@ -646,11 +643,11 @@ export class Kernel implements IKernel {
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
-            traceInfoIfCI(`Initialize config for plots for ${(this.resourceUri || this.id).toString()}`);
+            traceInfoIfCI(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.id)}`);
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
-            traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.id).toString()}`);
+            traceInfo(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.id)}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             results.push(...matplotInit.splitLines({ trim: false }));
