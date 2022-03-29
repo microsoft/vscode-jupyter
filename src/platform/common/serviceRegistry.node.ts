@@ -54,7 +54,7 @@ import { LanguageInitializer } from '../../telemetry/languageInitializer.node';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
-import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost';
+import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
