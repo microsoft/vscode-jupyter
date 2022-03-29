@@ -188,10 +188,13 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
 
-        if (!jupyterLab.KernelMessage.isDisplayDataMsg(payload)) {
+        if (
+            !jupyterLab.KernelMessage.isDisplayDataMsg(payload) &&
+            !jupyterLab.KernelMessage.isExecuteResultMsg(payload)
+        ) {
             return;
         }
-        const displayMsg = payload as KernelMessage.IDisplayDataMsg;
+        const displayMsg = payload as KernelMessage.IDisplayDataMsg | KernelMessage.IExecuteResultMsg;
 
         if (displayMsg.content && displayMsg.content.data && displayMsg.content.data[WIDGET_MIMETYPE]) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
