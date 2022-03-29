@@ -1,3 +1,4 @@
+// Based this logic on this file here: https://github.com/import-js/eslint-plugin-import/blob/main/src/rules/no-nodejs-modules.js
 const importType = require('eslint-plugin-import/lib/core/importType');
 const moduleVisitor = require('eslint-module-utils/moduleVisitor');
 const path = require('path');
