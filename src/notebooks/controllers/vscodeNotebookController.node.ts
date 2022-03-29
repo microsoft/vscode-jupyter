@@ -452,7 +452,7 @@ export class VSCodeNotebookController implements Disposable {
         this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
-        let context: 'start' | 'execution' = 'start';
+        let currentContext: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
         let controller = this.controller;
         try {
@@ -462,7 +462,7 @@ export class VSCodeNotebookController implements Disposable {
                 controller = kernel.controller;
                 this.startCellExecutionIfNecessary(cell, kernel.controller);
             }
-            context = 'execution';
+            currentContext = 'execution';
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
@@ -476,7 +476,7 @@ export class VSCodeNotebookController implements Disposable {
             displayErrorsInCell(
                 cell,
                 controller,
-                await errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
                 isCancelled
             );
             return NotebookCellExecutionState.Idle;

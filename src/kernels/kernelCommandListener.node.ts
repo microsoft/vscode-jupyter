@@ -168,7 +168,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     }
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
-    private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
+    private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: IKernel) {
         const notebook = getAssociatedNotebookDocument(kernel);
         if (!notebook) {
             throw new Error('Unable to start a kernel that is not attached to a notebook document');
@@ -190,7 +190,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 await wrapKernelMethod(
                     controller.controller,
                     controller.connection,
-                    context,
+                    currentContext,
                     this.serviceContainer,
                     kernel.resourceUri,
                     notebook,
@@ -202,7 +202,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     displayErrorsInCell(
                         currentCell,
                         kernel.controller,
-                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
                         false
                     );
                 } else {

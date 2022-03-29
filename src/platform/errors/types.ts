@@ -127,21 +127,25 @@ export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     /**
      * Handles the errors and if necessary displays an error message.
-     * The value of `context` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
-     * Thus based on the context the error message would be different.
      */
     handleError(err: Error): Promise<void>;
     /**
      * Handles errors specific to kernels.
+     * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
+     * Thus based on the context the error message would be different.
      */
     handleKernelError(
         err: Error,
-        context: 'start' | 'restart' | 'interrupt' | 'execution',
+        errorContext: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse>;
+    /**
+     * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
+     * Thus based on the context the error message would be different.
+     */
     getErrorMessageForDisplayInCell(
         err: Error,
-        context: 'start' | 'restart' | 'interrupt' | 'execution'
+        errorContext: 'start' | 'restart' | 'interrupt' | 'execution'
     ): Promise<string>;
 }

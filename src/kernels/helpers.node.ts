@@ -1584,7 +1584,7 @@ export async function notifyAndRestartDeadKernel(
 export async function handleKernelError(
     serviceContainer: IServiceContainer,
     error: Error,
-    context: 'start' | 'interrupt' | 'restart' | 'execution',
+    errorContext: 'start' | 'interrupt' | 'restart' | 'execution',
     resource: Resource,
     kernel: IKernel,
     controller: NotebookController,
@@ -1593,7 +1593,7 @@ export async function handleKernelError(
     const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
-    if (metadata.interpreter && context === 'start') {
+    if (metadata.interpreter && errorContext === 'start') {
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
@@ -1605,7 +1605,7 @@ export async function handleKernelError(
     // Send telemetry for handling the error (if raw)
     const isLocal = isLocalConnection(metadata);
     const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
-    if (rawLocalKernel && context === 'start') {
+    if (rawLocalKernel && errorContext === 'start') {
         sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
             reason: handleResult
         });
@@ -1636,8 +1636,8 @@ export async function handleKernelError(
     return { controller, metadata };
 }
 
-function convertContextToFunction(context: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
-    switch (context) {
+function convertContextToFunction(currentContext: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
+    switch (currentContext) {
         case 'start':
             return (k: IKernel) => k.start(options);
 
@@ -1795,7 +1795,7 @@ export async function wrapKernelMethodImpl(
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     let kernel: IKernel | undefined;
     let currentMethod = convertContextToFunction(initialContext, options);
-    let context = initialContext;
+    let currentContext = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook.uri, {
@@ -1818,7 +1818,7 @@ export async function wrapKernelMethodImpl(
                     deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
                 };
             } else {
-                onAction(context, kernel);
+                onAction(currentContext, kernel);
                 await currentMethod(kernel);
 
                 // If the kernel is dead, ask the user if they want to restart
@@ -1828,7 +1828,7 @@ export async function wrapKernelMethodImpl(
             }
         } catch (error) {
             traceWarning(
-                `Error occurred while trying to ${context} the kernel, options.disableUI=${options.disableUI}`,
+                `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,
                 error
             );
             if (options.disableUI) {
@@ -1837,7 +1837,7 @@ export async function wrapKernelMethodImpl(
             const result = await handleKernelError(
                 serviceContainer,
                 error,
-                context,
+                currentContext,
                 resource,
                 kernel,
                 controller,
@@ -1848,7 +1848,7 @@ export async function wrapKernelMethodImpl(
             // When we wrap around, update the current method to start. This
             // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
             currentMethod = (k) => k.start(options);
-            context = 'start';
+            currentContext = 'start';
 
             // Since an error occurred, we have to try again (controller may have switched so we have to pick a new kernel)
             kernel = undefined;
