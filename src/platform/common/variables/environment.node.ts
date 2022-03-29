@@ -7,7 +7,7 @@ import { sendTelemetryEvent } from '../../../telemetry/index.node';
 import { EventName } from '../../../telemetry/constants';
 import { traceError } from '../logger.node';
 import { isFileNotFoundError } from '../platform/errors.node';
-import { IFileSystem } from '../platform/types';
+import { IFileSystem } from '../platform/types.node';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()

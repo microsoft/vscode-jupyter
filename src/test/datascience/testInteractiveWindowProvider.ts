@@ -5,7 +5,7 @@
 // import * as uuid from 'uuid/v4';
 // import { Memento, Uri } from 'vscode';
 // import * as types from '../../platform/common/application/types';
-// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import {
 //     GLOBAL_MEMENTO,
 //     IAsyncDisposableRegistry,

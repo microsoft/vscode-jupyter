@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { FileSystem } from '../../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../../platform/common/platform/types';
+import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';

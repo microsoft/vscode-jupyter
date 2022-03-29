@@ -10,7 +10,7 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { Common, DataScience } from '../../../platform/common/utils/localize.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';

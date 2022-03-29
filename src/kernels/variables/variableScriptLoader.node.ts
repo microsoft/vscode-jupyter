@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IJupyterVariable } from './types';
 

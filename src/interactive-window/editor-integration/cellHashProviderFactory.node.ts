@@ -3,7 +3,7 @@
 
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { IDocumentManager, IDebugService } from '../../platform/common/application/types';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';

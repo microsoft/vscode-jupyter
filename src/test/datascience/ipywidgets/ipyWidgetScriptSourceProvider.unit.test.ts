@@ -11,7 +11,7 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { HttpClient } from '../../../platform/common/net/httpClient.node';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize.node';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';

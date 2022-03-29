@@ -20,7 +20,7 @@ import {
     ShellOptions,
     SpawnOptions,
     StdErrError
-} from './types';
+} from './types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class ProcessService extends EventEmitter implements IProcessService {

@@ -2118,6 +2118,7 @@
         "decompress-response": "^4.2.0",
         "download": "^8.0.0",
         "encoding": "^0.1.13",
+        "events": "^3.3.0",
         "fast-deep-equal": "^2.0.1",
         "font-awesome": "^4.7.0",
         "fs-extra": "^4.0.3",

@@ -11,7 +11,7 @@ import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../platform/api.node';
-import { IProcessService } from '../platform/common/process/types';
+import { IProcessService } from '../platform/common/process/types.node';
 import { IDisposable, IJupyterSettings } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';

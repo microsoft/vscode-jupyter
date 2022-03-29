@@ -6,7 +6,7 @@ import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from 
 import * as path from 'path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts/index.node';
-import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IServiceContainer } from '../../platform/ioc/types';

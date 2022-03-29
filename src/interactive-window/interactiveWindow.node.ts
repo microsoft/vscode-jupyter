@@ -27,7 +27,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platfor
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants.node';
 import '../platform/common/extensions.node';
 import { traceInfoIfCI } from '../platform/common/logger.node';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
 import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';

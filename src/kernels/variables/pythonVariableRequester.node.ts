@@ -5,7 +5,7 @@ import * as path from 'path';
 import { CancellationToken, NotebookDocument } from 'vscode';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 import { traceError } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize.node';
 import { stripAnsi } from '../../platform/common/utils/regexp.node';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError.node';

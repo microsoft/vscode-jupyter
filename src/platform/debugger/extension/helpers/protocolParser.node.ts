@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { Readable } from 'stream';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IProtocolParser } from '../types';
+import { IProtocolParser } from '../types.node';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 

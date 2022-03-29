@@ -9,7 +9,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants.node';
 import { traceError } from '../../common/logger.node';
 import * as internalScripts from '../../common/process/internal/scripts/index.node';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { IProcessServiceFactory } from '../../common/process/types.node';
 import { createDeferred } from '../../common/utils/async';
 import { IInterpreterService } from '../../interpreter/contracts.node';
 import { IServiceContainer } from '../../ioc/types';

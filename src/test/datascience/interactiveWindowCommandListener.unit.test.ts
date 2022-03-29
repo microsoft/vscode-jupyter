@@ -13,7 +13,7 @@ export const __ = '';
 // import { IApplicationShell } from '../../platform/common/application/types';
 // import { ConfigurationService } from '../../platform/common/configuration/service';
 // import { FileSystem } from '../../platform/common/platform/fileSystem';
-// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import { IConfigurationService, IDisposable } from '../../platform/common/types';
 // import * as localize from '../../platform/common/utils/localize';
 // import { generateCells } from '../../platform/datascience/cellFactory';

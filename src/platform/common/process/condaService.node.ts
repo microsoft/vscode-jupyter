@@ -7,11 +7,12 @@ import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/trace.node';
 import { traceDecorators, traceError, traceVerbose } from '../logger.node';
-import { IFileSystem, IPlatformService } from '../platform/types';
+import { IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from 'path';
 import { swallowExceptions } from '../utils/decorators.node';
+import { IFileSystem } from '../platform/types.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 

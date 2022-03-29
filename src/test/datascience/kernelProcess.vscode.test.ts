@@ -13,10 +13,10 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { LocalKernelSpecConnectionMetadata } from '../../platform/../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';

@@ -2,8 +2,8 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../../kernels/jupyter/types';
-import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
+import { IFileSystem } from '../common/platform/types.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types.node';
 
 import { reportAction } from '../progress/decorator.node';
 import { ReportableAction } from '../progress/types';

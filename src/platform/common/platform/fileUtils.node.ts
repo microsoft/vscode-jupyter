@@ -5,7 +5,7 @@ import { IDisposable } from '@fluentui/react';
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types';
+import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types.node';
 import { IConfigurationService } from '../types';
 import { chain, iterable } from '../utils/async';
 import { IServiceContainer } from '../../ioc/types';

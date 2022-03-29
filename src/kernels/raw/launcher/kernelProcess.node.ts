@@ -28,13 +28,13 @@ import {
 } from '../../../platform/errors/errorUtils.node';
 import { BaseError } from '../../../platform/errors/types';
 import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult,
     IProcessService
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';

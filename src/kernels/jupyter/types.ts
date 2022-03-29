@@ -7,7 +7,7 @@ import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
-import { SpawnOptions, ExecutionResult, ObservableExecutionResult } from '../../platform/common/process/types';
+import { SpawnOptions, ExecutionResult, ObservableExecutionResult } from '../../platform/common/process/types.node';
 import { IAsyncDisposable, ICell, IDisplayOptions, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

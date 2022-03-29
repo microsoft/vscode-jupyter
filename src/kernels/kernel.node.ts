@@ -21,8 +21,8 @@ import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/common/logger.node';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../platform/common/platform/types';
-import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
+import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     Resource,
     IDisposableRegistry,
@@ -50,6 +50,7 @@ import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayId
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
+    isLocalHostConnection,
     isPythonKernelConnection,
     sendTelemetryForPythonKernelExecutable
 } from './helpers.node';
@@ -62,7 +63,6 @@ import {
     INotebookProviderConnection,
     InterruptResult,
     isLocalConnection,
-    isLocalHostConnection,
     KernelConnectionMetadata,
     KernelSocketInformation,
     NotebookCellRunState

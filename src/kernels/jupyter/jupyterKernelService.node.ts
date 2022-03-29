@@ -11,7 +11,7 @@ import { Cancellation } from '../../platform/common/cancellation.node';
 import '../../platform/common/extensions.node';
 import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger.node';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc.node';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';

@@ -8,8 +8,8 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
-import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
     IDisposableRegistry,
     IOutputChannel,

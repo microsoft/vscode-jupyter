@@ -11,7 +11,7 @@ import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { traceDecorators, traceError, traceInfo } from '../logger.node';
 import { getDisplayPath } from '../platform/fs-paths.node';
-import { IFileSystem } from '../platform/types';
+import { IFileSystem } from '../platform/types.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';
 import { PythonDaemonFactory } from './pythonDaemonFactory.node';
@@ -30,7 +30,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
     isDaemonPoolCreationOption
-} from './types';
+} from './types.node';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';

@@ -18,7 +18,7 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../platform/common/application/types';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators.node';

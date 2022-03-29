@@ -18,7 +18,11 @@ import { IDisposable, IDisposableRegistry } from '../types';
 import { createDeferred } from '../utils/async';
 import { BasePythonDaemon } from './baseDaemon.node';
 import { PythonDaemonExecutionService } from './pythonDaemon.node';
-import { DaemonExecutionFactoryCreationOptions, IPythonDaemonExecutionService, IPythonExecutionService } from './types';
+import {
+    DaemonExecutionFactoryCreationOptions,
+    IPythonDaemonExecutionService,
+    IPythonExecutionService
+} from './types.node';
 
 export class PythonDaemonFactory {
     protected readonly envVariables: NodeJS.ProcessEnv;

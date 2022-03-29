@@ -8,7 +8,7 @@
 // import * as sinon from 'sinon';
 // import { commands, ConfigurationTarget, Uri } from 'vscode';
 // import { IWorkspaceService } from '../../platform/common/application/types';
-// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import { IPythonToolExecutionService } from '../../platform/common/process/types';
 // import { IDisposable, Product } from '../../platform/common/types';
 // import { INotebookEditorProvider } from '../../platform/datascience/types';

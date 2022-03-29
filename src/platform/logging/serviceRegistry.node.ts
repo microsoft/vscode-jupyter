@@ -4,7 +4,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { WorkspaceService } from '../common/application/workspace.node';
 import { ConfigurationService } from '../common/configuration/service.node';
 import { FileSystem } from '../common/platform/fileSystem.node';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types.node';
 import { IConfigurationService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 

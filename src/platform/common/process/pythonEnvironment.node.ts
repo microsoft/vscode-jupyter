@@ -1,4 +1,4 @@
-import { IFileSystem } from '../platform/types';
+import { IFileSystem } from '../platform/types.node';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -8,7 +8,7 @@ import { getExecutablePath } from '../../pythonEnvironments/info/executable.node
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
 import { traceError, traceInfo } from '../logger.node';
 import * as internalPython from './internal/python.node';
-import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
+import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths.node';

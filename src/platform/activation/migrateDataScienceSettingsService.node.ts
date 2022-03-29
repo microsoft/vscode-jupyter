@@ -10,7 +10,7 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
 import { Settings } from '../common/constants.node';
 import { traceError } from '../common/logger.node';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types.node';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators.node';
 import { traceDecorators } from '../logging/index.node';

@@ -16,7 +16,6 @@ import type {
     Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as url from 'url';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
 import { WebSocketData } from '../platform/api/extension';
@@ -115,14 +114,6 @@ export function isLocalConnection(
     return (
         kernelConnection.kind === 'startUsingLocalKernelSpec' || kernelConnection.kind === 'startUsingPythonInterpreter'
     );
-}
-
-export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
-    if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
-        const parsed = new url.URL(kernelConnection.baseUrl);
-        return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
-    }
-    return false;
 }
 
 export interface IKernel extends IAsyncDisposable {

@@ -5,7 +5,8 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
-import { IPlatformService, IFileSystem } from '../../../platform/common/platform/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     IPathUtils,
     IDisposableRegistry,

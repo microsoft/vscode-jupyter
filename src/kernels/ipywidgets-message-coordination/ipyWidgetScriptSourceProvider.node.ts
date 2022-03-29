@@ -7,8 +7,8 @@ import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import '../../platform/common/extensions.node';
 import { traceError } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
-import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
     WidgetCDNs,
     IPersistentState,

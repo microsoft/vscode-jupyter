@@ -18,7 +18,7 @@ import { WorkspaceService } from '../../platform/common/application/workspace.no
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState.node';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { ProcessServiceFactory } from '../../platform/common/process/processFactory.node';
 import { PythonExecutionFactory } from '../../platform/common/process/pythonExecutionFactory.node';
 import {
@@ -30,7 +30,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,

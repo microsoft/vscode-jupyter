@@ -6,7 +6,7 @@ import '../../../../platform/common/extensions.node';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../../platform/common/logger.node';
-import { IFileSystem } from '../../../../platform/common/platform/types';
+import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import { IAsyncDisposable, IConfigurationService } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators.node';
 import { calculateWorkingDirectory } from '../../../../platform/common/utils.node';

@@ -16,7 +16,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { PythonDaemonExecutionService } from '../../../platform/common/process/pythonDaemon.node';
 import { PythonDaemonExecutionServicePool } from '../../../platform/common/process/pythonDaemonPool.node';
-import { IProcessLogger, IPythonExecutionService, Output } from '../../../platform/common/process/types';
+import { IProcessLogger, IPythonExecutionService, Output } from '../../../platform/common/process/types.node';
 import { ReadWrite } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { InterpreterInformation, PythonEnvironment } from '../../../platform/pythonEnvironments/info';

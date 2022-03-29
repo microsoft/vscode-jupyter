@@ -22,7 +22,7 @@ import {
     Output,
     SpawnOptions,
     StdErrError
-} from './types';
+} from './types.node';
 
 export type ErrorResponse = { error?: string };
 export type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };

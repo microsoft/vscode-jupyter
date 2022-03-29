@@ -21,7 +21,7 @@ import { logValue } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError } from '../../platform/common/logger.node';
-import { IPythonExecutionFactory, IProcessServiceFactory } from '../../platform/common/process/types';
+import { IPythonExecutionFactory, IProcessServiceFactory } from '../../platform/common/process/types.node';
 import {
     IConfigurationService,
     IPersistentStateFactory,

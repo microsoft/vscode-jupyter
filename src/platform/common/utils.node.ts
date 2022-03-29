@@ -16,7 +16,7 @@ import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IWorkspaceService } from './application/types';
 import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants.node';
 import { traceError, traceInfo } from './logger.node';
-import { IFileSystem } from './platform/types';
+import { IFileSystem } from './platform/types.node';
 
 import { ICell, IConfigurationService, Resource } from './types';
 import { DataScience } from './utils/localize.node';

@@ -9,7 +9,7 @@ import { getLocString } from '../../webviews/webview-side/react-common/locReactS
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize.node';
 import { isUri } from '../../platform/common/utils/misc.node';

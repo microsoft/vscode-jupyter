@@ -8,7 +8,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import { IOutputChannel } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { Products } from '../../platform/common/utils/localize.node';

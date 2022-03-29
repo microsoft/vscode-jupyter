@@ -7,7 +7,7 @@ import * as tcpPortUsed from 'tcp-port-used';
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
-import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { PYTHON_PATH, sleep } from '../common';

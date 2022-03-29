@@ -11,7 +11,7 @@ import { IInstaller, Product, InstallerResponse } from '../../../kernels/install
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import { traceWarning } from '../../../platform/common/logger.node';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
 import { parseSemVer } from '../../../platform/common/utils.node';
 import { DataScience, Common } from '../../../platform/common/utils/localize.node';

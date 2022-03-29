@@ -21,7 +21,7 @@ import {
     ObservableExecutionResult,
     PooledDaemonExecutionFactoryCreationOptions,
     SpawnOptions
-} from './types';
+} from './types.node';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 

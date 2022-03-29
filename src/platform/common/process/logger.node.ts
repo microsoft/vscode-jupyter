@@ -8,7 +8,7 @@ import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants.nod
 import { traceInfo } from '../logger.node';
 import { IOutputChannel, IPathUtils } from '../types';
 import { Logging } from '../utils/localize.node';
-import { IProcessLogger, SpawnOptions } from './types';
+import { IProcessLogger, SpawnOptions } from './types.node';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {

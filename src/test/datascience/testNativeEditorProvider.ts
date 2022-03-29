@@ -7,7 +7,7 @@ export const __ = '';
 // import { CustomDocument, Uri, WebviewPanel } from 'vscode';
 
 // import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 // import { createDeferred, Deferred } from '../../platform/common/utils/async';
 // import { NativeEditor } from '../../platform/datascience/interactive-ipynb/nativeEditor';

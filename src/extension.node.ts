@@ -75,7 +75,7 @@ import { registerTypes as registerIntellisenseTypes } from './intellisense/servi
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants.node';
 import { getDisplayPath } from './platform/common/platform/fs-paths.node';
-import { IFileSystem } from './platform/common/platform/types';
+import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
 import { addOutputChannelLogging, setLoggingLevel } from './platform/logging/index.node';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';

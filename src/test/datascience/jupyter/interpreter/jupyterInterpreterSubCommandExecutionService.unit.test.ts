@@ -16,7 +16,7 @@ import {
     IPythonDaemonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../../../platform/common/process/types';
+} from '../../../../platform/common/process/types.node';
 import { DataScience } from '../../../../platform/common/utils/localize.node';
 import { noop } from '../../../../platform/common/utils/misc.node';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';

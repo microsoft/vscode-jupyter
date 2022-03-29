@@ -22,7 +22,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger.node';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IJupyterSession, IKernel } from '../../../kernels/types';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
@@ -41,6 +41,7 @@ import {
     isShortNamePath,
     shortNameMatchesLongName
 } from './helper.node';
+import { IFileSystem } from '../../common/platform/types.node';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request

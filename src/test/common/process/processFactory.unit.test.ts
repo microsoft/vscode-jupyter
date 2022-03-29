@@ -10,7 +10,7 @@ import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
-import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types';
+import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';

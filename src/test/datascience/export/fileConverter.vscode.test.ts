@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     IConfigurationService,
     IDisposable,

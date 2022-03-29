@@ -12,7 +12,7 @@ import {
     SpawnOptions,
     ObservableExecutionResult,
     IPythonDaemonExecutionService
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { noop } from '../../../platform/common/utils/misc.node';

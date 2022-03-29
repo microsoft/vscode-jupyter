@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators.node';
 import { noop } from '../../../platform/common/utils/misc.node';

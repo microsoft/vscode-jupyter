@@ -7,9 +7,9 @@ import '../extensions.node';
 import { inject, injectable, named, optional } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
-import { IFileSystem, IPlatformService } from '../platform/types';
+import { IPlatformService } from '../platform/types';
 import * as internalScripts from './internal/scripts/index.node';
-import { ExecutionResult, IProcessServiceFactory } from './types';
+import { ExecutionResult, IProcessServiceFactory } from './types.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../types';
 import { createDeferredFromPromise, sleep } from '../utils/async';
 import { OSType } from '../utils/platform';
@@ -36,6 +36,7 @@ import { testOnlyMethod } from '../utils/decorators.node';
 import { DataScience } from '../utils/localize.node';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter.node';
 import { Telemetry } from '../constants.node';
+import { IFileSystem } from '../platform/types.node';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;

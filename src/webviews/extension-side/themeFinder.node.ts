@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IExtensions } from '../../platform/common/types';
 import { IThemeFinder } from './types';
 

@@ -11,7 +11,7 @@ import { IExtensionSingleActivationService } from '../platform/activation/types'
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { Telemetry, JupyterDaemonModule } from '../platform/common/constants.node';
-import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types';
+import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types.node';
 import { IDisposableRegistry } from '../platform/common/types';
 import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators.node';
 import { sendTelemetryEvent } from '../telemetry/index.node';

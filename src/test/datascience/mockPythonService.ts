@@ -6,7 +6,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';

@@ -4,7 +4,7 @@ import * as path from 'path';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError } from '../../platform/common/logger.node';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize.node';
 import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer.node';
 

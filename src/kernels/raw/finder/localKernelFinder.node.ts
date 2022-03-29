@@ -18,7 +18,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
 import { traceInfo, traceError } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { isPythonNotebook } from '../../../notebooks/helpers.node';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';

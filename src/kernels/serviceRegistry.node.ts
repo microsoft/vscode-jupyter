@@ -12,7 +12,7 @@ import { JVSC_EXTENSION_ID } from '../platform/common/constants.node';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
-import { IProtocolParser } from '../platform/debugger/extension/types';
+import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry/index.node';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';

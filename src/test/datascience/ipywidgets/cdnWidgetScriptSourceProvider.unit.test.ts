@@ -11,7 +11,7 @@ import { Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';

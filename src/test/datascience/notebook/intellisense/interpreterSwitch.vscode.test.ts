@@ -24,7 +24,7 @@ import {
     defaultNotebookTestTimeout
 } from '../helper';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { IPythonExecutionFactory } from '../../../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

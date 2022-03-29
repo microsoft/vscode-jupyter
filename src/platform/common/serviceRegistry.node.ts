@@ -37,7 +37,7 @@ import { PersistentStateFactory } from './persistentState.node';
 import { IS_WINDOWS } from './platform/constants.node';
 import { PathUtils } from './platform/pathUtils.node';
 import { ProcessLogger } from './process/logger.node';
-import { IProcessLogger } from './process/types';
+import { IProcessLogger } from './process/types.node';
 import {
     IAsyncDisposableRegistry,
     IBrowserService,

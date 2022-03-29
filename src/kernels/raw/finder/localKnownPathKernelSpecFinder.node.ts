@@ -16,7 +16,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
 import { traceInfo, traceError } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
