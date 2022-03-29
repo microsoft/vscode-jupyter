@@ -54,6 +54,7 @@ import { LanguageInitializer } from '../../telemetry/languageInitializer.node';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
+import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -90,6 +91,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RunInDedicatedExtensionHostCommandHandler
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

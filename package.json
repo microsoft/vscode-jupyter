@@ -68,6 +68,7 @@
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onCommand:jupyter.clearSavedJupyterUris",
         "onCommand:jupyter.filterKernels",
+        "onCommand:jupyter.runInDedicatedExtensionHost",
         "onWalkthrough:jupyterWelcome",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive"
@@ -811,6 +812,11 @@
                 "command": "jupyter.interactive.copyCell",
                 "title": "%DataScience.interactiveCopyCell%",
                 "icon": "$(copy)",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.runInDedicatedExtensionHost",
+                "title": "%DataScience.runInDedicatedExtensionHost%",
                 "category": "Jupyter"
             }
         ],

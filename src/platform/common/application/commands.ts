@@ -86,6 +86,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['extension.open']: [string];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
     ['jupyter.reloadVSCode']: [string];
+    ['jupyter.runInDedicatedExtensionHost']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
