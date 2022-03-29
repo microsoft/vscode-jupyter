@@ -16,7 +16,7 @@ import {
     IDisposableRegistry,
     IConfigurationService
 } from '../platform/common/types';
-import { isUri, noop } from '../platform/common/utils/misc';
+import { noop } from '../platform/common/utils/misc';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { INotebookProvider, IStatusProvider } from '../platform/datascience/types';
@@ -45,11 +45,12 @@ export class KernelProvider implements IKernelProvider {
     public get kernels() {
         const kernels = new Set<IKernel>();
         this.notebook.notebookDocuments.forEach((item) => {
-            const kernel = this.get(item);
+            const kernel = this.get(item.uri);
             if (kernel) {
                 kernels.add(kernel);
             }
         });
+        Array.from(this.kernelsByUri.values()).forEach((item) => kernels.add(item.kernel));
         return Array.from(kernels);
     }
     constructor(
@@ -67,7 +68,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         this.asyncDisposables.push(this);
-        this.notebook.onDidCloseNotebookDocument(this.disposeOldKernel, this, disposables);
+        this.notebook.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e.uri), this, disposables);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -82,8 +83,8 @@ export class KernelProvider implements IKernelProvider {
         return this._onDidStartKernel.event;
     }
 
-    public get(owner: NotebookDocument | Uri): IKernel | undefined {
-        return this.getInternal(owner)?.kernel;
+    public get(uri: Uri): IKernel | undefined {
+        return this.getInternal(uri)?.kernel;
     }
     public async dispose() {
         traceInfoIfCI(`Disposing all kernels from kernel provider`);
@@ -97,17 +98,13 @@ export class KernelProvider implements IKernelProvider {
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel {
         const existingKernelInfo = this.getInternal(uri);
-        const notebook = workspace.notebookDocuments.find((nb) =>
-            isUri(uri) ? nb.uri.toString() === uri.toString() : nb === uri
-        );
+        const notebook = workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString());
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
-        const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
-        if (notebook) {
-            this.disposeOldKernel(notebook);
-        }
+        this.disposeOldKernel(uri);
 
+        const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
         const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new Kernel(
@@ -146,18 +143,16 @@ export class KernelProvider implements IKernelProvider {
         return kernel;
     }
     public getInternal(
-        owner: NotebookDocument | Uri
+        uri: Uri
     ):
         | {
               options: KernelOptions;
               kernel: IKernel;
           }
         | undefined {
-        const notebook = workspace.notebookDocuments.find((nb) =>
-            isUri(owner) ? nb.uri.toString() === owner.toString() : nb === owner
-        );
-        if (!notebook && isUri(owner)) {
-            return this.kernelsByUri.get(owner.toString());
+        const notebook = workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString());
+        if (!notebook) {
+            return this.kernelsByUri.get(uri.toString());
         }
         return notebook ? this.kernelsByNotebook.get(notebook) : undefined;
     }
@@ -184,19 +179,35 @@ export class KernelProvider implements IKernelProvider {
             this.disposables
         );
     }
-    private disposeOldKernel(notebook: NotebookDocument) {
-        traceInfoIfCI(
-            `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
-        );
-        const kernelToDispose = this.kernelsByNotebook.get(notebook);
-        if (kernelToDispose) {
-            this.pendingDisposables.add(kernelToDispose.kernel);
-            kernelToDispose.kernel
-                .dispose()
-                .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
-                .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
-                .catch(noop);
+    private disposeOldKernel(uri: Uri) {
+        const notebook = workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString());
+        if (notebook) {
+            traceInfoIfCI(
+                `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
+            );
+
+            const kernelToDispose = this.kernelsByNotebook.get(notebook);
+            if (kernelToDispose) {
+                this.pendingDisposables.add(kernelToDispose.kernel);
+                kernelToDispose.kernel
+                    .dispose()
+                    .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                    .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
+                    .catch(noop);
+            }
+            this.kernelsByNotebook.delete(notebook);
+        } else {
+            traceInfoIfCI(`Disposing kernel associated with ${getDisplayPath(uri)}`);
+            const kernelToDispose = this.kernelsByUri.get(uri.toString());
+            if (kernelToDispose) {
+                this.pendingDisposables.add(kernelToDispose.kernel);
+                kernelToDispose.kernel
+                    .dispose()
+                    .catch((ex) => traceWarning('Failed to dispose old kernel', ex))
+                    .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
+                    .catch(noop);
+            }
+            this.kernelsByUri.delete(uri.toString());
         }
-        this.kernelsByNotebook.delete(notebook);
     }
 }
