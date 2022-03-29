@@ -85,18 +85,17 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
-        document: vscode.NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
     ): Promise<INotebook> {
-        traceInfo(`Creating raw notebook for ${getDisplayPath(document.uri)}`);
+        traceInfo(`Creating raw notebook for ${getDisplayPath(resource)}`);
         const notebookPromise = createDeferred<INotebook>();
         this.trackDisposable(notebookPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceInfo(`Getting preferred kernel for ${getDisplayPath(document.uri)}`);
+        traceInfo(`Getting preferred kernel for ${getDisplayPath(resource)}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -110,7 +109,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                     });
                 }
             }
-            traceInfo(`Computing working directory ${getDisplayPath(document.uri)}`);
+            traceInfo(`Computing working directory ${getDisplayPath(resource)}`);
             const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -132,7 +131,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 trackKernelResourceInformation(resource, { kernelConnection });
             }
             traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(document.uri)} with connection ${kernelConnection.id}`
+                `Connecting to raw session for ${getDisplayPath(resource)} with connection ${kernelConnection.id}`
             );
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {

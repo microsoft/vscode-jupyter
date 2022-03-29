@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { Disposable, Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper';
 import {
     IKernelProvider,
@@ -105,28 +105,29 @@ class JupyterKernelService implements IExportedKernelService {
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
-    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; notebook: NotebookDocument }[]> {
+    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        return this.kernelProvider.kernels
+        const kernels: { metadata: KernelConnectionMetadata; uri: Uri }[] = [];
+        this.kernelProvider.kernels
             .filter((item) => item.startedAtLeastOnce)
-            .map((item) => {
-                return {
+            .forEach((item) => {
+                kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    notebook: item.notebookDocument
-                };
+                    uri: item.id
+                });
             });
+
+        return kernels;
     }
-    getKernel(
-        notebook: NotebookDocument
-    ): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
+    getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
-        const kernel = this.kernelProvider.get(notebook);
+        const kernel = this.kernelProvider.get(uri);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
@@ -135,23 +136,23 @@ class JupyterKernelService implements IExportedKernelService {
             };
         }
     }
-    async startKernel(spec: KernelConnectionMetadata, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+    async startKernel(spec: KernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'startKernel'
         });
-        return this.startOrConnect(spec, notebook);
+        return this.startOrConnect(spec, uri);
     }
-    async connect(spec: ActiveKernel, notebook: NotebookDocument): Promise<IKernelConnectionInfo> {
+    async connect(spec: ActiveKernel, uri: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'connect'
         });
-        return this.startOrConnect(spec, notebook);
+        return this.startOrConnect(spec, uri);
     }
     private async startOrConnect(
         spec: KernelConnectionMetadata | ActiveKernel,
-        notebook: NotebookDocument
+        uri: Uri
     ): Promise<IKernelConnectionInfo> {
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
@@ -164,10 +165,10 @@ class JupyterKernelService implements IExportedKernelService {
         if (!controller) {
             throw new Error('Not found');
         }
-        const kernel = await this.kernelProvider.getOrCreate(notebook, {
+        const kernel = await this.kernelProvider.getOrCreate(uri, {
             metadata,
             controller: controller.controller,
-            resourceUri: notebook.uri
+            resourceUri: uri
         });
         let wrappedConnection = JupyterKernelService.wrappedKernelConnections.get(kernel);
         if (wrappedConnection) {

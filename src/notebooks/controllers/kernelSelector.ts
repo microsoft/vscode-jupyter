@@ -6,9 +6,10 @@ import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
 import { Resource } from '../../platform/common/types';
 import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { getResourceType } from '../../platform/common/utils';
+import { workspace } from 'vscode';
 
 // TODO: This should probably move to a 'notebook' subsection
 
@@ -69,4 +70,12 @@ export function findNotebookEditor(
             : undefined;
 
     return targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+}
+
+export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
+    if (!kernel) {
+        return;
+    }
+
+    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.id.toString());
 }

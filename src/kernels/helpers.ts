@@ -1786,7 +1786,7 @@ export async function wrapKernelMethodImpl(
     let context = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
-        kernel = kernelProvider.getOrCreate(notebook, {
+        kernel = kernelProvider.getOrCreate(notebook.uri, {
             metadata,
             controller,
             resourceUri: resource

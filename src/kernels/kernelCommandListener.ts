@@ -26,6 +26,7 @@ import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -113,7 +114,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             return;
         }
 
-        const kernel = this.kernelProvider.get(document);
+        const kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
@@ -135,7 +136,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         }
 
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        const kernel = this.kernelProvider.get(document);
+        const kernel = this.kernelProvider.get(document.uri);
 
         if (kernel) {
             trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
@@ -167,6 +168,10 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
+        const notebook = getAssociatedNotebookDocument(kernel);
+        if (!notebook) {
+            throw new Error('Unable to start a kernel that is not attached to a notebook document');
+        }
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);
         if (pendingPromise) {
@@ -175,7 +180,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const promise = (async () => {
             // Get currently executing cell and controller
             const currentCell = kernel.pendingCells[0];
-            const controller = this.notebookControllerManager.getSelectedNotebookController(kernel.notebookDocument);
+            const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
             try {
                 if (!controller) {
                     throw new Error('No kernel associated with the notebook');
@@ -187,7 +192,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     context,
                     this.serviceContainer,
                     kernel.resourceUri,
-                    kernel.notebookDocument
+                    notebook
                 );
             } catch (ex) {
                 if (currentCell) {

@@ -155,7 +155,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await testSliderWidget(comms);
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.restart();
         await testSliderWidget(comms);
 
@@ -173,7 +173,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await testSliderWidget(comms);
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.interrupt();
         await testSliderWidget(comms);
 

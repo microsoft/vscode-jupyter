@@ -18,6 +18,7 @@ import { IKernel, isLocalConnection } from '../types';
 import { IInteractiveWindowDebugger } from '../../interactive-window/types';
 import { ICellHashListener, IFileHashes } from '../../interactive-window/editor-integration/types';
 import { IJupyterDebugService, ISourceMapRequest } from './types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
@@ -64,10 +65,11 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
     }
 
     public async detach(kernel: IKernel): Promise<void> {
-        if (!kernel.session) {
+        const notebook = getAssociatedNotebookDocument(kernel);
+        if (!kernel.session || !notebook) {
             return;
         }
-        const config = this.configs.get(kernel.notebookDocument);
+        const config = this.configs.get(notebook);
         if (config) {
             traceInfo('stop debugging');
 
@@ -165,11 +167,12 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
-        if (!kernel) {
+        const notebook = getAssociatedNotebookDocument(kernel);
+        if (!kernel || !notebook) {
             return;
         }
         // If we already have configuration, we're already attached, don't do it again.
-        const key = kernel.notebookDocument;
+        const key = notebook;
         let result = this.configs.get(key);
         if (result) {
             return {
@@ -200,7 +203,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         }
 
         if (result.port) {
-            this.configs.set(kernel.notebookDocument, result);
+            this.configs.set(notebook, result);
 
             // Sign up for any change to the kernel to delete this config.
             const disposables: Disposable[] = [];

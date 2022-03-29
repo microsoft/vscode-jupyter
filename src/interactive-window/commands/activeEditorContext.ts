@@ -16,6 +16,7 @@ import { getActiveInteractiveWindow } from '../helpers';
 import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -166,7 +167,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
             activeEditor && activeEditor.document.notebookType === JupyterNotebookView
-                ? this.kernelProvider.get(activeEditor.document)
+                ? this.kernelProvider.get(activeEditor.document.uri)
                 : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
@@ -191,7 +192,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateContextOfActiveInteractiveWindowKernel() {
         const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
-        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
+        const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
             this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
@@ -204,11 +205,12 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
-        if (kernel.notebookDocument.notebookType === InteractiveWindowView) {
+        const notebook = getAssociatedNotebookDocument(kernel);
+        if (notebook?.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
-            kernel.notebookDocument.notebookType === JupyterNotebookView &&
-            kernel.notebookDocument === this.vscNotebook.activeNotebookEditor?.document
+            notebook?.notebookType === JupyterNotebookView &&
+            notebook === this.vscNotebook.activeNotebookEditor?.document
         ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }

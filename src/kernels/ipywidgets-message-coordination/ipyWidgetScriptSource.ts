@@ -28,6 +28,7 @@ import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, WidgetScriptSource } from './types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 
@@ -84,7 +85,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
-                if (e.notebookDocument === this.document) {
+                if (getAssociatedNotebookDocument(e) === this.document) {
                     this.initialize().catch(traceError.bind('Failed to initialize'));
                 }
             },
@@ -172,7 +173,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         }
 
         if (!this.kernel) {
-            this.kernel = await this.kernelProvider.get(this.document);
+            this.kernel = await this.kernelProvider.get(this.document.uri);
         }
         if (!this.kernel) {
             return;

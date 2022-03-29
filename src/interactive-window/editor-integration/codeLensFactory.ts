@@ -26,6 +26,7 @@ import { CellHashProviderFactory } from './cellHashProviderFactory';
 import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, ICellHashProvider, IFileHashes } from './types';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -63,7 +64,12 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeKernel(
-            (kernel) => this.notebookData.delete(kernel.notebookDocument.uri.toString()),
+            (kernel) => {
+                const notebook = getAssociatedNotebookDocument(kernel);
+                if (notebook) {
+                    this.notebookData.delete(notebook.uri.toString());
+                }
+            },
             this,
             disposables
         );

@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '1', 0, false)]);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook.uri);
         if (!kernel) {
             throw new Error('Kernel not available');
         }
@@ -364,7 +364,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await sleep(500);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook.uri);
         if (!kernel) {
             throw new Error('Kernel not available');
         }

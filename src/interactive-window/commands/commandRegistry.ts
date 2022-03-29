@@ -357,7 +357,7 @@ export class CommandRegistry implements IDisposable {
             // Attempt to get the interactive window for this file
             const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
             if (iw && iw.notebookDocument) {
-                const kernel = this.kernelProvider.get(iw.notebookDocument);
+                const kernel = this.kernelProvider.get(iw.notebookDocument.uri);
                 if (kernel) {
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
