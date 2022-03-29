@@ -285,6 +285,28 @@ module.exports = {
                 ]
             }
         ],
+        'import/no-nodejs-modules': [
+            'error',
+            {
+                zones: [
+                    {
+                        target: './src/**[!test]**/**/*.ts',
+                        from: './src/test/**/*.ts',
+                        message: 'Importing test modules from ./src/test into extension code is not allowed.'
+                    },
+                    {
+                        target: './src/**[!test]**/**/*[!.node].ts',
+                        from: './src/**/*.node.ts',
+                        message: 'Importing node modules into non node files is not allowed.'
+                    },
+                    {
+                        target: './src/**[!test]**/**/*[!.web].ts',
+                        from: './src/**/*.web.ts',
+                        message: 'Importing web modules into non web files is not allowed.'
+                    }
+                ]
+            }
+        ],
         strict: 'off'
     },
     settings: {
