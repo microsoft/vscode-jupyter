@@ -45,7 +45,7 @@ export class NotebookProvider implements INotebookProvider {
                 handler.dispose();
             }
         });
-        options.ui = this.startupUi
+        options.ui = this.startupUi;
         if (this.rawNotebookProvider.isSupported && options.kind === 'localJupyter') {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (
