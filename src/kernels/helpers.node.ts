@@ -1718,7 +1718,7 @@ export async function wrapKernelMethod(
 
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
-        traceVerbose(`${context} the kernel, change options.disableUI`);
+        traceVerbose(`${initialContext} the kernel, change options.disableUI`);
         currentPromise.options.disableUI = false;
     }
     // If the current kernel has been disposed or in the middle of being disposed, then create another one.
