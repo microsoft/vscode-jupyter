@@ -42,7 +42,6 @@ import {
     IPathUtils
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { chainable } from '../../platform/common/utils/decorators.node';
 import { DataScience, Common } from '../../platform/common/utils/localize.node';
 import { noop } from '../../platform/common/utils/misc.node';
 import {
@@ -490,7 +489,15 @@ export class VSCodeNotebookController implements Disposable {
         // executeCell can get called multiple times before the first one is resolved. Since we only want
         // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
         // all of the cells if it fails.
-        return connectToKernel(this.controller, this.kernelConnection, this.serviceContainer, doc.uri, doc, options);
+        return connectToKernel(
+            this.controller,
+            this.kernelConnection,
+            this.serviceContainer,
+            doc.uri,
+            doc,
+            options,
+            this.disposables
+        );
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

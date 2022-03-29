@@ -194,7 +194,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     this.serviceContainer,
                     kernel.resourceUri,
                     notebook,
-                    new DisplayOptions(false)
+                    new DisplayOptions(false),
+                    this.disposableRegistry
                 );
             } catch (ex) {
                 if (currentCell) {

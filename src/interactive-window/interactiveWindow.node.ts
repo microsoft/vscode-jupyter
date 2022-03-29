@@ -193,6 +193,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.owner,
                 this.notebookDocument,
                 new DisplayOptions(false),
+                this.internalDisposables,
                 onStartKernel
             );
             this.currentKernelInfo.controller = kernel.controller;

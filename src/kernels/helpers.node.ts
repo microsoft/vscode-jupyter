@@ -40,7 +40,8 @@ import {
     Resource,
     IMemento,
     GLOBAL_MEMENTO,
-    IDisplayOptions
+    IDisplayOptions,
+    IDisposable
 } from '../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize.node';
@@ -1668,7 +1669,8 @@ async function verifyKernelState(
         kernel: IKernel;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
     }>,
-    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void,
+    disposables: IDisposable[]
 ): Promise<IKernel> {
     const { kernel, deadKernelAction } = await promise;
     // Before returning, but without disposing the kernel, double check it's still valid
@@ -1694,6 +1696,7 @@ async function verifyKernelState(
             resource,
             notebook,
             options,
+            disposables,
             onAction
         );
     }
@@ -1708,6 +1711,7 @@ export async function wrapKernelMethod(
     resource: Resource,
     notebook: NotebookDocument,
     options: IDisplayOptions,
+    disposables: IDisposable[],
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
@@ -1736,7 +1740,8 @@ export async function wrapKernelMethod(
             notebook,
             options,
             currentPromise.kernel.promise,
-            onAction
+            onAction,
+            disposables
         );
     }
 
@@ -1754,11 +1759,15 @@ export async function wrapKernelMethod(
     // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
     promise
         .then((result) => {
-            result.kernel.onDisposed(() => {
-                if (connections.get(notebook)?.kernel === deferred) {
-                    connections.delete(notebook);
-                }
-            });
+            result.kernel.onDisposed(
+                () => {
+                    if (connections.get(notebook)?.kernel === deferred) {
+                        connections.delete(notebook);
+                    }
+                },
+                undefined,
+                disposables
+            );
         })
         .catch(() => {
             if (connections.get(notebook)?.kernel === deferred) {
@@ -1767,7 +1776,7 @@ export async function wrapKernelMethod(
         });
 
     connections.set(notebook, { kernel: deferred, options });
-    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction);
+    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction, disposables);
 }
 
 export async function wrapKernelMethodImpl(
@@ -1855,9 +1864,20 @@ export async function connectToKernel(
     resource: Resource,
     notebook: NotebookDocument,
     options: IDisplayOptions,
+    disposables: IDisposable[],
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
-    return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
+    return wrapKernelMethod(
+        controller,
+        metadata,
+        'start',
+        serviceContainer,
+        resource,
+        notebook,
+        options,
+        disposables,
+        onAction
+    );
 }
 
 export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
