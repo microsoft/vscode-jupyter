@@ -2277,6 +2277,7 @@
         "eslint-plugin-import": "^2.25.4",
         "eslint-plugin-jsdoc": "^31.0.4",
         "eslint-plugin-jsx-a11y": "^6.3.1",
+        "eslint-plugin-local-rules": "file:build/eslint-rules",
         "eslint-plugin-no-null": "^1.0.2",
         "eslint-plugin-prefer-arrow": "^1.2.2",
         "eslint-plugin-prettier": "^3.1.2",
