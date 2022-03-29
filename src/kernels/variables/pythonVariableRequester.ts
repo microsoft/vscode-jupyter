@@ -65,7 +65,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        const fileName = path.basename(kernel.id.path);
+        const fileName = path.basename(
+            getAssociatedNotebookDocument(kernel)?.uri.fsPath || kernel.resourceUri?.fsPath || kernel.id.path
+        );
 
         // Combine with the original result (the call only returns the new fields)
         return {
