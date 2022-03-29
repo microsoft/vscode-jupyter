@@ -139,9 +139,7 @@ export class KernelExecution implements IDisposable {
     public async restart(sessionPromise?: Promise<IJupyterSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
         const notebook = Kernel.getAssociatedNotebook(this.kernel);
-        const executionQueue = notebook
-            ? this.documentExecutions.get(notebook)
-            : undefined;
+        const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
         traceInfo('Restart kernel execution');

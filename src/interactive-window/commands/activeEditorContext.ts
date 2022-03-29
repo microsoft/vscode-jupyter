@@ -206,7 +206,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
-        const notebook = Kernel.getAssociatedNotebook(kernel)
+        const notebook = Kernel.getAssociatedNotebook(kernel);
         if (notebook?.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
