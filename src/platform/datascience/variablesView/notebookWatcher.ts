@@ -50,7 +50,9 @@ export class NotebookWatcher implements INotebookWatcher {
     public get activeKernel(): IKernel | undefined {
         const activeNotebook = this.notebooks.activeNotebookEditor?.document;
         const activeJupyterNotebookKernel =
-            activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook.uri) : undefined;
+            activeNotebook?.notebookType == JupyterNotebookView
+                ? this.kernelProvider.get(activeNotebook.uri)
+                : undefined;
 
         if (activeJupyterNotebookKernel) {
             return activeJupyterNotebookKernel;

@@ -127,7 +127,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test.only('Interrupt during debugging', async function () {
+    test('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
 
