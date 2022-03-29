@@ -3,7 +3,7 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { CancellationToken, Event, NotebookDocument } from 'vscode';
+import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
     ConnectNotebookProviderOptions,
@@ -113,7 +113,6 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
     isSupported: boolean;
     connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
-        document: NotebookDocument,
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,

@@ -12,8 +12,8 @@ import type {
     Event,
     NotebookCell,
     NotebookController,
-    NotebookDocument,
-    QuickPickItem
+    QuickPickItem,
+    Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
@@ -400,7 +400,6 @@ export type GetServerOptions = {
  */
 export type NotebookCreationOptions = {
     resource: Resource;
-    document: NotebookDocument;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;

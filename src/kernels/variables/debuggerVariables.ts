@@ -6,6 +6,7 @@ import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants';
 import { traceError } from '../../platform/common/logger';
