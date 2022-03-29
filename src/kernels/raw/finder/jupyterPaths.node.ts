@@ -7,6 +7,7 @@ import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { traceError } from '../../../platform/common/logger.node';
 import {
     IPathUtils,
     IDisposableRegistry,
@@ -17,10 +18,20 @@ import {
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecorators } from '../../../platform/logging/index.node';
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const untildify = require('untildify');
+
+const homeDir = untildify('~');
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
+const winJupyterRuntimePath = path.join(homeDir, 'AppData', 'Roaming', 'jupyter', 'runtime');
+const linuxJupyterRuntimePath = process.env['$XDG_RUNTIME_DIR']
+    ? path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter')
+    : path.join(homeDir, '.local', 'share', 'jupyter');
+const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
+
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
 const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_.';
@@ -84,6 +95,35 @@ export class JupyterPaths {
             return this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH);
         }
         return this.cachedKernelSpecRootPath;
+    }
+    /**
+     * Returns the value for `JUPYTER_RUNTIME_DIR`, location where Jupyter stores runtime files.
+     * Such as kernel connection files.
+     */
+    public async getRuntimeDir() {
+        let runtimeDir: string | undefined = '';
+        if (this.platformService.isWindows) {
+            // On windows the path is not correct if we combine those variables.
+            // It won't point to a path that you can actually read from.
+            runtimeDir = await tryGetRealPath(winJupyterRuntimePath);
+        } else if (this.platformService.isMac) {
+            runtimeDir = macJupyterRuntimePath;
+        } else {
+            runtimeDir = linuxJupyterRuntimePath;
+        }
+        if (!runtimeDir) {
+            traceError(`Failed to determine Jupyter runtime directory`);
+            return;
+        }
+
+        try {
+            if (!(await this.fs.localDirectoryExists(runtimeDir))) {
+                await this.fs.ensureLocalDir(runtimeDir);
+            }
+            return runtimeDir;
+        } catch (ex) {
+            traceError(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);
+        }
     }
     /**
      * This list comes from the docs here:
