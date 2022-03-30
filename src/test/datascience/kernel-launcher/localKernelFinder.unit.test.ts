@@ -145,8 +145,8 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                     });
                 }
             });
-            globalSpecPath = ((await jupyterPaths.getKernelSpecRootPath()) as unknown) as string;
-            tempDirForKernelSpecs = ((await jupyterPaths.getKernelSpecTempRegistrationFolder()) as unknown) as string;
+            globalSpecPath = (await jupyterPaths.getKernelSpecRootPath()) as unknown as string;
+            tempDirForKernelSpecs = (await jupyterPaths.getKernelSpecTempRegistrationFolder()) as unknown as string;
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
                     const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);

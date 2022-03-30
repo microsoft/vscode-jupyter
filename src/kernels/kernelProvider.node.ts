@@ -142,9 +142,7 @@ export class KernelProvider implements IKernelProvider {
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }
-    public getInternal(
-        uri: Uri
-    ):
+    public getInternal(uri: Uri):
         | {
               options: KernelOptions;
               kernel: IKernel;

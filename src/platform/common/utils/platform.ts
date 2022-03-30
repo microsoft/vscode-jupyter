@@ -27,7 +27,7 @@ export function getOSType(platform: string = process.platform): OSType {
 
 export function getEnvironmentVariable(key: string): string | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return ((process.env as any) as EnvironmentVariables)[key];
+    return (process.env as any as EnvironmentVariables)[key];
 }
 
 export function getPathEnvironmentVariable(): string | undefined {

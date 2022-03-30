@@ -770,7 +770,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
         when(interpreterService.getInterpreterDetails(match('/bar/baz/python.exe'))).thenResolve(missingNotebookPython);
         when(interpreterService.getInterpreterDetails(argThat((o) => !o.includes || !o.includes('python')))).thenReject(
-            ('Unknown interpreter' as any) as Error
+            'Unknown interpreter' as any as Error
         );
         if (runInDocker) {
             when(fileSystem.readLocalFile('/proc/self/cgroup')).thenResolve('hello docker world');
@@ -803,25 +803,25 @@ suite('Jupyter Execution', async () => {
 
         when(
             executionFactory.createDaemon(argThat((o) => o.interpreter && o.interpreter.path === workingPython.path))
-        ).thenResolve((workingService.object as unknown) as IPythonDaemonExecutionService);
+        ).thenResolve(workingService.object as unknown as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(
                 argThat((o) => o.interpreter && o.interpreter.path === missingKernelPython.path)
             )
-        ).thenResolve((missingKernelService.object as unknown) as IPythonDaemonExecutionService);
+        ).thenResolve(missingKernelService.object as unknown as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(
                 argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython.path)
             )
-        ).thenResolve((missingNotebookService.object as unknown) as IPythonDaemonExecutionService);
+        ).thenResolve(missingNotebookService.object as unknown as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(
                 argThat((o) => o.interpreter && o.interpreter.path === missingNotebookPython2.path)
             )
-        ).thenResolve((missingNotebookService2.object as unknown) as IPythonDaemonExecutionService);
+        ).thenResolve(missingNotebookService2.object as unknown as IPythonDaemonExecutionService);
 
         let activeService = workingService;
         if (activeInterpreter === missingKernelPython) {
@@ -1008,7 +1008,7 @@ suite('Jupyter Execution', async () => {
             executionService: activeService.object,
             jupyterExecution: new HostJupyterExecution(
                 instance(interpreterService),
-                (disposableRegistry as unknown) as any[],
+                disposableRegistry as unknown as any[],
                 disposableRegistry,
                 instance(fileSystem),
                 instance(workspaceService),

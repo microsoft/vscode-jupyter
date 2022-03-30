@@ -165,7 +165,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
  */
 export function iterEmpty<T>(): AsyncIterator<T, void> {
     // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    return ((async function* () {})() as unknown) as AsyncIterator<T, void>;
+    return (async function* () {})() as unknown as AsyncIterator<T, void>;
 }
 
 type NextResult<T> = { index: number } & (

@@ -117,7 +117,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @optional()
         minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
     ) {
-        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables = minTimeAfterWhichWeShouldCacheEnvVariables;
+        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables =
+            minTimeAfterWhichWeShouldCacheEnvVariables;
         this.envVarsService.onDidEnvironmentVariablesChange(
             () => this.activatedEnvVariablesCache.clear(),
             this,

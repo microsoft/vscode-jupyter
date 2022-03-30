@@ -170,13 +170,13 @@ export class RawKernel implements Kernel.IKernelConnection {
         } else if (this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
             traceInfo(`Interrupting kernel with a shell message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            const msg = (jupyterLab.KernelMessage.createMessage({
+            const msg = jupyterLab.KernelMessage.createMessage({
                 msgType: 'interrupt_request' as any,
                 channel: 'shell',
                 username: this.realKernel.username,
                 session: this.realKernel.clientId,
                 content: {}
-            }) as any) as KernelMessage.IShellMessage<'inspect_request'>;
+            }) as any as KernelMessage.IShellMessage<'inspect_request'>;
             await this.realKernel
                 .sendShellMessage<'interrupt_request'>(msg as any, true, true)
                 .done.catch((ex) => traceError('Failed to interrupt via a message', ex));
@@ -275,7 +275,8 @@ let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default
 
 export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-    const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+    const jupyterLabSerialize =
+        require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
@@ -297,7 +298,8 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     if (!nonSerializingKernel) {
         // Note, this is done with a postInstall step (found in build\ci\postInstall.js). In that post install step
         // we eliminate the serialize import from the default kernel and remap it to do nothing.
-        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
+        nonSerializingKernel =
+            require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
     const realKernel = new nonSerializingKernel.KernelConnection({
         serverSettings: settings,

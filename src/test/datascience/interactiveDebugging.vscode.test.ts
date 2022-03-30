@@ -51,7 +51,7 @@ suite('Interactive window debugging', async function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
+        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
     });
     teardown(async function () {
         // Make sure that debugging is shut down
@@ -259,7 +259,7 @@ suite('Interactive window debugging', async function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Parse the HTML for our expected variables
         let expectedVariables = [{ name: 'x', type: 'int', length: '', value: '1' }];
