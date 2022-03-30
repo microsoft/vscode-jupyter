@@ -6,9 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
-import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
+import { Executables, FileSystemPaths, FileSystemPathUtils, homePath } from './fs-paths.node';
 
 @injectable()
 export class PathUtils implements IPathUtils {
@@ -21,7 +19,7 @@ export class PathUtils implements IPathUtils {
         // We cannot just use FileSystemPathUtils.withDefaults() because
         // of the isWindows arg.
         this.utils = new FileSystemPathUtils(
-            untildify('~'),
+            homePath,
             FileSystemPaths.withDefaults(),
             new Executables(path.delimiter, osType),
             path

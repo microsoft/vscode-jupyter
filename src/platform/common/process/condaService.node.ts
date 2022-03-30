@@ -13,11 +13,10 @@ import { createDeferredFromPromise } from '../utils/async';
 import * as path from 'path';
 import { swallowExceptions } from '../utils/decorators.node';
 import { IFileSystem } from '../platform/types.node';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
+import { homePath } from '../platform/fs-paths.node';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
-const condaEnvironmentsFile = path.join(untildify('~'), '.conda', 'environments.txt');
+const condaEnvironmentsFile = path.join(homePath, '.conda', 'environments.txt');
 @injectable()
 export class CondaService {
     private isAvailable: boolean | undefined;
