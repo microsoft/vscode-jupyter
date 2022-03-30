@@ -116,6 +116,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
+        when(connection.localLaunch).thenReturn(false);
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
@@ -195,10 +196,11 @@ suite('DataScience - JupyterSession', () => {
     });
 
     suite('After connecting', () => {
-        setup(connect);
+        // setup(connect);
         test('Interrupting will result in kernel being interrupted', async () => {
             when(kernel.interrupt()).thenResolve();
 
+            await connect();
             await jupyterSession.interrupt();
 
             verify(kernel.interrupt()).once();
@@ -256,9 +258,9 @@ suite('DataScience - JupyterSession', () => {
             test('Remote session with Notebook and starting a new session', async () => {
                 // Create jupyter session for Notebooks
                 createJupyterSession(Uri.file('test.ipynb'));
+                when(connection.localLaunch).thenReturn(false);
                 await connect();
 
-                when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
@@ -303,14 +305,17 @@ suite('DataScience - JupyterSession', () => {
                 verify(session.dispose()).once();
             });
             test('Local session', async () => {
+                console.error('Start test');
                 when(connection.localLaunch).thenReturn(true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
+
+                await connect();
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
+                verify(contentsManager.delete(anything())).never();
                 // always kill the sessions.
                 verify(session.shutdown()).once();
                 verify(session.dispose()).once();
@@ -318,13 +323,17 @@ suite('DataScience - JupyterSession', () => {
         });
         suite('Wait for session idle', () => {
             test('Will timeout', async () => {
+                await connect();
+
                 when(kernel.status).thenReturn('unknown');
+                when(connection.localLaunch).thenReturn(true);
 
                 const promise = jupyterSession.waitForIdle(100);
 
                 await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut());
             });
             test('Will succeed', async () => {
+                await connect();
                 when(kernel.status).thenReturn('idle');
 
                 await jupyterSession.waitForIdle(100);
@@ -365,6 +374,7 @@ suite('DataScience - JupyterSession', () => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
+                await connect();
             });
             teardown(() => {
                 verify(sessionManager.connectTo(anything())).never();
