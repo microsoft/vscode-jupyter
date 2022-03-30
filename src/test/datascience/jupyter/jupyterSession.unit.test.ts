@@ -18,6 +18,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
 import { traceInfo } from '../../../platform/logging';
+import * as path from 'path';
 import { ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -32,9 +33,10 @@ import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
 import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - JupyterSession', () => {
+suite.only('DataScience - JupyterSession', () => {
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let restartSessionCreatedEvent: Deferred<void>;
@@ -124,7 +126,10 @@ suite('DataScience - JupyterSession', () => {
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
-
+        const fs = mock<IFileSystem>();
+        const tmpFile = path.join('tmp', 'tempfile.json');
+        when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
+        when(fs.deleteLocalFile(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
@@ -142,7 +147,8 @@ suite('DataScience - JupyterSession', () => {
             '',
             1,
             instance(kernelService),
-            1
+            1,
+            instance(fs)
         );
     }
     setup(() => createJupyterSession());
@@ -168,12 +174,23 @@ suite('DataScience - JupyterSession', () => {
     }
     teardown(async () => jupyterSession.dispose().catch(noop));
 
-    test('Start a session when connecting', async () => {
+    test('Start a remote session when connecting', async () => {
+        when(connection.localLaunch).thenReturn(false);
+
         await connect();
 
         assert.isTrue(jupyterSession.isConnected);
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(contentsManager.newUntitled(anything())).once();
+    });
+    test('Start a local session when connecting', async () => {
+        when(connection.localLaunch).thenReturn(true);
+
+        await connect();
+
+        assert.isTrue(jupyterSession.isConnected);
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(contentsManager.newUntitled(anything())).never();
     });
 
     suite('After connecting', () => {

@@ -16,6 +16,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/co
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSessionManagerFactory, IJupyterPasswordConnect, IJupyterSessionManager } from '../types';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
@@ -28,7 +29,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService
+        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
     /**
@@ -45,7 +47,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.config,
             this.appShell,
             this.stateFactory,
-            this.kernelService
+            this.kernelService,
+            this.fs
         );
         await result.initialize(connInfo);
         this.disposableRegistry.push(

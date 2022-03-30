@@ -28,6 +28,7 @@ import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessi
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -68,7 +69,8 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number
+        interruptTimeout: number,
+        private readonly fs: IFileSystem
     ) {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
@@ -204,7 +206,12 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createBackingFile(): Promise<Contents.IModel | undefined> {
+    private async createBackingFile(): Promise<string | undefined> {
+        if (this.connInfo.localLaunch) {
+            const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
+            await tempFile.dispose();
+            return tempFile.filePath;
+        }
         let backingFile: Contents.IModel | undefined = undefined;
 
         // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
@@ -246,7 +253,7 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         if (backingFile) {
-            return backingFile;
+            return backingFile.path;
         }
     }
 
@@ -270,7 +277,11 @@ export class JupyterSession extends BaseJupyterSession {
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.path).ignoreErrors();
+                    if (this.connInfo.localLaunch) {
+                        this.contentsManager.delete(backingFile).ignoreErrors();
+                    } else {
+                        this.fs.deleteLocalFile(backingFile).ignoreErrors();
+                    }
                 }
                 throw ex;
             }
@@ -284,7 +295,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -332,7 +343,11 @@ export class JupyterSession extends BaseJupyterSession {
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
                         if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                            if (this.connInfo.localLaunch) {
+                                this.contentsManager.delete(backingFile).ignoreErrors();
+                            } else {
+                                this.fs.deleteLocalFile(backingFile).ignoreErrors();
+                            }
                         }
                     }),
             options.token
