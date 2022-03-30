@@ -487,9 +487,6 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions) {
-        // executeCell can get called multiple times before the first one is resolved. Since we only want
-        // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
-        // all of the cells if it fails.
         return connectToKernel(
             this.controller,
             this.kernelConnection,
