@@ -445,22 +445,19 @@ export class VSCodeNotebookController implements Disposable {
             currentExecution.start(new Date().getTime());
             void currentExecution.clearOutput(cell);
         }
-        return currentExecution;
     }
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
-        const execution = this.startCellExecutionIfNecessary(cell, this.controller);
+        this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let context: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
         let controller = this.controller;
-        let connectedToKernel = false;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
-            connectedToKernel = true;
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {
                 controller = kernel.controller;
@@ -472,9 +469,6 @@ export class VSCodeNotebookController implements Disposable {
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
-            if (!connectedToKernel){
-                console.log(execution);
-            }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled =
