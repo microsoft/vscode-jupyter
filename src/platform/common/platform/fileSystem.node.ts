@@ -49,10 +49,14 @@ export class FileSystem implements IFileSystem {
         await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
     }
 
-    public async createTemporaryLocalFile(suffix: string, mode?: number): Promise<TemporaryFile> {
-        const opts = {
+    public async createTemporaryLocalFile(
+        options: string | { fileExtension: string; prefix: string }
+    ): Promise<TemporaryFile> {
+        const suffix = typeof options === 'string' ? options : options.fileExtension;
+        const prefix = options && typeof options === 'object' ? options.prefix : undefined;
+        const opts: tmp.Options = {
             postfix: suffix,
-            mode
+            prefix
         };
         return new Promise<TemporaryFile>((resolve, reject) => {
             tmp.file(opts, (err, filename, _fd, cleanUp) => {

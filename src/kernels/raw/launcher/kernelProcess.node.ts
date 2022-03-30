@@ -358,7 +358,7 @@ export class KernelProcess implements IKernelProcess {
     }
     private async createConnectionFile() {
         const runtimeDir = await this.jupyterPaths.getRuntimeDir();
-        const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
+        const tempFile = await this.fileSystem.createTemporaryLocalFile({ fileExtension: '.json', prefix: 'kernel-' });
         // Note: We have to dispose the temp file and recreate it else the file
         // system will hold onto the file with an open handle. THis doesn't work so well when
         // a different process tries to open it.
