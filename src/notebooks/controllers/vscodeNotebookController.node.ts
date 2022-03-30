@@ -54,7 +54,7 @@ import { TraceOptions } from '../../platform/logging/trace.node';
 import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { displayErrorsInCell } from '../../platform/errors/errorUtils.node';
+import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils.node';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
@@ -474,7 +474,7 @@ export class VSCodeNotebookController implements Disposable {
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(
+            endCellAndDisplayErrorsInCell(
                 cell,
                 controller,
                 await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),

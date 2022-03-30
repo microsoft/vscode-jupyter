@@ -567,21 +567,26 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export function displayErrorsInCell(
+export function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
     controller: NotebookController,
     errorMessage: string,
     isCancelled: boolean
 ) {
+    const execution = CellExecutionCreator.getOrCreate(cell, controller);
     const output = createOutputWithErrorMessageForDisplay(errorMessage);
     if (!output) {
+        if (execution.started) {
+            execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
+        }
         return;
     }
-    const execution = CellExecutionCreator.getOrCreate(cell, controller);
     // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
-    execution.start(cell.executionSummary?.timing?.endTime);
-    execution.executionOrder = cell.executionSummary?.executionOrder;
-
+    const started = execution.started;
+    if (!started) {
+        execution.start(cell.executionSummary?.timing?.endTime);
+        execution.executionOrder = cell.executionSummary?.executionOrder;
+    }
     void execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }
