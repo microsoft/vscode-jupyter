@@ -217,7 +217,12 @@ export class JupyterSession extends BaseJupyterSession {
             await tempFile.dispose();
             // This way we ensure all checkpoints are in a unique directory and will not conflict.
             await this.fs.ensureLocalDir(tempDirectory);
-            const filePath = path.join(tempDirectory, path.basename(tempFile.filePath));
+
+            const newName = this.resource
+                ? `${path.basename(this.resource.fsPath, '.ipynb')}.ipynb`
+                : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
+
+            const filePath = path.join(tempDirectory, newName);
             return {
                 filePath,
                 dispose: () => this.fs.deleteLocalFile(filePath)
