@@ -348,9 +348,6 @@ export class Kernel implements IKernel {
             this.startupUI.disableUI = false;
         }
         options.onDidChangeDisableUI(() => {
-            traceVerbose(
-                `Disable UI changed to ${options.disableUI} & this.startupUI.disableUI=${this.startupUI.disableUI}`
-            );
             if (!options.disableUI && this.startupUI.disableUI) {
                 this.startupUI.disableUI = false;
             }
