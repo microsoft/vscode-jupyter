@@ -15,7 +15,7 @@ import { KernelDiedError } from './kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from './kernelProcessExitedError.node';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceWarning } from '../../platform/common/logger.node';
+import { traceError, traceWarning } from '../../platform/common/logger.node';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize.node';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
@@ -53,9 +53,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
+    private handledErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
         err = WrappedError.unwrap(err);
+        if (this.handledErrors.has(err)) {
+            return;
+        }
+        this.handledErrors.add(err);
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
@@ -96,9 +101,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     }
     public async getErrorMessageForDisplayInCell(
         error: Error,
-        context: 'start' | 'restart' | 'interrupt' | 'execution'
+        errorContext: 'start' | 'restart' | 'interrupt' | 'execution'
     ) {
         error = WrappedError.unwrap(error);
+        traceError(`Error in execution (get message for cell)`, error);
         if (error instanceof KernelDeadError) {
             // When we get this we've already asked the user to restart the kernel,
             // No need to display errors in each cell.
@@ -143,22 +149,32 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 return messageParts.join('\n');
             }
         }
-        return getUserFriendlyErrorMessage(error, context);
+        return getUserFriendlyErrorMessage(error, errorContext);
     }
     public async handleKernelError(
         err: Error,
-        context: 'start' | 'restart' | 'interrupt' | 'execution',
+        errorContext: 'start' | 'restart' | 'interrupt' | 'execution',
         kernelConnection: KernelConnectionMetadata,
         resource: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
-        traceWarning('Kernel Error', err);
+        traceWarning(`Kernel Error, context = ${errorContext}`, err);
         err = WrappedError.unwrap(err);
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
         if (err instanceof JupyterKernelDependencyError) {
-            return err.reason;
+            traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
+            if (err.reason === KernelInterpreterDependencyResponse.uiHidden) {
+                // At this point we're handling the error, and if the error was initially swallowed due to
+                // auto start (ui hidden), now we need to display the error to the user.
+                const response = await this.dependencyManager.installMissingDependencies(err);
+                return response === JupyterInterpreterDependencyResponse.ok
+                    ? KernelInterpreterDependencyResponse.ok
+                    : KernelInterpreterDependencyResponse.cancel;
+            } else {
+                return err.reason;
+            }
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
-        } else if ((context === 'start' || context === 'restart') && err instanceof JupyterInstallError) {
+        } else if ((errorContext === 'start' || errorContext === 'restart') && err instanceof JupyterInstallError) {
             const response = await this.dependencyManager.installMissingDependencies(err);
             return response === JupyterInterpreterDependencyResponse.ok
                 ? KernelInterpreterDependencyResponse.ok
@@ -188,7 +204,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             traceWarning(`Cancelled by user`, err);
             return KernelInterpreterDependencyResponse.cancel;
         } else if (
-            (context === 'start' || context === 'restart') &&
+            (errorContext === 'start' || errorContext === 'restart') &&
             !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
         ) {
             const tokenSource = new CancellationTokenSource();
@@ -215,7 +231,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             } else {
                 // These are generic errors, we have no idea what went wrong,
                 // hence add a descriptive prefix (message), that provides more context to the user.
-                void this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, context));
+                void this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, errorContext));
             }
             return KernelInterpreterDependencyResponse.failed;
         }
@@ -243,9 +259,9 @@ const errorPrefixes = {
  * all they contain is some cryptic or stdout or tracebacks.
  * For such messages, provide more context on what went wrong.
  */
-function getUserFriendlyErrorMessage(error: Error, context?: 'start' | 'restart' | 'interrupt' | 'execution') {
+function getUserFriendlyErrorMessage(error: Error, errorContext?: 'start' | 'restart' | 'interrupt' | 'execution') {
     error = WrappedError.unwrap(error);
-    const errorPrefix = context ? errorPrefixes[context] : '';
+    const errorPrefix = errorContext ? errorPrefixes[errorContext] : '';
     if (error instanceof BaseError) {
         // These are generic errors, we have no idea what went wrong,
         // hence add a descriptive prefix (message), that provides more context to the user.

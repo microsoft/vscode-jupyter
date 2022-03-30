@@ -27,6 +27,7 @@ import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
+import { DisplayOptions } from './displayOptions.node';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -167,7 +168,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     }
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
-    private async wrapKernelMethod(context: 'interrupt' | 'restart', kernel: IKernel) {
+    private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: IKernel) {
         const notebook = getAssociatedNotebookDocument(kernel);
         if (!notebook) {
             throw new Error('Unable to start a kernel that is not attached to a notebook document');
@@ -189,17 +190,19 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 await wrapKernelMethod(
                     controller.controller,
                     controller.connection,
-                    context,
+                    currentContext,
                     this.serviceContainer,
                     kernel.resourceUri,
-                    notebook
+                    notebook,
+                    new DisplayOptions(false),
+                    this.disposableRegistry
                 );
             } catch (ex) {
                 if (currentCell) {
                     displayErrorsInCell(
                         currentCell,
                         kernel.controller,
-                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
                         false
                     );
                 } else {

@@ -40,7 +40,8 @@ import {
     Resource,
     IMemento,
     GLOBAL_MEMENTO,
-    IDisplayOptions
+    IDisplayOptions,
+    IDisposable
 } from '../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize.node';
@@ -77,7 +78,6 @@ import { getResourceType } from '../platform/common/utils.node';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
-import { DisplayOptions } from './displayOptions.node';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 // Helper functions for dealing with kernels and kernelspecs
@@ -1584,7 +1584,7 @@ export async function notifyAndRestartDeadKernel(
 export async function handleKernelError(
     serviceContainer: IServiceContainer,
     error: Error,
-    context: 'start' | 'interrupt' | 'restart' | 'execution',
+    errorContext: 'start' | 'interrupt' | 'restart' | 'execution',
     resource: Resource,
     kernel: IKernel,
     controller: NotebookController,
@@ -1593,7 +1593,7 @@ export async function handleKernelError(
     const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
     const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
-    if (metadata.interpreter && context === 'start') {
+    if (metadata.interpreter && errorContext === 'start') {
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
@@ -1605,7 +1605,7 @@ export async function handleKernelError(
     // Send telemetry for handling the error (if raw)
     const isLocal = isLocalConnection(metadata);
     const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
-    if (rawLocalKernel && context === 'start') {
+    if (rawLocalKernel && errorContext === 'start') {
         sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
             reason: handleResult
         });
@@ -1636,8 +1636,8 @@ export async function handleKernelError(
     return { controller, metadata };
 }
 
-function convertContextToFunction(context: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
-    switch (context) {
+function convertContextToFunction(currentContext: 'start' | 'interrupt' | 'restart', options?: IDisplayOptions) {
+    switch (currentContext) {
         case 'start':
             return (k: IKernel) => k.start(options);
 
@@ -1664,12 +1664,13 @@ async function verifyKernelState(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     promise: Promise<{
         kernel: IKernel;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
     }>,
-    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
+    onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void,
+    disposables: IDisposable[]
 ): Promise<IKernel> {
     const { kernel, deadKernelAction } = await promise;
     // Before returning, but without disposing the kernel, double check it's still valid
@@ -1695,6 +1696,7 @@ async function verifyKernelState(
             resource,
             notebook,
             options,
+            disposables,
             onAction
         );
     }
@@ -1708,9 +1710,12 @@ export async function wrapKernelMethod(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
+    disposables: IDisposable[],
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
+    traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
+
     let currentPromise = connections.get(notebook);
     if (!options.disableUI && currentPromise?.options.disableUI) {
         currentPromise.options.disableUI = false;
@@ -1734,7 +1739,8 @@ export async function wrapKernelMethod(
             notebook,
             options,
             currentPromise.kernel.promise,
-            onAction
+            onAction,
+            disposables
         );
     }
 
@@ -1752,11 +1758,15 @@ export async function wrapKernelMethod(
     // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
     promise
         .then((result) => {
-            result.kernel.onDisposed(() => {
-                if (connections.get(notebook)?.kernel === deferred) {
-                    connections.delete(notebook);
-                }
-            });
+            result.kernel.onDisposed(
+                () => {
+                    if (connections.get(notebook)?.kernel === deferred) {
+                        connections.delete(notebook);
+                    }
+                },
+                undefined,
+                disposables
+            );
         })
         .catch(() => {
             if (connections.get(notebook)?.kernel === deferred) {
@@ -1765,7 +1775,7 @@ export async function wrapKernelMethod(
         });
 
     connections.set(notebook, { kernel: deferred, options });
-    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction);
+    return verifyKernelState(serviceContainer, resource, notebook, options, deferred.promise, onAction, disposables);
 }
 
 export async function wrapKernelMethodImpl(
@@ -1775,7 +1785,7 @@ export async function wrapKernelMethodImpl(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void
 ): Promise<{
     kernel: IKernel;
@@ -1784,7 +1794,7 @@ export async function wrapKernelMethodImpl(
     const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
     let kernel: IKernel | undefined;
     let currentMethod = convertContextToFunction(initialContext, options);
-    let context = initialContext;
+    let currentContext = initialContext;
     while (kernel === undefined) {
         // Try to create the kernel (possibly again)
         kernel = kernelProvider.getOrCreate(notebook.uri, {
@@ -1807,7 +1817,7 @@ export async function wrapKernelMethodImpl(
                     deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
                 };
             } else {
-                onAction(context, kernel);
+                onAction(currentContext, kernel);
                 await currentMethod(kernel);
 
                 // If the kernel is dead, ask the user if they want to restart
@@ -1816,13 +1826,17 @@ export async function wrapKernelMethodImpl(
                 }
             }
         } catch (error) {
+            traceWarning(
+                `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,
+                error
+            );
             if (options.disableUI) {
                 throw error;
             }
             const result = await handleKernelError(
                 serviceContainer,
                 error,
-                context,
+                currentContext,
                 resource,
                 kernel,
                 controller,
@@ -1833,7 +1847,7 @@ export async function wrapKernelMethodImpl(
             // When we wrap around, update the current method to start. This
             // means if we're handling a restart or an interrupt that fails, we move onto trying to start the kernel.
             currentMethod = (k) => k.start(options);
-            context = 'start';
+            currentContext = 'start';
 
             // Since an error occurred, we have to try again (controller may have switched so we have to pick a new kernel)
             kernel = undefined;
@@ -1848,10 +1862,21 @@ export async function connectToKernel(
     serviceContainer: IServiceContainer,
     resource: Resource,
     notebook: NotebookDocument,
-    options: IDisplayOptions = new DisplayOptions(false),
+    options: IDisplayOptions,
+    disposables: IDisposable[],
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
-    return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
+    return wrapKernelMethod(
+        controller,
+        metadata,
+        'start',
+        serviceContainer,
+        resource,
+        notebook,
+        options,
+        disposables,
+        onAction
+    );
 }
 
 export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
