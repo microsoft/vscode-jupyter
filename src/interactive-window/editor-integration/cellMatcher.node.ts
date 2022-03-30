@@ -47,6 +47,10 @@ export class CellMatcher {
         return this.isMarkdown(code) ? 'markdown' : 'code';
     }
 
+    public isEmptyCell(code: string): boolean {
+        return this.stripFirstMarker(code).trim().length === 0;
+    }
+
     public stripFirstMarker(code: string): string {
         const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
 
