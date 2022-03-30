@@ -36,7 +36,7 @@ import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKern
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { waitForCondition } from '../common';
 
-suite('kernel Process', () => {
+suite.only('kernel Process', () => {
     let kernelProcess: KernelProcess;
     let processServiceFactory: IProcessServiceFactory;
     const connection: IKernelConnection = {
@@ -66,6 +66,7 @@ suite('kernel Process', () => {
     let daemon: PythonKernelInterruptDaemon;
     let proc: ChildProcess;
     let jupyterPaths: JupyterPaths;
+    const tempFileCreationOptions = { fileExtension: '.json', prefix: 'kernel-' };
     setup(() => {
         tempFileDisposable = mock<IDisposable>();
         token = new CancellationTokenSource();
@@ -147,14 +148,14 @@ suite('kernel Process', () => {
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        when(fs.createTemporaryLocalFile('.json')).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
 
         await kernelProcess.launch('', 0, token.token);
 
-        verify(fs.createTemporaryLocalFile('.json')).atLeast(1);
+        verify(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).atLeast(1);
         verify(tempFileDisposable.dispose()).once();
         verify(fs.writeLocalFile(tempFile, anything())).atLeast(1);
         verify(tempFileDisposable.dispose()).calledBefore(fs.writeLocalFile(tempFile, anything()));
@@ -169,7 +170,7 @@ suite('kernel Process', () => {
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        when(fs.createTemporaryLocalFile('.json')).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
@@ -188,7 +189,7 @@ suite('kernel Process', () => {
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        when(fs.createTemporaryLocalFile('.json')).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
@@ -213,7 +214,7 @@ suite('kernel Process', () => {
         when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        when(fs.createTemporaryLocalFile('.json')).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
@@ -248,7 +249,7 @@ suite('kernel Process', () => {
         when(jupyterPaths.getRuntimeDir()).thenResolve();
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
-        when(fs.createTemporaryLocalFile('.json')).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
@@ -279,7 +280,7 @@ suite('kernel Process', () => {
         const tempFile = path.join('tmp', 'temporary file.json');
         const jupyterRuntimeDir = path.join('hello', 'jupyter', 'runtime');
         const expectedConnectionFile = path.join(jupyterRuntimeDir, path.basename(tempFile));
-        when(fs.createTemporaryLocalFile(anything())).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: noop,
             filePath: tempFile
         });
@@ -326,7 +327,7 @@ suite('kernel Process', () => {
             path: 'python'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
-        when(fs.createTemporaryLocalFile(anything())).thenResolve({
+        when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: noop,
             filePath: tempFile
         });
