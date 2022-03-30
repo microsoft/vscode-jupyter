@@ -209,8 +209,14 @@ export class JupyterSession extends BaseJupyterSession {
     private async createBackingFile(): Promise<string | undefined> {
         if (this.connInfo.localLaunch) {
             const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
+            const tempDirectory = path.join(
+                path.dirname(tempFile.filePath),
+                path.basename(tempFile.filePath, '.ipynb')
+            );
             await tempFile.dispose();
-            return tempFile.filePath;
+            // This way we ensure all checkpoints are in a unique directory and will not conflict.
+            await this.fs.ensureLocalDir(tempDirectory);
+            return path.join(tempDirectory, path.basename(tempFile.filePath));
         }
         let backingFile: Contents.IModel | undefined = undefined;
 

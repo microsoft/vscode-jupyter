@@ -36,7 +36,7 @@ import { DisplayOptions } from '../../../kernels/displayOptions.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite.only('DataScience - JupyterSession', () => {
+suite('DataScience - JupyterSession', () => {
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let restartSessionCreatedEvent: Deferred<void>;
@@ -130,6 +130,7 @@ suite.only('DataScience - JupyterSession', () => {
         const tmpFile = path.join('tmp', 'tempfile.json');
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
         when(fs.deleteLocalFile(anything())).thenResolve();
+        when(fs.ensureLocalDir(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
