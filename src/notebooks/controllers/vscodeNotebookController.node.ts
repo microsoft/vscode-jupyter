@@ -30,7 +30,7 @@ import {
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning } from '../../platform/common/logger.node';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/common/logger.node';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import {
     IBrowserService,
@@ -468,6 +468,7 @@ export class VSCodeNotebookController implements Disposable {
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
+            traceError(`Error in execution`, ex);
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled =

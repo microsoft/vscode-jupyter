@@ -15,7 +15,7 @@ import { KernelDiedError } from './kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from './kernelProcessExitedError.node';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceWarning } from '../../platform/common/logger.node';
+import { traceError, traceWarning } from '../../platform/common/logger.node';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize.node';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
@@ -104,6 +104,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         errorContext: 'start' | 'restart' | 'interrupt' | 'execution'
     ) {
         error = WrappedError.unwrap(error);
+        traceError(`Error in execution (get message for cell)`, error);
         if (error instanceof KernelDeadError) {
             // When we get this we've already asked the user to restart the kernel,
             // No need to display errors in each cell.
